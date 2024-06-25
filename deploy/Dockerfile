@@ -9,13 +9,14 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa
 
-# Update package list and install necessary packages including Python 3.8 and psycopg2
+# Update package list and install necessary packages including Python 3.8, psycopg2, and LLVM distutils
 RUN apt-get update && \
     apt-get install -y \
     python3.8 \
     python3.8-dev \
     python3-pip \
     python3-psycopg2 \
+    python3.8-distutils \
     build-essential \
     gdb \
     curl \
@@ -28,6 +29,8 @@ RUN apt-get update && \
     libicu-dev \
     pkg-config \
     libclang-dev \
+    llvm-dev \
+    clang \
     flex \
     bison \
     wget \
@@ -64,16 +67,15 @@ RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /home/postgres/.bash
 # Set environment variables for both root and other users
 ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig"
 ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-ENV LIBCLANG_PATH="/usr/lib/llvm-10/lib"
 ENV NEURDBPATH="/code/neurdb-dev"
 RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /etc/profile && \
-    echo "export LIBCLANG_PATH=${LIBCLANG_PATH}" >> /etc/profile && \
     echo "export NEURDBPATH=${NEURDBPATH}" >> /etc/profile && \
     echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /home/postgres/.bashrc && \
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /home/postgres/.bashrc && \
-    echo "export LIBCLANG_PATH=${LIBCLANG_PATH}" >> /home/postgres/.bashrc && \
-    echo "export NEURDBPATH=${NEURDBPATH}" >> /home/postgres/.bashrc
+    echo "export NEURDBPATH=${NEURDBPATH}" >> /home/postgres/.bashrc && \
+    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /etc/profile && \
+    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /home/postgres/.bashrc
 
 # Set the working directory
 WORKDIR /code/neurdb-dev

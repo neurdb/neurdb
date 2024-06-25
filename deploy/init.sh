@@ -30,7 +30,14 @@ mkdir -p $NEURDBPATH/psql/data
 ./psql/bin/initdb -D $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
 
-#pip install -r contrib/nr/pysrc/requirement.txt
+# Wait a few seconds to ensure the database is up and running
+sleep 5
+
+# Load dataset
+$NEURDBPATH/psql/bin/psql -h localhost -U postgres -p 5432 -f $NEURDBPATH/dataset/iris_psql.sql
+
+# Install packages
+pip3 install -r $NEURDBPATH/contrib/nr/pysrc/requirement.txt
 
 echo "DB started!"
 
