@@ -9,13 +9,14 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa
 
-# Update package list and install necessary packages including Python 3.8, psycopg2, and LLVM
+# Update package list and install necessary packages including Python 3.8, psycopg2, and LLVM distutils
 RUN apt-get update && \
     apt-get install -y \
     python3.8 \
     python3.8-dev \
     python3-pip \
     python3-psycopg2 \
+    python3.8-distutils \
     build-essential \
     gdb \
     curl \
