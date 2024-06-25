@@ -1,7 +1,7 @@
 use serde_json::json;
 use std::collections::HashMap;
 use std::error::Error;
-use crate::utils::io::send_request;
+use neurdb_extension::utils::io::send_request;  // Import by crate name
 
 #[test]
 fn test_send_request() -> Result<(), Box<dyn Error>> {
