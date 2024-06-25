@@ -51,6 +51,8 @@ def exception_catcher(func):
             global_res = func(params, args)
             return global_res
         except Exception as e:
+            print(orjson.dumps(
+                {"res": global_res, "Errored": traceback.format_exc()}).decode('utf-8'))
             return orjson.dumps(
                 {"res": global_res, "Errored": traceback.format_exc()}).decode('utf-8')
 
