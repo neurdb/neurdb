@@ -1,7 +1,7 @@
 use serde_json::json;
 use std::collections::HashMap;
 use crate::bindings::python_interface::{PY_MODULE, run_python_function};
-use crate::utils::parse_sql::{parse_expr, expr_to_sql};
+use crate::utils::io::send_request;
 use std::time::Instant;
 // use shared_memory::*;
 // use std::ffi::c_long;
@@ -38,7 +38,9 @@ pub fn mlp_clf(
     let task_json = json!(task_map).to_string();
 
     // Call the Python function to perform regression
-    let eva_results = run_python_function(&PY_MODULE, &task_json, "mlp_clf");
+    // let eva_results = run_python_function(&PY_MODULE, &task_json, "mlp_clf");
+    // Call the send_request function to perform the HTTP request
+    let eva_results = send_request("http://localhost:8090/mlp_clf", &task_json);
 
     // Measure the time taken for the entire process
     let _end_time = Instant::now();
@@ -46,7 +48,15 @@ pub fn mlp_clf(
 
     // Prepare the response with results and metadata
     response.insert("time_usage", model_init_time.to_string());
-    response.insert("result", eva_results.to_string());
+
+    match eva_results {
+        Ok(result) => {
+            response.insert("result", result);
+        }
+        Err(e) => {
+            response.insert("error", e.to_string());
+        }
+    }
 
     response.insert("table", table.to_string());
     response.insert("columns", columns.to_string());

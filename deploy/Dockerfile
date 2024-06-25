@@ -17,6 +17,8 @@ RUN apt-get update && \
     python3-pip \
     python3-psycopg2 \
     python3.8-distutils \
+    pkg-config \
+    libssl-dev \
     build-essential \
     gdb \
     curl \
@@ -50,6 +52,8 @@ RUN useradd -m -s /bin/bash postgres && \
     echo "postgres ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Install Rust using rustup and cargo-pgrx as the postgres user
+# Ensure rustc 1.78.0 rustc --version
+# Ensure cargo-pgrx v0.11.4 cargo-pgrx --version
 USER postgres
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
     echo 'source $HOME/.cargo/env' >> $HOME/.bashrc && \
@@ -86,11 +90,7 @@ COPY init.sh /usr/local/bin/init.sh
 # Ensure the build script is executable
 RUN chmod +x /usr/local/bin/init.sh
 
-# Create necessary directories and set permissions before switching to postgres
-RUN mkdir -p /code/neurdb-dev/psql && chown -R postgres:postgres /code/neurdb-dev
-
 # Change to non-root user 'postgres' for database compilation and running the init script
 USER postgres
-
 # Command to run the init.sh script
 CMD ["bash", "/usr/local/bin/init.sh"]

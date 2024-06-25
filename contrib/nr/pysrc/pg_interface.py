@@ -2,14 +2,13 @@ import json
 import traceback
 import orjson
 from argparse import Namespace
-
 import calendar
 import os
 import time
 import argparse
 import examples.mlp as mlp
 import configparser
-
+from flask import Flask, request, jsonify
 
 def parse_config_arguments(config_path: str):
     parser = configparser.ConfigParser()
@@ -35,7 +34,7 @@ def exception_catcher(func):
     def wrapper(encoded_str: str):
         global_res = "NA, "
         try:
-            # each functon accepts a json string
+            # each function accepts a json string
             params = json.loads(encoded_str)
             config_file = params.get("config_file")
 
@@ -52,6 +51,8 @@ def exception_catcher(func):
             global_res = func(params, args)
             return global_res
         except Exception as e:
+            print(orjson.dumps(
+                {"res": global_res, "Errored": traceback.format_exc()}).decode('utf-8'))
             return orjson.dumps(
                 {"res": global_res, "Errored": traceback.format_exc()}).decode('utf-8')
 
@@ -83,7 +84,17 @@ def get_data_from_shared_memory_int(n_rows):
     data = data.reshape(n_rows, -1)
     return data
 
+# Initialize the Flask application
+app = Flask(__name__)
+
+# Define the /mlp_clf route
+@app.route('/mlp_clf', methods=['POST'])
+def handle_mlp_clf():
+    data = request.get_json()
+    params_json = json.dumps(data)
+    result = mlp_clf(params_json)
+    return jsonify(result)
 
 if __name__ == "__main__":
-    params = {}
-    params["pass"] = 10
+    # Start the Flask server
+    app.run(host='localhost', port=8090)
