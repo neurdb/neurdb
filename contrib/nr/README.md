@@ -28,9 +28,6 @@ Install nr
 ```bash
 docker exec -it neurdb_dev bash
 
-# switch back to the root user with password: rootpassword
-# su -
-
 cd /code/neurdb-dev/contrib/nr
 cargo pgrx init --pg16 $NEURDBPATH/psql/bin/pg_config
 cargo clean
@@ -42,15 +39,35 @@ Install nr_inference
 ```bash
 ```
 
+## Test Extension
+
+```bash
+$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
+```
+
+Run extension
+
+```sql
+DROP EXTENSION neurdb_extension;
+CREATE EXTENSION neurdb_extension;
+
+SELECT mlp_clf('class', 'iris', '', '/code/neurdb-dev/contrib/nr/pysrc/config.ini');
+
+PREDICT VALUE OF
+  class
+FROM
+  iris;
+```
+
+
+
 # Re-install
+
 Folders created in docker can only removed from docker itself.
 ```bash
 # switch back to the root user with password: rootpassword to remove 
 su -
 rm -rf $NEURDBPATH/contrib/nr/target
-
-su - postgres
-rm -rf $NEURDBPATH/psql
 ```
 
 
