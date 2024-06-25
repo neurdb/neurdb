@@ -10,6 +10,7 @@ git clone https://<username>:<token>@github.com/<username>/<repository>.git
 
 # give docker write premission
 chmod -R 777 ~/neurdb-dev
+chmod 777 ~/neurdb-dev/meson.build
 ```
 
 ## Build Dockerfile
