@@ -10,8 +10,8 @@ set -x
 NEURDBPATH=${NEURDBPATH:-/code/neurdb-dev}
 
 # Clean files
-rm -rf $NEURDBPATH/psql
-rm $NEURDBPATH/logfile
+rm -rf $NEURDBPATH/psql || true
+rm $NEURDBPATH/logfile  || true
 
 # Print and execute commands
 mkdir -p $NEURDBPATH/psql
