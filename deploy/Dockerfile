@@ -64,7 +64,7 @@ RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /home/postgres/.bash
 # Set environment variables for both root and other users
 ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig"
 ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-ENV LIBCLANG_PATH="/usr/lib/llvm-10/lib"
+ENV LIBCLANG_PATH="/usr/lib/llvm-10/lib:$LIBCLANG_PATH"
 ENV NEURDBPATH="/code/neurdb-dev"
 RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /etc/profile && \

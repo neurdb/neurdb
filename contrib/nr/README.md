@@ -31,7 +31,7 @@ docker exec -it neurdb_dev bash
 # switch back to the root user with password: rootpassword
 su -
 
-cd ./contrib/nr
+cd /code/neurdb-dev/contrib/nr
 cargo pgrx init --pg16 $NEURDBPATH/psql/bin/pg_config
 cargo clean
 cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
