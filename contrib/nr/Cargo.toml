@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+name = "neurdb_extension"
+crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["pg16", "python"]
