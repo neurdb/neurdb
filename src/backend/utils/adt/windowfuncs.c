@@ -491,7 +491,7 @@ window_ntile_support(PG_FUNCTION_ARGS)
 
 		if (list_length(wfunc->args) == 1)
 		{
-			Node *expr = eval_const_expressions(NULL, linitial(wfunc->args));
+			Node	   *expr = eval_const_expressions(NULL, linitial(wfunc->args));
 
 			/*
 			 * Due to the Node representation of WindowClause runConditions in

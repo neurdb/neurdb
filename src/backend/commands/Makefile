@@ -44,6 +44,7 @@ OBJS = \
 	operatorcmds.o \
 	policy.o \
 	portalcmds.o \
+	predict.o \
 	prepare.o \
 	proclang.o \
 	publicationcmds.o \

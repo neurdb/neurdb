@@ -4047,4 +4047,27 @@ typedef struct DropSubscriptionStmt
 	DropBehavior behavior;		/* RESTRICT or CASCADE behavior */
 } DropSubscriptionStmt;
 
+
+/**
+ * NEURDB
+*/
+
+typedef enum PredictType
+{
+	PREDICT_CLASS,				/* Classification prediction. */
+	PREDICT_VALUE				/* Value prediction. */
+}			PredictType;
+
+typedef struct NeurDBPredictStmt
+{
+	NodeTag		type;			/* Node type identifier */
+	PredictType kind;			/* Task type (classification or value
+								 * prediction) */
+	List	   *targetList;		/* A list of targets (columns) for the
+								 * prediction */
+	List	   *fromClause;		/* A list of tables involved in the prediction */
+	Node	   *whereClause;	/* The WHERE clause for filtering data */
+	bool		allowTrain;	/* Let DB train a model if it does not exist? */
+}			NeurDBPredictStmt;
+
 #endif							/* PARSENODES_H */

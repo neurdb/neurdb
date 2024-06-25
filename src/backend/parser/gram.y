@@ -319,6 +319,7 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 		CreateMatViewStmt RefreshMatViewStmt CreateAmStmt
 		CreatePublicationStmt AlterPublicationStmt
 		CreateSubscriptionStmt AlterSubscriptionStmt DropSubscriptionStmt
+		NeurDBPredictStmt
 
 %type <node>	select_no_parens select_with_parens select_clause
 				simple_select values_clause
@@ -659,6 +660,8 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 				json_object_constructor_null_clause_opt
 				json_array_constructor_null_clause_opt
 
+%type <node>	neurdb_target neurdb_from
+%type <boolean> opt_allow_train
 
 /*
  * Non-keyword token types.  These are hard-wired into the "flex" lexer.
@@ -744,7 +747,7 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 
 	PARALLEL PARAMETER PARSER PARTIAL PARTITION PASSING PASSWORD
 	PLACING PLANS POLICY
-	POSITION PRECEDING PRECISION PRESERVE PREPARE PREPARED PRIMARY
+	POSITION PRECEDING PRECISION PREDICT PRESERVE PREPARE PREPARED PRIMARY
 	PRIOR PRIVILEGES PROCEDURAL PROCEDURE PROCEDURES PROGRAM PUBLICATION
 
 	QUOTE
@@ -762,7 +765,7 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 	SUBSCRIPTION SUBSTRING SUPPORT SYMMETRIC SYSID SYSTEM_P SYSTEM_USER
 
 	TABLE TABLES TABLESAMPLE TABLESPACE TEMP TEMPLATE TEMPORARY TEXT_P THEN
-	TIES TIME TIMESTAMP TO TRAILING TRANSACTION TRANSFORM
+	TIES TIME TIMESTAMP TO TRAILING TRAIN TRANSACTION TRANSFORM
 	TREAT TRIGGER TRIM TRUE_P
 	TRUNCATE TRUSTED TYPE_P TYPES_P
 
@@ -1088,6 +1091,7 @@ stmt:
 			| VariableSetStmt
 			| VariableShowStmt
 			| ViewStmt
+			| NeurDBPredictStmt
 			| /*EMPTY*/
 				{ $$ = NULL; }
 		;
@@ -11811,6 +11815,7 @@ ExplainableStmt:
 			| CreateMatViewStmt
 			| RefreshMatViewStmt
 			| ExecuteStmt					/* by default all are $$=$1 */
+			| NeurDBPredictStmt
 		;
 
 /*****************************************************************************
@@ -16918,6 +16923,53 @@ BareColLabel:	IDENT								{ $$ = $1; }
 			| bare_label_keyword					{ $$ = pstrdup($1); }
 		;
 
+/*****************************************************************************
+ *
+ *		QUERY (NEURDB):
+ *				PREDICT STATEMENTS
+ *
+ *****************************************************************************/
+NeurDBPredictStmt: 
+			PREDICT CLASS OF neurdb_target
+				{
+					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $4;
+					n->kind = PREDICT_CLASS;
+					$$ = (Node *) n;
+				}
+			| PREDICT VALUE_P OF neurdb_target
+				{
+					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $4;
+					n->kind = PREDICT_VALUE;
+					$$ = (Node *) n;
+				}
+		;
+
+neurdb_target: target_list neurdb_from opt_allow_train
+				{
+					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $2;
+					n->targetList = $1;
+					n->allowTrain = $3;
+					$$ = (Node *) n;
+				}
+		;
+
+opt_allow_train: 
+			TRAIN IF_P NOT EXISTS					{ $$ = true; }
+			| /*EMPTY*/								{ $$ = false; }
+		;
+
+neurdb_from: 
+			FROM from_list 
+			where_clause
+			group_clause having_clause window_clause
+			opt_sort_clause opt_select_limit opt_for_locking_clause
+				{
+					NeurDBPredictStmt *n = makeNode(NeurDBPredictStmt);
+					n->fromClause = $2;
+					n->whereClause = $3;
+					$$ = (Node *) n;
+				}
+		;
 
 /*
  * Keyword category lists.  Generally, every keyword present in
@@ -17419,6 +17471,7 @@ reserved_keyword:
 			| OR
 			| ORDER
 			| PLACING
+			| PREDICT
 			| PRIMARY
 			| REFERENCES
 			| RETURNING
@@ -17431,6 +17484,7 @@ reserved_keyword:
 			| THEN
 			| TO
 			| TRAILING
+			| TRAIN
 			| TRUE_P
 			| UNION
 			| UNIQUE
@@ -17730,6 +17784,7 @@ bare_label_keyword:
 			| POLICY
 			| POSITION
 			| PRECEDING
+			| PREDICT
 			| PREPARE
 			| PREPARED
 			| PRESERVE
@@ -17831,6 +17886,7 @@ bare_label_keyword:
 			| TIME
 			| TIMESTAMP
 			| TRAILING
+			| TRAIN
 			| TRANSACTION
 			| TRANSFORM
 			| TREAT

@@ -1,0 +1,42 @@
+[package]
+name = "neurdb_extension"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = ["pg16", "python"]
+python = ["pyo3"]
+pg16 = ["pgrx/pg16", "pgrx-tests/pg16"]
+pg_test = []
+
+[dependencies]
+pgrx = "=0.11.4"  # Updated to the latest version
+pgrx-pg-sys = "=0.11.4"
+serde_json = { version = "1.0.85", features = ["preserve_order"] }
+pyo3 = { version = "0.21.2", features = ["auto-initialize", "extension-module"], optional = true }
+once_cell = "1.8.0"
+log = "0.4.14"
+serde = "1.0"
+serde_derive = "1.0"
+shared_memory = "0.12.4"
+regex = "1"
+
+[dev-dependencies]
+pgrx-tests = "=0.11.4"
+
+[build-dependencies]
+cc = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8"  # Add serde_yaml here
+
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+panic = "unwind"
+opt-level = 3
+lto = "fat"
+codegen-units = 1

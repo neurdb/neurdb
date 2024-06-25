@@ -1,0 +1,4 @@
+comment = 'A postgres extension to manage models'
+default_version = '1.0.0'
+module_pathname = '$libdir/libpg_model'
+relocatable = true
