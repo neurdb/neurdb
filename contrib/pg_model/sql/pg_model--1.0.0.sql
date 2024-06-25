@@ -1,7 +1,7 @@
 -- script to define tables and functions for pg_model
 
 -- create tables
-CREATE TABLE model
+CREATE TABLE IF NOT EXISTS model
 (
     model_id   serial PRIMARY KEY,
     model_name text NOT NULL,
