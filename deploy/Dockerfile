@@ -52,6 +52,8 @@ RUN useradd -m -s /bin/bash postgres && \
     echo "postgres ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Install Rust using rustup and cargo-pgrx as the postgres user
+# Ensure rustc 1.78.0 rustc --version
+# Ensure cargo-pgrx v0.11.4 cargo-pgrx --version
 USER postgres
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
     echo 'source $HOME/.cargo/env' >> $HOME/.bashrc && \
