@@ -61,6 +61,9 @@ echo "Install NR Extension Done"
 cd $NEURDBPATH/contrib/pg_model
 make
 make install
+cp pg_model.control $NEURDBPATH/psql/share/postgresql/extension
+cp sql/pg_model--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
+cp build/libpg_model.so $NEURDBPATH/psql/lib/postgresql
 echo "Install NR Model Extension Done"
 
 echo "Plese use 'control + c' to exist the logging print"

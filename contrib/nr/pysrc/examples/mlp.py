@@ -29,7 +29,7 @@ def read_data(conn, table: str, where_condition: str, label: str):
     else:
         query = f"SELECT * FROM {table}"
     df = pd.read_sql(query, conn)
-    features = df.columns.tolist()[1:]
+    features = df.columns.tolist()
     features.remove(label)
     X = df[features].values
     y, _ = pd.factorize(df[label].values)
@@ -46,7 +46,7 @@ def read_data(conn, table: str, where_condition: str, label: str):
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size=3, hidden_size=10, num_classes=3):
+    def __init__(self, input_size=4, hidden_size=10, num_classes=3):
         super(MLP, self).__init__()
         self.hidden = nn.Linear(input_size, hidden_size)
         self.output = nn.Linear(hidden_size, num_classes)

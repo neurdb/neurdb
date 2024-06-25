@@ -54,7 +54,6 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 	char		trainingFuncName[] = "mlp_clf";
 	char        inferenceFuncName[] = "pgm_predict_table";
 
-
 	if (columns == NULL || table == NULL || whereClause == NULL)
 	{
 		elog(ERROR, "Null argument passed to exec_udf");
@@ -76,7 +75,6 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 
 	findModelFCInfo->args[0].value = CStringGetTextDatum(modelName);
 	findModelFCInfo->args[0].isnull = false;
-
 	findModelResult = FunctionCallInvoke(findModelFCInfo);
 
 	if (findModelResult == 0)
@@ -105,6 +103,7 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 		trainingFCInfo->args[3].isnull = false;
 
 		trainingResult = FunctionCallInvoke(trainingFCInfo);
+
 		if (!trainingFCInfo->isnull)
 		{
 			text	   *resultText = DatumGetTextP(trainingResult);
@@ -142,17 +141,17 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 		inferenceFCInfo->args[3].isnull = false;
 
 		inferenceResult = FunctionCallInvoke(inferenceFCInfo);
+
 		if (!inferenceFCInfo->isnull)
 		{
 			text	   *resultText = DatumGetTextP(inferenceResult);
 			char	   *resultCString = text_to_cstring(resultText);
-
-			elog(INFO, "Result: %s", resultCString);
+			elog(INFO, "Inference result: %s", resultCString);
 			pfree(resultCString);
 		}
 		else
 		{
-			elog(INFO, "Result is NULL");
+			elog(INFO, "Inference result is NULL");
 		}
 	}
 }
@@ -248,18 +247,25 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	/* Free the list of targets */
 	list_free(p_target);
 
-	switch (stmt->kind)
-	{
-		case PREDICT_CLASS:
-			elog(ERROR, "PREDICT_CLASS prediction type not implemented: %d", (int) stmt->kind);
-			return InvalidObjectAddress;
+	return InvalidObjectAddress;
 
-		case PREDICT_VALUE:
-			elog(ERROR, "PREDICT_VALUE prediction type not implemented: %d", (int) stmt->kind);
-			return InvalidObjectAddress;
-
-		default:
-			elog(ERROR, "unrecognized prediction type: %d", (int) stmt->kind);
-			return InvalidObjectAddress;
-	}
+	/**
+	 * TODO:
+	 * It looks like calling stmt-> kind will cause memory leak. So I commented
+	 * it out for now. We will solve this issue later.
+	 */
+	// switch (stmt->kind)
+	// {
+	// 	case PREDICT_CLASS:
+	// 		elog(ERROR, "PREDICT_CLASS prediction type not implemented: %d", (int) stmt->kind);
+	// 		return InvalidObjectAddress;
+	//
+	// 	case PREDICT_VALUE:
+	// 		elog(ERROR, "PREDICT_VALUE prediction type not implemented: %d", (int) stmt->kind);
+	// 		return InvalidObjectAddress;
+	//
+	// 	default:
+	// 		elog(ERROR, "unrecognized prediction type: %d", (int) stmt->kind);
+	// 		return InvalidObjectAddress;
+	// }
 }
