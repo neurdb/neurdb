@@ -17,6 +17,8 @@ RUN apt-get update && \
     python3-pip \
     python3-psycopg2 \
     python3.8-distutils \
+    pkg-config \
+    libssl-dev \
     build-essential \
     gdb \
     curl \
