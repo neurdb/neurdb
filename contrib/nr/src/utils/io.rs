@@ -1,6 +1,7 @@
 use reqwest::blocking::Client;
-use serde_json::json;
+use serde_json::Value;
 use std::collections::HashMap;
+use std::error::Error;
 
 pub fn send_request(url: &str, task_json: &str) -> Result<String, Box<dyn Error>> {
     // Create an HTTP client
