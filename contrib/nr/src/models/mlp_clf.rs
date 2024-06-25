@@ -48,7 +48,15 @@ pub fn mlp_clf(
 
     // Prepare the response with results and metadata
     response.insert("time_usage", model_init_time.to_string());
-    response.insert("result", eva_results.to_string());
+
+    match eva_results {
+        Ok(result) => {
+            response.insert("result", result);
+        }
+        Err(e) => {
+            response.insert("error", e.to_string());
+        }
+    }
 
     response.insert("table", table.to_string());
     response.insert("columns", columns.to_string());
