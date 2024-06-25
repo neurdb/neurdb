@@ -17,7 +17,7 @@ chmod -R 777 ~/neurdb-dev
 Build images
 
 ```bash
-cd ~/neurdb-dev/
+cd ~/neurdb-dev/deploy
 bash build.sh
 ```
 
@@ -29,7 +29,7 @@ Install nr
 docker exec -it neurdb_dev bash
 
 # switch back to the root user with password: rootpassword
-su -
+# su -
 
 cd /code/neurdb-dev/contrib/nr
 cargo pgrx init --pg16 $NEURDBPATH/psql/bin/pg_config
