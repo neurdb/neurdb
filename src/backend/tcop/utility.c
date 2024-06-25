@@ -25,6 +25,7 @@
 #include "catalog/index.h"
 #include "catalog/namespace.h"
 #include "catalog/pg_authid.h"
+#include "catalog/pg_collation.h"
 #include "catalog/pg_inherits.h"
 #include "catalog/toasting.h"
 #include "commands/alter.h"
@@ -45,6 +46,7 @@
 #include "commands/matview.h"
 #include "commands/policy.h"
 #include "commands/portalcmds.h"
+#include "commands/predict.h"
 #include "commands/prepare.h"
 #include "commands/proclang.h"
 #include "commands/publicationcmds.h"
@@ -68,6 +70,7 @@
 #include "tcop/pquery.h"
 #include "tcop/utility.h"
 #include "utils/acl.h"
+#include "utils/formatting.h"
 #include "utils/guc.h"
 #include "utils/lsyscache.h"
 #include "utils/rel.h"
@@ -218,6 +221,7 @@ ClassifyUtilityCommandAsReadOnly(Node *parsetree)
 		case T_SecLabelStmt:
 		case T_TruncateStmt:
 		case T_ViewStmt:
+		case T_NeurDBPredictStmt:
 			{
 				/* DDL is not read-only, and neither is TRUNCATE. */
 				return COMMAND_IS_NOT_READ_ONLY;
@@ -1914,6 +1918,30 @@ ProcessUtilitySlow(ParseState *pstate,
 				address = AlterCollation((AlterCollationStmt *) parsetree);
 				break;
 
+			case T_NeurDBPredictStmt:
+				{
+					/*
+					 * FIXME: The logic is currently problematic. It does not
+					 * handle the case where the user-defined names include
+					 * `where`. However, I think we should not rely on string
+					 * anyway. Instead, try to parse from the whereClause
+					 * parse tree node whenever possible (since that's the
+					 * point of the parse tree)
+					 */
+					const char *queryStringLowerCase = str_tolower(
+																   queryString,
+																   strlen(queryString),
+																   DEFAULT_COLLATION_OID
+						);
+					const char *whereClauseString = strstr(
+														   queryStringLowerCase,
+														   "where"
+						);
+
+					address = ExecPredictStmt((NeurDBPredictStmt *) parsetree, pstate, whereClauseString);
+				}
+				break;
+
 			default:
 				elog(ERROR, "unrecognized node type: %d",
 					 (int) nodeTag(parsetree));
@@ -2391,6 +2419,10 @@ CreateCommandTag(Node *parsetree)
 
 		case T_SelectStmt:
 			tag = CMDTAG_SELECT;
+			break;
+
+		case T_NeurDBPredictStmt:
+			tag = CMDTAG_PREDICT;
 			break;
 
 		case T_PLAssignStmt:
