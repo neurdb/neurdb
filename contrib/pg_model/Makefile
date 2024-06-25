@@ -11,9 +11,6 @@ install:
 #	cp pg_model.control $(shell pg_config --sharedir)/extension
 #	cp sql/pg_model--1.0.0.sql $(shell pg_config --sharedir)/extension
 #	cp build/libpg_model.so $(shell pg_config --libdir)
-	cp pg_model.control $NEURDBPATH/psql/share/postgresql/extension
-	cp sql/pg_model--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
-	cp build/libpg_model.so $NEURDBPATH/psql/lib/postgresql
 
 clean:
 	rm -rf build
