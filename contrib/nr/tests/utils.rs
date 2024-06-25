@@ -7,10 +7,10 @@ use neurdb_extension::utils::io::send_request;  // Import by crate name
 fn test_send_request() -> Result<(), Box<dyn Error>> {
     // Step 1: Prepare task map for the Python function
     let mut task_map = HashMap::new();
-    task_map.insert("where_cond", "where_cond");
-    task_map.insert("table", "table");
-    task_map.insert("label", "label");
-    task_map.insert("config_file", "config_file");
+    task_map.insert("where_cond", "");
+    task_map.insert("table", "iris");
+    task_map.insert("label", "class");
+    task_map.insert("config_file", "/code/neurdb-dev/contrib/nr/pysrc/config.ini");
 
     // Convert task map to JSON string
     let task_json = json!(task_map).to_string();
