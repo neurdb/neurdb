@@ -35,7 +35,7 @@ sleep 5
 
 # Load dataset
 $NEURDBPATH/psql/bin/psql -h localhost -U postgres -p 5432 -f $NEURDBPATH/dataset/iris_psql.sql
-echo "DB started!"
+echo "DB Started!"
 
 # Install packages
 pip3 install -r $NEURDBPATH/contrib/nr/pysrc/requirement.txt
@@ -44,6 +44,14 @@ pip3 install -r $NEURDBPATH/contrib/nr/pysrc/requirement.txt
 nohup python3 $NEURDBPATH/contrib/nr/pysrc/pg_interface.py &
 
 echo "Python Server started!"
+
+# Compile Extension
+cd /code/neurdb-dev/contrib/nr
+cargo pgrx init --pg16 $NEURDBPATH/psql/bin/pg_config
+cargo clean
+cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
+
+echo "Extension Compile Done"
 
 # Continue
 tail -f /dev/null
