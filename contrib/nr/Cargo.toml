@@ -5,6 +5,7 @@ edition = "2021"
 
 [lib]
 name = "neurdb_extension"
+# generate both a C-compatible dynamic library and a Rust library
 crate-type = ["cdylib", "rlib"]
 
 [features]
