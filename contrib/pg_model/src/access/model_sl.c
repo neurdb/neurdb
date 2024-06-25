@@ -209,10 +209,10 @@ get_model_id_by_name(const char *model_name) {
         ereport(ERROR, (errmsg("get_model_id_by_name: unable to execute query")));
     }
 
-    char *model_id_str = TextDatumGetCString(*spi_get_single_result(&conn));
+    const Datum *model_id_datum = spi_get_single_result(&conn);
+    const int model_id = DatumGetInt32(*model_id_datum);
+
     // finish the SPI connection
     spi_finish(&conn);
-    // convert the result to an int type
-    int model_id = strtol(model_id_str, NULL, 10);
     return model_id;
 }
