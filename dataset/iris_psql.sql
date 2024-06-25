@@ -1,4 +1,3 @@
-CREATE DATABASE neurdb;
 DROP TABLE IF EXISTS iris;
 CREATE TABLE iris(
      sepal_l FLOAT,
