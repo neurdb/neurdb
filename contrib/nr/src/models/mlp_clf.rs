@@ -40,7 +40,7 @@ pub fn mlp_clf(
     // Call the Python function to perform regression
     // let eva_results = run_python_function(&PY_MODULE, &task_json, "mlp_clf");
     // Call the send_request function to perform the HTTP request
-    let eva_results = send_request("localhost:8090/mlp_clf", &task_json)?;
+    let eva_results = send_request("localhost:8090/mlp_clf", &task_json);
 
     // Measure the time taken for the entire process
     let _end_time = Instant::now();
