@@ -61,14 +61,17 @@ FROM
 
 
 
-# Re-install
+# Dev Rust Extensin
 
-Folders created in docker can only removed from docker itself.
+After updating the codebase, run the following
+
 ```bash
-# switch back to the root user with password: rootpassword to remove 
-su -
-rm -rf $NEURDBPATH/contrib/nr/target
+cargo test -- --nocapture
 ```
+
+Once the test pass, 
+
+
 
 
 
