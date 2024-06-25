@@ -54,6 +54,8 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 	char		trainingFuncName[] = "mlp_clf";
 	char        inferenceFuncName[] = "pgm_predict_table";
 
+	// debug
+	elog(INFO, "starting exec_udf");
 
 	if (columns == NULL || table == NULL || whereClause == NULL)
 	{
@@ -63,6 +65,9 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 
 	// check if the model exists
 	Oid findModelFuncOid = LookupFuncName(list_make1(makeString(findModelFuncName)), 1, findModelArgTypes, false);
+
+	// debug
+	elog(INFO, "findModelFuncOid: %d", findModelFuncOid);
 
 	if (!OidIsValid(findModelFuncOid))
 	{
@@ -77,7 +82,11 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 	findModelFCInfo->args[0].value = CStringGetTextDatum(modelName);
 	findModelFCInfo->args[0].isnull = false;
 
+	elog(INFO, "Calling findModel function");
+
 	findModelResult = FunctionCallInvoke(findModelFCInfo);
+
+	elog(INFO, "findModelResult: %d", DatumGetInt32(findModelResult));
 
 	if (findModelResult == 0)
 	{
@@ -104,7 +113,14 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 		trainingFCInfo->args[2].isnull = false;
 		trainingFCInfo->args[3].isnull = false;
 
+		// debug
+		elog(INFO, "Calling training function");
+
 		trainingResult = FunctionCallInvoke(trainingFCInfo);
+
+		//debug
+		elog(INFO, "Training result: %d", DatumGetInt32(trainingResult));
+
 		if (!trainingFCInfo->isnull)
 		{
 			text	   *resultText = DatumGetTextP(trainingResult);
@@ -141,9 +157,16 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 		inferenceFCInfo->args[2].isnull = false;
 		inferenceFCInfo->args[3].isnull = false;
 
+		// debug
+		elog(INFO, "Calling inference function");
+
 		inferenceResult = FunctionCallInvoke(inferenceFCInfo);
+
 		if (!inferenceFCInfo->isnull)
 		{
+			// debug
+			elog(INFO, "Inference result is not null");
+
 			text	   *resultText = DatumGetTextP(inferenceResult);
 			char	   *resultCString = text_to_cstring(resultText);
 
