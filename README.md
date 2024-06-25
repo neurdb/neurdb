@@ -35,6 +35,7 @@ docker exec -it neurdb_dev bash
 ### Install nr_inference
 
 ```bash
+docker exec -it neurdb_dev bash
 ```
 
 ## Test Extension
@@ -117,19 +118,19 @@ DROP EXTENSION neurdb_extension;
 CREATE EXTENSION neurdb_extension;
 ```
 
-## Debug C Extensin for inference
+## Debug C Extension for inference
+Start the PostgreSQL server
 
+```bash
+$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
+```
 
+Drop/Create the extension
 
-
-
-
-
-
-
-
-
-
+```sql
+DROP EXTENSION pg_model;
+CREATE EXTENSION pg_model;
+```
 
 
 # Some CMDs
