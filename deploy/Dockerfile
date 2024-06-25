@@ -28,6 +28,7 @@ RUN apt-get update && \
     libicu-dev \
     pkg-config \
     libclang-dev \
+    libclang1 \
     flex \
     bison \
     wget \
