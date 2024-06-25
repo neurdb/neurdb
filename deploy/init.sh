@@ -48,7 +48,7 @@ nohup python3 $NEURDBPATH/contrib/nr/pysrc/pg_interface.py &
 echo "Python Server started!"
 
 # Compile nr extension
-cd /code/neurdb-dev/contrib/nr
+cd $NEURDBPATH/contrib/nr
 cargo pgrx init --pg16 $NEURDBPATH/psql/bin/pg_config
 cargo clean
 cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
@@ -58,7 +58,7 @@ $NEURDBPATH/psql/bin/psql -h localhost -U postgres -p 5432 -c "CREATE EXTENSION 
 echo "Install NR Extension Done"
 
 # Compile nr_model extension
-cd /code/neurdb-dev/contrib/pg_model
+cd $NEURDBPATH/contrib/pg_model
 make
 make install
 echo "Install NR Model Extension Done"
