@@ -31,10 +31,10 @@ mkdir -p $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
 
 # Wait a few seconds to ensure the database is up and running
-#sleep 5
+sleep 5
 
 # Load dataset
-#$NEURDBPATH/psql/bin/psql -d neurdb -f $NEURDBPATH/dataset/iris_psql.sql
+$NEURDBPATH/psql/bin/psql -h localhost -U postgres -p 5432 -f $NEURDBPATH/dataset/iris_psql.sql
 
 
 #pip install -r contrib/nr/pysrc/requirement.txt
