@@ -79,8 +79,6 @@ RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
     echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /etc/profile && \
     echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /home/postgres/.bashrc
 
-# Change to non-root user 'postgres' for database compilation and running the init script
-USER postgres
 # Set the working directory
 WORKDIR /code/neurdb-dev
 
@@ -91,8 +89,11 @@ COPY init.sh /usr/local/bin/init.sh
 RUN chmod +x /usr/local/bin/init.sh
 
 # Create necessary directories and set permissions before switching to postgres
-RUN mkdir -p /code/neurdb-dev/psql && chown -R postgres:postgres /code/neurdb-dev
+#RUN mkdir -p /code/neurdb-dev/psql
+#RUN chown -R postgres:postgres /code/neurdb-dev
+#RUN chown -R postgres:postgres /code/neurdb-dev/psql
 
-
+# Change to non-root user 'postgres' for database compilation and running the init script
+USER postgres
 # Command to run the init.sh script
 CMD ["bash", "/usr/local/bin/init.sh"]
