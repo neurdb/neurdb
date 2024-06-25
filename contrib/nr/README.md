@@ -23,13 +23,13 @@ bash build.sh
 
 ## Install Extensions
 
-Install nr
+### Install nr
 
 ```bash
 docker exec -it neurdb_dev bash
 ```
 
-Install nr_inference
+### Install nr_inference
 
 ```bash
 ```
@@ -54,9 +54,9 @@ FROM
   iris;
 ```
 
+# Debug
 
-
-# Debug PostgreSQL
+## Debug PostgreSQL
 
 ```bash
 # users
@@ -88,7 +88,7 @@ log_min_error_statement = DEBUG1
 
 
 
-# Debug Rust Extensin for training
+## Debug Rust Extensin for training
 
 After updating the codebase, run the following
 
@@ -114,7 +114,7 @@ DROP EXTENSION neurdb_extension;
 CREATE EXTENSION neurdb_extension;
 ```
 
-# Debug C Extensin for inference
+## Debug C Extensin for inference
 
 
 
