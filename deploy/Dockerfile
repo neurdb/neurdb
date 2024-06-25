@@ -38,7 +38,12 @@ RUN apt-get update && \
     wget \
     unzip \
     sudo \
+    cmake \
     && apt-get clean
+
+# Download torchlib CPU version and extract it to /home
+RUN wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.3.1%2Bcpu.zip
+RUN unzip libtorch-cxx11-abi-shared-with-deps-2.3.1+cpu.zip -d /home
 
 # Set Python 3.8 as the default python3
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
