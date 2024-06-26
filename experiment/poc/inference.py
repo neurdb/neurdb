@@ -4,7 +4,7 @@ import torch
 from torch import nn
 import argparse
 
-from ..utils.prepare_data import connect_to_db
+from prepare_data import connect_to_db
 
 
 BATCH_SIZE = 10
