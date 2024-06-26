@@ -273,6 +273,10 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
     const char *table_name = text_to_cstring(PG_GETARG_TEXT_PP(2));
     // ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
     const char *column_names_array = text_to_cstring(PG_GETARG_TEXT_PP(3));
+
+    // create a dummy column names array for testing
+    // TODO: replace this with the actual column names array
+    column_names_array = "sepal_w,petal_l,petal_w";
     // spit by comma is the number of columns
     int num_columns = 1;
     for (int i = 0; i < strlen(column_names_array); i++) {
