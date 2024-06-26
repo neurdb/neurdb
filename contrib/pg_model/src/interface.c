@@ -9,6 +9,7 @@
 
 #include "access/model_sl.h"
 #include "inference/model_inference.h"
+#include "utils/log/logger.h"
 #include "utils/torch/device.h"
 
 
@@ -268,44 +269,35 @@ pgm_get_model_id_by_name(PG_FUNCTION_ARGS) {
  */
 Datum
 pgm_predict_table(PG_FUNCTION_ARGS) {
+    Logger logger;
+    logger_init(&logger, 10);   // init the logger for testing
+    logger_start(&logger, "fetching data from table");
+
     const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
     const int batch_size = PG_GETARG_INT32(1);
     const char *table_name = text_to_cstring(PG_GETARG_TEXT_PP(2));
-    // ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
-    const char *column_names_array = text_to_cstring(PG_GETARG_TEXT_PP(3));
-
-    // create a dummy column names array for testing
-    // TODO: replace this with the actual column names array
-    column_names_array = "sepal_l,sepal_w,petal_l,petal_w";
-    // spit by comma is the number of columns
-    int num_columns = 1;
-    for (int i = 0; i < strlen(column_names_array); i++) {
-        if (column_names_array[i] == ',') {
-            num_columns++;
-        }
-    }
-
-    // int num_columns = ARR_DIMS(column_names_array)[0];
-    // Datum *column_datums;   // hold the column names after deconstruction
-    // bool *column_nulls;
-    // deconstruct_array(column_names_array, TEXTOID, -1, false, 'i', &column_datums, &column_nulls, &num_columns);
+    ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
+    int num_columns = ARR_DIMS(column_names_array)[0];
+    Datum *column_datums;   // hold the column names after deconstruction
+    bool *column_nulls;
+    deconstruct_array(column_names_array, TEXTOID, -1, false, 'i', &column_datums, &column_nulls, &num_columns);
 
     // StringInfoData holds information about an extensible string.
     // @see pgslq/include/server/lib/stringinfo.h
-    // StringInfoData columns;
-    // initStringInfo(&columns);
+    StringInfoData columns;
+    initStringInfo(&columns);
 
-    // for (int i = 0; i < num_columns; ++i) {
-        // if (i > 0) {
-            // appendStringInfoString(&columns, ", ");
-        // }
-        // appendStringInfoString(&columns, TextDatumGetCString(column_datums[i]));
-    // }
+    for (int i = 0; i < num_columns; ++i) {
+        if (i > 0) {
+            appendStringInfoString(&columns, ", ");
+        }
+        appendStringInfoString(&columns, TextDatumGetCString(column_datums[i]));
+    }
 
     // build sql query
     StringInfoData query;
     initStringInfo(&query);
-    appendStringInfo(&query, "SELECT %s FROM %s", column_names_array, table_name);
+    appendStringInfo(&query, "SELECT %s FROM %s", columns.data, table_name);
 
     // execute query
     SPI_connect();
@@ -313,7 +305,8 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
         SPI_finish();
         ereport(ERROR, (errmsg("failed to execute query: %s", query.data)));
     }
-
+    logger_end(&logger);
+    logger_start(&logger, "forward inference");
     // get the result
     const SPITupleTable *tuptable = SPI_tuptable;
     const int num_rows = (int) SPI_processed;
@@ -349,10 +342,10 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
         tw_free_tensor(input);
         pfree(data);
     }
-
+    logger_end(&logger);
     SPI_finish();
-
     // clean up
     tw_free_model(model);
+    logger_print(&logger);
     PG_RETURN_NULL();
 }
