@@ -276,7 +276,7 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
 
     // create a dummy column names array for testing
     // TODO: replace this with the actual column names array
-    column_names_array = "sepal_w,petal_l,petal_w";
+    column_names_array = "sepal_l,sepal_w,petal_l,petal_w";
     // spit by comma is the number of columns
     int num_columns = 1;
     for (int i = 0; i < strlen(column_names_array); i++) {
