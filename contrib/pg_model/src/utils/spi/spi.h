@@ -1,5 +1,5 @@
 /*
-* spi.h
+ * spi.h
  *    handle query and execution through the Postgres Server Programming Interface (SPI)
  */
 #ifndef PG_MODEL_SPI_H
@@ -45,12 +45,21 @@ bool
 spi_execute_query(SpiConnection *conn, const char *query, int nargs, Oid *arg_types, Datum *values, const char *nulls);
 
 /**
- * @description: get a single result from the SPI query execution
+ * @description: get the first column of the single result from the SPI query execution
  * @see https://www.postgresql.org/docs/current/spi-spi-getvalue.html
  * @see https://www.postgresql.org/docs/current/spi-spi-execute.html
  */
 Datum *
 spi_get_single_result(SpiConnection *conn);
+
+/**
+ * @description: get a single result from the SPI query execution
+ * @param {SpiConnection *} conn - the SPI connection
+ * @param {int} index - the column index of the result
+ * @return {Datum *} - the result
+ */
+Datum *
+spi_get_single_result_p(SpiConnection *conn, int index);
 
 /**
  * @description: finish the SPI connection

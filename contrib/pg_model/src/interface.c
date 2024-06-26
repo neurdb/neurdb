@@ -127,11 +127,9 @@ Datum
 pgm_predict_float4(PG_FUNCTION_ARGS) {
     FuncCallContext *funcctx; // function calling context
     PredictionResultData *prediction_result_data; // to store the values returned
-
     if (SRF_IS_FIRSTCALL()) {
         funcctx = SRF_FIRSTCALL_INIT();
         MemoryContext oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-
         const text *model_name_text = PG_GETARG_TEXT_PP(0);
         char *model_name = text_to_cstring(model_name_text);
         ArrayType *input_array = PG_GETARG_ARRAYTYPE_P(1);
@@ -143,17 +141,22 @@ pgm_predict_float4(PG_FUNCTION_ARGS) {
                         errmsg("pgm_predict_float4:input array must be of type float4, but it is of type %s",
                             format_type_be(ARR_ELEMTYPE(input_array)))));
         }
-
         ModelWrapper *model = load_model_by_name(model_name); // loading model
         if (model == NULL) {
             // the model is not found
-            ereport(ERROR, (errmsg("pgm_predict_float4: model %s not found", model_name)));
-            PG_RETURN_NULL();
+            elog(WARNING, "pgm_predict_float4: model %s is not found, no prediction is made", model_name);
+            SRF_RETURN_DONE(funcctx);
         }
 
         float *data = (float *) ARR_DATA_PTR(input_array); // TODO: currently only support float data
         TensorWrapper *input = tw_create_tensor(data, ARR_DIMS(input_array), ARR_NDIM(input_array));
         const TensorWrapper *output = forward(model, input); // get the prediction result
+        if (output == NULL) {
+            // error occurred during forward inference
+            elog(WARNING, "pgm_predict_float4: error occurred during model forward inference, no prediction is made");
+            elog(WARNING, "pgm_predict_float4: please check the log for more details");
+            SRF_RETURN_DONE(funcctx);
+        }
 
         // construct prediction result data
         prediction_result_data = (PredictionResultData *) palloc(sizeof(PredictionResultData));
@@ -244,12 +247,15 @@ pgm_store_model(PG_FUNCTION_ARGS) {
 /*
  * get the model id by the model name
  * @param model_name: the name of the model
- * @return model id
+ * @return model id if model is found, NULL otherwise
  */
 Datum
 pgm_get_model_id_by_name(PG_FUNCTION_ARGS) {
     const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
     const int model_id = get_model_id_by_name(model_name);
+    if (model_id == -1) {
+        PG_RETURN_NULL();
+    }
     PG_RETURN_INT32(model_id);
 }
 
@@ -270,34 +276,49 @@ pgm_get_model_id_by_name(PG_FUNCTION_ARGS) {
 Datum
 pgm_predict_table(PG_FUNCTION_ARGS) {
     Logger logger;
-    logger_init(&logger, 10);   // init the logger for testing
+    logger_init(&logger, 10); // init the logger for testing
     logger_start(&logger, "fetching data from table");
 
     const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
     const int batch_size = PG_GETARG_INT32(1);
     const char *table_name = text_to_cstring(PG_GETARG_TEXT_PP(2));
-    ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
-    int num_columns = ARR_DIMS(column_names_array)[0];
-    Datum *column_datums;   // hold the column names after deconstruction
-    bool *column_nulls;
-    deconstruct_array(column_names_array, TEXTOID, -1, false, 'i', &column_datums, &column_nulls, &num_columns);
+    // ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
+    const char *column_names_array = text_to_cstring(PG_GETARG_TEXT_PP(3));
+
+    // create a dummy column names array for testing
+    // TODO: replace this with the actual column names array
+    // column_names_array = "sepal_l,sepal_w,petal_l,petal_w";
+    elog(INFO, "%s", column_names_array);
+
+    // spit by comma is the number of columns
+    int num_columns = 1;
+    for (int i = 0; i < strlen(column_names_array); i++) {
+        if (column_names_array[i] == ',') {
+            num_columns++;
+        }
+    }
+
+    // int num_columns = ARR_DIMS(column_names_array)[0];
+    // Datum *column_datums;   // hold the column names after deconstruction
+    // bool *column_nulls;
+    // deconstruct_array(column_names_array, TEXTOID, -1, false, 'i', &column_datums, &column_nulls, &num_columns);
 
     // StringInfoData holds information about an extensible string.
     // @see pgslq/include/server/lib/stringinfo.h
-    StringInfoData columns;
-    initStringInfo(&columns);
+    // StringInfoData columns;
+    // initStringInfo(&columns);
 
-    for (int i = 0; i < num_columns; ++i) {
-        if (i > 0) {
-            appendStringInfoString(&columns, ", ");
-        }
-        appendStringInfoString(&columns, TextDatumGetCString(column_datums[i]));
-    }
+    // for (int i = 0; i < num_columns; ++i) {
+        // if (i > 0) {
+            // appendStringInfoString(&columns, ", ");
+        // }
+        // appendStringInfoString(&columns, TextDatumGetCString(column_datums[i]));
+    // }
 
     // build sql query
     StringInfoData query;
     initStringInfo(&query);
-    appendStringInfo(&query, "SELECT %s FROM %s", columns.data, table_name);
+    appendStringInfo(&query, "SELECT %s FROM %s", column_names_array, table_name);
 
     // execute query
     SPI_connect();
@@ -305,6 +326,7 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
         SPI_finish();
         ereport(ERROR, (errmsg("failed to execute query: %s", query.data)));
     }
+
     logger_end(&logger);
     logger_start(&logger, "forward inference");
     // get the result
@@ -316,7 +338,7 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
     ModelWrapper *model = load_model_by_name(model_name);
 
     int batch = 0;
-
+    TensorWrapper *output = NULL;
     for (int start = 0; start < num_rows; start += batch_size) {
         const int end = (start + batch_size > num_rows) ? num_rows : start + batch_size;
         const int current_batch_size = end - start;
@@ -334,9 +356,17 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
         TensorWrapper *input = tw_create_tensor(data, dims, 2);
 
         // forward inference
-        forward(model, input);
+        output = forward(model, input);
+        if (output == NULL) {
+            // error occurred during forward inference
+            tw_free_tensor(input);
+            tw_free_model(model);
+            pfree(data);
+            ereport(ERROR, (errmsg("pgm_predict_table: error occurred during model forward inference")));
+            PG_RETURN_NULL();
+        }
         batch++;
-        elog(INFO, "[batch %d] forward inference completed", batch);
+        // elog(INFO, "[batch %d] forward inference completed", batch);
 
         // clean up
         tw_free_tensor(input);
@@ -344,6 +374,7 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
     }
     logger_end(&logger);
     SPI_finish();
+
     // clean up
     tw_free_model(model);
     logger_print(&logger);

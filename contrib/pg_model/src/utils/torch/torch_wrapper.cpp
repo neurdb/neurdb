@@ -69,10 +69,15 @@ tw_forward(const ModelWrapper *tw_model, const TensorWrapper *input) {
     module->to(*static_cast<torch::Device *>(device)); // move module to device
     tensor_input->to(*static_cast<torch::Device *>(device)); // move tensor to device
     // forward inference
-    const auto output = module->forward({*tensor_input}).toTensor();
-    const auto tw_output = new TensorWrapper();
-    tw_output->tensor = new torch::Tensor(output);
-    return tw_output;
+    try {
+        const auto output = module->forward({*tensor_input}).toTensor();
+        const auto tw_output = new TensorWrapper();
+        tw_output->tensor = new torch::Tensor(output);
+        return tw_output;
+    } catch (const std::runtime_error &e) {
+        std::cerr << "Error during forward inference: " << e.what() << std::endl;
+        return nullptr;
+    }
 }
 
 bool

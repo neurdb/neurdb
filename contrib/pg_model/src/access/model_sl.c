@@ -146,7 +146,7 @@ load_model_by_id(int model_id) {
 ModelWrapper *
 load_model_by_name(const char *model_name) {
     // prepare the query, try to find the path of the model
-    const char *query = "SELECT model_path FROM model WHERE model_name = $1";
+    const char *query = "SELECT model_path, model_byte FROM model WHERE model_name = $1";
     Oid arg_types[1] = {TEXTOID};
     Datum values[1] = {CStringGetTextDatum(model_name)};
     const char nulls[1] = {' '};
@@ -163,28 +163,23 @@ load_model_by_name(const char *model_name) {
     }
 
     ModelWrapper *model = NULL;
+    Datum* model_path_datum = spi_get_single_result_p(&conn, 0);
+    Datum* model_bytea_datum = spi_get_single_result_p(&conn, 1);
 
-    const Datum* model_path_datum = spi_get_single_result(&conn);
-
-    if (model_path_datum == NULL) {
-        // no path found, try to load the model by bytea
-        query = "SELECT model_byte FROM model WHERE model_name = $1";
-        if (!spi_execute_query(&conn, query, 1, arg_types, values, nulls)) {
-            ereport(ERROR, (errmsg("load_model_by_name: unable to execute query")));
-        }
-        const Datum* model_bytea_datum = spi_get_single_result(&conn);
-        if (model_bytea_datum == NULL) {
-            ereport(ERROR, (errmsg("load_model_by_name: unable to find the model")));
-        }
-        bytea *model_bytea = DatumGetByteaP(*model_bytea_datum);
-        // load the model by bytea
-        model = load_model_by_bytea(model_bytea);
-    } else {
+    if (model_path_datum != NULL) {
         // load the model by path
         const char *model_path = TextDatumGetCString(*model_path_datum);
         model = load_model_by_path(model_path);
+        pfree(model_path_datum);
     }
-
+    if (model_bytea_datum != NULL) {
+        if (model == NULL) {
+            // load the model by bytea
+            bytea *model_bytea = DatumGetByteaP(*model_bytea_datum);
+            model = load_model_by_bytea(model_bytea);
+        }
+        pfree(model_bytea_datum);   // free the bytea datum
+    }
     // finish the SPI connection
     spi_finish(&conn);
     return model;
@@ -210,7 +205,12 @@ get_model_id_by_name(const char *model_name) {
     }
 
     const Datum *model_id_datum = spi_get_single_result(&conn);
-    const int model_id = DatumGetInt32(*model_id_datum);
+    int model_id;
+    if (model_id_datum == NULL) {
+        model_id = -1;      // return -1 if no model found
+    } else {
+        model_id = DatumGetInt32(*model_id_datum);
+    }
 
     // finish the SPI connection
     spi_finish(&conn);

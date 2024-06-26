@@ -60,7 +60,9 @@ spi_execute_query(SpiConnection *conn, const char *query, int nargs, Oid *arg_ty
                 return false;
             }
             conn->returned = true;
-            conn->prepared = false;     // one SPI connect might have multiple SPI_execute_plan calls, therefore reset the prepared flag
+            conn->prepared = false;
+            SPI_freeplan(conn->plan);  // free the plan after execution
+            // one SPI connect might have multiple SPI_execute_plan calls, therefore reset the prepared flag
             return true;
         }
     PG_CATCH(); {
@@ -94,24 +96,43 @@ spi_finish(SpiConnection *conn) {
 }
 
 /**
- * @description: get a single result from the SPI query execution
- * @return {char *} - the result in string format, NULL if no result
+ * @description: get the first column of the single result from the SPI query execution
+ * @return the result in Datum, NULL if no result
  * @see https://www.postgresql.org/docs/current/spi-spi-getvalue.html
  * @see https://www.postgresql.org/docs/current/spi-spi-execute.html
  */
 Datum *
 spi_get_single_result(SpiConnection *conn) {
-    if (conn->returned) {
+    return spi_get_single_result_p(conn, 0);
+}
+
+/**
+ * @description get a single result from the SPI query execution
+ * @param conn the SPI connection
+ * @param index the column index of the result
+ * @return the result in Datum, NULL if no result
+ */
+Datum *
+spi_get_single_result_p(SpiConnection *conn, const int index) {
+    // check if the query has been executed and returned, and if the result is not empty
+    if (conn->returned &&
+        SPI_tuptable != NULL &&
+        SPI_tuptable->vals != NULL &&
+        SPI_tuptable->vals[0] != NULL &&        // SPI_processed is the number of rows the (last) query returned
+        SPI_processed > 0 &&                    // @see https://www.postgresql.org/docs/current/spi-spi-execute.html
+        SPI_tuptable->tupdesc != NULL &&
+        SPI_tuptable->tupdesc->natts > index
+    ) {
         bool isnull;
         Datum *result = (Datum *) palloc(sizeof(Datum));
-        *result = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
+        *result = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, index + 1, &isnull);
         if (isnull) {
             pfree(result);
             return NULL;
         }
         return result;
     } else {
-        // no result to get
+        // no result to get from
         return NULL;
     }
 }
