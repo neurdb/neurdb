@@ -210,7 +210,12 @@ get_model_id_by_name(const char *model_name) {
     }
 
     const Datum *model_id_datum = spi_get_single_result(&conn);
-    const int model_id = DatumGetInt32(*model_id_datum);
+    int model_id;
+    if (model_id_datum == NULL) {
+        model_id = -1;      // return -1 if no model found
+    } else {
+        model_id = DatumGetInt32(*model_id_datum);
+    }
 
     // finish the SPI connection
     spi_finish(&conn);

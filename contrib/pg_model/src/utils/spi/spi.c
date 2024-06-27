@@ -60,7 +60,8 @@ spi_execute_query(SpiConnection *conn, const char *query, int nargs, Oid *arg_ty
                 return false;
             }
             conn->returned = true;
-            conn->prepared = false;     // one SPI connect might have multiple SPI_execute_plan calls, therefore reset the prepared flag
+            conn->prepared = false;
+            // one SPI connect might have multiple SPI_execute_plan calls, therefore reset the prepared flag
             return true;
         }
     PG_CATCH(); {
@@ -101,7 +102,14 @@ spi_finish(SpiConnection *conn) {
  */
 Datum *
 spi_get_single_result(SpiConnection *conn) {
-    if (conn->returned) {
+    elog(INFO, "START spi_get_single_result");
+    // check if the query has been executed and returned, and if the result is not empty
+    if (conn->returned && SPI_tuptable != NULL &&
+        SPI_tuptable->vals != NULL &&
+        SPI_tuptable->vals[0] != NULL &&
+        SPI_tuptable->tupdesc != NULL &&
+        SPI_tuptable->tupdesc->natts > 0
+    ) {
         bool isnull;
         Datum *result = (Datum *) palloc(sizeof(Datum));
         *result = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
@@ -111,7 +119,7 @@ spi_get_single_result(SpiConnection *conn) {
         }
         return result;
     } else {
-        // no result to get
+        // no result to get from
         return NULL;
     }
 }

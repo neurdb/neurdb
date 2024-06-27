@@ -244,12 +244,15 @@ pgm_store_model(PG_FUNCTION_ARGS) {
 /*
  * get the model id by the model name
  * @param model_name: the name of the model
- * @return model id
+ * @return model id if model is found, NULL otherwise
  */
 Datum
 pgm_get_model_id_by_name(PG_FUNCTION_ARGS) {
     const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
     const int model_id = get_model_id_by_name(model_name);
+    if (model_id == -1) {
+        PG_RETURN_NULL();
+    }
     PG_RETURN_INT32(model_id);
 }
 
