@@ -147,13 +147,19 @@ pgm_predict_float4(PG_FUNCTION_ARGS) {
         ModelWrapper *model = load_model_by_name(model_name); // loading model
         if (model == NULL) {
             // the model is not found
-            ereport(ERROR, (errmsg("pgm_predict_float4: model %s not found", model_name)));
-            PG_RETURN_NULL();
+            elog(WARNING, "pgm_predict_float4: model %s is not found, no prediction is made", model_name);
+            SRF_RETURN_DONE(funcctx);
         }
 
         float *data = (float *) ARR_DATA_PTR(input_array); // TODO: currently only support float data
         TensorWrapper *input = tw_create_tensor(data, ARR_DIMS(input_array), ARR_NDIM(input_array));
         const TensorWrapper *output = forward(model, input); // get the prediction result
+        if (output == NULL) {
+            // error occurred during forward inference
+            elog(WARNING, "pgm_predict_float4: error occurred during model forward inference, no prediction is made");
+            elog(WARNING, "pgm_predict_float4: please check the log for more details");
+            SRF_RETURN_DONE(funcctx);
+        }
 
         // construct prediction result data
         prediction_result_data = (PredictionResultData *) palloc(sizeof(PredictionResultData));
@@ -273,7 +279,7 @@ pgm_get_model_id_by_name(PG_FUNCTION_ARGS) {
 Datum
 pgm_predict_table(PG_FUNCTION_ARGS) {
     Logger logger;
-    logger_init(&logger, 10);   // init the logger for testing
+    logger_init(&logger, 10); // init the logger for testing
     logger_start(&logger, "fetching data from table");
 
     const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
@@ -333,7 +339,7 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
     ModelWrapper *model = load_model_by_name(model_name);
 
     int batch = 0;
-
+    TensorWrapper *output = NULL;
     for (int start = 0; start < num_rows; start += batch_size) {
         const int end = (start + batch_size > num_rows) ? num_rows : start + batch_size;
         const int current_batch_size = end - start;
@@ -351,7 +357,15 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
         TensorWrapper *input = tw_create_tensor(data, dims, 2);
 
         // forward inference
-        forward(model, input);
+        output = forward(model, input);
+        if (output == NULL) {
+            // error occurred during forward inference
+            tw_free_tensor(input);
+            tw_free_model(model);
+            pfree(data);
+            ereport(ERROR, (errmsg("pgm_predict_table: error occurred during model forward inference")));
+            PG_RETURN_NULL();
+        }
         batch++;
         // elog(INFO, "[batch %d] forward inference completed", batch);
 

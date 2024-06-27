@@ -174,11 +174,12 @@ load_model_by_name(const char *model_name) {
         }
         const Datum* model_bytea_datum = spi_get_single_result(&conn);
         if (model_bytea_datum == NULL) {
-            ereport(ERROR, (errmsg("load_model_by_name: unable to find the model")));
+            model = NULL;
+        } else {
+            bytea *model_bytea = DatumGetByteaP(*model_bytea_datum);
+            // load the model by bytea
+            model = load_model_by_bytea(model_bytea);
         }
-        bytea *model_bytea = DatumGetByteaP(*model_bytea_datum);
-        // load the model by bytea
-        model = load_model_by_bytea(model_bytea);
     } else {
         // load the model by path
         const char *model_path = TextDatumGetCString(*model_path_datum);
