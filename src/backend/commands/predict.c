@@ -131,7 +131,7 @@ exec_udf(const char *columns, const char *table, const char *whereClause)
 		InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 4, InvalidOid, NULL, NULL);
 
 		inferenceFCInfo->args[0].value = CStringGetTextDatum(modelName);
-		inferenceFCInfo->args[1].value = Int32GetDatum(1);
+		inferenceFCInfo->args[1].value = Int32GetDatum(100);
 		inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
 		inferenceFCInfo->args[3].value = CStringGetTextDatum(columns);
 

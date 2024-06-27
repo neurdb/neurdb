@@ -350,7 +350,7 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
         // forward inference
         forward(model, input);
         batch++;
-        elog(INFO, "[batch %d] forward inference completed", batch);
+        // elog(INFO, "[batch %d] forward inference completed", batch);
 
         // clean up
         tw_free_tensor(input);
