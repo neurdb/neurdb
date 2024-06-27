@@ -102,7 +102,6 @@ spi_finish(SpiConnection *conn) {
  */
 Datum *
 spi_get_single_result(SpiConnection *conn) {
-    elog(INFO, "START spi_get_single_result");
     // check if the query has been executed and returned, and if the result is not empty
     if (conn->returned && SPI_tuptable != NULL &&
         SPI_tuptable->vals != NULL &&
