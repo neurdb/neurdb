@@ -23,6 +23,10 @@ Batch size: 100 	Device: Intel(R) Xeon(R) W-2133 CPU @ 3.60GHz
 | Other (ms)           | 346.767 | 380.964 | 397.235  | 358.463   |
 | Total (ms)           | 471.387 | 740.004 | 1198.295 | 1437.063  |
 
+![forward_inferece execution time](./image/poc_forward_inference_number_of_samples.png)
+
+<div style="text-align: center; color: grey; font-size: 0.9em;">Figure 1: Forward Inference Execution Time in Native Python and In Database</div>
+
 ### Experiment 2
 
 We fix the number of samples to 1,000,000 and vary the batch size to 100, 500, 1,000, 2,000, and 5,000. The execution times for native Python environment inference and in-database inference are shown below.
@@ -47,5 +51,6 @@ Number of samples: 1,000,000	Device: Intel(R) Xeon(R) W-2133 CPU @ 3.60GHz
 | Other (ms)           | 354.183  | 639.775  | 475.551  | 435.974  |
 | Total (ms)           | 1587.853 | 1312.315 | 1106.681 | 1062.304 |
 
-
+![time vs batch size](./image/poc_time_vs_batch_size.png)
+<div style="text-align: center; color: grey; font-size: 0.9em;">Figure 2: Time vs Batch Size</div>
 
