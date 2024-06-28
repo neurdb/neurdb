@@ -127,11 +127,9 @@ Datum
 pgm_predict_float4(PG_FUNCTION_ARGS) {
     FuncCallContext *funcctx; // function calling context
     PredictionResultData *prediction_result_data; // to store the values returned
-
     if (SRF_IS_FIRSTCALL()) {
         funcctx = SRF_FIRSTCALL_INIT();
         MemoryContext oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-
         const text *model_name_text = PG_GETARG_TEXT_PP(0);
         char *model_name = text_to_cstring(model_name_text);
         ArrayType *input_array = PG_GETARG_ARRAYTYPE_P(1);
@@ -143,7 +141,6 @@ pgm_predict_float4(PG_FUNCTION_ARGS) {
                         errmsg("pgm_predict_float4:input array must be of type float4, but it is of type %s",
                             format_type_be(ARR_ELEMTYPE(input_array)))));
         }
-
         ModelWrapper *model = load_model_by_name(model_name); // loading model
         if (model == NULL) {
             // the model is not found
