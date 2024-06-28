@@ -285,11 +285,6 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
     // ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
     const char *column_names_array = text_to_cstring(PG_GETARG_TEXT_PP(3));
 
-    // create a dummy column names array for testing
-    // TODO: replace this with the actual column names array
-    // column_names_array = "sepal_l,sepal_w,petal_l,petal_w";
-    elog(INFO, "%s", column_names_array);
-
     // spit by comma is the number of columns
     int num_columns = 1;
     for (int i = 0; i < strlen(column_names_array); i++) {

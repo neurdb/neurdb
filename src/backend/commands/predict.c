@@ -207,7 +207,7 @@ ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereCl
     }
 
     /* Execute the UDF with extracted columns, table name, and where clause */
-    elog(INFO, "Executing UDF with columns: %s, table: %s, whereClause: %s", columns.data, tableName, whereClause);
+    elog(DEBUG1, "Executing UDF with columns: %s, table: %s, whereClause: %s", columns.data, tableName, whereClause);
     exec_udf(columns.data, tableName, whereClause);
 
     /* Free the list of targets */
