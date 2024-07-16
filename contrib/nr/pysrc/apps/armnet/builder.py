@@ -6,7 +6,7 @@ from apps.base.builder import BuilderBase
 import time
 from utils.date import timeSince
 from utils.metrics import AverageMeter, roc_auc_compute_fn
-import logging
+from logger.logger import logger
 from torch.utils.data import DataLoader
 import copy
 
@@ -29,7 +29,7 @@ class ARMNetModelBuilder(BuilderBase):
             self.args.ensemble,
             self.args.dnn_nlayer,
             self.args.dnn_nhid)
-        logging.info(vars(self.args))
+        logger.info(vars(self.args))
 
         # optimizer
         opt_metric = nn.BCEWithLogitsLoss(reduction='mean')
@@ -48,7 +48,7 @@ class ARMNetModelBuilder(BuilderBase):
         start_time = time.time()
 
         for epoch in range(self.args.epoch):
-            logging.info(f'Epoch [{epoch:3d}/{self.args.epoch:3d}]')
+            logger.info(f'Epoch [{epoch:3d}/{self.args.epoch:3d}]')
 
             # Training phase
             self.model.train()
@@ -77,12 +77,12 @@ class ARMNetModelBuilder(BuilderBase):
                 train_timestamp = time.time()
 
                 if batch_idx % self.args.report_freq == 0:
-                    logging.info(f'Epoch [{epoch:3d}/{self.args.epoch}][{batch_idx:3d}/{len(train_loader)}]\t'
-                                 f'{train_time_avg.val:.3f} ({train_time_avg.avg:.3f}) AUC {train_auc_avg.val:4f} '
-                                 f'({train_auc_avg.avg:4f}) Loss {train_loss_avg.val:8.4f} ({train_loss_avg.avg:8.4f})')
+                    logger.info(f'Epoch [{epoch:3d}/{self.args.epoch}][{batch_idx:3d}/{len(train_loader)}]\t'
+                                f'{train_time_avg.val:.3f} ({train_time_avg.avg:.3f}) AUC {train_auc_avg.val:4f} '
+                                f'({train_auc_avg.avg:4f}) Loss {train_loss_avg.val:8.4f} ({train_loss_avg.avg:8.4f})')
 
-            logging.info(f'train\tTime {timeSince(s=train_time_avg.sum):>12s} '
-                         f'AUC {train_auc_avg.avg:8.4f} Loss {train_loss_avg.avg:8.4f}')
+            logger.info(f'train\tTime {timeSince(s=train_time_avg.sum):>12s} '
+                        f'AUC {train_auc_avg.avg:8.4f} Loss {train_loss_avg.avg:8.4f}')
 
             # Validation phase
             valid_auc = self._evaluate(val_loader, opt_metric, 'val')
@@ -92,17 +92,17 @@ class ARMNetModelBuilder(BuilderBase):
             if valid_auc >= best_valid_auc:
                 patience_cnt = 0
                 best_valid_auc, best_test_auc = valid_auc, test_auc
-                logging.info(f'best valid auc: valid {valid_auc:.4f}, test {test_auc:.4f}')
+                logger.info(f'best valid auc: valid {valid_auc:.4f}, test {test_auc:.4f}')
             else:
                 patience_cnt += 1
-                logging.info(f'valid {valid_auc:.4f}, test {test_auc:.4f}')
-                logging.info(f'Early stopped, {patience_cnt}-th best auc at epoch {epoch - 1}')
+                logger.info(f'valid {valid_auc:.4f}, test {test_auc:.4f}')
+                logger.info(f'Early stopped, {patience_cnt}-th best auc at epoch {epoch - 1}')
             if patience_cnt >= self.args.patience:
-                logging.info(f'Final best valid auc {best_valid_auc:.4f}, with test auc {best_test_auc:.4f}')
+                logger.info(f'Final best valid auc {best_valid_auc:.4f}, with test auc {best_test_auc:.4f}')
                 break
 
         self.model.eval()
-        logging.info(f'Total running time for training/validation/test: {timeSince(since=start_time)}')
+        logger.info(f'Total running time for training/validation/test: {timeSince(since=start_time)}')
 
     def _evaluate(self, data_loader: DataLoader, opt_metric, namespace='val'):
         self.model.eval()
@@ -129,12 +129,12 @@ class ARMNetModelBuilder(BuilderBase):
                 timestamp = time.time()
 
                 if batch_idx % self.args.report_freq == 0:
-                    logging.info(f'{namespace}\tEpoch [{batch_idx:3d}/{len(data_loader)}]\t'
-                                 f'{time_avg.val:.3f} ({time_avg.avg:.3f}) AUC {auc_avg.val:4f} ({auc_avg.avg:4f}) '
-                                 f'Loss {loss_avg.val:8.4f} ({loss_avg.avg:8.4f})')
+                    logger.info(f'{namespace}\tEpoch [{batch_idx:3d}/{len(data_loader)}]\t'
+                                f'{time_avg.val:.3f} ({time_avg.avg:.3f}) AUC {auc_avg.val:4f} ({auc_avg.avg:4f}) '
+                                f'Loss {loss_avg.val:8.4f} ({loss_avg.avg:8.4f})')
 
-        logging.info(f'{namespace}\tTime {timeSince(s=time_avg.sum):>12s} '
-                     f'AUC {auc_avg.avg:8.4f} Loss {loss_avg.avg:8.4f}')
+        logger.info(f'{namespace}\tTime {timeSince(s=time_avg.sum):>12s} '
+                    f'AUC {auc_avg.avg:8.4f} Loss {loss_avg.avg:8.4f}')
         return auc_avg.avg
 
     def inference(self, data_loader: DataLoader):
@@ -149,5 +149,5 @@ class ARMNetModelBuilder(BuilderBase):
                 y = self.model(batch)
                 predictions.append(y.cpu().numpy().tolist())
 
-        logging.info(f'Total running time for inference: {timeSince(since=start_time)}')
+        logger.info(f'Total running time for inference: {timeSince(since=start_time)}')
         return predictions

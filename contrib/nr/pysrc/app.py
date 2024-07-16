@@ -1,11 +1,9 @@
-import json
 import traceback
 import orjson
-import logging
 from flask import Flask, request, jsonify, g
 from shared_config.config import parse_config_arguments
 from apps import build_model
-from logger.logger import configure_logging
+from logger.logger import logger
 from connection.pg_connect import DatabaseModelHandler
 from utils.dataset import libsvm_dataloader, build_inference_loader
 from utils.io import save_model_weight, load_model_weight
@@ -16,7 +14,6 @@ app = Flask(__name__)
 
 # Load config and initialize once
 config_args = parse_config_arguments("./config.ini")
-configure_logging(config_args)
 model_cache = ModelCache()
 
 db_connector = DatabaseModelHandler({
@@ -68,7 +65,7 @@ def model_train():
             "Errored": traceback.format_exc()
         }
         print(traceback.format_exc())
-        logging.error(orjson.dumps(error_message).decode('utf-8'))
+        logger.error(orjson.dumps(error_message).decode('utf-8'))
         return jsonify(error_message), 500
 
 
@@ -115,7 +112,7 @@ def model_inference():
             "res": "NA",
             "Errored": traceback.format_exc()
         }
-        logging.error(orjson.dumps(error_message).decode('utf-8'))
+        logger.error(orjson.dumps(error_message).decode('utf-8'))
         return jsonify(error_message), 500
 
 

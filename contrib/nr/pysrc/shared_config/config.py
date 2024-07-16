@@ -31,8 +31,6 @@ def parse_config_arguments(config_path: str) -> argparse.Namespace:
     args = argparse.Namespace()
 
     # Default config
-    args.log_folder = parser.get('DEFAULT', 'log_folder', fallback='logs')
-    args.log_name = parser.get('DEFAULT', 'log_name', fallback='app')
     args.base_dir = parser.get('DEFAULT', 'base_dir', fallback='.')
     args.model_repo = parser.get('DEFAULT', 'model_repo', fallback='./models')
 
