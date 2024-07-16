@@ -1,7 +1,5 @@
 import logging
 import os
-import calendar
-import time
 
 
 # Define a function to configure the logger
