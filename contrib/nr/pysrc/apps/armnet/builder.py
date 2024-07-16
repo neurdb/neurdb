@@ -8,13 +8,12 @@ import time
 from utils.date import timeSince
 from utils.metrics import AverageMeter, roc_auc_compute_fn
 from torch.utils.data import DataLoader
-import copy
 
 
 class ARMNetModelBuilder(BuilderBase):
     def __init__(self, args):
         super().__init__()
-        self.args = copy.copy(args)
+        self.args = args
 
     def train(self, train_loader: DataLoader, val_loader: DataLoader, test_loader: DataLoader):
 
