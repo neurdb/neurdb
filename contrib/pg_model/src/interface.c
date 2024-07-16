@@ -15,15 +15,15 @@
 
 PG_MODULE_MAGIC;
 
-PG_FUNCTION_INFO_V1(pgm_register_model);
+// PG_FUNCTION_INFO_V1(pgm_register_model);
 
-PG_FUNCTION_INFO_V1(pgm_unregister_model);
+// PG_FUNCTION_INFO_V1(pgm_unregister_model);
+
+// PG_FUNCTION_INFO_V1(pgm_get_model_id_by_name);
+
+// PG_FUNCTION_INFO_V1(pgm_store_model);
 
 PG_FUNCTION_INFO_V1(pgm_predict_float4);
-
-PG_FUNCTION_INFO_V1(pgm_get_model_id_by_name);
-
-PG_FUNCTION_INFO_V1(pgm_store_model);
 
 PG_FUNCTION_INFO_V1(pgm_predict_table);
 
@@ -59,62 +59,62 @@ typedef struct {
 
 /******** Public API ********/
 
-/*
- * register a model to the model table
- * @param model_name: the name of the model
- * @param model_path: the path of the model file (.pt)
- * @return true if success, false otherwise
- */
-Datum
-pgm_register_model(PG_FUNCTION_ARGS) {
-    // check the number of arguments
-    if (PG_NARGS() != 2) {
-        ereport(ERROR, (errmsg("pgm_register_model: %d arguments are required, but only %d provided", 2, PG_NARGS())));
-        PG_RETURN_BOOL(false);
-    }
-
-    const char *model_name = NULL;
-    const char *model_path = NULL;
-
-    model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
-    model_path = text_to_cstring(PG_GETARG_TEXT_PP(1));
-
-    // validate the model name and model path
-    if (strlen(model_name) == 0) {
-        ereport(ERROR, (errmsg("pgm_register_model: model name is empty")));
-    }
-    if (access(model_path, R_OK) != 0) {
-        ereport(ERROR, (errmsg("pgm_register_model: model path %s is not accessible", model_path)));
-    }
-    // register the model
-    const bool success = register_model(model_name, model_path);
-    PG_RETURN_BOOL(success);
-}
-
-/*
- * unregister a model from the model table, note that the model file will not be deleted
- * @param model_name: the name of the model
- * @return true if success, false otherwise
- */
-Datum
-pgm_unregister_model(PG_FUNCTION_ARGS) {
-    // check the number of arguments
-    if (PG_NARGS() != 1) {
-        ereport(ERROR,
-                (errmsg("pgm_unregister_model: %d arguments are required, but only %d provided", 1, PG_NARGS())));
-        PG_RETURN_BOOL(false);
-    }
-
-    const char *model_name = NULL;
-    model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
-    // validate the model name
-    if (strlen(model_name) == 0) {
-        ereport(ERROR, (errmsg("pgm_unregister_model: model name is empty")));
-    }
-    // drop the model
-    const bool success = unregister_model(model_name);
-    PG_RETURN_BOOL(success);
-}
+// /*
+//  * register a model to the model table
+//  * @param model_name: the name of the model
+//  * @param model_path: the path of the model file (.pt)
+//  * @return true if success, false otherwise
+//  */
+// Datum
+// pgm_register_model(PG_FUNCTION_ARGS) {
+//     // check the number of arguments
+//     if (PG_NARGS() != 2) {
+//         ereport(ERROR, (errmsg("pgm_register_model: %d arguments are required, but only %d provided", 2, PG_NARGS())));
+//         PG_RETURN_BOOL(false);
+//     }
+//
+//     const char *model_name = NULL;
+//     const char *model_path = NULL;
+//
+//     model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
+//     model_path = text_to_cstring(PG_GETARG_TEXT_PP(1));
+//
+//     // validate the model name and model path
+//     if (strlen(model_name) == 0) {
+//         ereport(ERROR, (errmsg("pgm_register_model: model name is empty")));
+//     }
+//     if (access(model_path, R_OK) != 0) {
+//         ereport(ERROR, (errmsg("pgm_register_model: model path %s is not accessible", model_path)));
+//     }
+//     // register the model
+//     const bool success = register_model(model_name, model_path);
+//     PG_RETURN_BOOL(success);
+// }
+//
+// /*
+//  * unregister a model from the model table, note that the model file will not be deleted
+//  * @param model_name: the name of the model
+//  * @return true if success, false otherwise
+//  */
+// Datum
+// pgm_unregister_model(PG_FUNCTION_ARGS) {
+//     // check the number of arguments
+//     if (PG_NARGS() != 1) {
+//         ereport(ERROR,
+//                 (errmsg("pgm_unregister_model: %d arguments are required, but only %d provided", 1, PG_NARGS())));
+//         PG_RETURN_BOOL(false);
+//     }
+//
+//     const char *model_name = NULL;
+//     model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
+//     // validate the model name
+//     if (strlen(model_name) == 0) {
+//         ereport(ERROR, (errmsg("pgm_unregister_model: model name is empty")));
+//     }
+//     // drop the model
+//     const bool success = unregister_model(model_name);
+//     PG_RETURN_BOOL(success);
+// }
 
 /*
  * make a prediction using a model
@@ -130,8 +130,11 @@ pgm_predict_float4(PG_FUNCTION_ARGS) {
     if (SRF_IS_FIRSTCALL()) {
         funcctx = SRF_FIRSTCALL_INIT();
         MemoryContext oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-        const text *model_name_text = PG_GETARG_TEXT_PP(0);
-        char *model_name = text_to_cstring(model_name_text);
+        // const text *model_name_text = PG_GETARG_TEXT_PP(0);
+        // char *model_name = text_to_cstring(model_name_text);
+        const int model_id = (int) PG_GETARG_INT32(0);
+        // the model id obtained from PG_GETARG_INT32 is signed int, same as int
+
         ArrayType *input_array = PG_GETARG_ARRAYTYPE_P(1);
 
         // check value types in the input array
@@ -141,10 +144,10 @@ pgm_predict_float4(PG_FUNCTION_ARGS) {
                         errmsg("pgm_predict_float4:input array must be of type float4, but it is of type %s",
                             format_type_be(ARR_ELEMTYPE(input_array)))));
         }
-        ModelWrapper *model = load_model_by_name(model_name); // loading model
+        ModelWrapper *model = load_model_by_id(model_id);
         if (model == NULL) {
             // the model is not found
-            elog(WARNING, "pgm_predict_float4: model %s is not found, no prediction is made", model_name);
+            elog(WARNING, "pgm_predict_float4: model %d is not found, no prediction is made", model_id);
             SRF_RETURN_DONE(funcctx);
         }
 
@@ -188,7 +191,7 @@ pgm_predict_float4(PG_FUNCTION_ARGS) {
         // free the model and tensors
         tw_free_model(model);
         tw_free_tensor(input);
-        pfree(model_name);
+        // pfree(model_name);
 
         MemoryContextSwitchTo(oldcontext); // switch back to the old context
     }
@@ -220,44 +223,44 @@ pgm_predict_float4(PG_FUNCTION_ARGS) {
     }
 }
 
-/**
- * store a model to the model table
- * @param model_name: the name of the model
- * @param model_path: the path of the model file (.pt)
- * @return true if success, false otherwise
- */
-Datum
-pgm_store_model(PG_FUNCTION_ARGS) {
-    if (PG_NARGS() != 2) {
-        ereport(ERROR, (errmsg("pgm_store_model: %d arguments are required, but only %d provided", 2, PG_NARGS())));
-        PG_RETURN_BOOL(false);
-    }
-
-    const char *model_name = NULL;
-    const char *model_path = NULL;
-    model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
-    model_path = text_to_cstring(PG_GETARG_TEXT_PP(1));
-
-    const ModelWrapper *model = tw_load_model_by_path(model_path); // this guarantees that the model file is accessible
-    const bool success = store_model(model_name, model);
-
-    PG_RETURN_BOOL(success);
-}
-
-/*
- * get the model id by the model name
- * @param model_name: the name of the model
- * @return model id if model is found, NULL otherwise
- */
-Datum
-pgm_get_model_id_by_name(PG_FUNCTION_ARGS) {
-    const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
-    const int model_id = get_model_id_by_name(model_name);
-    if (model_id == -1) {
-        PG_RETURN_NULL();
-    }
-    PG_RETURN_INT32(model_id);
-}
+// /**
+//  * store a model to the model table
+//  * @param model_name: the name of the model
+//  * @param model_path: the path of the model file (.pt)
+//  * @return true if success, false otherwise
+//  */
+// Datum
+// pgm_store_model(PG_FUNCTION_ARGS) {
+//     if (PG_NARGS() != 2) {
+//         ereport(ERROR, (errmsg("pgm_store_model: %d arguments are required, but only %d provided", 2, PG_NARGS())));
+//         PG_RETURN_BOOL(false);
+//     }
+//
+//     const char *model_name = NULL;
+//     const char *model_path = NULL;
+//     model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
+//     model_path = text_to_cstring(PG_GETARG_TEXT_PP(1));
+//
+//     const ModelWrapper *model = tw_load_model_by_path(model_path); // this guarantees that the model file is accessible
+//     const bool success = store_model(model_name, model);
+//
+//     PG_RETURN_BOOL(success);
+// }
+//
+// /*
+//  * get the model id by the model name
+//  * @param model_name: the name of the model
+//  * @return model id if model is found, NULL otherwise
+//  */
+// Datum
+// pgm_get_model_id_by_name(PG_FUNCTION_ARGS) {
+//     const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
+//     const int model_id = get_model_id_by_name(model_name);
+//     if (model_id == -1) {
+//         PG_RETURN_NULL();
+//     }
+//     PG_RETURN_INT32(model_id);
+// }
 
 /**
  * @description make a prediction using the model by passing a table
@@ -279,7 +282,8 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
     logger_init(&logger, 10); // init the logger for testing
     logger_start(&logger, "fetching data from table");
 
-    const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
+    // const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
+    const int model_id = PG_GETARG_INT32(0);
     const int batch_size = PG_GETARG_INT32(1);
     const char *table_name = text_to_cstring(PG_GETARG_TEXT_PP(2));
     // ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
@@ -330,7 +334,7 @@ pgm_predict_table(PG_FUNCTION_ARGS) {
     TupleDesc tupdesc = tuptable->tupdesc;
 
     // forward inference
-    ModelWrapper *model = load_model_by_name(model_name);
+    ModelWrapper *model = load_model_by_id(model_id);
 
     int batch = 0;
     TensorWrapper *output = NULL;

@@ -1,42 +1,48 @@
 -- script to define tables and functions for pg_model
 
 -- create tables
-CREATE TABLE IF NOT EXISTS model
+CREATE TABLE model
 (
     model_id   serial PRIMARY KEY,
-    model_name text NOT NULL,
-    model_path text,
-    model_byte bytea
+    model_meta bytea NOT NULL
+);
+
+CREATE TABLE layer
+(
+    model_id int REFERENCES model(model_id),
+    layer_id int,
+    create_time timestamp,
+    layer_data bytea
 );
 
 -- save and load functions
 -- @see {src/access/model_sl.h}
-CREATE FUNCTION pgm_register_model(model_name text, model_path text) RETURNS BOOL
-AS
-    'MODULE_PATHNAME',
-'pgm_register_model'
-    LANGUAGE C STRICT;
+-- CREATE FUNCTION pgm_register_model(model_name text, model_path text) RETURNS BOOL
+-- AS
+-- 'MODULE_PATHNAME',
+-- 'pgm_register_model'
+--     LANGUAGE C STRICT;
 
 -- @see {src/access/model_sl.h}
-CREATE FUNCTION pgm_unregister_model(model_name text) RETURNS BOOL
-AS
-    'MODULE_PATHNAME',
-'pgm_unregister_model'
-    LANGUAGE C STRICT;
+-- CREATE FUNCTION pgm_unregister_model(model_name text) RETURNS BOOL
+-- AS
+-- 'MODULE_PATHNAME',
+-- 'pgm_unregister_model'
+--     LANGUAGE C STRICT;
 
 -- @see {src/access/model_sl.h}
-CREATE FUNCTION pgm_store_model(model_name text, model_path text) RETURNS BOOL
-AS
-    'MODULE_PATHNAME',
-'pgm_store_model'
-    LANGUAGE C STRICT;
+-- CREATE FUNCTION pgm_store_model(model_name text, model_path text) RETURNS BOOL
+-- AS
+-- 'MODULE_PATHNAME',
+-- 'pgm_store_model'
+--     LANGUAGE C STRICT;
 
 -- @see {src/access/model_sl.h}
-CREATE FUNCTION pgm_get_model_id_by_name(model_name text) RETURNS INT
-AS
-    'MODULE_PATHNAME',
-'pgm_get_model_id_by_name'
-    LANGUAGE C STRICT;
+-- CREATE FUNCTION pgm_get_model_id_by_name(model_name text) RETURNS INT
+-- AS
+-- 'MODULE_PATHNAME',
+-- 'pgm_get_model_id_by_name'
+--     LANGUAGE C STRICT;
 
 -- inference functions
 -- @see {src/inference/model_inference.h}

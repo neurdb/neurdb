@@ -95,6 +95,9 @@ COPY init.sh /usr/local/bin/init.sh
 # Ensure the build script is executable
 RUN chmod +x /usr/local/bin/init.sh
 
+# Expose port
+EXPOSE 5432
+
 # Change to non-root user 'postgres' for database compilation and running the init script
 USER postgres
 # Command to run the init.sh script

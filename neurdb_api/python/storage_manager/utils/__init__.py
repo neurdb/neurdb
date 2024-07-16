@@ -1,0 +1,1 @@
+from storage_manager.utils.serializer import ModelSerializer

@@ -9,32 +9,40 @@
 #include <fmgr.h>
 
 
-/**
- * @description: register a model to the model table
- * @param {cstring}    model name
- * @param {cstring}    model path
- * @return {bool}      true if success, false otherwise
- */
-Datum
-pgm_register_model(PG_FUNCTION_ARGS);
-
-/**
- * @description: unregister a model from the model table,
- * note that the model file will not be deleted from the file system
- * @param {cstring}    model name
- * @return {bool}      true if success, false otherwise
- */
-Datum
-pgm_unregister_model(PG_FUNCTION_ARGS);
-
-/**
- * @desciption: store a model to the model table
- * @param {cstring}    model name
- * @param {cstring}    model path (in .pt file)
- * @return {bool}      true if success, false otherwise
- */
-Datum
-pgm_store_model(PG_FUNCTION_ARGS);
+// /**
+//  * @description: register a model to the model table
+//  * @param {cstring}    model name
+//  * @param {cstring}    model path
+//  * @return {bool}      true if success, false otherwise
+//  */
+// Datum
+// pgm_register_model(PG_FUNCTION_ARGS);
+//
+// /**
+//  * @description: unregister a model from the model table,
+//  * note that the model file will not be deleted from the file system
+//  * @param {cstring}    model name
+//  * @return {bool}      true if success, false otherwise
+//  */
+// Datum
+// pgm_unregister_model(PG_FUNCTION_ARGS);
+//
+// /**
+//  * @desciption: store a model to the model table
+//  * @param {cstring}    model name
+//  * @param {cstring}    model path (in .pt file)
+//  * @return {bool}      true if success, false otherwise
+//  */
+// Datum
+// pgm_store_model(PG_FUNCTION_ARGS);
+//
+// /**
+//  * @description: get the model id by the model name
+//  * @param {cstring}    model name
+//  * @return {int}       model id
+//  */
+// Datum
+// pgm_get_model_id_by_name(PG_FUNCTION_ARGS);
 
 /**
  * @description: make a prediction using the model
@@ -48,14 +56,6 @@ pgm_store_model(PG_FUNCTION_ARGS);
  */
 Datum
 pgm_predict_float4(PG_FUNCTION_ARGS);
-
-/**
- * @description: get the model id by the model name
- * @param {cstring}    model name
- * @return {int}       model id
- */
-Datum
-pgm_get_model_id_by_name(PG_FUNCTION_ARGS);
 
 /**
  * @description make a prediction using the model by passing a table
