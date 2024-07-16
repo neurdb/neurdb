@@ -1,0 +1,160 @@
+<mxfile host="app.diagrams.net" modified="2024-07-03T05:30:51.785Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" etag="A3bTMVn-Oaq6WyRroP26" version="24.6.4" type="device">
+  <diagram name="Page-1" id="8XE66PTTWrEcFHV8efwZ">
+    <mxGraphModel dx="562" dy="1114" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="nep_mTBAoV48JmN-1zuL-1" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;PostgreSQL&lt;/font&gt;&lt;/span&gt;&lt;div style=&quot;font-size: 16px;&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;Database&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="320" width="150" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-14" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="30" width="180" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-15" value="&lt;b&gt;StorageManager&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=default;" vertex="1" parent="1">
+          <mxGeometry x="430" y="30" width="180" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-16" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="30" width="190" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-17" value="&lt;b&gt;Utils&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=default;" vertex="1" parent="1">
+          <mxGeometry x="30" y="30" width="190" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-18" value="&lt;p style=&quot;line-height: 170%;&quot;&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;&lt;b&gt;ModelSerializer&lt;/b&gt;&lt;/span&gt;&lt;br&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="56.25" y="90" width="137.5" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-26" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="370" y="240" width="250" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-4" value="" style="rounded=0;whiteSpace=wrap;html=1;container=0;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="-40" width="290" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-5" value="&lt;b&gt;SQL&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=default;container=0;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="-40" width="290" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-9" value="&lt;p style=&quot;line-height: 170%;&quot;&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;save_model load_model &lt;/span&gt;&lt;span style=&quot;font-size: 14px; background-color: initial;&quot;&gt;update_model delete_model&lt;/span&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#36393d;container=0;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="-18" y="75" width="100" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-10" value="Database" style="rounded=0;whiteSpace=wrap;html=1;container=0;fillColor=#eeeeee;strokeColor=#36393d;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="150" y="75" width="80" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-55" value="&lt;b&gt;NeurDB&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="-18" y="40" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-56" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="nep_mTBAoV48JmN-1zuL-26" source="nep_mTBAoV48JmN-1zuL-9" target="nep_mTBAoV48JmN-1zuL-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="50" y="70" as="sourcePoint" />
+            <mxPoint x="100" y="20" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-69" value="&lt;b&gt;Database&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="150" y="40" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-72" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;Layer&lt;/span&gt;&lt;br&gt;&lt;div&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Entity&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=#36393d;fillColor=#eeeeee;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="93" y="105" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-75" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;Model&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Entity&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=#36393d;fillColor=#eeeeee;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-26">
+          <mxGeometry x="93" y="75" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="nep_mTBAoV48JmN-1zuL-18" target="nep_mTBAoV48JmN-1zuL-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="115" />
+              <mxPoint x="290" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="nep_mTBAoV48JmN-1zuL-29" target="nep_mTBAoV48JmN-1zuL-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="115" />
+              <mxPoint x="290" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-29" value="save_model&lt;div&gt;load_model&lt;/div&gt;&lt;div&gt;update_model&lt;/div&gt;&lt;div&gt;delete_model&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="470" y="80" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="650" y="115.0344827586207" as="sourcePoint" />
+            <mxPoint x="570" y="115" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-30" value="PyTorch&lt;div&gt;Models&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="70" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-40" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;Module.nn&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=default;dashed=1;fillColor=default;" vertex="1" parent="1">
+          <mxGeometry x="330" y="105" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-44" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;ModelStorage.Pickled&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=#36393d;fillColor=#cce5ff;" vertex="1" parent="1">
+          <mxGeometry x="235" y="198" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-22" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="200" width="160" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-23" value="&lt;b&gt;Common&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=default;" vertex="1" parent="1">
+          <mxGeometry x="30" y="200" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-48" value="ModelStorage" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#cce5ff;strokeColor=#36393d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-49" value="LayerStorage" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#eeeeee;strokeColor=#36393d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="310" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-50" value="LayerSequenceStorage" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#eeeeee;strokeColor=#36393d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="350" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-52" value="" style="curved=1;endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="222" as="sourcePoint" />
+            <mxPoint x="110" y="292.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="280" y="249" />
+              <mxPoint x="230" y="289" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-67" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="643" y="168" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-58" value="" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;dashed=1;dashPattern=12 12;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-67">
+          <mxGeometry width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-66" value="" style="group" vertex="1" connectable="0" parent="nep_mTBAoV48JmN-1zuL-67">
+          <mxGeometry x="15" y="6" width="145" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-59" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-66">
+          <mxGeometry y="5" width="25" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-60" value="APIs that expose to the user" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-66">
+          <mxGeometry x="30" width="115" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-61" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#36393d;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-66">
+          <mxGeometry y="40" width="25" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-62" value="&lt;p style=&quot;text-align: justify; line-height: 60%;&quot;&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;Intermediate methods, they are safe enough, but not sharing with the user by design&lt;/font&gt;&lt;/p&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-66">
+          <mxGeometry x="30" y="31.5" width="115" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-64" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#36393d;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-66">
+          <mxGeometry y="76" width="25" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-65" value="Not expose to the user" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="nep_mTBAoV48JmN-1zuL-66">
+          <mxGeometry x="30" y="71" width="115" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.009;entryY=0.358;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="nep_mTBAoV48JmN-1zuL-10" target="nep_mTBAoV48JmN-1zuL-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nep_mTBAoV48JmN-1zuL-73" value="" style="curved=1;endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="nep_mTBAoV48JmN-1zuL-72">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="490" y="480" as="sourcePoint" />
+            <mxPoint x="110" y="405" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="460" y="460" />
+              <mxPoint x="240" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
