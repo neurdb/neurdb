@@ -13,9 +13,12 @@ set(PostgreSQL_SHAREDIR "${PostgreSQL_ROOT}/share")
 find_package(PostgreSQL REQUIRED)
 include_directories(${PostgreSQL_INCLUDE_DIRS})
 
+find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIRS})
+
 FILE(GLOB_RECURSE SOURCES "src/*.c")
 add_library(nr_preprocessing SHARED ${SOURCES})
-target_link_libraries(nr_preprocessing ${PostgreSQL_LIBRARIES})
+target_link_libraries(nr_preprocessing ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES})
 
 install(TARGETS nr_preprocessing DESTINATION ${PostgreSQL_LIBDIR})
 install(FILES sql/nr_preprocessing--1.0.0.sql DESTINATION ${PostgreSQL_SHAREDIR}/extension)

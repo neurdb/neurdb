@@ -4,11 +4,9 @@
 #include <utils/array.h>
 #include <executor/spi.h>
 
-#include <stdio.h>
-
-
 #include "labeling/encode.h"
 #include "utils/network/http.h"
+
 
 PG_MODULE_MAGIC;
 
@@ -36,7 +34,7 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
  * @return Table
  */
 Datum nr_inference(PG_FUNCTION_ARGS) {
-    char* model_name = PG_GETARG_INT32(0); // model name
+    char* model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     int model_id = PG_GETARG_INT32(1); // model id
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
     int batch_size = PG_GETARG_INT32(3); // batch size
