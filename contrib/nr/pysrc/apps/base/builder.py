@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from torch.utils.data import DataLoader
-import torch.nn as nn
 
 
 class BuilderBase(ABC):
