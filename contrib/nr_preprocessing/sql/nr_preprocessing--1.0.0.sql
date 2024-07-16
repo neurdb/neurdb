@@ -1,4 +1,4 @@
-CREATE FUNCTION nr_inference(model_id int, table_name text, batch_size int, columns text[])
+CREATE FUNCTION nr_inference(model_name text, model_id int, table_name text, batch_size int, columns text[])
     RETURNS SETOF RECORD
 AS
 'MODULE_PATHNAME',
@@ -6,7 +6,7 @@ AS
     LANGUAGE C STRICT;
 
 
-CREATE FUNCTION nr_train(model_id int, table_name text, batch_size int, columns text[], target text)
+CREATE FUNCTION nr_train(model_name text, table_name text, batch_size int, columns text[], target text)
     RETURNS BOOL
 AS
 'MODULE_PATHNAME',

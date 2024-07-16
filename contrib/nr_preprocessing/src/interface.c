@@ -27,6 +27,7 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
  *     2.1 If not, it performs one-hot encoding on the specified columns (TODO: this is not implemented yet)
  *     2.2 If yes, it continues to the next step
  * 3. It convert the data to libsvm format, and foward the data to the python server
+ * @param model_name text The name of the model
  * @param model_id integer The id of the model to be used in the inference
  * @param table_name text The name of the table to be used in the inference
  * @param batch_size integer The batch size of the input data
@@ -34,10 +35,11 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
  * @return Table
  */
 Datum nr_inference(PG_FUNCTION_ARGS) {
-    int model_id = PG_GETARG_INT32(0); // model id
-    char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1)); // table name
-    int batch_size = PG_GETARG_INT32(2); // batch size
-    ArrayType *columns = PG_GETARG_ARRAYTYPE_P(3);
+    char* model_name = PG_GETARG_INT32(0); // model name
+    int model_id = PG_GETARG_INT32(1); // model id
+    char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
+    int batch_size = PG_GETARG_INT32(3); // batch size
+    ArrayType *columns = PG_GETARG_ARRAYTYPE_P(4);
     int n_columns;
     char **column_names = text_array2char_array(columns, &n_columns); // column names
 
@@ -131,7 +133,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 
 /**
  * Train the model
- * @param model_id int The id of the model to be trained
+ * @param model_name int The name of the model to be trained
  * @param table_name text The name of the table to be used in the training
  * @param batch_size int The batch size of the input data
  * @param features text[] Columns to be used in the training
@@ -139,7 +141,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
  * @return void
  */
 Datum nr_train(PG_FUNCTION_ARGS) {
-    int model_id = PG_GETARG_INT32(0); // model id
+    char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1)); // table name
     int batch_size = PG_GETARG_INT32(2); // batch size
     ArrayType *features = PG_GETARG_ARRAYTYPE_P(3);
@@ -228,12 +230,14 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     }
     SPI_finish();
 
-    File *fp = fopen("/home/siqi/Desktop/neurdb-local/neurdb-dev/contrib/nr_preprocessing/libsvm_data.libsvm", "w");
-    if (fp == NULL) {
-        elog(ERROR, "Failed to open file");
-    }
-    fprintf(fp, "%s", libsvm_data.data);
-    fclose(fp);
+    // File *fp = fopen("/home/siqi/Desktop/neurdb-local/neurdb-dev/contrib/nr_preprocessing/libsvm_data.libsvm", "w");
+    // if (fp == NULL) {
+    //     elog(ERROR, "Failed to open file");
+    // }
+    // fprintf(fp, "%s", libsvm_data.data);
+    // fclose(fp);
+
+    // send the data to the python server
 
     // clean up
     pfree(table_name);
