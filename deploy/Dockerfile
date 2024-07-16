@@ -32,6 +32,7 @@ RUN apt-get update && \
     pkg-config \
     libclang-dev \
     llvm-dev \
+    libcurl4-openssl-dev \
     clang \
     flex \
     bison \
