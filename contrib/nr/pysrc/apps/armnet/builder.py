@@ -1,3 +1,4 @@
+from logger.logger import logger
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -6,7 +7,6 @@ from apps.base.builder import BuilderBase
 import time
 from utils.date import timeSince
 from utils.metrics import AverageMeter, roc_auc_compute_fn
-from logger.logger import logger
 from torch.utils.data import DataLoader
 import copy
 

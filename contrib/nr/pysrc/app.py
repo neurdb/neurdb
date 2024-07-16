@@ -1,9 +1,9 @@
+from logger.logger import logger
 import traceback
 import orjson
 from flask import Flask, request, jsonify, g
 from shared_config.config import parse_config_arguments
 from apps import build_model
-from logger.logger import logger
 from connection.pg_connect import DatabaseModelHandler
 from utils.dataset import libsvm_dataloader, build_inference_loader
 from utils.io import save_model_weight, load_model_weight
