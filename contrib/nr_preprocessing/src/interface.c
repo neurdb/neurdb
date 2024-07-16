@@ -8,6 +8,7 @@
 
 
 #include "labeling/encode.h"
+#include "utils/network/http.h"
 
 PG_MODULE_MAGIC;
 
@@ -113,12 +114,15 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     }
     SPI_finish();
 
-    File *fp = fopen("/home/siqi/Desktop/neurdb-local/neurdb-dev/contrib/nr_preprocessing/libsvm_data.libsvm", "w");
-    if (fp == NULL) {
-        elog(ERROR, "Failed to open file");
-    }
-    fprintf(fp, "%s", libsvm_data.data);
-    fclose(fp);
+    // send inference request to the Python Server
+    request_inference(libsvm_data.data, model_name, model_id);
+
+    // File *fp = fopen("/home/siqi/Desktop/neurdb-local/neurdb-dev/contrib/nr_preprocessing/libsvm_data.libsvm", "w");
+    // if (fp == NULL) {
+    //     elog(ERROR, "Failed to open file");
+    // }
+    // fprintf(fp, "%s", libsvm_data.data);
+    // fclose(fp);
 
     // clean up
     pfree(table_name);
@@ -229,6 +233,9 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         pfree(row_data.data);
     }
     SPI_finish();
+
+    // send training request to the Python Server
+    request_train(libsvm_data.data, batch_size, model_name);
 
     // File *fp = fopen("/home/siqi/Desktop/neurdb-local/neurdb-dev/contrib/nr_preprocessing/libsvm_data.libsvm", "w");
     // if (fp == NULL) {
