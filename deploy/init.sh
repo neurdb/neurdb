@@ -58,13 +58,22 @@ echo "Python Server started!"
 #echo "Install NR Extension Done"
 
 # Compile nr_model extension
-cd $NEURDBPATH/contrib/pg_model
+#cd $NEURDBPATH/contrib/pg_model
+#make
+#make install
+#cp pg_model.control $NEURDBPATH/psql/share/postgresql/extension
+#cp sql/pg_model--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
+#cp build/libpg_model.so $NEURDBPATH/psql/lib/postgresql
+#echo "Install NR Model Extension Done"
+
+# Compile nr_preprocessing extension
+cd $NEURDBPATH/contrib/nr_preprocessing
 make
 make install
-cp pg_model.control $NEURDBPATH/psql/share/postgresql/extension
-cp sql/pg_model--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
-cp build/libpg_model.so $NEURDBPATH/psql/lib/postgresql
-echo "Install NR Model Extension Done"
+cp nr_preprocessing.control $NEURDBPATH/psql/share/postgresql/extension
+cp sql/nr_preprocessing--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
+cp build/libnr_preprocessing.so $NEURDBPATH/psql/lib/postgresql
+echo "Install NR Preprocessing Extension Done"
 
 echo "Plese use 'control + c' to exist the logging print"
 
