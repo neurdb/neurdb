@@ -44,7 +44,7 @@ def test_inference_endpoint(file_path, model_name, model_id):
 
 if __name__ == "__main__":
     # Test sending the libsvm file to train endpoint
-    _file_path = './dataset/frappe/test.libsvm'
+    _file_path = '../../../dataset/frappe/test.libsvm'
     _batch_size = 32  # Example batch size
     _model_name = 'armnet'  # Example model name
 
