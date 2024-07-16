@@ -102,7 +102,7 @@ class ARMNetModelBuilder(BuilderBase):
                 break
 
         self.model.eval()
-        logging.info(f'Total running time: {timeSince(since=start_time)}')
+        logging.info(f'Total running time for training/validation/test: {timeSince(since=start_time)}')
 
     def _evaluate(self, data_loader: DataLoader, opt_metric, namespace='val'):
         self.model.eval()
@@ -138,6 +138,7 @@ class ARMNetModelBuilder(BuilderBase):
         return auc_avg.avg
 
     def inference(self, data_loader: DataLoader):
+        start_time = time.time()
         predictions = []
         with torch.no_grad():
             for batch in data_loader:
@@ -148,4 +149,5 @@ class ARMNetModelBuilder(BuilderBase):
                 y = self.model(batch)
                 predictions.append(y.cpu().numpy().tolist())
 
+        logging.info(f'Total running time for inference: {timeSince(since=start_time)}')
         return predictions
