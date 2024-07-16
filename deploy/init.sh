@@ -75,7 +75,7 @@ cp sql/nr_preprocessing--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
 cp build/libnr_preprocessing.so $NEURDBPATH/psql/lib/postgresql
 echo "Install NR Preprocessing Extension Done"
 
-echo "Plese use 'control + c' to exist the logging print"
+echo "Please use 'control + c' to exist the logging print"
 
 # Continue
 tail -f /dev/null
