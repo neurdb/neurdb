@@ -1,4 +1,21 @@
 import re
+import os
+import torch
+import random
+import numpy as np
+
+
+def seed_everything(seed=2022):
+    '''
+    [reference]
+    https://gist.github.com/KirillVladimirov/005ec7f762293d2321385580d3dbe335
+    '''
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
 
 
 def parse_conditions(input_str):
@@ -14,6 +31,3 @@ def parse_conditions(input_str):
 
     # Join all conditions with 'AND'
     return " AND ".join(conditions)
-
-# input_str = "{BOOLEXPR :boolop and :args ({A_EXPR :name (\"=\") :lexpr {COLUMNREF :fields (\"cn\" \"country_code\") :location 74} :rexpr {A_CONST :val \"[us]\" :location 91} :location 90} {A_EXPR :name (\"=\") :lexpr {COLUMNREF :fields (\"k\" \"keyword\") :location 104} :rexpr {A_CONST :val \"character-name-in-title\" :location 115} :location 114} {A_EXPR :name (\"=\") :lexpr {COLUMNREF :fields (\"cn\" \"id\") :location 147} :rexpr {COLUMNREF :fields (\"mc\" \"company_id\") :location 155} :location 153}) :location 100}"
-# print(parse_conditions(input_str))
