@@ -6,9 +6,8 @@ import time
 
 # Define a function to configure the logger
 def configure_logging():
-    ts = calendar.timegm(time.gmtime())
-    log_folder = './alg_server_l ogs'
-    log_file_name = f"app_{ts}.log"
+    log_folder = './'
+    log_file_name = "app.log"
     log_file_path = os.path.join(log_folder, log_file_name)
 
     # Create the log directory if it doesn't exist
