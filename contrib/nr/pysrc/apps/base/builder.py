@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import List
+import numpy as np
 from torch.utils.data import DataLoader
 
 
@@ -40,7 +42,7 @@ class BuilderBase(ABC):
         pass
 
     @abstractmethod
-    def inference(self, test_loader: DataLoader):
+    def inference(self, test_loader: DataLoader) -> List[np.ndarray]:
         """
         Evaluate the model.
         """

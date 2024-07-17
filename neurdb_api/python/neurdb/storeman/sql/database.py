@@ -1,4 +1,5 @@
 from datetime import datetime
+from pprint import pprint
 from typing import List, Optional
 
 import psycopg2
@@ -65,12 +66,17 @@ class NeurDB:
         # if two layers have the same layer_id, the one with the latest create_time is kept,
         # all layers are sorted by layer_id from smallest to largest
         layers = sorted(
-            layers, key=lambda x: (x[1], x[2]), reverse=False
+            layers, key=lambda x: (x[1], datetime.now() - x[2]), reverse=False
         )  # sort in ascending order
-        layers = [layers[0]] + [
-            layers[i] for i in range(1, len(layers)) if layers[i][1] != layers[i - 1][1]
-        ]
-        layer_sequence_pickled = [layer[3] for layer in layers]
+        
+        selected_layers = [layers[0]]
+        for i in range(1, len(layers)):
+            if layers[i][1] != layers[i - 1][1]:
+                selected_layers.append(layers[i])
+        
+        [print(f"[layer] model_id={x[0]} layer_id={x[1]} create_time={x[2]}") for x in selected_layers]
+        
+        layer_sequence_pickled = [layer[3] for layer in selected_layers]
 
         return ModelStorage.Pickled(model_meta, layer_sequence_pickled)
 
@@ -91,7 +97,7 @@ class NeurDB:
         self.database.insert(
             "layer",
             ["model_id", "layer_id", "create_time", "layer_data"],
-            [model_id, layer_id, "now()", layer_data],
+            [model_id, layer_id, datetime.now().isoformat(), layer_data],
         )
 
     def delete_model(self, model_id: int):

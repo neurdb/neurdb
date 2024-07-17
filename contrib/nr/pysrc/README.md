@@ -29,6 +29,12 @@ Train & Inference
 python cli.py -ti
 ```
 
+Finetune existing model (if MODEL_ID exists)
+
+```sh
+python cli.py -ti -m MODEL_ID
+```
+
 Inference only
 
 ```sh
