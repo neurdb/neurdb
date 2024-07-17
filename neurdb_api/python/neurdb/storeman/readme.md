@@ -10,7 +10,7 @@ The APIs provided by the Storage Manager are as shown below.
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | `ModelSerializer.serialize_model(model: torch.nn.Model) -> ModelStorage.Pickled` | Serialize a `torch.nn.Model` into a `ModelStorage.Pickled` object. |
 | `ModelSerializer.deserialize_model(model_pickled: ModelStorage.Pickled) -> torch.nn.Module` | Deserialize a `ModelStorage.Pickled` object into a `torch.nn.Model`. |
-| `NeurDB(db_name: str, db_user: str, db_host: str, db_port: str) -> NeurDB` | Creates a `NeurDB` object to interact with the database. Defaults are taken from `Configuration.py` under the `storage_manager.config` package. You can specify values when creating the object or modify global parameters in `Configuration.py`. |
+| `NeurDB(db_name: str, db_user: str, db_host: str, db_port: str) -> NeurDB` | Creates a `NeurDB` object to interact with the database. Defaults are taken from `Configuration.py` under the `storeman.config` package. You can specify values when creating the object or modify global parameters in `Configuration.py`. |
 | `neurdb_object.save_model(model_storage_pickle: ModelStorage.Pickled) -> int` | Save a model to the database. The model's id will be returned. Layer-level storage is handled within this method. |
 | `neurdb_object.load_model(model_id: int) -> ModelStorage.Pickled` | Loads a model from the database using its ID.                |
 | `neurdb_object.update_model(model_id: int, layer_id: int, layer_data: bytes) -> None` | Updates a specific layer of the model. The `layer_id` defaults to the layer's sequence in the model, starting from 0. |

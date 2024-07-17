@@ -1,4 +1,4 @@
-from storage_manager.common import ModelStorage
+from ..common import ModelStorage
 from io import BytesIO
 import torch
 import pickle
@@ -39,6 +39,6 @@ class ModelSerializer:
         """
         buffer = BytesIO(layer_bytes)
         meta = pickle.load(buffer)
-        layer = meta['class'](**meta['init_params'])
-        layer.load_state_dict(meta['state_dict'])
+        layer = meta["class"](**meta["init_params"])
+        layer.load_state_dict(meta["state_dict"])
         return layer

@@ -1,4 +1,4 @@
-from logger.logger import logger
+from logger.logger import logger, configure_logging
 import traceback
 import orjson
 from flask import Flask, request, jsonify, g
@@ -9,6 +9,8 @@ from utils.dataset import libsvm_dataloader, build_inference_loader
 from utils.io import save_model_weight, load_model_weight
 from io import BytesIO
 from cache.model_cache import ModelCache
+
+configure_logging("./app.log")
 
 app = Flask(__name__)
 

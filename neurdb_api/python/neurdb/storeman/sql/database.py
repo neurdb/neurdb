@@ -2,9 +2,9 @@ from datetime import datetime
 from typing import List, Optional
 
 import psycopg2
-from storage_manager.config import Configuration
-from storage_manager.common.storage import ModelStorage
-from storage_manager.sql.entity import ModelEntity, LayerEntity
+from ..config import Configuration
+from ..common.storage import ModelStorage
+from .entity import ModelEntity, LayerEntity
 
 
 class NeurDB:
@@ -48,9 +48,12 @@ class NeurDB:
         @param int model_id: model id
         @return: ModelStorage.Pickled
         """
-        model_meta = self.database.select(
-            "model", ["model_meta"], ["model_id = %s"], [model_id]
-        )[0][0].tobytes()
+        try:
+            model_meta = self.database.select(
+                "model", ["model_meta"], ["model_id = %s"], [model_id]
+            )[0][0].tobytes()
+        except IndexError:
+            raise FileNotFoundError(f"cannot find model id: {model_id}")
 
         layers = self.database.select(
             "layer",
@@ -132,11 +135,15 @@ class NeurDB:
         """
         self.database.insert("model", ["model_meta"], [model_entity.model_meta])
 
+        # model_id
         return self.database.select(
-            "model", ["model_id"], ["model_meta = %s"], [model_entity.model_meta]
-        )[0][
-            0
-        ]  # model_id
+            "model",
+            ["model_id"],
+            ["model_meta = %s"],
+            [model_entity.model_meta],
+            order_by="model_id",
+            ascending=False,
+        )[0][0]
 
     def _save_layer_entity(self, layer_entity: LayerEntity) -> None:
         """
@@ -179,6 +186,8 @@ class Database:
         columns: List[str],
         conditions: Optional[List[str]] = None,
         condition_values: Optional[List] = None,
+        order_by: Optional[str] = None,
+        ascending: bool = True,
     ) -> list:
         """
         Selects data from the database
@@ -196,6 +205,11 @@ class Database:
             condition_values = []
 
         query = f"SELECT {columns_str} FROM {table} WHERE {conditions_str}"
+        if order_by:
+            query += f" ORDER BY {order_by}"
+        if not ascending:
+            query += " DESC"
+
         self.cursor.execute(query, condition_values)
         return self.cursor.fetchall()
 
