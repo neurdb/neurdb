@@ -14,6 +14,8 @@ PG_FUNCTION_INFO_V1(nr_inference);
 
 PG_FUNCTION_INFO_V1(nr_train);
 
+PG_FUNCTION_INFO_V1(nr_finetune);
+
 
 // ******** Helper functions ********
 char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
@@ -217,6 +219,109 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
     // send training request to the Python Server
     request_train(libsvm_data.data, batch_size, model_name);
+
+    // clean up
+    pfree(table_name);
+    pfree(features);
+    pfree(target);
+    for (int i = 0; i < n_features; ++i) {
+        pfree(feature_names[i]);
+    }
+    pfree(feature_names);
+    PG_RETURN_NULL();
+}
+
+
+/**
+ * Resquest the server to finetune a model
+ * @param libsvm_data char* Finetune data in libsvm format
+ * @param model_name char* Model name
+ * @param model_id int Trained model id
+ * @param batch_size int Batch size in finetune
+ */
+Datum nr_finetune(PG_FUNCTION_ARGS) {
+    char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
+    int model_id = PG_GETARG_INT32(1); // model id
+    char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
+    int batch_size = PG_GETARG_INT32(3); // batch size
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(4);
+    int n_features;
+    char **feature_names = text_array2char_array(features, &n_features); // feature names
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(5));    // target column
+
+    // prepare the query
+    StringInfoData query;
+    initStringInfo(&query);
+    appendStringInfo(&query, "SELECT ");
+    for (int i = 0; i < n_features; ++i) {
+        if (i > 0) {
+            appendStringInfoString(&query, ", ");
+        }
+        appendStringInfoString(&query, feature_names[i]);
+    }
+    appendStringInfo(&query, ", %s FROM %s", target, table_name);
+
+    // calling SPI execution
+    SPI_connect();
+    SPI_execute(query.data, true, 0);
+
+    // get the query result
+    SPITupleTable *tuptable = SPI_tuptable;
+    TupleDesc tupdesc = tuptable->tupdesc;
+    int processed_rows = SPI_processed;
+    StringInfoData libsvm_data;
+    initStringInfo(&libsvm_data);
+
+    // build libsvm format data
+    for (int i = 0; i < processed_rows; i++) {
+        StringInfoData row_data;
+        initStringInfo(&row_data);
+        // add label
+        bool is_null;
+        Datum value = SPI_getbinval(tuptable->vals[i], tupdesc, n_features + 1, &is_null);
+        appendStringInfo(&row_data, "%d", DatumGetInt32(value));
+        // add features
+        for (int col = 0; col < n_features; col++) {
+            value = SPI_getbinval(tuptable->vals[i], tupdesc, col + 1, &is_null);
+            // check the type of value
+            int type = SPI_gettypeid(tupdesc, col + 1);
+            switch (type) {
+                case INT2OID:
+                    appendStringInfo(&row_data, " %d:%hd", col + 1, DatumGetInt16(value));
+                    break;
+                case INT4OID:
+                    appendStringInfo(&row_data, " %d:%d", col + 1, DatumGetInt32(value));
+                    break;
+                case INT8OID:
+                    appendStringInfo(&row_data, " %d:%ld", col + 1, DatumGetInt64(value));
+                    break;
+                case FLOAT4OID:
+                    appendStringInfo(&row_data, " %d:%f", col + 1, DatumGetFloat4(value));
+                    break;
+                case FLOAT8OID:
+                    appendStringInfo(&row_data, " %d:%lf", col + 1, DatumGetFloat8(value));
+                    break;
+                case TEXTOID:
+                case VARCHAROID:
+                case CHAROID:
+                    // do tokenization
+                    char *text = DatumGetCString(value);
+                    int token = encode_text(text, table_name, feature_names[col]);
+                    appendStringInfo(&row_data, " %d:%d", col + 1, token);
+                    break;
+                default:
+                    SPI_finish();
+                    elog(ERROR, "Unsupported data type");
+            }
+        }
+        appendStringInfoString(&libsvm_data, row_data.data);
+        appendStringInfoChar(&libsvm_data, '\n');
+        pfree(row_data.data);
+    }
+    SPI_finish();
+
+    // send training request to the Python Server
+    request_finetune(libsvm_data.data, model_name, model_id, batch_size);
 
     // clean up
     pfree(table_name);

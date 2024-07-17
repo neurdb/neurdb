@@ -33,4 +33,16 @@ Datum nr_inference(PG_FUNCTION_ARGS);
  */
 Datum nr_train(PG_FUNCTION_ARGS);
 
+/**
+ * Finetune a model
+ * @param model_name text The name of the model to be finetuned
+ * @param model_id int The id of the model to be finetuned
+ * @param table_name text The name of the table to be used in the finetuning
+ * @param batch_size int The batch size of the input data
+ * @param features text[] Columns to be used in the finetuning
+ * @param target text The target column
+ * @return void
+ */
+Datum nr_finetune(PG_FUNCTION_ARGS);
+
 #endif //INTERFACE_H

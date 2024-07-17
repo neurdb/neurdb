@@ -12,3 +12,11 @@ AS
 'MODULE_PATHNAME',
 'nr_train'
     LANGUAGE C STRICT;
+
+
+CREATE FUNCTION nr_finetune(model_name text, model_id int, table_name text, batch_size int, columns text[], target text)
+    RETURNS BOOL
+AS
+'MODULE_PATHNAME',
+'nr_finetune'
+    LANGUAGE C STRICT;
