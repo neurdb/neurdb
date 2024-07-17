@@ -73,8 +73,9 @@ void request_train(const char *libsvm_data, const int batch_size, const char *mo
  * @param libsvm_data char* Inference data in libsvm format
  * @param model_name char* Model name
  * @param model_id int Trained model id
+ * @param batch_size int Batch size in inference
  */
-void request_inference(const char* libsvm_data, const char* model_name, const int model_id) {
+void request_inference(const char* libsvm_data, const char* model_name, const int model_id, const int batch_size) {
     CURL *curl;
     CURLcode res;
 
@@ -100,6 +101,12 @@ void request_inference(const char* libsvm_data, const char* model_name, const in
         char model_id_str[10];
         snprintf(model_id_str, sizeof(model_id_str), "%d", model_id);
         curl_mime_data(field, model_id_str, CURL_ZERO_TERMINATED);
+
+        field = curl_mime_addpart(form);
+        curl_mime_name(field, "batch_size");
+        char batch_size_str[10];
+        snprintf(batch_size_str, sizeof(batch_size_str), "%d", batch_size);
+        curl_mime_data(field, batch_size_str, CURL_ZERO_TERMINATED);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);

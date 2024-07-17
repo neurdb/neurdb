@@ -73,9 +73,10 @@ def model_inference():
         model_name = params.get("model_name")
         model_id = int(params.get("model_id"))
         libsvm_data = params.get("libsvm_data")
+        batch_size = int(params.get("batch_size"))
 
         inference_loader, nfields, nfeat = build_inference_loader(
-            g.config_args.data_loader_worker, libsvm_data)
+            g.config_args.data_loader_worker, libsvm_data, batch_size)
 
         # load model
         builder = g.model_cache.get_model(model_name, model_id)

@@ -92,13 +92,15 @@ def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str):
     return train_loader, val_loader, test_loader, nfields, nfeat
 
 
-def build_inference_loader(data_loader_worker: int, data: str):
+def build_inference_loader(data_loader_worker: int, data: str, batch_size=0):
     dataset = LibsvmDataset(data)
     nfields = dataset.nfields
     nfeat = dataset.nfeat
     total_samples = len(dataset)
+    if batch_size == 0:
+        batch_size = total_samples
     loader = DataLoader(dataset,
-                        batch_size=total_samples,
+                        batch_size=batch_size,
                         shuffle=False,
                         num_workers=data_loader_worker,
                         pin_memory=True)

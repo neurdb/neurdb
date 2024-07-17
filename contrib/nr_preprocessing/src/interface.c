@@ -29,7 +29,7 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
  * @param model_name text The name of the model
  * @param model_id integer The id of the model to be used in the inference
  * @param table_name text The name of the table to be used in the inference
- * @param batch_size integer The batch size of the input data
+ * @param batch_size integer The batch size of the input data, 0 for single inference
  * @param features text[] Columns to be used in the inference
  * @return Table
  */
@@ -113,14 +113,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     SPI_finish();
 
     // send inference request to the Python Server
-    request_inference(libsvm_data.data, model_name, model_id);
-
-    // File *fp = fopen("/home/siqi/Desktop/neurdb-local/neurdb-dev/contrib/nr_preprocessing/libsvm_data.libsvm", "w");
-    // if (fp == NULL) {
-    //     elog(ERROR, "Failed to open file");
-    // }
-    // fprintf(fp, "%s", libsvm_data.data);
-    // fclose(fp);
+    request_inference(libsvm_data.data, model_name, model_id, batch_size);
 
     // clean up
     pfree(table_name);
@@ -174,16 +167,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     StringInfoData libsvm_data;
     initStringInfo(&libsvm_data);
 
-    // check if all columns' value type are integers, if not, call encode_column to encode the text
-    // for (int i = 0; i < n_features; i++) {
-    //     int type = SPI_gettypeid(tupdesc, i + 1);
-    //     if (type != INT2OID && type != INT4OID && type != INT8OID
-    //         && type != FLOAT4OID && type != FLOAT8OID) {
-    //         // encode the column
-    //         encode_column(table_name, feature_names[i]);
-    //         }
-    // }
-
     // build libsvm format data
     for (int i = 0; i < processed_rows; i++) {
         StringInfoData row_data;
@@ -234,15 +217,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
     // send training request to the Python Server
     request_train(libsvm_data.data, batch_size, model_name);
-
-    // File *fp = fopen("/home/siqi/Desktop/neurdb-local/neurdb-dev/contrib/nr_preprocessing/libsvm_data.libsvm", "w");
-    // if (fp == NULL) {
-    //     elog(ERROR, "Failed to open file");
-    // }
-    // fprintf(fp, "%s", libsvm_data.data);
-    // fclose(fp);
-
-    // send the data to the python server
 
     // clean up
     pfree(table_name);
