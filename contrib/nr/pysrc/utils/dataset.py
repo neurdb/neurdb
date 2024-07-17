@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader, random_split
 class LibsvmDataset(Dataset):
     """ Dataset loader for Libsvm data format """
 
-    def __init__(self, file_obj):
-        self.file_obj = file_obj
+    def __init__(self, data: str):
+        self.data = data.split('\n')
         self._load_data()
 
     def _load_data(self):
@@ -18,9 +18,10 @@ class LibsvmDataset(Dataset):
         values_list = []
         labels_list = []
         unique_features = set()
-
-        for line in self.file_obj:
-            columns = line.decode('utf-8').strip().split(' ')
+        for line in self.data:
+            if not line:
+                continue    # skip empty lines
+            columns = line.strip().split(' ')
             nfields_in_line = len(columns) - 1
             max_nfields = max(max_nfields, nfields_in_line)
 
@@ -57,10 +58,10 @@ class LibsvmDataset(Dataset):
         return {'id': self.feat_id[idx], 'value': self.feat_value[idx], 'y': self.y[idx]}
 
 
-def libsvm_dataloader(batch_size: int, data_loader_worker: int, file_obj):
+def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str):
     val_split = 0.1
     test_split = 0.1
-    dataset = LibsvmDataset(file_obj)
+    dataset = LibsvmDataset(data)
     nfields = dataset.nfields
     nfeat = dataset.nfeat
     total_samples = len(dataset)
@@ -91,8 +92,8 @@ def libsvm_dataloader(batch_size: int, data_loader_worker: int, file_obj):
     return train_loader, val_loader, test_loader, nfields, nfeat
 
 
-def build_inference_loader(data_loader_worker: int, file_obj):
-    dataset = LibsvmDataset(file_obj)
+def build_inference_loader(data_loader_worker: int, data: str):
+    dataset = LibsvmDataset(data)
     nfields = dataset.nfields
     nfeat = dataset.nfeat
     total_samples = len(dataset)

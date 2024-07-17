@@ -7,7 +7,6 @@ from apps import build_model
 from connection.pg_connect import DatabaseModelHandler
 from utils.dataset import libsvm_dataloader, build_inference_loader
 from utils.io import save_model_weight, load_model_weight
-from io import BytesIO
 from cache.model_cache import ModelCache
 
 app = Flask(__name__)
@@ -41,13 +40,11 @@ def model_train():
     try:
         params = request.form  # Use request.form to get form data
         batch_size = int(params.get("batch_size"))
-        libsvm_file = request.files['libsvm_file']
         model_name = params.get("model_name")
-
-        file_obj = BytesIO(libsvm_file.read())
+        data = params.get("libsvm_data")
 
         train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
-            batch_size, g.config_args.data_loader_worker, file_obj)
+            batch_size, g.config_args.data_loader_worker, data)
 
         builder = build_model(model_name, g.config_args)
         builder.model_dimension = (nfeat, nfields)
@@ -75,12 +72,10 @@ def model_inference():
         params = request.form  # Use requ
         model_name = params.get("model_name")
         model_id = int(params.get("model_id"))
-        libsvm_file = request.files['libsvm_file']
-
-        file_obj = BytesIO(libsvm_file.read())
+        libsvm_data = params.get("libsvm_data")
 
         inference_loader, nfields, nfeat = build_inference_loader(
-            g.config_args.data_loader_worker, file_obj)
+            g.config_args.data_loader_worker, libsvm_data)
 
         # load model
         builder = g.model_cache.get_model(model_name, model_id)

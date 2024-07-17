@@ -1,7 +1,7 @@
 #include "http.h"
 
+#include <c.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
 
@@ -15,25 +15,27 @@
  * @param model_name char* Model name TODO: I think here we shouldn't pass the name, but the architecture of the model
  */
 void request_train(const char *libsvm_data, const int batch_size, const char *model_name) {
-    CURL *curl = curl_easy_init();
+    CURL *curl;
     CURLcode res;
 
     curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
 
     if (curl) {
         char url[256];
         snprintf(url, sizeof(url), "%s/train", SERVER_URL);
 
         curl_mime *form = curl_mime_init(curl);
-
         // set up fields in the form
         curl_mimepart *field = curl_mime_addpart(form);
-        curl_mime_name(field, "libsvm_file");
-        curl_mime_filedata(field, libsvm_data);
+        curl_mime_name(field, "libsvm_data");
+        curl_mime_data(field, libsvm_data, CURL_ZERO_TERMINATED);
 
         field = curl_mime_addpart(form);
         curl_mime_name(field, "batch_size");
-        curl_mime_data(field, (const char *)&batch_size, CURL_ZERO_TERMINATED);
+        char batch_size_str[10];
+        snprintf(batch_size_str, sizeof(batch_size_str), "%d", batch_size);
+        curl_mime_data(field, batch_size_str, CURL_ZERO_TERMINATED);
 
         field = curl_mime_addpart(form);
         curl_mime_name(field, "model_name");
@@ -73,21 +75,21 @@ void request_train(const char *libsvm_data, const int batch_size, const char *mo
  * @param model_id int Trained model id
  */
 void request_inference(const char* libsvm_data, const char* model_name, const int model_id) {
-    CURL *curl = curl_easy_init();
+    CURL *curl;
     CURLcode res;
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl = curl_easy_init();
 
     if (curl) {
         char url[256];
         snprintf(url, sizeof(url), "%s/inference", SERVER_URL);
 
         curl_mime *form = curl_mime_init(curl);
-
         // set up fields in the form
         curl_mimepart *field = curl_mime_addpart(form);
-        curl_mime_name(field, "libsvm_file");
-        curl_mime_filedata(field, libsvm_data);
+        curl_mime_name(field, "libsvm_data");
+        curl_mime_data(field, libsvm_data, CURL_ZERO_TERMINATED);
 
         field = curl_mime_addpart(form);
         curl_mime_name(field, "model_name");
@@ -95,7 +97,9 @@ void request_inference(const char* libsvm_data, const char* model_name, const in
 
         field = curl_mime_addpart(form);
         curl_mime_name(field, "model_id");
-        curl_mime_data(field, (const char *)&model_id, CURL_ZERO_TERMINATED);
+        char model_id_str[10];
+        snprintf(model_id_str, sizeof(model_id_str), "%d", model_id);
+        curl_mime_data(field, model_id_str, CURL_ZERO_TERMINATED);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
@@ -109,10 +113,10 @@ void request_inference(const char* libsvm_data, const char* model_name, const in
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &reponse_code);
 
             if (reponse_code != 200) {
-                // train failed
+                // inference failed
                 fprintf(stderr, "Response code: %ld, failed to make inference\n", reponse_code);
             } else {
-                // train success
+                // inference success
                 printf("Response from the server");
             }
         }

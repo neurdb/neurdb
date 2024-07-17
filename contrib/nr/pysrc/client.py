@@ -8,7 +8,7 @@ SERVER_URL = "http://localhost:8090"
 def test_train_endpoint(file_path, batch_size, model_name):
     url = f"{SERVER_URL}/train"
     with open(file_path, 'rb') as file:
-        files = {'libsvm_file': file}
+        files = {'libsvm_data': file}
         data = {
             'batch_size': batch_size,
             'model_name': model_name
@@ -27,7 +27,7 @@ def test_train_endpoint(file_path, batch_size, model_name):
 def test_inference_endpoint(file_path, model_name, model_id):
     url = f"{SERVER_URL}/inference"
     with open(file_path, 'rb') as file:
-        files = {'libsvm_file': file}
+        files = {'libsvm_data': file}
         data = {
             'model_name': model_name,
             'model_id': model_id
