@@ -28,8 +28,6 @@ class NeurDBModelHandler:
         serialized_model = neurdb.ModelSerializer.serialize_model(model)
         return self._conn.save_model(serialized_model)
 
-    def get_model(self, model_id: int, model_args: dict) -> nn.Module:
+    def get_model(self, model_id: int) -> nn.Module:
         storage = self._conn.load_model(model_id).unpack()
-        print(model_args)
-        storage.init_params = model_args
         return storage.to_model()

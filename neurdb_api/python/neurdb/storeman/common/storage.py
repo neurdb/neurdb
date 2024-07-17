@@ -6,16 +6,6 @@ from typing import List, Optional, Type, Union
 from torch import nn
 
 
-def filter_args(d: dict, class_type: Type[nn.Module]):
-    sig = inspect.signature(class_type)
-    filter_keys = [
-        param.name
-        for param in sig.parameters.values()
-        if param.kind == param.POSITIONAL_OR_KEYWORD
-    ]
-    return {k: d[k] for k in filter_keys if k in d}
-
-
 class LayerStorage:
     """
     Class to store the PyTorch layer
@@ -35,7 +25,8 @@ class LayerStorage:
         @param name: The name of the layer, this is optional, but must be provided if the layer is part of a model
         """
         self.layer_class = layer_class
-        self.init_params = Utils.clean_init_params(init_params)
+        # self.init_params = Utils.clean_init_params(init_params)
+        self.init_params = init_params
         self.state_dict = state_dict
         self.name = name
 
@@ -82,8 +73,10 @@ class LayerStorage:
         Convert the LayerStorage object to the PyTorch layer
         @return: A nn.Module object
         """
-        params = self.init_params["layers"][self.name]
-        layer = self.layer_class(**filter_args(params, self.layer_class))
+        # params = self.init_params["layers"][self.name]
+        # layer = self.layer_class(**filter_args(params, self.layer_class))
+        layer = self.layer_class.__new__(self.layer_class)
+        layer.__dict__.update(self.init_params)
         layer.load_state_dict(self.state_dict)
         return layer
 
@@ -182,7 +175,8 @@ class ModelStorage:
         if LayerSequenceStorage is None:
             layers = LayerSequenceStorage([])
         self.model_class = model_class
-        self.init_params = Utils.clean_init_params(init_params)
+        # self.init_params = Utils.clean_init_params(init_params)
+        self.init_params = init_params
         self.layer_sequence = layers
 
     def __str__(self):
@@ -212,14 +206,11 @@ class ModelStorage:
         Convert the ModelStorage object to the PyTorch model
         @return: A PyTorch model in nn.Module format
         """
-        params = self.init_params["model"]
-        model = self.model_class(**filter_args(params, self.model_class))
+        model = self.model_class.__new__(self.model_class)
+        model.__dict__.update(self.init_params)
         for layer in self.layer_sequence:
             if layer.name is None:
                 raise ValueError("Layer name should not be None")
-
-            layer.init_params = self.init_params
-
             model.add_module(layer.name, layer.to_layer())
         return model
 

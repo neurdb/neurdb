@@ -68,56 +68,8 @@ def _do_inference(
 
         builder = build_model(model_name, args)
 
-        # TODO: I think we should change NeurDB APIs here. It should infer the 
-        # model args automatically, or store the args into DB (model table), 
-        # instead of manually input
-        model_args = {
-            "model": {
-                "nfield": nfields,
-                "nfeat": nfeat,
-                "nemb": args.nemb,
-                "nhead": args.nattn_head,
-                "alpha": args.alpha,
-                "nhid": args.h,
-                "mlp_nlayer": args.mlp_nlayer,
-                "mlp_nhid": args.mlp_nhid,
-                "dropout": args.dropout,
-                "ensemble": args.ensemble,
-                "deep_nlayer": args.dnn_nlayer,
-                "deep_nhid": args.dnn_nhid,
-            },
-            "layers": {
-                "embedding": {"nfeat": nfeat, "nemb": args.nemb},
-                "attn_layer": {
-                    "nhead": args.nattn_head,
-                    "nfield": nfields,
-                    "nemb": args.nemb,
-                    "d_k": args.nemb,
-                    "nhid": args.h,
-                    "alpha": args.alpha,
-                },
-                "arm_bn": {"num_features": args.nattn_head * args.h},
-                "mlp": {
-                    "ninput": args.nattn_head * args.h * args.nemb,
-                    "nlayers": args.mlp_nlayer,
-                    "nhid": args.mlp_nhid,
-                    "dropout": args.dropout,
-                },
-                "deep_embedding": {
-                    "nfeat": nfeat,
-                    "nemb": args.nemb,
-                },
-                "deep_mlp": {
-                    "ninput": nfields * args.nemb,
-                    "nlayers": args.dnn_nlayer,
-                    "nhid": args.dnn_nhid,
-                    "dropout": args.dropout,
-                },
-                "ensemble_layer": {"in_features": 2, "out_features": 1},
-            },
-        }
         try:
-            builder.model = db.get_model(model_id, model_args).to(DEVICE)
+            builder.model = db.get_model(model_id).to(DEVICE)
         except FileNotFoundError:
             return [], f"model {model_name} not trained yet"
 
