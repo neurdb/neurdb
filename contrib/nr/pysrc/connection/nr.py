@@ -4,6 +4,7 @@ from torch import nn
 import neurdb
 from logger.logger import logger
 
+
 class DBParams(TypedDict):
     db_name: str
     db_user: str
@@ -35,10 +36,8 @@ class NeurDBModelHandler:
 
         return model_id
 
-    def get_model(self, model_id: int, model_args: dict) -> ModelStorage:
+    def get_model(self, model_id: int) -> ModelStorage:
         storage = self._conn.load_model(model_id).unpack()
-        print(model_args)
-        storage.init_params = model_args
         return storage
 
     def has_model(self, model_id: int) -> bool:
@@ -46,5 +45,4 @@ class NeurDBModelHandler:
             self._conn.load_model(model_id)
         except FileNotFoundError:
             return False
-
         return True
