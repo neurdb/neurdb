@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurdb"
+dynamic = ["version"]
+requires-python = ">= 3.9"
+authors = [
+  {name = "NeurDB Development Team", email = "dbsystem@comp.nus.edu.sg"},
+]
+license = {file = "LICENSE"}
+keywords = ["NeurDB", "database", "AIxDB"]
+
+[project.urls]
+Homepage = "https://neurdb.com"
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}

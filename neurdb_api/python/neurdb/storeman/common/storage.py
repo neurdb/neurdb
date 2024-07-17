@@ -1,8 +1,19 @@
+import inspect
 import pickle
 from io import BytesIO
 from typing import List, Optional, Type, Union
 
 from torch import nn
+
+
+def filter_args(d: dict, class_type: Type[nn.Module]):
+    sig = inspect.signature(class_type)
+    filter_keys = [
+        param.name
+        for param in sig.parameters.values()
+        if param.kind == param.POSITIONAL_OR_KEYWORD
+    ]
+    return {k: d[k] for k in filter_keys if k in d}
 
 
 class LayerStorage:
@@ -71,7 +82,8 @@ class LayerStorage:
         Convert the LayerStorage object to the PyTorch layer
         @return: A nn.Module object
         """
-        layer = self.layer_class(**self.init_params)
+        params = self.init_params["layers"][self.name]
+        layer = self.layer_class(**filter_args(params, self.layer_class))
         layer.load_state_dict(self.state_dict)
         return layer
 
@@ -200,10 +212,13 @@ class ModelStorage:
         Convert the ModelStorage object to the PyTorch model
         @return: A PyTorch model in nn.Module format
         """
-        model = self.model_class(**self.init_params)
+        params = self.init_params["model"]
+        model = self.model_class(**filter_args(params, self.model_class))
         for layer in self.layer_sequence:
             if layer.name is None:
                 raise ValueError("Layer name should not be None")
+
+            layer.init_params = self.init_params
 
             model.add_module(layer.name, layer.to_layer())
         return model

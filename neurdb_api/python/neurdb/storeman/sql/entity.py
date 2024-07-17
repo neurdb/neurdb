@@ -34,7 +34,9 @@ class LayerEntity:
     """
 
     @dispatch(int, int, datetime, bytes)
-    def __init__(self, model_id: int, layer_id: int, create_time: datetime, layer_data: bytes):
+    def __init__(
+        self, model_id: int, layer_id: int, create_time: datetime, layer_data: bytes
+    ):
         """
         @param model_id: model id (foreign key)
         @param layer_id: layer id
