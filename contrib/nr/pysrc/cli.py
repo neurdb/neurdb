@@ -77,8 +77,8 @@ class Setup:
             for i, (_, layer) in enumerate(model.named_children()):
                 if i < start_layer_id:
                     layer.requires_grad_(False)
-                builder.model = model.to(DEVICE)
-
+            
+            builder.model = model.to(DEVICE)
             builder.model_dimension = (nfeat, nfields)
             builder.train(train_loader, val_loader, test_loader)
 
