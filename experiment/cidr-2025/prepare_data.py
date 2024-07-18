@@ -1,14 +1,18 @@
 import psycopg2
 from psycopg2 import extras
+from psycopg2.extensions import register_adapter, AsIs
+import numpy as np
 import argparse
 import pandas as pd
 
 DB_PARAMS = {
     'dbname': 'postgres',
-    'user': 'postgres',
+    'user': 'siqi',
     'host': 'localhost',
     'port': '5432'
 }
+
+register_adapter(np.int64, AsIs)
 
 
 def connect_to_db() -> tuple:
@@ -67,9 +71,11 @@ def prepare_data(number_of_rows) -> None:
 
     # insert data into the frappe table
     data = pd.read_csv('dataset/frappe.csv')
-    needed_rows = data.sample(n=number_of_rows - current_row_num)
+    data = data.sample(n=number_of_rows - current_row_num)
     insert_query = "INSERT INTO frappe (label, feature1, feature2, feature3, feature4, feature5, feature6, feature7, feature8, feature9, feature10) VALUES %s"
-    extras.execute_values(cursor, insert_query, needed_rows.values)
+    # convert numpy.int64 to int
+    data = data.astype(int)
+    extras.execute_values(cursor, insert_query, data.values)
 
     conn.commit()
     cursor.execute('SELECT COUNT(*) FROM frappe')
