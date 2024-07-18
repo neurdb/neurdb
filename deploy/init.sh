@@ -41,6 +41,7 @@ $NEURDBPATH/psql/bin/psql -h localhost -p 5432 -U postgres -f $NEURDBPATH/datase
 echo "DB Started!"
 
 # Install packages
+pip3 install --upgrade pip
 pip3 install -r $NEURDBPATH/contrib/nr/pysrc/requirement.txt
 
 # Run python server
