@@ -112,7 +112,6 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
         appendStringInfoChar(&libsvm_data, '\n');
         pfree(row_data.data);
     }
-    SPI_finish();
 
     // send inference request to the Python Server
     request_inference(libsvm_data.data, model_name, model_id, batch_size);
@@ -124,6 +123,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
         pfree(column_names[i]);
     }
     pfree(column_names);
+    SPI_finish();
     PG_RETURN_NULL();
 }
 
@@ -215,7 +215,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         appendStringInfoChar(&libsvm_data, '\n');
         pfree(row_data.data);
     }
-    SPI_finish();
 
     // send training request to the Python Server
     request_train(libsvm_data.data, batch_size, model_name);
@@ -228,6 +227,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         pfree(feature_names[i]);
     }
     pfree(feature_names);
+    SPI_finish();
     PG_RETURN_NULL();
 }
 
@@ -318,7 +318,6 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
         appendStringInfoChar(&libsvm_data, '\n');
         pfree(row_data.data);
     }
-    SPI_finish();
 
     // send training request to the Python Server
     request_finetune(libsvm_data.data, model_name, model_id, batch_size);
@@ -331,6 +330,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
         pfree(feature_names[i]);
     }
     pfree(feature_names);
+    SPI_finish();
     PG_RETURN_NULL();
 }
 
