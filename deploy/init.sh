@@ -42,7 +42,7 @@ echo "DB Started!"
 
 # Install packages
 pip3 install --upgrade pip
-pip3 install -r requirement.txt --extra-index-url https://download.pytorch.org/whl/cu121
+pip3 install -r $NEURDBPATH/contrib/nr/pysrc/requirement.txt --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Install neurdb package
 cd $NEURDBPATH/neurdb_api/python
