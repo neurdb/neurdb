@@ -22,7 +22,7 @@ Change the permission of `meson.build`:
 chmod 777 ~/neurdb-dev/meson.build
 ```
 
-#### Build Dockerfile
+### Build Dockerfile
 In the server, build the docker image:
 ```bash
 cd ~/neurdb-dev/deploy
@@ -34,3 +34,17 @@ Go into the docker environment:
 docker exec -it neurdb_dev bash
 ```
 
+### Prepare Data
+Navigate to the experiment folder:
+```bash
+cd $NEURDBPATH/experiment/cidr-2025
+```
+
+Run prepare_data.py script:
+```bash
+python3 prepare_data.py --create_table --num_rows 10000
+```
+
+`--create_table` flag is used to create the table in the database if it does not exist.
+
+`--num_rows` flag is used to specify the number of rows to be inserted into the table. (e.g., 10000)

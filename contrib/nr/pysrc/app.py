@@ -1,3 +1,5 @@
+import os
+
 from connection import NeurDBModelHandler
 from logger.logger import logger, configure_logging
 import traceback
@@ -14,7 +16,12 @@ configure_logging("./app.log")
 app = Flask(__name__)
 
 # Load config and initialize once
-config_args = parse_config_arguments("./config.ini")
+config_path = "./config.ini"
+# TODO: hardcoded path here, need to be fixed in the future
+if os.path.exists('$NEURDBPATH/contrib/nr/pysrc/config.ini'):
+    config_path = os.path.expandvars('$NEURDBPATH/contrib/nr/pysrc/config.ini')
+
+config_args = parse_config_arguments(config_path)
 model_cache = ModelCache()
 
 # db_connector = DatabaseModelHandler({

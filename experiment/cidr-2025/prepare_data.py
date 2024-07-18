@@ -7,7 +7,7 @@ import pandas as pd
 
 DB_PARAMS = {
     'dbname': 'postgres',
-    'user': 'siqi',
+    'user': 'postgres',
     'host': 'localhost',
     'port': '5432'
 }
