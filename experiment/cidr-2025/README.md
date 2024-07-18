@@ -51,6 +51,11 @@ python3 prepare_data.py --create_table --num_rows 10000
 
 `--num_rows` flag is used to specify the number of rows to be inserted into the table. (e.g., 10000)
 
+### Start Python Server
+```bash
+cd $NEURDBPATH/contrib/nr/pysrc
+python3 app.py
+```
 
 ### Run NeurDB
 Connect to the database:
@@ -59,7 +64,16 @@ $NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
 ```
 
 Train a model:
-```bash
+```postgresql
 SELECT nr_train('armnet', 'frappe', 10, ARRAY['feature1', 'feature2', 'feature3', 'feature4', 'feature5', 'feature6', 'feature7', 'feature8', 'feature9', 'feature10'], 'label');
 ```
 
+Forward inference:
+```postgresql
+SELECT nr_inference('armnet', 1, 'frappe', 10, ARRAY['feature1', 'feature2', 'feature3', 'feature4', 'feature5', 'feature6', 'feature7', 'feature8', 'feature9', 'feature10']);
+```
+
+Finetune a model:
+```postgresql
+SELECT nr_finetune('armnet', 1, 'frappe', 10, ARRAY['feature1', 'feature2', 'feature3', 'feature4', 'feature5', 'feature6', 'feature7', 'feature8', 'feature9', 'feature10'], 'label');
+```
