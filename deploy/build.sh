@@ -17,6 +17,7 @@ docker build -t neurdbimg .
 docker run -d --name neurdb_dev \
     -v ~/neurdb-dev:/code/neurdb-dev \
     -p 5432:5432 \
+    --gpus all \
     neurdbimg
 
 # Follow the Docker container logs
