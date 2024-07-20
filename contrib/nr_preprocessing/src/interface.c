@@ -6,6 +6,7 @@
 
 #include "labeling/encode.h"
 #include "utils/network/http.h"
+#include "utils/metic/time_metric.h"
 
 
 PG_MODULE_MAGIC;
@@ -36,6 +37,9 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
  * @return Table
  */
 Datum nr_inference(PG_FUNCTION_ARGS) {
+    TimeMetric *time_metric = init_time_metric("nr_inference", MILLISECOND);
+    record_start_time(time_metric);     // record the start time of the function
+
     char* model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     int model_id = PG_GETARG_INT32(1); // model id
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
@@ -112,9 +116,11 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
         appendStringInfoChar(&libsvm_data, '\n');
         pfree(row_data.data);
     }
+    record_preprocess_end_time(time_metric);    // record the end time of preprocessing
 
     // send inference request to the Python Server
     request_inference(libsvm_data.data, model_name, model_id, batch_size);
+    record_operation_end_time(time_metric);     // record the end time of operation
 
     // clean up
     pfree(table_name);
@@ -124,6 +130,11 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     }
     pfree(column_names);
     SPI_finish();
+
+    record_end_time(time_metric);    // record the end time of the function
+    calculate_time(time_metric);
+    postgres_log_time(time_metric);  // log the time metric
+    free_time_metric(time_metric);
     PG_RETURN_NULL();
 }
 
@@ -138,6 +149,9 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
  * @return void
  */
 Datum nr_train(PG_FUNCTION_ARGS) {
+    TimeMetric *time_metric = init_time_metric("nr_train", MILLISECOND);
+    record_start_time(time_metric);     // record the start time of the function
+
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1)); // table name
     int batch_size = PG_GETARG_INT32(2); // batch size
@@ -215,9 +229,11 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         appendStringInfoChar(&libsvm_data, '\n');
         pfree(row_data.data);
     }
+    record_preprocess_end_time(time_metric);    // record the end time of preprocessing
 
     // send training request to the Python Server
     request_train(libsvm_data.data, batch_size, model_name);
+    record_operation_end_time(time_metric);     // record the end time of operation
 
     // clean up
     pfree(table_name);
@@ -228,6 +244,11 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     }
     pfree(feature_names);
     SPI_finish();
+
+    record_end_time(time_metric);    // record the end time of the function
+    calculate_time(time_metric);
+    postgres_log_time(time_metric);  // log the time metric
+    free_time_metric(time_metric);
     PG_RETURN_NULL();
 }
 
@@ -240,6 +261,9 @@ Datum nr_train(PG_FUNCTION_ARGS) {
  * @param batch_size int Batch size in finetune
  */
 Datum nr_finetune(PG_FUNCTION_ARGS) {
+    TimeMetric *time_metric = init_time_metric("nr_finetune", MILLISECOND);
+    record_start_time(time_metric);     // record the start time of the function
+
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     int model_id = PG_GETARG_INT32(1); // model id
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
@@ -318,9 +342,11 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
         appendStringInfoChar(&libsvm_data, '\n');
         pfree(row_data.data);
     }
+    record_preprocess_end_time(time_metric);    // record the end time of preprocessing
 
     // send training request to the Python Server
     request_finetune(libsvm_data.data, model_name, model_id, batch_size);
+    record_operation_end_time(time_metric);     // record the end time of operation
 
     // clean up
     pfree(table_name);
@@ -331,6 +357,11 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     }
     pfree(feature_names);
     SPI_finish();
+
+    record_end_time(time_metric);    // record the end time of the function
+    calculate_time(time_metric);
+    postgres_log_time(time_metric);  // log the time metric
+    free_time_metric(time_metric);
     PG_RETURN_NULL();
 }
 
