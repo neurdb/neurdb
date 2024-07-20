@@ -2,6 +2,7 @@ from decimal import ROUND_HALF_UP, Decimal
 import logging
 import os
 from pathlib import Path
+import sys
 from typing import Optional
 import structlog
 
@@ -13,14 +14,14 @@ def round_floats(logger, method_name, event_dict):
                 Decimal(str(value)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
             )
         return value
-
+    
     def _traverse(d):
         for key, value in d.items():
             d[key] = _test_value(value)
-
+            
             if isinstance(value, dict):
                 _traverse(value)
-
+                
         return d
 
     return _traverse(event_dict)
@@ -55,7 +56,7 @@ structlog.configure(
     cache_logger_on_first_use=False,
 )
 
-logger_name = "neurdb_algserver"
+logger_name = "neurdb_api"
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(logger_name)
 logger = logger.bind(logger=logger_name)

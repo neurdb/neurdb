@@ -26,11 +26,11 @@ DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 class Setup:
     def __init__(
-            self,
-            model_name: str,
-            libsvm_data: str,
-            args: argparse.Namespace,
-            db: MODEL_HANDLER,
+        self,
+        model_name: str,
+        libsvm_data: str,
+        args: argparse.Namespace,
+        db: MODEL_HANDLER,
     ) -> None:
         self._model_name = model_name
         self.libsvm_data = libsvm_data
@@ -44,9 +44,7 @@ class Setup:
     def train(self, batch_size: int) -> Tuple[int, Error]:
         try:
             train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
-                batch_size,
-                self._args.data_loader_worker,
-                self.libsvm_data
+                batch_size, self._args.data_loader_worker, self.libsvm_data
             )
 
             builder = build_model(self._model_name, self._args)
@@ -59,12 +57,12 @@ class Setup:
         except Exception:
             return -1, str(traceback.format_exc())
 
-    def finetune(self, model_id: int, batch_size: int, start_layer_id: int) -> Tuple[int, Error]:
+    def finetune(
+        self, model_id: int, batch_size: int, start_layer_id: int
+    ) -> Tuple[int, Error]:
         try:
             train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
-                batch_size,
-                self._args.data_loader_worker,
-                self.libsvm_data
+                batch_size, self._args.data_loader_worker, self.libsvm_data
             )
 
             try:
@@ -77,7 +75,7 @@ class Setup:
             for i, (_, layer) in enumerate(model.named_children()):
                 if i < start_layer_id:
                     layer.requires_grad_(False)
-            
+
             builder.model = model.to(DEVICE)
             builder.model_dimension = (nfeat, nfields)
             builder.train(train_loader, val_loader, test_loader)
@@ -89,7 +87,9 @@ class Setup:
         except Exception:
             return -1, str(traceback.format_exc())
 
-    def inference(self, model_id: int, batch_size: int) -> Tuple[List[np.ndarray], Error]:
+    def inference(
+        self, model_id: int, batch_size: int
+    ) -> Tuple[List[np.ndarray], Error]:
         try:
             inference_loader, nfields, nfeat = build_inference_loader(
                 self._args.data_loader_worker, self.libsvm_data, batch_size
@@ -118,12 +118,14 @@ class Setup:
 
 
 def train(
-        model_name: str,
-        training_libsvm: str,
-        args: argparse.Namespace,
-        db: MODEL_HANDLER,
-        batch_size: int,
+    model_name: str,
+    training_libsvm: str,
+    args: argparse.Namespace,
+    db: MODEL_HANDLER,
+    batch_size: int,
 ) -> int:
+    logger.info(f"start", task="train", model_name=model_name, batch_size=batch_size)
+
     s = Setup(model_name, training_libsvm, args, db)
 
     model_id, err = s.train(batch_size)
@@ -131,18 +133,26 @@ def train(
         logger.error(f"train failed with error: {err}")
         return -1
 
-    print(f"train done. model_id: {model_id}")
+    logger.info(f"done", task="train", model_id=model_id)
     return model_id
 
 
 def finetune(
-        model_name: str,
-        finetune_libsvm: str,
-        args: argparse.Namespace,
-        db: MODEL_HANDLER,
-        model_id: int,
-        batch_size: int,
+    model_name: str,
+    finetune_libsvm: str,
+    args: argparse.Namespace,
+    db: MODEL_HANDLER,
+    model_id: int,
+    batch_size: int,
 ) -> int:
+    logger.info(
+        f"start",
+        task="finetune",
+        model_id=model_id,
+        model_name=model_name,
+        batch_size=batch_size,
+    )
+
     s = Setup(model_name, finetune_libsvm, args, db)
 
     model_id, err = s.finetune(model_id, batch_size, start_layer_id=5)
@@ -150,19 +160,28 @@ def finetune(
         logger.error(f"train failed with error: {err}")
         return -1
 
-    print(f"finetune done. model_id: {model_id}")
+    logger.info("done", task="finetune", model_id=model_id)
     return model_id
 
 
 def inference(
-        model_name: str,
-        inference_libsvm: str,
-        args: argparse.Namespace,
-        db: MODEL_HANDLER,
-        model_id: int,
-        batch_size: int,
+    model_name: str,
+    inference_libsvm: str,
+    args: argparse.Namespace,
+    db: MODEL_HANDLER,
+    model_id: int,
+    batch_size: int,
 ) -> List[np.ndarray]:
+    logger.info(
+        f"start",
+        task="finetune",
+        model_id=model_id,
+        model_name=model_name,
+        batch_size=batch_size,
+    )
+
     s = Setup(model_name, inference_libsvm, args, db)
+
     response, err = s.inference(model_id, batch_size)
     if err is not None:
         logger.error(f"inference failed with error: {err}")
@@ -170,6 +189,7 @@ def inference(
     logger.debug(f"inference done. response[0,:100]:")
     logger.debug(response[0][:100] if len(response[0]) >= 100 else response[0])
 
+    logger.info("done", task="inference", model_id=model_id)
     return response
 
 

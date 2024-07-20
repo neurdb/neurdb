@@ -6,6 +6,7 @@ import psycopg2
 from ..config import Configuration
 from ..common.storage import ModelStorage
 from .entity import ModelEntity, LayerEntity
+from neurdb.logger import logger
 
 
 class NeurDB:
@@ -74,7 +75,7 @@ class NeurDB:
             if layers[i][1] != layers[i - 1][1]:
                 selected_layers.append(layers[i])
         
-        [print(f"[layer] model_id={x[0]} layer_id={x[1]} create_time={x[2]}") for x in selected_layers]
+        [logger.debug("select layer", model_id=x[0], layer_id=x[1], create_time=str(x[2])) for x in selected_layers]
         
         layer_sequence_pickled = [layer[3] for layer in selected_layers]
 

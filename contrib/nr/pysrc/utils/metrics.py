@@ -1,3 +1,6 @@
+from logger.logger import logger
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -22,7 +25,7 @@ class AverageMeter(object):
 
 
 def roc_auc_compute_fn(y_pred, y_target):
-    """ IGNITE.CONTRIB.METRICS.ROC_AUC """
+    """IGNITE.CONTRIB.METRICS.ROC_AUC"""
     try:
         from sklearn.metrics import roc_auc_score
     except ImportError:
@@ -41,8 +44,10 @@ def roc_auc_compute_fn(y_pred, y_target):
     try:
         return roc_auc_score(y_true, y_pred)
     except ValueError:
-        print('ValueError: Only one class present in y_true. ROC AUC score is not defined in that case.')
-        return 0.
+        logger.error(
+            "ValueError: Only one class present in y_true. ROC AUC score is not defined in that case"
+        )
+        return 0.0
 
 
 def accuracy(output, target, topk=(1,)):

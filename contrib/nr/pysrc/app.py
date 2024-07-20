@@ -9,10 +9,12 @@ from shared_config.config import parse_config_arguments
 from cache.model_cache import ModelCache
 
 from cli import train, inference, finetune
+from neurdb.logger import configure_logging as api_configure_logging
 
 
 # configure_logging("./app.log")
 configure_logging(None)
+api_configure_logging(None)
 
 app = Flask(__name__)
 
@@ -51,7 +53,7 @@ def before_request():
     g.model_cache = model_cache
 
 
-@app.route('/train', methods=['POST'])
+@app.route("/train", methods=["POST"])
 def model_train():
     try:
         params = request.form  # Use request.form to get form data
@@ -59,14 +61,12 @@ def model_train():
         model_name = params.get("model_name")
         data = params.get("libsvm_data")
 
-
-
         model_id = train(
             model_name=model_name,
             training_libsvm=data,
             args=config_args,
             db=NEURDB_CONNECTOR,
-            batch_size=batch_size
+            batch_size=batch_size,
         )
 
         # train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
@@ -83,16 +83,13 @@ def model_train():
         return jsonify({"model_id": model_id})
 
     except Exception:
-        error_message = {
-            "res": "NA",
-            "Errored": traceback.format_exc()
-        }
-        print(traceback.format_exc())
-        logger.error(orjson.dumps(error_message).decode('utf-8'))
+        stacktrace = traceback.format_exc()
+        error_message = {"res": "NA", "Errored": stacktrace}
+        logger.error("model_train error", stacktrace=stacktrace)
         return jsonify(error_message), 500
 
 
-@app.route('/inference', methods=['POST'])
+@app.route("/inference", methods=["POST"])
 def model_inference():
     try:
         params = request.form  # Use request.form to get form data
@@ -107,7 +104,7 @@ def model_inference():
             args=config_args,
             db=NEURDB_CONNECTOR,
             model_id=model_id,
-            batch_size=batch_size
+            batch_size=batch_size,
         )
 
         # inference_loader, nfields, nfeat = build_inference_loader(
@@ -139,15 +136,13 @@ def model_inference():
         return jsonify({"res": result})
 
     except Exception:
-        error_message = {
-            "res": "NA",
-            "Errored": traceback.format_exc()
-        }
-        logger.error(orjson.dumps(error_message).decode('utf-8'))
+        stacktrace = traceback.format_exc()
+        error_message = {"res": "NA", "Errored": stacktrace}
+        logger.error("model_inference error", stacktrace=stacktrace)
         return jsonify(error_message), 500
 
 
-@app.route('/finetune', methods=['POST'])
+@app.route("/finetune", methods=["POST"])
 def model_finetune():
     try:
         params = request.form  # Use request.form to get form data
@@ -167,11 +162,9 @@ def model_finetune():
         return jsonify({"model_id": model_id})
 
     except Exception:
-        error_message = {
-            "res": "NA",
-            "Errored": traceback.format_exc()
-        }
-        logger.error(orjson.dumps(error_message).decode('utf-8'))
+        stacktrace = traceback.format_exc()
+        error_message = {"res": "NA", "Errored": stacktrace}
+        logger.error("model_finetune error", stacktrace=stacktrace)
         return jsonify(error_message), 500
 
 
