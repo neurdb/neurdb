@@ -69,14 +69,19 @@ class NeurDB:
         layers = sorted(
             layers, key=lambda x: (x[1], datetime.now() - x[2]), reverse=False
         )  # sort in ascending order
-        
+
         selected_layers = [layers[0]]
         for i in range(1, len(layers)):
             if layers[i][1] != layers[i - 1][1]:
                 selected_layers.append(layers[i])
-        
-        [logger.debug("select layer", model_id=x[0], layer_id=x[1], create_time=str(x[2])) for x in selected_layers]
-        
+
+        [
+            logger.debug(
+                "select layer", model_id=x[0], layer_id=x[1], create_time=str(x[2])
+            )
+            for x in selected_layers
+        ]
+
         layer_sequence_pickled = [layer[3] for layer in selected_layers]
 
         return ModelStorage.Pickled(model_meta, layer_sequence_pickled)

@@ -35,7 +35,9 @@ class BuilderBase(ABC):
         self._nfield = nfield
 
     @abstractmethod
-    def train(self, train_loader: DataLoader, val_loader: DataLoader, test_loader: DataLoader):
+    def train(
+        self, train_loader: DataLoader, val_loader: DataLoader, test_loader: DataLoader
+    ):
         """
         Train the model.
         """

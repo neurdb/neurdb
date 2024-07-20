@@ -9,4 +9,3 @@ from apps.base.builder import BuilderBase
 
 class MLPBuilder(BuilderBase):
     pass
-

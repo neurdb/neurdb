@@ -8,5 +8,5 @@ def build_model(model_name: str, config_args) -> BuilderBase:
     if model_name == "armnet":
         model = ARMNetModelBuilder(config_args)
     # if model_name == "mlp":
-        # model = MLPBuilder(config_args)
+    # model = MLPBuilder(config_args)
     return model

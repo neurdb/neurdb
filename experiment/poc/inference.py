@@ -8,7 +8,7 @@ from prepare_data import connect_to_db
 
 
 BATCH_SIZE = 10
-MODEL_PATH = 'mlp_model.pt'
+MODEL_PATH = "mlp_model.pt"
 
 
 class MLP(nn.Module):
@@ -33,7 +33,7 @@ def load_model():
 
 def query_data():
     conn, cursor = connect_to_db()
-    cursor.execute('SELECT * FROM iris')
+    cursor.execute("SELECT * FROM iris")
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -42,7 +42,7 @@ def query_data():
 
 def inference(rows: list, batch_size: int = 10):
     # group rows into batches
-    batches = [rows[i:i + batch_size] for i in range(0, len(rows), batch_size)]
+    batches = [rows[i : i + batch_size] for i in range(0, len(rows), batch_size)]
     model = load_model()
     for batch in batches:
         data = torch.tensor([row[:-1] for row in batch], dtype=torch.float32)
@@ -72,7 +72,7 @@ class Logger:
     def end_all(self):
         self.end_time = time.monotonic()
         self.duration = (self.end_time - self.start_time) * 1000
-        print(f'Total duration: {self.duration} ms')
+        print(f"Total duration: {self.duration} ms")
         self.print_records()
 
     class LogRecord:
@@ -90,22 +90,26 @@ class Logger:
             self.duration = (self.end_time - self.start_time) * 1000
 
         def __str__(self):
-            return f'{self.msg}: {self.duration} ms'
+            return f"{self.msg}: {self.duration} ms"
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Inference on the iris dataset')
-    parser.add_argument('--batch_size', type=int, default=10, help='Batch size for inference')
-    parser.add_argument('--model_path', type=str, default='mlp_model.pt', help='Path to the model')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Inference on the iris dataset")
+    parser.add_argument(
+        "--batch_size", type=int, default=10, help="Batch size for inference"
+    )
+    parser.add_argument(
+        "--model_path", type=str, default="mlp_model.pt", help="Path to the model"
+    )
     args = parser.parse_args()
     BATCH_SIZE = args.batch_size
     MODEL_PATH = args.model_path
 
     logger = Logger()
-    logger.start('query data from database')
+    logger.start("query data from database")
     rows = query_data()
     logger.end()
-    logger.start('inference')
+    logger.start("inference")
     inference(rows, BATCH_SIZE)
     logger.end()
     logger.end_all()

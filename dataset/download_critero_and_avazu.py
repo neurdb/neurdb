@@ -4,16 +4,20 @@ import zipfile
 import urllib.request
 from tqdm import tqdm
 
+
 class DownloadProgressBar(tqdm):
     def update_to(self, b=1, bsize=1, tsize=None):
         if tsize is not None:
             self.total = tsize
         self.update(b * bsize - self.n)
 
+
 def download(url, output_path):
-    with DownloadProgressBar(unit='B', unit_scale=True,
-                             miniters=1, desc=url.split('/')[-1]) as t:
+    with DownloadProgressBar(
+        unit="B", unit_scale=True, miniters=1, desc=url.split("/")[-1]
+    ) as t:
         urllib.request.urlretrieve(url, filename=output_path, reporthook=t.update_to)
+
 
 if __name__ == "__main__":
     # if not os.path.exists('../data/avazu/'):
@@ -25,11 +29,14 @@ if __name__ == "__main__":
     #     zip_ref.extractall('../data/avazu/')
     # print("Done.")
 
-    if not os.path.exists('../data/criteo/'):
-        os.mkdir('../data/criteo/')
+    if not os.path.exists("../data/criteo/"):
+        os.mkdir("../data/criteo/")
     print("Begin to download criteo data, the total size is 3GB...")
-    download('https://worksheets.codalab.org/rest/bundles/0x8dca5e7bac42470aa445f9a205d177c6/contents/blob/', '../data/criteo/criteo.zip')
+    download(
+        "https://worksheets.codalab.org/rest/bundles/0x8dca5e7bac42470aa445f9a205d177c6/contents/blob/",
+        "../data/criteo/criteo.zip",
+    )
     print("Unzipping criteo dataset...")
-    with zipfile.ZipFile('../data/criteo/criteo.zip', 'r') as zip_ref:
-        zip_ref.extractall('../data/criteo/')
+    with zipfile.ZipFile("../data/criteo/criteo.zip", "r") as zip_ref:
+        zip_ref.extractall("../data/criteo/")
     print("Done.")

@@ -18,7 +18,7 @@ def save_model_weight(model: nn.Module, model_repo: str) -> (bytes, str):
     model_path = os.path.join(model_repo, "mlp_model.pt")
     torch.save(model.state_dict(), model_path)
 
-    with open(model_path, 'rb') as file:
+    with open(model_path, "rb") as file:
         model_binary = file.read()
 
     return model_binary, model_path
@@ -34,7 +34,7 @@ def save_model_jit(model: nn.Module, model_repo: str) -> (str, str, str):
     model_path = model_repo + "/mlp_model.pt"
     torch.jit.save(torch.jit.script(model), model_path)
 
-    with open(model_path, 'rb') as file:
+    with open(model_path, "rb") as file:
         model_binary = file.read()
 
     return model_binary, model_path

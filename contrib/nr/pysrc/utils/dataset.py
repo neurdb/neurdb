@@ -1,14 +1,18 @@
+import os
 import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 from torch.utils.data import DataLoader, random_split
 
+from logger.logger import logger
+from tqdm.contrib.logging import logging_redirect_tqdm
+
 
 class LibsvmDataset(Dataset):
-    """ Dataset loader for Libsvm data format """
+    """Dataset loader for Libsvm data format"""
 
     def __init__(self, data: str):
-        self.data = data.split('\n')
+        self.data = data.split("\n")
         self._load_data()
 
     def _load_data(self):
@@ -20,12 +24,12 @@ class LibsvmDataset(Dataset):
         unique_features = set()
         for line in self.data:
             if not line:
-                continue    # skip empty lines
-            columns = line.strip().split(' ')
+                continue  # skip empty lines
+            columns = line.strip().split(" ")
             nfields_in_line = len(columns) - 1
             max_nfields = max(max_nfields, nfields_in_line)
 
-            pairs = [list(map(int, pair.split(':'))) for pair in columns[1:]]
+            pairs = [list(map(int, pair.split(":"))) for pair in columns[1:]]
             ids, values = zip(*pairs) if pairs else ([], [])
             ids_list.append(ids)
             values_list.append(values)
@@ -44,18 +48,27 @@ class LibsvmDataset(Dataset):
         with tqdm(total=self.nsamples) as pbar:
             for i in range(self.nsamples):
                 try:
-                    self.feat_id[i, :len(ids_list[i])] = torch.tensor(ids_list[i], dtype=torch.long)
-                    self.feat_value[i, :len(values_list[i])] = torch.tensor(values_list[i], dtype=torch.float)
+                    self.feat_id[i, : len(ids_list[i])] = torch.tensor(
+                        ids_list[i], dtype=torch.long
+                    )
+                    self.feat_value[i, : len(values_list[i])] = torch.tensor(
+                        values_list[i], dtype=torch.float
+                    )
                 except Exception as e:
-                    print(f'Incorrect data format in sample {i}! Error: {e}')
+                    print(f"Incorrect data format in sample {i}! Error: {e}")
                 pbar.update(1)
-        print(f'# {self.nsamples} data samples loaded...')
+
+        logger.debug("data samples loaded", n_samples=self.nsamples)
 
     def __len__(self):
         return self.nsamples
 
     def __getitem__(self, idx):
-        return {'id': self.feat_id[idx], 'value': self.feat_value[idx], 'y': self.y[idx]}
+        return {
+            "id": self.feat_id[idx],
+            "value": self.feat_value[idx],
+            "y": self.y[idx],
+        }
 
 
 def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str):
@@ -69,25 +82,33 @@ def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str):
     test_size = int(total_samples * test_split)
     train_size = total_samples - val_size - test_size
 
-    train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
+    train_dataset, val_dataset, test_dataset = random_split(
+        dataset, [train_size, val_size, test_size]
+    )
 
-    train_loader = DataLoader(train_dataset,
-                              batch_size=batch_size,
-                              shuffle=True,
-                              num_workers=data_loader_worker,
-                              pin_memory=True)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=data_loader_worker,
+        pin_memory=True,
+    )
 
-    val_loader = DataLoader(val_dataset,
-                            batch_size=batch_size,
-                            shuffle=False,
-                            num_workers=data_loader_worker,
-                            pin_memory=True)
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=data_loader_worker,
+        pin_memory=True,
+    )
 
-    test_loader = DataLoader(test_dataset,
-                             batch_size=batch_size,
-                             shuffle=False,
-                             num_workers=data_loader_worker,
-                             pin_memory=True)
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=data_loader_worker,
+        pin_memory=True,
+    )
 
     return train_loader, val_loader, test_loader, nfields, nfeat
 
@@ -99,9 +120,11 @@ def build_inference_loader(data_loader_worker: int, data: str, batch_size=0):
     total_samples = len(dataset)
     if batch_size == 0:
         batch_size = total_samples
-    loader = DataLoader(dataset,
-                        batch_size=batch_size,
-                        shuffle=False,
-                        num_workers=data_loader_worker,
-                        pin_memory=True)
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=data_loader_worker,
+        pin_memory=True,
+    )
     return loader, nfields, nfeat
