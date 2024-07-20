@@ -37,7 +37,7 @@ until $NEURDBPATH/psql/bin/psql -h localhost -p 5432 -U postgres -c '\q'; do
 done
 
 # Load dataset
-$NEURDBPATH/psql/bin/psql -h localhost -p 5432 -U postgres -f $NEURDBPATH/dataset/iris_psql.sql
+$NEURDBPATH/psql/bin/psql -h localhost -p 5432 -U postgres -f $NEURDBPATH/dataset/iris/iris_psql.sql
 echo "DB Started!"
 
 # Install packages
@@ -49,7 +49,8 @@ cd $NEURDBPATH/neurdb_api/python
 pip3 install -e . --config-settings editable_mode=compat
 
 # Run python server
-nohup python3 $NEURDBPATH/contrib/nr/pysrc/app.py &
+cd $NEURDBPATH/contrib/nr/pysrc
+nohup python3 app.py &
 echo "Python Server started!"
 
 # Compile nr extension
@@ -70,7 +71,7 @@ echo "Python Server started!"
 #cp sql/pg_model--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
 #cp build/libpg_model.so $NEURDBPATH/psql/lib/postgresql
 #echo "Install NR Model Extension Done"
-
+ 
 # Compile nr_preprocessing extension
 cd $NEURDBPATH/contrib/nr_preprocessing
 make
