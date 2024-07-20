@@ -11,7 +11,8 @@ from cache.model_cache import ModelCache
 from cli import train, inference, finetune
 
 
-configure_logging("./app.log")
+# configure_logging("./app.log")
+configure_logging(None)
 
 app = Flask(__name__)
 
