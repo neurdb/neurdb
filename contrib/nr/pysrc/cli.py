@@ -10,7 +10,7 @@ import traceback
 from shared_config.config import parse_config_arguments
 from apps import build_model
 from connection import DatabaseModelHandler, NeurDBModelHandler
-from utils.dataset import libsvm_dataloader, build_inference_loader
+from dataloader.libsvm import libsvm_dataloader, build_inference_loader
 
 # from cache.model_cache import ModelCache
 
