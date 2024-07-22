@@ -5,6 +5,8 @@ from shared_config.config import parse_config_arguments
 from app.routes import train_bp, inference_bp, finetune_bp
 from app.handlers.data_dispatcher import LibSvmDataQueue
 from app.websocket import socketio
+from cache.data_cache import DataCache
+from dataloader.steam_libsvm import StreamingDataLoader
 
 app = Flask(__name__)
 
@@ -23,13 +25,16 @@ NEURDB_CONNECTOR = NeurDBModelHandler(
     }
 )
 
-data_queue = LibSvmDataQueue(socketio, maxsize=100)
-
 # define global contexts
+data_cache = DataCache()
+data_queue = LibSvmDataQueue(socketio=socketio, data_cache=data_cache, maxsize=100)
+data_loader = StreamingDataLoader(data_cache=data_cache)
+
 with app.app_context():
     app.config['config_args'] = config_args
     app.config['db_connector'] = NEURDB_CONNECTOR
     app.config['data_queue'] = data_queue
+    app.config['data_loader'] = data_loader
 
 # register http svc
 app.register_blueprint(train_bp)

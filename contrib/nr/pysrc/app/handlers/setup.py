@@ -87,15 +87,6 @@ class Setup:
             except FileNotFoundError:
                 return [], f"model {self._model_name} not trained yet"
 
-            # check if test data matching model dimension
-            # model_nfeat, model_nfields = builder.model_dimension
-            # if nfields > model_nfields or nfeat > model_nfeat:
-            #     return (
-            #         [],
-            #         f"model {model_name} trained with nfields = {model_nfields} and nfeat = {model_nfeat}. "
-            #         f"cannot handle input with nfields = {nfields} and nfeat = {nfeat}.",
-            #     )
-
             infer_res = builder.inference(inference_loader)
             return infer_res, None
 
