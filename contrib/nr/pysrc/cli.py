@@ -9,7 +9,7 @@ from logger.logger import logger, configure_logging
 import traceback
 from shared_config.config import parse_config_arguments
 from models import build_model
-from connection import DatabaseModelHandler, NeurDBModelHandler
+from connection import NeurDBModelHandler
 from dataloader.libsvm import libsvm_dataloader, build_inference_loader
 
 # from cache.model_cache import ModelCache
