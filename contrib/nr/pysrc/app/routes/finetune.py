@@ -1,9 +1,9 @@
-from flask import request, jsonify, g
+from flask import request, jsonify, current_app
 from app.handlers.finetune import finetune
 import traceback
 import orjson
 from logger.logger import logger
-from . import finetune_bp
+from app.routes.blueprints import finetune_bp
 
 
 @finetune_bp.route('/finetune', methods=['POST'])
@@ -15,11 +15,14 @@ def model_finetune():
         libsvm_data = params.get("libsvm_data")
         batch_size = int(params.get("batch_size"))
 
+        config_args = current_app.config['config_args']
+        db_connector = current_app.config['db_connector']
+
         model_id = finetune(
             model_name=model_name,
             finetune_libsvm=libsvm_data,
-            args=g.config_args,
-            db=g.db_connector,
+            args=config_args,
+            db=db_connector,
             model_id=model_id,
             batch_size=batch_size,
         )

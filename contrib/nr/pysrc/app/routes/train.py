@@ -1,9 +1,9 @@
-from flask import request, jsonify, g
+from flask import request, jsonify, current_app
 from app.handlers.train import train
 import traceback
 import orjson
 from logger.logger import logger
-from . import train_bp
+from app.routes.blueprints import train_bp
 
 
 @train_bp.route('/train', methods=['POST'])
@@ -14,11 +14,14 @@ def model_train():
         model_name = params.get("model_name")
         data = params.get("libsvm_data")
 
+        config_args = current_app.config['config_args']
+        db_connector = current_app.config['db_connector']
+
         model_id = train(
             model_name=model_name,
             training_libsvm=data,
-            args=g.config_args,
-            db=g.db_connector,
+            args=config_args,
+            db=db_connector,
             batch_size=batch_size
         )
 
