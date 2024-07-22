@@ -6,7 +6,6 @@ import torch.nn.functional as F
 
 
 class Embedding(nn.Module):
-
     def __init__(self, nfeat, nemb):
         super().__init__()
         self.embedding = nn.Embedding(nfeat, nemb)
@@ -17,12 +16,11 @@ class Embedding(nn.Module):
         :param x:   {'id': LongTensor B*F, 'value': FloatTensor B*F}
         :return:    embeddings B*F*E
         """
-        emb = self.embedding(x['id'])                           # B*F*E
-        return emb * x['value'].unsqueeze(2)                    # B*F*E
+        emb = self.embedding(x["id"])  # B*F*E
+        return emb * x["value"].unsqueeze(2)  # B*F*E
 
 
 class Linear(nn.Module):
-
     def __init__(self, nfeat):
         super().__init__()
         self.weight = nn.Embedding(nfeat, 1)
@@ -33,12 +31,11 @@ class Linear(nn.Module):
         :param x:   {'id': LongTensor B*F, 'value': FloatTensor B*F}
         :return:    linear transform of x
         """
-        linear = self.weight(x['id']).squeeze(2) * x['value']   # B*F
-        return torch.sum(linear, dim=1) + self.bias             # B
+        linear = self.weight(x["id"]).squeeze(2) * x["value"]  # B*F
+        return torch.sum(linear, dim=1) + self.bias  # B
 
 
 class FactorizationMachine(nn.Module):
-
     def __init__(self, reduce_dim=True):
         super().__init__()
         self.reduce_dim = reduce_dim
@@ -47,12 +44,12 @@ class FactorizationMachine(nn.Module):
         """
         :param x:   FloatTensor B*F*E
         """
-        square_of_sum = torch.sum(x, dim=1)**2                  # B*E
-        sum_of_square = torch.sum(x**2, dim=1)                  # B*E
-        fm = square_of_sum - sum_of_square                      # B*E
+        square_of_sum = torch.sum(x, dim=1) ** 2  # B*E
+        sum_of_square = torch.sum(x**2, dim=1)  # B*E
+        fm = square_of_sum - sum_of_square  # B*E
         if self.reduce_dim:
-            fm = torch.sum(fm, dim=1)                           # B
-        return 0.5 * fm                                         # B*E/B
+            fm = torch.sum(fm, dim=1)  # B
+        return 0.5 * fm  # B*E/B
 
 
 def get_triu_indices(n, diag_offset=1):
@@ -66,7 +63,6 @@ def get_all_indices(n):
 
 
 class MLP(nn.Module):
-
     def __init__(self, ninput, nlayers, nhid, dropout, noutput=1):
         super().__init__()
         layers = list()
@@ -76,7 +72,8 @@ class MLP(nn.Module):
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(p=dropout))
             ninput = nhid
-        if nlayers==0: nhid = ninput
+        if nlayers == 0:
+            nhid = ninput
         layers.append(nn.Linear(nhid, noutput))
         self.mlp = nn.Sequential(*layers)
 
@@ -92,14 +89,14 @@ def normalize_adj(adj):
     """normalize and return a adjacency matrix (numpy array)"""
     rowsum = np.array(adj.sum(1))
     d_inv_sqrt = np.power(rowsum, -0.5).flatten()
-    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
+    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.0
     d_mat_inv_sqrt = np.diag(d_inv_sqrt)
     return adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt)
 
 
 class SelfAttnLayer(nn.Module):
     def __init__(self, nemb):
-        """ Self Attention Layer (scaled dot-product)"""
+        """Self Attention Layer (scaled dot-product)"""
         super(SelfAttnLayer, self).__init__()
         self.Wq = nn.Linear(nemb, nemb, bias=False)
         self.Wk = nn.Linear(nemb, nemb, bias=False)
@@ -112,21 +109,20 @@ class SelfAttnLayer(nn.Module):
         """
         query, key, value = self.Wq(x), self.Wk(x), self.Wv(x)
         d_k = query.size(-1)
-        scores = torch.einsum('bxe,bye->bxy', query, key)               # B*F*F
-        attn_weights = F.softmax(scores / math.sqrt(d_k), dim=-1)       # B*F*F
-        return torch.einsum('bxy,bye->bxe', attn_weights, value), attn_weights
+        scores = torch.einsum("bxe,bye->bxy", query, key)  # B*F*F
+        attn_weights = F.softmax(scores / math.sqrt(d_k), dim=-1)  # B*F*F
+        return torch.einsum("bxy,bye->bxe", attn_weights, value), attn_weights
 
 
 class scaled_dot_prodct_attention_(nn.Module):
-    ''' Scaled Dot-Product Attention '''
+    """Scaled Dot-Product Attention"""
 
-    def __init__(self, temperature, attn_dropout=0.):
+    def __init__(self, temperature, attn_dropout=0.0):
         super().__init__()
         self.temperature = temperature
         self.dropout = nn.Dropout(attn_dropout)
 
     def forward(self, q, k, v, mask=None):
-
         attn = torch.matmul(q / self.temperature, k.transpose(2, 3))
 
         if mask is not None:
@@ -139,21 +135,22 @@ class scaled_dot_prodct_attention_(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    '''Multi-head Attention Module'''
-    def __init__(self, nhead, ninput, n_k, n_v, dropout=0.):
+    """Multi-head Attention Module"""
+
+    def __init__(self, nhead, ninput, n_k, n_v, dropout=0.0):
         super(MultiHeadAttention, self).__init__()
         self.nhead, self.n_k, self.n_v = nhead, n_k, n_v
 
-        self.Wq = nn.Linear(ninput, nhead*n_k, bias=False)
-        self.Wk = nn.Linear(ninput, nhead*n_k, bias=False)
-        self.Wv = nn.Linear(ninput, nhead*n_v, bias=False)
+        self.Wq = nn.Linear(ninput, nhead * n_k, bias=False)
+        self.Wk = nn.Linear(ninput, nhead * n_k, bias=False)
+        self.Wv = nn.Linear(ninput, nhead * n_v, bias=False)
 
         self.attn_layer = scaled_dot_prodct_attention_(temperature=n_k**0.5)
 
         self.dropout = nn.Dropout(p=dropout)
         self.layer_norm = nn.LayerNorm(ninput, eps=1e-6)
 
-        self.fc = nn.Linear(nhead*n_v, ninput, bias=False)
+        self.fc = nn.Linear(nhead * n_v, ninput, bias=False)
 
     def forward(self, x, mask=None):
         """
@@ -164,19 +161,19 @@ class MultiHeadAttention(nn.Module):
         bsz, seq_len = x.size(0), x.size(1)
         residual = x
 
-        query = self.Wq(x).view(bsz, seq_len, self.nhead, self.n_k)     # B*F*H*Ek
-        key = self.Wk(x).view(bsz, seq_len, self.nhead, self.n_k)       # B*F*H*Ek
-        value = self.Wv(x).view(bsz, seq_len, self.nhead, self.n_v)     # B*F*H*Ev
+        query = self.Wq(x).view(bsz, seq_len, self.nhead, self.n_k)  # B*F*H*Ek
+        key = self.Wk(x).view(bsz, seq_len, self.nhead, self.n_k)  # B*F*H*Ek
+        value = self.Wv(x).view(bsz, seq_len, self.nhead, self.n_v)  # B*F*H*Ev
 
         q, k, v = query.transpose(1, 2), key.transpose(1, 2), value.transpose(1, 2)
 
         if mask is not None:
-            mask = mask.unsqueeze(1)                                    # B*1*N*N
+            mask = mask.unsqueeze(1)  # B*1*N*N
 
-        y, attn = self.attn_layer(q, k, v, mask=mask)                   # B*H*F*Ev,
+        y, attn = self.attn_layer(q, k, v, mask=mask)  # B*H*F*Ev,
 
-        y = y.transpose(1, 2).contiguous().view(bsz, seq_len, -1)       # B*F*(HxEv)
-        y = self.dropout(self.fc(y))                                    # B*F*E
+        y = y.transpose(1, 2).contiguous().view(bsz, seq_len, -1)  # B*F*(HxEv)
+        y = self.dropout(self.fc(y))  # B*F*E
         y += residual
-        y = self.layer_norm(y)                                          # B*F*E
+        y = self.layer_norm(y)  # B*F*E
         return y, attn

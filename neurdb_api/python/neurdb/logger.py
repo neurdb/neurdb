@@ -2,6 +2,7 @@ from decimal import ROUND_HALF_UP, Decimal
 import logging
 import os
 from pathlib import Path
+import sys
 from typing import Optional
 import structlog
 
@@ -55,7 +56,7 @@ structlog.configure(
     cache_logger_on_first_use=False,
 )
 
-logger_name = "neurdb_algserver"
+logger_name = "neurdb_api"
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(logger_name)
 logger = logger.bind(logger=logger_name)

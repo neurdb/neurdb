@@ -26,13 +26,15 @@ class NeurDBModelHandler:
         serialized_model = neurdb.ModelSerializer.serialize_model(model)
         return self._conn.save_model(serialized_model)
 
-    def update_layers(self, model_id: int, model: ModelStorage, start_layer_id: int) -> int:
+    def update_layers(
+        self, model_id: int, model: ModelStorage, start_layer_id: int
+    ) -> int:
         for i, l in enumerate(model.layer_sequence):
             if i < start_layer_id:
                 continue
 
             self._conn.update_model(model_id, i, l.get_pickled())
-            logger.debug(f"updated layer {i} of model {model_id}")
+            logger.debug(f"layer updated", model_id=model_id, layer_id=i)
 
         return model_id
 

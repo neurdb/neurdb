@@ -74,11 +74,7 @@ echo "Python Server started!"
  
 # Compile nr_preprocessing extension
 cd $NEURDBPATH/contrib/nr_preprocessing
-make
 make install
-cp nr_preprocessing.control $NEURDBPATH/psql/share/postgresql/extension
-cp sql/nr_preprocessing--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
-cp build/libnr_preprocessing.so $NEURDBPATH/psql/lib/postgresql
 echo "Install NR Preprocessing Extension Done"
 
 echo "Please use 'control + c' to exist the logging print"

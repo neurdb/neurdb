@@ -3,9 +3,9 @@ import re
 
 def parse_conditions(input_str):
     # Extract the field names
-    fields = re.findall(r'\"([^\"]+)\"\s*\"([^\"]+)\"\)', input_str)
+    fields = re.findall(r"\"([^\"]+)\"\s*\"([^\"]+)\"\)", input_str)
     # Extract the values
-    values = re.findall(r':val\s*\"([^\"]+)\"', input_str)
+    values = re.findall(r":val\s*\"([^\"]+)\"", input_str)
 
     # Combine fields and values into a condition string
     conditions = []
