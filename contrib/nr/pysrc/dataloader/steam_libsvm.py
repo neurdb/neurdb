@@ -18,7 +18,7 @@ class StreamingDataLoader:
         self.name_space = name_space
         self.end_signal = "end_position"
         self.cache_svc_url = cache_svc_url
-        self.data_queue = queue.Queue(maxsize=10)
+        self.data_queue = queue.Queue(maxsize=20)
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self.fetch_data, daemon=True)
         self.thread.start()

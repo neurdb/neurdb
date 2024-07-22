@@ -1,7 +1,7 @@
 from einops import rearrange
 import torch
 import torch.nn as nn
-from apps.armnet.utils.entmax import EntmaxBisect
+from models.armnet.utils.entmax import EntmaxBisect
 from .layers import Embedding, MLP
 
 

@@ -2,8 +2,8 @@ from logger.logger import logger
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from apps.armnet.model.model import ARMNetModel
-from apps.base.builder import BuilderBase
+from models.armnet.model.model import ARMNetModel
+from models.base.builder import BuilderBase
 import time
 from utils.date import timeSince
 from utils.metrics import AverageMeter, roc_auc_compute_fn
