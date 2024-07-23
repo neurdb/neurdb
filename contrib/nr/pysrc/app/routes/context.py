@@ -32,16 +32,16 @@ def before_execute(dataset_name: str, data_key: str, client_id: str) -> bool:
     client = current_app.config['clients'][client_id]
     print(f"[socket]: set task for client {client_id}...")
 
-    # assign the data dispaccher
-    g.data_dispatcher.set_task(_cache, client)
-    if not g.data_dispatcher.start():
-        return False
-
     # register it as global variables
     # todo: multiple request share same dispatcher, add refercne count
     dispatchers = current_app.config['dispatchers']
     if dataset_name not in dispatchers:
-        dispatchers[dataset_name] = dispatchers
+        dispatchers[dataset_name] = g.data_dispatcher
+
+    # assign the data dispaccher
+    g.data_dispatcher.set_task(_cache, client)
+    if not g.data_dispatcher.start():
+        return False
 
     # create dataset
     data = StreamingDataSet(_cache, data_key=data_key)

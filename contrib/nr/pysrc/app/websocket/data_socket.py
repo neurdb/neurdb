@@ -3,7 +3,7 @@ from cache.data_cache import DataCache
 from flask_socketio import Namespace, emit
 from flask_socketio import SocketIO
 
-socketio = SocketIO(ping_timeout=30, ping_interval=5)
+socketio = SocketIO(ping_timeout=30, ping_interval=5, logger=False, engineio_logger=False)
 
 
 class NRDataManager(Namespace):

@@ -55,4 +55,6 @@ socketio.init_app(app, async_mode=async_mode)
 socketio.on_namespace(NRDataManager('/'))
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=app.config['config_args'].server_port)
+    socketio.run(app,
+                 host="0.0.0.0", port=app.config['config_args'].server_port,
+                 allow_unsafe_werkzeug=True)
