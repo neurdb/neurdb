@@ -2,7 +2,7 @@ import argparse
 from typing import List, Tuple, Optional
 import numpy as np
 import traceback
-from dataloader.libsvm import libsvm_dataloader, build_inference_loader
+from dataloader.steam_libsvm_dataset import libsvm_dataloader, build_inference_loader
 from connection import NeurDBModelHandler
 from models import build_model
 from shared_config.config import DEVICE
@@ -14,7 +14,7 @@ class Setup:
     def __init__(
             self,
             model_name: str,
-            libsvm_data: str,
+            libsvm_data,
             args: argparse.Namespace,
             db: NeurDBModelHandler,
     ) -> None:
