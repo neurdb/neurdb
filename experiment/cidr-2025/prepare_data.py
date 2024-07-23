@@ -65,18 +65,18 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
     for table_name, data in datasets.items():
         _create_table(cursor, conn, table_name, data)
 
-    insert_query = (
-        f"INSERT INTO {table_name} "
-        f"(label, {', '.join([f'feature{i}' for i in range(1, len(data.columns))])}) "
-        f"VALUES %s"
-    )
-    extras.execute_values(cursor, insert_query, data.values)
-    conn.commit()
+        insert_query = (
+            f"INSERT INTO {table_name} "
+            f"(label, {', '.join([f'feature{i}' for i in range(1, len(data.columns))])}) "
+            f"VALUES %s"
+        )
+        extras.execute_values(cursor, insert_query, data.values)
+        conn.commit()
 
-    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-    logger.debug(
-        f"Successfully created table {table_name} with {cursor.fetchone()[0]} rows, random state {random_state}..."
-    )
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        logger.debug(
+            f"Successfully created table {table_name} with {cursor.fetchone()[0]} rows, random state {random_state}..."
+        )
     conn.close()
     logger.debug("Done creating tables...")
 
