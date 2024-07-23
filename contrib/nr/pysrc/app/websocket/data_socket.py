@@ -3,7 +3,6 @@ from cache.data_cache import DataCache
 from flask_socketio import Namespace, emit
 from flask_socketio import SocketIO
 
-
 socketio = SocketIO(ping_timeout=30, ping_interval=5)
 
 
@@ -61,11 +60,12 @@ class NRDataManager(Namespace):
             emit('response', {'message': 'Queue is full, data not added.'})
 
 
-def emit_request_data(key: str, client):
+def emit_request_data(key: str, client_id: str):
     """
-    Emit request_data event to a specific client
-    :param key: The key to be sent
-    :param sid: The session ID of the specific client
-    :return: None
+    Emit request_data event to clients
+    :param key:
+    :param client_id:
+    :return:
     """
-    socketio.emit("request_data", {'key': key})
+    print("[socket]: emit_request_data...")
+    socketio.emit('request_data', {'key': key})

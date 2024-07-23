@@ -54,5 +54,4 @@ socketio.init_app(app, async_mode=async_mode)
 socketio.on_namespace(NRDataManager('/'))
 
 if __name__ == "__main__":
-    # support WebSocket while preserving all standard HTTP functionalities.
     socketio.run(app, host="0.0.0.0", port=app.config['config_args'].server_port)
