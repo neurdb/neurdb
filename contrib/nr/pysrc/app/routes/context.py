@@ -1,7 +1,7 @@
 from app.routes.blueprints import context_bp
 
 from app.handlers.data_dispatcher import LibSvmDataDispatcher
-from app.websocket.data_dispatcher import socketio
+from app.websocket.data_socket import socketio
 from flask import current_app, g
 from dataloader.steam_libsvm_dataset import StreamingDataSet
 

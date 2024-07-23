@@ -3,7 +3,7 @@ import time
 from flask_socketio import SocketIO
 from cache.data_cache import DataCache
 import torch
-from app.websocket.data_dispatcher import emit_request_data
+from app.websocket.data_socket import emit_request_data
 
 
 class LibSvmDataDispatcher:
