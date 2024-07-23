@@ -3,6 +3,7 @@ import time
 from flask_socketio import SocketIO
 from cache.data_cache import DataCache
 import torch
+from app.websocket.data_dispatcher import emit_request_data
 
 
 class LibSvmDataDispatcher:
@@ -78,7 +79,7 @@ class LibSvmDataDispatcher:
             key = self.data_cache.is_full()
             if key:
                 print(f"[LibSvmDataDispatcher] fetching data for {key}...")
-                self.socketio.emit('request_data', {'key': key})
+                emit_request_data(key)
             time.sleep(0.1)
 
     def stop(self):
