@@ -26,11 +26,13 @@ NEURDB_CONNECTOR = None
 
 # shared global contexts among tasks.
 data_cache = {}
+dispatchers = {}
 
 with app.app_context():
     app.config['config_args'] = config_args
     app.config['db_connector'] = NEURDB_CONNECTOR
     app.config['data_cache'] = data_cache
+    app.config['dispatchers'] = dispatchers
 
 app.before_request(before_request_func)
 app.after_request(after_request_func)

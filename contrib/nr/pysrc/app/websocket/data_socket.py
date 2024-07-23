@@ -34,6 +34,10 @@ def receive_db_data(data: dict):
     print("[socket]: receive_db_data...")
     dataset_name = data['dataset_name']
     dataset = data['dataset']
+    if dataset_name not in current_app.config['dispatchers']:
+        emit('response', {'message': 'dispatchers is not initialized.'})
+        return
+
     dispatcher = current_app.config['dispatchers'][dataset_name]
 
     if dispatcher.set(dataset):

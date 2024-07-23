@@ -14,29 +14,6 @@ dataset = """0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 518
 0 164:1 3515:1 5042:1 5052:1 5053:1 5055:1 5058:1 5062:1 5074:1 5149:1\n
 0 4:1 1177:1 5044:1 5049:1 5054:1 5057:1 5058:1 5060:1 5071:1 5152:1"""
 
-# Socket.IO client
-sio = socketio.Client()
-
-
-# Define the event handler for the 'response' event
-@sio.on('response')
-def on_response(data):
-    print(f"Server response: {data}")
-
-
-# Define the event handler for the 'request_data' event
-@sio.on('request_data')
-def on_request_data(data):
-    key = data.get('key')
-    print(f"Received request_data for key: {key}")
-    # Handle the request data logic here
-    # For example, you might fetch data from a file or database and send it back to the server
-    sio.emit('receive_db_data', {'dataset_name': key, 'dataset': dataset})
-
-
-# Connect to the Socket.IO server
-sio.connect(SERVER_URL)
-
 
 def test_train_endpoint(batch_size, model_name, dataset_name):
     url = f"{SERVER_URL}/train"
@@ -72,29 +49,7 @@ def test_inference_endpoint(model_name, model_id):
         print(response.content)
 
 
-def test_dataset_profiling(dataset_name, nfeat, nfield):
-    profiling_data = {
-        'dataset_name': dataset_name,
-        'nfeat': nfeat,
-        'nfield': nfield
-    }
-    sio.emit('dataset_profiling', profiling_data)
-
-
-def test_receive_db_data(dataset_name, dataset):
-    db_data = {
-        'dataset_name': dataset_name,
-        'dataset': dataset
-    }
-    sio.emit('receive_db_data', db_data)
-
-
 if __name__ == "__main__":
-    # Test dataset profiling via Socket.IO
-    test_dataset_profiling('frappe', 5500, 10)
-
-    # Test sending dataset data via Socket.IO
-    test_receive_db_data('frappe', dataset)
 
     # Test sending the libsvm data to train endpoint
     _batch_size = 32  # Example batch size
@@ -106,7 +61,3 @@ if __name__ == "__main__":
     if _model_id:
         _model_id = 1
     test_inference_endpoint(_model_name, int(_model_id))
-
-    # Wait for responses and then disconnect
-    sio.sleep(2)
-    sio.disconnect()
