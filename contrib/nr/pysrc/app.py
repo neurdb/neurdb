@@ -45,7 +45,7 @@ app.register_blueprint(inference_bp)
 app.register_blueprint(finetune_bp)
 
 # register socket svcs
-socketio = SocketIO(app)
+socketio = SocketIO(app, ping_timeout=30, ping_interval=5)
 socketio.on_namespace(NRDataManager('/'))
 
 if __name__ == "__main__":
