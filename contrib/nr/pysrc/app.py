@@ -4,8 +4,9 @@ from logger.logger import configure_logging
 from flask import Flask, g
 from shared_config.config import parse_config_arguments
 from app.routes import train_bp, inference_bp, finetune_bp
-from app.websocket import socketio
+from app.websocket.data_socket import NRDataManager
 from app.routes.context import before_request_func, after_request_func
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
 
@@ -44,7 +45,8 @@ app.register_blueprint(inference_bp)
 app.register_blueprint(finetune_bp)
 
 # register socket svcs
-socketio.init_app(app)
+socketio = SocketIO(app)
+socketio.on_namespace(NRDataManager('/'))
 
 if __name__ == "__main__":
     # support WebSocket while preserving all standard HTTP functionalities.

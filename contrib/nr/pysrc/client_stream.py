@@ -15,12 +15,13 @@ dataset = """0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 518
 0 4:1 1177:1 5044:1 5049:1 5054:1 5057:1 5058:1 5060:1 5071:1 5152:1"""
 
 
-def test_train_endpoint(batch_size, model_name, dataset_name):
+def test_train_endpoint(batch_size, model_name, dataset_name, client_id):
     url = f"{SERVER_URL}/train"
     data = {
         'batch_size': batch_size,
         'model_name': model_name,
-        'dataset_name': dataset_name
+        'dataset_name': dataset_name,
+        'client_socket_id': client_id
     }
     response = requests.post(url, data=data)
     if response.status_code == 200:
@@ -33,11 +34,12 @@ def test_train_endpoint(batch_size, model_name, dataset_name):
         return None
 
 
-def test_inference_endpoint(model_name, model_id):
+def test_inference_endpoint(model_name, model_id, client_id):
     url = f"{SERVER_URL}/inference"
     data = {
         'model_name': model_name,
-        'model_id': model_id
+        'model_id': model_id,
+        'client_socket_id': client_id
     }
     response = requests.post(url, data=data)
     if response.status_code == 200:
@@ -51,14 +53,14 @@ def test_inference_endpoint(model_name, model_id):
 
 if __name__ == "__main__":
 
-    client_id = ""
+    _client_id = "7_26653Q00DIOGTsAAAB"
     # Test sending the libsvm data to train endpoint
     _batch_size = 32  # Example batch size
     _model_name = 'armnet'  # Example model name
     _dataset_name = 'frappe'
 
-    _model_id = test_train_endpoint(_batch_size, _model_name, _dataset_name)
+    _model_id = test_train_endpoint(_batch_size, _model_name, _dataset_name, _client_id)
 
     if _model_id:
         _model_id = 1
-    test_inference_endpoint(_model_name, int(_model_id))
+    test_inference_endpoint(_model_name, int(_model_id), _client_id)
