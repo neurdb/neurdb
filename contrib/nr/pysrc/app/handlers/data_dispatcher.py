@@ -5,14 +5,28 @@ from cache.data_cache import DataCache
 import torch
 
 
-class LibSvmDataQueue:
-    def __init__(self, socketio: SocketIO, data_cache: DataCache, max_nfields: int):
+class LibSvmDataDispatcher:
+    def __init__(self, socketio: SocketIO, data_cache: DataCache):
         self.socketio = socketio
         self.data_cache = data_cache
-        self.max_nfields = max_nfields
+
+        self.max_nfields = None
+        self.thread = None
+        self.stop_event = threading.Event()
+
+    def start(self) -> bool:
+        # self.data_cache.dataset_statistics[1] is number of filed
+        if self.data_cache.dataset_statistics[1] is None:
+            print("Cannot start the dispatcher, need max_nfields")
+            return False
+
+        self.max_nfields = self.data_cache.dataset_statistics[1]
+
+        self.stop_event.clear()
         self.thread = threading.Thread(target=self._background_thread)
         self.thread.daemon = True
         self.thread.start()
+        return True
 
     def batch_preprocess(self, data: str):
         data = data.split('\n')
@@ -56,10 +70,16 @@ class LibSvmDataQueue:
             return False
 
     def _background_thread(self):
-        print("[LibSvmDataQueue] thread started...")
-        while True:
+        print("[LibSvmDataDispatcher] thread started...")
+        while not self.stop_event.is_set():
             key = self.data_cache.is_full()
             if key:
-                print(f"[LibSvmDataQueue] fetching data for {key}...")
+                print(f"[LibSvmDataDispatcher] fetching data for {key}...")
                 self.socketio.emit('request_data', {'key': key})
             time.sleep(0.1)
+
+    def stop(self):
+        if self.thread is not None:
+            self.stop_event.set()
+            self.thread.join()
+            self.thread = None
