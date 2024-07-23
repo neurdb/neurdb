@@ -1,13 +1,20 @@
+import os
+
 import psycopg2
 from psycopg2 import extras
 from psycopg2.extensions import register_adapter, AsIs
 import numpy as np
 import argparse
 import pandas as pd
+from util.file2dataframe import libsvm2csv, npy2csv
+from neurdb.logger import configure_logging
+from neurdb.logger import logger
+
+configure_logging(None)
 
 DB_PARAMS = {
     "dbname": "postgres",
-    "user": "postgres",
+    "user": "siqi",
     "host": "127.0.0.1",
     "port": "5432",
 }
@@ -15,7 +22,7 @@ DB_PARAMS = {
 register_adapter(np.int64, AsIs)
 
 
-def connect_to_db() -> tuple:
+def _connect_to_db() -> tuple:
     """
     Connect to the database
     :return connection and cursor
@@ -25,117 +32,98 @@ def connect_to_db() -> tuple:
     return conn, cursor
 
 
-def _exists_table(cursor, table_name: str):
-    cursor.execute(
-        "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s)",
-        (table_name,),
-    )
-    table_exists = cursor.fetchone()[0]
-    return table_exists
-
-
-def _drop_table(cursor, table_name: str):
-    cursor.execute(f"DROP TABLE {table_name}")
-
-
-def drop_tables() -> None:
-    conn, cursor = connect_to_db()
-
-    for table_name in ["frappe", "frappe_raw"]:
-        if _exists_table(cursor, table_name):
-            _drop_table(cursor, table_name)
-        conn.commit()
-
-    conn.close()
-
-
-def create_tables() -> None:
-    conn, cursor = connect_to_db()
-
-    for table_name in ["frappe", "frappe_raw"]:
-        if not _exists_table(cursor, table_name):
-            cursor.execute(
-                f"CREATE TABLE {table_name} ("
-                "id SERIAL PRIMARY KEY,"
-                "label INTEGER,"
-                "feature1 INTEGER,"
-                "feature2 INTEGER,"
-                "feature3 INTEGER,"
-                "feature4 INTEGER,"
-                "feature5 INTEGER,"
-                "feature6 INTEGER,"
-                "feature7 INTEGER,"
-                "feature8 INTEGER,"
-                "feature9 INTEGER,"
-                "feature10 INTEGER"
-                ")",
-            )
-            conn.commit()
-    conn.close()
-
-
-def prepare_data(number_of_rows) -> None:
+def _create_table(cursor, conn, table_name: str, data: pd.DataFrame):
     """
-    Prepare data for the experiment. Two tables are created: frappe and frappe_raw. frappe_raw contains the original data,
-     and frappe contains the data for the experiment.
-    :param number_of_rows: number of rows in frappe table
+    Create a table in the database
+    :param cursor: current cursor
+    :param conn: current connection
+    :param table_name: name of the table
+    :param data: pandas DataFrame (this function only need the columns, not the data)
     :return None
     """
-    conn, cursor = connect_to_db()
 
-    # ******* frappe table *******
-    cursor.execute("SELECT COUNT(*) FROM frappe")
-    current_row_num = cursor.fetchone()[0]
+    # Drop the old table if it exists
+    cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
+    conn.commit()
 
-    if current_row_num > number_of_rows:
-        raise Exception(
-            f"Number of rows in frappe table is {current_row_num}, greater than {number_of_rows}"
+    # Create the new table
+    query = f"CREATE TABLE IF NOT EXISTS {table_name} ("
+    query += "id SERIAL PRIMARY KEY,"
+    query += "label INTEGER,"
+    for i in range(1, len(data.columns)):
+        data_type = "INTEGER" if data[data.columns[i]].dtype == "int64" else "FLOAT"
+        query += f"feature{i} {data_type},"
+    query = query[:-1] + ")"
+    cursor.execute(query)
+    conn.commit()
+
+
+def create_tables_for_dataset(data: pd.DataFrame, table_name: str) -> None:
+    """
+    We create six tables for each dataset:
+    - raw: the original data, this contains 50% of the data
+    - test1, 2, 3, 4, 5: these tables contain 10% of the data each
+    :param data: pandas DataFrame
+    :param table_name: name of the table
+    :return None
+    """
+    logger.debug(f"Creating tables for dataset {table_name}...")
+    conn, cursor = _connect_to_db()
+    data = data.sample(frac=1, random_state=10)
+    datasets = {
+        f"{table_name}_raw": data[: int(0.5 * len(data))],
+        f"{table_name}_test1": data[int(0.5 * len(data)): int(0.6 * len(data))],
+        f"{table_name}_test2": data[int(0.6 * len(data)): int(0.7 * len(data))],
+        f"{table_name}_test3": data[int(0.7 * len(data)): int(0.8 * len(data))],
+        f"{table_name}_test4": data[int(0.8 * len(data)): int(0.9 * len(data))],
+        f"{table_name}_test5": data[int(0.9 * len(data)):],
+    }
+
+    for table_name, data in datasets.items():
+        _create_table(cursor, conn, table_name, data)
+
+        insert_query = (
+            f"INSERT INTO {table_name} "
+            f"(label, {", ".join([f"feature{i}" for i in range(1, len(data.columns))])}) "
+            f"VALUES %s"
         )
-
-    # insert data into the frappe table
-    data = pd.read_csv("dataset/frappe.csv")
-    data = data.sample(n=number_of_rows - current_row_num, replace=True)
-    insert_query = "INSERT INTO frappe (label, feature1, feature2, feature3, feature4, feature5, feature6, feature7, feature8, feature9, feature10) VALUES %s"
-    # convert numpy.int64 to int
-    data = data.astype(int)
-    extras.execute_values(cursor, insert_query, data.values)
-    conn.commit()
-    cursor.execute("SELECT COUNT(*) FROM frappe")
-    print(f"Number of rows in frappe table: {cursor.fetchone()[0]}")
-
-    # ******* frappe_raw table *******
-    data = pd.read_csv("dataset/frappe.csv")
-    insert_query = "INSERT INTO frappe_raw (label, feature1, feature2, feature3, feature4, feature5, feature6, feature7, feature8, feature9, feature10) VALUES %s"
-    # convert numpy.int64 to int
-    data = data.astype(int)
-    extras.execute_values(cursor, insert_query, data.values)
-    conn.commit()
-    cursor.execute("SELECT COUNT(*) FROM frappe_raw")
-    print(f"Number of rows in frappe_raw table: {cursor.fetchone()[0]}")
+        extras.execute_values(cursor, insert_query, data.values)
+        conn.commit()
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        logger.debug(f"Successfully created table {table_name} with {cursor.fetchone()[0]} rows...")
     conn.close()
+    logger.debug("Done creating tables...")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--drop_tables",
-        action="store_true",
-        help="Drop the frappe and frappe_raw tables",
+        "--dataset_name",
+        type=str,
+        help="Name of the dataset"
     )
     parser.add_argument(
-        "--create_tables",
-        action="store_true",
-        help="Create the frappe and frappe_raw tables",
+        "--input_file",
+        type=str,
+        help="Path to the dataset file, e.g., /path/to/data.csv"
     )
     parser.add_argument(
-        "--num_rows", type=int, default=10000, help="Number of rows in the frappe table"
+        "--file_type",
+        type=str,
+        default="csv",
+        help="Type of the input file, csv, npy or libsvm"
     )
     args = parser.parse_args()
-
-    if args.drop_tables:
-        drop_tables()
-
-    if args.create_tables:
-        create_tables()
-
-    prepare_data(args.num_rows)
+    input_file = args.input_file
+    dataset_name = args.dataset_name
+    file_type = args.file_type
+    if file_type == "csv":
+        data = pd.read_csv(input_file)
+    elif file_type == "npy":
+        data = npy2csv(input_file, "temp.csv")
+    elif file_type == "libsvm":
+        data = libsvm2csv(input_file, "temp.csv")
+    else:
+        raise ValueError("Invalid file type. Please use csv, npy or libsvm.")
+    create_tables_for_dataset(data, dataset_name)
+    logger.debug(f"Preparation for dataset {dataset_name} is done.")

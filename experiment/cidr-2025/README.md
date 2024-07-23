@@ -44,12 +44,14 @@ cd $NEURDBPATH/experiment/cidr-2025
 
 Run prepare_data.py script:
 ```bash
-python3 prepare_data.py --drop_tables --create_tables --num_rows 10000
+python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.libsvm --file_type libsvm
 ```
 
-`--create_table` flag is used to create the table in the database if it does not exist.
+`--dataset_name` name of the dataset (e.g., frappe)
 
-`--num_rows` flag is used to specify the number of rows to be inserted into the table. (e.g., 10000)
+`--input_file` path to the input file, in libsvm, npy, or csv format (e.g., /path/to/data.libsvm)
+
+`--file_type` type of the input file, either libsvm, npy, or csv (e.g., libsvm)
 
 ### Start Python Server
 ```bash
