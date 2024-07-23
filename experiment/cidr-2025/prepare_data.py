@@ -83,7 +83,7 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
 
     insert_query = (
         f"INSERT INTO {table_name} "
-        f"(label, {", ".join([f"feature{i}" for i in range(1, len(data.columns))])}) "
+        f"(label, {', '.join([f'feature{i}' for i in range(1, len(data.columns))])}) "
         f"VALUES %s"
     )
     extras.execute_values(cursor, insert_query, data.values)
