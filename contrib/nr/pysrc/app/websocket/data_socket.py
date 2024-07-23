@@ -31,6 +31,7 @@ def receive_db_data(data: dict):
     :param data: Dictionary containing dataset name and data.
     :return:
     """
+    print("[socket]: receive_db_data...")
     dataset_name = data['dataset_name']
     dataset = data['dataset']
     _cache = current_app.config['data_cache'][dataset_name]
@@ -47,4 +48,5 @@ def emit_request_data(key: str):
     :param key:
     :return:
     """
+    print("[socket]: emit_request_data...")
     socketio.emit('request_data', {'key': key})

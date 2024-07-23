@@ -19,6 +19,9 @@ class LibSvmDataDispatcher:
         self.thread = None
         self.stop_event = threading.Event()
 
+    def set_dispatcher_target(self, data_cache: DataCache):
+        self.data_cache = data_cache
+
     def start(self) -> bool:
         # self.data_cache.dataset_statistics[1] is number of filed
         if self.data_cache is None or self.data_cache.dataset_statistics[1] is None:
@@ -80,7 +83,7 @@ class LibSvmDataDispatcher:
             if key:
                 print(f"[LibSvmDataDispatcher] fetching data for {key}...")
                 emit_request_data(key)
-            time.sleep(0.1)
+            time.sleep(2)
 
     def stop(self):
         if self.thread is not None:
