@@ -16,11 +16,12 @@ def model_train():
         model_name = params.get("model_name")
         data = params.get("libsvm_data")
         dataset_name = params.get("dataset_name")
+        client_socket_id = params.get("client_socket_id")
 
         config_args = current_app.config['config_args']
         db_connector = current_app.config['db_connector']
 
-        if not before_execute(dataset_name=dataset_name, data_key=Bufferkey.TRAIN_KEY):
+        if not before_execute(dataset_name=dataset_name, data_key=Bufferkey.TRAIN_KEY, client_id=client_socket_id):
             return jsonify("cannot start the data dispatcher, call dataset_profiling fisrt"), 400
 
         model_id = train(

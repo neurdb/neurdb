@@ -1,7 +1,20 @@
 from flask_socketio import emit
-from flask import current_app
+from flask import current_app, request
 from app.websocket import socketio
 from cache.data_cache import DataCache
+
+
+@socketio.on('connect')
+def handle_connect():
+    sid = request.sid
+    print(f"Client connected: {sid}")
+    socketio.emit('message', {'data': sid}, room=sid)
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    sid = request.sid
+    print(f"{sid} Client disconnected: ")
 
 
 @socketio.on('dataset_profiling')
@@ -46,11 +59,12 @@ def receive_db_data(data: dict):
         emit('response', {'message': 'Queue is full, data not added.'})
 
 
-def emit_request_data(key: str):
+def emit_request_data(key: str, sid: str):
     """
-    Emit request_data event to clients
-    :param key:
-    :return:
+    Emit request_data event to a specific client
+    :param key: The key to be sent
+    :param sid: The session ID of the specific client
+    :return: None
     """
-    print("[socket]: emit_request_data...")
-    socketio.emit('request_data', {'key': key})
+    print(f"[socket]: emit_request_data to client {sid} with key {key}...")
+    socketio.emit('request_data', {'key': key}, room=sid)

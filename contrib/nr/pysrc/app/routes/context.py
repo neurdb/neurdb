@@ -1,12 +1,11 @@
 from app.handlers.data_dispatcher import LibSvmDataDispatcher
-from app.websocket.data_socket import socketio
 from flask import current_app, g
 from dataloader.steam_libsvm_dataset import StreamingDataSet
 
 
 def before_request_func():
     print("before_request executing!")
-    g.data_dispatcher = LibSvmDataDispatcher(socketio=socketio)
+    g.data_dispatcher = LibSvmDataDispatcher()
 
 
 def after_request_func(response):
@@ -15,11 +14,12 @@ def after_request_func(response):
     g.data_dispatcher = None
 
 
-def before_execute(dataset_name: str, data_key: str) -> bool:
+def before_execute(dataset_name: str, data_key: str, client_id: str) -> bool:
     """
     Start LibSvmDataDispatcher and create StreamingDataSet
     :param dataset_name:
     :param data_key: train, infernece
+    :param client_id: socket client id
     :return:
     """
     print("before_execute executing!")
@@ -30,7 +30,7 @@ def before_execute(dataset_name: str, data_key: str) -> bool:
     _cache = data_cache[dataset_name]
 
     # assign the data dispaccher
-    g.data_dispatcher.set_dispatcher_target(_cache)
+    g.data_dispatcher.set_task(_cache, client_id)
     if not g.data_dispatcher.start():
         return False
 

@@ -1,26 +1,24 @@
 import threading
 import time
-from flask_socketio import SocketIO
 from cache.data_cache import DataCache
 import torch
 from app.websocket.data_socket import emit_request_data
 
 
 class LibSvmDataDispatcher:
-    def __init__(self, socketio: SocketIO, data_cache: DataCache = None):
+    def __init__(self, data_cache: DataCache = None):
         """
-
-        :param socketio: exist socketio
         :param data_cache: globla cache service
         """
-        self.socketio = socketio
         self.data_cache = data_cache
+        self.client_id = None
 
         self.thread = None
         self.stop_event = threading.Event()
 
-    def set_dispatcher_target(self, data_cache: DataCache):
+    def set_task(self, data_cache: DataCache, client_id: str):
         self.data_cache = data_cache
+        self.client_id = client_id
 
     def start(self) -> bool:
         # self.data_cache.dataset_statistics[1] is number of filed
@@ -82,7 +80,7 @@ class LibSvmDataDispatcher:
             key = self.data_cache.is_full()
             if key:
                 print(f"[LibSvmDataDispatcher] fetching data for {key}...")
-                emit_request_data(key)
+                emit_request_data(key, self.client_id)
             time.sleep(2)
 
     def stop(self):
