@@ -105,9 +105,8 @@ if __name__ == "__main__":
         help="Name of the dataset"
     )
     parser.add_argument(
-        "--ramdom_state",
+        "--random_state",
         type=int,
-        default=10,
         help="Random state to shuffle the dataset"
     )
     parser.add_argument(
@@ -125,7 +124,12 @@ if __name__ == "__main__":
     input_file = args.input_file
     dataset_name = args.dataset_name
     file_type = args.file_type
-    ramdom_state = args.random_state
+
+    if args.random_state is None:
+        random_state = 10
+    else:
+        random_state = args.random_state
+
     if file_type == "csv":
         data = pd.read_csv(input_file)
     elif file_type == "npy":
@@ -134,5 +138,5 @@ if __name__ == "__main__":
         data = libsvm2csv(input_file, "temp.csv")
     else:
         raise ValueError("Invalid file type. Please use csv, npy or libsvm.")
-    create_table_for_dataset(data, dataset_name, ramdom_state)
+    create_table_for_dataset(data, dataset_name, random_state)
     logger.debug(f"Preparation for dataset {dataset_name} is done.")
