@@ -3,7 +3,7 @@ from logger.logger import configure_logging
 from flask import Flask, g
 from shared_config.config import parse_config_arguments
 from app.routes import train_bp, inference_bp, finetune_bp
-from app.handlers.data_dispatcher import LibSvmDataQueue
+from app.handlers.data_dispatcher import LibSvmDataDispatcher
 from app.websocket.data_dispatcher import socketio
 
 
@@ -28,7 +28,7 @@ def create_app():
     # define global contexts
     app.config['config_args'] = config_args
     app.config['db_connector'] = NEURDB_CONNECTOR
-    app.config['data_queue'] = LibSvmDataQueue(socketio, maxsize=100)
+    app.config['data_queue'] = LibSvmDataDispatcher(socketio, maxsize=100)
 
     # register http svc
     app.register_blueprint(train_bp)

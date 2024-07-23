@@ -7,6 +7,7 @@ import numpy as np
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+
 def seed_everything(seed=2022):
     """
     [reference]

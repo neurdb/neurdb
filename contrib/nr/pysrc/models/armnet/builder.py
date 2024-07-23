@@ -8,8 +8,7 @@ import time
 from utils.date import timeSince
 from utils.metrics import AverageMeter, roc_auc_compute_fn
 from torch.utils.data import DataLoader
-
-DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+from shared_config.config import DEVICE
 
 
 class ARMNetModelBuilder(BuilderBase):
@@ -20,7 +19,7 @@ class ARMNetModelBuilder(BuilderBase):
         self._logger = logger.bind(model="ARM-Net")
 
     def train(
-        self, train_loader: DataLoader, val_loader: DataLoader, test_loader: DataLoader
+            self, train_loader: DataLoader, val_loader: DataLoader, test_loader: DataLoader
     ):
         logger = self._logger.bind(task="train")
 

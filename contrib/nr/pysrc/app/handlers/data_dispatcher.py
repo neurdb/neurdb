@@ -6,21 +6,23 @@ import torch
 
 
 class LibSvmDataDispatcher:
-    def __init__(self, socketio: SocketIO, data_cache: DataCache):
+    def __init__(self, socketio: SocketIO, data_cache: DataCache = None):
+        """
+
+        :param socketio: exist socketio
+        :param data_cache: globla cache service
+        """
         self.socketio = socketio
         self.data_cache = data_cache
 
-        self.max_nfields = None
         self.thread = None
         self.stop_event = threading.Event()
 
     def start(self) -> bool:
         # self.data_cache.dataset_statistics[1] is number of filed
-        if self.data_cache.dataset_statistics[1] is None:
+        if self.data_cache is None or self.data_cache.dataset_statistics[1] is None:
             print("Cannot start the dispatcher, need max_nfields")
             return False
-
-        self.max_nfields = self.data_cache.dataset_statistics[1]
 
         self.stop_event.clear()
         self.thread = threading.Thread(target=self._background_thread)
@@ -29,6 +31,7 @@ class LibSvmDataDispatcher:
         return True
 
     def batch_preprocess(self, data: str):
+        max_nfileds = self.data_cache.dataset_statistics[1]
         data = data.split('\n')
 
         sample_lines = 0
@@ -48,8 +51,8 @@ class LibSvmDataDispatcher:
             sample_lines += 1
 
         nsamples = sample_lines
-        feat_id = torch.zeros((nsamples, self.max_nfields), dtype=torch.long)
-        feat_value = torch.zeros((nsamples, self.max_nfields), dtype=torch.float)
+        feat_id = torch.zeros((nsamples, max_nfileds), dtype=torch.long)
+        feat_value = torch.zeros((nsamples, max_nfileds), dtype=torch.float)
         y = torch.tensor(labels_list, dtype=torch.float)
 
         for i in range(nsamples):

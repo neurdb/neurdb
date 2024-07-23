@@ -1,9 +1,11 @@
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, g
 from app.handlers.train import train
 import traceback
 import orjson
 from logger.logger import logger
 from app.routes.blueprints import train_bp
+from app.routes.context import before_execute
+from cache.data_cache import Bufferkey
 
 
 @train_bp.route('/train', methods=['POST'])
@@ -13,13 +15,18 @@ def model_train():
         batch_size = int(params.get("batch_size"))
         model_name = params.get("model_name")
         data = params.get("libsvm_data")
+        dataset_name = params.get("dataset_name")
 
         config_args = current_app.config['config_args']
         db_connector = current_app.config['db_connector']
 
+        if not before_execute(dataset_name=dataset_name, data_key=Bufferkey.TRAIN_KEY):
+            return jsonify("cannot start the data dispatcher, call dataset_profiling fisrt"), 400
+
         model_id = train(
             model_name=model_name,
-            training_libsvm=data,
+            # training_libsvm=data,
+            training_libsvm=g.data_loader,
             args=config_args,
             db=db_connector,
             batch_size=batch_size
