@@ -8,6 +8,7 @@ from app.websocket.data_socket import NRDataManager
 from app.routes.context import before_request_func, after_request_func
 from app.websocket.data_socket import socketio
 
+
 app = Flask(__name__)
 
 # Load config and initialize once
@@ -49,7 +50,7 @@ app.register_blueprint(finetune_bp)
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
 # the best option based on installed packages.
-async_mode = None
+async_mode = "threading"
 socketio.init_app(app, async_mode=async_mode)
 socketio.on_namespace(NRDataManager('/'))
 
