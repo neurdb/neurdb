@@ -6,7 +6,7 @@ from shared_config.config import parse_config_arguments
 from app.routes import train_bp, inference_bp, finetune_bp
 from app.websocket.data_socket import NRDataManager
 from app.routes.context import before_request_func, after_request_func
-from flask_socketio import SocketIO
+from app.websocket.data_socket import socketio
 
 app = Flask(__name__)
 
@@ -29,12 +29,14 @@ NEURDB_CONNECTOR = None
 # shared global contexts among tasks.
 data_cache = {}
 dispatchers = {}
+clients = {}
 
 with app.app_context():
     app.config['config_args'] = config_args
     app.config['db_connector'] = NEURDB_CONNECTOR
     app.config['data_cache'] = data_cache
     app.config['dispatchers'] = dispatchers
+    app.config['clients'] = clients
 
 app.before_request(before_request_func)
 app.after_request(after_request_func)
@@ -45,7 +47,7 @@ app.register_blueprint(inference_bp)
 app.register_blueprint(finetune_bp)
 
 # register socket svcs
-socketio = SocketIO(app, ping_timeout=30, ping_interval=5)
+socketio.init_app(app)
 socketio.on_namespace(NRDataManager('/'))
 
 if __name__ == "__main__":
