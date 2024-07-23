@@ -1,5 +1,3 @@
-import os
-
 import psycopg2
 from psycopg2 import extras
 from psycopg2.extensions import register_adapter, AsIs
@@ -58,18 +56,19 @@ def _create_table(cursor, conn, table_name: str, data: pd.DataFrame):
     conn.commit()
 
 
-def create_tables_for_dataset(data: pd.DataFrame, table_name: str) -> None:
+def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: int):
     """
     We create six tables for each dataset:
     - raw: the original data, this contains 50% of the data
     - test1, 2, 3, 4, 5: these tables contain 10% of the data each
     :param data: pandas DataFrame
     :param table_name: name of the table
+    :param random_state: random state used to shuffle the data
     :return None
     """
     logger.debug(f"Creating tables for dataset {table_name}...")
     conn, cursor = _connect_to_db()
-    data = data.sample(frac=1, random_state=10)
+    data = data.sample(frac=1, random_state=random_state)
     datasets = {
         f"{table_name}_raw": data[: int(0.5 * len(data))],
         f"{table_name}_test1": data[int(0.5 * len(data)): int(0.6 * len(data))],
@@ -82,15 +81,18 @@ def create_tables_for_dataset(data: pd.DataFrame, table_name: str) -> None:
     for table_name, data in datasets.items():
         _create_table(cursor, conn, table_name, data)
 
-        insert_query = (
-            f"INSERT INTO {table_name} "
-            f"(label, {", ".join([f"feature{i}" for i in range(1, len(data.columns))])}) "
-            f"VALUES %s"
-        )
-        extras.execute_values(cursor, insert_query, data.values)
-        conn.commit()
-        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-        logger.debug(f"Successfully created table {table_name} with {cursor.fetchone()[0]} rows...")
+    insert_query = (
+        f"INSERT INTO {table_name} "
+        f"(label, {", ".join([f"feature{i}" for i in range(1, len(data.columns))])}) "
+        f"VALUES %s"
+    )
+    extras.execute_values(cursor, insert_query, data.values)
+    conn.commit()
+
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+    logger.debug(
+        f"Successfully created table {table_name} with {cursor.fetchone()[0]} rows, random state {random_state}..."
+    )
     conn.close()
     logger.debug("Done creating tables...")
 
@@ -101,6 +103,12 @@ if __name__ == "__main__":
         "--dataset_name",
         type=str,
         help="Name of the dataset"
+    )
+    parser.add_argument(
+        "--ramdom_state",
+        type=int,
+        default=10,
+        help="Random state to shuffle the dataset"
     )
     parser.add_argument(
         "--input_file",
@@ -117,6 +125,7 @@ if __name__ == "__main__":
     input_file = args.input_file
     dataset_name = args.dataset_name
     file_type = args.file_type
+    ramdom_state = args.random_state
     if file_type == "csv":
         data = pd.read_csv(input_file)
     elif file_type == "npy":
@@ -125,5 +134,5 @@ if __name__ == "__main__":
         data = libsvm2csv(input_file, "temp.csv")
     else:
         raise ValueError("Invalid file type. Please use csv, npy or libsvm.")
-    create_tables_for_dataset(data, dataset_name)
+    create_table_for_dataset(data, dataset_name, ramdom_state)
     logger.debug(f"Preparation for dataset {dataset_name} is done.")
