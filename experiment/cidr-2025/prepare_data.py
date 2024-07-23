@@ -1,4 +1,3 @@
-import psycopg2
 from psycopg2 import extras
 from psycopg2.extensions import register_adapter, AsIs
 import numpy as np
@@ -8,26 +7,11 @@ from util.file2dataframe import libsvm2csv, npy2csv
 from neurdb.logger import configure_logging
 from neurdb.logger import logger
 
+from util.database import connect_db
+
 configure_logging(None)
 
-DB_PARAMS = {
-    "dbname": "postgres",
-    "user": "postgres",
-    "host": "127.0.0.1",
-    "port": "5432",
-}
-
 register_adapter(np.int64, AsIs)
-
-
-def _connect_to_db() -> tuple:
-    """
-    Connect to the database
-    :return connection and cursor
-    """
-    conn = psycopg2.connect(**DB_PARAMS)
-    cursor = conn.cursor()
-    return conn, cursor
 
 
 def _create_table(cursor, conn, table_name: str, data: pd.DataFrame):
@@ -67,7 +51,7 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
     :return None
     """
     logger.debug(f"Creating tables for dataset {table_name}...")
-    conn, cursor = _connect_to_db()
+    conn, cursor = connect_db()
     data = data.sample(frac=1, random_state=random_state)
     datasets = {
         f"{table_name}_raw": data[: int(0.5 * len(data))],
@@ -133,9 +117,9 @@ if __name__ == "__main__":
     if file_type == "csv":
         data = pd.read_csv(input_file)
     elif file_type == "npy":
-        data = npy2csv(input_file, "temp.csv")
+        data = npy2csv(input_file)
     elif file_type == "libsvm":
-        data = libsvm2csv(input_file, "temp.csv")
+        data = libsvm2csv(input_file)
     else:
         raise ValueError("Invalid file type. Please use csv, npy or libsvm.")
     create_table_for_dataset(data, dataset_name, random_state)

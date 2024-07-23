@@ -4,13 +4,16 @@ This folder contains the code and data for the experiments in the paper "XXX" su
 
 ## Dataset
 
-### Frappe
+### Avazu
 
-The frappe dataset contains a context-aware app usage log.  It consist of 96203 entries by 957 users for 4082 apps used in various contexts.
+The Click-Through Rate Prediction dataset contains predictions of whether a mobile ad will be clicked. The dataset is available at [Kaggle](https://www.kaggle.com/c/avazu-ctr-prediction/data). 
 
-We sample 2 negative samples for 1 positive sample to create the dataset. The total number of samples is **288609**.
+The dataset contains **40428967** samples. It has XXX columns, including the label column.
 
-In our experiments, we randomly sample data from the dataset to create a larger dataset. The number of samples is specified by the `--num_rows` flag in the `prepare_data.py` script under the `experiment/cidr-2025` folder.
+### Criteo
+
+The dataset contains **45840617** samples. It has XXX columns, including the label column.
+
 
 ## Get Started
 
@@ -44,7 +47,7 @@ cd $NEURDBPATH/experiment/cidr-2025
 
 Run prepare_data.py script:
 ```bash
-python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.libsvm --file_type libsvm
+python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.libsvm --file_type libsvm --random_state 10
 ```
 
 `--dataset_name` name of the dataset (e.g., frappe)
@@ -52,6 +55,8 @@ python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.l
 `--input_file` path to the input file, in libsvm, npy, or csv format (e.g., /path/to/data.libsvm)
 
 `--file_type` type of the input file, either libsvm, npy, or csv (e.g., libsvm)
+
+`--random_state` used to shuffle the data
 
 ### Start Python Server
 ```bash
