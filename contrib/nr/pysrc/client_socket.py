@@ -34,7 +34,6 @@ def on_request_data(data):
     key = data.get('key')
     print(f"Received request_data for key: {key}")
     # Handle the request data logic here
-    # For example, you might fetch data from a file or database and send it back to the server
     sio.emit('receive_db_data', {'dataset_name': key, 'dataset': dataset})
 
 

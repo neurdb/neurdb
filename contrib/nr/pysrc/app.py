@@ -46,8 +46,11 @@ app.register_blueprint(train_bp)
 app.register_blueprint(inference_bp)
 app.register_blueprint(finetune_bp)
 
-# register socket svcs
-socketio.init_app(app)
+# Set this variable to "threading", "eventlet" or "gevent" to test the
+# different async modes, or leave it set to None for the application to choose
+# the best option based on installed packages.
+async_mode = None
+socketio.init_app(app, async_mode=async_mode)
 socketio.on_namespace(NRDataManager('/'))
 
 if __name__ == "__main__":

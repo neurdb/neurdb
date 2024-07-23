@@ -29,8 +29,11 @@ def before_execute(dataset_name: str, data_key: str, client_id: str) -> bool:
         return False
     _cache = data_cache[dataset_name]
 
+    client = current_app.config['clients'][client_id]
+    print(f"[socket]: set task for client {client_id}...")
+
     # assign the data dispaccher
-    g.data_dispatcher.set_task(_cache, client_id)
+    g.data_dispatcher.set_task(_cache, client)
     if not g.data_dispatcher.start():
         return False
 
