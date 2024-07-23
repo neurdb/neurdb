@@ -34,6 +34,12 @@ def before_execute(dataset_name: str, data_key: str) -> bool:
     if not g.data_dispatcher.start():
         return False
 
+    # register it as global variables
+    # todo: multiple request share same dispatcher, add refercne count
+    dispatchers = current_app.config['dispatchers']
+    if dataset_name not in dispatchers:
+        dispatchers[dataset_name] = dispatchers
+
     # create dataset
     data = StreamingDataSet(_cache, data_key=data_key)
     g.data_loader = data

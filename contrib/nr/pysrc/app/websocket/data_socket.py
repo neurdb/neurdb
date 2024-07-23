@@ -34,9 +34,9 @@ def receive_db_data(data: dict):
     print("[socket]: receive_db_data...")
     dataset_name = data['dataset_name']
     dataset = data['dataset']
-    _cache = current_app.config['data_cache'][dataset_name]
+    dispatcher = current_app.config['dispatchers'][dataset_name]
 
-    if _cache.add(dataset):
+    if dispatcher.set(dataset):
         emit('response', {'message': 'Data received and added to queue!'})
     else:
         emit('response', {'message': 'Queue is full, data not added.'})

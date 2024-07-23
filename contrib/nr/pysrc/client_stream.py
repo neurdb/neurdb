@@ -93,6 +93,9 @@ if __name__ == "__main__":
     # Test dataset profiling via Socket.IO
     test_dataset_profiling('frappe', 5500, 10)
 
+    # Test sending dataset data via Socket.IO
+    test_receive_db_data('frappe', dataset)
+
     # Test sending the libsvm data to train endpoint
     _batch_size = 32  # Example batch size
     _model_name = 'armnet'  # Example model name
@@ -103,9 +106,6 @@ if __name__ == "__main__":
     if _model_id:
         _model_id = 1
     test_inference_endpoint(_model_name, int(_model_id))
-
-    # Test sending dataset data via Socket.IO
-    test_receive_db_data('frappe', dataset)
 
     # Wait for responses and then disconnect
     sio.sleep(2)
