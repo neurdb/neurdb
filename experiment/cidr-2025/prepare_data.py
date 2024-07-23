@@ -1,4 +1,4 @@
-from psycopg2 import extras
+import os
 from psycopg2.extensions import register_adapter, AsIs
 import numpy as np
 import argparse
@@ -64,14 +64,13 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
 
     for table_name, data in datasets.items():
         _create_table(cursor, conn, table_name, data)
+        data.to_csv("temp.csv", sep=",", header=False, index=False)  # Use COPY instead of INSERT
 
-        insert_query = (
-            f"INSERT INTO {table_name} "
-            f"(label, {', '.join([f'feature{i}' for i in range(1, len(data.columns))])}) "
-            f"VALUES %s"
-        )
-        extras.execute_values(cursor, insert_query, data.values)
+        with open("temp.csv", "r") as f:
+            cursor.copy_from(f, table_name, sep=",", columns=data.columns)
+
         conn.commit()
+        os.remove("temp.csv")  # remove the temporary file
 
         cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
         logger.debug(
