@@ -3,12 +3,13 @@ import time
 from cache.data_cache import DataCache
 import torch
 from app.websocket.data_socket import emit_request_data
+from cache.data_cache import Bufferkey
 
 
 class LibSvmDataDispatcher:
     def __init__(self, data_cache: DataCache = None):
         """
-        :param data_cache: globla cache service
+        :param data_cache: the data catch it is curringly handling
         """
         self.data_cache = data_cache
         self.client_id = None
@@ -67,7 +68,13 @@ class LibSvmDataDispatcher:
 
         return {'id': feat_id, 'value': feat_value, 'y': y}
 
-    def add(self, key: str, data: str):
+    def add(self, key: Bufferkey, data: str):
+        """
+        Add a data to the key
+        :param key: Bufferkey.TRAIN_KEY etc
+        :param data: datasets libsvm format
+        :return:
+        """
         batch_data = self.batch_preprocess(data)
         if self.data_cache.set(key, batch_data):
             return True
@@ -81,7 +88,7 @@ class LibSvmDataDispatcher:
             if key:
                 print(f"[LibSvmDataDispatcher] fetching data for {key}...")
                 emit_request_data(key, self.client_id)
-            time.sleep(2)
+            time.sleep(200)
 
     def stop(self):
         if self.thread is not None:

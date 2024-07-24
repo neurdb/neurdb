@@ -34,7 +34,10 @@ def on_request_data(data):
     key = data.get('key')
     print(f"Received request_data for key: {key}")
     # Handle the request data logic here
-    sio.emit('receive_db_data', {'dataset_name': key, 'dataset': dataset})
+    sio.emit('receive_db_data',
+             {"dataset_name": "frappe",
+              "ml_stage": key,
+              "dataset": dataset})
 
 
 @sio.event
@@ -47,18 +50,19 @@ def disconnect():
     print("Disconnected from the server")
 
 
-def test_dataset_profiling(dataset_name, nfeat, nfield):
+def test_dataset_init(dataset_name, nfeat, nfield):
     profiling_data = {
         'dataset_name': dataset_name,
         'nfeat': nfeat,
         'nfield': nfield
     }
-    sio.emit('dataset_profiling', profiling_data)
+    sio.emit('dataset_init', profiling_data)
 
 
 def test_receive_db_data(dataset_name, dataset):
     db_data = {
         'dataset_name': dataset_name,
+        "ml_stage": "train",
         'dataset': dataset
     }
     sio.emit('receive_db_data', db_data)
@@ -68,9 +72,8 @@ def test_receive_db_data(dataset_name, dataset):
 sio.connect("http://localhost:8090")
 
 # Test dataset profiling via Socket.IO
-test_dataset_profiling('frappe', 5500, 10)
+test_dataset_init('frappe', 5500, 10)
 
-# Test sending dataset data via Socket.IO
 test_receive_db_data('frappe', dataset)
 
 # Keep the client running

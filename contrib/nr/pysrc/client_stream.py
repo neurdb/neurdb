@@ -53,7 +53,7 @@ def test_inference_endpoint(model_name, model_id, client_id):
 
 if __name__ == "__main__":
 
-    _client_id = "qgFIgKV0eqwnwao7AAAB"
+    _client_id = "s9owqjoHZn51Bv3sAAAB"
     # Test sending the libsvm data to train endpoint
     _batch_size = 32  # Example batch size
     _model_name = 'armnet'  # Example model name
@@ -61,6 +61,6 @@ if __name__ == "__main__":
 
     _model_id = test_train_endpoint(_batch_size, _model_name, _dataset_name, _client_id)
 
-    if _model_id:
+    if not _model_id:
         _model_id = 1
     test_inference_endpoint(_model_name, int(_model_id), _client_id)

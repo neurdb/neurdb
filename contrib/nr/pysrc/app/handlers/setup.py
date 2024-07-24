@@ -43,6 +43,7 @@ class Setup:
             return model_id, None
 
         except Exception:
+            print(traceback.format_exc())
             return -1, str(traceback.format_exc())
 
     def finetune(self, model_id: int, batch_size: int, start_layer_id: int) -> Tuple[int, Error]:

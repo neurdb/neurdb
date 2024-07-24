@@ -1,6 +1,7 @@
 from app.handlers.data_dispatcher import LibSvmDataDispatcher
 from flask import current_app, g
 from dataloader.steam_libsvm_dataset import StreamingDataSet
+from cache.data_cache import Bufferkey
 
 
 def before_request_func():
@@ -14,7 +15,7 @@ def after_request_func(response):
     g.data_dispatcher = None
 
 
-def before_execute(dataset_name: str, data_key: str, client_id: str) -> bool:
+def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> bool:
     """
     Start LibSvmDataDispatcher and create StreamingDataSet
     :param dataset_name:

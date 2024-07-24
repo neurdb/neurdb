@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 
 
 class StreamingDataSet(Dataset):
-    def __init__(self, data_cache: DataCache, data_key: str = Bufferkey.TRAIN_KEY):
+    def __init__(self, data_cache: DataCache, data_key: Bufferkey = Bufferkey.TRAIN_KEY):
         self.data_cache = data_cache
         self.data_key = data_key
 
@@ -14,7 +14,7 @@ class StreamingDataSet(Dataset):
         """
         :return:  _nfeat, _nfield
         """
-        return self.data_cache.dataset_statistics()
+        return self.data_cache.dataset_statistics
 
     def __iter__(self):
         return self
