@@ -2,9 +2,9 @@ from logger.logger import configure_logging
 from flask import Flask
 from shared_config.config import parse_config_arguments
 from app.routes import train_bp, inference_bp, finetune_bp
-from app.websocket.data_socket import NRDataManager
+from app.socketio.data_socketio import NRDataManager
 from app.routes.context import before_request_func, after_request_func
-from app.websocket.data_socket import socketio
+from app.socketio.data_socketio import socketio
 from cache import ContextStates, DataCache, LibSvmDataDispatcher
 from connection import NeurDBModelHandler
 
