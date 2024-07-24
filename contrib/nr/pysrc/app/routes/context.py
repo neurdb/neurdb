@@ -29,14 +29,10 @@ def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> (b
 
     # 2. check the data cache for that dataset
     data_cache = current_app.config["data_cache"]
-    if client_id not in data_cache:
-        return False, f"client_id {client_id} is not connect in web-socket"
+    if not data_cache.contains(client_id, dataset_name):
+        return False, f"client_id {client_id} or Dataset {dataset_name} is not connect in web-socket"
 
-    data_client_cache = data_cache[client_id]
-    if dataset_name not in data_client_cache:
-        return False, f"Dataset {dataset_name} is not registred in web-socket"
-
-    _cache = data_client_cache[dataset_name]
+    _cache = data_cache.get(client_id, dataset_name)
 
     # 3. create dataset
     g.data_loader = StreamingDataSet(_cache, data_key=data_key)

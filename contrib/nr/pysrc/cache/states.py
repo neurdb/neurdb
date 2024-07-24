@@ -1,40 +1,58 @@
 import threading
-from typing import Dict, TypeVar, Generic
+from typing import Dict, TypeVar, Generic, Optional, Union
+from functools import singledispatchmethod
 
 T = TypeVar('T')  # Generic type
 
 
 class ContextStates(Generic[T]):
     def __init__(self):
-        self.data_cache: Dict[str, Dict[str, T]] = {}
+        self.state: Dict[str, Dict[str, T]] = {}
         self.lock = threading.Lock()
 
     def add(self, outer_key: str, inner_key: str, value: T):
         with self.lock:
-            if outer_key not in self.data_cache:
-                self.data_cache[outer_key] = {}
-            self.data_cache[outer_key][inner_key] = value
+            if outer_key not in self.state:
+                self.state[outer_key] = {}
+            self.state[outer_key][inner_key] = value
             print(f"Added ({outer_key}, {inner_key}) = {value}")
 
-    def remove(self, outer_key: str, inner_key: str):
+    def remove(self, outer_key: str):
         with self.lock:
-            if outer_key in self.data_cache and inner_key in self.data_cache[outer_key]:
-                del self.data_cache[outer_key][inner_key]
-                # Remove outer_key if empty
-                if not self.data_cache[outer_key]:
-                    del self.data_cache[outer_key]
-                print(f"Removed ({outer_key}, {inner_key})")
+            if outer_key in self.state:
+                del self.state[outer_key]
+                print(f"Removed all contents under outer key ({outer_key})")
             else:
-                print(f"Key ({outer_key}, {inner_key}) not found")
+                print(f"Outer key ({outer_key}) not found")
 
-    def get(self, outer_key: str, inner_key: str) -> T:
+    @singledispatchmethod
+    def get(self, outer_key: str) -> Union[Optional[T], Dict[str, T]]:
         with self.lock:
-            return self.data_cache.get(outer_key, {}).get(inner_key)
+            if outer_key not in self.state:
+                print(f"Outer key ({outer_key}) not found")
+                return None
+            return self.state[outer_key]
 
-    def __contains__(self, outer_key: str) -> bool:
+    @get.register
+    def _(self, outer_key: str, inner_key: str) -> Optional[T]:
         with self.lock:
-            return outer_key in self.data_cache
+            if outer_key not in self.state:
+                print(f"Outer key ({outer_key}) not found")
+                return None
 
-    def __getitem__(self, outer_key: str) -> Dict[str, T]:
+            if inner_key not in self.state[outer_key]:
+                print(f"Inner key ({inner_key}) not found under outer key ({outer_key})")
+                return None
+
+            return self.state[outer_key][inner_key]
+
+    def contains(self, outer_key: str, inner_key: str) -> bool:
         with self.lock:
-            return self.data_cache[outer_key]
+            if outer_key not in self.state:
+                return False
+
+            inner_state = self.state[outer_key]
+            if inner_key not in inner_state:
+                return False
+
+            return True

@@ -6,6 +6,7 @@ from app.websocket.data_socket import NRDataManager
 from app.routes.context import before_request_func, after_request_func
 from app.websocket.data_socket import socketio
 from cache import ContextStates, DataCache, LibSvmDataDispatcher
+from connection import NeurDBModelHandler
 
 app = Flask(__name__)
 
@@ -14,28 +15,23 @@ config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
 configure_logging("./logs/app.log")
 
-# NEURDB_CONNECTOR = NeurDBModelHandler(
-#     {
-#         "db_name": config_args.db_name,
-#         "db_user": config_args.db_user,
-#         "db_host": config_args.db_host,
-#         "db_port": config_args.db_port,
-#         # "password": config_args.db_password,
-#     }
-# )
-NEURDB_CONNECTOR = None
+NEURDB_CONNECTOR = NeurDBModelHandler(
+    {
+        "db_name": config_args.db_name,
+        "db_user": config_args.db_user,
+        "db_host": config_args.db_host,
+        "db_port": config_args.db_port,
+        # "password": config_args.db_password,
+    }
+)
 
 # shared global contexts among tasks.
-data_cache = ContextStates[DataCache]()
-dispatchers = ContextStates[LibSvmDataDispatcher]()
-clients = {}
-
 with app.app_context():
     app.config['config_args'] = config_args
     app.config['db_connector'] = NEURDB_CONNECTOR
-    app.config["data_cache"] = data_cache
-    app.config['dispatchers'] = dispatchers
-    app.config['clients'] = clients
+    app.config["data_cache"] = ContextStates[DataCache]()
+    app.config['dispatchers'] = ContextStates[LibSvmDataDispatcher]()
+    app.config['clients'] = {}
 
 app.before_request(before_request_func)
 app.after_request(after_request_func)

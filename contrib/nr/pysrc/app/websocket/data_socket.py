@@ -10,7 +10,7 @@ class NRDataManager(Namespace):
 
     def on_connect(self):
         sid = request.sid
-        current_app.config['clients'][sid] = sid
+        current_app.config["clients"][sid] = sid
 
         print(f"Client connected: {sid}")
         print(current_app.config['clients'])
@@ -19,52 +19,42 @@ class NRDataManager(Namespace):
     def on_disconnect(self):
         sid = request.sid
         print(f"{sid} Client disconnected: ")
-        current_app.config["clients"].pop(sid)
-        current_app.config["data_cache"].pop(sid)
-        current_app.config["dispatchers"].pop(sid)
+        current_app.config['clients'].pop(sid, None)
+        current_app.config["data_cache"].remove(sid)
+        current_app.config["dispatchers"].remove(sid)
 
     def on_dataset_init(self, data: dict):
         """
-       1. Create data cache for a specific dataset.
-       2. Create dispatcher and start it.
-       :param data: Dictionary containing dataset information.
-       :return:
-           """
+        1. Create data cache for a specific dataset.
+        2. Create dispatcher and start it.
+        :param data: Dictionary containing dataset information.
+        :return:
+        """
         socket_id = request.sid
         dataset_name = data["dataset_name"]
         nfeat = data['nfeat']
         nfield = data['nfield']
 
         # 1. Create data cache if not exist
-        if socket_id not in current_app.config["data_cache"]:
-            current_app.config["data_cache"][socket_id] = {}
-
-        if dataset_name not in current_app.config["data_cache"]:
+        data_cache = current_app.config["data_cache"]
+        if not data_cache.contains(socket_id, dataset_name):
             _cache = DataCache(dataset_name)
             _cache.dataset_statistics = (nfeat, nfield)
-            current_app.config["data_cache"][socket_id][dataset_name] = _cache
+            data_cache.add(socket_id, dataset_name, _cache)
         else:
-            _cache = current_app.config["data_cache"][socket_id][dataset_name]
+            _cache = data_cache.get(socket_id, dataset_name)
 
-        # 2. Create dispatcher
-        if socket_id not in current_app.config["dispatchers"]:
-            current_app.config["dispatchers"][socket_id] = {}
-
-        # Check if the dataset exists for the client in the dispatchers dictionary
-        if dataset_name not in current_app.config["dispatchers"][socket_id]:
+        # 2. Create dispatcher if not exist
+        dispatchers = current_app.config["dispatchers"]
+        if not dispatchers.contains(socket_id, dataset_name):
             _data_dispatcher = LibSvmDataDispatcher()
-            current_app.config["dispatchers"][socket_id][dataset_name] = _data_dispatcher
+            dispatchers.add(socket_id, dataset_name, _data_dispatcher)
             _data_dispatcher.bound_client_to_cache(_cache, socket_id)
             _data_dispatcher.start(emit_request_data)
 
         emit('response', {'message': 'Done'})
 
     def on_receive_db_data(self, data: dict):
-        """
-        Receive data from the database UDFs.
-        :param data: Dictionary containing dataset name and data.
-        :return:
-        """
         socket_id = request.sid
         print(f"[socket]: {socket_id} receive_db_data...")
         dataset_name = data["dataset_name"]
@@ -80,15 +70,15 @@ class NRDataManager(Namespace):
             return
 
         # check dispatcher is launched for this datasets
-        if socket_id not in current_app.config["dispatchers"]:
+        dispatchers = current_app.config["dispatchers"]
+        if not dispatchers.contains(socket_id, dataset_name):
             emit("response", {
                 "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
                            f"wait for train/infernce/finetune request"})
             return
 
-        dispatcher = current_app.config['dispatchers'][socket_id][dataset_name]
-
-        if dispatcher.add(ml_stage, dataset):
+        dispatcher = dispatchers.get(socket_id, dataset_name)
+        if dispatcher and dispatcher.add(ml_stage, dataset):
             emit('response', {'message': 'Data received and added to queue!'})
         else:
             emit('response', {'message': 'Queue is full, data not added.'})
