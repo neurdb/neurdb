@@ -22,13 +22,14 @@ Clone the repository:
 git clone https://github.com/neurdb/neurdb-dev.git
 ```
 
-Change the permission of `meson.build`:
+Change the permission of the project folder:
 ```bash
-chmod 777 ~/neurdb-dev/meson.build
+cd neurdb-dev
+chmod 777 -R .
 ```
 
 ### Build Dockerfile
-In the server, build the docker image:
+In the server, build the docker image. Remember to `cd` to the `deploy` folder before running the build script, otherwise the docker bind mount will fail.
 ```bash
 cd ~/neurdb-dev/deploy
 bash build.sh
