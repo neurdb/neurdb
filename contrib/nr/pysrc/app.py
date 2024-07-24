@@ -5,10 +5,7 @@ from app.routes import train_bp, inference_bp, finetune_bp
 from app.websocket.data_socket import NRDataManager
 from app.routes.context import before_request_func, after_request_func
 from app.websocket.data_socket import socketio
-from typing import Dict
-from cache.data_dispatcher import LibSvmDataDispatcher
-from cache.data_cache import DataCache
-
+from cache import ContextStates, DataCache, LibSvmDataDispatcher
 
 app = Flask(__name__)
 
@@ -29,14 +26,14 @@ configure_logging("./logs/app.log")
 NEURDB_CONNECTOR = None
 
 # shared global contexts among tasks.
-data_cache: Dict[str, DataCache] = {}
-dispatchers: Dict[str, Dict[str, LibSvmDataDispatcher]] = {}
+data_cache = ContextStates[DataCache]()
+dispatchers = ContextStates[LibSvmDataDispatcher]()
 clients = {}
 
 with app.app_context():
     app.config['config_args'] = config_args
     app.config['db_connector'] = NEURDB_CONNECTOR
-    app.config['data_cache'] = data_cache
+    app.config["data_cache"] = data_cache
     app.config['dispatchers'] = dispatchers
     app.config['clients'] = clients
 

@@ -1,7 +1,7 @@
 
 import threading
 import time
-from cache.data_cache import DataCache, Bufferkey
+from cache import DataCache, Bufferkey
 import torch
 from typing import Callable
 

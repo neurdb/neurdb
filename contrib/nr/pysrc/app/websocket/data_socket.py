@@ -1,8 +1,7 @@
 from flask import current_app, request
 from flask_socketio import Namespace, emit
 from flask_socketio import SocketIO
-from cache.data_cache import DataCache, Bufferkey
-from cache.data_dispatcher import LibSvmDataDispatcher
+from cache import DataCache, Bufferkey, LibSvmDataDispatcher
 
 socketio = SocketIO(ping_timeout=30, ping_interval=5, logger=False, engineio_logger=False)
 
@@ -20,7 +19,9 @@ class NRDataManager(Namespace):
     def on_disconnect(self):
         sid = request.sid
         print(f"{sid} Client disconnected: ")
-        current_app.config['clients'].pop(sid)
+        current_app.config["clients"].pop(sid)
+        current_app.config["data_cache"].pop(sid)
+        current_app.config["dispatchers"].pop(sid)
 
     def on_dataset_init(self, data: dict):
         """
@@ -35,15 +36,17 @@ class NRDataManager(Namespace):
         nfield = data['nfield']
 
         # 1. Create data cache if not exist
+        if socket_id not in current_app.config["data_cache"]:
+            current_app.config["data_cache"][socket_id] = {}
+
         if dataset_name not in current_app.config["data_cache"]:
             _cache = DataCache(dataset_name)
             _cache.dataset_statistics = (nfeat, nfield)
-            current_app.config["data_cache"][dataset_name] = _cache
+            current_app.config["data_cache"][socket_id][dataset_name] = _cache
         else:
-            _cache = current_app.config["data_cache"][dataset_name]
+            _cache = current_app.config["data_cache"][socket_id][dataset_name]
 
         # 2. Create dispatcher
-        # Check if the client ID exists in the dispatchers dictionary
         if socket_id not in current_app.config["dispatchers"]:
             current_app.config["dispatchers"][socket_id] = {}
 

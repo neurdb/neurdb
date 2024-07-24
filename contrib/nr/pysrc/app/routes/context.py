@@ -1,6 +1,6 @@
 from flask import current_app, g
 from dataloader.steam_libsvm_dataset import StreamingDataSet
-from cache.data_cache import Bufferkey
+from cache import Bufferkey
 
 
 def before_request_func():
@@ -9,8 +9,6 @@ def before_request_func():
 
 def after_request_func(response):
     print("after_request executing!")
-    g.data_dispatcher.stop()
-    g.data_dispatcher = None
 
 
 def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> (bool, str):
@@ -30,10 +28,15 @@ def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> (b
         return False, f"client {client_id} is not registered by socket, no data here !"
 
     # 2. check the data cache for that dataset
-    data_cache = current_app.config['data_cache']
-    if dataset_name not in data_cache:
+    data_cache = current_app.config["data_cache"]
+    if client_id not in data_cache:
+        return False, f"client_id {client_id} is not connect in web-socket"
+
+    data_client_cache = data_cache[client_id]
+    if dataset_name not in data_client_cache:
         return False, f"Dataset {dataset_name} is not registred in web-socket"
-    _cache = data_cache[dataset_name]
+
+    _cache = data_client_cache[dataset_name]
 
     # 3. create dataset
     g.data_loader = StreamingDataSet(_cache, data_key=data_key)

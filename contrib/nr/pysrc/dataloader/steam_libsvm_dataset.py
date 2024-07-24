@@ -1,4 +1,4 @@
-from cache.data_cache import DataCache, Bufferkey
+from cache import DataCache, Bufferkey
 from typing import Tuple, Dict, List
 import time
 

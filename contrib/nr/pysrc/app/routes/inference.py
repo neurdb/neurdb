@@ -5,7 +5,7 @@ import orjson
 from logger.logger import logger
 from app.routes.routes import inference_bp
 from app.routes.context import before_execute
-from cache.data_cache import Bufferkey
+from cache import Bufferkey
 
 
 @inference_bp.route('/inference', methods=['POST'])
