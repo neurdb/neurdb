@@ -1,5 +1,6 @@
 from logger.logger import logger
 import torch
+from typing import List, Union
 import torch.nn as nn
 import torch.optim as optim
 from models.armnet.model.model import ARMNetModel
@@ -9,6 +10,7 @@ from utils.date import timeSince
 from utils.metrics import AverageMeter, roc_auc_compute_fn
 from torch.utils.data import DataLoader
 from shared_config.config import DEVICE
+from dataloader.steam_libsvm_dataset import StreamingDataSet
 
 
 class ARMNetModelBuilder(BuilderBase):
@@ -19,7 +21,12 @@ class ARMNetModelBuilder(BuilderBase):
         self._logger = logger.bind(model="ARM-Net")
 
     def train(
-            self, train_loader: DataLoader, val_loader: DataLoader, test_loader: DataLoader
+            self,
+            train_loader: Union[DataLoader, StreamingDataSet],
+            val_loader: Union[DataLoader, StreamingDataSet],
+            test_loader: Union[DataLoader, StreamingDataSet],
+            epochs: int,
+            batch_per_epoch: int
     ):
         logger = self._logger.bind(task="train")
 
@@ -69,6 +76,8 @@ class ARMNetModelBuilder(BuilderBase):
             train_timestamp = time.time()
 
             for batch_idx, batch in enumerate(train_loader):
+                if batch_idx > batch_per_epoch:
+                    break
                 target = batch["y"]
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
@@ -227,7 +236,6 @@ class ARMNetModelBuilder(BuilderBase):
 
     def inference(self, data_loader: DataLoader):
         logger = self._logger.bind(task="inference")
-
         start_time = time.time()
         predictions = []
         with torch.no_grad():

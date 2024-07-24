@@ -71,7 +71,7 @@ class LibsvmDataset(Dataset):
         }
 
 
-def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str):
+def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str, batch_per_epoch: int):
     val_split = 0.1
     test_split = 0.1
     dataset = LibsvmDataset(data)
@@ -113,7 +113,7 @@ def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str):
     return train_loader, val_loader, test_loader, nfields, nfeat
 
 
-def build_inference_loader(data_loader_worker: int, data: str, batch_size=0):
+def build_inference_loader(data_loader_worker: int, data: str, batch_size=0, batch_per_epoch: int = -1):
     dataset = LibsvmDataset(data)
     nfields = dataset.nfields
     nfeat = dataset.nfeat
@@ -128,3 +128,19 @@ def build_inference_loader(data_loader_worker: int, data: str, batch_size=0):
         pin_memory=True,
     )
     return loader, nfields, nfeat
+
+
+if __name__ == "__main__":
+    dataset = """0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 5183:1\n
+    1 42:1 1572:1 5042:1 5047:1 5053:1 5055:1 5058:1 5060:1 5070:1 5150:1\n
+    1 282:1 2552:1 5044:1 5052:1 5054:1 5055:1 5058:1 5060:1 5072:1 5244:1\n
+    0 215:1 1402:1 5039:1 5051:1 5054:1 5055:1 5058:1 5063:1 5069:1 5149:1\n
+    0 346:1 2423:1 5043:1 5051:1 5054:1 5055:1 5058:1 5063:1 5088:1 5149:1\n
+    0 391:1 2081:1 5039:1 5050:1 5054:1 5055:1 5058:1 5060:1 5088:1 5268:1\n
+    0 164:1 3515:1 5042:1 5052:1 5053:1 5055:1 5058:1 5062:1 5074:1 5149:1\n
+    0 4:1 1177:1 5044:1 5049:1 5054:1 5057:1 5058:1 5060:1 5071:1 5152:1"""
+
+    _loader, _nfields, _nfeat = build_inference_loader(1, dataset, 4)
+    for _ in range(2):
+        for batch_idx, batch in enumerate(_loader):
+            print(batch_idx, batch)

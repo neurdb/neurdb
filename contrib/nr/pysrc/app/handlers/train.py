@@ -10,10 +10,12 @@ def train(
         args: argparse.Namespace,
         db: NeurDBModelHandler,
         batch_size: int,
+        epochs: int,
+        batch_per_epoch: int
 ) -> int:
     s = Setup(model_name, training_libsvm, args, db)
 
-    model_id, err = s.train(batch_size)
+    model_id, err = s.train(batch_size, epochs, batch_per_epoch)
     if err is not None:
         logger.error(f"train failed with error: {err}")
         return -1

@@ -11,10 +11,12 @@ def finetune(
         db: NeurDBModelHandler,
         model_id: int,
         batch_size: int,
+        epochs: int,
+        batch_per_epoch: int
 ) -> int:
     s = Setup(model_name, finetune_libsvm, args, db)
 
-    model_id, err = s.finetune(model_id, batch_size, start_layer_id=5)
+    model_id, err = s.finetune(model_id, batch_size, start_layer_id=5, epochs=epochs, batch_per_epoch=batch_per_epoch)
     if err is not None:
         logger.error(f"train failed with error: {err}")
         return -1

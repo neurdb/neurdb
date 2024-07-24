@@ -19,6 +19,9 @@ def model_finetune():
         dataset_name = params.get("dataset_name")
         client_socket_id = params.get("client_socket_id")
 
+        epoch = int(params.get("epoch"))
+        batch_per_epoch = int(params.get("batch_per_epoch"))
+
         config_args = current_app.config['config_args']
         db_connector = current_app.config['db_connector']
 
@@ -27,12 +30,13 @@ def model_finetune():
 
         model_id = finetune(
             model_name=model_name,
-            # training_libsvm=data,
-            training_libsvm=g.data_loader,
+            finetune_libsvm=g.data_loader,
             args=config_args,
             db=db_connector,
             model_id=model_id,
             batch_size=batch_size,
+            epochs=epoch,
+            batch_per_epoch=batch_per_epoch,
         )
         return jsonify({"model_id": model_id})
 

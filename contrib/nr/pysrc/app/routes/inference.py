@@ -19,6 +19,8 @@ def model_inference():
         dataset_name = params.get("dataset_name")
         client_socket_id = params.get("client_socket_id")
 
+        all_batch_num = int(params.get("all_batch_num"))
+
         config_args = current_app.config['config_args']
         db_connector = current_app.config['db_connector']
 
@@ -27,12 +29,12 @@ def model_inference():
 
         result = inference(
             model_name=model_name,
-            # training_libsvm=data,
-            training_libsvm=g.data_loader,
+            inference_libsvm=g.data_loader,
             args=config_args,
             db=db_connector,
             model_id=model_id,
-            batch_size=batch_size
+            batch_size=batch_size,
+            all_batch_num=all_batch_num
         )
 
         return jsonify({"res": result})
