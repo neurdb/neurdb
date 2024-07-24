@@ -7,8 +7,15 @@ socketio = SocketIO(ping_timeout=30, ping_interval=5, logger=False, engineio_log
 
 
 class NRDataManager(Namespace):
+    """
+    NRDataManager register some socket endpoints
+    """
 
     def on_connect(self):
+        """
+        Handle client connection event.
+        Store the client session ID and notify the client.
+        """
         sid = request.sid
         current_app.config["clients"][sid] = sid
 
@@ -17,6 +24,10 @@ class NRDataManager(Namespace):
         emit('message', {'data': sid}, room=sid)
 
     def on_disconnect(self):
+        """
+        Handle client disconnection event.
+        Remove the client session ID and associated data from the server.
+        """
         sid = request.sid
         print(f"{sid} Client disconnected: ")
         current_app.config['clients'].pop(sid, None)
@@ -25,6 +36,7 @@ class NRDataManager(Namespace):
 
     def on_dataset_init(self, data: dict):
         """
+        Handle dataset initialization event.
         1. Create data cache for a specific dataset.
         2. Create dispatcher and start it.
         :param data: Dictionary containing dataset information.
@@ -55,13 +67,18 @@ class NRDataManager(Namespace):
         emit('response', {'message': 'Done'})
 
     def on_receive_db_data(self, data: dict):
+        """
+        Handle the event of receiving database data.
+        Add the received data to the appropriate cache queue.
+        :param data: Dictionary containing dataset information and the actual data.
+        """
         socket_id = request.sid
         print(f"[socket]: {socket_id} receive_db_data...")
         dataset_name = data["dataset_name"]
         ml_stage = data["ml_stage"]
         dataset = data["dataset"]
 
-        # check the ml_stage can be reconginzed
+        # Check if the ml_stage can be recognized
         ml_stage = Bufferkey.get_key_by_value(ml_stage)
         if not ml_stage:
             emit("response", {
@@ -69,12 +86,12 @@ class NRDataManager(Namespace):
                            f"only support 'train', 'evaluate', 'test', 'inference'"})
             return
 
-        # check dispatcher is launched for this datasets
+        # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
         if not dispatchers.contains(socket_id, dataset_name):
             emit("response", {
                 "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
-                           f"wait for train/infernce/finetune request"})
+                           f"wait for train/inference/finetune request"})
             return
 
         dispatcher = dispatchers.get(socket_id, dataset_name)
@@ -86,9 +103,9 @@ class NRDataManager(Namespace):
 
 def emit_request_data(key: Bufferkey, client_id: str):
     """
-    Emit request_data event to clients
-    :param key: Bufferkey.TRAIN_KEY etc
-    :param client_id:
+    Emit request_data event to clients.
+    :param key: Bufferkey indicating the type of data requested.
+    :param client_id: The client ID to send the request to.
     :return:
     """
     print(f"[socket]: emit_request_data with key={key}...")
