@@ -19,7 +19,9 @@ def model_train():
         client_socket_id = params.get("client_socket_id")
 
         epoch = int(params.get("epoch"))
-        batch_per_epoch = int(params.get("batch_per_epoch"))
+        train_batch_num = int(params.get("train_batch_num"))
+        eva_batch_num = int(params.get("eva_batch_num"))
+        test_batch_num = int(params.get("test_batch_num"))
 
         config_args = current_app.config['config_args']
         db_connector = current_app.config['db_connector']
@@ -34,7 +36,9 @@ def model_train():
             db=db_connector,
             batch_size=batch_size,
             epochs=epoch,
-            batch_per_epoch=batch_per_epoch,
+            train_batch_num=train_batch_num,
+            eva_batch_num=eva_batch_num,
+            test_batch_num=test_batch_num
         )
 
         return jsonify({"model_id": model_id})

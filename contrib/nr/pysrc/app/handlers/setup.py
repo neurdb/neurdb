@@ -27,18 +27,21 @@ class Setup:
     #     with open(self._dataset_file_path, "rb") as f:
     #         return f.read()
 
-    def train(self, batch_size: int, epochs: int, batch_per_epoch: int) -> Tuple[int, Error]:
+    def train(self, batch_size: int, epochs: int,
+              train_batch_num: int, eva_batch_num: int, test_batch_num: int) -> Tuple[int, Error]:
         try:
             train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
                 batch_size,
                 self._args.data_loader_worker,
                 self.libsvm_data,
-                batch_per_epoch
+                train_batch_num,
+                eva_batch_num,
+                test_batch_num
             )
 
             builder = build_model(self._model_name, self._args)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(train_loader, val_loader, test_loader, epochs, batch_per_epoch)
+            builder.train(train_loader, val_loader, test_loader, epochs, train_batch_num, eva_batch_num, test_batch_num)
 
             model_id = self._db.insert_model(builder.model)
             return model_id, None
@@ -47,14 +50,16 @@ class Setup:
             print(traceback.format_exc())
             return -1, str(traceback.format_exc())
 
-    def finetune(self, model_id: int, batch_size: int, start_layer_id: int, epochs: int, batch_per_epoch: int) -> Tuple[
-        int, Error]:
+    def finetune(self, model_id: int, batch_size: int, start_layer_id: int, epochs: int,
+                 train_batch_num: int, eva_batch_num: int, test_batch_num: int) -> Tuple[int, Error]:
         try:
             train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
                 batch_size,
                 self._args.data_loader_worker,
                 self.libsvm_data,
-                batch_per_epoch
+                train_batch_num,
+                eva_batch_num,
+                test_batch_num
             )
 
             try:
@@ -70,7 +75,7 @@ class Setup:
 
             builder.model = model.to(DEVICE)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(train_loader, val_loader, test_loader, epochs, batch_per_epoch)
+            builder.train(train_loader, val_loader, test_loader, epochs, train_batch_num, eva_batch_num, test_batch_num)
 
             model_id = self._db.update_layers(model_id, model_storage, start_layer_id)
 
@@ -79,10 +84,10 @@ class Setup:
         except Exception:
             return -1, str(traceback.format_exc())
 
-    def inference(self, model_id: int, batch_size: int, all_batch_num: int) -> Tuple[List[np.ndarray], Error]:
+    def inference(self, model_id: int, batch_size: int, inf_batch_num: int) -> Tuple[List[np.ndarray], Error]:
         try:
             inference_loader, nfields, nfeat = build_inference_loader(
-                self._args.data_loader_worker, self.libsvm_data, batch_size, all_batch_num
+                self._args.data_loader_worker, self.libsvm_data, batch_size, inf_batch_num
             )
 
             builder = build_model(self._model_name, self._args)
@@ -91,7 +96,7 @@ class Setup:
             except FileNotFoundError:
                 return [], f"model {self._model_name} not trained yet"
 
-            infer_res = builder.inference(inference_loader, all_batch_num)
+            infer_res = builder.inference(inference_loader, inf_batch_num)
             return infer_res, None
 
         except Exception:

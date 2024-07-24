@@ -12,11 +12,16 @@ def finetune(
         model_id: int,
         batch_size: int,
         epochs: int,
-        batch_per_epoch: int
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int
 ) -> int:
     s = Setup(model_name, finetune_libsvm, args, db)
 
-    model_id, err = s.finetune(model_id, batch_size, start_layer_id=5, epochs=epochs, batch_per_epoch=batch_per_epoch)
+    model_id, err = s.finetune(model_id, batch_size, start_layer_id=5, epochs=epochs,
+                               train_batch_num=train_batch_num,
+                               eva_batch_num=eva_batch_num,
+                               test_batch_num=test_batch_num)
     if err is not None:
         logger.error(f"train failed with error: {err}")
         return -1

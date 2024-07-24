@@ -4,11 +4,11 @@ import time
 
 
 class StreamingDataSet:
-    def __init__(self, data_cache: DataCache, data_key: Bufferkey = Bufferkey.TRAIN_KEY, all_batch_num: int = -1):
+    def __init__(self, data_cache: DataCache, data_key: Bufferkey = Bufferkey.TRAIN_KEY, batch_num: int = -1):
         self.data_cache = data_cache
         self.data_key = data_key
 
-        self.all_batches = all_batch_num
+        self.batch_num = batch_num
 
     def current_statistics(self) -> Tuple:
         return self.data_cache.dataset_statistics
@@ -33,22 +33,23 @@ class StreamingDataSet:
             time.sleep(0.1)
 
     def __len__(self):
-        return self.all_batches
+        return self.batch_num
 
 
-def libsvm_dataloader(batch_size: int, data_loader_worker: int, data_loader: StreamingDataSet, batch_per_epoch: int):
-    data_loader.all_batches = batch_per_epoch
+def libsvm_dataloader(batch_size: int, data_loader_worker: int, data_loader: StreamingDataSet,
+                      train_batch_num: int, eva_batch_num: int, test_batch_num: int):
+    data_loader.batch_num = train_batch_num
     val_data_loader = StreamingDataSet(data_cache=data_loader.data_cache, data_key=Bufferkey.EVALUATE_KEY,
-                                       all_batch_num=batch_per_epoch)
+                                       batch_num=eva_batch_num)
     test_data_loader = StreamingDataSet(data_cache=data_loader.data_cache, data_key=Bufferkey.TEST_KEY,
-                                        all_batch_num=batch_per_epoch)
+                                        batch_num=test_batch_num)
     nfeat, nfields = data_loader.current_statistics()
 
     return data_loader, val_data_loader, test_data_loader, nfields, nfeat
 
 
 def build_inference_loader(data_loader_worker: int, data_loader: StreamingDataSet, batch_size: int = -1,
-                           all_batch_num: int = -1):
-    data_loader.all_batches = all_batch_num
+                           inf_batch_num: int = -1):
+    data_loader.batch_num = inf_batch_num
     nfeat, nfields = data_loader.current_statistics()
     return data_loader, nfields, nfeat

@@ -13,10 +13,10 @@ def inference(
         db: NeurDBModelHandler,
         model_id: int,
         batch_size: int,
-        all_batch_num: int
+        inf_batch_num: int
 ) -> List[np.ndarray]:
     s = Setup(model_name, inference_libsvm, args, db)
-    response, err = s.inference(model_id, batch_size, all_batch_num)
+    response, err = s.inference(model_id, batch_size, inf_batch_num)
     if err is not None:
         logger.error(f"inference failed with error: {err}")
         return []

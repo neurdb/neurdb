@@ -26,7 +26,9 @@ class ARMNetModelBuilder(BuilderBase):
             val_loader: Union[DataLoader, StreamingDataSet],
             test_loader: Union[DataLoader, StreamingDataSet],
             epochs: int,
-            batch_per_epoch: int
+            train_batch_num: int,
+            eva_batch_num: int,
+            test_batch_num: int
     ):
         logger = self._logger.bind(task="train")
 
@@ -76,7 +78,7 @@ class ARMNetModelBuilder(BuilderBase):
             train_timestamp = time.time()
 
             for batch_idx, batch in enumerate(train_loader):
-                if batch_idx == batch_per_epoch:
+                if batch_idx == train_batch_num:
                     break
                 target = batch["y"]
                 if torch.cuda.is_available():
@@ -132,8 +134,8 @@ class ARMNetModelBuilder(BuilderBase):
             # )
 
             # Validation phase
-            valid_auc = self._evaluate(val_loader, opt_metric, "val")
-            test_auc = self._evaluate(test_loader, opt_metric, "test")
+            valid_auc = self._evaluate(val_loader, opt_metric, "val", eva_batch_num)
+            test_auc = self._evaluate(test_loader, opt_metric, "test", test_batch_num)
 
             # record best auc and save checkpoint
             if valid_auc >= best_valid_auc:
@@ -193,7 +195,8 @@ class ARMNetModelBuilder(BuilderBase):
     def model(self, value):
         self._model = value
 
-    def _evaluate(self, data_loader: DataLoader, opt_metric, namespace="val"):
+    def _evaluate(self, data_loader: Union[DataLoader, StreamingDataSet], opt_metric, namespace: str,
+                  batch_num: int):
         logger = self._logger.bind(task=namespace)
 
         self._model.eval()
@@ -203,6 +206,8 @@ class ARMNetModelBuilder(BuilderBase):
 
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
+                if batch_idx == batch_num:
+                    break
                 target = batch["y"]
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
@@ -234,12 +239,14 @@ class ARMNetModelBuilder(BuilderBase):
         logger.debug(f"Evaluate end", time=timeSince(s=time_avg.sum))
         return auc_avg.avg
 
-    def inference(self, data_loader: DataLoader):
+    def inference(self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int):
         logger = self._logger.bind(task="inference")
         start_time = time.time()
         predictions = []
         with torch.no_grad():
-            for batch in data_loader:
+            for batch_idx, batch in enumerate(data_loader):
+                if batch_idx == inf_batch_num:
+                    break
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
                     batch["value"] = batch["value"].cuda(non_blocking=True)

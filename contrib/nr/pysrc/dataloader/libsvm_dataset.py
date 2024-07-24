@@ -71,7 +71,8 @@ class LibsvmDataset(Dataset):
         }
 
 
-def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str, batch_per_epoch: int):
+def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str,
+                      train_batch_num: int, eva_batch_num: int, test_batch_num: int):
     val_split = 0.1
     test_split = 0.1
     dataset = LibsvmDataset(data)
@@ -113,7 +114,7 @@ def libsvm_dataloader(batch_size: int, data_loader_worker: int, data: str, batch
     return train_loader, val_loader, test_loader, nfields, nfeat
 
 
-def build_inference_loader(data_loader_worker: int, data: str, batch_size=0, batch_per_epoch: int = -1):
+def build_inference_loader(data_loader_worker: int, data: str, batch_size=0, inf_batch_num: int = -1):
     dataset = LibsvmDataset(data)
     nfields = dataset.nfields
     nfeat = dataset.nfeat

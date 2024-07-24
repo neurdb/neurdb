@@ -42,7 +42,9 @@ class BuilderBase(ABC):
               val_loader: Union[DataLoader, StreamingDataSet],
               test_loader: Union[DataLoader, StreamingDataSet],
               epochs: int,
-              batch_per_epoch: int
+              train_batch_num: int,
+              eva_batch_num: int,
+              test_batch_num: int
               ):
         """
 
@@ -50,17 +52,19 @@ class BuilderBase(ABC):
         :param val_loader:
         :param test_loader:
         :param epochs: num of epoch
-        :param batch_per_epoch: batch in each epoch
+        :param train_batch_num: batch in each epoch
+        :param eva_batch_num: overall batch
+        :param test_batch_num: overall batch
         :return:
         """
         pass
 
     @abstractmethod
-    def inference(self, test_loader: Union[DataLoader, StreamingDataSet], all_batch_num: int) -> List[np.ndarray]:
+    def inference(self, test_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int) -> List[np.ndarray]:
         """
 
         :param test_loader:
-        :param all_batch_num:
+        :param inf_batch_num:
         :return:
         """
         pass
