@@ -1,6 +1,6 @@
 from flask import current_app, g
 from dataloader.steam_libsvm_dataset import StreamingDataSet
-from cache import Bufferkey
+from cache.data_cache import Bufferkey
 
 
 def before_request_func():

@@ -1,7 +1,8 @@
 from flask import current_app, request
 from flask_socketio import Namespace, emit
 from flask_socketio import SocketIO
-from cache import LibSvmDataDispatcher, Bufferkey, DataCache
+from cache.data_cache import DataCache, Bufferkey
+from cache.data_dispatcher import LibSvmDataDispatcher
 
 socketio = SocketIO(ping_timeout=30, ping_interval=5, logger=False, engineio_logger=False)
 
@@ -51,7 +52,7 @@ class NRDataManager(Namespace):
             _data_dispatcher = LibSvmDataDispatcher()
             current_app.config["dispatchers"][socket_id][dataset_name] = _data_dispatcher
             _data_dispatcher.bound_client_to_cache(_cache, socket_id)
-            _data_dispatcher.start()
+            _data_dispatcher.start(emit_request_data)
 
         emit('response', {'message': 'Done'})
 
@@ -76,14 +77,13 @@ class NRDataManager(Namespace):
             return
 
         # check dispatcher is launched for this datasets
-        _dispatcher_key = get_dispatcher_key(socket_id, dataset_name)
-        if _dispatcher_key not in current_app.config["dispatchers"]:
+        if socket_id not in current_app.config["dispatchers"]:
             emit("response", {
                 "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
                            f"wait for train/infernce/finetune request"})
             return
 
-        dispatcher = current_app.config['dispatchers'][_dispatcher_key]
+        dispatcher = current_app.config['dispatchers'][socket_id][dataset_name]
 
         if dispatcher.add(ml_stage, dataset):
             emit('response', {'message': 'Data received and added to queue!'})

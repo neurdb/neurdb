@@ -3,7 +3,7 @@ from app.handlers.train import train
 import traceback
 import orjson
 from logger.logger import logger
-from app.routes.blueprints import train_bp
+from app.routes.routes import train_bp
 from app.routes.context import before_execute
 from cache.data_cache import Bufferkey
 

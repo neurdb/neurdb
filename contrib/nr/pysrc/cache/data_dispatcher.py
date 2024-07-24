@@ -1,10 +1,9 @@
 
 import threading
 import time
-from cache.data_cache import DataCache
+from cache.data_cache import DataCache, Bufferkey
 import torch
-from app.websocket.data_socket import emit_request_data
-from cache.data_cache import Bufferkey
+from typing import Callable
 
 
 class LibSvmDataDispatcher:
@@ -21,12 +20,6 @@ class LibSvmDataDispatcher:
     def bound_client_to_cache(self, data_cache: DataCache, client_id: str):
         self.data_cache = data_cache
         self.client_id = client_id
-
-    def start(self):
-        self.stop_event.clear()
-        self.thread = threading.Thread(target=self._background_thread)
-        self.thread.daemon = True
-        self.thread.start()
 
     def batch_preprocess(self, data: str):
         max_nfileds = self.data_cache.dataset_statistics[1]
@@ -76,7 +69,15 @@ class LibSvmDataDispatcher:
         else:
             return False
 
-    def _background_thread(self):
+    # ------------------------- threading -------------------------
+
+    def start(self, emit_request_data: Callable[[Bufferkey, str], None]):
+        self.stop_event.clear()
+        self.thread = threading.Thread(target=self._background_thread, args=(emit_request_data,))
+        self.thread.daemon = True
+        self.thread.start()
+
+    def _background_thread(self, emit_request_data):
         print("[LibSvmDataDispatcher] thread started...")
         while not self.stop_event.is_set():
             key = self.data_cache.is_full()

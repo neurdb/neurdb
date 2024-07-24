@@ -3,7 +3,7 @@ from app.handlers.finetune import finetune
 import traceback
 import orjson
 from logger.logger import logger
-from app.routes.blueprints import finetune_bp
+from app.routes.routes import finetune_bp
 from app.routes.context import before_execute
 from cache.data_cache import Bufferkey
 

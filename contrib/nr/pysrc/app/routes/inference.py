@@ -3,7 +3,7 @@ from app.handlers.inference import inference
 import traceback
 import orjson
 from logger.logger import logger
-from app.routes.blueprints import inference_bp
+from app.routes.routes import inference_bp
 from app.routes.context import before_execute
 from cache.data_cache import Bufferkey
 
