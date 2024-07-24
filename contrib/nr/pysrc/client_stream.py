@@ -58,7 +58,7 @@ def test_inference_endpoint(model_name, model_id, client_id, inf_batch_num):
 
 
 if __name__ == "__main__":
-    _client_id = "2quB-4bKkgsuYetlAAAB"
+    _client_id = "o8rmW9EraKW3uT1RAAAB"
     # Test sending the libsvm data to train endpoint
     _epoch = 1
     _batch_num = 3

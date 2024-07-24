@@ -15,7 +15,7 @@ def after_request_func(response):
     g.data_dispatcher = None
 
 
-def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> bool:
+def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> (bool, str):
     """
     Start LibSvmDataDispatcher and create StreamingDataSet
     :param dataset_name:
@@ -27,8 +27,11 @@ def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> bo
     # get the data cache for that dataset
     data_cache = current_app.config['data_cache']
     if dataset_name not in data_cache:
-        return False
+        return False, f"Dataset {dataset_name} is not registred in web-socket"
     _cache = data_cache[dataset_name]
+
+    if client_id not in current_app.config['clients']:
+        return False, f"client {client_id} is not registered by socket, no data here !"
 
     client = current_app.config['clients'][client_id]
     print(f"[socket]: set task for client {client_id}...")
@@ -42,9 +45,9 @@ def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> bo
     # assign the data dispaccher
     g.data_dispatcher.set_task(_cache, client)
     if not g.data_dispatcher.start():
-        return False
+        return False, "data_dispatcher threads cannot started, not set up dataset_statistics ?"
 
     # create dataset
     data = StreamingDataSet(_cache, data_key=data_key)
     g.data_loader = data
-    return True
+    return True, ""

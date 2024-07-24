@@ -26,8 +26,10 @@ def model_train():
         config_args = current_app.config['config_args']
         db_connector = current_app.config['db_connector']
 
-        if not before_execute(dataset_name=dataset_name, data_key=Bufferkey.TRAIN_KEY, client_id=client_socket_id):
-            return jsonify("cannot start the data dispatcher, call dataset_profiling fisrt"), 400
+        exe_flag, exe_info = before_execute(dataset_name=dataset_name, data_key=Bufferkey.TRAIN_KEY,
+                                            client_id=client_socket_id)
+        if not exe_flag:
+            return jsonify(exe_info), 400
 
         model_id = train(
             model_name=model_name,
