@@ -35,9 +35,13 @@ def _read_libsvm_file(input_file: str) -> list:
     with open(input_file, "r") as f:
         number_of_features = len(f.readline().strip().split(" ")) - 1
         f.seek(0)
+        index = 0
         for line in f:
             if line.strip():
                 yield _parse_libsvm_line(line, number_of_features)
+                index += 1
+                if index % 100000 == 0:
+                    logger.debug(f"Read {index} lines...")
 
 
 def libsvm2csv(input_file: str) -> pd.DataFrame:

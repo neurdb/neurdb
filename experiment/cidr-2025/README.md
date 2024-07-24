@@ -12,7 +12,7 @@ The dataset contains **40428967** samples. It has XXX columns, including the lab
 
 ### Criteo
 
-The dataset contains **45840617** samples. It has XXX columns, including the label column.
+The dataset contains **45840617** samples. We take the first 13 features as the input features.
 
 
 ## Get Started
