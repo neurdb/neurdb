@@ -88,7 +88,7 @@ class LibSvmDataDispatcher:
             if key:
                 print(f"[LibSvmDataDispatcher] fetching data for {key}...")
                 emit_request_data(key, self.client_id)
-            time.sleep(200)
+            time.sleep(0.1)
 
     def stop(self):
         if self.thread is not None:

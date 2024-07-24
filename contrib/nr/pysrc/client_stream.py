@@ -36,12 +36,13 @@ def test_train_endpoint(batch_size, model_name, dataset_name, client_id, epoch, 
         return None
 
 
-def test_inference_endpoint(model_name, model_id, client_id):
+def test_inference_endpoint(model_name, model_id, client_id, all_batch_num):
     url = f"{SERVER_URL}/inference"
     data = {
         'model_name': model_name,
         'model_id': model_id,
-        'client_socket_id': client_id
+        'client_socket_id': client_id,
+        'all_batch_num': all_batch_num
     }
     response = requests.post(url, data=data)
     if response.status_code == 200:
@@ -55,7 +56,7 @@ def test_inference_endpoint(model_name, model_id, client_id):
 
 if __name__ == "__main__":
 
-    _client_id = "OGIu1oJWP_47KwaQAAAB"
+    _client_id = "0AG4-HRCAxDy9AUpAAAB"
     # Test sending the libsvm data to train endpoint
     _epoch = 1
     _batch_per_epoch = 3
@@ -63,8 +64,6 @@ if __name__ == "__main__":
     _model_name = 'armnet'  # Example model name
     _dataset_name = 'frappe'
 
-    _model_id = test_train_endpoint(_batch_size, _model_name, _dataset_name, _client_id, _epoch, _batch_per_epoch)
+    test_train_endpoint(_batch_size, _model_name, _dataset_name, _client_id, _epoch, _batch_per_epoch)
 
-    if not _model_id:
-        _model_id = 1
-    test_inference_endpoint(_model_name, int(_model_id), _client_id)
+    test_inference_endpoint(_model_name, 0, _client_id, 4)

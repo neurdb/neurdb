@@ -76,7 +76,7 @@ class ARMNetModelBuilder(BuilderBase):
             train_timestamp = time.time()
 
             for batch_idx, batch in enumerate(train_loader):
-                if batch_idx > batch_per_epoch:
+                if batch_idx == batch_per_epoch:
                     break
                 target = batch["y"]
                 if torch.cuda.is_available():

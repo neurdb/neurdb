@@ -1,5 +1,6 @@
 from cache.data_cache import DataCache, Bufferkey
 from typing import Tuple, Dict, List
+import time
 
 
 class StreamingDataSet:
@@ -17,13 +18,19 @@ class StreamingDataSet:
 
     def __next__(self) -> Dict[str, List]:
         """
-        Get the next batch data
+        Wait until the next data is available.
         :return: current batch data
         """
-        batch_data = self.data_cache.get(self.data_key)
-        if batch_data is None:
-            raise ValueError(f"The buffer of {self.data_key} is not filled yet!")
-        return batch_data
+        waiting_message_printed = False
+        while True:
+            batch_data = self.data_cache.get(self.data_key)
+            if batch_data is not None:
+                print(f"Get data from buffer of {self.data_key} !!")
+                return batch_data
+            if not waiting_message_printed:
+                print(f"The buffer of {self.data_key} is not filled yet ! Waiting...")
+                waiting_message_printed = True
+            time.sleep(0.1)
 
     def __len__(self):
         return self.all_batches
