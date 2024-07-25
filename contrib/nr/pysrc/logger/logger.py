@@ -62,7 +62,7 @@ logger = logger.bind(logger=logger_name)
 logger.warning("Set logging level", level=log_level)
 
 
-def configure_logging(logfile: Optional[str]):
+def configure_logging(logfile: Optional[str], log_level=log_level):
     if logfile is None:
         renderer = structlog.dev.ConsoleRenderer()
         logger_factory = structlog.PrintLoggerFactory()
@@ -80,6 +80,9 @@ def configure_logging(logfile: Optional[str]):
         )
 
     structlog.configure(
+        wrapper_class=structlog.make_filtering_bound_logger(
+            logging._nameToLevel[log_level]
+        ),
         processors=processors + [renderer],
         logger_factory=logger_factory,
     )
