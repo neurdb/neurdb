@@ -8,9 +8,9 @@ import torch
 from logger.logger import logger, configure_logging
 import traceback
 from shared_config.config import parse_config_arguments
-from apps import build_model
-from connection import DatabaseModelHandler, NeurDBModelHandler
-from utils.dataset import libsvm_dataloader, build_inference_loader
+from models import build_model
+from connection import NeurDBModelHandler
+from dataloader.libsvm_dataset import libsvm_dataloader, build_inference_loader
 
 # from cache.model_cache import ModelCache
 

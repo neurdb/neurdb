@@ -3,6 +3,8 @@ click==8.1.7
 einops==0.8.0
 filelock==3.15.4
 Flask==3.0.3
+Flask-SocketIO==5.3.6
+eventlet==0.36.1
 fsspec==2024.6.1
 itsdangerous==2.2.0
 Jinja2==3.1.4

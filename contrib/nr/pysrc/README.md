@@ -1,5 +1,7 @@
 # NeurDB Python Server
 
+![design](./doc/design.png)
+
 ## Installation
 
 ```sh
