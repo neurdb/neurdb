@@ -42,9 +42,7 @@ def model_inference():
         return jsonify({"res": result})
 
     except Exception:
-        error_message = {
-            "res": "NA",
-            "Errored": traceback.format_exc()
-        }
-        logger.error(orjson.dumps(error_message).decode('utf-8'))
+        stacktrace = traceback.format_exc()
+        error_message = {"res": "NA", "Errored": stacktrace}
+        logger.error("model_inference error", stacktrace=stacktrace)
         return jsonify(error_message), 500

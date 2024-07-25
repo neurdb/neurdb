@@ -7,13 +7,16 @@ from app.routes.context import before_request_func, after_request_func
 from app.socketio.data_socketio import socketio
 from cache import ContextStates, DataCache, LibSvmDataDispatcher
 from connection import NeurDBModelHandler
+from neurdb.logger import configure_logging as api_configure_logging
+
+# configure_logging("./app.log")
+configure_logging(None)
+api_configure_logging(None)
 
 app = Flask(__name__)
 
-# Load config and initialize once
 config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
-configure_logging("./logs/app.log")
 
 NEURDB_CONNECTOR = NeurDBModelHandler(
     {

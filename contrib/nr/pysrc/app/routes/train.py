@@ -46,10 +46,7 @@ def model_train():
         return jsonify({"model_id": model_id})
 
     except Exception:
-        error_message = {
-            "res": "NA",
-            "Errored": traceback.format_exc()
-        }
-        print(traceback.format_exc())
-        logger.error(orjson.dumps(error_message).decode('utf-8'))
+        stacktrace = traceback.format_exc()
+        error_message = {"res": "NA", "Errored": stacktrace}
+        logger.error("model_train error", stacktrace=stacktrace)
         return jsonify(error_message), 500

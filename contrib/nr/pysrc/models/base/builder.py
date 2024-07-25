@@ -36,7 +36,6 @@ class BuilderBase(ABC):
         self._nfield = nfield
 
     @abstractmethod
-
     def train(self,
               train_loader: Union[DataLoader, StreamingDataSet],
               val_loader: Union[DataLoader, StreamingDataSet],
