@@ -77,6 +77,13 @@ class ARMNetModelBuilder(BuilderBase):
             train_timestamp = time.time()
 
             for batch_idx, batch in enumerate(train_loader):
+                # logger.debug(
+                #     "get batch",
+                #     id=batch_idx,
+                #     id_shape=batch["id"].shape,
+                #     value_shape=batch["value"].shape,
+                # )
+
                 target = batch["y"]
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
