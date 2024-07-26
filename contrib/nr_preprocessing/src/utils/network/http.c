@@ -20,10 +20,9 @@ void send_train_task(const char *model_name, const char *dataset_name, const cha
         snprintf(url, sizeof(url), "%s/train", SERVER_URL);
 
         curl_mime *form = curl_mime_init(curl);
-        curl_mimepart *field = curl_mime_addpart(form);
 
         // Add model_name field
-        field = curl_mime_addpart(form);
+        curl_mimepart *field = curl_mime_addpart(form);
         curl_mime_name(field, "model_name");
         curl_mime_data(field, model_name, CURL_ZERO_TERMINATED);
 
@@ -38,6 +37,7 @@ void send_train_task(const char *model_name, const char *dataset_name, const cha
         curl_mime_data(field, client_socket_id, CURL_ZERO_TERMINATED);
 
         // Add batch_size field
+        field = curl_mime_addpart(form);
         curl_mime_name(field, "batch_size");
         char batch_size_str[10];
         snprintf(batch_size_str, sizeof(batch_size_str), "%d", batch_size);
@@ -76,21 +76,21 @@ void send_train_task(const char *model_name, const char *dataset_name, const cha
         curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
 
         const CURLcode res = curl_easy_perform(curl);
-
-        if (res != CURLE_OK) {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-        } else {
-            long reponse_code;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &reponse_code);
-
-            if (reponse_code != 200) {
-                // train failed
-                fprintf(stderr, "Response code: %ld, failed to send the train task\n", reponse_code);
-            } else {
-                // train success
-                printf("Response from the server: training task received\n");
-            }
-        }
+        // TODO: here we skip the response code check, need to add them later
+        // if (res != CURLE_OK) {
+        //     fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        // } else {
+        //     long reponse_code;
+        //     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &reponse_code);
+        //
+        //     if (reponse_code != 200) {
+        //         // train failed
+        //         fprintf(stderr, "Response code: %ld, failed to send the train task\n", reponse_code);
+        //     } else {
+        //         // train success
+        //         printf("Response from the server: training task received\n");
+        //     }
+        // }
         curl_mime_free(form);
         curl_easy_cleanup(curl);
     }

@@ -7,10 +7,9 @@
 
 #include "labeling/encode.h"
 #include "utils/network/http.h"
-#include "utils/metric/time_metric.h"
 #include "utils/network/socketio.h"
-#include "utils/cjson/cJSON.h"
-
+#include "utils/network/socketio_nr.h"
+#include "utils/metric/time_metric.h"
 
 PG_MODULE_MAGIC;
 
@@ -23,8 +22,6 @@ PG_FUNCTION_INFO_V1(nr_finetune);
 
 // ******** Helper functions ********
 char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
-
-static void socketio_connect_callback(SocketIOClient *client, cJSON *json);
 
 
 /**
@@ -161,20 +158,6 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 }
 
 
-void socketio_send_batch_data(SocketIOClient *client, const char *dataset_name, const MLStage ml_stage,
-                              const char *batch_data) {
-    cJSON *json = cJSON_CreateObject();
-    cJSON_AddStringToObject(json, "dataset_name", dataset_name);
-    cJSON_AddStringToObject(json, "ml_stage", ML_STAGE[ml_stage]);
-    cJSON_AddStringToObject(json, "data", batch_data);
-    char *data = cJSON_PrintUnformatted(json);
-    socketio_emit(client, "receive_db_data", data);
-    // clean up
-    cJSON_Delete(json);
-    free(data);
-}
-
-
 /**
  * Train the model
  * @param model_name int The name of the model to be trained
@@ -199,13 +182,17 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
-    socketio_register_callback(sio_client, "connection", socketio_connect_callback);
+    socketio_register_callback(sio_client, "connection", nr_socketio_connect_callback);
     socketio_connect(sio_client, "http://localhost:8090");
 
     while (socketio_get_socket_id(sio_client) == 0) {
         // wait for the connection
         usleep(10000); // sleep for 10ms
     }
+
+    // init dataset
+    nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features);
+
     send_train_task(
         model_name,
         table_name,
@@ -303,7 +290,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
             record_query_end_time(time_metric);
             record_operation_start_time(time_metric);
             // TODO: send data to the Python Server
-            socketio_send_batch_data(sio_client, table_name, TRAIN, libsvm_data.data);
+
 
             record_operation_end_time(time_metric); // record the end time of operation
             record_query_start_time(time_metric);
@@ -485,11 +472,4 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out) {
     pfree(elements);
     pfree(nulls);
     return char_array;
-}
-
-static void socketio_connect_callback(SocketIOClient *client, cJSON *json) {
-    const cJSON *data = cJSON_GetObjectItemCaseSensitive(json, "sid");
-    if (cJSON_IsString(data) && (data->valuestring != NULL)) {
-        socketio_set_socket_id(client, data->valuestring);
-    }
 }

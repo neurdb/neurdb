@@ -1,6 +1,7 @@
 #include "socketio.h"
 
 #include <sio_client.h>
+#include <cstring>
 
 
 struct SocketIOClient {
@@ -13,8 +14,9 @@ SocketIOClient *socketio_client() {
     return new SocketIOClient();
 }
 
-void socketio_set_socket_id(SocketIOClient *client, char* socket_id) {
-    client->socket_id = socket_id;
+void socketio_set_socket_id(SocketIOClient *client, const char* socket_id) {
+    client->socket_id = new char[strlen(socket_id) + 1];
+    strcpy(client->socket_id, socket_id);
 }
 
 char* socketio_get_socket_id(const SocketIOClient *client) {

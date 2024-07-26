@@ -5,7 +5,7 @@
 #ifndef SOCKETIO_H
 #define SOCKETIO_H
 
-#include <cjson/cJSON.h>
+#include "../cjson/cJSON.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +42,7 @@ SocketIOClient *socketio_client();
  * @param socket_id char* The socket id to set
  */
 void
-socketio_set_socket_id(SocketIOClient *client, char *socket_id);
+socketio_set_socket_id(SocketIOClient *client, const char *socket_id);
 
 char *
 socketio_get_socket_id(const SocketIOClient *client);

@@ -1,3 +1,5 @@
+import ast
+
 from flask import current_app, request
 from flask_socketio import Namespace, emit
 from flask_socketio import SocketIO
@@ -34,7 +36,7 @@ class NRDataManager(Namespace):
         current_app.config["data_cache"].remove(sid)
         current_app.config["dispatchers"].remove(sid)
 
-    def on_dataset_init(self, data: dict):
+    def on_dataset_init(self, data: str):
         """
         Handle dataset initialization event.
         1. Create data cache for a specific dataset.
@@ -42,6 +44,9 @@ class NRDataManager(Namespace):
         :param data: Dictionary containing dataset information.
         :return:
         """
+        # str to dict
+        data = ast.literal_eval(data)
+
         socket_id = request.sid
         dataset_name = data["dataset_name"]
         nfeat = data['nfeat']
