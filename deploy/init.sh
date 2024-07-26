@@ -73,6 +73,12 @@ echo "Python Server started!"
 #echo "Install NR Model Extension Done"
  
 # Compile nr_preprocessing extension
+cd $NEURDBPATH/contrib/nr_preprocessing/lib
+git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git # socket.io-client-cpp
+cd socket.io-client-cpp
+cmake ./
+make install
+
 cd $NEURDBPATH/contrib/nr_preprocessing
 make install
 echo "Install NR Preprocessing Extension Done"
