@@ -21,7 +21,7 @@ class NRDataManager(Namespace):
 
         print(f"Client connected: {sid}")
         print(current_app.config['clients'])
-        emit('message', {'data': sid}, room=sid)
+        emit('connection', {'sid': sid}, room=sid)
 
     def on_disconnect(self):
         """
@@ -64,7 +64,7 @@ class NRDataManager(Namespace):
             _data_dispatcher.bound_client_to_cache(_cache, socket_id)
             _data_dispatcher.start(emit_request_data)
 
-        emit('response', {'message': 'Done'})
+        emit('dataset_init', {'message': 'Done'})
 
     def on_receive_db_data(self, data: dict):
         """

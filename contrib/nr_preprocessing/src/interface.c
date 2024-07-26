@@ -1,5 +1,6 @@
 #include "interface.h"
 
+#include <unistd.h>
 #include <utils/builtins.h>
 #include <utils/array.h>
 #include <executor/spi.h>
@@ -7,7 +8,8 @@
 #include "labeling/encode.h"
 #include "utils/network/http.h"
 #include "utils/metric/time_metric.h"
-#include "utils/network/websocket.h"
+#include "utils/network/socketio.h"
+#include "utils/cjson/cJSON.h"
 
 
 PG_MODULE_MAGIC;
@@ -21,6 +23,8 @@ PG_FUNCTION_INFO_V1(nr_finetune);
 
 // ******** Helper functions ********
 char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
+
+static void socketio_connect_callback(SocketIOClient *client, cJSON *json);
 
 
 /**
@@ -157,6 +161,20 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 }
 
 
+void socketio_send_batch_data(SocketIOClient *client, const char *dataset_name, const MLStage ml_stage,
+                              const char *batch_data) {
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "dataset_name", dataset_name);
+    cJSON_AddStringToObject(json, "ml_stage", ML_STAGE[ml_stage]);
+    cJSON_AddStringToObject(json, "data", batch_data);
+    char *data = cJSON_PrintUnformatted(json);
+    socketio_emit(client, "receive_db_data", data);
+    // clean up
+    cJSON_Delete(json);
+    free(data);
+}
+
+
 /**
  * Train the model
  * @param model_name int The name of the model to be trained
@@ -179,22 +197,26 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     char **feature_names = text_array2char_array(features, &n_features); // feature names
     char *target = text_to_cstring(PG_GETARG_TEXT_P(4)); // target column
 
-    // init websocket
-    WebsocketInfo *ws_info = init_ws_connection("localhost", 8090, "/", 10);
-    if (ws_info == NULL) {
-        elog(ERROR, "Failed to initialize the WebSocket connection");
-    }
+    // init SocketIO
+    SocketIOClient *sio_client = socketio_client();
+    socketio_register_callback(sio_client, "connection", socketio_connect_callback);
+    socketio_connect(sio_client, "http://localhost:8090");
 
-    // start websocket thread
-    if (start_ws_thread(ws_info) != 0) {
-        elog(ERROR, "Failed to start the WebSocket thread");
-    }
-
-    while (strlen(ws_info->sid) == 0) {
+    while (socketio_get_socket_id(sio_client) == 0) {
+        // wait for the connection
         usleep(10000); // sleep for 10ms
     }
-
-    send_train_task(model_name, table_name, ws_info->sid, batch_size, 1, 1, 1, 1);
+    send_train_task(
+        model_name,
+        table_name,
+        socketio_get_socket_id(sio_client),
+        batch_size,
+        1,
+        1,
+        1,
+        1
+    );
+    elog(INFO, "Train task sent");
 
     // prepare the query
     StringInfoData query;
@@ -280,8 +302,9 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
             record_query_end_time(time_metric);
             record_operation_start_time(time_metric);
-            // send training request to the Python Server
-            send_batch_data(ws_info, table_name, TRAIN, libsvm_data.data);
+            // TODO: send data to the Python Server
+            socketio_send_batch_data(sio_client, table_name, TRAIN, libsvm_data.data);
+
             record_operation_end_time(time_metric); // record the end time of operation
             record_query_start_time(time_metric);
             resetStringInfo(&row_data);
@@ -462,4 +485,11 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out) {
     pfree(elements);
     pfree(nulls);
     return char_array;
+}
+
+static void socketio_connect_callback(SocketIOClient *client, cJSON *json) {
+    const cJSON *data = cJSON_GetObjectItemCaseSensitive(json, "sid");
+    if (cJSON_IsString(data) && (data->valuestring != NULL)) {
+        socketio_set_socket_id(client, data->valuestring);
+    }
 }
