@@ -4,6 +4,7 @@
 #include <utils/builtins.h>
 #include <utils/array.h>
 #include <executor/spi.h>
+#include <math.h>
 
 #include "labeling/encode.h"
 #include "utils/network/http.h"
@@ -163,6 +164,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
  * @param model_name int The name of the model to be trained
  * @param table_name text The name of the table to be used in the training
  * @param batch_size int The batch size of the input data
+ * @param epochs int The number of epochs
  * @param features text[] Columns to be used in the training
  * @param target text The target column
  * @return void
@@ -175,17 +177,21 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1)); // table name
     int batch_size = PG_GETARG_INT32(2); // batch size
-    ArrayType *features = PG_GETARG_ARRAYTYPE_P(3);
+    int epoch = PG_GETARG_INT32(3); // epoch
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(4);
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // feature names
-    char *target = text_to_cstring(PG_GETARG_TEXT_P(4)); // target column
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(5)); // target column
 
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
 
-    BatchDataQueue *queue = malloc(sizeof(BatchDataQueue));
-    init_batch_data_queue(queue, 10);
-    socketio_set_queue(sio_client, queue);
+    BatchDataQueue *queues[4];
+    for (int i = 0; i < 4; i++) {
+        queues[i] = malloc(sizeof(BatchDataQueue));
+        init_batch_data_queue(queues[i], 10);
+    }
+    socketio_set_queues(sio_client, queues);
 
     socketio_register_callback(sio_client, "connection", nr_socketio_connect_callback);
     socketio_register_callback(sio_client, "request_data", nr_socketio_request_data_callback);
@@ -199,24 +205,50 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     // init dataset
     nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features);
 
-    send_train_task(
-        model_name,
-        table_name,
-        socketio_get_socket_id(sio_client),
-        batch_size,
-        1,
-        1,
-        1,
-        1
-    );
-    elog(INFO, "Train task sent");
-
     // prepare the query
     StringInfoData query;
     initStringInfo(&query);
 
+    appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
+    // calling SPI execution
+    SPI_connect();
+    SPI_execute(query.data, false, 0);
+
+    bool isnull;
+    const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
+
+    const int n_batches = DatumGetInt32(n_rows) / batch_size;
+    const int n_batches_train = (int) ceil(n_batches * 0.8);
+    const int n_batches_evaluate = (int) ceil(n_batches * 0.1);
+    const int n_batches_test = (int) ceil(n_batches * 0.1);
+
+    // create a new thread to send the training task
+    pthread_t train_thread;
+    TrainingInfo *training_info = malloc(sizeof(TrainingInfo));
+    training_info->model_name = model_name;
+    training_info->table_name = table_name;
+    training_info->client_socket_id = socketio_get_socket_id(sio_client);
+    training_info->batch_size = batch_size;
+    training_info->epoch = epoch;
+    training_info->train_batch_num = n_batches_train;
+    training_info->eva_batch_num = n_batches_evaluate;
+    training_info->test_batch_num = n_batches_test;
+    pthread_create(&train_thread, NULL, send_train_task, (void *)training_info);
+
+    // send_train_task(
+    //     model_name,
+    //     table_name,
+    //     socketio_get_socket_id(sio_client),
+    //     batch_size,
+    //     epoch,
+    //     n_batches_train,
+    //     n_batches_evaluate,
+    //     n_batches_test
+    // );
+
+    resetStringInfo(&query);
     char *cursor_name = "nr_train_cursor";
-    appendStringInfo(&query, "DECLARE %s CURSOR FOR ", cursor_name);
+    appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ", cursor_name); // SCROLL is necessrary for rewind
     appendStringInfo(&query, "SELECT ");
 
     for (int i = 0; i < n_features; ++i) {
@@ -227,8 +259,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     }
     appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
-    // calling SPI execution
-    SPI_connect();
+    // create the cursor for training data
     SPI_execute(query.data, false, 0);
 
     resetStringInfo(&query);
@@ -239,11 +270,34 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     initStringInfo(&libsvm_data);
     initStringInfo(&row_data);
     elog(INFO, "Start training");
+    int current_epoch = 0;
+    int current_stage;
+    int current_batch = 0;
 
     while (true) {
+        // set the current stage
+        if (current_batch >= n_batches_train) {
+            current_stage = EVALUATE;
+        } else if (current_batch >= n_batches_train + n_batches_evaluate) {
+            current_stage = TEST;
+        } else {
+            current_stage = TRAIN;
+        }
+
         SPI_execute(query.data, false, batch_size);
         if (SPI_processed == 0) {
-            break; // no more rows to fetch, break the loop
+            current_epoch++;
+            current_batch = 0;
+            // if the current epoch is greater than the specified epoch, break the loop
+            if (current_epoch >= epoch) {
+                break;
+            }
+            // reset the cursor
+            resetStringInfo(&query);
+            appendStringInfo(&query, "MOVE ABSOLUTE 0 IN %s", cursor_name);
+            SPI_execute(query.data, false, 0);
+            resetStringInfo(&query);
+            appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
         }
         resetStringInfo(&libsvm_data);
         resetStringInfo(&row_data);
@@ -297,13 +351,12 @@ Datum nr_train(PG_FUNCTION_ARGS) {
             record_query_end_time(time_metric);
             record_operation_start_time(time_metric);
             // send training data to the Python Server, blocking operation if the queue is full
-            elog(INFO, "Emitting batch data");
-            nr_socketio_emit_batch_data(sio_client, table_name, TRAIN, libsvm_data.data);
-            elog(INFO, "Batch data emitted");
+            nr_socketio_emit_batch_data(sio_client, table_name, current_stage, libsvm_data.data);
             record_operation_end_time(time_metric); // record the end time of operation
             record_query_start_time(time_metric);
             resetStringInfo(&row_data);
         }
+        current_batch++;
     }
     record_query_end_time(time_metric); // record the eventual end time of query
 

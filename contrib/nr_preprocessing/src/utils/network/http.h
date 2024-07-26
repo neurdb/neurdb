@@ -12,15 +12,16 @@
  * @param eva_batch_num int Number of evaluation batches
  * @param test_batch_num int Number of testing batches
  */
-void send_train_task(
-    const char *model_name,
-    const char *dataset_name,
-    const char *client_socket_id,
-    int batch_size,
-    int epoch,
-    int train_batch_num,
-    int eva_batch_num,
-    int test_batch_num
+void* send_train_task(
+    // const char *model_name,
+    // const char *dataset_name,
+    // const char *client_socket_id,
+    // int batch_size,
+    // int epoch,
+    // int train_batch_num,
+    // int eva_batch_num,
+    // int test_batch_num
+    void *arg
 );
 
 /**

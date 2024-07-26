@@ -6,13 +6,24 @@
 #include <curl/curl.h>
 #include <utils/elog.h>
 
+#include "../../interface.h"
+
 
 #define SERVER_URL "http://localhost:8090"
 
-
-void send_train_task(const char *model_name, const char *dataset_name, const char *client_socket_id,
-                     const int batch_size, const int epoch, const int train_batch_num, const int eva_batch_num,
-                     const int test_batch_num) {
+// void send_train_task(const char *model_name, const char *dataset_name, const char *client_socket_id,
+//                      const int batch_size, const int epoch, const int train_batch_num, const int eva_batch_num,
+//                      const int test_batch_num)
+void* send_train_task(void *arg) {
+    TrainingInfo *info = (TrainingInfo *) arg;
+    const char *model_name = info->model_name;
+    const char *dataset_name = info->table_name;
+    const char *client_socket_id = info->client_socket_id;
+    const int batch_size = info->batch_size;
+    const int epoch = info->epoch;
+    const int train_batch_num = info->train_batch_num;
+    const int eva_batch_num = info->eva_batch_num;
+    const int test_batch_num = info->test_batch_num;
     curl_global_init(CURL_GLOBAL_ALL);
     CURL *curl = curl_easy_init();
 
@@ -99,6 +110,7 @@ void send_train_task(const char *model_name, const char *dataset_name, const cha
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
+    return NULL;
 }
 
 

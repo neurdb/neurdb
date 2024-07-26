@@ -71,7 +71,7 @@ class NRDataManager(Namespace):
 
         emit('dataset_init', {'message': 'Done'})
 
-    def on_batch_data(self, data: dict):
+    def on_batch_data(self, data: str):
         """
         Handle the event of receiving database data.
         Add the received data to the appropriate cache queue.
@@ -79,6 +79,8 @@ class NRDataManager(Namespace):
         """
         socket_id = request.sid
         print(f"[socket]: {socket_id} receive_db_data...")
+        data = ast.literal_eval(data)
+        
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
 

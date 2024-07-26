@@ -21,6 +21,6 @@ void nr_socketio_emit_db_init(SocketIOClient *client, const char *dataset_name, 
 /**
  * Emit the "batch_data" event
  */
-void nr_socketio_emit_batch_data(SocketIOClient *client, const char *dataset_name, const MLStage *data_type, const char *batch_data);
+void nr_socketio_emit_batch_data(SocketIOClient *client, const char *dataset_name, MLStage data_type, const char *batch_data);
 
 #endif //SOCKETIO_CALLBACK_H

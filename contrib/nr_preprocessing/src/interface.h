@@ -4,6 +4,17 @@
 #include <postgres.h>
 #include <fmgr.h>
 
+typedef struct {
+    char *model_name;
+    char *table_name;
+    char* client_socket_id;
+    int batch_size;
+    int epoch;
+    int train_batch_num;
+    int eva_batch_num;
+    int test_batch_num;
+} TrainingInfo;
+
 
 /**
  * Preprocess the input data for model inference. It contains the following steps:
@@ -27,6 +38,7 @@ Datum nr_inference(PG_FUNCTION_ARGS);
  * @param model_name int The name of the model to be trained
  * @param table_name text The name of the table to be used in the training
  * @param batch_size int The batch size of the input data
+ * @param epochs int The number of epochs
  * @param features text[] Columns to be used in the training
  * @param target text The target column
  * @return void
