@@ -16,9 +16,11 @@ include_directories(${PostgreSQL_INCLUDE_DIRS})
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
+find_library(LWS_LIBRARY NAMES websockets)
+
 FILE(GLOB_RECURSE SOURCES "src/*.c")
 add_library(nr_preprocessing SHARED ${SOURCES})
-target_link_libraries(nr_preprocessing ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES})
+target_link_libraries(nr_preprocessing ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES} ${LWS_LIBRARY})
 
 install(TARGETS nr_preprocessing DESTINATION ${PostgreSQL_LIBDIR})
 install(FILES sql/nr_preprocessing--1.0.0.sql DESTINATION ${PostgreSQL_SHAREDIR}/extension)

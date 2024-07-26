@@ -2,12 +2,26 @@
 #define HTTP_H
 
 /**
- * Resquest the server to train a model
- * @param libsvm_data char* Training data in libsvm format
- * @param batch_size int Batch size in training
+ * Send a training task to the server
  * @param model_name char* Model name
+ * @param dataset_name char* Dataset name
+ * @param client_socket_id char* Client socket id
+ * @param batch_size int Batch size in training
+ * @param epoch int Number of epochs
+ * @param train_batch_num int Number of training batches
+ * @param eva_batch_num int Number of evaluation batches
+ * @param test_batch_num int Number of testing batches
  */
-void request_train(const char *libsvm_data, int batch_size, const char *model_name);
+void send_train_task(
+    const char *model_name,
+    const char *dataset_name,
+    const char *client_socket_id,
+    int batch_size,
+    int epoch,
+    int train_batch_num,
+    int eva_batch_num,
+    int test_batch_num
+);
 
 /**
  * Resquest the server to make a forward inference with a model

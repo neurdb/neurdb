@@ -17,11 +17,13 @@ typedef struct {
     char *name;
     int unit;
     struct timespec overall_start_time;
-    struct timespec preprocess_end_time;
     struct timespec overall_end_time;
+    struct timespec query_start_time;
+    struct timespec query_end_time;
+    struct timespec operation_start_time;
     struct timespec operation_end_time;
     double overall_time; // = (overall_end_time - overall_start_time) / unit
-    double preprocess_time; // = (preprocess_end_time - overall_start_time) / unit
+    double query_time; // = (preprocess_end_time - overall_start_time) / unit
     double operation_time; // = (operation_end_time - preprocess_end_time) / unit
 } TimeMetric;
 
@@ -37,16 +39,14 @@ TimeMetric *init_time_metric(char *name, TimeUnit unit);
 void free_time_metric(TimeMetric *time_metric);
 
 // ****** Recording Time Functions ******
-void record_start_time(TimeMetric *time_metric);
+void record_overall_start_time(TimeMetric *time_metric);
+void record_overall_end_time(TimeMetric *time_metric);
 
-void record_preprocess_end_time(TimeMetric *time_metric);
+void record_query_start_time(TimeMetric *time_metric);
+void record_query_end_time(TimeMetric *time_metric);
 
+void record_operation_start_time(TimeMetric *time_metric);
 void record_operation_end_time(TimeMetric *time_metric);
-
-void record_end_time(TimeMetric *time_metric);
-
-// ****** Calculate Time Gap Functions ******
-void calculate_time(TimeMetric *time_metric);
 
 // ****** Output Time Functions ******
 void print_time(const TimeMetric *time_metric);

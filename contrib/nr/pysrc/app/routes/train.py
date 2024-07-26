@@ -14,7 +14,6 @@ def model_train():
         params = request.form  # Use request.form to get form data
         batch_size = int(params.get("batch_size"))
         model_name = params.get("model_name")
-        data = params.get("libsvm_data")
         dataset_name = params.get("dataset_name")
         client_socket_id = params.get("client_socket_id")
 

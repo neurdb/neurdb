@@ -33,6 +33,8 @@ RUN apt-get update && \
     libclang-dev \
     llvm-dev \
     libcurl4-openssl-dev \
+    libwebsockets-dev \
+    libcjson-dev \
     clang \
     flex \
     bison \
