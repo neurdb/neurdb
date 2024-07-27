@@ -1,3 +1,5 @@
+import json
+
 import socketio
 
 # Global dataset string
@@ -32,9 +34,9 @@ def on_response(data):
 def on_request_data(data):
     print("Received on_request_data")
     # Handle the request data logic here
-    sio.emit('receive_db_data',
-             {"dataset_name": "frappe",
-              "dataset": dataset})
+    sio.emit('batch_data',
+             json.dumps({"dataset_name": "frappe",
+                         "dataset": dataset}))
 
 
 @sio.event
@@ -53,7 +55,7 @@ def test_dataset_init(dataset_name, nfeat, nfield):
         'nfeat': nfeat,
         'nfield': nfield
     }
-    sio.emit('dataset_init', profiling_data)
+    sio.emit('dataset_init', json.dumps(profiling_data))
 
 
 def test_receive_db_data(dataset_name, dataset):
@@ -61,7 +63,7 @@ def test_receive_db_data(dataset_name, dataset):
         'dataset_name': dataset_name,
         'dataset': dataset
     }
-    sio.emit('receive_db_data', db_data)
+    sio.emit('batch_data', json.dumps(db_data))
 
 
 # Connect to the Socket.IO server
