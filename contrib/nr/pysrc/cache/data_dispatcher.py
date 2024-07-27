@@ -30,6 +30,8 @@ class LibSvmDataDispatcher:
         self.data_cache = data_cache
         self.client_id = client_id
 
+    # ------------------------- data prepceossing -------------------------
+
     def batch_preprocess(self, data: str):
         """
         Preprocess a batch of data from LibSVM format.
