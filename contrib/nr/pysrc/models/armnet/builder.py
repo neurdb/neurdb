@@ -78,8 +78,6 @@ class ARMNetModelBuilder(BuilderBase):
             train_timestamp = time.time()
 
             for batch_idx, batch in enumerate(train_loader):
-                if batch_idx == train_batch_num:
-                    break
                 target = batch["y"]
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
@@ -121,7 +119,8 @@ class ARMNetModelBuilder(BuilderBase):
                         # },
                         # loss={"batch": train_loss_avg.val, "avg": train_loss_avg.avg},
                     )
-
+                if batch_idx + 1 == train_batch_num:
+                    break
             logger.debug(
                 "Epoch end",
                 time=timeSince(s=train_time_avg.sum),
@@ -206,8 +205,6 @@ class ARMNetModelBuilder(BuilderBase):
 
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
-                if batch_idx == batch_num:
-                    break
                 target = batch["y"]
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
@@ -231,6 +228,8 @@ class ARMNetModelBuilder(BuilderBase):
                         f"Loss {loss_avg.val:8.4f} ({loss_avg.avg:8.4f})"
                     )
 
+                if batch_idx + 1 == batch_num:
+                    break
         logger.debug(
             f"Time {timeSince(s=time_avg.sum):>12s} "
             f"AUC {auc_avg.avg:8.4f} Loss {loss_avg.avg:8.4f}"
