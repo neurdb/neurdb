@@ -29,7 +29,7 @@ class DataCache:
     DataCache manages caching of different datasets with thread-safe operations.
     """
 
-    def __init__(self, dataset_name: str, maxsize=80):
+    def __init__(self, dataset_name: str, total_batch_num: int, maxsize=80):
         """
         Initialize the DataCache with a dataset name and a maximum cache size.
         :param dataset_name: The name of the dataset.
@@ -38,11 +38,15 @@ class DataCache:
         self.current_dataset_name = dataset_name
         self.lock = threading.Lock()
         self.queue = Queue(maxsize=maxsize)
+
         self.maxsize = maxsize
+        self.total_batch_num = total_batch_num
+        self.current_batch_num = 0
 
         # for dataset_statistics of current datasets
         self._nfeat = None
         self._nfield = None
+
 
     @property
     def dataset_statistics(self) -> Tuple[Optional[int], Optional[int]]:
@@ -71,6 +75,7 @@ class DataCache:
         with self.lock:
             if not self.queue.full():
                 self.queue.put(value)
+                self.current_batch_num += 1
                 return True
             return False
 
@@ -90,7 +95,7 @@ class DataCache:
         :return: True if the queue is full, False otherwise.
         """
         with self.lock:
-            return self.queue.full()
+            return self.queue.full() or self.current_batch_num == self.total_batch_num
 
     def is_empty(self) -> bool:
         """

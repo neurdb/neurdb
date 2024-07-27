@@ -51,11 +51,13 @@ class NRDataManager(Namespace):
         dataset_name = data["dataset_name"]
         nfeat = data['nfeat']
         nfield = data['nfield']
+        total_batch_num = data['nbatch']
+        cache_num = data['cache_num']
 
         # 1. Create data cache if not exist
         data_cache = current_app.config["data_cache"]
         if not data_cache.contains(socket_id, dataset_name):
-            _cache = DataCache(dataset_name)
+            _cache = DataCache(dataset_name=dataset_name, total_batch_num=total_batch_num, maxsize=cache_num)
             _cache.dataset_statistics = (nfeat, nfield)
             data_cache.add(socket_id, dataset_name, _cache)
         else:
@@ -80,7 +82,7 @@ class NRDataManager(Namespace):
         socket_id = request.sid
         print(f"[socket]: {socket_id} receive_db_data...")
         data = ast.literal_eval(data)
-        
+
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
 
