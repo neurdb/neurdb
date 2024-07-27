@@ -14,7 +14,7 @@
  */
 void *send_train_task(
     // const char *model_name,
-    // const char *dataset_name,
+    // const char *table_name,
     // const char *client_socket_id,
     // int batch_size,
     // int epoch,
@@ -48,5 +48,16 @@ void *send_inference_task(
  * @param model_id int Trained model id
  * @param batch_size int Batch size in finetune
  */
-void request_finetune(const char *libsvm_data, const char *model_name, int model_id, int batch_size);
+void *send_finetune_task(
+    // char *model_name;
+    // int model_id;
+    // char *table_name;
+    // char* client_socket_id;
+    // int batch_size;
+    // int epoch;
+    // int train_batch_num;
+    // int eva_batch_num;
+    // int test_batch_num;
+    void *arg
+);
 #endif

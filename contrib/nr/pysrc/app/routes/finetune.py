@@ -13,9 +13,8 @@ def model_finetune():
         params = request.form  # Use request.form to get form data
         model_name = params.get("model_name")
         model_id = int(params.get("model_id"))
-        libsvm_data = params.get("libsvm_data")
         batch_size = int(params.get("batch_size"))
-        dataset_name = params.get("dataset_name")
+        dataset_name = params.get("table_name")
         client_socket_id = params.get("client_socket_id")
 
         epoch = int(params.get("epoch"))
