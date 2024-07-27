@@ -4,19 +4,19 @@ import argparse
 from connection import NeurDBModelHandler
 from app.handlers.setup import Setup
 import numpy as np
+from dataloader.steam_libsvm_dataset import StreamingDataSet
 
 
 def inference(
         model_name: str,
-        inference_libsvm: str,
+        inference_libsvm: StreamingDataSet,
         args: argparse.Namespace,
         db: NeurDBModelHandler,
         model_id: int,
-        batch_size: int,
         inf_batch_num: int
 ) -> List[np.ndarray]:
     s = Setup(model_name, inference_libsvm, args, db)
-    response, err = s.inference(model_id, batch_size, inf_batch_num)
+    response, err = s.inference(model_id, inf_batch_num)
     if err is not None:
         logger.error(f"inference failed with error: {err}")
         return []

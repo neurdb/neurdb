@@ -18,15 +18,17 @@ app = Flask(__name__)
 config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
 
-NEURDB_CONNECTOR = NeurDBModelHandler(
-    {
-        "db_name": config_args.db_name,
-        "db_user": config_args.db_user,
-        "db_host": config_args.db_host,
-        "db_port": config_args.db_port,
-        # "password": config_args.db_password,
-    }
-)
+NEURDB_CONNECTOR  = None
+
+#     = NeurDBModelHandler(
+#     {
+#         "db_name": config_args.db_name,
+#         "db_user": config_args.db_user,
+#         "db_host": config_args.db_host,
+#         "db_port": config_args.db_port,
+#         # "password": config_args.db_password,
+#     }
+# )
 
 # shared global contexts among tasks.
 with app.app_context():

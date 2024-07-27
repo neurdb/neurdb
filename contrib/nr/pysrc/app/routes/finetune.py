@@ -38,7 +38,6 @@ def model_finetune():
             args=config_args,
             db=db_connector,
             model_id=model_id,
-            batch_size=batch_size,
             epochs=epoch,
             train_batch_num=train_batch_num,
             eva_batch_num=eva_batch_num,

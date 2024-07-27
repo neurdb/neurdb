@@ -75,16 +75,7 @@ class NRDataManager(Namespace):
         socket_id = request.sid
         print(f"[socket]: {socket_id} receive_db_data...")
         dataset_name = data["dataset_name"]
-        ml_stage = data["ml_stage"]
         dataset = data["dataset"]
-
-        # Check if the ml_stage can be recognized
-        ml_stage = Bufferkey.get_key_by_value(ml_stage)
-        if not ml_stage:
-            emit("response", {
-                "message": f"{ml_stage} cannot be recognized, "
-                           f"only support 'train', 'evaluate', 'test', 'inference'"})
-            return
 
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
@@ -95,18 +86,17 @@ class NRDataManager(Namespace):
             return
 
         dispatcher = dispatchers.get(socket_id, dataset_name)
-        if dispatcher and dispatcher.add(ml_stage, dataset):
+        if dispatcher and dispatcher.add(dataset):
             emit('response', {'message': 'Data received and added to queue!'})
         else:
             emit('response', {'message': 'Queue is full, data not added.'})
 
 
-def emit_request_data(key: Bufferkey, client_id: str):
+def emit_request_data(client_id: str):
     """
     Emit request_data event to clients.
-    :param key: Bufferkey indicating the type of data requested.
     :param client_id: The client ID to send the request to.
     :return:
     """
-    print(f"[socket]: emit_request_data with key={key}...")
-    socketio.emit('request_data', {'key': key.value}, to=client_id)
+    print("[socket]: emit_request_data with key={key}...")
+    socketio.emit('request_data', {}, to=client_id)

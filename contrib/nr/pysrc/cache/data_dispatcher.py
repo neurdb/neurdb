@@ -1,6 +1,6 @@
 import threading
 import time
-from cache import DataCache, Bufferkey
+from cache import DataCache
 import torch
 from typing import Callable
 
@@ -70,22 +70,21 @@ class LibSvmDataDispatcher:
 
         return {'id': feat_id, 'value': feat_value, 'y': y}
 
-    def add(self, key: Bufferkey, data: str):
+    def add(self, data: str):
         """
         Add data to the cache under the given key.
-        :param key: The Bufferkey (e.g., Bufferkey.TRAIN_KEY).
         :param data: The dataset in LibSVM format.
         :return: True if the data was added successfully, False otherwise.
         """
         batch_data = self.batch_preprocess(data)
-        if self.data_cache.set(key, batch_data):
+        if self.data_cache.add(batch_data):
             return True
         else:
             return False
 
     # ------------------------- threading -------------------------
 
-    def start(self, emit_request_data: Callable[[Bufferkey, str], None]):
+    def start(self, emit_request_data: Callable[[str], None]):
         """
         Start the background thread to manage data dispatch.
         :param emit_request_data: The function to call for requesting data.
@@ -102,10 +101,10 @@ class LibSvmDataDispatcher:
         """
         print("[LibSvmDataDispatcher] thread started...")
         while not self.stop_event.is_set():
-            key = self.data_cache.is_full()
-            if key:
-                print(f"[LibSvmDataDispatcher] fetching data for {key}...")
-                emit_request_data(key, self.client_id)
+            isfull = self.data_cache.is_full()
+            if not isfull:
+                print("[LibSvmDataDispatcher] fetching data for ...")
+                emit_request_data(self.client_id)
             time.sleep(0.1)
 
     def stop(self):

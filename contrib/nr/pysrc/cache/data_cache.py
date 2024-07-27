@@ -1,6 +1,7 @@
 import threading
-from typing import Optional
+from typing import Optional, Tuple
 from enum import Enum
+from queue import Queue
 
 
 # Define global variables for cache keys
@@ -28,20 +29,15 @@ class DataCache:
     DataCache manages caching of different datasets with thread-safe operations.
     """
 
-    def __init__(self, dataset_name: str, maxsize=20):
+    def __init__(self, dataset_name: str, maxsize=80):
         """
         Initialize the DataCache with a dataset name and a maximum cache size.
         :param dataset_name: The name of the dataset.
-        :param maxsize: The maximum number of items allowed in the cache for each Bufferkey.
+        :param maxsize: The maximum number of items allowed in the cache.
         """
         self.current_dataset_name = dataset_name
         self.lock = threading.Lock()
-        self.cache = {
-            Bufferkey.TRAIN_KEY: [],
-            Bufferkey.EVALUATE_KEY: [],
-            Bufferkey.TEST_KEY: [],
-            Bufferkey.INFERENCE_KEY: []
-        }
+        self.queue = Queue(maxsize=maxsize)
         self.maxsize = maxsize
 
         # for dataset_statistics of current datasets
@@ -49,7 +45,7 @@ class DataCache:
         self._nfield = None
 
     @property
-    def dataset_statistics(self):
+    def dataset_statistics(self) -> Tuple[Optional[int], Optional[int]]:
         """
         Get the dataset statistics (number of features and fields).
         :return: A tuple (nfeat, nfield) representing the dataset statistics.
@@ -57,7 +53,7 @@ class DataCache:
         return self._nfeat, self._nfield
 
     @dataset_statistics.setter
-    def dataset_statistics(self, statistics):
+    def dataset_statistics(self, statistics: Tuple[int, int]):
         """
         Set the dataset statistics (number of features and fields).
         :param statistics: A tuple (nfeat, nfield) representing the dataset statistics.
@@ -66,45 +62,40 @@ class DataCache:
         self._nfeat = nfeat
         self._nfield = nfield
 
-    def set(self, key: Bufferkey, value: dict) -> bool:
+    def add(self, value: dict) -> bool:
         """
-        Add a value to the cache for the given key if the cache is not full.
-        :param key: The Bufferkey enum member indicating which cache to add to.
-        :param value: The value to add to the cache.
-        :return: True if the value was added, False if the cache is full.
+        Add a value to the right of the queue if the queue is not full.
+        :param value: The value to add to the queue.
+        :return: True if the value was added, False if the queue is full.
         """
         with self.lock:
-            if key in self.cache and len(self.cache[key]) < self.maxsize:
-                self.cache[key].append(value)
+            if not self.queue.full():
+                self.queue.put(value)
                 return True
             return False
 
-    def get(self, key: Bufferkey) -> Optional[dict]:
+    def get(self) -> Optional[dict]:
         """
-        Retrieve and remove the oldest value from the cache for the given key.
-        :param key: The Bufferkey enum member indicating which cache to retrieve from.
-        :return: The oldest value from the cache, or None if the cache is empty.
+        Retrieve and remove the oldest value from the queue (read from left).
+        :return: The oldest value from the queue, or None if the queue is empty.
         """
         with self.lock:
-            if key in self.cache and len(self.cache[key]) > 0:
-                return self.cache[key].pop(0)
+            if not self.queue.empty():
+                return self.queue.get()
             return None
 
-    def is_full(self) -> Optional[Bufferkey]:
+    def is_full(self) -> bool:
         """
-        Check if any cache is full.
-        :return: The Bufferkey enum member for the cache that is not full, or None if all caches are full.
+        Check if the queue is full.
+        :return: True if the queue is full, False otherwise.
         """
         with self.lock:
-            for key_value, values in self.cache.items():
-                if len(values) < self.maxsize:
-                    return key_value
-            return None
+            return self.queue.full()
 
     def is_empty(self) -> bool:
         """
-        Check if all caches are empty.
-        :return: True if all caches are empty, False otherwise.
+        Check if the queue is empty.
+        :return: True if the queue is empty, False otherwise.
         """
         with self.lock:
-            return all(len(values) == 0 for values in self.cache.values())
+            return self.queue.empty()

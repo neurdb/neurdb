@@ -2,14 +2,14 @@ from logger.logger import logger
 import argparse
 from connection import NeurDBModelHandler
 from app.handlers.setup import Setup
+from dataloader.steam_libsvm_dataset import StreamingDataSet
 
 
 def train(
         model_name: str,
-        training_libsvm: str,
+        training_libsvm: StreamingDataSet,
         args: argparse.Namespace,
         db: NeurDBModelHandler,
-        batch_size: int,
         epochs: int,
         train_batch_num: int,
         eva_batch_num: int,
@@ -17,7 +17,7 @@ def train(
 ) -> int:
     s = Setup(model_name, training_libsvm, args, db)
 
-    model_id, err = s.train(batch_size, epochs, train_batch_num, eva_batch_num, test_batch_num)
+    model_id, err = s.train(epochs, train_batch_num, eva_batch_num, test_batch_num)
     if err is not None:
         logger.error(f"train failed with error: {err}")
         return -1

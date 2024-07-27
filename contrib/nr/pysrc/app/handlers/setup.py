@@ -2,7 +2,7 @@ import argparse
 from typing import List, Tuple, Optional
 import numpy as np
 import traceback
-from dataloader.steam_libsvm_dataset import libsvm_dataloader, build_inference_loader
+from dataloader.steam_libsvm_dataset import StreamingDataSet
 from connection import NeurDBModelHandler
 from models import build_model
 from shared_config.config import DEVICE
@@ -14,7 +14,7 @@ class Setup:
     def __init__(
             self,
             model_name: str,
-            libsvm_data,
+            libsvm_data: StreamingDataSet,
             args: argparse.Namespace,
             db: NeurDBModelHandler,
     ) -> None:
@@ -27,13 +27,10 @@ class Setup:
     #     with open(self._dataset_file_path, "rb") as f:
     #         return f.read()
 
-    def train(self, batch_size: int, epochs: int,
+    def train(self, epochs: int,
               train_batch_num: int, eva_batch_num: int, test_batch_num: int) -> Tuple[int, Error]:
         try:
-            train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
-                batch_size,
-                self._args.data_loader_worker,
-                self.libsvm_data,
+            nfields, nfeat = self.libsvm_data.setup_for_train_task(
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num
@@ -41,7 +38,8 @@ class Setup:
 
             builder = build_model(self._model_name, self._args)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(train_loader, val_loader, test_loader, epochs, train_batch_num, eva_batch_num, test_batch_num)
+            builder.train(self.libsvm_data, self.libsvm_data, self.libsvm_data, epochs, train_batch_num, eva_batch_num,
+                          test_batch_num)
 
             model_id = self._db.insert_model(builder.model)
             return model_id, None
@@ -50,13 +48,10 @@ class Setup:
             print(traceback.format_exc())
             return -1, str(traceback.format_exc())
 
-    def finetune(self, model_id: int, batch_size: int, start_layer_id: int, epochs: int,
+    def finetune(self, model_id: int, start_layer_id: int, epochs: int,
                  train_batch_num: int, eva_batch_num: int, test_batch_num: int) -> Tuple[int, Error]:
         try:
-            train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
-                batch_size,
-                self._args.data_loader_worker,
-                self.libsvm_data,
+            nfields, nfeat = self.libsvm_data.setup_for_train_task(
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num
@@ -75,7 +70,8 @@ class Setup:
 
             builder.model = model.to(DEVICE)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(train_loader, val_loader, test_loader, epochs, train_batch_num, eva_batch_num, test_batch_num)
+            builder.train(self.libsvm_data, self.libsvm_data, self.libsvm_data, epochs, train_batch_num, eva_batch_num,
+                          test_batch_num)
 
             model_id = self._db.update_layers(model_id, model_storage, start_layer_id)
 
@@ -84,11 +80,9 @@ class Setup:
         except Exception:
             return -1, str(traceback.format_exc())
 
-    def inference(self, model_id: int, batch_size: int, inf_batch_num: int) -> Tuple[List[np.ndarray], Error]:
+    def inference(self, model_id: int, inf_batch_num: int) -> Tuple[List[np.ndarray], Error]:
         try:
-            inference_loader, nfields, nfeat = build_inference_loader(
-                self._args.data_loader_worker, self.libsvm_data, batch_size, inf_batch_num
-            )
+            self.libsvm_data.setup_for_inference_task(inf_batch_num)
 
             builder = build_model(self._model_name, self._args)
             try:
@@ -96,7 +90,7 @@ class Setup:
             except FileNotFoundError:
                 return [], f"model {self._model_name} not trained yet"
 
-            infer_res = builder.inference(inference_loader, inf_batch_num)
+            infer_res = builder.inference(self.libsvm_data, inf_batch_num)
             return infer_res, None
 
         except Exception:

@@ -31,12 +31,9 @@ def on_response(data):
 @sio.on('request_data')
 def on_request_data(data):
     print("Received on_request_data")
-    key = data.get('key')
-    print(f"Received request_data for key: {key}")
     # Handle the request data logic here
     sio.emit('receive_db_data',
              {"dataset_name": "frappe",
-              "ml_stage": key,
               "dataset": dataset})
 
 
@@ -62,14 +59,13 @@ def test_dataset_init(dataset_name, nfeat, nfield):
 def test_receive_db_data(dataset_name, dataset):
     db_data = {
         'dataset_name': dataset_name,
-        "ml_stage": "train",
         'dataset': dataset
     }
     sio.emit('receive_db_data', db_data)
 
 
 # Connect to the Socket.IO server
-sio.connect("http://localhost:8090")
+sio.connect("http://127.0.0.1:8090")
 
 # Test dataset profiling via Socket.IO
 test_dataset_init('frappe', 5500, 10)

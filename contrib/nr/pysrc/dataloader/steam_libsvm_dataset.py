@@ -4,11 +4,22 @@ import time
 
 
 class StreamingDataSet:
-    def __init__(self, data_cache: DataCache, data_key: Bufferkey = Bufferkey.TRAIN_KEY, batch_num: int = -1):
-        self.data_cache = data_cache
-        self.data_key = data_key
+    def __init__(self, data_cache: DataCache,
+                 stage_counts: Dict[Bufferkey, int] = None,
+                 data_key: Bufferkey = Bufferkey.TRAIN_KEY):
 
-        self.batch_num = batch_num
+        self.data_cache = data_cache
+
+        if data_key != Bufferkey.INFERENCE_KEY:
+            self.ml_stages = [Bufferkey.TRAIN_KEY, Bufferkey.EVALUATE_KEY, Bufferkey.TEST_KEY]
+            self.stage_counts = stage_counts
+        else:
+            self.ml_stages = [Bufferkey.INFERENCE_KEY]
+            self.stage_counts = stage_counts
+
+        self.current_stage_index = 0
+        self.current_stage = self.ml_stages[0]
+        self.current_stage_batch_count = 0
 
     def current_statistics(self) -> Tuple:
         return self.data_cache.dataset_statistics
@@ -23,33 +34,40 @@ class StreamingDataSet:
         """
         waiting_message_printed = False
         while True:
-            batch_data = self.data_cache.get(self.data_key)
+            batch_data = self.data_cache.get()
             if batch_data is not None:
-                print(f"Get data from buffer of {self.data_key} !!")
+                print(f"Get data from buffer of {self.current_stage} !!")
+                # increase the current stage count
+                self.current_stage_batch_count += 1
+                if self.current_stage_batch_count >= self.stage_counts[self.current_stage]:
+                    self.current_stage_batch_count = 0
+                    # switch to next stage
+                    self.current_stage_index = (self.current_stage_index + 1) % len(self.ml_stages)
+                    self.current_stage = self.ml_stages[self.current_stage_index]
                 return batch_data
             if not waiting_message_printed:
-                print(f"The buffer of {self.data_key} is not filled yet ! Waiting...")
+                print(f"The buffer of {self.current_stage} is not filled yet ! Waiting...")
                 waiting_message_printed = True
             time.sleep(0.1)
 
     def __len__(self):
-        return self.batch_num
+        # max number of batches in current stage.
+        return self.stage_counts[self.current_stage]
 
+    def setup_for_train_task(self, train_batch_num: int, eva_batch_num: int, test_batch_num: int):
 
-def libsvm_dataloader(batch_size: int, data_loader_worker: int, data_loader: StreamingDataSet,
-                      train_batch_num: int, eva_batch_num: int, test_batch_num: int):
-    data_loader.batch_num = train_batch_num
-    val_data_loader = StreamingDataSet(data_cache=data_loader.data_cache, data_key=Bufferkey.EVALUATE_KEY,
-                                       batch_num=eva_batch_num)
-    test_data_loader = StreamingDataSet(data_cache=data_loader.data_cache, data_key=Bufferkey.TEST_KEY,
-                                        batch_num=test_batch_num)
-    nfeat, nfields = data_loader.current_statistics()
+        self.stage_counts = {
+            Bufferkey.TRAIN_KEY: train_batch_num,
+            Bufferkey.EVALUATE_KEY: eva_batch_num,
+            Bufferkey.TEST_KEY: test_batch_num,
+        }
 
-    return data_loader, val_data_loader, test_data_loader, nfields, nfeat
+        nfeat, nfields = self.current_statistics()
 
+        return nfields, nfeat
 
-def build_inference_loader(data_loader_worker: int, data_loader: StreamingDataSet, batch_size: int = -1,
-                           inf_batch_num: int = -1):
-    data_loader.batch_num = inf_batch_num
-    nfeat, nfields = data_loader.current_statistics()
-    return data_loader, nfields, nfeat
+    def setup_for_inference_task(self, inf_batch_num: int = -1):
+
+        self.stage_counts = {
+            Bufferkey.INFERENCE_KEY: inf_batch_num,
+        }

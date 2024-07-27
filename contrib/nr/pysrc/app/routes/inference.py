@@ -35,7 +35,6 @@ def model_inference():
             args=config_args,
             db=db_connector,
             model_id=model_id,
-            batch_size=batch_size,
             inf_batch_num=inf_batch_num
         )
 
