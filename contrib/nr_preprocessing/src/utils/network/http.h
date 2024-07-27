@@ -12,7 +12,7 @@
  * @param eva_batch_num int Number of evaluation batches
  * @param test_batch_num int Number of testing batches
  */
-void* send_train_task(
+void *send_train_task(
     // const char *model_name,
     // const char *dataset_name,
     // const char *client_socket_id,
@@ -31,7 +31,15 @@ void* send_train_task(
  * @param model_id int Trained model id
  * @param batch_size int Batch size in inference, 0 for single inference
  */
-void request_inference(const char *libsvm_data, const char *model_name, int model_id, int batch_size);
+void *send_inference_task(
+    // const char *model_name,
+    // const int model_id,
+    // const char *table_name,
+    // const char *client_socket_id,
+    // const int batch_size,
+    // const int batch_num
+    void *arg
+);
 
 /**
  * Resquest the server to finetune a model

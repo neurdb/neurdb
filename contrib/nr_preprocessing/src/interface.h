@@ -15,6 +15,14 @@ typedef struct {
     int test_batch_num;
 } TrainingInfo;
 
+typedef struct {
+    char *model_name;
+    int model_id;
+    char *table_name;
+    char* client_socket_id;
+    int batch_size;
+    int batch_num;
+} InferenceInfo;
 
 /**
  * Preprocess the input data for model inference. It contains the following steps:
