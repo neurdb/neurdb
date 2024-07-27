@@ -6,6 +6,7 @@
 #define SOCKETIO_H
 
 #include "../cjson/cJSON.h"
+#include "../data_structure/queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +47,17 @@ socketio_set_socket_id(SocketIOClient *client, const char *socket_id);
 
 char *
 socketio_get_socket_id(const SocketIOClient *client);
+
+/**
+ * Set the queue for the client
+ * @param client SocketIOClient* The client to set the queue
+ * @param queue BatchDataQueue* The queue to set
+ */
+void
+socketio_set_queue(SocketIOClient *client, BatchDataQueue *queue);
+
+BatchDataQueue *
+socketio_get_queue(const SocketIOClient *client);
 
 /**
  * Connect to the socket.io server

@@ -182,7 +182,13 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
+
+    BatchDataQueue *queue = malloc(sizeof(BatchDataQueue));
+    init_batch_data_queue(queue, 10);
+    socketio_set_queue(sio_client, queue);
+
     socketio_register_callback(sio_client, "connection", nr_socketio_connect_callback);
+    socketio_register_callback(sio_client, "request_data", nr_socketio_request_data_callback);
     socketio_connect(sio_client, "http://localhost:8090");
 
     while (socketio_get_socket_id(sio_client) == 0) {
@@ -232,6 +238,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     StringInfoData row_data;
     initStringInfo(&libsvm_data);
     initStringInfo(&row_data);
+    elog(INFO, "Start training");
 
     while (true) {
         SPI_execute(query.data, false, batch_size);
@@ -289,9 +296,10 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
             record_query_end_time(time_metric);
             record_operation_start_time(time_metric);
-            // TODO: send data to the Python Server
-
-
+            // send training data to the Python Server, blocking operation if the queue is full
+            elog(INFO, "Emitting batch data");
+            nr_socketio_emit_batch_data(sio_client, table_name, TRAIN, libsvm_data.data);
+            elog(INFO, "Batch data emitted");
             record_operation_end_time(time_metric); // record the end time of operation
             record_query_start_time(time_metric);
             resetStringInfo(&row_data);

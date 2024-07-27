@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <utils/elog.h>
 
 
 #define SERVER_URL "http://localhost:8090"
@@ -75,7 +76,10 @@ void send_train_task(const char *model_name, const char *dataset_name, const cha
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
 
+        elog(INFO, "Sending train task to server: %s", url);
+
         const CURLcode res = curl_easy_perform(curl);
+        elog(INFO, "Train task sent to server: %s", url);
         // TODO: here we skip the response code check, need to add them later
         // if (res != CURLE_OK) {
         //     fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));

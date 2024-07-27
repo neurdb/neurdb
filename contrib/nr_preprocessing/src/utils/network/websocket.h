@@ -4,22 +4,7 @@
 
 #include <libwebsockets.h>
 
-
-/******** Queue ********/
-typedef struct BatchDataNode {
-    char *batched_data;
-    struct BatchDataNode *next;
-} BatchDataNode;
-
-typedef struct BatchDataQueue {
-    BatchDataNode *head;
-    BatchDataNode *tail;
-    size_t size;
-    size_t max_size;
-    pthread_mutex_t mutex;
-    pthread_cond_t consume; // condition variable for the consumer - websocket thread
-    pthread_cond_t produce; // condition variable for the producer - main thread
-} BatchDataQueue;
+#include "../data_structure/queue.h"
 
 /******** Websocket ********/
 /**
