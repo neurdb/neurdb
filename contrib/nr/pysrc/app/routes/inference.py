@@ -1,7 +1,6 @@
 from flask import request, jsonify, current_app, g
 from app.handlers.inference import inference
 import traceback
-import orjson
 from logger.logger import logger
 from app.routes.routes import inference_bp
 from app.routes.context import before_execute

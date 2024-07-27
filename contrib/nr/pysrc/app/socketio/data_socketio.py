@@ -3,7 +3,7 @@ import ast
 from flask import current_app, request
 from flask_socketio import Namespace, emit
 from flask_socketio import SocketIO
-from cache import DataCache, Bufferkey, LibSvmDataDispatcher
+from cache import DataCache, LibSvmDataDispatcher
 
 socketio = SocketIO(ping_timeout=30, ping_interval=5, logger=False, engineio_logger=False)
 

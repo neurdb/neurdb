@@ -1,5 +1,4 @@
 import requests
-import socketio
 
 # Define the server address and port
 SERVER_URL = "http://localhost:8090"
