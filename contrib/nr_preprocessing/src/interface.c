@@ -186,12 +186,10 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
 
-    BatchDataQueue *queues[4];
-    for (int i = 0; i < 4; i++) {
-        queues[i] = malloc(sizeof(BatchDataQueue));
-        init_batch_data_queue(queues[i], 10);
-    }
-    socketio_set_queues(sio_client, queues);
+    BatchDataQueue *queue = malloc(sizeof(BatchDataQueue *));
+    init_batch_data_queue(queue, 10);
+
+    socketio_set_queue(sio_client, queue);
 
     socketio_register_callback(sio_client, "connection", nr_socketio_connect_callback);
     socketio_register_callback(sio_client, "request_data", nr_socketio_request_data_callback);
@@ -201,9 +199,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         // wait for the connection
         usleep(10000); // sleep for 10ms
     }
-
-    // init dataset
-    nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features);
 
     // prepare the query
     StringInfoData query;
@@ -217,10 +212,13 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     bool isnull;
     const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
 
-    const int n_batches = DatumGetInt32(n_rows) / batch_size;
+    const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
     const int n_batches_train = (int) ceil(n_batches * 0.8);
     const int n_batches_evaluate = (int) ceil(n_batches * 0.1);
-    const int n_batches_test = (int) ceil(n_batches * 0.1);
+    const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
+
+    // init dataset
+    nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features, n_batches * epoch, 80);
 
     // create a new thread to send the training task
     pthread_t train_thread;
@@ -269,27 +267,18 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     StringInfoData row_data;
     initStringInfo(&libsvm_data);
     initStringInfo(&row_data);
-    elog(INFO, "Start training");
     int current_epoch = 0;
-    int current_stage;
     int current_batch = 0;
 
     while (true) {
         // set the current stage
-        if (current_batch >= n_batches_train) {
-            current_stage = EVALUATE;
-        } else if (current_batch >= n_batches_train + n_batches_evaluate) {
-            current_stage = TEST;
-        } else {
-            current_stage = TRAIN;
-        }
-
         SPI_execute(query.data, false, batch_size);
         if (SPI_processed == 0) {
             current_epoch++;
             current_batch = 0;
             // if the current epoch is greater than the specified epoch, break the loop
             if (current_epoch >= epoch) {
+                elog(INFO, "Training completed");
                 break;
             }
             // reset the cursor
@@ -345,20 +334,21 @@ Datum nr_train(PG_FUNCTION_ARGS) {
                         elog(ERROR, "Unsupported data type");
                 }
             }
-            appendStringInfoString(&libsvm_data, row_data.data);
-            appendStringInfoChar(&libsvm_data, '\n');
-
-            record_query_end_time(time_metric);
-            record_operation_start_time(time_metric);
-            // send training data to the Python Server, blocking operation if the queue is full
-            nr_socketio_emit_batch_data(sio_client, table_name, current_stage, libsvm_data.data);
-            record_operation_end_time(time_metric); // record the end time of operation
-            record_query_start_time(time_metric);
-            resetStringInfo(&row_data);
+            appendStringInfoString(&row_data, "\n");
         }
+        appendStringInfoString(&libsvm_data, row_data.data);
+        record_query_end_time(time_metric);
+        record_operation_start_time(time_metric);
+        // send training data to the Python Server, blocking operation if the queue is full
+        nr_socketio_emit_batch_data(sio_client, table_name, libsvm_data.data);
+        record_operation_end_time(time_metric); // record the end time of operation
+        record_query_start_time(time_metric);
+        resetStringInfo(&row_data);
         current_batch++;
     }
     record_query_end_time(time_metric); // record the eventual end time of query
+
+    while (true) {}
 
     // clean up
     pfree(table_name);

@@ -12,14 +12,14 @@
 extern "C" {
 #endif
 
-static const char *ML_STAGE[] = {"train", "evaluate", "test", "inference"};
+// static const char *ML_STAGE[] = {"train", "evaluate", "test", "inference"};
 
-typedef enum {
-    TRAIN = 0,
-    EVALUATE = 1,
-    TEST = 2,
-    INFERENCE = 3
-} MLStage;
+// typedef enum {
+//     TRAIN = 0,
+//     EVALUATE = 1,
+//     TEST = 2,
+//     INFERENCE = 3
+// } MLStage;
 
 /**
  * Wrapper for the socket.io client
@@ -54,10 +54,10 @@ socketio_get_socket_id(const SocketIOClient *client);
  * @param queue BatchDataQueue* The queue to set
  */
 void
-socketio_set_queues(SocketIOClient *client, BatchDataQueue *queue[4]);
+socketio_set_queue(SocketIOClient *client, BatchDataQueue *queue);
 
 BatchDataQueue *
-socketio_get_queue(const SocketIOClient *client, MLStage stage);
+socketio_get_queue(const SocketIOClient *client);
 
 /**
  * Connect to the socket.io server

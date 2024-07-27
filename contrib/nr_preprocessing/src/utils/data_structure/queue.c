@@ -45,14 +45,14 @@ void enqueue(BatchDataQueue *queue, const char *batch_data) {
 
 char *dequeue(BatchDataQueue *queue) {
     pthread_mutex_lock(&queue->mutex); // lock the mutex
-    while (queue->head == NULL) {
-        // wait if the queue is empty
-        pthread_cond_wait(&queue->consume, &queue->mutex);
-    }
-    // if (queue->head == NULL) {
-    //     pthread_mutex_unlock(&queue->mutex); // unlock the mutex
-    //     return NULL;
+    // while (queue->head == NULL) {
+    //     // wait if the queue is empty
+    //     pthread_cond_wait(&queue->consume, &queue->mutex);
     // }
+    if (queue->head == NULL) {
+        pthread_mutex_unlock(&queue->mutex); // unlock the mutex
+        return NULL;
+    }
     // LOCKED
     BatchDataNode *node = queue->head;
     queue->head = node->next;

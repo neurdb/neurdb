@@ -87,8 +87,6 @@ void* send_train_task(void *arg) {
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
 
-        elog(INFO, "Sending train task to server: %s", url);
-
         const CURLcode res = curl_easy_perform(curl);
         elog(INFO, "Train task sent to server: %s", url);
         // TODO: here we skip the response code check, need to add them later
