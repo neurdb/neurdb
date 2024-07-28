@@ -76,6 +76,7 @@ echo "Python Server started!"
 cd $NEURDBPATH/contrib/nr_preprocessing/lib
 git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git # socket.io-client-cpp
 cd socket.io-client-cpp
+sudo chmod 777 -R ./
 cmake ./
 make install
 
