@@ -15,6 +15,26 @@ typedef struct {
     int test_batch_num;
 } TrainingInfo;
 
+typedef struct {
+    char *model_name;
+    int model_id;
+    char *table_name;
+    char* client_socket_id;
+    int batch_size;
+    int batch_num;
+} InferenceInfo;
+
+typedef struct {
+    char *model_name;
+    int model_id;
+    char *table_name;
+    char* client_socket_id;
+    int batch_size;
+    int epoch;
+    int train_batch_num;
+    int eva_batch_num;
+    int test_batch_num;
+} FinetuneInfo;
 
 /**
  * Preprocess the input data for model inference. It contains the following steps:
@@ -51,6 +71,7 @@ Datum nr_train(PG_FUNCTION_ARGS);
  * @param model_id int The id of the model to be finetuned
  * @param table_name text The name of the table to be used in the finetuning
  * @param batch_size int The batch size of the input data
+ * @param epochs int The number of epochs
  * @param features text[] Columns to be used in the finetuning
  * @param target text The target column
  * @return void

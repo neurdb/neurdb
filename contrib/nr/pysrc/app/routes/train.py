@@ -13,7 +13,7 @@ def model_train():
         params = request.form  # Use request.form to get form data
         batch_size = int(params.get("batch_size"))
         model_name = params.get("model_name")
-        dataset_name = params.get("dataset_name")
+        dataset_name = params.get("table_name")
         client_socket_id = params.get("client_socket_id")
 
         epoch = int(params.get("epoch"))

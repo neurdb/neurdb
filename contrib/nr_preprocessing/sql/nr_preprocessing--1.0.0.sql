@@ -15,7 +15,7 @@ AS 'MODULE_PATHNAME',
                VOLATILE;
 
 
-CREATE FUNCTION nr_finetune(model_name text, model_id int, table_name text, batch_size int, columns text[], target text)
+CREATE FUNCTION nr_finetune(model_name text, model_id int, table_name text, batch_size int, epoch int, columns text[], target text)
     RETURNS BOOL
 AS 'MODULE_PATHNAME',
 'nr_finetune'
