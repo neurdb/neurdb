@@ -387,8 +387,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     }
     record_query_end_time(time_metric); // record the eventual end time of query
 
-    while (true) {}
-
     // clean up
     pfree(table_name);
     pfree(features);
@@ -397,6 +395,13 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         pfree(feature_names[i]);
     }
     pfree(feature_names);
+
+    // wait until the send_train_task thread is completed
+    pthread_join(train_thread, NULL);
+
+    // close the connection
+    socketio_disconnect(sio_client);
+
     SPI_finish();
 
     record_overall_end_time(time_metric); // record the end time of the function

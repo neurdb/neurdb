@@ -16,6 +16,9 @@ void nr_socketio_request_data_callback(SocketIOClient *client, cJSON *json) {
     // const cJSON *data = cJSON_GetObjectItemCaseSensitive(json, "data_type");
     // if (cJSON_IsString(data) && (data->valuestring != NULL)) {
     char *data_str = dequeue(socketio_get_queue(client));
+    if (data_str == NULL) {
+        return;
+    }
     socketio_emit(client, "batch_data", data_str);
         // if (strcmp(data->valuestring, "train") == 0) {
         //     // send the training data

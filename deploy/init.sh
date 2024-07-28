@@ -77,11 +77,12 @@ cd $NEURDBPATH/contrib/nr_preprocessing/lib
 git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git # socket.io-client-cpp
 cd socket.io-client-cpp
 sudo chmod 777 -R ./
-cmake ./
+cmake -DCMAKE_CXX_FLAGS="-fPIC" ./
 make install
 
 cd $NEURDBPATH/contrib/nr_preprocessing
 make install
+cp build/libnr_preprocessing.so $NEURDBPATH/psql/lib/postgresql
 echo "Install NR Preprocessing Extension Done"
 
 echo "Please use 'control + c' to exist the logging print"
