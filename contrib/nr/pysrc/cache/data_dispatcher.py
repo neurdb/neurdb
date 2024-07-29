@@ -103,6 +103,13 @@ class LibSvmDataDispatcher:
         """
         print("[LibSvmDataDispatcher] thread started...")
         while not self.stop_event.is_set():
+            # stop if meets
+            isStop = self.data_cache.time_to_stop()
+            if isStop:
+                print(f"[LibSvmDataDispatcher] data_cache {self.data_cache.current_batch_num} "
+                      f"meets {self.data_cache.total_batch_num}, stop asking data.")
+                break
+            # consume if not full
             isfull = self.data_cache.is_full()
             if not isfull:
                 print("[LibSvmDataDispatcher] fetching data for ...")

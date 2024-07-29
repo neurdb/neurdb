@@ -47,7 +47,6 @@ class DataCache:
         self._nfeat = None
         self._nfield = None
 
-
     @property
     def dataset_statistics(self) -> Tuple[Optional[int], Optional[int]]:
         """
@@ -95,7 +94,15 @@ class DataCache:
         :return: True if the queue is full, False otherwise.
         """
         with self.lock:
-            return self.queue.full() or self.current_batch_num == self.total_batch_num
+            return self.queue.full()
+
+    def time_to_stop(self) -> bool:
+        """
+        Check if the queue is full.
+        :return: True if the total batch meet
+        """
+        with self.lock:
+            return self.current_batch_num == self.total_batch_num
 
     def is_empty(self) -> bool:
         """
