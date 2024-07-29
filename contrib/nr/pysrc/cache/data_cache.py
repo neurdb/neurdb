@@ -65,7 +65,7 @@ class DataCache:
         self._nfeat = nfeat
         self._nfield = nfield
 
-    def add(self, value: dict) -> bool:
+    def add(self, value) -> bool:
         """
         Add a value to the right of the queue if the queue is not full.
         :param value: The value to add to the queue.
