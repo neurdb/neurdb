@@ -10,6 +10,7 @@ from models import build_model
 from config import DB_CONFIG
 from shared_config.config import parse_config_arguments
 from config import logger
+import time
 
 
 if __name__ == "__main__":
@@ -45,12 +46,16 @@ if __name__ == "__main__":
         logger.info("Model file exists. Use external model params", path=model_path)
     else:
         logger.info("Model file does not exist. Training ...", path=model_path)
+        start_time = time.time()
         builder.train(train_loader, val_loader, test_loader)
-        logger.info("Model trained", path=model_path)
+        time_usage = time.time() - start_time
+        logger.info(f"Model trained, time usage = {time_usage}", path=model_path)
     
         logger.info("Saving model ...", path=model_path)
         torch.save(builder.model.state_dict(), model_path)
         logger.info("Model saved", path=model_path)
-    
+
+    start_time = time.time()
     y_pred = builder.inference(test_loader)
-    logger.info("Inference done", y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
+    time_usage = time.time() - start_time
+    logger.info(f"Inference done, time={time_usage}", y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
