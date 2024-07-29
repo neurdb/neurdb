@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Union
 from torch import nn
 import numpy as np
 from torch.utils.data import DataLoader
