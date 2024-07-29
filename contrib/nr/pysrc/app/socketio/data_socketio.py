@@ -92,13 +92,12 @@ class NRDataManager(Namespace):
             emit("response", {
                 "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
                            f"wait for train/inference/finetune request"})
-            return
-
-        dispatcher = dispatchers.get(socket_id, dataset_name)
-        if dispatcher and dispatcher.add(dataset):
-            emit('response', {'message': 'Data received and added to queue!'})
         else:
-            emit('response', {'message': 'Queue is full, data not added.'})
+            dispatcher = dispatchers.get(socket_id, dataset_name)
+            if dispatcher and dispatcher.add(dataset):
+                emit('response', {'message': 'Data received and added to queue!'})
+            else:
+                emit('response', {'message': 'Queue is full, data not added.'})
 
 
 def emit_request_data(client_id: str):
