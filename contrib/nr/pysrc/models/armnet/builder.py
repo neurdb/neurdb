@@ -19,6 +19,23 @@ class ARMNetModelBuilder(BuilderBase):
         self.args = args
         self._logger = logger.bind(model="ARM-Net")
 
+    def _init_model_arch(self):
+        if self._model is None:
+            self._model = ARMNetModel(
+                self._nfield if self._nfield else self.args.nfield,
+                self._nfeat if self._nfeat else self.args.nfeat,
+                self.args.nemb,
+                self.args.nattn_head,
+                self.args.alpha,
+                self.args.h,
+                self.args.mlp_nlayer,
+                self.args.mlp_nhid,
+                self.args.dropout,
+                self.args.ensemble,
+                self.args.dnn_nlayer,
+                self.args.dnn_nhid,
+            ).to(DEVICE)
+
     def train(
             self,
             train_loader: Union[DataLoader, StreamingDataSet],
@@ -33,20 +50,8 @@ class ARMNetModelBuilder(BuilderBase):
 
         # _nfeat, _nfield = self.model_dimension
         # create model
-        self._model = ARMNetModel(
-            self._nfield if self._nfield else self.args.nfield,
-            self._nfeat if self._nfeat else self.args.nfeat,
-            self.args.nemb,
-            self.args.nattn_head,
-            self.args.alpha,
-            self.args.h,
-            self.args.mlp_nlayer,
-            self.args.mlp_nhid,
-            self.args.dropout,
-            self.args.ensemble,
-            self.args.dnn_nlayer,
-            self.args.dnn_nhid,
-        ).to(DEVICE)
+        self._init_model_arch()
+
         logger.debug("model created with args", **vars(self.args))
 
         # optimizer
@@ -191,14 +196,6 @@ class ARMNetModelBuilder(BuilderBase):
         #     f"Total running time for training/validation/test: {timeSince(since=start_time)}"
         # )
 
-    @property
-    def model(self):
-        return self._model
-
-    @model.setter
-    def model(self, value):
-        self._model = value
-
     def _evaluate(self, data_loader: Union[DataLoader, StreamingDataSet], opt_metric, namespace: str,
                   batch_num: int):
         logger = self._logger.bind(task=namespace)
@@ -246,9 +243,14 @@ class ARMNetModelBuilder(BuilderBase):
     def inference(self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int):
         logger = self._logger.bind(task="inference")
 
+        # if this is to load model from the dict,
         if self.args.state_dict_path:
+            print("loading model from state dict")
+            self._init_model_arch()
             self._model.load_state_dict(torch.load(self.args.state_dict_path))
             logger.info("model loaded", state_dict_path=self.args.state_dict_path)
+        else:
+            print("loading model from database")
 
         start_time = time.time()
         predictions = []
