@@ -36,7 +36,7 @@ class DataCache:
         :param maxsize: The maximum number of items allowed in the cache.
         """
         self.current_dataset_name = dataset_name
-        self.lock = threading.Lock()
+        # self.lock = threading.Lock()
         self.queue = Queue(maxsize=maxsize)
 
         self.maxsize = maxsize
@@ -71,47 +71,43 @@ class DataCache:
         :param value: The value to add to the queue.
         :return: True if the value was added, False if the queue is full.
         """
-        with self.lock:
-            if not self.queue.full():
-                self.queue.put(value)
-                self.current_batch_num += 1
-                return True
-            return False
+        # with self.lock:
+        if not self.queue.full():
+            self.queue.put(value)
+            self.current_batch_num += 1
+            return True
+        return False
 
     def get(self) -> Optional[dict]:
         """
         Retrieve and remove the oldest value from the queue (read from left).
         :return: The oldest value from the queue, or None if the queue is empty.
         """
-        with self.lock:
-            if not self.queue.empty():
-                return self.queue.get()
-            return None
+        # with self.lock:
+        if not self.queue.empty():
+            return self.queue.get()
+        return None
 
     def is_full(self) -> bool:
         """
         Check if the queue is full.
         :return: True if the queue is full, False otherwise.
         """
-        with self.lock:
-            return self.queue.full()
+        return self.queue.full()
 
     def time_to_stop(self) -> bool:
         """
         Check if the queue is full.
         :return: True if the total batch meet
         """
-        with self.lock:
-            return self.current_batch_num == self.total_batch_num
+        return self.current_batch_num == self.total_batch_num
 
     def is_empty(self) -> bool:
         """
         Check if the queue is empty.
         :return: True if the queue is empty, False otherwise.
         """
-        with self.lock:
-            return self.queue.empty()
+        return self.queue.empty()
 
     def current_len(self):
-        with self.lock:
-            return self.queue.qsize()
+        return self.queue.qsize()
