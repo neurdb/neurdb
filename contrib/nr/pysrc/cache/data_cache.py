@@ -76,6 +76,7 @@ class DataCache:
             self.queue.put(value)
             self.current_batch_num += 1
             return True
+        print(f"Queue is full with length {self.queue.qsize()}, data not added.")
         return False
 
     def get(self) -> Optional[dict]:

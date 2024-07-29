@@ -99,6 +99,8 @@ class NRDataManager(Namespace):
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
         if not dispatchers.contains(socket_id, dataset_name):
+            print(f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
+                  f"wait for train/inference/finetune request")
             emit(
                 "response",
                 {
@@ -109,6 +111,7 @@ class NRDataManager(Namespace):
         else:
             dispatcher = dispatchers.get(socket_id, dataset_name)
             if dispatcher and dispatcher.add(dataset):
+                print("Data received and added to queue!")
                 emit("response", {"message": "Data received and added to queue!"})
             else:
                 emit("response", {"message": "Queue is full, data not added."})
