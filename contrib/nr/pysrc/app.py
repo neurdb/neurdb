@@ -8,6 +8,7 @@ from app.socketio.data_socketio import socketio
 from cache import ContextStates, DataCache, LibSvmDataDispatcher
 from connection import NeurDBModelHandler
 from neurdb.logger import configure_logging as api_configure_logging
+from flask import request, jsonify, current_app, g
 
 # configure_logging("./app.log")
 configure_logging(None)
@@ -18,15 +19,16 @@ app = Flask(__name__)
 config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
 
-NEURDB_CONNECTOR = NeurDBModelHandler(
-    {
-        "db_name": config_args.db_name,
-        "db_user": config_args.db_user,
-        "db_host": config_args.db_host,
-        "db_port": config_args.db_port,
-        # "password": config_args.db_password,
-    }
-)
+NEURDB_CONNECTOR = None
+#     NeurDBModelHandler(
+#     {
+#         "db_name": config_args.db_name,
+#         "db_user": config_args.db_user,
+#         "db_host": config_args.db_host,
+#         "db_port": config_args.db_port,
+#         # "password": config_args.db_password,
+#     }
+# )
 
 # shared global contexts among tasks.
 with app.app_context():
@@ -50,6 +52,13 @@ app.register_blueprint(finetune_bp)
 async_mode = "threading"
 socketio.init_app(app, async_mode=async_mode)
 socketio.on_namespace(NRDataManager('/'))
+
+
+@app.route('/test', methods=['GET'])
+def testing_app():
+    print("Test router")
+    return jsonify("finish testing")
+
 
 if __name__ == "__main__":
     socketio.run(app,
