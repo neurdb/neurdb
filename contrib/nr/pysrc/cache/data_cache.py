@@ -111,3 +111,7 @@ class DataCache:
         """
         with self.lock:
             return self.queue.empty()
+
+    def current_len(self):
+        with self.lock:
+            return self.queue.qsize()

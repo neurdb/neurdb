@@ -130,5 +130,4 @@ def emit_request_data(client_id: str):
     :return:
     """
 
-    print(f"emit request data to client {client_id}")
     socketio.emit("request_data", {}, to=client_id)

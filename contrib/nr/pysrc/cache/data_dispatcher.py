@@ -120,8 +120,9 @@ class LibSvmDataDispatcher:
             # consume if not full
             isfull = self.data_cache.is_full()
             if not isfull:
+                print(f"queue current length {self.data_cache.current_len()}, emit req to client_id {self.client_id} ")
                 emit_request_data(self.client_id)
-            time.sleep(0.1)
+            time.sleep(10)
 
     def stop(self):
         """

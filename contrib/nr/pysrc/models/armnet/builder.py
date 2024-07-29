@@ -59,15 +59,21 @@ class ARMNetModelBuilder(BuilderBase):
         opt_metric = nn.BCEWithLogitsLoss(reduction="mean").to(DEVICE)
         optimizer = optim.Adam(self._model.parameters(), lr=self.args.lr)
 
+        logger.debug("built the optimziers")
+
         # gradient clipping
         for p in self.model.parameters():
             p.register_hook(lambda grad: torch.clamp(grad, -1.0, 1.0))
         torch.backends.cudnn.benchmark = True
 
+        logger.debug("register_hook and build cudnn bencnmark")
+
         patience_cnt = 0
         best_valid_auc = 0.0
         best_test_auc = 0.0
         start_time = time.time()
+
+        logger.debug("start training...")
 
         for epoch in range(self.args.epoch):
             logger.debug("Epoch start", curr_epoch=epoch, end_at_epoch=self.args.epoch)
