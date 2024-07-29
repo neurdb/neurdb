@@ -10,6 +10,7 @@ from config import logger
 from models import build_model
 from python.dataloader import table_dataloader
 from shared_config.config import parse_config_arguments
+import time
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train an ARMNet model")
@@ -53,8 +54,10 @@ if __name__ == "__main__":
         logger.info("Model file exists. Use external model params", path=model_path)
     else:
         logger.info("Model file does not exist. Training ...", path=model_path)
+        begin_time = time.time()
         builder.train(train_loader, val_loader, test_loader, num_epochs, train_batch_num, eva_batch_num, test_batch_num)
-        logger.info("Model trained", path=model_path)
+        end_time = time.time()
+        logger.info(f"Model trained, time_usage = {end_time - begin_time}", path=model_path)
 
         logger.info("Saving model ...", path=model_path)
         torch.save(builder.model.state_dict(), model_path)
@@ -62,6 +65,8 @@ if __name__ == "__main__":
 
     if inference:
         logger.info("Running inference ...")
+        begin_time = time.time()
         inference_batch_num = args.inference_batch_num
         y_pred = builder.inference(test_loader, inference_batch_num)
-        logger.info("Inference done", y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
+        end_time = time.time()
+        logger.info(f"Inference done, time_usage = {end_time - begin_time}", y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
