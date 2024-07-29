@@ -186,7 +186,7 @@ class ARMNetModelBuilder(BuilderBase):
                 # logger.info(
                 #     f"Final best valid auc {best_valid_auc:.4f}, with test auc {best_test_auc:.4f}"
                 # )
-                break
+                # break
 
         self._model.eval()
 
