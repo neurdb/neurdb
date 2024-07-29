@@ -23,7 +23,8 @@ class NRDataManager(Namespace):
         current_app.config["clients"][sid] = sid
 
         print(f"Client connected: {sid}")
-        print(current_app.config["clients"])
+        _current_clients = current_app.config["clients"]
+        print(f"Current registered clients: {_current_clients}")
         emit("connection", {"sid": sid}, room=sid)
 
     # todo: this cannot connected by c client.
@@ -102,7 +103,7 @@ class NRDataManager(Namespace):
                 "response",
                 {
                     "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
-                    f"wait for train/inference/finetune request"
+                               f"wait for train/inference/finetune request"
                 },
             )
         else:
