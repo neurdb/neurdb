@@ -43,6 +43,9 @@ class StreamingDataSet:
         while True:
             batch_data = self.data_cache.get()
             if batch_data is not None:
+                print(
+                    f"[StreamingDataSet]: reading one data from queue..."
+                )
                 # increase the current stage count
                 self.current_stage_batch_count += 1
                 if (
@@ -66,9 +69,6 @@ class StreamingDataSet:
                     f"The buffer of {self.current_stage} is not filled yet ! Waiting..."
                 )
                 waiting_message_printed = True
-            print(
-                f"The buffer of {self.current_stage} is not filled yet ! Waiting..."
-            )
             time.sleep(2)
 
     def __len__(self):
