@@ -112,7 +112,6 @@ class LibSvmDataDispatcher:
             # consume if not full
             isfull = self.data_cache.is_full()
             if not isfull:
-                print("[LibSvmDataDispatcher] fetching data for ...")
                 emit_request_data(self.client_id)
             time.sleep(0.1)
 
