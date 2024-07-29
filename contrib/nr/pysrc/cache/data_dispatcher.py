@@ -38,14 +38,16 @@ class LibSvmDataDispatcher:
         :param data: The data in LibSVM format.
         :return: A dictionary with processed 'id', 'value', and 'y' tensors.
         """
+        print(f"[Data Preprocessing]: Preprocessing started...")
         max_nfileds = self.data_cache.dataset_statistics[1]
+        print(f"[Data Preprocessing]: max_nfileds = {max_nfileds}")
         data = data.split("\n")
 
         sample_lines = 0
         ids_list = []
         values_list = []
         labels_list = []
-
+        print(f"[Data Preprocessing]: # {len(data)} data samples to be loaded...")
         for line in data:
             if not line:
                 continue  # skip empty lines
@@ -56,11 +58,12 @@ class LibSvmDataDispatcher:
             values_list.append(values)
             labels_list.append(float(columns[0]))
             sample_lines += 1
-
+        print(f"[Data Preprocessing]: # {sample_lines} data samples loaded...")
         nsamples = sample_lines
         feat_id = torch.zeros((nsamples, max_nfileds), dtype=torch.long)
         feat_value = torch.zeros((nsamples, max_nfileds), dtype=torch.float)
         y = torch.tensor(labels_list, dtype=torch.float)
+        print(f"[Data Preprocessing]: Creating tensors...")
 
         for i in range(nsamples):
             try:
@@ -82,6 +85,7 @@ class LibSvmDataDispatcher:
         :param data: The dataset in LibSVM format.
         :return: True if the data was added successfully, False otherwise.
         """
+        print(f"[LibSvmDataDispatcher] add data to cache...")
         batch_data = self.batch_preprocess(data)
         if self.data_cache.add(batch_data):
             return True
