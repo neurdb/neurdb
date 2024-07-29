@@ -45,15 +45,16 @@ class BuilderBase(ABC):
         self._nfield = nfield
 
     @abstractmethod
-    def train(self,
-              train_loader: Union[DataLoader, StreamingDataSet],
-              val_loader: Union[DataLoader, StreamingDataSet],
-              test_loader: Union[DataLoader, StreamingDataSet],
-              epochs: int,
-              train_batch_num: int,
-              eva_batch_num: int,
-              test_batch_num: int
-              ):
+    def train(
+        self,
+        train_loader: Union[DataLoader, StreamingDataSet],
+        val_loader: Union[DataLoader, StreamingDataSet],
+        test_loader: Union[DataLoader, StreamingDataSet],
+        epochs: int,
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int,
+    ):
         """
 
         :param train_loader:
@@ -68,7 +69,9 @@ class BuilderBase(ABC):
         pass
 
     @abstractmethod
-    def inference(self, test_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int) -> List[np.ndarray]:
+    def inference(
+        self, test_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
+    ) -> List[np.ndarray]:
         """
 
         :param test_loader:

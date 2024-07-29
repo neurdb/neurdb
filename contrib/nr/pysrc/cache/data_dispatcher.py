@@ -39,7 +39,7 @@ class LibSvmDataDispatcher:
         :return: A dictionary with processed 'id', 'value', and 'y' tensors.
         """
         max_nfileds = self.data_cache.dataset_statistics[1]
-        data = data.split('\n')
+        data = data.split("\n")
 
         sample_lines = 0
         ids_list = []
@@ -49,8 +49,8 @@ class LibSvmDataDispatcher:
         for line in data:
             if not line:
                 continue  # skip empty lines
-            columns = line.strip().split(' ')
-            pairs = [list(map(int, pair.split(':'))) for pair in columns[1:]]
+            columns = line.strip().split(" ")
+            pairs = [list(map(int, pair.split(":"))) for pair in columns[1:]]
             ids, values = zip(*pairs) if pairs else ([], [])
             ids_list.append(ids)
             values_list.append(values)
@@ -64,13 +64,17 @@ class LibSvmDataDispatcher:
 
         for i in range(nsamples):
             try:
-                feat_id[i, :len(ids_list[i])] = torch.tensor(ids_list[i], dtype=torch.long)
-                feat_value[i, :len(values_list[i])] = torch.tensor(values_list[i], dtype=torch.float)
+                feat_id[i, : len(ids_list[i])] = torch.tensor(
+                    ids_list[i], dtype=torch.long
+                )
+                feat_value[i, : len(values_list[i])] = torch.tensor(
+                    values_list[i], dtype=torch.float
+                )
             except Exception as e:
-                print(f'Incorrect data format in sample {i}! Error: {e}')
-        print(f'# {nsamples} data samples loaded...')
+                print(f"Incorrect data format in sample {i}! Error: {e}")
+        print(f"# {nsamples} data samples loaded...")
 
-        return {'id': feat_id, 'value': feat_value, 'y': y}
+        return {"id": feat_id, "value": feat_value, "y": y}
 
     def add(self, data: str):
         """
@@ -92,7 +96,9 @@ class LibSvmDataDispatcher:
         :param emit_request_data: The function to call for requesting data.
         """
         self.stop_event.clear()
-        self.thread = threading.Thread(target=self._background_thread, args=(emit_request_data,))
+        self.thread = threading.Thread(
+            target=self._background_thread, args=(emit_request_data,)
+        )
         self.thread.daemon = True
         self.thread.start()
 
@@ -106,8 +112,10 @@ class LibSvmDataDispatcher:
             # stop if meets
             isStop = self.data_cache.time_to_stop()
             if isStop:
-                print(f"[LibSvmDataDispatcher] data_cache {self.data_cache.current_batch_num} "
-                      f"meets {self.data_cache.total_batch_num}, stop asking data.")
+                print(
+                    f"[LibSvmDataDispatcher] data_cache {self.data_cache.current_batch_num} "
+                    f"meets {self.data_cache.total_batch_num}, stop asking data."
+                )
                 break
             # consume if not full
             isfull = self.data_cache.is_full()

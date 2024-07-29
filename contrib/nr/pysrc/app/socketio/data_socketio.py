@@ -4,7 +4,9 @@ from flask import current_app, request
 from flask_socketio import SocketIO, Namespace, emit, disconnect
 from cache import DataCache, LibSvmDataDispatcher
 
-socketio = SocketIO(ping_timeout=30, ping_interval=5, logger=False, engineio_logger=False)
+socketio = SocketIO(
+    ping_timeout=30, ping_interval=5, logger=False, engineio_logger=False
+)
 
 
 class NRDataManager(Namespace):
@@ -21,8 +23,8 @@ class NRDataManager(Namespace):
         current_app.config["clients"][sid] = sid
 
         print(f"Client connected: {sid}")
-        print(current_app.config['clients'])
-        emit('connection', {'sid': sid}, room=sid)
+        print(current_app.config["clients"])
+        emit("connection", {"sid": sid}, room=sid)
 
     # todo: this cannot connected by c client.
     def on_disconnect(self):
@@ -33,7 +35,7 @@ class NRDataManager(Namespace):
         try:
             sid = request.sid
             print(f"{sid} Client disconnected: ")
-            current_app.config['clients'].pop(sid, None)
+            current_app.config["clients"].pop(sid, None)
             current_app.config["data_cache"].remove(sid)
             current_app.config["dispatchers"].remove(sid)
         except Exception as e:
@@ -52,15 +54,19 @@ class NRDataManager(Namespace):
 
         socket_id = request.sid
         dataset_name = data["dataset_name"]
-        nfeat = data['nfeat']
-        nfield = data['nfield']
-        total_batch_num = data['nbatch']
-        cache_num = data['cache_num']
+        nfeat = data["nfeat"]
+        nfield = data["nfield"]
+        total_batch_num = data["nbatch"]
+        cache_num = data["cache_num"]
 
         # 1. Create data cache if not exist
         data_cache = current_app.config["data_cache"]
         if not data_cache.contains(socket_id, dataset_name):
-            _cache = DataCache(dataset_name=dataset_name, total_batch_num=total_batch_num, maxsize=cache_num)
+            _cache = DataCache(
+                dataset_name=dataset_name,
+                total_batch_num=total_batch_num,
+                maxsize=cache_num,
+            )
             _cache.dataset_statistics = (nfeat, nfield)
             data_cache.add(socket_id, dataset_name, _cache)
         else:
@@ -74,7 +80,7 @@ class NRDataManager(Namespace):
             _data_dispatcher.bound_client_to_cache(_cache, socket_id)
             _data_dispatcher.start(emit_request_data)
 
-        emit('dataset_init', {'message': 'Done'})
+        emit("dataset_init", {"message": "Done"})
 
     def on_batch_data(self, data: str):
         """
@@ -92,15 +98,19 @@ class NRDataManager(Namespace):
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
         if not dispatchers.contains(socket_id, dataset_name):
-            emit("response", {
-                "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
-                           f"wait for train/inference/finetune request"})
+            emit(
+                "response",
+                {
+                    "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
+                    f"wait for train/inference/finetune request"
+                },
+            )
         else:
             dispatcher = dispatchers.get(socket_id, dataset_name)
             if dispatcher and dispatcher.add(dataset):
-                emit('response', {'message': 'Data received and added to queue!'})
+                emit("response", {"message": "Data received and added to queue!"})
             else:
-                emit('response', {'message': 'Queue is full, data not added.'})
+                emit("response", {"message": "Queue is full, data not added."})
 
     def force_disconnect(self):
         """
@@ -118,4 +128,4 @@ def emit_request_data(client_id: str):
     :param client_id: The client ID to send the request to.
     :return:
     """
-    socketio.emit('request_data', {}, to=client_id)
+    socketio.emit("request_data", {}, to=client_id)

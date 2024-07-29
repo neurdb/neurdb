@@ -19,35 +19,33 @@ sid = ""
 
 
 # Define the event handler for the 'message' event to receive the session ID
-@sio.on('connection')
+@sio.on("connection")
 def on_connection(data):
     global sid
-    sid = data.get('sid')
+    sid = data.get("sid")
     print(f"Received session ID from server: {sid}\n")
 
 
 # Define the event handler for the 'message' event to receive the session ID
-@sio.on('message')
+@sio.on("message")
 def on_message(data):
     global sid
-    sid = data.get('data')
+    sid = data.get("data")
     print(f"Received session ID from server: {sid}\n")
 
 
 # Define the event handler for the 'response' event
-@sio.on('response')
+@sio.on("response")
 def on_response(data):
     print(f"Server response: {data}\n")
 
 
 # Define the event handler for the 'request_data' event
-@sio.on('request_data')
+@sio.on("request_data")
 def on_request_data(data):
     print("Received on_request_data")
     # Handle the request data logic here
-    sio.emit('batch_data',
-             json.dumps({"dataset_name": "frappe",
-                         "dataset": dataset}))
+    sio.emit("batch_data", json.dumps({"dataset_name": "frappe", "dataset": dataset}))
 
 
 @sio.event
@@ -67,26 +65,21 @@ def force_disconnect(base_url, sid):
         if response.status_code == 200:
             print(f"Successfully disconnected client with SID: {sid}")
         else:
-            print(f"Failed to disconnect client with SID: {sid}, Status code: {response.status_code}")
+            print(
+                f"Failed to disconnect client with SID: {sid}, Status code: {response.status_code}"
+            )
     except requests.RequestException as e:
         print(f"An error occurred: {e}")
 
 
 def test_dataset_init(dataset_name, nfeat, nfield):
-    profiling_data = {
-        'dataset_name': dataset_name,
-        'nfeat': nfeat,
-        'nfield': nfield
-    }
-    sio.emit('dataset_init', json.dumps(profiling_data))
+    profiling_data = {"dataset_name": dataset_name, "nfeat": nfeat, "nfield": nfield}
+    sio.emit("dataset_init", json.dumps(profiling_data))
 
 
 def test_receive_db_data(dataset_name, dataset):
-    db_data = {
-        'dataset_name': dataset_name,
-        'dataset': dataset
-    }
-    sio.emit('batch_data', json.dumps(db_data))
+    db_data = {"dataset_name": dataset_name, "dataset": dataset}
+    sio.emit("batch_data", json.dumps(db_data))
 
 
 base_url = "http://127.0.0.1:8090"

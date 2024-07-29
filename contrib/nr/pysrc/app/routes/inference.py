@@ -7,7 +7,7 @@ from app.routes.context import before_execute
 from cache import Bufferkey
 
 
-@inference_bp.route('/inference', methods=['POST'])
+@inference_bp.route("/inference", methods=["POST"])
 def model_inference():
     try:
         params = request.form  # Use request.form to get form data
@@ -19,11 +19,14 @@ def model_inference():
 
         inf_batch_num = int(params.get("batch_num"))
 
-        config_args = current_app.config['config_args']
-        db_connector = current_app.config['db_connector']
+        config_args = current_app.config["config_args"]
+        db_connector = current_app.config["db_connector"]
 
-        exe_flag, exe_info = before_execute(dataset_name=dataset_name, data_key=Bufferkey.INFERENCE_KEY,
-                                            client_id=client_socket_id)
+        exe_flag, exe_info = before_execute(
+            dataset_name=dataset_name,
+            data_key=Bufferkey.INFERENCE_KEY,
+            client_id=client_socket_id,
+        )
         if not exe_flag:
             return jsonify(exe_info), 400
 
@@ -33,7 +36,7 @@ def model_inference():
             args=config_args,
             db=db_connector,
             model_id=model_id,
-            inf_batch_num=inf_batch_num
+            inf_batch_num=inf_batch_num,
         )
 
         return jsonify({"res": result})

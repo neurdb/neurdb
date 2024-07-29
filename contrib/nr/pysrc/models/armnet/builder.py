@@ -38,14 +38,14 @@ class ARMNetModelBuilder(BuilderBase):
             ).to(DEVICE)
 
     def train(
-            self,
-            train_loader: Union[DataLoader, StreamingDataSet],
-            val_loader: Union[DataLoader, StreamingDataSet],
-            test_loader: Union[DataLoader, StreamingDataSet],
-            epochs: int,
-            train_batch_num: int,
-            eva_batch_num: int,
-            test_batch_num: int
+        self,
+        train_loader: Union[DataLoader, StreamingDataSet],
+        val_loader: Union[DataLoader, StreamingDataSet],
+        test_loader: Union[DataLoader, StreamingDataSet],
+        epochs: int,
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int,
     ):
         logger = self._logger.bind(task="train")
 
@@ -197,8 +197,13 @@ class ARMNetModelBuilder(BuilderBase):
         #     f"Total running time for training/validation/test: {timeSince(since=start_time)}"
         # )
 
-    def _evaluate(self, data_loader: Union[DataLoader, StreamingDataSet], opt_metric, namespace: str,
-                  batch_num: int):
+    def _evaluate(
+        self,
+        data_loader: Union[DataLoader, StreamingDataSet],
+        opt_metric,
+        namespace: str,
+        batch_num: int,
+    ):
         logger = self._logger.bind(task=namespace)
 
         self._model.eval()
@@ -241,7 +246,9 @@ class ARMNetModelBuilder(BuilderBase):
         logger.debug(f"Evaluate end", time=timeSince(s=time_avg.sum))
         return auc_avg.avg
 
-    def inference(self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int):
+    def inference(
+        self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
+    ):
         logger = self._logger.bind(task="inference")
 
         # if this is to load model from the dict,

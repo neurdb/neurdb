@@ -33,11 +33,11 @@ NEURDB_CONNECTOR = None
 
 # shared global contexts among tasks.
 with app.app_context():
-    app.config['config_args'] = config_args
-    app.config['db_connector'] = NEURDB_CONNECTOR
+    app.config["config_args"] = config_args
+    app.config["db_connector"] = NEURDB_CONNECTOR
     app.config["data_cache"] = ContextStates[DataCache]()
-    app.config['dispatchers'] = ContextStates[LibSvmDataDispatcher]()
-    app.config['clients'] = {}
+    app.config["dispatchers"] = ContextStates[LibSvmDataDispatcher]()
+    app.config["clients"] = {}
 
 app.before_request(before_request_func)
 app.after_request(after_request_func)
@@ -48,21 +48,21 @@ app.register_blueprint(inference_bp)
 app.register_blueprint(finetune_bp)
 
 
-@app.route('/test', methods=['GET'])
+@app.route("/test", methods=["GET"])
 def testing_app():
     print("Test router")
     return jsonify("finish testing")
 
 
-@app.route('/force_disconnect/<sid>', methods=['POST'])
+@app.route("/force_disconnect/<sid>", methods=["POST"])
 def force_disconnect(sid):
     """
     HTTP endpoint to forcefully disconnect a client.
     :param sid: Session ID of the client to disconnect.
     """
     print(f"Received request to forcefully disconnect client: {sid}")
-    socketio.server.manager.disconnect(sid, '/')
-    app.config['clients'].pop(sid, None)
+    socketio.server.manager.disconnect(sid, "/")
+    app.config["clients"].pop(sid, None)
     app.config["data_cache"].remove(sid)
     app.config["dispatchers"].remove(sid)
     return jsonify({"status": "disconnected"}), 200
@@ -80,9 +80,12 @@ async_mode = "threading"
 #     from gevent import monkey
 #     monkey.patch_all()
 socketio.init_app(app, async_mode=async_mode)
-socketio.on_namespace(NRDataManager('/'))
+socketio.on_namespace(NRDataManager("/"))
 
 if __name__ == "__main__":
-    socketio.run(app,
-                 host="0.0.0.0", port=app.config['config_args'].server_port,
-                 allow_unsafe_werkzeug=True)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=app.config["config_args"].server_port,
+        allow_unsafe_werkzeug=True,
+    )

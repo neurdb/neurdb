@@ -2,11 +2,10 @@ import threading
 from typing import Dict, TypeVar, Generic, Optional, Union
 from functools import singledispatchmethod
 
-T = TypeVar('T')  # Generic type
+T = TypeVar("T")  # Generic type
 
 
 class ContextStates(Generic[T]):
-
     """
     ContextStates define global states and allows thread safe acccess
     """
@@ -69,7 +68,9 @@ class ContextStates(Generic[T]):
                 return None
 
             if inner_key not in self.state[outer_key]:
-                print(f"Inner key ({inner_key}) not found under outer key ({outer_key})")
+                print(
+                    f"Inner key ({inner_key}) not found under outer key ({outer_key})"
+                )
                 return None
 
             return self.state[outer_key][inner_key]

@@ -4,14 +4,21 @@ import time
 
 
 class StreamingDataSet:
-    def __init__(self, data_cache: DataCache,
-                 stage_counts: Dict[Bufferkey, int] = None,
-                 data_key: Bufferkey = Bufferkey.TRAIN_KEY):
+    def __init__(
+        self,
+        data_cache: DataCache,
+        stage_counts: Dict[Bufferkey, int] = None,
+        data_key: Bufferkey = Bufferkey.TRAIN_KEY,
+    ):
 
         self.data_cache = data_cache
 
         if data_key != Bufferkey.INFERENCE_KEY:
-            self.ml_stages = [Bufferkey.TRAIN_KEY, Bufferkey.EVALUATE_KEY, Bufferkey.TEST_KEY]
+            self.ml_stages = [
+                Bufferkey.TRAIN_KEY,
+                Bufferkey.EVALUATE_KEY,
+                Bufferkey.TEST_KEY,
+            ]
             self.stage_counts = stage_counts
         else:
             self.ml_stages = [Bufferkey.INFERENCE_KEY]
@@ -38,17 +45,26 @@ class StreamingDataSet:
             if batch_data is not None:
                 # increase the current stage count
                 self.current_stage_batch_count += 1
-                if self.current_stage_batch_count >= self.stage_counts[self.current_stage]:
+                if (
+                    self.current_stage_batch_count
+                    >= self.stage_counts[self.current_stage]
+                ):
                     _pre_stag_for_log = self.current_stage
                     # switch to next stage
-                    self.current_stage_index = (self.current_stage_index + 1) % len(self.ml_stages)
+                    self.current_stage_index = (self.current_stage_index + 1) % len(
+                        self.ml_stages
+                    )
                     self.current_stage = self.ml_stages[self.current_stage_index]
-                    print(f"[Streaming Dataloader]: stage {_pre_stag_for_log} finsih batch "
-                          f"{self.current_stage_batch_count} and switch to stage {self.current_stage}!!")
+                    print(
+                        f"[Streaming Dataloader]: stage {_pre_stag_for_log} finsih batch "
+                        f"{self.current_stage_batch_count} and switch to stage {self.current_stage}!!"
+                    )
                     self.current_stage_batch_count = 0
                 return batch_data
             if not waiting_message_printed:
-                print(f"The buffer of {self.current_stage} is not filled yet ! Waiting...")
+                print(
+                    f"The buffer of {self.current_stage} is not filled yet ! Waiting..."
+                )
                 waiting_message_printed = True
             time.sleep(0.1)
 
@@ -56,7 +72,9 @@ class StreamingDataSet:
         # max number of batches in current stage.
         return self.stage_counts[self.current_stage]
 
-    def setup_for_train_task(self, train_batch_num: int, eva_batch_num: int, test_batch_num: int):
+    def setup_for_train_task(
+        self, train_batch_num: int, eva_batch_num: int, test_batch_num: int
+    ):
 
         self.stage_counts = {
             Bufferkey.TRAIN_KEY: train_batch_num,

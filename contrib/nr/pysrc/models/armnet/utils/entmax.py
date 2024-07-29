@@ -3,6 +3,7 @@ Bisection implementation of alpha-entmax (Peters et al., 2019).
 Backward pass wrt alpha per (Correia et al., 2019). See
 https://arxiv.org/pdf/1905.05702 for detailed description.
 """
+
 # Author: Goncalo M Correia
 # Author: Ben Peters
 # Author: Vlad Niculae <vlad@vene.ro>

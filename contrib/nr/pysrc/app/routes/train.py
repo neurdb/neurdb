@@ -7,7 +7,7 @@ from app.routes.context import before_execute
 from cache import Bufferkey
 
 
-@train_bp.route('/train', methods=['POST'])
+@train_bp.route("/train", methods=["POST"])
 def model_train():
     try:
 
@@ -22,11 +22,14 @@ def model_train():
         eva_batch_num = int(params.get("eva_batch_num"))
         test_batch_num = int(params.get("test_batch_num"))
 
-        config_args = current_app.config['config_args']
-        db_connector = current_app.config['db_connector']
+        config_args = current_app.config["config_args"]
+        db_connector = current_app.config["db_connector"]
 
-        exe_flag, exe_info = before_execute(dataset_name=dataset_name, data_key=Bufferkey.TRAIN_KEY,
-                                            client_id=client_socket_id)
+        exe_flag, exe_info = before_execute(
+            dataset_name=dataset_name,
+            data_key=Bufferkey.TRAIN_KEY,
+            client_id=client_socket_id,
+        )
         if not exe_flag:
             logger.error(f"Execution flag failed: {exe_info}")
             return jsonify(exe_info), 400
@@ -39,7 +42,7 @@ def model_train():
             epochs=epoch,
             train_batch_num=train_batch_num,
             eva_batch_num=eva_batch_num,
-            test_batch_num=test_batch_num
+            test_batch_num=test_batch_num,
         )
         logger.info(f"Training completed successfully with model_id: {model_id}")
         return jsonify({"model_id": model_id})

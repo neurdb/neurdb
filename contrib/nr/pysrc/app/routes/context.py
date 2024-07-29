@@ -12,7 +12,9 @@ def after_request_func(response):
     return response
 
 
-def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> (bool, str):
+def before_execute(
+    dataset_name: str, data_key: Bufferkey, client_id: str
+) -> (bool, str):
     """
     1. check socket client is connected
     2. check data cache exist for dataset_name
@@ -25,13 +27,16 @@ def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> (b
     print("before_execute executing!")
 
     # 1. check the client is connected
-    if client_id not in current_app.config['clients']:
+    if client_id not in current_app.config["clients"]:
         return False, f"client {client_id} is not registered by socket, no data here !"
 
     # 2. check the data cache for that dataset
     data_cache = current_app.config["data_cache"]
     if not data_cache.contains(client_id, dataset_name):
-        return False, f"client_id {client_id} or Dataset {dataset_name} is not connect in web-socket"
+        return (
+            False,
+            f"client_id {client_id} or Dataset {dataset_name} is not connect in web-socket",
+        )
 
     _cache = data_cache.get(client_id, dataset_name)
 

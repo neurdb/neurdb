@@ -66,7 +66,7 @@ class Setup:
             train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
                 batch_size, self._args.data_loader_worker, self.libsvm_data
             )
-            
+
             self._args.nfield = nfields
             self._args.nfeat = nfeat
 
@@ -201,8 +201,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", default="config.ini")
     parser.add_argument("-l", "--logfile", default=None, type=str)
-    parser.add_argument("-t", "--train", default=False, action='store_true')
-    parser.add_argument("-i", "--inference", default=False, action='store_true')
+    parser.add_argument("-t", "--train", default=False, action="store_true")
+    parser.add_argument("-i", "--inference", default=False, action="store_true")
     parser.add_argument("-m", "--model-id", default=1, type=int)
     args = parser.parse_args()
 

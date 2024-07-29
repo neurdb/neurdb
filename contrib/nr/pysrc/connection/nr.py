@@ -27,7 +27,7 @@ class NeurDBModelHandler:
         return self._conn.save_model(serialized_model)
 
     def update_layers(
-            self, model_id: int, model: ModelStorage, start_layer_id: int
+        self, model_id: int, model: ModelStorage, start_layer_id: int
     ) -> int:
         for i, l in enumerate(model.layer_sequence):
             if i < start_layer_id:

@@ -12,11 +12,11 @@ Error = Optional[str]
 
 class Setup:
     def __init__(
-            self,
-            model_name: str,
-            libsvm_data: StreamingDataSet,
-            args: argparse.Namespace,
-            db: NeurDBModelHandler,
+        self,
+        model_name: str,
+        libsvm_data: StreamingDataSet,
+        args: argparse.Namespace,
+        db: NeurDBModelHandler,
     ) -> None:
         self._model_name = model_name
         self.libsvm_data = libsvm_data
@@ -27,19 +27,25 @@ class Setup:
     #     with open(self._dataset_file_path, "rb") as f:
     #         return f.read()
 
-    def train(self, epochs: int,
-              train_batch_num: int, eva_batch_num: int, test_batch_num: int) -> Tuple[int, Error]:
+    def train(
+        self, epochs: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
+    ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
-                train_batch_num,
-                eva_batch_num,
-                test_batch_num
+                train_batch_num, eva_batch_num, test_batch_num
             )
 
             builder = build_model(self._model_name, self._args)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(self.libsvm_data, self.libsvm_data, self.libsvm_data, epochs, train_batch_num, eva_batch_num,
-                          test_batch_num)
+            builder.train(
+                self.libsvm_data,
+                self.libsvm_data,
+                self.libsvm_data,
+                epochs,
+                train_batch_num,
+                eva_batch_num,
+                test_batch_num,
+            )
 
             model_id = self._db.insert_model(builder.model)
             return model_id, None
@@ -48,13 +54,18 @@ class Setup:
             print(traceback.format_exc())
             return -1, str(traceback.format_exc())
 
-    def finetune(self, model_id: int, start_layer_id: int, epochs: int,
-                 train_batch_num: int, eva_batch_num: int, test_batch_num: int) -> Tuple[int, Error]:
+    def finetune(
+        self,
+        model_id: int,
+        start_layer_id: int,
+        epochs: int,
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int,
+    ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
-                train_batch_num,
-                eva_batch_num,
-                test_batch_num
+                train_batch_num, eva_batch_num, test_batch_num
             )
 
             try:
@@ -70,8 +81,15 @@ class Setup:
 
             builder.model = model.to(DEVICE)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(self.libsvm_data, self.libsvm_data, self.libsvm_data, epochs, train_batch_num, eva_batch_num,
-                          test_batch_num)
+            builder.train(
+                self.libsvm_data,
+                self.libsvm_data,
+                self.libsvm_data,
+                epochs,
+                train_batch_num,
+                eva_batch_num,
+                test_batch_num,
+            )
 
             model_id = self._db.update_layers(model_id, model_storage, start_layer_id)
 
@@ -80,7 +98,9 @@ class Setup:
         except Exception:
             return -1, str(traceback.format_exc())
 
-    def inference(self, model_id: int, inf_batch_num: int) -> Tuple[List[np.ndarray], Error]:
+    def inference(
+        self, model_id: int, inf_batch_num: int
+    ) -> Tuple[List[np.ndarray], Error]:
         try:
             self.libsvm_data.setup_for_inference_task(inf_batch_num)
 
