@@ -184,7 +184,11 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     }
     record_query_end_time(time_metric); // record the eventual end time of query
 
-    while (true) {}
+    // wait until the send_inference_task thread is completed
+    pthread_join(inference_thread, NULL);
+
+    // close the connection
+    nr_socketio_emit_force_disconnect(sio_client);
 
     // clean up
     pfree(table_name);
@@ -311,7 +315,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     initStringInfo(&libsvm_data);
     initStringInfo(&row_data);
     int current_epoch = 0;
-    int current_batch = 0;
 
     while (true) {
         SPI_execute(query.data, false, batch_size);
@@ -381,9 +384,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         record_query_end_time(time_metric);
         record_operation_start_time(time_metric);
         // send training data to the Python Server, blocking operation if the queue is full
-        current_batch++;
         nr_socketio_emit_batch_data(sio_client, table_name, libsvm_data.data);
-        elog(INFO, "Batch %d sent", current_batch);
         record_operation_end_time(time_metric); // record the end time of operation
         record_query_start_time(time_metric);
         resetStringInfo(&row_data);
@@ -474,7 +475,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features, n_batches * epoch, 80);
 
     // create a new thread to send the finetune task
-    pthread_t train_thread;
+    pthread_t finetune_thread;
     FinetuneInfo *finetune_info = malloc(sizeof(FinetuneInfo));
     finetune_info->model_name = model_name;
     finetune_info->model_id = model_id;
@@ -485,7 +486,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     finetune_info->train_batch_num = n_batches_train;
     finetune_info->eva_batch_num = n_batches_evaluate;
     finetune_info->test_batch_num = n_batches_test;
-    pthread_create(&train_thread, NULL, send_finetune_task, (void *)finetune_info);
+    pthread_create(&finetune_thread, NULL, send_finetune_task, (void *)finetune_info);
 
     resetStringInfo(&query);
     char *cursor_name = "nr_finetune_cursor";
@@ -588,7 +589,9 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     }
     record_query_end_time(time_metric); // record the eventual end time of query
 
-    while (true) {}
+    pthread_join(finetune_thread, NULL);
+
+    nr_socketio_emit_force_disconnect(sio_client);
 
     // clean up
     pfree(table_name);
