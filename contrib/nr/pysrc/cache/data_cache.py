@@ -72,8 +72,11 @@ class DataCache:
         :return: True if the value was added, False if the queue is full.
         """
         # with self.lock:
+        print("enter add")
         if not self.queue.full():
+            print("[add]: queue is not full,adding..,")
             self.queue.put(value)
+            print("[add]: added")
             self.current_batch_num += 1
             print(f"[add]: add data to the Queue, cur length = {self.queue.qsize()}")
             return True
