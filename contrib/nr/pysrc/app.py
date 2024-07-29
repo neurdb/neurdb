@@ -2,7 +2,7 @@ from logger.logger import configure_logging
 from flask import Flask
 from shared_config.config import parse_config_arguments
 from app.routes import train_bp, inference_bp, finetune_bp
-from app.routes.context import before_request_func, after_request_func
+# from app.routes.context import before_request_func, after_request_func
 from app.socketio.data_socketio import socketio, NRDataManager
 from cache import ContextStates, DataCache, LibSvmDataDispatcher
 from connection import NeurDBModelHandler
@@ -36,8 +36,8 @@ with app.app_context():
     app.config['dispatchers'] = ContextStates[LibSvmDataDispatcher]()
     app.config['clients'] = {}
 
-app.before_request(before_request_func)
-app.after_request(after_request_func)
+# app.before_request(before_request_func)
+# app.after_request(after_request_func)
 
 # register http svc
 app.register_blueprint(train_bp)
