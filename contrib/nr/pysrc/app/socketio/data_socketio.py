@@ -1,8 +1,7 @@
 import ast
 
 from flask import current_app, request
-from flask_socketio import Namespace, emit
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, Namespace, emit, disconnect
 from cache import DataCache, LibSvmDataDispatcher
 
 socketio = SocketIO(ping_timeout=30, ping_interval=5, logger=False, engineio_logger=False)
@@ -25,6 +24,7 @@ class NRDataManager(Namespace):
         print(current_app.config['clients'])
         emit('connection', {'sid': sid}, room=sid)
 
+    # todo: this cannot connected by c client.
     def on_disconnect(self):
         """
         Handle client disconnection event.
@@ -101,6 +101,14 @@ class NRDataManager(Namespace):
                 emit('response', {'message': 'Data received and added to queue!'})
             else:
                 emit('response', {'message': 'Queue is full, data not added.'})
+
+    def force_disconnect(self, sid):
+        """
+        Forcefully disconnect a client.
+        :param sid: Session ID of the client to disconnect.
+        """
+        print(f"Forcefully disconnecting client: {sid}")
+        disconnect(sid)
 
 
 def emit_request_data(client_id: str):

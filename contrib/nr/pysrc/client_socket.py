@@ -1,6 +1,7 @@
 import json
 import time
 import socketio
+import requests
 
 # Global dataset string
 dataset = """0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 5183:1\n
@@ -14,11 +15,21 @@ dataset = """0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 518
 
 # Socket.IO client
 sio = socketio.Client()
+sid = ""
+
+
+# Define the event handler for the 'message' event to receive the session ID
+@sio.on('connection')
+def on_connection(data):
+    global sid
+    sid = data.get('sid')
+    print(f"Received session ID from server: {sid}\n")
 
 
 # Define the event handler for the 'message' event to receive the session ID
 @sio.on('message')
 def on_message(data):
+    global sid
     sid = data.get('data')
     print(f"Received session ID from server: {sid}\n")
 
@@ -49,6 +60,18 @@ def disconnect():
     print("Disconnected from the server")
 
 
+def force_disconnect(base_url, sid):
+    url = f"{base_url}/force_disconnect/{sid}"
+    try:
+        response = requests.post(url)
+        if response.status_code == 200:
+            print(f"Successfully disconnected client with SID: {sid}")
+        else:
+            print(f"Failed to disconnect client with SID: {sid}, Status code: {response.status_code}")
+    except requests.RequestException as e:
+        print(f"An error occurred: {e}")
+
+
 def test_dataset_init(dataset_name, nfeat, nfield):
     profiling_data = {
         'dataset_name': dataset_name,
@@ -66,15 +89,17 @@ def test_receive_db_data(dataset_name, dataset):
     sio.emit('batch_data', json.dumps(db_data))
 
 
+base_url = "http://127.0.0.1:8090"
 # Connect to the Socket.IO server
-sio.connect("http://127.0.0.1:8090")
+sio.connect(base_url)
 
 # test_dataset_init('frappe', 5500, 10)
 # test_receive_db_data('frappe', dataset)
 time.sleep(2)
 
 # Disconnect after sending the test data
-sio.disconnect()
+# sio.disconnect()
+force_disconnect(base_url, sid)
 
 # Keep the client running
 sio.wait()

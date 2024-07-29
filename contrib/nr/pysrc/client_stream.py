@@ -68,3 +68,5 @@ if __name__ == "__main__":
     test_train_endpoint(_batch_size, _model_name, _dataset_name, _client_id, _epoch, _batch_num, _batch_num, _batch_num)
 
     test_inference_endpoint(_model_name, 0, _client_id, _batch_num)
+
+    "curl -X POST http://127.0.0.1:5000/force_disconnect/<sid>"

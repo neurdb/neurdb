@@ -44,6 +44,27 @@ app.register_blueprint(train_bp)
 app.register_blueprint(inference_bp)
 app.register_blueprint(finetune_bp)
 
+
+@app.route('/test', methods=['GET'])
+def testing_app():
+    print("Test router")
+    return jsonify("finish testing")
+
+
+@app.route('/force_disconnect/<sid>', methods=['POST'])
+def force_disconnect(sid):
+    """
+    HTTP endpoint to forcefully disconnect a client.
+    :param sid: Session ID of the client to disconnect.
+    """
+    print(f"Received request to forcefully disconnect client: {sid}")
+    socketio.server.manager.disconnect(sid, '/')
+    app.config['clients'].pop(sid, None)
+    app.config["data_cache"].remove(sid)
+    app.config["dispatchers"].remove(sid)
+    return jsonify({"status": "disconnected"}), 200
+
+
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
 # the best option based on installed packages.
@@ -57,13 +78,6 @@ async_mode = "threading"
 #     monkey.patch_all()
 socketio.init_app(app, async_mode=async_mode)
 socketio.on_namespace(NRDataManager('/'))
-
-
-@app.route('/test', methods=['GET'])
-def testing_app():
-    print("Test router")
-    return jsonify("finish testing")
-
 
 if __name__ == "__main__":
     socketio.run(app,
