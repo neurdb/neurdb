@@ -6,7 +6,7 @@ import torch
 from python.dataloader import table_dataloader
 import argparse
 
-from apps import build_model
+from models import build_model
 from config import DB_CONFIG
 from shared_config.config import parse_config_arguments
 from config import logger
