@@ -90,11 +90,12 @@ class NRDataManager(Namespace):
         :param data: Dictionary containing dataset information and the actual data.
         """
         socket_id = request.sid
-        print(f"[socket]: {socket_id} receive_db_data...")
         data = ast.literal_eval(data)
 
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
+
+        print(f"[socket]: {socket_id} receive_db_data name {dataset_name} and data {dataset}")
 
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
@@ -110,11 +111,16 @@ class NRDataManager(Namespace):
             )
         else:
             dispatcher = dispatchers.get(socket_id, dataset_name)
-            if dispatcher and dispatcher.add(dataset):
-                print("Data received and added to queue!")
-                emit("response", {"message": "Data received and added to queue!"})
+            if not dispatcher:
+                print("dispatcher is not initialized")
+                emit("response", {"message": "dispatcher is not initialized"})
             else:
-                emit("response", {"message": "Queue is full, data not added."})
+                if dispatcher.add(dataset):
+                    print("Data received and added to queue!")
+                    emit("response", {"message": "Data received and added to queue!"})
+                else:
+                    print("Queue is full, and thus data not added.")
+                    emit("response", {"message": "Queue is full, data not added."})
 
     def force_disconnect(self):
         """

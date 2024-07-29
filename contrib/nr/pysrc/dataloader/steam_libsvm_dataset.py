@@ -69,7 +69,7 @@ class StreamingDataSet:
             print(
                 f"The buffer of {self.current_stage} is not filled yet ! Waiting..."
             )
-            time.sleep(0.2)
+            time.sleep(2)
 
     def __len__(self):
         # max number of batches in current stage.
