@@ -9,6 +9,7 @@ def before_request_func():
 
 def after_request_func(response):
     print("after_request executing!")
+    return response
 
 
 def before_execute(dataset_name: str, data_key: Bufferkey, client_id: str) -> (bool, str):
