@@ -250,7 +250,7 @@ class ARMNetModelBuilder(BuilderBase):
         self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
     ):
         logger = self._logger.bind(task="inference")
-
+        print(f"begin inference for {inf_batch_num} batches ")
         # if this is to load model from the dict,
         if self.args.state_dict_path:
             print("loading model from state dict")
@@ -272,6 +272,6 @@ class ARMNetModelBuilder(BuilderBase):
 
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
-
+        print(f"done inference for {inf_batch_num} batches ")
         logger.debug(f"Inference end", time=timeSince(since=start_time))
         return predictions
