@@ -40,7 +40,7 @@ class ContextStates(Generic[T]):
                 del self.state[outer_key]
                 print(f"Removed all contents under outer key ({outer_key})")
             else:
-                print(f"Outer key ({outer_key}) not found")
+                print(f"Error: Outer key ({outer_key}) not found")
 
     @singledispatchmethod
     def get(self, outer_key: str) -> Union[Optional[T], Dict[str, T]]:

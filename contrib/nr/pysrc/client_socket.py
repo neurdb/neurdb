@@ -1,5 +1,5 @@
 import json
-
+import time
 import socketio
 
 # Global dataset string
@@ -69,10 +69,12 @@ def test_receive_db_data(dataset_name, dataset):
 # Connect to the Socket.IO server
 sio.connect("http://127.0.0.1:8090")
 
-# Test dataset profiling via Socket.IO
-test_dataset_init('frappe', 5500, 10)
+# test_dataset_init('frappe', 5500, 10)
+# test_receive_db_data('frappe', dataset)
+time.sleep(2)
 
-test_receive_db_data('frappe', dataset)
+# Disconnect after sending the test data
+sio.disconnect()
 
 # Keep the client running
 sio.wait()
