@@ -35,21 +35,22 @@ if __name__ == "__main__":
 
     config_args = parse_config_arguments(os.path.join(os.environ["NEURDBPATH"], "contrib/nr/pysrc/config.ini"))
     config_args.epoch = args.num_epochs
+    config_args.state_dict_path = model_path
+    config_args.nfield = nfields
+    config_args.nfeat = nfeat
     
     builder = build_model("armnet", config_args)
-    builder.model_dimension = nfeat, nfields
     
     if os.path.exists(model_path):
-        logger.info(f"Model file exists. Loading ...", path=model_path)
-        builder.model.load_state_dict(torch.load(model_path))
-        logger.info(f"Model loaded", path=model_path)
+        logger.info("Model file exists. Use external model params", path=model_path)
     else:
-        logger.info(f"Model file does not exist. Training ...", path=model_path)
+        logger.info("Model file does not exist. Training ...", path=model_path)
         builder.train(train_loader, val_loader, test_loader)
-        logger.info(f"Model trained", path=model_path)
+        logger.info("Model trained", path=model_path)
     
-        logger.info(f"Saving model ...", path=model_path)
+        logger.info("Saving model ...", path=model_path)
         torch.save(builder.model.state_dict(), model_path)
-        logger.info(f"Model saved", path=model_path)
+        logger.info("Model saved", path=model_path)
     
-    builder.inference(test_loader)
+    y_pred = builder.inference(test_loader)
+    logger.info("Inference done", y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)

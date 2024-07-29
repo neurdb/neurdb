@@ -47,8 +47,10 @@ class Setup:
                 batch_size, self._args.data_loader_worker, self.libsvm_data
             )
 
+            self._args.nfield = nfields
+            self._args.nfeat = nfeat
+
             builder = build_model(self._model_name, self._args)
-            builder.model_dimension = (nfeat, nfields)
             builder.train(train_loader, val_loader, test_loader)
 
             model_id = self._db.insert_model(builder.model)
@@ -64,6 +66,9 @@ class Setup:
             train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
                 batch_size, self._args.data_loader_worker, self.libsvm_data
             )
+            
+            self._args.nfield = nfields
+            self._args.nfeat = nfeat
 
             try:
                 builder = build_model(self._model_name, self._args)
@@ -77,7 +82,6 @@ class Setup:
                     layer.requires_grad_(False)
 
             builder.model = model.to(DEVICE)
-            builder.model_dimension = (nfeat, nfields)
             builder.train(train_loader, val_loader, test_loader)
 
             model_id = self._db.update_layers(model_id, model_storage, start_layer_id)
