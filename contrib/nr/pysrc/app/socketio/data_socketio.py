@@ -30,11 +30,14 @@ class NRDataManager(Namespace):
         Handle client disconnection event.
         Remove the client session ID and associated data from the server.
         """
-        sid = request.sid
-        print(f"{sid} Client disconnected: ")
-        current_app.config['clients'].pop(sid, None)
-        current_app.config["data_cache"].remove(sid)
-        current_app.config["dispatchers"].remove(sid)
+        try:
+            sid = request.sid
+            print(f"{sid} Client disconnected: ")
+            current_app.config['clients'].pop(sid, None)
+            current_app.config["data_cache"].remove(sid)
+            current_app.config["dispatchers"].remove(sid)
+        except Exception as e:
+            print(f"Error {e}")
 
     def on_dataset_init(self, data: str):
         """
