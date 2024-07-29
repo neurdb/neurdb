@@ -95,7 +95,7 @@ class NRDataManager(Namespace):
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
 
-        print(f"[socket]: {socket_id} receive_db_data name {dataset_name} and data {dataset}")
+        print(f"[socket]: {socket_id} receive_db_data name {dataset_name} and data {dataset[:10]}...")
 
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
