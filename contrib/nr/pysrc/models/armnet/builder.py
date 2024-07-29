@@ -20,6 +20,7 @@ class ARMNetModelBuilder(BuilderBase):
         self._logger = logger.bind(model="ARM-Net")
 
     def _init_model_arch(self):
+        print(f"[_init_model_arch]: Moving model to {DEVICE}")
         if self._model is None:
             self._model = ARMNetModel(
                 self._nfield if self._nfield else self.args.nfield,
