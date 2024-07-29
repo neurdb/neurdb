@@ -15,7 +15,7 @@ docker build -t neurdbimg .
 # Run the Docker container
 # You may replace or delete the port mapping
 docker run -d --name neurdb_dev \
-    -v ../../neurdb-dev:/code/neurdb-dev \
+    -v $(pwd)/../:/code/neurdb-dev \
     -p 5432:5432 \
     --gpus all \
     neurdbimg

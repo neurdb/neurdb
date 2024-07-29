@@ -1,5 +1,4 @@
-import psycopg2
-from psycopg2 import extras
+import os
 from psycopg2.extensions import register_adapter, AsIs
 import numpy as np
 import argparse
@@ -8,26 +7,11 @@ from util.file2dataframe import libsvm2csv, npy2csv
 from neurdb.logger import configure_logging
 from neurdb.logger import logger
 
+from util.database import connect_db
+
 configure_logging(None)
 
-DB_PARAMS = {
-    "dbname": "postgres",
-    "user": "postgres",
-    "host": "127.0.0.1",
-    "port": "5432",
-}
-
 register_adapter(np.int64, AsIs)
-
-
-def _connect_to_db() -> tuple:
-    """
-    Connect to the database
-    :return connection and cursor
-    """
-    conn = psycopg2.connect(**DB_PARAMS)
-    cursor = conn.cursor()
-    return conn, cursor
 
 
 def _create_table(cursor, conn, table_name: str, data: pd.DataFrame):
@@ -67,7 +51,7 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
     :return None
     """
     logger.debug(f"Creating tables for dataset {table_name}...")
-    conn, cursor = _connect_to_db()
+    conn, cursor = connect_db()
     data = data.sample(frac=1, random_state=random_state)
     datasets = {
         f"{table_name}_raw": data[: int(0.5 * len(data))],
@@ -80,19 +64,18 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
 
     for table_name, data in datasets.items():
         _create_table(cursor, conn, table_name, data)
+        data.to_csv("temp.csv", sep=",", header=False, index=False)  # Use COPY instead of INSERT
 
-    insert_query = (
-        f"INSERT INTO {table_name} "
-        f"(label, {", ".join([f"feature{i}" for i in range(1, len(data.columns))])}) "
-        f"VALUES %s"
-    )
-    extras.execute_values(cursor, insert_query, data.values)
-    conn.commit()
+        with open("temp.csv", "r") as f:
+            cursor.copy_from(f, table_name, sep=",", columns=data.columns)
 
-    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-    logger.debug(
-        f"Successfully created table {table_name} with {cursor.fetchone()[0]} rows, random state {random_state}..."
-    )
+        conn.commit()
+        os.remove("temp.csv")  # remove the temporary file
+
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        logger.debug(
+            f"Successfully created table {table_name} with {cursor.fetchone()[0]} rows, random state {random_state}..."
+        )
     conn.close()
     logger.debug("Done creating tables...")
 
@@ -105,9 +88,8 @@ if __name__ == "__main__":
         help="Name of the dataset"
     )
     parser.add_argument(
-        "--ramdom_state",
+        "--random_state",
         type=int,
-        default=10,
         help="Random state to shuffle the dataset"
     )
     parser.add_argument(
@@ -125,14 +107,19 @@ if __name__ == "__main__":
     input_file = args.input_file
     dataset_name = args.dataset_name
     file_type = args.file_type
-    ramdom_state = args.random_state
+
+    if args.random_state is None:
+        random_state = 10
+    else:
+        random_state = args.random_state
+
     if file_type == "csv":
         data = pd.read_csv(input_file)
     elif file_type == "npy":
-        data = npy2csv(input_file, "temp.csv")
+        data = npy2csv(input_file)
     elif file_type == "libsvm":
-        data = libsvm2csv(input_file, "temp.csv")
+        data = libsvm2csv(input_file)
     else:
         raise ValueError("Invalid file type. Please use csv, npy or libsvm.")
-    create_table_for_dataset(data, dataset_name, ramdom_state)
+    create_table_for_dataset(data, dataset_name, random_state)
     logger.debug(f"Preparation for dataset {dataset_name} is done.")

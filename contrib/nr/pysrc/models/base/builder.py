@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import List
+from torch import nn
 import numpy as np
 from torch.utils.data import DataLoader
 from dataloader.steam_libsvm_dataset import StreamingDataSet
@@ -12,9 +13,17 @@ class BuilderBase(ABC):
     """
 
     def __init__(self):
-        self.model = None
+        self._model: nn.Module = None
         self._nfeat = None
         self._nfield = None
+
+    @property
+    def model(self) -> nn.Module:
+        return self._model
+
+    @model.setter
+    def model(self, value):
+        self._model = value
 
     @property
     def model_dimension(self):

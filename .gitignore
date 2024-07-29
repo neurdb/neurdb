@@ -49,3 +49,6 @@ lib*.pc
 
 # Python installed packages
 /venv/
+
+# .vscode
+/.vscode/

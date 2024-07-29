@@ -4,13 +4,16 @@ This folder contains the code and data for the experiments in the paper "XXX" su
 
 ## Dataset
 
-### Frappe
+### Avazu
 
-The frappe dataset contains a context-aware app usage log.  It consist of 96203 entries by 957 users for 4082 apps used in various contexts.
+The Click-Through Rate Prediction dataset contains predictions of whether a mobile ad will be clicked. The dataset is available at [Kaggle](https://www.kaggle.com/c/avazu-ctr-prediction/data). 
 
-We sample 2 negative samples for 1 positive sample to create the dataset. The total number of samples is **288609**.
+The dataset contains **40428967** samples. It has XXX columns, including the label column.
 
-In our experiments, we randomly sample data from the dataset to create a larger dataset. The number of samples is specified by the `--num_rows` flag in the `prepare_data.py` script under the `experiment/cidr-2025` folder.
+### Criteo
+
+The dataset contains **45840617** samples. We take the first 13 features as the input features.
+
 
 ## Get Started
 
@@ -19,13 +22,14 @@ Clone the repository:
 git clone https://github.com/neurdb/neurdb-dev.git
 ```
 
-Change the permission of `meson.build`:
+Change the permission of the project folder:
 ```bash
-chmod 777 ~/neurdb-dev/meson.build
+cd neurdb-dev
+chmod 777 -R .
 ```
 
 ### Build Dockerfile
-In the server, build the docker image:
+In the server, build the docker image. Remember to `cd` to the `deploy` folder before running the build script, otherwise the docker bind mount will fail.
 ```bash
 cd ~/neurdb-dev/deploy
 bash build.sh
@@ -42,9 +46,14 @@ Navigate to the experiment folder:
 cd $NEURDBPATH/experiment/cidr-2025
 ```
 
+Add necessary modules:
+```bash
+export PYTHONPATH=$NEURDBPATH/contrib/nr/pysrc:$PYTHONPATH
+```
+
 Run prepare_data.py script:
 ```bash
-python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.libsvm --file_type libsvm
+python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.libsvm --file_type libsvm --random_state 10
 ```
 
 `--dataset_name` name of the dataset (e.g., frappe)
@@ -52,6 +61,8 @@ python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.l
 `--input_file` path to the input file, in libsvm, npy, or csv format (e.g., /path/to/data.libsvm)
 
 `--file_type` type of the input file, either libsvm, npy, or csv (e.g., libsvm)
+
+`--random_state` used to shuffle the data
 
 ### Start Python Server
 ```bash

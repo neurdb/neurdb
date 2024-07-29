@@ -47,8 +47,10 @@ class Setup:
                 batch_size, self._args.data_loader_worker, self.libsvm_data
             )
 
+            self._args.nfield = nfields
+            self._args.nfeat = nfeat
+
             builder = build_model(self._model_name, self._args)
-            builder.model_dimension = (nfeat, nfields)
             builder.train(train_loader, val_loader, test_loader)
 
             model_id = self._db.insert_model(builder.model)
@@ -64,6 +66,9 @@ class Setup:
             train_loader, val_loader, test_loader, nfields, nfeat = libsvm_dataloader(
                 batch_size, self._args.data_loader_worker, self.libsvm_data
             )
+            
+            self._args.nfield = nfields
+            self._args.nfeat = nfeat
 
             try:
                 builder = build_model(self._model_name, self._args)
@@ -77,7 +82,6 @@ class Setup:
                     layer.requires_grad_(False)
 
             builder.model = model.to(DEVICE)
-            builder.model_dimension = (nfeat, nfields)
             builder.train(train_loader, val_loader, test_loader)
 
             model_id = self._db.update_layers(model_id, model_storage, start_layer_id)
@@ -197,8 +201,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", default="config.ini")
     parser.add_argument("-l", "--logfile", default=None, type=str)
-    parser.add_argument("-t", "--train", action=argparse.BooleanOptionalAction)
-    parser.add_argument("-i", "--inference", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-t", "--train", default=False, action='store_true')
+    parser.add_argument("-i", "--inference", default=False, action='store_true')
     parser.add_argument("-m", "--model-id", default=1, type=int)
     args = parser.parse_args()
 
@@ -222,16 +226,18 @@ if __name__ == "__main__":
     file_path = os.path.abspath("../../../dataset/frappe/test.libsvm")
     model_name = "armnet"
     logger.info(f"file_path={file_path}, model_name={model_name}")
+    with open(file_path) as f:
+        data = f.read()
 
     if not args.train:
         logger.info("mode: inference")
         model_id = args.model_id
     elif db.has_model(args.model_id):
         logger.info("model exists. mode: finetune")
-        model_id = finetune(model_name, file_path, config_args, db, args.model_id, 32)
+        model_id = finetune(model_name, data, config_args, db, args.model_id, 32)
     else:
         logger.info("model does not exist. mode: train")
-        model_id = train(model_name, file_path, config_args, db, 32)
+        model_id = train(model_name, data, config_args, db, 32)
 
     if args.inference:
-        inference(model_name, file_path, config_args, db, model_id)
+        inference(model_name, data, config_args, db, model_id, 32)

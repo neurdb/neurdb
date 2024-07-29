@@ -17,7 +17,6 @@ class ARMNetModelBuilder(BuilderBase):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self._model = None
         self._logger = logger.bind(model="ARM-Net")
 
     def train(
@@ -33,11 +32,10 @@ class ARMNetModelBuilder(BuilderBase):
         logger = self._logger.bind(task="train")
 
         # _nfeat, _nfield = self.model_dimension
-
         # create model
         self._model = ARMNetModel(
-            self._nfield,
-            self._nfeat,
+            self._nfield if self._nfield else self.args.nfield,
+            self._nfeat if self._nfeat else self.args.nfeat,
             self.args.nemb,
             self.args.nattn_head,
             self.args.alpha,
@@ -78,6 +76,13 @@ class ARMNetModelBuilder(BuilderBase):
             train_timestamp = time.time()
 
             for batch_idx, batch in enumerate(train_loader):
+                # logger.debug(
+                #     "get batch",
+                #     id=batch_idx,
+                #     id_shape=batch["id"].shape,
+                #     value_shape=batch["value"].shape,
+                # )
+
                 target = batch["y"]
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
@@ -240,6 +245,11 @@ class ARMNetModelBuilder(BuilderBase):
 
     def inference(self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int):
         logger = self._logger.bind(task="inference")
+
+        if self.args.state_dict_path:
+            self._model.load_state_dict(torch.load(self.args.state_dict_path))
+            logger.info("model loaded", state_dict_path=self.args.state_dict_path)
+
         start_time = time.time()
         predictions = []
         with torch.no_grad():
