@@ -36,14 +36,16 @@ class StreamingDataSet:
         while True:
             batch_data = self.data_cache.get()
             if batch_data is not None:
-                print(f"Get data from buffer of {self.current_stage} !!")
                 # increase the current stage count
                 self.current_stage_batch_count += 1
                 if self.current_stage_batch_count >= self.stage_counts[self.current_stage]:
-                    self.current_stage_batch_count = 0
+                    _pre_stag_for_log = self.current_stage
                     # switch to next stage
                     self.current_stage_index = (self.current_stage_index + 1) % len(self.ml_stages)
                     self.current_stage = self.ml_stages[self.current_stage_index]
+                    print(f"[Streaming Dataloader]: stage {_pre_stag_for_log} finsih batch "
+                          f"{self.current_stage_batch_count} and switch to stage {self.current_stage}!!")
+                    self.current_stage_batch_count = 0
                 return batch_data
             if not waiting_message_printed:
                 print(f"The buffer of {self.current_stage} is not filled yet ! Waiting...")
