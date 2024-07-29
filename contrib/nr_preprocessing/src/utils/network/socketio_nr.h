@@ -23,4 +23,9 @@ void nr_socketio_emit_db_init(SocketIOClient *client, const char *dataset_name, 
  */
 void nr_socketio_emit_batch_data(SocketIOClient *client, const char *dataset_name, const char *batch_data);
 
+/**
+ * Emit the "force_disconnect" event
+ */
+void nr_socketio_emit_force_disconnect(SocketIOClient *client);
+
 #endif //SOCKETIO_CALLBACK_H

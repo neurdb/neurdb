@@ -400,7 +400,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     pthread_join(train_thread, NULL);
 
     // close the connection
-    socketio_disconnect(sio_client);
+    nr_socketio_emit_force_disconnect(sio_client);
 
     SPI_finish();
 

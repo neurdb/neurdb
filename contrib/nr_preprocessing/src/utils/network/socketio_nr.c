@@ -74,3 +74,7 @@ void nr_socketio_emit_batch_data(SocketIOClient *client, const char *dataset_nam
     // clean up
     cJSON_Delete(json);
 }
+
+void nr_socketio_emit_force_disconnect(SocketIOClient *client) {
+    socketio_emit(client, "force_disconnect", "");
+}

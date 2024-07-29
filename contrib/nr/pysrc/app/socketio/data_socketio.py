@@ -102,11 +102,12 @@ class NRDataManager(Namespace):
             else:
                 emit('response', {'message': 'Queue is full, data not added.'})
 
-    def force_disconnect(self, sid):
+    def force_disconnect(self):
         """
         Forcefully disconnect a client.
         :param sid: Session ID of the client to disconnect.
         """
+        sid = request.sid
         print(f"Forcefully disconnecting client: {sid}")
         disconnect(sid)
 
