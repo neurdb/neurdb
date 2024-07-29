@@ -46,6 +46,11 @@ Navigate to the experiment folder:
 cd $NEURDBPATH/experiment/cidr-2025
 ```
 
+Add necessary modules:
+```bash
+export PYTHONPATH=$NEURDBPATH/contrib/nr/pysrc:$PYTHONPATH
+```
+
 Run prepare_data.py script:
 ```bash
 python3 prepare_data.py --dataset_name dataset_name --input_file /path/to/data.libsvm --file_type libsvm --random_state 10

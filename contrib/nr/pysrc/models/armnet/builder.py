@@ -17,7 +17,6 @@ class ARMNetModelBuilder(BuilderBase):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self._model = None
         self._logger = logger.bind(model="ARM-Net")
 
     def train(

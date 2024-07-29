@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, random_split
 import pandas as pd
 import psycopg2
 import torch
+import config
 
 
 class TableDataset(Dataset):
@@ -92,7 +93,7 @@ def table_dataloader(database_config, table_name: str, batch_size: int):
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=0,  # TODO: change this to args specified
+        num_workers=config.DATALOADER_NUM_WORKERS,
         pin_memory=True
     )
 
@@ -100,7 +101,7 @@ def table_dataloader(database_config, table_name: str, batch_size: int):
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=0,  # TODO: change this to args specified
+        num_workers=config.DATALOADER_NUM_WORKERS,
         pin_memory=True
     )
 
@@ -108,7 +109,7 @@ def table_dataloader(database_config, table_name: str, batch_size: int):
         test_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=0,  # TODO: change this to args specified
+        num_workers=config.DATALOADER_NUM_WORKERS,
         pin_memory=True
     )
 
