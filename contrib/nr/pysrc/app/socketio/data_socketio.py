@@ -129,4 +129,6 @@ def emit_request_data(client_id: str):
     :param client_id: The client ID to send the request to.
     :return:
     """
+
+    print(f"emit request data to client {client_id}")
     socketio.emit("request_data", {}, to=client_id)
