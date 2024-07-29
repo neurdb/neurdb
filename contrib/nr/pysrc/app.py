@@ -48,6 +48,13 @@ app.register_blueprint(finetune_bp)
 # different async modes, or leave it set to None for the application to choose
 # the best option based on installed packages.
 async_mode = "threading"
+# monkey patching is necessary because this application uses a background thread
+# if async_mode == 'eventlet':
+#     import eventlet
+#     eventlet.monkey_patch()
+# elif async_mode == 'gevent':
+#     from gevent import monkey
+#     monkey.patch_all()
 socketio.init_app(app, async_mode=async_mode)
 socketio.on_namespace(NRDataManager('/'))
 
