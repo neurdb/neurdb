@@ -19,7 +19,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_path", type=str, default="./model.h5", help="Path to save the model"
     )
-    parser.add_argument("--epoch", type=int, default=10, help="Number of epochs")
     parser.add_argument("--train_batch_num", type=int, help="Number of batches for training")
     parser.add_argument("--eva_batch_num", type=int, help="NUmber of batches for evaluation")
     parser.add_argument("--test_batch_num", type=int, help="Number of batches for testing")
@@ -31,7 +30,6 @@ if __name__ == "__main__":
     num_epochs = args.num_epochs
     batch_size = args.batch_size
     model_path = args.model_path
-    epoch = args.epoch
     train_batch_num = args.train_batch_num
     eva_batch_num = args.eva_batch_num
     test_batch_num = args.test_batch_num
@@ -55,7 +53,7 @@ if __name__ == "__main__":
         logger.info("Model file exists. Use external model params", path=model_path)
     else:
         logger.info("Model file does not exist. Training ...", path=model_path)
-        builder.train(train_loader, val_loader, test_loader, epoch, train_batch_num, eva_batch_num, test_batch_num)
+        builder.train(train_loader, val_loader, test_loader, num_epochs, train_batch_num, eva_batch_num, test_batch_num)
         logger.info("Model trained", path=model_path)
 
         logger.info("Saving model ...", path=model_path)
