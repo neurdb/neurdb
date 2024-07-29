@@ -71,4 +71,7 @@ def parse_config_arguments(config_path: str) -> argparse.Namespace:
     args.patience = parser.getint("TRAIN_MODEL", "patience", fallback=5)
     args.eval_freq = parser.getint("TRAIN_MODEL", "eval_freq", fallback=100)
 
+    # inference config
+    args.state_dict_path = parser.get("INFERENCE_MODEL", "state_dict_path", fallback="")
+
     return args
