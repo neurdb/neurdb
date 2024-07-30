@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <utils/elog.h>
 
 
 void init_batch_data_queue(BatchDataQueue *queue, size_t max_size) {
