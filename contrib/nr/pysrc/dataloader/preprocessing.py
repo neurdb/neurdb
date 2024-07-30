@@ -10,38 +10,38 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
     :return: A dictionary with processed 'id', 'value', and 'y' tensors.
     """
     logger.debug(f"[Data Preprocessing]: Preprocessing started...")
-    data = data.split("\n")
 
-    sample_lines = 0
+    # Split data into lines and filter out any empty lines
+    lines = [line.strip() for line in data.split("\n") if line.strip()]
+
+    # Initialize lists for ids, values, and labels
     ids_list = []
     values_list = []
     labels_list = []
 
-    for line in data:
-        if not line:
-            continue  # skip empty lines
-        columns = line.strip().split(" ")
-        pairs = [list(map(int, pair.split(":"))) for pair in columns[1:]]
-        ids, values = zip(*pairs) if pairs else ([], [])
+    # Parse each line into ids, values, and label
+    for line in lines:
+        columns = line.split()
+        label = float(columns[0])
+        pairs = [pair.split(":") for pair in columns[1:]]
+        ids = [int(pair[0]) for pair in pairs]
+        values = [float(pair[1]) for pair in pairs]
+
         ids_list.append(ids)
         values_list.append(values)
-        labels_list.append(float(columns[0]))
-        sample_lines += 1
+        labels_list.append(label)
 
-    nsamples = sample_lines
+    nsamples = len(lines)
     feat_id = torch.zeros((nsamples, max_nfileds), dtype=torch.long)
     feat_value = torch.zeros((nsamples, max_nfileds), dtype=torch.float)
     y = torch.tensor(labels_list, dtype=torch.float)
-    # logger.debug(f"[Data Preprocessing]: Creating tensors...")
 
     for i in range(nsamples):
-        try:
-            ids = ids_list[i]
-            values = values_list[i]
-            feat_id[i, :len(ids)] = torch.tensor(ids, dtype=torch.long)
-            feat_value[i, :len(values)] = torch.tensor(values, dtype=torch.float)
-        except Exception as e:
-            logger.debug(f"[Data Preprocessing]: Incorrect data format in sample {i}! Error: {e}")
+        ids = ids_list[i]
+        values = values_list[i]
+        feat_id[i, :len(ids)] = torch.tensor(ids, dtype=torch.long)
+        feat_value[i, :len(values)] = torch.tensor(values, dtype=torch.float)
+
     logger.debug(f"[Data Preprocessing]: # {nsamples} data samples loaded successfully.")
 
     return {"id": feat_id, "value": feat_value, "y": y}
