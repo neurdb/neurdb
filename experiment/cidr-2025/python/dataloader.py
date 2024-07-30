@@ -141,6 +141,7 @@ def table_dataloader(database_config, table_name: str, batch_size: int):
     Mirror from pysrc/utils/dataset.py
     """
     dataset = TableDataset(database_config, table_name, batch_size)
+    logger.debug("TableDataset initialized")
     val_split = 0.1
     test_split = 0.1
     nfield = dataset.nfield
@@ -158,6 +159,8 @@ def table_dataloader(database_config, table_name: str, batch_size: int):
         Subset(dataset, range(train_size, train_size+val_size)),
         Subset(dataset, range(train_size+val_size))
     )
+
+    logger.debug("TableDataset splited")
 
     train_loader = DataLoader(
         train_dataset,
@@ -182,5 +185,6 @@ def table_dataloader(database_config, table_name: str, batch_size: int):
         num_workers=config.DATALOADER_NUM_WORKERS,
         pin_memory=True,
     )
+    logger.debug("data loader created")
 
     return train_loader, val_loader, test_loader, nfield, nfeat
