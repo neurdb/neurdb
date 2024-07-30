@@ -272,14 +272,14 @@ class ARMNetModelBuilder(BuilderBase):
         predictions = []
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
-                if batch_idx == inf_batch_num:
-                    break
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
                     batch["value"] = batch["value"].cuda(non_blocking=True)
 
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
+                if batch_idx + 1 == inf_batch_num:
+                    break
         print(f"done inference for {inf_batch_num} batches ")
         logger.debug(f"Inference end", time=timeSince(since=start_time))
         return predictions
