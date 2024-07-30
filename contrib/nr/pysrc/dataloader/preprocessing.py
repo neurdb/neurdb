@@ -1,4 +1,5 @@
 import torch
+from logger.logger import logger
 
 
 def libsvm_batch_preprocess(data: str, max_nfileds: int):
@@ -8,7 +9,7 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
     :param max_nfileds: nfileds
     :return: A dictionary with processed 'id', 'value', and 'y' tensors.
     """
-    print(f"[Data Preprocessing]: Preprocessing started...")
+    logger.debug(f"[Data Preprocessing]: Preprocessing started...")
     data = data.split("\n")
 
     sample_lines = 0
@@ -31,7 +32,7 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
     feat_id = torch.zeros((nsamples, max_nfileds), dtype=torch.long)
     feat_value = torch.zeros((nsamples, max_nfileds), dtype=torch.float)
     y = torch.tensor(labels_list, dtype=torch.float)
-    # print(f"[Data Preprocessing]: Creating tensors...")
+    # logger.debug(f"[Data Preprocessing]: Creating tensors...")
 
     for i in range(nsamples):
         try:
@@ -40,7 +41,7 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
             feat_id[i, :len(ids)] = torch.tensor(ids, dtype=torch.long)
             feat_value[i, :len(values)] = torch.tensor(values, dtype=torch.float)
         except Exception as e:
-            print(f"[Data Preprocessing]: Incorrect data format in sample {i}! Error: {e}")
-    print(f"[Data Preprocessing]: # {nsamples} data samples loaded successfully.")
+            logger.debug(f"[Data Preprocessing]: Incorrect data format in sample {i}! Error: {e}")
+    logger.debug(f"[Data Preprocessing]: # {nsamples} data samples loaded successfully.")
 
     return {"id": feat_id, "value": feat_value, "y": y}

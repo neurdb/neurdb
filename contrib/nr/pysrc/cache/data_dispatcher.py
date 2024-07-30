@@ -125,7 +125,7 @@ class LibSvmDataDispatcher:
 
         # Add the processed data to the cache
         if self.data_cache.add(batch_data):
-            logger.debug(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
+            logger.debug(f"[LibSvmDataDispatcher]: Data added, cur length = {self.data_cache.current_len()}")
         else:
             logger.debug(f"[LibSvmDataDispatcher]: stopoing dispacher threads,no data to add after waiting for 10 mins")
             self.stop()
