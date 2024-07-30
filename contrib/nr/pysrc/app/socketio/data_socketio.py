@@ -38,6 +38,12 @@ class NRDataManager(Namespace):
             logger.debug(f"{sid} Client disconnected: ")
             current_app.config["clients"].pop(sid, None)
             current_app.config["data_cache"].remove(sid)
+
+            for dataset_name, ele in current_app.config["dispatchers"].get(sid).items():
+                print(
+                    f"[Discinnect & Recording]dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
+            current_app.config["dispatchers"].remove(sid)
+
             current_app.config["dispatchers"].remove(sid)
         except Exception as e:
             logger.debug(f"Error {e}")
@@ -125,6 +131,14 @@ class NRDataManager(Namespace):
         :param sid: Session ID of the client to disconnect.
         """
         sid = request.sid
+        current_app.config["clients"].pop(sid, None)
+        current_app.config["data_cache"].remove(sid)
+
+        for dataset_name, ele in current_app.config["dispatchers"].get(sid).items():
+            print(
+                f"[Discinnect & Recording]dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
+        current_app.config["dispatchers"].remove(sid)
+
         logger.debug(f"Forcefully disconnecting client: {sid}")
         disconnect(sid)
 
