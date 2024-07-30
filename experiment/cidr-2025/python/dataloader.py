@@ -47,12 +47,14 @@ class TableDataset(Dataset):
         if idx < lb or idx >= ub:
             self._fetch_batch(idx)
 
-        x = torch.tensor(
-            self.batch_cache_x.iloc[idx % self.batch_size].values, dtype=torch.long
-        )
-        y = torch.tensor(
-            self.batch_cache_y.iloc[idx % self.batch_size], dtype=torch.float
-        )
+        # x = torch.tensor(
+        #     self.batch_cache_x.iloc[idx % self.batch_size].values, dtype=torch.long
+        # )
+        # y = torch.tensor(
+        #     self.batch_cache_y.iloc[idx % self.batch_size], dtype=torch.float
+        # )
+        x = self.batch_cache_x[idx % self.batch_size]
+        y = self.batch_cache_y[idx % self.batch_size]
 
         return {
             "id": x,
@@ -80,8 +82,10 @@ class TableDataset(Dataset):
                 self.connection,
             )
 
-        self.batch_cache_x = batch_cache.drop(columns=["id", "label"])
-        self.batch_cache_y = batch_cache["label"]
+        # self.batch_cache_x = batch_cache.drop(columns=["id", "label"])
+        # self.batch_cache_y = batch_cache["label"]
+        self.batch_cache_x = torch.tensor(batch_cache.drop(columns=["id", "label"]).values, dtype=torch.long)
+        self.batch_cache_y = torch.tensor(batch_cache["label"].values, dtype=torch.float)
         self.batch_id = batch_id
 
         # logger.debug(

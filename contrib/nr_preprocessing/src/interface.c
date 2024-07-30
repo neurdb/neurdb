@@ -217,7 +217,6 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
  * @return void
  */
 Datum nr_train(PG_FUNCTION_ARGS) {
-    elog(INFO, "Training started...");
     TimeMetric *time_metric = init_time_metric("nr_train", MILLISECOND);
     record_overall_start_time(time_metric); // record the start time of the function
     record_query_start_time(time_metric); // record the start time of preprocessing
