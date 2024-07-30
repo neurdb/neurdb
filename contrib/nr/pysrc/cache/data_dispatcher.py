@@ -113,8 +113,7 @@ class LibSvmDataDispatcher:
 
         # Process the data
         _nfields = self.data_cache.dataset_statistics[1]
-        # batch_data = libsvm_batch_preprocess_id_only(data, _nfields)
-        batch_data = libsvm_batch_preprocess(data, _nfields)
+        batch_data = libsvm_batch_preprocess_id_only(data, _nfields)
 
         # Record the end time
         end_time = time.time()
