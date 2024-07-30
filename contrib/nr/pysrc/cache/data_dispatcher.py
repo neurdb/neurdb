@@ -71,12 +71,6 @@ class LibSvmDataDispatcher:
                 values = values_list[i]
                 feat_id[i, :len(ids)] = torch.tensor(ids, dtype=torch.long)
                 feat_value[i, :len(values)] = torch.tensor(values, dtype=torch.float)
-                # feat_id[i, : len(ids_list[i])] = torch.tensor(
-                #     ids_list[i], dtype=torch.long
-                # )
-                # feat_value[i, : len(values_list[i])] = torch.tensor(
-                #     values_list[i], dtype=torch.float
-                # )
             except Exception as e:
                 print(f"[Data Preprocessing]: Incorrect data format in sample {i}! Error: {e}")
         print(f"[Data Preprocessing]: # {nsamples} data samples loaded successfully.")
