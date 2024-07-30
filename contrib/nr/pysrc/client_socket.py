@@ -61,12 +61,19 @@ def on_request_data(data):
     sio.emit("batch_data", json.dumps({"dataset_name": "frappe", "dataset": dataset}))
 
 
+def test_dataset_init(dataset_name, nfeat, nfield):
+    profiling_data = {"dataset_name": dataset_name, "nfeat": nfeat, "nfield": nfield}
+    sio.emit("dataset_init", json.dumps(profiling_data))
+
+
 base_url = "http://127.0.0.1:8090"
 # Connect to the Socket.IO server
 sio.connect(base_url)
 
 # Disconnect after sending the test data
 # sio.disconnect()
+
+test_dataset_init("frappe", 5500, 10)
 
 # Keep the client running
 sio.wait()
