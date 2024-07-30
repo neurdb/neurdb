@@ -20,6 +20,7 @@ class TableDataset(Dataset):
         """
         self.connection = psycopg2.connect(**database_config)
         self.cursor = self.connection.cursor()
+        logger.debug("TableDataset cursor connected")
         self.table_name = table_name
         self.batch_size = batch_size
         self.batch_cache_x = pd.DataFrame()
