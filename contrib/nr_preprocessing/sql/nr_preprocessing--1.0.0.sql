@@ -1,4 +1,4 @@
-CREATE FUNCTION nr_inference(model_name text, model_id int, table_name text, batch_size int, columns text[])
+CREATE FUNCTION nr_inference(model_name text, model_id int, table_name text, batch_size int, batch_num int, columns text[])
     RETURNS SETOF RECORD
 AS
 'MODULE_PATHNAME',

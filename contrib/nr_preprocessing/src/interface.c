@@ -48,7 +48,8 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     int model_id = PG_GETARG_INT32(1); // model id
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
     int batch_size = PG_GETARG_INT32(3); // batch size
-    ArrayType *features = PG_GETARG_ARRAYTYPE_P(4);
+    int batch_num = PG_GETARG_INT32(4); // batch number
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(5);
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // column names
 
@@ -82,6 +83,10 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
 
     const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
+
+    if (batch_num >= 0) {
+        n_batches = batch_num;
+    }
 
     // init dataset
     nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features, n_batches, 80);
