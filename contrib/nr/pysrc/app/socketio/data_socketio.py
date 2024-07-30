@@ -22,7 +22,7 @@ class NRDataManager(Namespace):
         sid = request.sid
         current_app.config["clients"][sid] = sid
 
-        logger.debug(f"Client connected: {sid}")
+        logger.info(f"Client connected: {sid}")
         _current_clients = current_app.config["clients"]
         logger.debug(f"Current registered clients: {_current_clients}")
         emit("connection", {"sid": sid}, room=sid)
