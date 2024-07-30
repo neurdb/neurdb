@@ -278,8 +278,9 @@ class ARMNetModelBuilder(BuilderBase):
 
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
+                logger.debug(f"done batch for {batch_idx}, total {inf_batch_num} ")
                 if batch_idx + 1 == inf_batch_num:
                     break
-        print(f"done inference for {inf_batch_num} batches ")
+        logger.debug(f"done inference for {inf_batch_num} batches ")
         logger.debug(f"Inference end", time=timeSince(since=start_time))
         return predictions
