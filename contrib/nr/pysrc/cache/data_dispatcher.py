@@ -84,6 +84,7 @@ class LibSvmDataDispatcher:
         :return: True if the data was added successfully, False otherwise.
         """
         print(f"[LibSvmDataDispatcher] add data to cache...")
+        time.sleep(300)
         batch_data = self.batch_preprocess(data)
         if self.data_cache.add(batch_data):
             return True
