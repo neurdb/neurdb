@@ -1,18 +1,21 @@
 import json
 import socketio
+import random
 
 
 def generate_dataset(target_rows: int = 4096) -> str:
-    base_string = """0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 5183\n
-                    1 42:1 1572:1 5042:1 5047:1 5053:1 5055:1 5058:1 5060:1 5070:1 5150:1"""
-
-    rows_per_string = base_string.count('\n') + 1
-    repeat_count = (target_rows // rows_per_string) + 1
-    final_string = base_string * repeat_count
-    lines = final_string.strip().split('\n')
-    final_string = '\n'.join(lines[:target_rows])
-    print(f"Length of final string: {len(final_string)} characters")
-    return final_string
+    base_strings = [
+        "0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 5183:1",
+        "1 42:1 1572:1 5042:1 5047:1 5053:1 5055:1 5058:1 5060:1 5070:1 5150:1",
+        "1 282:1 2552:1 5044:1 5052:1 5054:1 5055:1 5058:1 5060:1 5072:1 5244:1",
+        "0 215:1 1402:1 5039:1 5051:1 5054:1 5055:1 5058:1 5063:1 5069:1 5149:1",
+        "0 346:1 2423:1 5043:1 5051:1 5054:1 5055:1 5058:1 5063:1 5088:1 5149:1",
+        "0 391:1 2081:1 5039:1 5050:1 5054:1 5055:1 5058:1 5060:1 5088:1 5268:1",
+        "0 164:1 3515:1 5042:1 5052:1 5053:1 5055:1 5058:1 5062:1 5074:1 5149:1",
+        "0 4:1 1177:1 5044:1 5049:1 5054:1 5057:1 5058:1 5060:1 5071:1 5152:1"
+    ]
+    _dataset = "\n".join(random.choice(base_strings) for _ in range(target_rows))
+    return _dataset
 
 
 dataset = generate_dataset()
@@ -62,7 +65,8 @@ def on_request_data(data):
 
 
 def test_dataset_init(dataset_name, nfeat, nfield):
-    profiling_data = {"dataset_name": dataset_name, "nfeat": nfeat, "nfield": nfield}
+    profiling_data = {"dataset_name": dataset_name, "nfeat": nfeat, "nfield": nfield,
+                      "nbatch": 1000, "cache_num": 80}
     sio.emit("dataset_init", json.dumps(profiling_data))
 
 
