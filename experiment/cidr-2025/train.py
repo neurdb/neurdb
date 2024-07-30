@@ -36,6 +36,8 @@ if __name__ == "__main__":
     test_batch_num = args.test_batch_num
     inference = args.inference
 
+    begin_time = time.time()
+
     logger.debug(f"Loading data from table {table_name}...")
     train_loader, val_loader, test_loader, nfields, nfeat = table_dataloader(
         DB_CONFIG, table_name, batch_size
@@ -54,19 +56,21 @@ if __name__ == "__main__":
         logger.info("Model file exists. Use external model params", path=model_path)
     else:
         logger.info("Model file does not exist. Training ...", path=model_path)
-        begin_time = time.time()
+
         builder.train(train_loader, val_loader, test_loader, num_epochs, train_batch_num, eva_batch_num, test_batch_num)
-        end_time = time.time()
-        logger.info(f"Model trained, time_usage = {end_time - begin_time}", path=model_path)
+        logger.info("Model trained", path=model_path)
 
         logger.info("Saving model ...", path=model_path)
         torch.save(builder.model.state_dict(), model_path)
         logger.info("Model saved", path=model_path)
 
+        end_time = time.time()
+        logger.info(f"Model trained + saved, time_usage = {end_time - begin_time}", path=model_path)
+
     if inference:
         logger.info("Running inference ...")
-        begin_time = time.time()
         inference_batch_num = args.inference_batch_num
         y_pred = builder.inference(test_loader, inference_batch_num)
         end_time = time.time()
-        logger.info(f"Inference done, time_usage = {end_time - begin_time}", y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
+        logger.info(f"Inference done, time_usage = {end_time - begin_time}",
+                    y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
