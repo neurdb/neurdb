@@ -144,19 +144,19 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
                 int type = SPI_gettypeid(tupdesc, col + 1);
                 switch (type) {
                     case INT2OID:
-                        appendStringInfo(&row_data, " %hd", col + 1, DatumGetInt16(value));
+                        appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
                         break;
                     case INT4OID:
-                        appendStringInfo(&row_data, " %d", col + 1, DatumGetInt32(value));
+                        appendStringInfo(&row_data, " %d", DatumGetInt32(value));
                         break;
                     case INT8OID:
-                        appendStringInfo(&row_data, " %ld", col + 1, DatumGetInt64(value));
+                        appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
                         break;
                     case FLOAT4OID:
-                        appendStringInfo(&row_data, " %f", col + 1, DatumGetFloat4(value));
+                        appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
                         break;
                     case FLOAT8OID:
-                        appendStringInfo(&row_data, " %lf", col + 1, DatumGetFloat8(value));
+                        appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
                         break;
                     case TEXTOID:
                     case VARCHAROID:
@@ -556,19 +556,19 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
                 int type = SPI_gettypeid(tupdesc, col + 1);
                 switch (type) {
                     case INT2OID:
-                        appendStringInfo(&row_data, " %hd", col + 1, DatumGetInt16(value));
+                        appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
                         break;
                     case INT4OID:
-                        appendStringInfo(&row_data, " %d", col + 1, DatumGetInt32(value));
+                        appendStringInfo(&row_data, " %d", DatumGetInt32(value));
                         break;
                     case INT8OID:
-                        appendStringInfo(&row_data, " %ld", col + 1, DatumGetInt64(value));
+                        appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
                         break;
                     case FLOAT4OID:
-                        appendStringInfo(&row_data, " %f", col + 1, DatumGetFloat4(value));
+                        appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
                         break;
                     case FLOAT8OID:
-                        appendStringInfo(&row_data, " %lf", col + 1, DatumGetFloat8(value));
+                        appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
                         break;
                     case TEXTOID:
                     case VARCHAROID:
