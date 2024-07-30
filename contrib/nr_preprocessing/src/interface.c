@@ -82,7 +82,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     bool isnull;
     const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
 
-    const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
+    int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
 
     if (batch_num >= 0) {
         n_batches = batch_num;
