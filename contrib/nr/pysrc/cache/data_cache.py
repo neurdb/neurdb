@@ -77,7 +77,6 @@ class DataCache:
         try:
             self.queue.put(value, timeout=600)
             self.current_batch_num += 1
-            print(f"[add]: add data to the Queue, cur length = {self.queue.qsize()}")
         except Full:
             print("Queue is full, and item could not be added within the timeout period.")
             # Handle the situation, such as retrying or logging the issue

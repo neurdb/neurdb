@@ -9,14 +9,13 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
     :return: A dictionary with processed 'id', 'value', and 'y' tensors.
     """
     print(f"[Data Preprocessing]: Preprocessing started...")
-    print(f"[Data Preprocessing]: max_nfileds = {max_nfileds}")
     data = data.split("\n")
 
     sample_lines = 0
     ids_list = []
     values_list = []
     labels_list = []
-    print(f"[Data Preprocessing]: # {len(data)} data samples to be loaded...")
+
     for line in data:
         if not line:
             continue  # skip empty lines
@@ -27,12 +26,12 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
         values_list.append(values)
         labels_list.append(float(columns[0]))
         sample_lines += 1
-    print(f"[Data Preprocessing]: # {sample_lines} data samples loaded...")
+
     nsamples = sample_lines
     feat_id = torch.zeros((nsamples, max_nfileds), dtype=torch.long)
     feat_value = torch.zeros((nsamples, max_nfileds), dtype=torch.float)
     y = torch.tensor(labels_list, dtype=torch.float)
-    print(f"[Data Preprocessing]: Creating tensors...")
+    # print(f"[Data Preprocessing]: Creating tensors...")
 
     for i in range(nsamples):
         try:

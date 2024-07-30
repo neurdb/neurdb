@@ -66,11 +66,11 @@ class LibSvmDataDispatcher:
         The background thread function for managing data dispatch.
         :param emit_request_data: The function to call for requesting data.
         """
-        print("[LibSvmDataDispatcher] Background thread started...")
+        print("[LibSvmDataDispatcher] ----- Background thread started  ----- ")
 
         # Send the initial request to trigger the process
         print(
-            f"Queue current length {self.data_cache.current_len()}, "
+            f"[LibSvmDataDispatcher] Queue current length {self.data_cache.current_len()}, "
             f"emitting initial request to client_id {self.client_id}")
         emit_request_data(self.client_id)
 
@@ -84,7 +84,8 @@ class LibSvmDataDispatcher:
             if self.full_event.wait(timeout=600):
                 # Emit request data
                 print(
-                    f"Queue current length {self.data_cache.current_len()}, emitting request to client_id {self.client_id}")
+                    f"[LibSvmDataDispatcher] Sender wake up, queue current length {self.data_cache.current_len()}, "
+                    f"emitting request to client_id {self.client_id}")
                 emit_request_data(self.client_id)
                 # Reset the event
                 self.full_event.clear()
@@ -101,10 +102,11 @@ class LibSvmDataDispatcher:
         Add data to the cache.
         :param data: The dataset in LibSVM format.
         """
-        print(f"[LibSvmDataDispatcher] Adding data to cache...")
+        print(f"[LibSvmDataDispatcher] receive data, adding data to cache...")
         # todo: make the batch_processing method configurable
         _nfields = self.data_cache.dataset_statistics[1]
         batch_data = libsvm_batch_preprocess(data, _nfields)
         self.data_cache.add(batch_data)
+        print(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
         # Notify that new data is available
         self.full_event.set()
