@@ -40,6 +40,7 @@ def model_inference():
         )
 
         # todo: make the response as result
+        logger.debug("---- Inference return to UDF ---- ")
         return jsonify({"res": "Done"})
 
     except Exception:
