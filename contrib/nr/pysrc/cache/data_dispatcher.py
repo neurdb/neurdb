@@ -98,7 +98,6 @@ class LibSvmDataDispatcher:
                 logger.debug(f"[LibSvmDataDispatcher] No data available after waiting 10 mins.")
                 self.stop()
 
-        # Ensure that the event is cleared if the thread stops
         self.full_event.clear()
 
     # ------------------------- data operation -------------------------
@@ -128,6 +127,7 @@ class LibSvmDataDispatcher:
         if self.data_cache.add(batch_data):
             logger.debug(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
         else:
+            logger.debug(f"[LibSvmDataDispatcher]: stopoing dispacher threads,no data to add after waiting for 10 mins")
             self.stop()
 
         # Notify that new data is available
