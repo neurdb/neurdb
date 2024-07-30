@@ -26,8 +26,12 @@ class TableDataset(Dataset):
         self.batch_cache_y = pd.DataFrame()
         self.batch_id = 0
         self.length = self.get_length()
-        self.nfeat = self.get_nfeat()
-        self.nfield = self.get_nfield()
+        # self.nfeat = self.get_nfeat()
+        # self.nfield = self.get_nfield()
+
+        # avazue_test1
+        self.nfeat = 1544272
+        self.nfield = 22
         
         self._fetch_batch(0) # cache first batch
 
