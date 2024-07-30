@@ -3,6 +3,7 @@ from cache import DataCache
 from typing import Callable
 from dataloader.preprocessing import libsvm_batch_preprocess
 from logger.logger import logger
+import time
 
 
 class LibSvmDataDispatcher:
@@ -21,6 +22,9 @@ class LibSvmDataDispatcher:
         self.thread = None
         self.stop_event = threading.Event()
         self.full_event = threading.Event()
+
+        # Initialize aggregation variables
+        self.total_preprocessing_time = 0.0
 
     def bound_client_to_cache(self, data_cache: DataCache, client_id: str):
         """
@@ -104,10 +108,24 @@ class LibSvmDataDispatcher:
         :param data: The dataset in LibSVM format.
         """
         logger.debug(f"[LibSvmDataDispatcher] receive data, adding data to cache...")
-        # todo: make the batch_processing method configurable
+
+        # Record the start time
+        start_time = time.time()
+
+        # Process the data
         _nfields = self.data_cache.dataset_statistics[1]
         batch_data = libsvm_batch_preprocess(data, _nfields)
+
+        # Record the end time
+        end_time = time.time()
+        preprocessing_time = end_time - start_time
+
+        # Update the aggregation variables
+        self.total_preprocessing_time += preprocessing_time
+
+        # Add the processed data to the cache
         self.data_cache.add(batch_data)
         logger.debug(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
+
         # Notify that new data is available
         self.full_event.set()
