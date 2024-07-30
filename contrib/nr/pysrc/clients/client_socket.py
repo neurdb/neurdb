@@ -72,6 +72,21 @@ def generate_dataset(target_rows: int = 4096) -> str:
     return _dataset
 
 
+def generate_id_only_dataset(target_rows: int = 4096) -> str:
+    base_strings = [
+        "0 204  4798  5041  5046  5053  5055  5058  5060  5073  5183 ",
+        "1 42  1572  5042  5047  5053  5055  5058  5060  5070  5150 ",
+        "1 282  2552  5044  5052  5054  5055  5058  5060  5072  5244 ",
+        "0 215  1402  5039  5051  5054  5055  5058  5063  5069  5149 ",
+        "0 346  2423  5043  5051  5054  5055  5058  5063  5088  5149 ",
+        "0 391  2081  5039  5050  5054  5055  5058  5060  5088  5268 ",
+        "0 164  3515  5042  5052  5053  5055  5058  5062  5074  5149 ",
+        "0 4  1177  5044  5049  5054  5057  5058  5060  5071  5152 "
+    ]
+    _dataset = "\n".join(random.choice(base_strings) for _ in range(target_rows))
+    return _dataset
+
+
 def main():
     base_url = "http://127.0.0.1:8090"
     dataset = generate_dataset()
