@@ -96,9 +96,8 @@ class LibSvmDataDispatcher:
                 self.full_event.clear()
             else:
                 logger.debug(f"[LibSvmDataDispatcher] No data available after waiting 10 mins.")
+                self.full_event.clear()
                 self.stop()
-
-        self.full_event.clear()
 
     # ------------------------- data operation -------------------------
 
