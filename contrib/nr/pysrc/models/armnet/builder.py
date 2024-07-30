@@ -281,6 +281,6 @@ class ARMNetModelBuilder(BuilderBase):
                 logger.debug(f"done batch for {batch_idx}, total {inf_batch_num} ")
                 if batch_idx + 1 == inf_batch_num:
                     break
-        logger.debug(f"done inference for {inf_batch_num} batches ")
-        logger.debug(f"Inference end", time=timeSince(since=start_time))
+        logger.debug("Done inference for {inf_batch_num} batches ")
+        logger.debug("---- Inference end ---- ", time=timeSince(since=start_time) )
         return predictions
