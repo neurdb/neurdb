@@ -19,15 +19,18 @@ config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
 print(config_args)
 
-NEURDB_CONNECTOR = NeurDBModelHandler(
-    {
-        "db_name": config_args.db_name,
-        "db_user": config_args.db_user,
-        "db_host": config_args.db_host,
-        "db_port": config_args.db_port,
-        # "password": config_args.db_password,
-    }
-)
+if config_args.run_model != "in_database":
+    NEURDB_CONNECTOR = None
+else:
+    NEURDB_CONNECTOR = NeurDBModelHandler(
+        {
+            "db_name": config_args.db_name,
+            "db_user": config_args.db_user,
+            "db_host": config_args.db_host,
+            "db_port": config_args.db_port,
+            # "password": config_args.db_password,
+        }
+    )
 
 # shared global contexts among tasks.
 with app.app_context():

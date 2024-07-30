@@ -75,4 +75,7 @@ def parse_config_arguments(config_path: str) -> argparse.Namespace:
     # inference config
     args.state_dict_path = parser.get("INFERENCE_MODEL", "state_dict_path", fallback="")
 
+    # inference config
+    args.run_model = parser.get("DEFAULT", "run_model", fallback="")
+
     return args
