@@ -3,26 +3,16 @@ import requests
 # Define the server address and port
 SERVER_URL = "http://localhost:8090"
 
-# Global dataset string
-dataset = """0 204:1 4798:1 5041:1 5046:1 5053:1 5055:1 5058:1 5060:1 5073:1 5183:1\n
-1 42:1 1572:1 5042:1 5047:1 5053:1 5055:1 5058:1 5060:1 5070:1 5150:1\n
-1 282:1 2552:1 5044:1 5052:1 5054:1 5055:1 5058:1 5060:1 5072:1 5244:1\n
-0 215:1 1402:1 5039:1 5051:1 5054:1 5055:1 5058:1 5063:1 5069:1 5149:1\n
-0 346:1 2423:1 5043:1 5051:1 5054:1 5055:1 5058:1 5063:1 5088:1 5149:1\n
-0 391:1 2081:1 5039:1 5050:1 5054:1 5055:1 5058:1 5060:1 5088:1 5268:1\n
-0 164:1 3515:1 5042:1 5052:1 5053:1 5055:1 5058:1 5062:1 5074:1 5149:1\n
-0 4:1 1177:1 5044:1 5049:1 5054:1 5057:1 5058:1 5060:1 5071:1 5152:1"""
-
 
 def test_train_endpoint(
-    batch_size,
-    model_name,
-    dataset_name,
-    client_id,
-    epoch,
-    train_batch_num,
-    eva_batch_num,
-    test_batch_num,
+        batch_size,
+        model_name,
+        dataset_name,
+        client_id,
+        epoch,
+        train_batch_num,
+        eva_batch_num,
+        test_batch_num,
 ):
     url = f"{SERVER_URL}/train"
     data = {

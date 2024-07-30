@@ -3,6 +3,7 @@
 #include <c.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utils/elog.h>
 
 
 void nr_socketio_connect_callback(SocketIOClient *client, cJSON *json) {
