@@ -144,19 +144,19 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
                 int type = SPI_gettypeid(tupdesc, col + 1);
                 switch (type) {
                     case INT2OID:
-                        appendStringInfo(&row_data, " %d:%hd", col + 1, DatumGetInt16(value));
+                        appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
                         break;
                     case INT4OID:
-                        appendStringInfo(&row_data, " %d:%d", col + 1, DatumGetInt32(value));
+                        appendStringInfo(&row_data, " %d", DatumGetInt32(value));
                         break;
                     case INT8OID:
-                        appendStringInfo(&row_data, " %d:%ld", col + 1, DatumGetInt64(value));
+                        appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
                         break;
                     case FLOAT4OID:
-                        appendStringInfo(&row_data, " %d:%f", col + 1, DatumGetFloat4(value));
+                        appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
                         break;
                     case FLOAT8OID:
-                        appendStringInfo(&row_data, " %d:%lf", col + 1, DatumGetFloat8(value));
+                        appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
                         break;
                     case TEXTOID:
                     case VARCHAROID:
@@ -164,7 +164,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
                         // do tokenization
                         char *text = DatumGetCString(value);
                         int token = encode_text(text, table_name, feature_names[col]);
-                        appendStringInfo(&row_data, " %d:%d", col + 1, token);
+                        appendStringInfo(&row_data, " %d", token);
                         break;
                     default:
                         SPI_finish();
@@ -351,19 +351,24 @@ Datum nr_train(PG_FUNCTION_ARGS) {
                 int type = SPI_gettypeid(tupdesc, col + 1);
                 switch (type) {
                     case INT2OID:
-                        appendStringInfo(&row_data, " %d:%hd", col + 1, DatumGetInt16(value));
+                        // appendStringInfo(&row_data, " %d:%hd", col + 1, DatumGetInt16(value));
+                        appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
                         break;
                     case INT4OID:
-                        appendStringInfo(&row_data, " %d:%d", col + 1, DatumGetInt32(value));
+                        // appendStringInfo(&row_data, " %d:%d", col + 1, DatumGetInt32(value));
+                        appendStringInfo(&row_data, " %d", DatumGetInt32(value));
                         break;
                     case INT8OID:
-                        appendStringInfo(&row_data, " %d:%ld", col + 1, DatumGetInt64(value));
+                        // appendStringInfo(&row_data, " %d:%ld", col + 1, DatumGetInt64(value));
+                        appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
                         break;
                     case FLOAT4OID:
-                        appendStringInfo(&row_data, " %d:%f", col + 1, DatumGetFloat4(value));
+                        // appendStringInfo(&row_data, " %d:%f", col + 1, DatumGetFloat4(value));
+                        appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
                         break;
                     case FLOAT8OID:
-                        appendStringInfo(&row_data, " %d:%lf", col + 1, DatumGetFloat8(value));
+                        // appendStringInfo(&row_data, " %d:%lf", col + 1, DatumGetFloat8(value));
+                        appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
                         break;
                     case TEXTOID:
                     case VARCHAROID:
@@ -371,7 +376,8 @@ Datum nr_train(PG_FUNCTION_ARGS) {
                         // do tokenization
                         char *text = DatumGetCString(value);
                         int token = encode_text(text, table_name, feature_names[col]);
-                        appendStringInfo(&row_data, " %d:%d", col + 1, token);
+                        // appendStringInfo(&row_data, " %d:%d", col + 1, token);
+                        appendStringInfo(&row_data, " %d", token);
                         break;
                     default:
                         SPI_finish();
@@ -550,19 +556,19 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
                 int type = SPI_gettypeid(tupdesc, col + 1);
                 switch (type) {
                     case INT2OID:
-                        appendStringInfo(&row_data, " %d:%hd", col + 1, DatumGetInt16(value));
+                        appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
                         break;
                     case INT4OID:
-                        appendStringInfo(&row_data, " %d:%d", col + 1, DatumGetInt32(value));
+                        appendStringInfo(&row_data, " %d", DatumGetInt32(value));
                         break;
                     case INT8OID:
-                        appendStringInfo(&row_data, " %d:%ld", col + 1, DatumGetInt64(value));
+                        appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
                         break;
                     case FLOAT4OID:
-                        appendStringInfo(&row_data, " %d:%f", col + 1, DatumGetFloat4(value));
+                        appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
                         break;
                     case FLOAT8OID:
-                        appendStringInfo(&row_data, " %d:%lf", col + 1, DatumGetFloat8(value));
+                        appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
                         break;
                     case TEXTOID:
                     case VARCHAROID:
@@ -570,7 +576,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
                         // do tokenization
                         char *text = DatumGetCString(value);
                         int token = encode_text(text, table_name, feature_names[col]);
-                        appendStringInfo(&row_data, " %d:%d", col + 1, token);
+                        appendStringInfo(&row_data, " %d", token);
                         break;
                     default:
                         SPI_finish();
