@@ -19,17 +19,15 @@ config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
 print(config_args)
 
-NEURDB_CONNECTOR = None
-
-# NeurDBModelHandler(
-#     {
-#         "db_name": config_args.db_name,
-#         "db_user": config_args.db_user,
-#         "db_host": config_args.db_host,
-#         "db_port": config_args.db_port,
-#         # "password": config_args.db_password,
-#     }
-# )
+NEURDB_CONNECTOR = NeurDBModelHandler(
+    {
+        "db_name": config_args.db_name,
+        "db_user": config_args.db_user,
+        "db_host": config_args.db_host,
+        "db_port": config_args.db_port,
+        # "password": config_args.db_password,
+    }
+)
 
 # shared global contexts among tasks.
 with app.app_context():
@@ -52,20 +50,6 @@ app.register_blueprint(finetune_bp)
 def testing_app():
     print("Test router")
     return jsonify("finish testing")
-
-
-# @app.route("/force_disconnect/<sid>", methods=["POST"])
-# def force_disconnect(sid):
-#     """
-#     HTTP endpoint to forcefully disconnect a client.
-#     :param sid: Session ID of the client to disconnect.
-#     """
-#     print(f"Received request to forcefully disconnect client: {sid}")
-#     socketio.server.manager.disconnect(sid, "/")
-#     app.config["clients"].pop(sid, None)
-#     app.config["data_cache"].remove(sid)
-#     app.config["dispatchers"].remove(sid)
-#     return jsonify({"status": "disconnected"}), 200
 
 
 # Set this variable to "threading", "eventlet" or "gevent" to test the

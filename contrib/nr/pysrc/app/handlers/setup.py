@@ -47,8 +47,7 @@ class Setup:
                 test_batch_num,
             )
 
-            # model_id = self._db.insert_model(builder.model)
-            model_id = 123
+            model_id = self._db.insert_model(builder.model)
             return model_id, None
 
         except Exception:
