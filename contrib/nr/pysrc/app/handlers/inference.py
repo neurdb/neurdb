@@ -20,7 +20,6 @@ def inference(
     if err is not None:
         logger.error(f"inference failed with error: {err}")
         return []
-    logger.debug(f"inference done. response[0,:100]:")
-    logger.debug(response[0][:100] if len(response[0]) >= 100 else response[0])
+    logger.debug(f"inference done. response")
 
     return response
