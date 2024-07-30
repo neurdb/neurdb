@@ -72,5 +72,7 @@ if __name__ == "__main__":
         inference_batch_num = args.inference_batch_num
         y_pred = builder.inference(test_loader, inference_batch_num)
         end_time = time.time()
-        logger.info(f"Inference done, time_usage = {end_time - begin_time}",
-                    y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
+        logger.info(f"Inference done for {len(y_pred)} samples, time_usage = {end_time - begin_time}")
+
+        # logger.info(f"Inference done, time_usage = {end_time - begin_time}",
+        #             y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
