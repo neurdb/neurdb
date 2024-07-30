@@ -1,5 +1,5 @@
 import ast
-
+from logger.logger import logger
 from flask import current_app, request
 from flask_socketio import SocketIO, Namespace, emit, disconnect
 from cache import DataCache, LibSvmDataDispatcher
@@ -22,9 +22,9 @@ class NRDataManager(Namespace):
         sid = request.sid
         current_app.config["clients"][sid] = sid
 
-        print(f"Client connected: {sid}")
+        logger.debug(f"Client connected: {sid}")
         _current_clients = current_app.config["clients"]
-        print(f"Current registered clients: {_current_clients}")
+        logger.debug(f"Current registered clients: {_current_clients}")
         emit("connection", {"sid": sid}, room=sid)
 
     # todo: this cannot connected by c client.
@@ -35,12 +35,12 @@ class NRDataManager(Namespace):
         """
         try:
             sid = request.sid
-            print(f"{sid} Client disconnected: ")
+            logger.debug(f"{sid} Client disconnected: ")
             current_app.config["clients"].pop(sid, None)
             current_app.config["data_cache"].remove(sid)
             current_app.config["dispatchers"].remove(sid)
         except Exception as e:
-            print(f"Error {e}")
+            logger.debug(f"Error {e}")
 
     def on_dataset_init(self, data: str):
         """
@@ -95,13 +95,13 @@ class NRDataManager(Namespace):
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
 
-        print(f"[socket]: {socket_id} receive_db_data name {dataset_name} and data {dataset[:10]}...")
+        logger.debug(f"[socket]: {socket_id} receive_db_data name {dataset_name} and data {dataset[:10]}...")
 
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
         if not dispatchers.contains(socket_id, dataset_name):
-            print(f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
-                  f"wait for train/inference/finetune request")
+            logger.debug(f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
+                         f"wait for train/inference/finetune request")
             emit(
                 "response",
                 {
@@ -110,10 +110,10 @@ class NRDataManager(Namespace):
                 },
             )
         else:
-            # print(f"dispatchers is initialized for dataset {dataset_name} and client {socket_id}")
+            # logger.debug(f"dispatchers is initialized for dataset {dataset_name} and client {socket_id}")
             dispatcher = dispatchers.get(socket_id, dataset_name)
             if not dispatcher:
-                print("dispatcher is not initialized")
+                logger.debug("dispatcher is not initialized")
                 emit("response", {"message": "dispatcher is not initialized"})
             else:
                 dispatcher.add(dataset)
@@ -125,7 +125,7 @@ class NRDataManager(Namespace):
         :param sid: Session ID of the client to disconnect.
         """
         sid = request.sid
-        print(f"Forcefully disconnecting client: {sid}")
+        logger.debug(f"Forcefully disconnecting client: {sid}")
         disconnect(sid)
 
 

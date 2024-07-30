@@ -1,7 +1,7 @@
-import threading
 from typing import Optional, Tuple
 from enum import Enum
 from queue import Queue, Full, Empty
+from logger.logger import logger
 
 
 # Define global variables for cache keys
@@ -78,7 +78,7 @@ class DataCache:
             self.queue.put(value, timeout=600)
             self.current_batch_num += 1
         except Full:
-            print("Queue is full, and item could not be added within the timeout period.")
+            logger.debug("Queue is full, and item could not be added within the timeout period.")
             # Handle the situation, such as retrying or logging the issue
 
     def get(self) -> Optional[dict]:
@@ -90,7 +90,7 @@ class DataCache:
             value = self.queue.get(timeout=600)  # Block up to 5 seconds
             return value
         except Empty:
-            print("Queue was empty and no item was available within the timeout period.")
+            logger.debug("Queue was empty and no item was available within the timeout period.")
             return None
 
     def is_full(self) -> bool:

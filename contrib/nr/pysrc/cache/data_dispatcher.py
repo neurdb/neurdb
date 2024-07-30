@@ -2,6 +2,7 @@ import threading
 from cache import DataCache
 from typing import Callable
 from dataloader.preprocessing import libsvm_batch_preprocess
+from logger.logger import logger
 
 
 class LibSvmDataDispatcher:
@@ -57,7 +58,7 @@ class LibSvmDataDispatcher:
             try:
                 self.thread.join(timeout=10)  # Wait up to 10 seconds for the thread to stop
             except Exception as e:
-                print(f"[LibSvmDataDispatcher] Exception while stopping thread: {e}")
+                logger.debug(f"[LibSvmDataDispatcher] Exception while stopping thread: {e}")
             finally:
                 self.thread = None
 
@@ -66,10 +67,10 @@ class LibSvmDataDispatcher:
         The background thread function for managing data dispatch.
         :param emit_request_data: The function to call for requesting data.
         """
-        print("[LibSvmDataDispatcher] ----- Background thread started  ----- ")
+        logger.debug("[LibSvmDataDispatcher] ----- Background thread started  ----- ")
 
         # Send the initial request to trigger the process
-        print(
+        logger.debug(
             f"[LibSvmDataDispatcher] Queue current length {self.data_cache.current_len()}, "
             f"emitting initial request to client_id {self.client_id}")
         emit_request_data(self.client_id)
@@ -77,20 +78,20 @@ class LibSvmDataDispatcher:
         while not self.stop_event.is_set():
             # Check if we need to stop
             if self.data_cache.time_to_stop():
-                print(f"[LibSvmDataDispatcher] Data cache meets total batch num, stopping.")
+                logger.debug(f"[LibSvmDataDispatcher] Data cache meets total batch num, stopping.")
                 break
 
             # Wait up to 10 minutes
             if self.full_event.wait(timeout=600):
                 # Emit request data
-                print(
+                logger.debug(
                     f"[LibSvmDataDispatcher] Sender wake up, queue current length {self.data_cache.current_len()}, "
                     f"emitting request to client_id {self.client_id}")
                 emit_request_data(self.client_id)
                 # Reset the event
                 self.full_event.clear()
             else:
-                print(f"[LibSvmDataDispatcher] No data available after waiting.")
+                logger.debug(f"[LibSvmDataDispatcher] No data available after waiting.")
 
         # Ensure that the event is cleared if the thread stops
         self.full_event.clear()
@@ -102,11 +103,11 @@ class LibSvmDataDispatcher:
         Add data to the cache.
         :param data: The dataset in LibSVM format.
         """
-        print(f"[LibSvmDataDispatcher] receive data, adding data to cache...")
+        logger.debug(f"[LibSvmDataDispatcher] receive data, adding data to cache...")
         # todo: make the batch_processing method configurable
         _nfields = self.data_cache.dataset_statistics[1]
         batch_data = libsvm_batch_preprocess(data, _nfields)
         self.data_cache.add(batch_data)
-        print(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
+        logger.debug(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
         # Notify that new data is available
         self.full_event.set()
