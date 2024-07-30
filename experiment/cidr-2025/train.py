@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
         builder.train(train_loader, val_loader, test_loader, num_epochs, train_batch_num, eva_batch_num, test_batch_num)
         logger.info("Model trained", path=model_path)
-
+        torch.cuda.synchronize()  # Wait for all GPU operations to complete
         logger.info("Saving model ...", path=model_path)
         torch.save(builder.model.state_dict(), model_path)
         logger.info("Model saved", path=model_path)
@@ -71,6 +71,7 @@ if __name__ == "__main__":
         logger.info("Running inference ...")
         inference_batch_num = args.inference_batch_num
         y_pred = builder.inference(test_loader, inference_batch_num)
+        torch.cuda.synchronize()  # Wait for all GPU operations to complete
         end_time = time.time()
         logger.info(f"Inference done for {len(y_pred)} samples, time_usage = {end_time - begin_time}")
 
