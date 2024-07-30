@@ -41,6 +41,7 @@ def model_inference():
 
         # todo: make the response as result
         logger.debug("---- Inference return to UDF ---- ")
+        logger.info(f"---- Inference done for {len(result) * len(result[0])} samples ----")
         return jsonify({"res": "Done"})
 
     except Exception:
