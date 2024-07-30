@@ -200,7 +200,7 @@ class ARMNetModelBuilder(BuilderBase):
         self._logger.debug("Train end", time=timeSince(since=start_time))
 
         if isinstance(train_loader, StreamingDataSet):
-            self._logger.debug(f"streaming dataloader time usage = {train_loader.total_time_fetching}")
+            self._logger.info(f"streaming dataloader time usage = {train_loader.total_time_fetching}")
         # logger.info(
         #     f"Total running time for training/validation/test: {timeSince(since=start_time)}"
         # )
