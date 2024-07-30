@@ -73,7 +73,7 @@ if __name__ == "__main__":
         y_pred = builder.inference(test_loader, inference_batch_num)
         torch.cuda.synchronize()  # Wait for all GPU operations to complete
         end_time = time.time()
-        logger.info(f"Inference done for {len(y_pred)} samples, time_usage = {end_time - begin_time}")
+        logger.info(f"Inference done for {len(y_pred) * len(y_pred[0])} samples, time_usage = {end_time - begin_time}")
 
         # logger.info(f"Inference done, time_usage = {end_time - begin_time}",
         #             y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)
