@@ -130,11 +130,11 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 
     while (true) {
         current_batch++;
+        SPI_execute(query.data, false, batch_size);
         if (SPI_processed == 0 || current_batch > n_batches) {
             elog(INFO, "Inference completed");
             break; // no more rows to fetch, break the loop
         }
-        SPI_execute(query.data, false, batch_size);
         resetStringInfo(&libsvm_data);
         resetStringInfo(&row_data);
         // get the query result
