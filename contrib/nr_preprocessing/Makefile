@@ -20,7 +20,7 @@ install: buildext
 	cp sql/nr_preprocessing--1.0.0.sql $(NEURDBPATH)/psql/share/postgresql/extension
 	# only works when in psql/lib/postgresql
 	cp build/libnr_preprocessing.so $(NEURDBPATH)/psql/lib
-	#cp build/libnr_preprocessing.so $(NEURDBPATH)/psql/lib/postgresql
+	cp build/libnr_preprocessing.so $(NEURDBPATH)/psql/lib/postgresql
 
 clean:
 	rm -rf build
