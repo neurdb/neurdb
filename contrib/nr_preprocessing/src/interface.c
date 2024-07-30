@@ -164,7 +164,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
                         // do tokenization
                         char *text = DatumGetCString(value);
                         int token = encode_text(text, table_name, feature_names[col]);
-                        appendStringInfo(&row_data, " %d", col + 1, token);
+                        appendStringInfo(&row_data, " %d", token);
                         break;
                     default:
                         SPI_finish();
@@ -576,7 +576,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
                         // do tokenization
                         char *text = DatumGetCString(value);
                         int token = encode_text(text, table_name, feature_names[col]);
-                        appendStringInfo(&row_data, " %d", col + 1, token);
+                        appendStringInfo(&row_data, " %d", token);
                         break;
                     default:
                         SPI_finish();
