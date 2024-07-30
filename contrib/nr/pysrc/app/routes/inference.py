@@ -39,7 +39,8 @@ def model_inference():
             inf_batch_num=inf_batch_num,
         )
 
-        return jsonify({"res": result})
+        # todo: make the response as result
+        return jsonify({"res": "Done"})
 
     except Exception:
         stacktrace = traceback.format_exc()
