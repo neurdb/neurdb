@@ -1,7 +1,7 @@
 import threading
 from cache import DataCache
 from typing import Callable
-from dataloader.preprocessing import libsvm_batch_preprocess, libsvm_batch_preprocess_id_only
+from dataloader.preprocessing import libsvm_batch_preprocess
 from logger.logger import logger
 import time
 
@@ -113,7 +113,7 @@ class LibSvmDataDispatcher:
 
         # Process the data
         _nfields = self.data_cache.dataset_statistics[1]
-        batch_data = libsvm_batch_preprocess_id_only(data, _nfields)
+        batch_data = libsvm_batch_preprocess(data, _nfields)
 
         # Record the end time
         end_time = time.time()
