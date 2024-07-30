@@ -1,6 +1,7 @@
 from cache import DataCache, Bufferkey
 from typing import Tuple, Dict, List
 from logger.logger import logger
+import time
 
 
 class StreamingDataSet:
@@ -28,6 +29,8 @@ class StreamingDataSet:
         self.current_stage = self.ml_stages[0]
         self.current_stage_batch_count = 0
 
+        self.total_time_fetching = 0
+
     def current_statistics(self) -> Tuple:
         return self.data_cache.dataset_statistics
 
@@ -40,7 +43,10 @@ class StreamingDataSet:
         :return: current batch data
         """
         logger.debug(f"[StreamingDataSet]: reading one data from queue...")
+        begin_time = time.time()
         batch_data = self.data_cache.get()
+        end_time = time.time()
+        self.total_time_fetching += end_time - begin_time
         if batch_data is None:
             # raise to http response
             raise "No data to read after waiting for 10 mins"
