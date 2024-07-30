@@ -119,12 +119,9 @@ class NRDataManager(Namespace):
                 emit("response", {"message": "dispatcher is not initialized"})
             else:
                 print("dispatcher is initialized")
-                if dispatcher.add(dataset):
-                    print("Data received and added to queue!")
-                    emit("response", {"message": "Data received and added to queue!"})
-                else:
-                    print("Queue is full, and thus data not added.")
-                    emit("response", {"message": "Queue is full, data not added."})
+                dispatcher.add(dataset)
+                print("Data received and added to queue!")
+                emit("response", {"message": "Data received and added to queue!"})
 
     def force_disconnect(self):
         """

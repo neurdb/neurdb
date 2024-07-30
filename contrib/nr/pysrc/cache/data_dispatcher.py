@@ -21,6 +21,8 @@ class LibSvmDataDispatcher:
         self.thread = None
         self.stop_event = threading.Event()
 
+        self.full_event = threading.Event()
+
     def bound_client_to_cache(self, data_cache: DataCache, client_id: str):
         """
         Bind a client to the data cache.
@@ -84,12 +86,9 @@ class LibSvmDataDispatcher:
         :return: True if the data was added successfully, False otherwise.
         """
         print(f"[LibSvmDataDispatcher] add data to cache...")
-        time.sleep(300)
         batch_data = self.batch_preprocess(data)
-        if self.data_cache.add(batch_data):
-            return True
-        else:
-            return False
+        self.data_cache.add(batch_data)
+        self.full_event.set()
 
     # ------------------------- threading -------------------------
 
@@ -112,20 +111,21 @@ class LibSvmDataDispatcher:
         """
         print("[LibSvmDataDispatcher] thread started...")
         while not self.stop_event.is_set():
-            # stop if meets
-            isStop = self.data_cache.time_to_stop()
-            if isStop:
-                print(
-                    f"[LibSvmDataDispatcher] data_cache {self.data_cache.current_batch_num} "
-                    f"meets {self.data_cache.total_batch_num}, stop asking data."
-                )
+            # Check if we need to stop
+            if self.data_cache.time_to_stop():
+                print(f"[LibSvmDataDispatcher] data_cache meets total batch num, stopping.")
                 break
-            # consume if not full
-            isfull = self.data_cache.is_full()
-            if not isfull:
-                print(f"queue current length {self.data_cache.current_len()}, emit req to client_id {self.client_id} ")
-                emit_request_data(self.client_id)
-            time.sleep(0.2)
+
+            # Wait until the event is set
+            self.full_event.wait()
+
+            # Emit request data
+            print(
+                f"Queue current length {self.data_cache.current_len()}, emitting request to client_id {self.client_id}")
+            emit_request_data(self.client_id)
+
+            # Reset the event
+            self.full_event.clear()
 
     def stop(self):
         """
