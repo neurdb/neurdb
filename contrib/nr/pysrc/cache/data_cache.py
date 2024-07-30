@@ -1,7 +1,7 @@
 import threading
 from typing import Optional, Tuple
 from enum import Enum
-from queue import Queue
+from queue import Queue, Full, Empty
 
 
 # Define global variables for cache keys
@@ -65,33 +65,33 @@ class DataCache:
         self._nfeat = nfeat
         self._nfield = nfield
 
-    def add(self, value) -> bool:
+    # ------------------------- data operation -------------------------
+
+    def add(self, value):
         """
         Add a value to the right of the queue if the queue is not full.
         :param value: The value to add to the queue.
         :return: True if the value was added, False if the queue is full.
         """
         # with self.lock:
-        print("enter add")
-        if not self.queue.full():
-            print("[add]: queue is not full,adding..,")
-            self.queue.put(value)
-            print("[add]: added")
+        try:
+            self.queue.put(value, timeout=600)
             self.current_batch_num += 1
-            print(f"[add]: add data to the Queue, cur length = {self.queue.qsize()}")
-            return True
-        print(f"Queue is full with length {self.queue.qsize()}, data not added.")
-        return False
+        except Full:
+            print("Queue is full, and item could not be added within the timeout period.")
+            # Handle the situation, such as retrying or logging the issue
 
     def get(self) -> Optional[dict]:
         """
         Retrieve and remove the oldest value from the queue (read from left).
         :return: The oldest value from the queue, or None if the queue is empty.
         """
-        # with self.lock:
-        if not self.queue.empty():
-            return self.queue.get()
-        return None
+        try:
+            value = self.queue.get(timeout=600)  # Block up to 5 seconds
+            return value
+        except Empty:
+            print("Queue was empty and no item was available within the timeout period.")
+            return None
 
     def is_full(self) -> bool:
         """

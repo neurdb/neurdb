@@ -99,7 +99,6 @@ class NRDataManager(Namespace):
 
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
-        print(f"dispatchers: {dispatchers}")
         if not dispatchers.contains(socket_id, dataset_name):
             print(f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
                   f"wait for train/inference/finetune request")
@@ -111,20 +110,14 @@ class NRDataManager(Namespace):
                 },
             )
         else:
-            print(f"dispatchers is initialized for dataset {dataset_name} and client {socket_id}")
+            # print(f"dispatchers is initialized for dataset {dataset_name} and client {socket_id}")
             dispatcher = dispatchers.get(socket_id, dataset_name)
-            print(f"dispatcher-2: {dispatcher}")
             if not dispatcher:
                 print("dispatcher is not initialized")
                 emit("response", {"message": "dispatcher is not initialized"})
             else:
-                print("dispatcher is initialized")
-                if dispatcher.add(dataset):
-                    print("Data received and added to queue!")
-                    emit("response", {"message": "Data received and added to queue!"})
-                else:
-                    print("Queue is full, and thus data not added.")
-                    emit("response", {"message": "Queue is full, data not added."})
+                dispatcher.add(dataset)
+                emit("response", {"message": "Data received and added to queue!"})
 
     def force_disconnect(self):
         """

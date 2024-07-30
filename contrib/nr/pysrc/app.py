@@ -52,20 +52,6 @@ def testing_app():
     return jsonify("finish testing")
 
 
-@app.route("/force_disconnect/<sid>", methods=["POST"])
-def force_disconnect(sid):
-    """
-    HTTP endpoint to forcefully disconnect a client.
-    :param sid: Session ID of the client to disconnect.
-    """
-    print(f"Received request to forcefully disconnect client: {sid}")
-    socketio.server.manager.disconnect(sid, "/")
-    app.config["clients"].pop(sid, None)
-    app.config["data_cache"].remove(sid)
-    app.config["dispatchers"].remove(sid)
-    return jsonify({"status": "disconnected"}), 200
-
-
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
 # the best option based on installed packages.
