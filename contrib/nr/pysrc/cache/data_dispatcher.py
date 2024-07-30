@@ -95,7 +95,8 @@ class LibSvmDataDispatcher:
                 # Reset the event
                 self.full_event.clear()
             else:
-                logger.debug(f"[LibSvmDataDispatcher] No data available after waiting.")
+                logger.debug(f"[LibSvmDataDispatcher] No data available after waiting 10 mins.")
+                self.stop()
 
         # Ensure that the event is cleared if the thread stops
         self.full_event.clear()
@@ -124,8 +125,10 @@ class LibSvmDataDispatcher:
         self.total_preprocessing_time += preprocessing_time
 
         # Add the processed data to the cache
-        self.data_cache.add(batch_data)
-        logger.debug(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
+        if self.data_cache.add(batch_data):
+            logger.debug(f"[LibSvmDataDispatcher]: added data done, cur length = {self.data_cache.current_len()}")
+        else:
+            self.stop()
 
         # Notify that new data is available
         self.full_event.set()

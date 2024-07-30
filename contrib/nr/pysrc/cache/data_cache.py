@@ -67,7 +67,7 @@ class DataCache:
 
     # ------------------------- data operation -------------------------
 
-    def add(self, value):
+    def add(self, value) -> bool:
         """
         Add a value to the right of the queue if the queue is not full.
         :param value: The value to add to the queue.
@@ -77,9 +77,10 @@ class DataCache:
         try:
             self.queue.put(value, timeout=600)
             self.current_batch_num += 1
+            return True
         except Full:
             logger.debug("Queue is full, and item could not be added within the timeout period.")
-            # Handle the situation, such as retrying or logging the issue
+            return False
 
     def get(self) -> Optional[dict]:
         """
