@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 import os
 
 from models import build_model
-from shared_config.config import parse_config_arguments
+from shared_config.config import parse_config_arguments, DEVICE
 import torch
 
 
@@ -13,7 +13,7 @@ def generate_embeddings(args, config_args):
     # Initialize and load the model
     builder = build_model("armnet", config_args)
     builder._init_model_arch()
-    builder._model.load_state_dict(torch.load(args.model_path, map_location=torch.device('cpu')))
+    builder._model.load_state_dict(torch.load(args.model_path, map_location=torch.device(DEVICE)))
 
     # Reading the CSV file without pandas and without a header
     data = []
@@ -27,12 +27,11 @@ def generate_embeddings(args, config_args):
     i = 0
     for row in data:
         i += 1
-        x = {"id": torch.tensor([int(item) for item in row[1:]], dtype=torch.long),
-             "value": torch.ones((1, config_args.nfield), dtype=torch.float)}
-        emb = builder._model.embedding(x)
+        x = torch.tensor([int(item) for item in row[1:]], dtype=torch.long).to(DEVICE)
+        emb = builder._model.embedding.embedding(x)
         emb = emb.view(-1).tolist()
         embeddings.append(emb)
-        if i % 5000 == 0:
+        if i % 500 == 0:
             print(i)
 
     return embeddings, data
@@ -76,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_clusters', type=int, default=5, help='Number of clusters for K-Means')
     parser.add_argument('--top_clusters', type=int, default=4, help='Number of top largest clusters to save')
 
-    parser.add_argument('--config_path', type=str, default=4, help='Number of top largest clusters to save')
+    parser.add_argument('--config_path', type=str, default="/Users/kevin/project_c++/neurdb_proj/neurdb-dev/contrib/nr/pysrc/config.ini")
 
     # Parse arguments
     args = parser.parse_args()
