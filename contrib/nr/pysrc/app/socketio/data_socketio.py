@@ -1,4 +1,6 @@
 import ast
+import json
+
 from logger.logger import logger
 from flask import current_app, request
 from flask_socketio import SocketIO, Namespace, emit, disconnect
@@ -96,7 +98,7 @@ class NRDataManager(Namespace):
         :param data: Dictionary containing dataset information and the actual data.
         """
         socket_id = request.sid
-        data = ast.literal_eval(data)
+        data = json.loads(data)
 
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
