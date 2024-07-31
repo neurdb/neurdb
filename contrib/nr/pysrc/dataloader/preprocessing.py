@@ -13,7 +13,11 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
     logger.debug(f"[Data Preprocessing]: Preprocessing started...")
 
     # Split data into lines and filter out any empty lines
-    lines = [line.strip() for line in data.split("\n") if line.strip()]
+    lines = []
+    for line in data.split("\n"):
+        line = line.strip()
+        if line:
+            lines.append(line)
 
     # Initialize lists for ids, values, and labels
     ids_list = []
