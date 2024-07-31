@@ -53,13 +53,13 @@ class ARMNetModelBuilder(BuilderBase):
         # create model
         self._init_model_arch()
 
-        logger.debug("model created with args", **vars(self.args))
+        logger.info("model created with args", **vars(self.args))
 
         # optimizer
         opt_metric = nn.BCEWithLogitsLoss(reduction="mean").to(DEVICE)
         optimizer = optim.Adam(self._model.parameters(), lr=self.args.lr)
 
-        logger.debug("built the optimziers")
+        logger.info("built the optimziers")
 
         # gradient clipping
         for p in self.model.parameters():
@@ -67,17 +67,17 @@ class ARMNetModelBuilder(BuilderBase):
                 p.register_hook(lambda grad: torch.clamp(grad, -1.0, 1.0))
         torch.backends.cudnn.benchmark = True
 
-        logger.debug("register_hook and build cudnn bencnmark")
+        logger.info("register_hook and build cudnn bencnmark")
 
         patience_cnt = 0
         best_valid_auc = 0.0
         best_test_auc = 0.0
         start_time = time.time()
 
-        logger.debug("start training...")
+        logger.info("start training...")
 
         for epoch in range(self.args.epoch):
-            logger.debug("Epoch start", curr_epoch=epoch, end_at_epoch=self.args.epoch)
+            logger.info("Epoch start", curr_epoch=epoch, end_at_epoch=self.args.epoch)
 
             # Training phase
             self._model.train()
@@ -89,7 +89,7 @@ class ARMNetModelBuilder(BuilderBase):
             train_timestamp = time.time()
 
             for batch_idx, batch in enumerate(train_loader):
-                # logger.debug(
+                # logger.info(
                 #     "get batch",
                 #     id=batch_idx,
                 #     id_shape=batch["id"].shape,
@@ -117,7 +117,7 @@ class ARMNetModelBuilder(BuilderBase):
                 train_timestamp = time.time()
 
                 if batch_idx % self.args.report_freq == 0:
-                    logger.debug(
+                    logger.info(
                         "%s",
                         f"Epoch [{epoch:3d}/{self.args.epoch}][{batch_idx:3d}/{len(train_loader)}]\t"
                         f"{train_time_avg.val:.3f} ({train_time_avg.avg:.3f}) AUC {train_auc_avg.val:4f} "
@@ -139,7 +139,7 @@ class ARMNetModelBuilder(BuilderBase):
                     )
                 if batch_idx + 1 == train_batch_num:
                     break
-            logger.debug(
+            logger.info(
                 "Epoch end",
                 time=timeSince(s=train_time_avg.sum),
                 auc=train_auc_avg.avg,
@@ -159,7 +159,7 @@ class ARMNetModelBuilder(BuilderBase):
                 patience_cnt = 0
                 best_valid_auc, best_test_auc = valid_auc, test_auc
 
-                logger.debug(
+                logger.info(
                     "New best valid auc",
                     epoch=epoch,
                     valid_auc=valid_auc,
@@ -171,7 +171,7 @@ class ARMNetModelBuilder(BuilderBase):
             else:
                 patience_cnt += 1
 
-                logger.debug(
+                logger.info(
                     "Evaluation early stopped",
                     epoch=epoch - 1,
                     patience_cnt=patience_cnt,
@@ -184,7 +184,7 @@ class ARMNetModelBuilder(BuilderBase):
                 # )
 
             if patience_cnt >= self.args.patience:
-                self._logger.debug(
+                self._logger.info(
                     "Evaluation end",
                     epoch=epoch,
                     valid_auc=best_valid_auc,
@@ -198,7 +198,7 @@ class ARMNetModelBuilder(BuilderBase):
 
         self._model.eval()
 
-        self._logger.debug("Train end", time=timeSince(since=start_time))
+        self._logger.info("Train end", time=timeSince(since=start_time))
 
         if isinstance(train_loader, StreamingDataSet):
             self._logger.info(f"streaming dataloader time usage = {train_loader.total_time_fetching}")
@@ -239,7 +239,7 @@ class ARMNetModelBuilder(BuilderBase):
                 timestamp = time.time()
 
                 if batch_idx % self.args.report_freq == 0:
-                    logger.debug(
+                    logger.info(
                         f"Epoch [{batch_idx:3d}/{len(data_loader)}]\t"
                         f"{time_avg.val:.3f} ({time_avg.avg:.3f}) AUC {auc_avg.val:4f} ({auc_avg.avg:4f}) "
                         f"Loss {loss_avg.val:8.4f} ({loss_avg.avg:8.4f})"
@@ -247,12 +247,12 @@ class ARMNetModelBuilder(BuilderBase):
 
                 if batch_idx + 1 == batch_num:
                     break
-        logger.debug(
+        logger.info(
             f"Time {timeSince(s=time_avg.sum):>12s} "
             f"AUC {auc_avg.avg:8.4f} Loss {loss_avg.avg:8.4f}"
         )
 
-        logger.debug(f"Evaluate end", time=timeSince(s=time_avg.sum))
+        logger.info(f"Evaluate end", time=timeSince(s=time_avg.sum))
         return auc_avg.avg
 
     def inference(
@@ -279,9 +279,9 @@ class ARMNetModelBuilder(BuilderBase):
 
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
-                logger.debug(f"done batch for {batch_idx}, total {inf_batch_num} ")
+                logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
                 if batch_idx + 1 == inf_batch_num:
                     break
-        logger.debug("Done inference for {inf_batch_num} batches ")
-        logger.debug("---- Inference end ---- ", time=timeSince(since=start_time))
+        logger.info("Done inference for {inf_batch_num} batches ")
+        logger.info("---- Inference end ---- ", time=timeSince(since=start_time))
         return predictions
