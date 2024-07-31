@@ -1,5 +1,7 @@
 import argparse
 import csv
+from sklearn.cluster import KMeans
+import os
 
 from models import build_model
 from shared_config.config import parse_config_arguments
@@ -23,12 +25,37 @@ def generate_embeddings(args, config_args):
     embeddings = []
     for row in data:
         x = {"id": torch.tensor([int(item) for item in row[1:]], dtype=torch.long),
-             "value": torch.ones((1, config_args.nfield), dtype=torch.float)
-             }
+             "value": torch.ones((1, config_args.nfield), dtype=torch.float)}
         emb = builder._model.embedding(x)
         emb = emb.view(-1).tolist()
         embeddings.append(emb)
-    return embeddings
+
+    return embeddings, data
+
+
+def perform_kmeans(embeddings, num_clusters):
+    kmeans = KMeans(n_clusters=num_clusters, random_state=random_state).fit(embeddings)
+    return kmeans.labels_
+
+
+def save_clusters(data, labels, args, top_clusters):
+    cluster_mapping = {}
+    for idx, label in enumerate(labels):
+        if label in cluster_mapping:
+            cluster_mapping[label].append(data[idx])
+        else:
+            cluster_mapping[label] = [data[idx]]
+
+    # Sorting clusters by size and picking the top clusters
+    sorted_clusters = sorted(cluster_mapping.items(), key=lambda x: len(x[1]), reverse=True)[:top_clusters]
+
+    # Save each cluster's data into a separate CSV file
+    for idx, (cluster_id, rows) in enumerate(sorted_clusters):
+        output_path = os.path.join(args.output_folder, f"cluster_{cluster_id}.csv")
+        with open(output_path, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for row in rows:
+                csvwriter.writerow(row)
 
 
 if __name__ == "__main__":
@@ -42,13 +69,19 @@ if __name__ == "__main__":
     parser.add_argument('--top_clusters', type=int, default=4, help='Number of top largest clusters to save')
 
     # Parse arguments
-    _args = parser.parse_args()
+    args = parser.parse_args()
 
     # Parse configuration
-    _config_args = parse_config_arguments("/Users/kevin/project_c++/neurdb_proj/neurdb-dev/contrib/nr/pysrc/config.ini")
-    _config_args.nfield = 22
-    _config_args.nfeat = 1544272
+    config_args = parse_config_arguments("/Users/kevin/project_c++/neurdb_proj/neurdb-dev/contrib/nr/pysrc/config.ini")
+    config_args.nfield = 22
+    config_args.nfeat = 1544272
+    random_state = 0
 
-    embeddings = generate_embeddings(_args, _config_args)
+    # Generate embeddings and original data
+    embeddings, data = generate_embeddings(args, config_args)
 
+    # Perform K-means clustering
+    labels = perform_kmeans(embeddings, args.num_clusters)
 
+    # Save clustered data
+    save_clusters(data, labels, args, args.top_clusters)
