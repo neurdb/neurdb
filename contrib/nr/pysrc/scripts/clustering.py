@@ -9,6 +9,7 @@ import torch
 
 
 def generate_embeddings(args, config_args):
+    print("generating embeddings...")
     # Initialize and load the model
     builder = build_model("armnet", config_args)
     builder._init_model_arch()
@@ -23,22 +24,28 @@ def generate_embeddings(args, config_args):
 
     # Assuming all columns are used for embedding except the first one
     embeddings = []
+    i = 0
     for row in data:
+        i += 1
         x = {"id": torch.tensor([int(item) for item in row[1:]], dtype=torch.long),
              "value": torch.ones((1, config_args.nfield), dtype=torch.float)}
         emb = builder._model.embedding(x)
         emb = emb.view(-1).tolist()
         embeddings.append(emb)
+        if i % 5000 == 0:
+            print(i)
 
     return embeddings, data
 
 
 def perform_kmeans(embeddings, num_clusters):
+    print("perform_kmeans...")
     kmeans = KMeans(n_clusters=num_clusters, random_state=random_state).fit(embeddings)
     return kmeans.labels_
 
 
 def save_clusters(data, labels, args, top_clusters):
+    print("save_clusters...")
     cluster_mapping = {}
     for idx, label in enumerate(labels):
         if label in cluster_mapping:
