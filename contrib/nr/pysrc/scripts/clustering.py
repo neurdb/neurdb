@@ -31,8 +31,7 @@ def generate_embeddings(args, config_args):
         emb = builder._model.embedding.embedding(x)
         emb = emb.view(-1).tolist()
         embeddings.append(emb)
-        if i % 500 == 0:
-            print(i)
+        print(i)
 
     return embeddings, data
 
