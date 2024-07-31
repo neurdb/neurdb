@@ -20,12 +20,12 @@ def _parse_libsvm_line(line: str, num_features: int) -> list:
     """
     parts = line.strip().split(" ")
     label = int(parts[0])
-    features = [0.0] * num_features
+    features = [0] * num_features
     idx = 0
     for part in parts[1:]:
         index, value = part.split(":")
         # features[int(index) - 1] = float(value)
-        features[idx] = float(value)
+        features[idx] = int(index)
         idx += 1
     return [label] + features
 
