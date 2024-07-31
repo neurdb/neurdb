@@ -24,14 +24,11 @@ def generate_embeddings(args, config_args):
 
     # Assuming all columns are used for embedding except the first one
     embeddings = []
-    i = 0
     for row in data:
-        i += 1
         x = torch.tensor([int(item) for item in row[1:]], dtype=torch.long).to(DEVICE)
         emb = builder._model.embedding.embedding(x)
         emb = emb.view(-1).tolist()
         embeddings.append(emb)
-        print(i)
 
     return embeddings, data
 
