@@ -1,11 +1,11 @@
 import time
-from client_socket import SocketClient, generate_dataset
+from client_socket import SocketClient, generate_dataset, generate_id_only_dataset
 from client_stream import test_train_endpoint
 
 
 def main():
     base_url = "http://127.0.0.1:8090"
-    dataset = generate_dataset()
+    dataset = generate_id_only_dataset()
 
     # Initialize the SocketClient
     socket_client = SocketClient(base_url)
