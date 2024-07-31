@@ -63,7 +63,8 @@ class ARMNetModelBuilder(BuilderBase):
 
         # gradient clipping
         for p in self.model.parameters():
-            p.register_hook(lambda grad: torch.clamp(grad, -1.0, 1.0))
+            if p.requires_grad:
+                p.register_hook(lambda grad: torch.clamp(grad, -1.0, 1.0))
         torch.backends.cudnn.benchmark = True
 
         logger.debug("register_hook and build cudnn bencnmark")
