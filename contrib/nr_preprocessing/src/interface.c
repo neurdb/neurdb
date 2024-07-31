@@ -72,22 +72,23 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     }
 
     // prepare the query
+    SPI_connect();
     StringInfoData query;
     initStringInfo(&query);
+    //
+    // appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
+    // // calling SPI execution
+    // SPI_execute(query.data, false, 0);
+    //
+    // bool isnull;
+    // const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
+    //
+    // int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
 
-    appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
-    // calling SPI execution
-    SPI_connect();
-    SPI_execute(query.data, false, 0);
-
-    bool isnull;
-    const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
-
-    int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
-
-    if (batch_num >= 0) {
-        n_batches = batch_num;
-    }
+    // if (batch_num >= 0) {
+    //     n_batches = batch_num;
+    // }
+    int n_batches = batch_num;
 
     // init dataset
     nr_socketio_emit_db_init(sio_client, table_name, nfeat, n_features, n_batches, 80);
@@ -234,12 +235,13 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1)); // table name
     int batch_size = PG_GETARG_INT32(2); // batch size
-    int epoch = PG_GETARG_INT32(3); // epoch
-    int nfeat = PG_GETARG_INT32(4); // max number of input ids
-    ArrayType *features = PG_GETARG_ARRAYTYPE_P(5);
+    int batch_num = PG_GETARG_INT32(3); // batch number for each epoch
+    int epoch = PG_GETARG_INT32(4); // epoch
+    int nfeat = PG_GETARG_INT32(5); // max number of input ids
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // feature names
-    char *target = text_to_cstring(PG_GETARG_TEXT_P(6)); // target column
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(7)); // target column
 
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
@@ -262,15 +264,20 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     StringInfoData query;
     initStringInfo(&query);
 
-    appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
+    // appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
     // calling SPI execution
     SPI_connect();
-    SPI_execute(query.data, false, 0);
+    // SPI_execute(query.data, false, 0);
 
-    bool isnull;
-    const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
+    // bool isnull;
+    // const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
 
-    const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
+    // const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
+    // const int n_batches_train = (int) ceil(n_batches * 0.8);
+    // const int n_batches_evaluate = (int) ceil(n_batches * 0.1);
+    // const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
+
+    const int n_batches = batch_num;
     const int n_batches_train = (int) ceil(n_batches * 0.8);
     const int n_batches_evaluate = (int) ceil(n_batches * 0.1);
     const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
@@ -326,11 +333,14 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     initStringInfo(&libsvm_data);
     initStringInfo(&row_data);
     int current_epoch = 0;
+    int current_batch = 0;
 
     while (true) {
+        current_batch++;
         SPI_execute(query.data, false, batch_size);
-        if (SPI_processed == 0) {
+        if (SPI_processed == 0 || current_batch > n_batches) {
             current_epoch++;
+            current_batch = 1; // reset the current batch
             // if the current epoch is greater than the specified epoch, break the loop
             if (current_epoch >= epoch) {
                 elog(INFO, "Training completed");
@@ -442,12 +452,13 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     int model_id = PG_GETARG_INT32(1); // model id
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
     int batch_size = PG_GETARG_INT32(3); // batch size
-    int epoch = PG_GETARG_INT32(4); // epoch
-    int nfeat = PG_GETARG_INT32(5); // max number of input ids
-    ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
+    int batch_num = PG_GETARG_INT32(4); // batch number
+    int epoch = PG_GETARG_INT32(5); // epoch
+    int nfeat = PG_GETARG_INT32(6); // max number of input ids
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(7);
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // feature names
-    char *target = text_to_cstring(PG_GETARG_TEXT_P(7)); // target column
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(8)); // target column
 
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
@@ -470,15 +481,16 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     StringInfoData query;
     initStringInfo(&query);
 
-    appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
+    // appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
     // calling SPI execution
     SPI_connect();
-    SPI_execute(query.data, false, 0);
+    // SPI_execute(query.data, false, 0);
 
-    bool isnull;
-    const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
+    // bool isnull;
+    // const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
 
-    const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
+    const int n_batches = batch_num;
+    // const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
     const int n_batches_train = (int) ceil(n_batches * 0.8);
     const int n_batches_evaluate = (int) ceil(n_batches * 0.1);
     const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
@@ -524,13 +536,16 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     initStringInfo(&libsvm_data);
     initStringInfo(&row_data);
     int current_epoch = 0;
+    int current_batch = 0;
 
     while (true) {
         // read_only must be set to false, otherwise FETCH will not work
         // FETCH will not work if the query is VOLATILE
+        current_batch++;
         SPI_execute(query.data, false, batch_size);
-        if (SPI_processed == 0) {
+        if (SPI_processed == 0 || current_batch > n_batches) {
             current_epoch++;
+            current_batch = 1; // reset the current batch
             // if the current epoch is greater than the specified epoch, break the loop
             if (current_epoch >= epoch) {
                 elog(INFO, "Finetune completed");
