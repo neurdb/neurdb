@@ -100,30 +100,25 @@ def libsvm_batch_preprocess_id_only(data: str, max_nfileds: int):
 def _parser_data(data: str):
     logger.debug(f"[Data Preprocessing]: Preprocessing started...")
 
-    # Split data into lines and filter out any empty lines
-    lines = []
-    for line in data.split("\n"):
-        line = line.strip()
-        if line:
-            lines.append(line)
-
     # Initialize lists for ids and labels
     ids_list = []
     labels_list = []
-
-    # Timing for line traversal and parsing
     parse_start_time = time.time()
-    # Parse each line into ids and label
-    for line in lines:
-        columns = line.split()
-        label = float(columns[0])
-        ids = [int(id) for id in columns[1:]]
 
-        ids_list.append(ids)
-        labels_list.append(label)
+    # Split data into lines and filter out any empty lines
+    for line in data.split("\n"):
+        line = line.strip()
+        if line:
+            columns = line.split()
+            label = float(columns[0])
+            ids = [int(id) for id in columns[1:]]
+
+            ids_list.append(ids)
+            labels_list.append(label)
+
     parse_end_time = time.time()
     logger.debug(f"[Data Preprocessing, Timing]: Parsing time: {parse_end_time - parse_start_time:.4f} seconds")
-    return len(lines), ids_list, labels_list
+    return len(ids_list), ids_list, labels_list
 
 
 def _fill_data_into_tensor(nsamples: int, ids_list, feat_id):
