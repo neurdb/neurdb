@@ -37,13 +37,13 @@ class NRDataManager(Namespace):
         """
         try:
             sid = request.sid
-            logger.debug(f"{sid} Client disconnected: ")
+            logger.info(f"[socket: Discinnect & Recording] : {sid} Client disconnected: ")
             current_app.config["clients"].pop(sid, None)
             current_app.config["data_cache"].remove(sid)
 
             for dataset_name, ele in current_app.config["dispatchers"].get(sid).items():
                 print(
-                    f"[Discinnect & Recording]dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
+                    f"[socket: Discinnect & Recording] dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
             current_app.config["dispatchers"].remove(sid)
 
             current_app.config["dispatchers"].remove(sid)
@@ -68,7 +68,7 @@ class NRDataManager(Namespace):
         total_batch_num = data["nbatch"]
         cache_num = data["cache_num"]
 
-        logger.info(f"on_dataset_init, receive: {data}")
+        logger.info(f"[socket: on_dataset_init] on_dataset_init, receive: {data}")
 
         # 1. Create data cache if not exist
         data_cache = current_app.config["data_cache"]
@@ -123,7 +123,7 @@ class NRDataManager(Namespace):
             # logger.debug(f"dispatchers is initialized for dataset {dataset_name} and client {socket_id}")
             dispatcher = dispatchers.get(socket_id, dataset_name)
             if not dispatcher:
-                logger.debug("dispatcher is not initialized")
+                logger.debug("[socket: on_batch_data]: dispatcher is not initialized")
                 emit("response", {"message": "dispatcher is not initialized"})
             else:
                 dispatcher.add(dataset)
@@ -140,10 +140,10 @@ class NRDataManager(Namespace):
 
         for dataset_name, ele in current_app.config["dispatchers"].get(sid).items():
             print(
-                f"[Discinnect & Recording]dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
+                f"[socket: Discinnect & Recording] dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
         current_app.config["dispatchers"].remove(sid)
 
-        logger.debug(f"Forcefully disconnecting client: {sid}")
+        logger.info(f"[socket: Discinnect & Recording] Forcefully disconnecting client: {sid}")
         disconnect(sid)
 
 
