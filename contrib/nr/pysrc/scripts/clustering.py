@@ -52,6 +52,7 @@ def save_clusters(data, labels, args, top_clusters):
     # Save each cluster's data into a separate CSV file
     for idx, (cluster_id, rows) in enumerate(sorted_clusters):
         output_path = os.path.join(args.output_folder, f"cluster_{cluster_id}.csv")
+        print(f"cluster_{cluster_id}.csv has {len(rows)} rows")
         with open(output_path, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
             for row in rows:
@@ -85,3 +86,7 @@ if __name__ == "__main__":
 
     # Save clustered data
     save_clusters(data, labels, args, args.top_clusters)
+
+"""
+python script_name.py --model_path "/path/to/your/model.pt" --input_file "/path/to/your/input.csv" --output_folder "/path/to/output/directory" --num_clusters 5 --top_clusters 4
+"""
