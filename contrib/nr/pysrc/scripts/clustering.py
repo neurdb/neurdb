@@ -76,11 +76,13 @@ if __name__ == "__main__":
     parser.add_argument('--num_clusters', type=int, default=5, help='Number of clusters for K-Means')
     parser.add_argument('--top_clusters', type=int, default=4, help='Number of top largest clusters to save')
 
+    parser.add_argument('--config_path', type=int, default=4, help='Number of top largest clusters to save')
+
     # Parse arguments
     args = parser.parse_args()
 
     # Parse configuration
-    config_args = parse_config_arguments("/Users/kevin/project_c++/neurdb_proj/neurdb-dev/contrib/nr/pysrc/config.ini")
+    config_args = parse_config_arguments(args.config_path)
     config_args.nfield = 22
     config_args.nfeat = 1544272
     random_state = 0
@@ -95,5 +97,5 @@ if __name__ == "__main__":
     save_clusters(data, labels, args, args.top_clusters)
 
 """
-python script_name.py --model_path "/path/to/your/model.pt" --input_file "/path/to/your/input.csv" --output_folder "/path/to/output/directory" --num_clusters 5 --top_clusters 4
+python script_name.py --model_path "/path/to/your/model.pt" --input_file "/path/to/your/input.csv" --output_folder "/path/to/output/directory" --num_clusters 5 --top_clusters 4 --config_path "./"
 """
