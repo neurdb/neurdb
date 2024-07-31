@@ -39,11 +39,14 @@ if __name__ == "__main__":
 
     # Assuming all columns are used for embedding except the first one
     embeddings = []
+    print(data)
     for row in data:
         x = {"id": torch.tensor([int(item) for item in row[1:]], dtype=torch.long),
-             "value": torch.ones((len(data), config_args.nfield), dtype=torch.float)
+             "value": torch.ones((1, config_args.nfield), dtype=torch.float)
              }
         emb = builder._model.embedding(x)
-        embeddings.append(emb)
-        print(embeddings)
+        emb = emb.view(emb.size(0), -1)
+        embeddings.append(emb.tolist())
+        print(emb.shape, emb)
+
         time.sleep(1000)
