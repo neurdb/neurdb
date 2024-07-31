@@ -76,7 +76,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_clusters', type=int, default=5, help='Number of clusters for K-Means')
     parser.add_argument('--top_clusters', type=int, default=4, help='Number of top largest clusters to save')
 
-    parser.add_argument('--config_path', type=int, default=4, help='Number of top largest clusters to save')
+    parser.add_argument('--config_path', type=str, default=4, help='Number of top largest clusters to save')
 
     # Parse arguments
     args = parser.parse_args()
