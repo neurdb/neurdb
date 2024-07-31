@@ -54,12 +54,13 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
     conn, cursor = connect_db()
     data = data.sample(frac=1, random_state=random_state)
     datasets = {
-        f"{table_name}_raw": data[: int(0.5 * len(data))],
-        f"{table_name}_test1": data[int(0.5 * len(data)): int(0.6 * len(data))],
-        f"{table_name}_test2": data[int(0.6 * len(data)): int(0.7 * len(data))],
-        f"{table_name}_test3": data[int(0.7 * len(data)): int(0.8 * len(data))],
-        f"{table_name}_test4": data[int(0.8 * len(data)): int(0.9 * len(data))],
-        f"{table_name}_test5": data[int(0.9 * len(data)):],
+        # f"{table_name}_raw": data[: int(0.5 * len(data))],
+        # f"{table_name}_test1": data[int(0.5 * len(data)): int(0.6 * len(data))],
+        # f"{table_name}_test2": data[int(0.6 * len(data)): int(0.7 * len(data))],
+        # f"{table_name}_test3": data[int(0.7 * len(data)): int(0.8 * len(data))],
+        # f"{table_name}_test4": data[int(0.8 * len(data)): int(0.9 * len(data))],
+        # f"{table_name}_test5": data[int(0.9 * len(data)):],
+        f"{table_name}_raw": data   # Use the whole dataset
     }
 
     for table_name, data in datasets.items():
