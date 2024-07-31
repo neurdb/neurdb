@@ -50,7 +50,6 @@ void nr_socketio_request_data_callback(SocketIOClient *client, cJSON *json) {
 }
 
 void nr_socketio_emit_db_init(SocketIOClient *client, const char *dataset_name, int nfeat, const int nfield, const int nbatch, const int cache_num) {
-    nfeat = 5500;
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "dataset_name", dataset_name);
     cJSON_AddNumberToObject(json, "nfeat", nfeat);

@@ -49,7 +49,8 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
     int batch_size = PG_GETARG_INT32(3); // batch size
     int batch_num = PG_GETARG_INT32(4); // batch number
-    ArrayType *features = PG_GETARG_ARRAYTYPE_P(5);
+    int nfeat = PG_GETARG_INT32(5); // max number of input ids
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // column names
 
@@ -89,7 +90,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     }
 
     // init dataset
-    nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features, n_batches, 80);
+    nr_socketio_emit_db_init(sio_client, table_name, nfeat, n_features, n_batches, 80);
 
     // create a new thread to send the training task
     pthread_t inference_thread;
@@ -220,6 +221,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
  * @param table_name text The name of the table to be used in the training
  * @param batch_size int The batch size of the input data
  * @param epochs int The number of epochs
+ * @param nfeat int The max number of input ids
  * @param features text[] Columns to be used in the training
  * @param target text The target column
  * @return void
@@ -233,10 +235,11 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1)); // table name
     int batch_size = PG_GETARG_INT32(2); // batch size
     int epoch = PG_GETARG_INT32(3); // epoch
-    ArrayType *features = PG_GETARG_ARRAYTYPE_P(4);
+    int nfeat = PG_GETARG_INT32(4); // max number of input ids
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(5);
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // feature names
-    char *target = text_to_cstring(PG_GETARG_TEXT_P(5)); // target column
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(6)); // target column
 
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
@@ -273,7 +276,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
 
     // init dataset
-    nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features, n_batches * epoch, 80);
+    nr_socketio_emit_db_init(sio_client, table_name, nfeat, n_features, n_batches * epoch, 80);
 
     // create a new thread to send the training task
     pthread_t train_thread;
@@ -440,10 +443,11 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2)); // table name
     int batch_size = PG_GETARG_INT32(3); // batch size
     int epoch = PG_GETARG_INT32(4); // epoch
-    ArrayType *features = PG_GETARG_ARRAYTYPE_P(5);
+    int nfeat = PG_GETARG_INT32(5); // max number of input ids
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // feature names
-    char *target = text_to_cstring(PG_GETARG_TEXT_P(6)); // target column
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(7)); // target column
 
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
@@ -480,7 +484,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
 
     // init dataset
-    nr_socketio_emit_db_init(sio_client, table_name, n_features + 1, n_features, n_batches * epoch, 80);
+    nr_socketio_emit_db_init(sio_client, table_name, nfeat, n_features, n_batches * epoch, 80);
 
     // create a new thread to send the finetune task
     pthread_t finetune_thread;

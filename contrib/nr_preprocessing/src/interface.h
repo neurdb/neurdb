@@ -47,6 +47,7 @@ typedef struct {
  * @param model_id integer The id of the model to be used in the inference
  * @param table_name text The name of the table to be used in the inference
  * @param batch_size integer The batch size of the input data, 0 for single inference
+ * @param batch_num int The number of batches
  * @param features text[] Columns to be used in the inference
  * @return Table
  */
