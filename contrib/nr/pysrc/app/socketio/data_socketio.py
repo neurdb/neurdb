@@ -68,6 +68,8 @@ class NRDataManager(Namespace):
         total_batch_num = data["nbatch"]
         cache_num = data["cache_num"]
 
+        logger.info(f"on_dataset_init, receive: {data}")
+
         # 1. Create data cache if not exist
         data_cache = current_app.config["data_cache"]
         if not data_cache.contains(socket_id, dataset_name):
@@ -103,7 +105,7 @@ class NRDataManager(Namespace):
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
 
-        logger.debug(f"[socket]: {socket_id} receive_db_data name {dataset_name} and data {dataset[:10]}...")
+        logger.debug(f"[socket: on_batch_data]: {socket_id} receive_db_data name {dataset_name} and data {dataset[:10]}...")
 
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
