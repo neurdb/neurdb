@@ -25,6 +25,8 @@ def model_train():
         config_args = current_app.config["config_args"]
         db_connector = current_app.config["db_connector"]
 
+        logger.info(f"[model_train]: receive params {params}")
+
         exe_flag, exe_info = before_execute(
             dataset_name=dataset_name,
             data_key=Bufferkey.TRAIN_KEY,
