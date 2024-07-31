@@ -31,10 +31,15 @@ class TableDataset(Dataset):
         # self.nfield = self.get_nfield()
 
         # avazue_test1
-        self.nfeat = 1544272
-        self.nfield = 22
-        
-        self._fetch_batch(0) # cache first batch
+        # self.nfeat = 1544272
+        # self.nfield = 22
+
+        # diabetes_raw
+        self.nfeat = 369
+        self.nfield = 43
+
+        # cache first batch
+        self._fetch_batch(0)
 
     def get_length(self):
         """
