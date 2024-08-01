@@ -21,10 +21,9 @@ if __name__ == "__main__":
 
     # first column is the label, the rest are feature1, feature2, ...
     conn, cursor = connect_db()
-    cursor.execute(
-        f"CRAETE TABLE {args.table_name} "
-        f"(label INT, {", ".join([f"feature{i} INT" for i in range(1, num_columns)])})"
-    )
+    feature_columns = ", ".join([f"feature{i} INT" for i in range(1, num_columns)])
+    create_table_query = f"CREATE TABLE {args.table_name} (label INT, {feature_columns})"
+    cursor.execute(create_table_query)
     conn.commit()
 
     with open(args.csv_file, "r") as f:
