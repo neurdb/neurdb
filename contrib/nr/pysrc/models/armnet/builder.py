@@ -55,6 +55,15 @@ class ARMNetModelBuilder(BuilderBase):
 
         logger.info("model created with args", **vars(self.args))
 
+        # if this is to load model from the dict,
+        if self.args.state_dict_path:
+            print("loading model from state dict")
+            self._init_model_arch()
+            self._model.load_state_dict(torch.load(self.args.state_dict_path))
+            logger.info("model loaded", state_dict_path=self.args.state_dict_path)
+        else:
+            print("loading model from database")
+
         # optimizer
         opt_metric = nn.BCEWithLogitsLoss(reduction="mean").to(DEVICE)
         optimizer = optim.Adam(self._model.parameters(), lr=self.args.lr)

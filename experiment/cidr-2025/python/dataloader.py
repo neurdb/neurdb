@@ -27,16 +27,16 @@ class TableDataset(Dataset):
         self.batch_cache_y = pd.DataFrame()
         self.batch_id = 0
         self.length = self.get_length()
-        # self.nfeat = self.get_nfeat()
-        # self.nfield = self.get_nfield()
+        self.nfeat = self.get_nfeat()
+        self.nfield = self.get_nfield()
 
         # avazue_test1
         # self.nfeat = 1544272
         # self.nfield = 22
 
         # diabetes_raw
-        self.nfeat = 369
-        self.nfield = 43
+        #self.nfeat = 369
+        #self.nfield = 43
 
         # cache first batch
         self._fetch_batch(0)
@@ -92,9 +92,8 @@ class TableDataset(Dataset):
                 self.connection,
             )
 
-        # self.batch_cache_x = batch_cache.drop(columns=["id", "label"])
-        # self.batch_cache_y = batch_cache["label"]
-        self.batch_cache_x = torch.tensor(batch_cache.drop(columns=["id", "label"]).values, dtype=torch.long)
+        #self.batch_cache_x = torch.tensor(batch_cache.drop(columns=["id", "label"]).values, dtype=torch.long)
+        self.batch_cache_x = torch.tensor(batch_cache.drop(columns=["label"]).values, dtype=torch.long)
         self.batch_cache_y = torch.tensor(batch_cache["label"].values, dtype=torch.float)
         self.batch_id = batch_id
 
@@ -111,7 +110,8 @@ class TableDataset(Dataset):
             f"SELECT column_name FROM information_schema.columns WHERE table_name = N'{self.table_name}'"
         )
         column_names: List[str] = [r[0] for r in self.cursor.fetchall()]
-        column_names = [r for r in column_names if r not in ["id", "label"]]
+        #column_names = [r for r in column_names if r not in ["id", "label"]]
+        column_names = [r for r in column_names if r not in ["label"]]
         logger.debug("get column names", column_names=column_names)
         
         return column_names
