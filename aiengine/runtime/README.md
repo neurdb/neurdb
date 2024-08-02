@@ -1,4 +1,4 @@
-# NeurDB Python Server
+# NeurDB Runtime
 
 ![design](./doc/design.png)
 
