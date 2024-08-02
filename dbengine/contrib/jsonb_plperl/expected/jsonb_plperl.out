@@ -8,7 +8,7 @@ $val = {a => 1, b => 'boo', c => undef};
 return $val;
 $$;
 SELECT testHVToJsonb();
-          testhvtojsonb          
+          testhvtojsonb
 ---------------------------------
  {"a": 1, "b": "boo", "c": null}
 (1 row)
@@ -21,7 +21,7 @@ $val = [{a => 1, b => 'boo', c => undef}, {d => 2}];
 return $val;
 $$;
 SELECT testAVToJsonb();
-                testavtojsonb                
+                testavtojsonb
 ---------------------------------------------
  [{"a": 1, "b": "boo", "c": null}, {"d": 2}]
 (1 row)
@@ -34,7 +34,7 @@ $val = 1;
 return $val;
 $$;
 SELECT testSVToJsonb();
- testsvtojsonb 
+ testsvtojsonb
 ---------------
  1
 (1 row)
@@ -48,7 +48,7 @@ return $val;
 $$;
 -- this might produce either 18446744073709551615 or 4294967295
 SELECT testUVToJsonb() IN ('18446744073709551615'::jsonb, '4294967295'::jsonb);
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -61,7 +61,7 @@ AS $$
 return ('1' =~ m(0\t2));
 $$;
 SELECT testRegexpResultToJsonb();
- testregexpresulttojsonb 
+ testregexpresulttojsonb
 -------------------------
  0
 (1 row)
@@ -75,13 +75,13 @@ my $x = shift;
 return {a => $x};
 $$;
 SELECT testTextToJsonbObject('abc');
- testtexttojsonbobject 
+ testtexttojsonbobject
 -----------------------
  {"a": "abc"}
 (1 row)
 
 SELECT testTextToJsonbObject(NULL);
- testtexttojsonbobject 
+ testtexttojsonbobject
 -----------------------
  {"a": null}
 (1 row)
@@ -96,13 +96,13 @@ die 'unexpected '.(ref($_[0]) || 'not a').' reference'
 return $_[0];
 $$;
 SELECT roundtrip('null') is null;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT roundtrip('1');
- roundtrip 
+ roundtrip
 -----------
  1
 (1 row)
@@ -111,139 +111,139 @@ SELECT roundtrip('1E+131071');
 ERROR:  cannot convert infinity to jsonb
 CONTEXT:  PL/Perl function "roundtrip"
 SELECT roundtrip('-1');
- roundtrip 
+ roundtrip
 -----------
  -1
 (1 row)
 
 SELECT roundtrip('1.2');
- roundtrip 
+ roundtrip
 -----------
  1.2
 (1 row)
 
 SELECT roundtrip('-1.2');
- roundtrip 
+ roundtrip
 -----------
  -1.2
 (1 row)
 
 SELECT roundtrip('"string"');
- roundtrip 
+ roundtrip
 -----------
  "string"
 (1 row)
 
 SELECT roundtrip('"NaN"');
- roundtrip 
+ roundtrip
 -----------
  "NaN"
 (1 row)
 
 SELECT roundtrip('true');
- roundtrip 
+ roundtrip
 -----------
  1
 (1 row)
 
 SELECT roundtrip('false');
- roundtrip 
+ roundtrip
 -----------
  0
 (1 row)
 
 SELECT roundtrip('[]', 'ARRAY');
- roundtrip 
+ roundtrip
 -----------
  []
 (1 row)
 
 SELECT roundtrip('[null, null]', 'ARRAY');
-  roundtrip   
+  roundtrip
 --------------
  [null, null]
 (1 row)
 
 SELECT roundtrip('[1, 2, 3]', 'ARRAY');
- roundtrip 
+ roundtrip
 -----------
  [1, 2, 3]
 (1 row)
 
 SELECT roundtrip('[-1, 2, -3]', 'ARRAY');
-  roundtrip  
+  roundtrip
 -------------
  [-1, 2, -3]
 (1 row)
 
 SELECT roundtrip('[1.2, 2.3, 3.4]', 'ARRAY');
-    roundtrip    
+    roundtrip
 -----------------
  [1.2, 2.3, 3.4]
 (1 row)
 
 SELECT roundtrip('[-1.2, 2.3, -3.4]', 'ARRAY');
-     roundtrip     
+     roundtrip
 -------------------
  [-1.2, 2.3, -3.4]
 (1 row)
 
 SELECT roundtrip('["string1", "string2"]', 'ARRAY');
-       roundtrip        
+       roundtrip
 ------------------------
  ["string1", "string2"]
 (1 row)
 
 SELECT roundtrip('[["string1", "string2"]]', 'ARRAY');
-        roundtrip         
+        roundtrip
 --------------------------
  [["string1", "string2"]]
 (1 row)
 
 SELECT roundtrip('{}', 'HASH');
- roundtrip 
+ roundtrip
 -----------
  {}
 (1 row)
 
 SELECT roundtrip('{"1": null}', 'HASH');
-  roundtrip  
+  roundtrip
 -------------
  {"1": null}
 (1 row)
 
 SELECT roundtrip('{"1": 1}', 'HASH');
- roundtrip 
+ roundtrip
 -----------
  {"1": 1}
 (1 row)
 
 SELECT roundtrip('{"1": -1}', 'HASH');
- roundtrip 
+ roundtrip
 -----------
  {"1": -1}
 (1 row)
 
 SELECT roundtrip('{"1": 1.1}', 'HASH');
- roundtrip  
+ roundtrip
 ------------
  {"1": 1.1}
 (1 row)
 
 SELECT roundtrip('{"1": -1.1}', 'HASH');
-  roundtrip  
+  roundtrip
 -------------
  {"1": -1.1}
 (1 row)
 
 SELECT roundtrip('{"1": "string1"}', 'HASH');
-    roundtrip     
+    roundtrip
 ------------------
  {"1": "string1"}
 (1 row)
 
 SELECT roundtrip('{"1": {"2": [3, 4, 5]}, "2": 3}', 'HASH');
-            roundtrip            
+            roundtrip
 ---------------------------------
  {"1": {"2": [3, 4, 5]}, "2": 3}
 (1 row)

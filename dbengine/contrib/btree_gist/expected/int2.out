@@ -3,37 +3,37 @@ CREATE TABLE int2tmp (a int2);
 \copy int2tmp from 'data/int2.data'
 SET enable_seqscan=on;
 SELECT count(*) FROM int2tmp WHERE a <  237;
- count 
+ count
 -------
    297
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a <= 237;
- count 
+ count
 -------
    298
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a  = 237;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a >= 237;
- count 
+ count
 -------
    249
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a >  237;
- count 
+ count
 -------
    248
 (1 row)
 
 SELECT a, a <-> '237' FROM int2tmp ORDER BY a <-> '237' LIMIT 3;
-  a  | ?column? 
+  a  | ?column?
 -----+----------
  237 |        0
  232 |        5
@@ -43,38 +43,38 @@ SELECT a, a <-> '237' FROM int2tmp ORDER BY a <-> '237' LIMIT 3;
 CREATE INDEX int2idx ON int2tmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM int2tmp WHERE a <  237::int2;
- count 
+ count
 -------
    297
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a <= 237::int2;
- count 
+ count
 -------
    298
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a  = 237::int2;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a >= 237::int2;
- count 
+ count
 -------
    249
 (1 row)
 
 SELECT count(*) FROM int2tmp WHERE a >  237::int2;
- count 
+ count
 -------
    248
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT a, a <-> '237' FROM int2tmp ORDER BY a <-> '237' LIMIT 3;
-                   QUERY PLAN                   
+                   QUERY PLAN
 ------------------------------------------------
  Limit
    ->  Index Only Scan using int2idx on int2tmp
@@ -82,10 +82,9 @@ SELECT a, a <-> '237' FROM int2tmp ORDER BY a <-> '237' LIMIT 3;
 (3 rows)
 
 SELECT a, a <-> '237' FROM int2tmp ORDER BY a <-> '237' LIMIT 3;
-  a  | ?column? 
+  a  | ?column?
 -----+----------
  237 |        0
  232 |        5
  228 |        9
 (3 rows)
-

@@ -508,4 +508,3 @@ msgstr "\n"
 #, c-format
 msgid "%s home page: <%s>\n"
 msgstr "Домашня сторінка %s: <%s>\n"
-

@@ -69,13 +69,13 @@ Chaning the postgresql code, then restart the pg server
 ```bash
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 
-make 
+make
 make install
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
 $NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
 ```
 
-If there are any error, check the log at 
+If there are any error, check the log at
 
 ```bash
 # Update the `psql/postgresql.conf` by adding those two lines
@@ -104,7 +104,7 @@ cd /code/neurdb-dev/contrib/nr
 cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
 ```
 
-Then 
+Then
 
 ```bash
 $NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
@@ -142,10 +142,10 @@ Debug if there is an error
 
 ```bash
 # check if the .sql file generated in the folder psql/share/extension/
-# if it's empty, then run 
+# if it's empty, then run
 cargo pgrx schema --pg-config ./psql/bin/pg_config --features python --release
 
-# if the PGRX_INCLUDEDIR_SERVER and PGXS cannot found, then run 
+# if the PGRX_INCLUDEDIR_SERVER and PGXS cannot found, then run
 PGRX_INCLUDEDIR_SERVER=$NEURDBPATH/psql/include/postgresql/server PGXS=$NEURDBPATH/psql/lib/postgresql/pgxs/src/makefiles/pgxs.mk cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
 
 ```
@@ -164,4 +164,3 @@ export LC_NUMERIC="en_US.UTF-8"
 export LC_TIME="en_US.UTF-8"
 export DYLD_LIBRARY_PATH=$NEURDBPATH/psql/lib:$DYLD_LIBRARY_PATH
 ```
-

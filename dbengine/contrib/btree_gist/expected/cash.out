@@ -3,37 +3,37 @@ CREATE TABLE moneytmp (a money);
 \copy moneytmp from 'data/cash.data'
 SET enable_seqscan=on;
 SELECT count(*) FROM moneytmp WHERE a <  '22649.64';
- count 
+ count
 -------
    289
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a <= '22649.64';
- count 
+ count
 -------
    290
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a  = '22649.64';
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a >= '22649.64';
- count 
+ count
 -------
    254
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a >  '22649.64';
- count 
+ count
 -------
    253
 (1 row)
 
 SELECT a, a <-> '21472.79' FROM moneytmp ORDER BY a <-> '21472.79' LIMIT 3;
-     a      | ?column? 
+     a      | ?column?
 ------------+----------
  $21,472.79 |    $0.00
  $21,469.25 |    $3.54
@@ -43,38 +43,38 @@ SELECT a, a <-> '21472.79' FROM moneytmp ORDER BY a <-> '21472.79' LIMIT 3;
 CREATE INDEX moneyidx ON moneytmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM moneytmp WHERE a <  '22649.64'::money;
- count 
+ count
 -------
    289
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a <= '22649.64'::money;
- count 
+ count
 -------
    290
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a  = '22649.64'::money;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a >= '22649.64'::money;
- count 
+ count
 -------
    254
 (1 row)
 
 SELECT count(*) FROM moneytmp WHERE a >  '22649.64'::money;
- count 
+ count
 -------
    253
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT a, a <-> '21472.79' FROM moneytmp ORDER BY a <-> '21472.79' LIMIT 3;
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Limit
    ->  Index Only Scan using moneyidx on moneytmp
@@ -82,10 +82,9 @@ SELECT a, a <-> '21472.79' FROM moneytmp ORDER BY a <-> '21472.79' LIMIT 3;
 (3 rows)
 
 SELECT a, a <-> '21472.79' FROM moneytmp ORDER BY a <-> '21472.79' LIMIT 3;
-     a      | ?column? 
+     a      | ?column?
 ------------+----------
  $21,472.79 |    $0.00
  $21,469.25 |    $3.54
  $21,915.01 |  $442.22
 (3 rows)
-

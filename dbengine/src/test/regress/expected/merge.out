@@ -16,11 +16,11 @@ INSERT INTO target VALUES (1, 10);
 INSERT INTO target VALUES (2, 20);
 INSERT INTO target VALUES (3, 30);
 SELECT t.ctid is not null as matched, t.*, s.* FROM source s FULL OUTER JOIN target t ON s.sid = t.tid ORDER BY t.tid, s.sid;
- matched | tid | balance | sid | delta 
+ matched | tid | balance | sid | delta
 ---------+-----+---------+-----+-------
- t       |   1 |      10 |     |      
- t       |   2 |      20 |     |      
- t       |   3 |      30 |     |      
+ t       |   1 |      10 |     |
+ t       |   2 |      20 |     |
+ t       |   3 |      30 |     |
 (3 rows)
 
 ALTER TABLE target OWNER TO regress_merge_privs;
@@ -39,7 +39,7 @@ USING source AS s
 ON t.tid = s.sid
 WHEN MATCHED THEN
 	DELETE;
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Merge on target t
    ->  Merge Join
@@ -236,13 +236,13 @@ ROLLBACK;
 -- insert some non-matching source rows to work from
 INSERT INTO source VALUES (4, 40);
 SELECT * FROM source ORDER BY sid;
- sid | delta 
+ sid | delta
 -----+-------
    4 |    40
 (1 row)
 
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -271,12 +271,12 @@ ON t.tid = s.sid
 WHEN NOT MATCHED THEN
 	INSERT DEFAULT VALUES;
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
    3 |      30
-     |        
+     |
 (4 rows)
 
 ROLLBACK;
@@ -290,7 +290,7 @@ USING source AS s
 ON t.tid = s.sid
 WHEN MATCHED THEN
 	UPDATE SET balance = 0;
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Merge on target t
    ->  Hash Join
@@ -306,7 +306,7 @@ USING source AS s
 ON t.tid = s.sid
 WHEN MATCHED THEN
 	DELETE;
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Merge on target t
    ->  Hash Join
@@ -322,7 +322,7 @@ USING source AS s
 ON t.tid = s.sid
 WHEN NOT MATCHED THEN
 	INSERT VALUES (4, NULL);
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Merge on target t
    ->  Hash Left Join
@@ -338,7 +338,7 @@ ANALYZE target;
 INSERT INTO source VALUES (2, 5);
 INSERT INTO source VALUES (3, 20);
 SELECT * FROM source ORDER BY sid;
- sid | delta 
+ sid | delta
 -----+-------
    2 |     5
    3 |    20
@@ -346,7 +346,7 @@ SELECT * FROM source ORDER BY sid;
 (3 rows)
 
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -361,7 +361,7 @@ ON t.tid = s.sid
 WHEN MATCHED THEN
 	UPDATE SET balance = 0;
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |       0
@@ -377,7 +377,7 @@ ON t.tid = s.sid
 WHEN MATCHED THEN
 	DELETE;
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
 (1 row)
@@ -390,7 +390,7 @@ ON t.tid = s.sid
 WHEN MATCHED THEN
 	DO NOTHING;
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -405,19 +405,19 @@ ON t.tid = s.sid
 WHEN NOT MATCHED THEN
 	INSERT VALUES (4, NULL);
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
    3 |      30
-   4 |        
+   4 |
 (4 rows)
 
 ROLLBACK;
 -- duplicate source row causes multiple target row update ERROR
 INSERT INTO source VALUES (2, 5);
 SELECT * FROM source ORDER BY sid;
- sid | delta 
+ sid | delta
 -----+-------
    2 |     5
    2 |     5
@@ -426,7 +426,7 @@ SELECT * FROM source ORDER BY sid;
 (4 rows)
 
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -455,7 +455,7 @@ ROLLBACK;
 DELETE FROM source WHERE sid = 2;
 INSERT INTO source VALUES (2, 5);
 SELECT * FROM source ORDER BY sid;
- sid | delta 
+ sid | delta
 -----+-------
    2 |     5
    3 |    20
@@ -463,7 +463,7 @@ SELECT * FROM source ORDER BY sid;
 (3 rows)
 
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -487,7 +487,7 @@ ROLLBACK;
 DELETE FROM source WHERE sid = 4;
 INSERT INTO source VALUES (4, 40);
 SELECT * FROM source ORDER BY sid;
- sid | delta 
+ sid | delta
 -----+-------
    2 |     5
    3 |    20
@@ -495,7 +495,7 @@ SELECT * FROM source ORDER BY sid;
 (3 rows)
 
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -515,7 +515,7 @@ WHEN NOT MATCHED THEN
 WHEN MATCHED THEN
 	UPDATE SET balance = 0;
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |       0
@@ -534,7 +534,7 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
 	INSERT VALUES (4, 4);
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |       0
@@ -552,7 +552,7 @@ ON t.tid = s.sid
 WHEN MATCHED THEN
 	UPDATE SET balance = t.balance + s.delta;
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      25
@@ -568,7 +568,7 @@ ON t.tid = s.sid
 WHEN NOT MATCHED THEN
 	INSERT VALUES (s.sid, s.delta);
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -588,7 +588,7 @@ ON t.tid = s.sid
 WHEN NOT MATCHED THEN
   INSERT VALUES (s.sid, s.delta);
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -609,7 +609,7 @@ ON t.tid = s.sid
 WHEN NOT MATCHED THEN
 	INSERT (tid, balance) VALUES (s.sid, s.delta);
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -652,7 +652,7 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
 	INSERT VALUES (s.sid, s.delta);
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      25
@@ -685,7 +685,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN NOT MATCHED THEN
 	INSERT (tid) VALUES (s.sid);
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      -1
 (1 row)
@@ -697,7 +697,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN NOT MATCHED AND FALSE THEN
 	INSERT (tid) VALUES (s.sid);
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
 (0 rows)
 
@@ -707,7 +707,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN NOT MATCHED AND s.balance <> 100 THEN
 	INSERT (tid) VALUES (s.sid);
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
 (0 rows)
 
@@ -718,7 +718,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN NOT MATCHED AND s.balance = 100 THEN
 	INSERT (tid) VALUES (s.sid);
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      -1
 (1 row)
@@ -742,14 +742,14 @@ USING wq_source s ON t.tid = s.sid
 WHEN NOT MATCHED AND s.balance = 100 THEN
 	INSERT (tid) VALUES (s.sid);
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      -1
 (1 row)
 
 -- conditions in MATCHED clause can refer to both source and target
 SELECT * FROM wq_source;
- balance | sid 
+ balance | sid
 ---------+-----
      100 |   1
 (1 row)
@@ -759,7 +759,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN MATCHED AND s.balance = 100 THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      99
 (1 row)
@@ -769,7 +769,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN MATCHED AND t.balance = 100 THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      99
 (1 row)
@@ -780,7 +780,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN MATCHED AND t.balance = 99 AND s.balance > 100 THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      99
 (1 row)
@@ -790,7 +790,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN MATCHED AND t.balance = 99 AND s.balance = 100 THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |     199
 (1 row)
@@ -801,7 +801,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN MATCHED AND t.balance = 99 OR s.balance > 100 THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |     199
 (1 row)
@@ -811,7 +811,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN MATCHED AND t.balance = 199 OR s.balance > 100 THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |     299
 (1 row)
@@ -823,7 +823,7 @@ USING wq_source s ON (t.tid = s.sid)
 WHEN matched and t = s or t.tid = s.sid THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |     399
 (1 row)
@@ -847,7 +847,7 @@ USING wq_source s ON t.tid = s.sid
 WHEN MATCHED AND t.tableoid >= 0 THEN
 	UPDATE SET balance = t.balance + s.balance;
 SELECT * FROM wq_target;
- tid | balance 
+ tid | balance
 -----+---------
    1 |     499
 (1 row)
@@ -924,7 +924,7 @@ NOTICE:  AFTER DELETE STATEMENT trigger
 NOTICE:  AFTER UPDATE STATEMENT trigger
 NOTICE:  AFTER INSERT STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      15
@@ -941,12 +941,12 @@ BEGIN
 END;
 $$;
 SELECT * FROM target full outer join source on (sid = tid);
- tid | balance | sid | delta 
+ tid | balance | sid | delta
 -----+---------+-----+-------
    3 |      30 |   3 |    20
    2 |      20 |   2 |     5
      |         |   4 |    40
-   1 |      10 |     |      
+   1 |      10 |     |
 (4 rows)
 
 create trigger merge_skip BEFORE INSERT OR UPDATE or DELETE
@@ -982,12 +982,12 @@ NOTICE:  AFTER INSERT STATEMENT trigger
 NOTICE:  Not found
 NOTICE:  ROW_COUNT = 0
 SELECT * FROM target FULL OUTER JOIN source ON (sid = tid);
- tid | balance | sid | delta 
+ tid | balance | sid | delta
 -----+---------+-----+-------
    3 |      30 |   3 |    20
    2 |      20 |   2 |     5
      |         |   4 |    40
-   1 |      10 |     |      
+   1 |      10 |     |
 (4 rows)
 
 DROP TRIGGER merge_skip ON target;
@@ -1023,7 +1023,7 @@ NOTICE:  BEFORE INSERT ROW trigger row: (9,57)
 NOTICE:  AFTER INSERT ROW trigger row: (9,57)
 NOTICE:  AFTER INSERT STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -1044,7 +1044,7 @@ NOTICE:  BEFORE INSERT ROW trigger row: (4,40)
 NOTICE:  AFTER INSERT ROW trigger row: (4,40)
 NOTICE:  AFTER INSERT STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -1064,7 +1064,7 @@ NOTICE:  BEFORE INSERT ROW trigger row: (4,40)
 NOTICE:  AFTER INSERT ROW trigger row: (4,40)
 NOTICE:  AFTER INSERT STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -1093,7 +1093,7 @@ NOTICE:  AFTER UPDATE ROW trigger row: (3,30) -> (3,60)
 NOTICE:  AFTER UPDATE STATEMENT trigger
 NOTICE:  AFTER INSERT STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      20
    2 |      40
@@ -1110,7 +1110,7 @@ WHEN NOT MATCHED THEN
 NOTICE:  BEFORE INSERT STATEMENT trigger
 NOTICE:  AFTER INSERT STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -1134,7 +1134,7 @@ NOTICE:  BEFORE INSERT ROW trigger row: (4,40)
 NOTICE:  AFTER INSERT ROW trigger row: (4,40)
 NOTICE:  AFTER INSERT STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -1168,13 +1168,13 @@ NOTICE:  BEFORE UPDATE STATEMENT trigger
 NOTICE:  BEFORE UPDATE ROW trigger row: (3,30) -> (3,26)
 NOTICE:  AFTER UPDATE ROW trigger row: (3,30) -> (3,26)
 NOTICE:  AFTER UPDATE STATEMENT trigger
- merge_func 
+ merge_func
 ------------
           1
 (1 row)
 
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      10
    2 |      20
@@ -1191,7 +1191,7 @@ NOTICE:  BEFORE UPDATE ROW trigger row: (1,10) -> (1,1)
 NOTICE:  AFTER UPDATE ROW trigger row: (1,10) -> (1,1)
 NOTICE:  AFTER UPDATE STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |       1
    2 |      20
@@ -1213,7 +1213,7 @@ NOTICE:  BEFORE UPDATE ROW trigger row: (1,10) -> (1,1)
 NOTICE:  AFTER UPDATE ROW trigger row: (1,10) -> (1,1)
 NOTICE:  AFTER UPDATE STATEMENT trigger
 SELECT * FROM target ORDER BY tid;
- tid | balance 
+ tid | balance
 -----+---------
    1 |       1
    2 |      20
@@ -1235,7 +1235,7 @@ ON tid = sid
 WHEN MATCHED AND t.balance > delta THEN
 	UPDATE SET balance = t.balance + delta;
 SELECT * FROM sq_target;
- tid | balance 
+ tid | balance
 -----+---------
    3 |     300
    1 |     110
@@ -1252,7 +1252,7 @@ ON tid = sid
 WHEN MATCHED THEN
     UPDATE SET balance = v.balance + delta;
 SELECT * FROM sq_target;
- tid | balance 
+ tid | balance
 -----+---------
    2 |     200
    3 |     300
@@ -1287,7 +1287,7 @@ WHEN NOT MATCHED THEN
 WHEN MATCHED AND tid < 2 THEN
 	DELETE;
 SELECT * FROM sq_target;
- tid | balance 
+ tid | balance
 -----+---------
    2 |     200
    3 |     300
@@ -1354,7 +1354,7 @@ SELECT explain_merge('
 MERGE INTO ex_mtarget t USING ex_msource s ON t.a = s.a
 WHEN MATCHED THEN
 	UPDATE SET b = t.b + 1');
-                            explain_merge                             
+                            explain_merge
 ----------------------------------------------------------------------
  Merge on ex_mtarget t (actual rows=0 loops=1)
    Tuples: updated=50
@@ -1375,7 +1375,7 @@ SELECT explain_merge('
 MERGE INTO ex_mtarget t USING ex_msource s ON t.a = s.a
 WHEN MATCHED AND t.a < 10 THEN
 	UPDATE SET b = t.b + 1');
-                            explain_merge                             
+                            explain_merge
 ----------------------------------------------------------------------
  Merge on ex_mtarget t (actual rows=0 loops=1)
    Tuples: updated=5 skipped=45
@@ -1398,7 +1398,7 @@ WHEN MATCHED AND t.a < 10 THEN
 	UPDATE SET b = t.b + 1
 WHEN MATCHED AND t.a >= 10 AND t.a <= 20 THEN
 	DELETE');
-                            explain_merge                             
+                            explain_merge
 ----------------------------------------------------------------------
  Merge on ex_mtarget t (actual rows=0 loops=1)
    Tuples: updated=5 deleted=5 skipped=40
@@ -1419,7 +1419,7 @@ SELECT explain_merge('
 MERGE INTO ex_mtarget t USING ex_msource s ON t.a = s.a
 WHEN NOT MATCHED AND s.a < 10 THEN
 	INSERT VALUES (a, b)');
-                            explain_merge                             
+                            explain_merge
 ----------------------------------------------------------------------
  Merge on ex_mtarget t (actual rows=0 loops=1)
    Tuples: inserted=4 skipped=96
@@ -1444,7 +1444,7 @@ WHEN MATCHED AND t.a >= 30 AND t.a <= 40 THEN
 	DELETE
 WHEN NOT MATCHED AND s.a < 20 THEN
 	INSERT VALUES (a, b)');
-                            explain_merge                             
+                            explain_merge
 ----------------------------------------------------------------------
  Merge on ex_mtarget t (actual rows=0 loops=1)
    Tuples: inserted=10 updated=9 deleted=5 skipped=76
@@ -1465,7 +1465,7 @@ SELECT explain_merge('
 MERGE INTO ex_mtarget t USING ex_msource s ON t.a = s.a AND t.a < -1000
 WHEN MATCHED AND t.a < 10 THEN
 	DO NOTHING');
-                           explain_merge                            
+                           explain_merge
 --------------------------------------------------------------------
  Merge on ex_mtarget t (actual rows=0 loops=1)
    ->  Merge Join (actual rows=0 loops=1)
@@ -1496,7 +1496,7 @@ USING (SELECT *, (SELECT count(*) FROM ref r
 ON t.a = s.a AND t.b < s.cnt
 WHEN MATCHED AND t.c > s.cnt THEN
   UPDATE SET (b, c) = (SELECT s.b, s.cnt);
-                                     QUERY PLAN                                      
+                                     QUERY PLAN
 -------------------------------------------------------------------------------------
  Merge on public.tgt t
    ->  Hash Join
@@ -1541,7 +1541,7 @@ ON tid = sid
 WHEN MATCHED THEN
     UPDATE SET balance = (SELECT count(*) FROM sq_target);
 SELECT * FROM sq_target WHERE tid = 1;
- tid | balance 
+ tid | balance
 -----+---------
    1 |       3
 (1 row)
@@ -1554,7 +1554,7 @@ ON tid = sid
 WHEN MATCHED AND (SELECT count(*) > 0 FROM sq_target) THEN
     UPDATE SET balance = 42;
 SELECT * FROM sq_target WHERE tid = 1;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      42
 (1 row)
@@ -1567,7 +1567,7 @@ ON tid = sid AND (SELECT count(*) > 0 FROM sq_target)
 WHEN MATCHED THEN
     UPDATE SET balance = 42;
 SELECT * FROM sq_target WHERE tid = 1;
- tid | balance 
+ tid | balance
 -----+---------
    1 |      42
 (1 row)
@@ -1600,7 +1600,7 @@ MERGE INTO pa_target t
   WHEN NOT MATCHED THEN
     INSERT VALUES (sid, delta, 'inserted by merge');
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    1 |     110 | initial updated by merge
    2 |      20 | inserted by merge
@@ -1629,7 +1629,7 @@ MERGE INTO pa_target t
   WHEN NOT MATCHED THEN
     INSERT VALUES (sid, delta, 'inserted by merge');
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    1 |     110 | initial updated by merge
    2 |      20 | inserted by merge
@@ -1674,13 +1674,13 @@ RETURN result;
 END;
 $$;
 SELECT merge_func();
- merge_func 
+ merge_func
 ------------
          14
 (1 row)
 
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    2 |     110 | initial updated by merge
    2 |      20 | inserted by merge
@@ -1738,7 +1738,7 @@ END;
 $$;
 NOTICE:  ROW_COUNT = 14
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    1 |     110 | initial updated by merge
    2 |      20 | inserted by merge
@@ -1768,7 +1768,7 @@ MERGE INTO pa_target t
   WHEN NOT MATCHED THEN
     INSERT VALUES (sid, delta, 'inserted by merge');
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    1 |     110 | initial updated by merge
    2 |      20 | inserted by merge
@@ -1810,7 +1810,7 @@ END;
 $$;
 NOTICE:  ROW_COUNT = 14
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    2 |     110 | initial updated by merge
    2 |      20 | inserted by merge
@@ -1852,7 +1852,7 @@ END;
 $$;
 NOTICE:  ROW_COUNT = 10
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    1 |     100 | initial
    2 |      20 | inserted by merge
@@ -1894,7 +1894,7 @@ END;
 $$;
 NOTICE:  ROW_COUNT = 3
 SELECT * FROM pa_target ORDER BY tid;
- tid | balance |           val            
+ tid | balance |           val
 -----+---------+--------------------------
    6 |     550 | initial updated by merge
   12 |    1210 | initial updated by merge
@@ -1950,7 +1950,7 @@ MERGE INTO pa_target t
   WHEN NOT MATCHED THEN
     INSERT VALUES (slogts::timestamp, sid, delta, 'inserted by merge');
 SELECT * FROM pa_target ORDER BY tid;
-          logts           | tid | balance |           val            
+          logts           | tid | balance |           val
 --------------------------+-----+---------+--------------------------
  Tue Jan 31 00:00:00 2017 |   1 |     110 | initial updated by merge
  Tue Feb 28 00:00:00 2017 |   2 |     220 | initial updated by merge
@@ -1974,7 +1974,7 @@ INSERT INTO pa_source VALUES (1), (2);
 EXPLAIN (VERBOSE, COSTS OFF)
 MERGE INTO pa_target t USING pa_source s ON t.tid = s.sid
   WHEN NOT MATCHED THEN INSERT VALUES (s.sid);
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Merge on public.pa_target t
    Merge on public.pa_targetp t_1
@@ -1993,7 +1993,7 @@ MERGE INTO pa_target t USING pa_source s ON t.tid = s.sid
 MERGE INTO pa_target t USING pa_source s ON t.tid = s.sid
   WHEN NOT MATCHED THEN INSERT VALUES (s.sid);
 TABLE pa_target;
- tid 
+ tid
 -----
    1
    2
@@ -2005,7 +2005,7 @@ DROP TABLE pa_targetp;
 EXPLAIN (VERBOSE, COSTS OFF)
 MERGE INTO pa_target t USING pa_source s ON t.tid = s.sid
   WHEN NOT MATCHED THEN INSERT VALUES (s.sid);
-                 QUERY PLAN                 
+                 QUERY PLAN
 --------------------------------------------
  Merge on public.pa_target t
    ->  Hash Left Join
@@ -2073,7 +2073,7 @@ ON t.tid = sid1
 WHEN MATCHED THEN
 	UPDATE SET val = val || ' ' || delta::text;
 SELECT * FROM cj_target;
- tid | balance |               val                
+ tid | balance |               val
 -----+---------+----------------------------------
    3 |     400 | initial source2 updated by merge
    1 |     220 | initial source2 200
@@ -2089,7 +2089,7 @@ ON t.tid = fj.scat
 WHEN NOT MATCHED THEN
 	INSERT (tid, balance, val) VALUES (fj.scat, fj.delta, fj.phv);
 SELECT * FROM cj_target;
- tid | balance |               val                
+ tid | balance |               val
 -----+---------+----------------------------------
    3 |     400 | initial source2 updated by merge
    1 |     220 | initial source2 200
@@ -2099,7 +2099,7 @@ SELECT * FROM cj_target;
   10 |     400 | join input
   20 |     200 | join input
   20 |     300 | join input
-     |         | 
+     |         |
 (9 rows)
 
 ALTER TABLE cj_source1 RENAME COLUMN sid1 TO sid;
@@ -2130,7 +2130,7 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
 	INSERT VALUES (id, -1, 'inserted ' || id.*::text);
 SELECT count(*) FROM fs_target;
- count 
+ count
 -------
    100
 (1 row)
@@ -2191,7 +2191,7 @@ INSERT INTO measurement VALUES (1, '2006-03-27', 15, 40);
 INSERT INTO measurement VALUES (1, '2007-01-15', 10, 10);
 INSERT INTO measurement VALUES (1, '2007-01-17', 10, 10);
 SELECT tableoid::regclass, * FROM measurement ORDER BY city_id, logdate;
-       tableoid       | city_id |  logdate   | peaktemp | unitsales 
+       tableoid       | city_id |  logdate   | peaktemp | unitsales
 ----------------------+---------+------------+----------+-----------
  measurement          |       0 | 07-21-2005 |        5 |        15
  measurement_y2006m02 |       1 | 02-10-2006 |       35 |        10
@@ -2223,7 +2223,7 @@ WHEN NOT MATCHED THEN INSERT
      (city_id, logdate, peaktemp, unitsales)
    VALUES (city_id, logdate, peaktemp, unitsales);
 SELECT tableoid::regclass, * FROM measurement ORDER BY city_id, logdate, peaktemp;
-       tableoid       | city_id |  logdate   | peaktemp | unitsales 
+       tableoid       | city_id |  logdate   | peaktemp | unitsales
 ----------------------+---------+------------+----------+-----------
  measurement          |       0 | 07-21-2005 |       25 |        35
  measurement_y2006m02 |       1 | 02-10-2006 |       35 |        10
@@ -2232,12 +2232,12 @@ SELECT tableoid::regclass, * FROM measurement ORDER BY city_id, logdate, peaktem
  measurement_y2006m03 |       1 | 03-01-2006 |       20 |        10
  measurement_y2006m03 |       1 | 03-17-2006 |       25 |        10
  measurement_y2006m03 |       1 | 03-27-2006 |       15 |        40
- measurement_y2006m03 |       1 | 03-27-2006 |          |          
- measurement_y2007m01 |       1 | 01-15-2007 |        5 |          
+ measurement_y2006m03 |       1 | 03-27-2006 |          |
+ measurement_y2007m01 |       1 | 01-15-2007 |        5 |
  measurement_y2007m01 |       1 | 01-15-2007 |       10 |        10
  measurement_y2007m01 |       1 | 01-16-2007 |       10 |        10
  measurement_y2007m01 |       1 | 01-17-2007 |       10 |        10
- measurement_y2007m01 |       1 | 01-17-2007 |          |          
+ measurement_y2007m01 |       1 | 01-17-2007 |          |
  measurement_y2006m02 |       2 | 02-10-2006 |       20 |        20
 (14 rows)
 
@@ -2253,7 +2253,7 @@ WHEN NOT MATCHED THEN INSERT
      (city_id, logdate, peaktemp, unitsales)
    VALUES (city_id, logdate, peaktemp, unitsales);
 SELECT tableoid::regclass, * FROM measurement ORDER BY city_id, logdate;
-       tableoid       | city_id |  logdate   | peaktemp | unitsales 
+       tableoid       | city_id |  logdate   | peaktemp | unitsales
 ----------------------+---------+------------+----------+-----------
  measurement          |       0 | 07-21-2005 |       25 |        35
  measurement_y2006m02 |       1 | 02-10-2006 |       35 |        10
@@ -2271,14 +2271,14 @@ MERGE INTO new_measurement nm
       (nm.city_id = m.city_id and nm.logdate=m.logdate)
 WHEN MATCHED THEN DELETE;
 SELECT * FROM new_measurement ORDER BY city_id, logdate;
- city_id |  logdate   | peaktemp | unitsales 
+ city_id |  logdate   | peaktemp | unitsales
 ---------+------------+----------+-----------
        1 | 02-16-2006 |       50 |        10
        1 | 03-01-2006 |       20 |        10
-       1 | 03-27-2006 |          |          
-       1 | 01-15-2007 |        5 |          
+       1 | 03-27-2006 |          |
+       1 | 01-15-2007 |        5 |
        1 | 01-16-2007 |       10 |        10
-       1 | 01-17-2007 |          |          
+       1 | 01-17-2007 |          |
        2 | 02-10-2006 |       20 |        20
 (7 rows)
 
@@ -2288,10 +2288,10 @@ MERGE INTO new_measurement nm
       (nm.city_id = m.city_id and nm.logdate=m.logdate)
 WHEN MATCHED THEN DELETE;
 SELECT * FROM new_measurement ORDER BY city_id, logdate;
- city_id |  logdate   | peaktemp | unitsales 
+ city_id |  logdate   | peaktemp | unitsales
 ---------+------------+----------+-----------
-       1 | 03-27-2006 |          |          
-       1 | 01-17-2007 |          |          
+       1 | 03-27-2006 |          |
+       1 | 01-17-2007 |          |
 (2 rows)
 
 DROP TABLE measurement, new_measurement CASCADE;

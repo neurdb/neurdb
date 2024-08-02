@@ -3,7 +3,7 @@ CREATE TABLE test_tablesample (id int, name text) WITH (fillfactor=10);
 INSERT INTO test_tablesample
   SELECT i, repeat(i::text, 200) FROM generate_series(0, 9) s(i);
 SELECT t.id FROM test_tablesample AS t TABLESAMPLE SYSTEM (50) REPEATABLE (0);
- id 
+ id
 ----
   3
   4
@@ -14,12 +14,12 @@ SELECT t.id FROM test_tablesample AS t TABLESAMPLE SYSTEM (50) REPEATABLE (0);
 (6 rows)
 
 SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (100.0/11) REPEATABLE (0);
- id 
+ id
 ----
 (0 rows)
 
 SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (50) REPEATABLE (0);
- id 
+ id
 ----
   3
   4
@@ -30,7 +30,7 @@ SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (50) REPEATABLE (0);
 (6 rows)
 
 SELECT id FROM test_tablesample TABLESAMPLE BERNOULLI (50) REPEATABLE (0);
- id 
+ id
 ----
   4
   5
@@ -40,26 +40,26 @@ SELECT id FROM test_tablesample TABLESAMPLE BERNOULLI (50) REPEATABLE (0);
 (5 rows)
 
 SELECT id FROM test_tablesample TABLESAMPLE BERNOULLI (5.5) REPEATABLE (0);
- id 
+ id
 ----
   7
 (1 row)
 
 -- 100% should give repeatable count results (ie, all rows) in any case
 SELECT count(*) FROM test_tablesample TABLESAMPLE SYSTEM (100);
- count 
+ count
 -------
     10
 (1 row)
 
 SELECT count(*) FROM test_tablesample TABLESAMPLE SYSTEM (100) REPEATABLE (1+2);
- count 
+ count
 -------
     10
 (1 row)
 
 SELECT count(*) FROM test_tablesample TABLESAMPLE SYSTEM (100) REPEATABLE (0.4);
- count 
+ count
 -------
     10
 (1 row)
@@ -70,18 +70,18 @@ CREATE VIEW test_tablesample_v2 AS
   SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (99);
 \d+ test_tablesample_v1
                      View "public.test_tablesample_v1"
- Column |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Description
 --------+---------+-----------+----------+---------+---------+-------------
- id     | integer |           |          |         | plain   | 
+ id     | integer |           |          |         | plain   |
 View definition:
  SELECT id
    FROM test_tablesample TABLESAMPLE system ((10 * 2)) REPEATABLE (2);
 
 \d+ test_tablesample_v2
                      View "public.test_tablesample_v2"
- Column |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Description
 --------+---------+-----------+----------+---------+---------+-------------
- id     | integer |           |          |         | plain   | 
+ id     | integer |           |          |         | plain   |
 View definition:
  SELECT id
    FROM test_tablesample TABLESAMPLE system (99);
@@ -91,25 +91,25 @@ BEGIN;
 DECLARE tablesample_cur SCROLL CURSOR FOR
   SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (50) REPEATABLE (0);
 FETCH FIRST FROM tablesample_cur;
- id 
+ id
 ----
   3
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   4
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   5
 (1 row)
 
 SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (50) REPEATABLE (0);
- id 
+ id
 ----
   3
   4
@@ -120,55 +120,55 @@ SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (50) REPEATABLE (0);
 (6 rows)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   6
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   7
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   8
 (1 row)
 
 FETCH FIRST FROM tablesample_cur;
- id 
+ id
 ----
   3
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   4
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   5
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   6
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   7
 (1 row)
 
 FETCH NEXT FROM tablesample_cur;
- id 
+ id
 ----
   8
 (1 row)
@@ -177,7 +177,7 @@ CLOSE tablesample_cur;
 END;
 EXPLAIN (COSTS OFF)
   SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (50) REPEATABLE (2);
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sample Scan on test_tablesample
    Sampling: system ('50'::real) REPEATABLE ('2'::double precision)
@@ -185,7 +185,7 @@ EXPLAIN (COSTS OFF)
 
 EXPLAIN (COSTS OFF)
   SELECT * FROM test_tablesample_v1;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sample Scan on test_tablesample
    Sampling: system ('20'::real) REPEATABLE ('2'::double precision)
@@ -194,7 +194,7 @@ EXPLAIN (COSTS OFF)
 -- check inheritance behavior
 explain (costs off)
   select count(*) from person tablesample bernoulli (100);
-                   QUERY PLAN                    
+                   QUERY PLAN
 -------------------------------------------------
  Aggregate
    ->  Append
@@ -209,20 +209,20 @@ explain (costs off)
 (10 rows)
 
 select count(*) from person tablesample bernoulli (100);
- count 
+ count
 -------
     58
 (1 row)
 
 select count(*) from person;
- count 
+ count
 -------
     58
 (1 row)
 
 -- check that collations get assigned within the tablesample arguments
 SELECT count(*) FROM test_tablesample TABLESAMPLE bernoulli (('1'::text < '0'::text)::int);
- count 
+ count
 -------
      0
 (1 row)
@@ -231,7 +231,7 @@ SELECT count(*) FROM test_tablesample TABLESAMPLE bernoulli (('1'::text < '0'::t
 select * from
   (values (0),(100)) v(pct),
   lateral (select count(*) from tenk1 tablesample bernoulli (pct)) ss;
- pct | count 
+ pct | count
 -----+-------
    0 |     0
  100 | 10000
@@ -240,7 +240,7 @@ select * from
 select * from
   (values (0),(100)) v(pct),
   lateral (select count(*) from tenk1 tablesample system (pct)) ss;
- pct | count 
+ pct | count
 -----+-------
    0 |     0
  100 | 10000
@@ -251,7 +251,7 @@ select pct, count(unique1) from
   (values (0),(100)) v(pct),
   lateral (select * from tenk1 tablesample bernoulli (pct)) ss
   group by pct;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  HashAggregate
    Group Key: "*VALUES*".column1
@@ -265,7 +265,7 @@ select pct, count(unique1) from
   (values (0),(100)) v(pct),
   lateral (select * from tenk1 tablesample bernoulli (pct)) ss
   group by pct;
- pct | count 
+ pct | count
 -----+-------
  100 | 10000
 (1 row)
@@ -274,7 +274,7 @@ select pct, count(unique1) from
   (values (0),(100)) v(pct),
   lateral (select * from tenk1 tablesample system (pct)) ss
   group by pct;
- pct | count 
+ pct | count
 -----+-------
  100 | 10000
 (1 row)
@@ -319,7 +319,7 @@ create table parted_sample_1 partition of parted_sample for values in (1);
 create table parted_sample_2 partition of parted_sample for values in (2);
 explain (costs off)
   select * from parted_sample tablesample bernoulli (100);
-                QUERY PLAN                 
+                QUERY PLAN
 -------------------------------------------
  Append
    ->  Sample Scan on parted_sample_1

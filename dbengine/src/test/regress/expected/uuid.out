@@ -41,13 +41,13 @@ LINE 1: INSERT INTO guid1(guid_field) VALUES('11+11111-1111-1111-111...
                                              ^
 -- test non-error-throwing API
 SELECT pg_input_is_valid('11', 'uuid');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('11', 'uuid');
-                 message                  | detail | hint | sql_error_code 
+                 message                  | detail | hint | sql_error_code
 ------------------------------------------+--------+------+----------------
  invalid input syntax for type uuid: "11" |        |      | 22P02
 (1 row)
@@ -58,7 +58,7 @@ INSERT INTO guid1(guid_field) VALUES('{22222222-2222-2222-2222-222222222222}');
 INSERT INTO guid1(guid_field) VALUES('3f3e3c3b3a3039383736353433a2313e');
 -- retrieving the inserted data
 SELECT guid_field FROM guid1;
-              guid_field              
+              guid_field
 --------------------------------------
  11111111-1111-1111-1111-111111111111
  22222222-2222-2222-2222-222222222222
@@ -67,7 +67,7 @@ SELECT guid_field FROM guid1;
 
 -- ordering test
 SELECT guid_field FROM guid1 ORDER BY guid_field ASC;
-              guid_field              
+              guid_field
 --------------------------------------
  11111111-1111-1111-1111-111111111111
  22222222-2222-2222-2222-222222222222
@@ -75,7 +75,7 @@ SELECT guid_field FROM guid1 ORDER BY guid_field ASC;
 (3 rows)
 
 SELECT guid_field FROM guid1 ORDER BY guid_field DESC;
-              guid_field              
+              guid_field
 --------------------------------------
  3f3e3c3b-3a30-3938-3736-353433a2313e
  22222222-2222-2222-2222-222222222222
@@ -84,42 +84,42 @@ SELECT guid_field FROM guid1 ORDER BY guid_field DESC;
 
 -- = operator test
 SELECT COUNT(*) FROM guid1 WHERE guid_field = '3f3e3c3b-3a30-3938-3736-353433a2313e';
- count 
+ count
 -------
      1
 (1 row)
 
 -- <> operator test
 SELECT COUNT(*) FROM guid1 WHERE guid_field <> '11111111111111111111111111111111';
- count 
+ count
 -------
      2
 (1 row)
 
 -- < operator test
 SELECT COUNT(*) FROM guid1 WHERE guid_field < '22222222-2222-2222-2222-222222222222';
- count 
+ count
 -------
      1
 (1 row)
 
 -- <= operator test
 SELECT COUNT(*) FROM guid1 WHERE guid_field <= '22222222-2222-2222-2222-222222222222';
- count 
+ count
 -------
      2
 (1 row)
 
 -- > operator test
 SELECT COUNT(*) FROM guid1 WHERE guid_field > '22222222-2222-2222-2222-222222222222';
- count 
+ count
 -------
      1
 (1 row)
 
 -- >= operator test
 SELECT COUNT(*) FROM guid1 WHERE guid_field >= '22222222-2222-2222-2222-222222222222';
- count 
+ count
 -------
      2
 (1 row)
@@ -135,7 +135,7 @@ ERROR:  duplicate key value violates unique constraint "guid1_unique_btree"
 DETAIL:  Key (guid_field)=(11111111-1111-1111-1111-111111111111) already exists.
 -- check to see whether the new indexes are actually there
 SELECT count(*) FROM pg_class WHERE relkind='i' AND relname LIKE 'guid%';
- count 
+ count
 -------
      3
 (1 row)
@@ -147,13 +147,13 @@ INSERT INTO guid2(guid_field) VALUES('{22222222-2222-2222-2222-222222222222}');
 INSERT INTO guid2(guid_field) VALUES('3f3e3c3b3a3039383736353433a2313e');
 -- join test
 SELECT COUNT(*) FROM guid1 g1 INNER JOIN guid2 g2 ON g1.guid_field = g2.guid_field;
- count 
+ count
 -------
      3
 (1 row)
 
 SELECT COUNT(*) FROM guid1 g1 LEFT JOIN guid2 g2 ON g1.guid_field = g2.guid_field WHERE g2.guid_field IS NULL;
- count 
+ count
 -------
      1
 (1 row)
@@ -163,7 +163,7 @@ TRUNCATE guid1;
 INSERT INTO guid1 (guid_field) VALUES (gen_random_uuid());
 INSERT INTO guid1 (guid_field) VALUES (gen_random_uuid());
 SELECT count(DISTINCT guid_field) FROM guid1;
- count 
+ count
 -------
      2
 (1 row)

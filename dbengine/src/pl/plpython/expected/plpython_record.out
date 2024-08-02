@@ -53,265 +53,265 @@ return first + '_inout';
 $$ LANGUAGE plpython3u;
 -- Test tuple returning functions
 SELECT * FROM test_table_record_as('dict', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_table_record_as('dict', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_table_record_as('dict', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_table_record_as('dict', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_table_record_as('dict', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_table_record_as('tuple', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_table_record_as('tuple', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_table_record_as('tuple', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_table_record_as('tuple', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_table_record_as('tuple', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_table_record_as('list', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_table_record_as('list', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_table_record_as('list', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_table_record_as('list', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_table_record_as('list', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_table_record_as('obj', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_table_record_as('obj', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_table_record_as('obj', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_table_record_as('obj', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_table_record_as('obj', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('dict', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('dict', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_type_record_as('dict', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_type_record_as('dict', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_type_record_as('dict', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('tuple', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('tuple', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_type_record_as('tuple', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_type_record_as('tuple', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_type_record_as('tuple', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('list', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('list', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_type_record_as('list', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_type_record_as('list', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_type_record_as('list', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('obj', null, null, false);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('obj', 'one', null, false);
- first | second 
+ first | second
 -------+--------
- one   |       
+ one   |
 (1 row)
 
 SELECT * FROM test_type_record_as('obj', null, 2, false);
- first | second 
+ first | second
 -------+--------
        |      2
 (1 row)
 
 SELECT * FROM test_type_record_as('obj', 'three', 3, false);
- first | second 
+ first | second
 -------+--------
  three |      3
 (1 row)
 
 SELECT * FROM test_type_record_as('obj', null, null, true);
- first | second 
+ first | second
 -------+--------
-       |       
+       |
 (1 row)
 
 SELECT * FROM test_type_record_as('str', 'one', 1, false);
- first | second 
+ first | second
 -------+--------
  'one' |      1
 (1 row)
 
 SELECT * FROM test_in_out_params('test_in');
-      second       
+      second
 -------------------
  test_in_in_to_out
 (1 row)
 
 SELECT * FROM test_in_out_params_multi('test_in');
-           second           |           third            
+           second           |           third
 ----------------------------+----------------------------
  test_in_record_in_to_out_1 | test_in_record_in_to_out_2
 (1 row)
 
 SELECT * FROM test_inout_params('test_in');
-     first     
+     first
 ---------------
  test_in_inout
 (1 row)
@@ -322,7 +322,7 @@ ALTER TABLE table_record DROP COLUMN second;
 ALTER TABLE table_record ADD COLUMN first text;
 ALTER TABLE table_record ADD COLUMN second int4;
 SELECT * FROM test_table_record_as('obj', 'one', 1, false);
- first | second 
+ first | second
 -------+--------
  one   |      1
 (1 row)
@@ -332,7 +332,7 @@ ALTER TYPE type_record DROP ATTRIBUTE second;
 ALTER TYPE type_record ADD ATTRIBUTE first text;
 ALTER TYPE type_record ADD ATTRIBUTE second int4;
 SELECT * FROM test_type_record_as('obj', 'one', 1, false);
- first | second 
+ first | second
 -------+--------
  one   |      1
 (1 row)

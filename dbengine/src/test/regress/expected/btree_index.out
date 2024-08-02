@@ -49,7 +49,7 @@ CREATE INDEX bt_f8_index ON bt_f8_heap USING btree (seqno float8_ops);
 SELECT b.*
    FROM bt_i4_heap b
    WHERE b.seqno < 1;
- seqno |   random   
+ seqno |   random
 -------+------------
      0 | 1935401906
 (1 row)
@@ -57,7 +57,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_i4_heap b
    WHERE b.seqno >= 9999;
- seqno |   random   
+ seqno |   random
 -------+------------
   9999 | 1227676208
 (1 row)
@@ -65,7 +65,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_i4_heap b
    WHERE b.seqno = 4500;
- seqno |   random   
+ seqno |   random
 -------+------------
   4500 | 2080851358
 (1 row)
@@ -73,7 +73,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_name_heap b
    WHERE b.seqno < '1'::name;
- seqno |   random   
+ seqno |   random
 -------+------------
  0     | 1935401906
 (1 row)
@@ -81,7 +81,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_name_heap b
    WHERE b.seqno >= '9999'::name;
- seqno |   random   
+ seqno |   random
 -------+------------
  9999  | 1227676208
 (1 row)
@@ -89,7 +89,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_name_heap b
    WHERE b.seqno = '4500'::name;
- seqno |   random   
+ seqno |   random
 -------+------------
  4500  | 2080851358
 (1 row)
@@ -97,7 +97,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_txt_heap b
    WHERE b.seqno < '1'::text;
- seqno |   random   
+ seqno |   random
 -------+------------
  0     | 1935401906
 (1 row)
@@ -105,7 +105,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_txt_heap b
    WHERE b.seqno >= '9999'::text;
- seqno |   random   
+ seqno |   random
 -------+------------
  9999  | 1227676208
 (1 row)
@@ -113,7 +113,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_txt_heap b
    WHERE b.seqno = '4500'::text;
- seqno |   random   
+ seqno |   random
 -------+------------
  4500  | 2080851358
 (1 row)
@@ -121,7 +121,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_f8_heap b
    WHERE b.seqno < '1'::float8;
- seqno |   random   
+ seqno |   random
 -------+------------
      0 | 1935401906
 (1 row)
@@ -129,7 +129,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_f8_heap b
    WHERE b.seqno >= '9999'::float8;
- seqno |   random   
+ seqno |   random
 -------+------------
   9999 | 1227676208
 (1 row)
@@ -137,7 +137,7 @@ SELECT b.*
 SELECT b.*
    FROM bt_f8_heap b
    WHERE b.seqno = '4500'::float8;
- seqno |   random   
+ seqno |   random
 -------+------------
   4500 | 2080851358
 (1 row)
@@ -151,7 +151,7 @@ set enable_indexscan to true;
 set enable_bitmapscan to false;
 explain (costs off)
 select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
-                                  QUERY PLAN                                  
+                                  QUERY PLAN
 ------------------------------------------------------------------------------
  Index Only Scan using pg_proc_proname_args_nsp_index on pg_proc
    Index Cond: ((proname >= 'RI_FKey'::text) AND (proname < 'RI_FKez'::text))
@@ -159,7 +159,7 @@ select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
 (3 rows)
 
 select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
-        proname         
+        proname
 ------------------------
  RI_FKey_cascade_del
  RI_FKey_noaction_del
@@ -170,7 +170,7 @@ select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
 
 explain (costs off)
 select proname from pg_proc where proname ilike '00%foo' order by 1;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Index Only Scan using pg_proc_proname_args_nsp_index on pg_proc
    Index Cond: ((proname >= '00'::text) AND (proname < '01'::text))
@@ -178,13 +178,13 @@ select proname from pg_proc where proname ilike '00%foo' order by 1;
 (3 rows)
 
 select proname from pg_proc where proname ilike '00%foo' order by 1;
- proname 
+ proname
 ---------
 (0 rows)
 
 explain (costs off)
 select proname from pg_proc where proname ilike 'ri%foo' order by 1;
-                           QUERY PLAN                            
+                           QUERY PLAN
 -----------------------------------------------------------------
  Index Only Scan using pg_proc_proname_args_nsp_index on pg_proc
    Filter: (proname ~~* 'ri%foo'::text)
@@ -194,7 +194,7 @@ set enable_indexscan to false;
 set enable_bitmapscan to true;
 explain (costs off)
 select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
-                                        QUERY PLAN                                        
+                                        QUERY PLAN
 ------------------------------------------------------------------------------------------
  Sort
    Sort Key: proname
@@ -205,7 +205,7 @@ select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
 (6 rows)
 
 select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
-        proname         
+        proname
 ------------------------
  RI_FKey_cascade_del
  RI_FKey_noaction_del
@@ -216,7 +216,7 @@ select proname from pg_proc where proname like E'RI\\_FKey%del' order by 1;
 
 explain (costs off)
 select proname from pg_proc where proname ilike '00%foo' order by 1;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Sort
    Sort Key: proname
@@ -227,13 +227,13 @@ select proname from pg_proc where proname ilike '00%foo' order by 1;
 (6 rows)
 
 select proname from pg_proc where proname ilike '00%foo' order by 1;
- proname 
+ proname
 ---------
 (0 rows)
 
 explain (costs off)
 select proname from pg_proc where proname ilike 'ri%foo' order by 1;
-                           QUERY PLAN                            
+                           QUERY PLAN
 -----------------------------------------------------------------
  Index Only Scan using pg_proc_proname_args_nsp_index on pg_proc
    Filter: (proname ~~* 'ri%foo'::text)
@@ -249,28 +249,28 @@ insert into btree_bpchar values ('foo'), ('fool'), ('bar'), ('quux');
 -- doesn't match index:
 explain (costs off)
 select * from btree_bpchar where f1 like 'foo';
-          QUERY PLAN           
+          QUERY PLAN
 -------------------------------
  Seq Scan on btree_bpchar
    Filter: (f1 ~~ 'foo'::text)
 (2 rows)
 
 select * from btree_bpchar where f1 like 'foo';
- f1  
+ f1
 -----
  foo
 (1 row)
 
 explain (costs off)
 select * from btree_bpchar where f1 like 'foo%';
-           QUERY PLAN           
+           QUERY PLAN
 --------------------------------
  Seq Scan on btree_bpchar
    Filter: (f1 ~~ 'foo%'::text)
 (2 rows)
 
 select * from btree_bpchar where f1 like 'foo%';
-  f1  
+  f1
 ------
  foo
  fool
@@ -279,7 +279,7 @@ select * from btree_bpchar where f1 like 'foo%';
 -- these do match the index:
 explain (costs off)
 select * from btree_bpchar where f1::bpchar like 'foo';
-                     QUERY PLAN                     
+                     QUERY PLAN
 ----------------------------------------------------
  Bitmap Heap Scan on btree_bpchar
    Filter: ((f1)::bpchar ~~ 'foo'::text)
@@ -288,14 +288,14 @@ select * from btree_bpchar where f1::bpchar like 'foo';
 (4 rows)
 
 select * from btree_bpchar where f1::bpchar like 'foo';
- f1  
+ f1
 -----
  foo
 (1 row)
 
 explain (costs off)
 select * from btree_bpchar where f1::bpchar like 'foo%';
-                                        QUERY PLAN                                        
+                                        QUERY PLAN
 ------------------------------------------------------------------------------------------
  Bitmap Heap Scan on btree_bpchar
    Filter: ((f1)::bpchar ~~ 'foo%'::text)
@@ -304,7 +304,7 @@ select * from btree_bpchar where f1::bpchar like 'foo%';
 (4 rows)
 
 select * from btree_bpchar where f1::bpchar like 'foo%';
-  f1  
+  f1
 ------
  foo
  fool

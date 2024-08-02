@@ -122,13 +122,13 @@ create function tcl_date_week(int4,int4,int4) returns text as $$
     return [clock format [clock scan "$2/$3/$1" -gmt 1] -format "%U" -gmt 1]
 $$ language pltcl immutable;
 select tcl_date_week(2010,1,26);
- tcl_date_week 
+ tcl_date_week
 ---------------
  04
 (1 row)
 
 select tcl_date_week(2001,10,24);
- tcl_date_week 
+ tcl_date_week
 ---------------
  42
 (1 row)

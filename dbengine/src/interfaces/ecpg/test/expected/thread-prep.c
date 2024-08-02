@@ -130,16 +130,16 @@ static void* fn(void* arg)
 	int i;
 
 	/* exec sql begin declare section */
-	  
-	 
-	   
-	
+
+
+
+
 #line 41 "prep.pgc"
  int value ;
- 
+
 #line 42 "prep.pgc"
  char name [ 100 ] ;
- 
+
 #line 43 "prep.pgc"
  char query [ 256 ] = "INSERT INTO T VALUES ( ? )" ;
 /* exec sql end declare section */
@@ -149,7 +149,7 @@ static void* fn(void* arg)
 	value = (intptr_t) arg;
 	sprintf(name, "Connection: %d", value);
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , name, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , name, 0);
 #line 49 "prep.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -169,8 +169,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 53 "prep.pgc"
 
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "i", 
-	ECPGt_int,&(value),(long)1,(long)1,sizeof(int), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "i",
+	ECPGt_int,&(value),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 54 "prep.pgc"
 
@@ -206,7 +206,7 @@ int main ()
 	pthread_t threads[THREADS];
 #endif
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 71 "prep.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}

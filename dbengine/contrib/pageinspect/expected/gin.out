@@ -58,14 +58,14 @@ ERROR:  input page is not a valid GIN data leaf page
 SHOW block_size \gset
 SELECT gin_leafpage_items(decode(repeat('00', :block_size), 'hex'));
 -[ RECORD 1 ]------+-
-gin_leafpage_items | 
+gin_leafpage_items |
 
 SELECT gin_metapage_info(decode(repeat('00', :block_size), 'hex'));
 -[ RECORD 1 ]-----+-
-gin_metapage_info | 
+gin_metapage_info |
 
 SELECT gin_page_opaque_info(decode(repeat('00', :block_size), 'hex'));
 -[ RECORD 1 ]--------+-
-gin_page_opaque_info | 
+gin_page_opaque_info |
 
 DROP TABLE test1;

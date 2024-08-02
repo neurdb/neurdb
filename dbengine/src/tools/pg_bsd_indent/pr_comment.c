@@ -66,7 +66,7 @@ static char sccsid[] = "@(#)pr_comment.c	8.1 (Berkeley) 6/6/93";
  *	12/6/76		D A Willcox of CAC	Modification to handle
  *						UNIX-style comments
  *
- */
+ */
 
 /*
  * this routine processes comments.  It makes an attempt to keep comments from

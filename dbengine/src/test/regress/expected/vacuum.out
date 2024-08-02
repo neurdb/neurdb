@@ -16,14 +16,14 @@ INSERT INTO vactst SELECT * FROM vactst;
 INSERT INTO vactst SELECT * FROM vactst;
 INSERT INTO vactst VALUES (0);
 SELECT count(*) FROM vactst;
- count 
+ count
 -------
   2049
 (1 row)
 
 DELETE FROM vactst WHERE i != 0;
 SELECT * FROM vactst;
- i 
+ i
 ---
  0
 (1 row)
@@ -43,7 +43,7 @@ INSERT INTO vactst SELECT * FROM vactst;
 INSERT INTO vactst SELECT * FROM vactst;
 INSERT INTO vactst VALUES (0);
 SELECT count(*) FROM vactst;
- count 
+ count
 -------
   2049
 (1 row)
@@ -52,7 +52,7 @@ DELETE FROM vactst WHERE i != 0;
 VACUUM (FULL) vactst;
 DELETE FROM vactst;
 SELECT * FROM vactst;
- i 
+ i
 ---
 (0 rows)
 
@@ -172,14 +172,14 @@ ERROR:  null value in column "i" of relation "vac_truncate_test" violates not-nu
 DETAIL:  Failing row contains (null, null).
 VACUUM (TRUNCATE FALSE, DISABLE_PAGE_SKIPPING) vac_truncate_test;
 SELECT pg_relation_size('vac_truncate_test') > 0;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 VACUUM (DISABLE_PAGE_SKIPPING) vac_truncate_test;
 SELECT pg_relation_size('vac_truncate_test') = 0;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -213,7 +213,7 @@ VACUUM (FREEZE) vacparted_i;
 SELECT relname, relhasindex FROM pg_class
   WHERE relname LIKE 'vacparted_i%' AND relkind IN ('p','r')
   ORDER BY relname;
-   relname    | relhasindex 
+   relname    | relhasindex
 --------------+-------------
  vacparted_i  | t
  vacparted_i1 | t
@@ -293,7 +293,7 @@ CREATE VIEW vac_option_tab_counts AS
   ORDER BY rel;
 VACUUM (PROCESS_TOAST TRUE) vac_option_tab;
 SELECT * FROM vac_option_tab_counts;
-  rel  | vacuum_count 
+  rel  | vacuum_count
 -------+--------------
  main  |            1
  toast |            1
@@ -301,7 +301,7 @@ SELECT * FROM vac_option_tab_counts;
 
 VACUUM (PROCESS_TOAST FALSE) vac_option_tab;
 SELECT * FROM vac_option_tab_counts;
-  rel  | vacuum_count 
+  rel  | vacuum_count
 -------+--------------
  main  |            2
  toast |            1
@@ -313,7 +313,7 @@ ERROR:  PROCESS_TOAST required with VACUUM FULL
 -- Only the toast table is processed.
 VACUUM (PROCESS_MAIN FALSE) vac_option_tab;
 SELECT * FROM vac_option_tab_counts;
-  rel  | vacuum_count 
+  rel  | vacuum_count
 -------+--------------
  main  |            2
  toast |            2
@@ -322,7 +322,7 @@ SELECT * FROM vac_option_tab_counts;
 -- Nothing is processed.
 VACUUM (PROCESS_MAIN FALSE, PROCESS_TOAST FALSE) vac_option_tab;
 SELECT * FROM vac_option_tab_counts;
-  rel  | vacuum_count 
+  rel  | vacuum_count
 -------+--------------
  main  |            2
  toast |            2
@@ -337,7 +337,7 @@ SELECT t.relfilenode AS toast_filenode FROM pg_class c, pg_class t
 VACUUM (PROCESS_MAIN FALSE, FULL) vac_option_tab;
 SELECT relfilenode = :main_filenode AS is_same_main_filenode
   FROM pg_class WHERE relname = 'vac_option_tab';
- is_same_main_filenode 
+ is_same_main_filenode
 -----------------------
  t
 (1 row)
@@ -345,7 +345,7 @@ SELECT relfilenode = :main_filenode AS is_same_main_filenode
 SELECT t.relfilenode = :toast_filenode AS is_same_toast_filenode
   FROM pg_class c, pg_class t
   WHERE c.reltoastrelid = t.oid AND c.relname = 'vac_option_tab';
- is_same_toast_filenode 
+ is_same_toast_filenode
 ------------------------
  f
 (1 row)

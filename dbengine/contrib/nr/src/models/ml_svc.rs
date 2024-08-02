@@ -147,4 +147,3 @@ pub fn ml_func(
     // Step 4: Return to PostgresSQL
     return serde_json::json!(response);
 }
-

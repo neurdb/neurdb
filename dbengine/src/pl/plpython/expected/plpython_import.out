@@ -50,13 +50,13 @@ return "sha hash of " + plain + " is " + digest.hexdigest()'
 -- import python modules
 --
 SELECT import_fail();
-    import_fail     
+    import_fail
 --------------------
  failed as expected
 (1 row)
 
 SELECT import_succeed();
-     import_succeed     
+     import_succeed
 ------------------------
  succeeded, as expected
 (1 row)
@@ -64,7 +64,7 @@ SELECT import_succeed();
 -- test import and simple argument handling
 --
 SELECT import_test_one('sha hash of this string');
-             import_test_one              
+             import_test_one
 ------------------------------------------
  a04e23cb9b1a09cd1051a04a7c571aae0f90346c
 (1 row)
@@ -72,8 +72,7 @@ SELECT import_test_one('sha hash of this string');
 -- test import and tuple argument handling
 --
 select import_test_two(users) from users where fname = 'willem';
-                          import_test_two                          
+                          import_test_two
 -------------------------------------------------------------------
  sha hash of willemdoe is 3cde6b574953b0ca937b4d76ebc40d534d910759
 (1 row)
-

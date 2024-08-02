@@ -12,7 +12,7 @@ INSERT INTO pxtest1 VALUES ('aaa');
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 UPDATE pxtest1 SET foobar = 'bbb' WHERE foobar = 'aaa';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  bbb
 (1 row)
@@ -21,14 +21,14 @@ PREPARE TRANSACTION 'foo1';
 ERROR:  prepared transactions are disabled
 HINT:  Set max_prepared_transactions to a nonzero value.
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
 
 -- Test pg_prepared_xacts system view
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -36,13 +36,13 @@ SELECT gid FROM pg_prepared_xacts;
 ROLLBACK PREPARED 'foo1';
 ERROR:  prepared transaction with identifier "foo1" does not exist
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
 
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -50,7 +50,7 @@ SELECT gid FROM pg_prepared_xacts;
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 INSERT INTO pxtest1 VALUES ('ddd');
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  ddd
@@ -60,7 +60,7 @@ PREPARE TRANSACTION 'foo2';
 ERROR:  prepared transactions are disabled
 HINT:  Set max_prepared_transactions to a nonzero value.
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
@@ -68,7 +68,7 @@ SELECT * FROM pxtest1;
 COMMIT PREPARED 'foo2';
 ERROR:  prepared transaction with identifier "foo2" does not exist
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
@@ -77,7 +77,7 @@ SELECT * FROM pxtest1;
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 UPDATE pxtest1 SET foobar = 'eee' WHERE foobar = 'ddd';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
@@ -86,7 +86,7 @@ PREPARE TRANSACTION 'foo3';
 ERROR:  prepared transactions are disabled
 HINT:  Set max_prepared_transactions to a nonzero value.
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -97,7 +97,7 @@ PREPARE TRANSACTION 'foo3';
 ERROR:  prepared transactions are disabled
 HINT:  Set max_prepared_transactions to a nonzero value.
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
@@ -105,7 +105,7 @@ SELECT * FROM pxtest1;
 ROLLBACK PREPARED 'foo3';
 ERROR:  prepared transaction with identifier "foo3" does not exist
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
@@ -114,7 +114,7 @@ SELECT * FROM pxtest1;
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 UPDATE pxtest1 SET foobar = 'eee' WHERE foobar = 'ddd';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
@@ -123,13 +123,13 @@ PREPARE TRANSACTION 'foo4';
 ERROR:  prepared transactions are disabled
 HINT:  Set max_prepared_transactions to a nonzero value.
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
@@ -140,14 +140,14 @@ PREPARE TRANSACTION 'foo5';
 ERROR:  prepared transactions are disabled
 HINT:  Set max_prepared_transactions to a nonzero value.
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
 ROLLBACK PREPARED 'foo4';
 ERROR:  prepared transaction with identifier "foo4" does not exist
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -156,15 +156,15 @@ DROP TABLE pxtest1;
 -- Test detection of session-level and xact-level locks on same object
 BEGIN;
 SELECT pg_advisory_lock(1);
- pg_advisory_lock 
+ pg_advisory_lock
 ------------------
- 
+
 (1 row)
 
 SELECT pg_advisory_xact_lock_shared(1);
- pg_advisory_xact_lock_shared 
+ pg_advisory_xact_lock_shared
 ------------------------------
- 
+
 (1 row)
 
 PREPARE TRANSACTION 'foo6';  -- fails
@@ -192,7 +192,7 @@ BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
   DECLARE foo CURSOR FOR SELECT * FROM pxtest4;
   -- Fetch 1 tuple, keeping the cursor open
   FETCH 1 FROM foo;
- a 
+ a
 ---
  1
 (1 row)
@@ -210,7 +210,7 @@ LINE 1: SELECT * FROM pxtest2;
                       ^
 -- There should be two prepared transactions
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -222,7 +222,7 @@ rollback;
 \c -
 -- There should still be two prepared transactions
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -240,7 +240,7 @@ LINE 1: SELECT * FROM pxtest2;
                       ^
 -- There should be one prepared transaction
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -248,13 +248,13 @@ SELECT gid FROM pg_prepared_xacts;
 COMMIT PREPARED 'regress-two';
 ERROR:  prepared transaction with identifier "regress-two" does not exist
 SELECT * FROM pxtest3;
- fff 
+ fff
 -----
 (0 rows)
 
 -- There should be no prepared transactions
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 

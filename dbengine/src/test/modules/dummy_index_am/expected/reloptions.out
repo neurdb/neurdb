@@ -7,7 +7,7 @@ SET client_min_messages TO 'warning';
 CREATE INDEX dummy_test_idx ON dummy_test_tab
   USING dummy_index_am (i);
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
- unnest 
+ unnest
 --------
 (0 rows)
 
@@ -28,7 +28,7 @@ NOTICE:  new option value for string parameter val
 -- Silence again validation checks for strings until the end of the test.
 SET client_min_messages TO 'warning';
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
-         unnest         
+         unnest
 ------------------------
  option_bool=false
  option_int=5
@@ -49,7 +49,7 @@ ALTER INDEX dummy_test_idx SET (option_enum = 'three');
 ERROR:  invalid value for enum option "option_enum": three
 DETAIL:  Valid values are "one" and "two".
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
-         unnest          
+         unnest
 -------------------------
  option_int=10
  option_bool=true
@@ -67,7 +67,7 @@ ALTER INDEX dummy_test_idx RESET (option_enum);
 ALTER INDEX dummy_test_idx RESET (option_string_val);
 ALTER INDEX dummy_test_idx RESET (option_string_null);
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
- unnest 
+ unnest
 --------
 (0 rows)
 
@@ -79,7 +79,7 @@ ERROR:  invalid value for integer option "option_int": true
 ALTER INDEX dummy_test_idx SET (option_int = 'val3'); -- error
 ERROR:  invalid value for integer option "option_int": val3
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
-     unnest     
+     unnest
 ----------------
  option_int=3.3
 (1 row)
@@ -94,7 +94,7 @@ ERROR:  invalid value for boolean option "option_bool": 3.4
 ALTER INDEX dummy_test_idx SET (option_bool = 'val4'); -- error
 ERROR:  invalid value for boolean option "option_bool": val4
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
-    unnest     
+    unnest
 ---------------
  option_bool=1
 (1 row)
@@ -107,7 +107,7 @@ ERROR:  invalid value for floating point option "option_real": true
 ALTER INDEX dummy_test_idx SET (option_real = 'val5'); -- error
 ERROR:  invalid value for floating point option "option_real": val5
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
-    unnest     
+    unnest
 ---------------
  option_real=4
 (1 row)
@@ -125,7 +125,7 @@ ALTER INDEX dummy_test_idx SET (option_enum = 'three'); -- error
 ERROR:  invalid value for enum option "option_enum": three
 DETAIL:  Valid values are "one" and "two".
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
-     unnest      
+     unnest
 -----------------
  option_enum=one
 (1 row)
@@ -136,7 +136,7 @@ ALTER INDEX dummy_test_idx SET (option_string_val = 4); -- ok
 ALTER INDEX dummy_test_idx SET (option_string_val = 3.5); -- ok
 ALTER INDEX dummy_test_idx SET (option_string_val = true); -- ok, as "true"
 SELECT unnest(reloptions) FROM pg_class WHERE relname = 'dummy_test_idx';
-         unnest         
+         unnest
 ------------------------
  option_string_val=true
 (1 row)

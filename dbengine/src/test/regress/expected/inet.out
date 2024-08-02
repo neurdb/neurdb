@@ -44,7 +44,7 @@ LINE 1: INSERT INTO INET_TBL (c, i) VALUES (cidr('ffff:ffff:ffff:fff...
                                                  ^
 DETAIL:  Value has bits set to right of mask.
 SELECT c AS cidr, i AS inet FROM INET_TBL;
-        cidr        |       inet       
+        cidr        |       inet
 --------------------+------------------
  192.168.1.0/24     | 192.168.1.226/24
  192.168.1.0/26     | 192.168.1.226
@@ -67,7 +67,7 @@ SELECT c AS cidr, i AS inet FROM INET_TBL;
 
 -- now test some support functions
 SELECT i AS inet, host(i), text(i), family(i) FROM INET_TBL;
-       inet       |     host      |       text       | family 
+       inet       |     host      |       text       | family
 ------------------+---------------+------------------+--------
  192.168.1.226/24 | 192.168.1.226 | 192.168.1.226/24 |      4
  192.168.1.226    | 192.168.1.226 | 192.168.1.226/32 |      4
@@ -89,7 +89,7 @@ SELECT i AS inet, host(i), text(i), family(i) FROM INET_TBL;
 (17 rows)
 
 SELECT c AS cidr, abbrev(c) FROM INET_TBL;
-        cidr        |       abbrev       
+        cidr        |       abbrev
 --------------------+--------------------
  192.168.1.0/24     | 192.168.1/24
  192.168.1.0/26     | 192.168.1.0/26
@@ -112,7 +112,7 @@ SELECT c AS cidr, abbrev(c) FROM INET_TBL;
 
 SELECT c AS cidr, broadcast(c),
   i AS inet, broadcast(i) FROM INET_TBL;
-        cidr        |    broadcast     |       inet       |               broadcast               
+        cidr        |    broadcast     |       inet       |               broadcast
 --------------------+------------------+------------------+---------------------------------------
  192.168.1.0/24     | 192.168.1.255/24 | 192.168.1.226/24 | 192.168.1.255/24
  192.168.1.0/26     | 192.168.1.63/26  | 192.168.1.226    | 192.168.1.226
@@ -135,7 +135,7 @@ SELECT c AS cidr, broadcast(c),
 
 SELECT c AS cidr, network(c) AS "network(cidr)",
   i AS inet, network(i) AS "network(inet)" FROM INET_TBL;
-        cidr        |   network(cidr)    |       inet       |  network(inet)   
+        cidr        |   network(cidr)    |       inet       |  network(inet)
 --------------------+--------------------+------------------+------------------
  192.168.1.0/24     | 192.168.1.0/24     | 192.168.1.226/24 | 192.168.1.0/24
  192.168.1.0/26     | 192.168.1.0/26     | 192.168.1.226    | 192.168.1.226/32
@@ -158,7 +158,7 @@ SELECT c AS cidr, network(c) AS "network(cidr)",
 
 SELECT c AS cidr, masklen(c) AS "masklen(cidr)",
   i AS inet, masklen(i) AS "masklen(inet)" FROM INET_TBL;
-        cidr        | masklen(cidr) |       inet       | masklen(inet) 
+        cidr        | masklen(cidr) |       inet       | masklen(inet)
 --------------------+---------------+------------------+---------------
  192.168.1.0/24     |            24 | 192.168.1.226/24 |            24
  192.168.1.0/26     |            26 | 192.168.1.226    |            32
@@ -182,7 +182,7 @@ SELECT c AS cidr, masklen(c) AS "masklen(cidr)",
 SELECT c AS cidr, masklen(c) AS "masklen(cidr)",
   i AS inet, masklen(i) AS "masklen(inet)" FROM INET_TBL
   WHERE masklen(c) <= 8;
-    cidr    | masklen(cidr) |    inet    | masklen(inet) 
+    cidr    | masklen(cidr) |    inet    | masklen(inet)
 ------------+---------------+------------+---------------
  10.0.0.0/8 |             8 | 10.1.2.3/8 |             8
  10.0.0.0/8 |             8 | 10.1.2.3/8 |             8
@@ -192,7 +192,7 @@ SELECT c AS cidr, masklen(c) AS "masklen(cidr)",
 
 SELECT c AS cidr, i AS inet FROM INET_TBL
   WHERE c = i;
-      cidr      |      inet      
+      cidr      |      inet
 ----------------+----------------
  192.168.1.0/24 | 192.168.1.0/24
  10.1.2.3/32    | 10.1.2.3
@@ -205,7 +205,7 @@ SELECT i, c,
   i >> c AS sup, i >>= c AS spe,
   i && c AS ovr
   FROM INET_TBL;
-        i         |         c          | lt | le | eq | ge | gt | ne | sb | sbe | sup | spe | ovr 
+        i         |         c          | lt | le | eq | ge | gt | ne | sb | sbe | sup | spe | ovr
 ------------------+--------------------+----+----+----+----+----+----+----+-----+-----+-----+-----
  192.168.1.226/24 | 192.168.1.0/24     | f  | f  | f  | t  | t  | t  | f  | t   | f   | t   | t
  192.168.1.226    | 192.168.1.0/26     | f  | f  | f  | t  | t  | t  | f  | f   | f   | f   | f
@@ -227,20 +227,20 @@ SELECT i, c,
 (17 rows)
 
 SELECT max(i) AS max, min(i) AS min FROM INET_TBL;
-     max     |    min    
+     max     |    min
 -------------+-----------
  10:23::ffff | 9.1.2.3/8
 (1 row)
 
 SELECT max(c) AS max, min(c) AS min FROM INET_TBL;
-       max       |    min     
+       max       |    min
 -----------------+------------
  10:23::8000/113 | 10.0.0.0/8
 (1 row)
 
 -- check the conversion to/from text and set_netmask
 SELECT set_masklen(inet(text(i)), 24) FROM INET_TBL;
-   set_masklen    
+   set_masklen
 ------------------
  192.168.1.226/24
  192.168.1.226/24
@@ -266,7 +266,7 @@ CREATE INDEX inet_idx1 ON inet_tbl(i);
 SET enable_seqscan TO off;
 EXPLAIN (COSTS OFF)
 SELECT * FROM inet_tbl WHERE i<<'192.168.1.0/24'::cidr;
-                                  QUERY PLAN                                   
+                                  QUERY PLAN
 -------------------------------------------------------------------------------
  Index Scan using inet_idx1 on inet_tbl
    Index Cond: ((i > '192.168.1.0/24'::inet) AND (i <= '192.168.1.255'::inet))
@@ -274,7 +274,7 @@ SELECT * FROM inet_tbl WHERE i<<'192.168.1.0/24'::cidr;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE i<<'192.168.1.0/24'::cidr;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/25
  192.168.1.0/24 | 192.168.1.255/25
@@ -283,7 +283,7 @@ SELECT * FROM inet_tbl WHERE i<<'192.168.1.0/24'::cidr;
 
 EXPLAIN (COSTS OFF)
 SELECT * FROM inet_tbl WHERE i<<='192.168.1.0/24'::cidr;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Index Scan using inet_idx1 on inet_tbl
    Index Cond: ((i >= '192.168.1.0/24'::inet) AND (i <= '192.168.1.255'::inet))
@@ -291,7 +291,7 @@ SELECT * FROM inet_tbl WHERE i<<='192.168.1.0/24'::cidr;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE i<<='192.168.1.0/24'::cidr;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -303,7 +303,7 @@ SELECT * FROM inet_tbl WHERE i<<='192.168.1.0/24'::cidr;
 
 EXPLAIN (COSTS OFF)
 SELECT * FROM inet_tbl WHERE '192.168.1.0/24'::cidr >>= i;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Index Scan using inet_idx1 on inet_tbl
    Index Cond: ((i >= '192.168.1.0/24'::inet) AND (i <= '192.168.1.255'::inet))
@@ -311,7 +311,7 @@ SELECT * FROM inet_tbl WHERE '192.168.1.0/24'::cidr >>= i;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE '192.168.1.0/24'::cidr >>= i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -323,7 +323,7 @@ SELECT * FROM inet_tbl WHERE '192.168.1.0/24'::cidr >>= i;
 
 EXPLAIN (COSTS OFF)
 SELECT * FROM inet_tbl WHERE '192.168.1.0/24'::cidr >> i;
-                                  QUERY PLAN                                   
+                                  QUERY PLAN
 -------------------------------------------------------------------------------
  Index Scan using inet_idx1 on inet_tbl
    Index Cond: ((i > '192.168.1.0/24'::inet) AND (i <= '192.168.1.255'::inet))
@@ -331,7 +331,7 @@ SELECT * FROM inet_tbl WHERE '192.168.1.0/24'::cidr >> i;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE '192.168.1.0/24'::cidr >> i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/25
  192.168.1.0/24 | 192.168.1.255/25
@@ -344,7 +344,7 @@ DROP INDEX inet_idx1;
 CREATE INDEX inet_idx2 ON inet_tbl using gist (i inet_ops);
 SET enable_seqscan TO off;
 SELECT * FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/25
  192.168.1.0/24 | 192.168.1.255/25
@@ -352,7 +352,7 @@ SELECT * FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE i <<= '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -363,7 +363,7 @@ SELECT * FROM inet_tbl WHERE i <<= '192.168.1.0/24'::cidr ORDER BY i;
 (6 rows)
 
 SELECT * FROM inet_tbl WHERE i && '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -374,7 +374,7 @@ SELECT * FROM inet_tbl WHERE i && '192.168.1.0/24'::cidr ORDER BY i;
 (6 rows)
 
 SELECT * FROM inet_tbl WHERE i >>= '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -382,12 +382,12 @@ SELECT * FROM inet_tbl WHERE i >>= '192.168.1.0/24'::cidr ORDER BY i;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE i >> '192.168.1.0/24'::cidr ORDER BY i;
- c | i 
+ c | i
 ---+---
 (0 rows)
 
 SELECT * FROM inet_tbl WHERE i < '192.168.1.0/24'::cidr ORDER BY i;
-      c      |      i      
+      c      |      i
 -------------+-------------
  10.0.0.0/8  | 9.1.2.3/8
  10.0.0.0/32 | 10.1.2.3/8
@@ -400,7 +400,7 @@ SELECT * FROM inet_tbl WHERE i < '192.168.1.0/24'::cidr ORDER BY i;
 (8 rows)
 
 SELECT * FROM inet_tbl WHERE i <= '192.168.1.0/24'::cidr ORDER BY i;
-       c        |       i        
+       c        |       i
 ----------------+----------------
  10.0.0.0/8     | 9.1.2.3/8
  10.0.0.0/8     | 10.1.2.3/8
@@ -414,13 +414,13 @@ SELECT * FROM inet_tbl WHERE i <= '192.168.1.0/24'::cidr ORDER BY i;
 (9 rows)
 
 SELECT * FROM inet_tbl WHERE i = '192.168.1.0/24'::cidr ORDER BY i;
-       c        |       i        
+       c        |       i
 ----------------+----------------
  192.168.1.0/24 | 192.168.1.0/24
 (1 row)
 
 SELECT * FROM inet_tbl WHERE i >= '192.168.1.0/24'::cidr ORDER BY i;
-         c          |        i         
+         c          |        i
 --------------------+------------------
  192.168.1.0/24     | 192.168.1.0/24
  192.168.1.0/24     | 192.168.1.226/24
@@ -434,7 +434,7 @@ SELECT * FROM inet_tbl WHERE i >= '192.168.1.0/24'::cidr ORDER BY i;
 (9 rows)
 
 SELECT * FROM inet_tbl WHERE i > '192.168.1.0/24'::cidr ORDER BY i;
-         c          |        i         
+         c          |        i
 --------------------+------------------
  192.168.1.0/24     | 192.168.1.226/24
  192.168.1.0/24     | 192.168.1.255/24
@@ -447,7 +447,7 @@ SELECT * FROM inet_tbl WHERE i > '192.168.1.0/24'::cidr ORDER BY i;
 (8 rows)
 
 SELECT * FROM inet_tbl WHERE i <> '192.168.1.0/24'::cidr ORDER BY i;
-         c          |        i         
+         c          |        i
 --------------------+------------------
  10.0.0.0/8         | 9.1.2.3/8
  10.0.0.0/8         | 10.1.2.3/8
@@ -470,7 +470,7 @@ SELECT * FROM inet_tbl WHERE i <> '192.168.1.0/24'::cidr ORDER BY i;
 -- test index-only scans
 EXPLAIN (COSTS OFF)
 SELECT i FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
-                    QUERY PLAN                     
+                    QUERY PLAN
 ---------------------------------------------------
  Sort
    Sort Key: i
@@ -479,7 +479,7 @@ SELECT i FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
 (4 rows)
 
 SELECT i FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
-        i         
+        i
 ------------------
  192.168.1.0/25
  192.168.1.255/25
@@ -492,7 +492,7 @@ DROP INDEX inet_idx2;
 CREATE INDEX inet_idx3 ON inet_tbl using spgist (i);
 SET enable_seqscan TO off;
 SELECT * FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/25
  192.168.1.0/24 | 192.168.1.255/25
@@ -500,7 +500,7 @@ SELECT * FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE i <<= '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -511,7 +511,7 @@ SELECT * FROM inet_tbl WHERE i <<= '192.168.1.0/24'::cidr ORDER BY i;
 (6 rows)
 
 SELECT * FROM inet_tbl WHERE i && '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -522,7 +522,7 @@ SELECT * FROM inet_tbl WHERE i && '192.168.1.0/24'::cidr ORDER BY i;
 (6 rows)
 
 SELECT * FROM inet_tbl WHERE i >>= '192.168.1.0/24'::cidr ORDER BY i;
-       c        |        i         
+       c        |        i
 ----------------+------------------
  192.168.1.0/24 | 192.168.1.0/24
  192.168.1.0/24 | 192.168.1.226/24
@@ -530,12 +530,12 @@ SELECT * FROM inet_tbl WHERE i >>= '192.168.1.0/24'::cidr ORDER BY i;
 (3 rows)
 
 SELECT * FROM inet_tbl WHERE i >> '192.168.1.0/24'::cidr ORDER BY i;
- c | i 
+ c | i
 ---+---
 (0 rows)
 
 SELECT * FROM inet_tbl WHERE i < '192.168.1.0/24'::cidr ORDER BY i;
-      c      |      i      
+      c      |      i
 -------------+-------------
  10.0.0.0/8  | 9.1.2.3/8
  10.0.0.0/32 | 10.1.2.3/8
@@ -548,7 +548,7 @@ SELECT * FROM inet_tbl WHERE i < '192.168.1.0/24'::cidr ORDER BY i;
 (8 rows)
 
 SELECT * FROM inet_tbl WHERE i <= '192.168.1.0/24'::cidr ORDER BY i;
-       c        |       i        
+       c        |       i
 ----------------+----------------
  10.0.0.0/8     | 9.1.2.3/8
  10.0.0.0/8     | 10.1.2.3/8
@@ -562,13 +562,13 @@ SELECT * FROM inet_tbl WHERE i <= '192.168.1.0/24'::cidr ORDER BY i;
 (9 rows)
 
 SELECT * FROM inet_tbl WHERE i = '192.168.1.0/24'::cidr ORDER BY i;
-       c        |       i        
+       c        |       i
 ----------------+----------------
  192.168.1.0/24 | 192.168.1.0/24
 (1 row)
 
 SELECT * FROM inet_tbl WHERE i >= '192.168.1.0/24'::cidr ORDER BY i;
-         c          |        i         
+         c          |        i
 --------------------+------------------
  192.168.1.0/24     | 192.168.1.0/24
  192.168.1.0/24     | 192.168.1.226/24
@@ -582,7 +582,7 @@ SELECT * FROM inet_tbl WHERE i >= '192.168.1.0/24'::cidr ORDER BY i;
 (9 rows)
 
 SELECT * FROM inet_tbl WHERE i > '192.168.1.0/24'::cidr ORDER BY i;
-         c          |        i         
+         c          |        i
 --------------------+------------------
  192.168.1.0/24     | 192.168.1.226/24
  192.168.1.0/24     | 192.168.1.255/24
@@ -595,7 +595,7 @@ SELECT * FROM inet_tbl WHERE i > '192.168.1.0/24'::cidr ORDER BY i;
 (8 rows)
 
 SELECT * FROM inet_tbl WHERE i <> '192.168.1.0/24'::cidr ORDER BY i;
-         c          |        i         
+         c          |        i
 --------------------+------------------
  10.0.0.0/8         | 9.1.2.3/8
  10.0.0.0/8         | 10.1.2.3/8
@@ -618,7 +618,7 @@ SELECT * FROM inet_tbl WHERE i <> '192.168.1.0/24'::cidr ORDER BY i;
 -- test index-only scans
 EXPLAIN (COSTS OFF)
 SELECT i FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
-                    QUERY PLAN                     
+                    QUERY PLAN
 ---------------------------------------------------
  Sort
    Sort Key: i
@@ -627,7 +627,7 @@ SELECT i FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
 (4 rows)
 
 SELECT i FROM inet_tbl WHERE i << '192.168.1.0/24'::cidr ORDER BY i;
-        i         
+        i
 ------------------
  192.168.1.0/25
  192.168.1.255/25
@@ -638,7 +638,7 @@ SET enable_seqscan TO on;
 DROP INDEX inet_idx3;
 -- simple tests of inet boolean and arithmetic operators
 SELECT i, ~i AS "~i" FROM inet_tbl;
-        i         |                     ~i                     
+        i         |                     ~i
 ------------------+--------------------------------------------
  192.168.1.226/24 | 63.87.254.29/24
  192.168.1.226    | 63.87.254.29
@@ -660,7 +660,7 @@ SELECT i, ~i AS "~i" FROM inet_tbl;
 (17 rows)
 
 SELECT i, c, i & c AS "and" FROM inet_tbl;
-        i         |         c          |      and       
+        i         |         c          |      and
 ------------------+--------------------+----------------
  192.168.1.226/24 | 192.168.1.0/24     | 192.168.1.0/24
  192.168.1.226    | 192.168.1.0/26     | 192.168.1.0
@@ -682,7 +682,7 @@ SELECT i, c, i & c AS "and" FROM inet_tbl;
 (17 rows)
 
 SELECT i, c, i | c AS "or" FROM inet_tbl;
-        i         |         c          |        or        
+        i         |         c          |        or
 ------------------+--------------------+------------------
  192.168.1.226/24 | 192.168.1.0/24     | 192.168.1.226/24
  192.168.1.226    | 192.168.1.0/26     | 192.168.1.226
@@ -704,7 +704,7 @@ SELECT i, c, i | c AS "or" FROM inet_tbl;
 (17 rows)
 
 SELECT i, i + 500 AS "i+500" FROM inet_tbl;
-        i         |      i+500       
+        i         |      i+500
 ------------------+------------------
  192.168.1.226/24 | 192.168.3.214/24
  192.168.1.226    | 192.168.3.214
@@ -726,7 +726,7 @@ SELECT i, i + 500 AS "i+500" FROM inet_tbl;
 (17 rows)
 
 SELECT i, i - 500 AS "i-500" FROM inet_tbl;
-        i         |                 i-500                  
+        i         |                 i-500
 ------------------+----------------------------------------
  192.168.1.226/24 | 192.167.255.238/24
  192.168.1.226    | 192.167.255.238
@@ -748,7 +748,7 @@ SELECT i, i - 500 AS "i-500" FROM inet_tbl;
 (17 rows)
 
 SELECT i, c, i - c AS "minus" FROM inet_tbl;
-        i         |         c          |      minus       
+        i         |         c          |      minus
 ------------------+--------------------+------------------
  192.168.1.226/24 | 192.168.1.0/24     |              226
  192.168.1.226    | 192.168.1.0/26     |              226
@@ -770,49 +770,49 @@ SELECT i, c, i - c AS "minus" FROM inet_tbl;
 (17 rows)
 
 SELECT '127.0.0.1'::inet + 257;
- ?column?  
+ ?column?
 -----------
  127.0.1.2
 (1 row)
 
 SELECT ('127.0.0.1'::inet + 257) - 257;
- ?column?  
+ ?column?
 -----------
  127.0.0.1
 (1 row)
 
 SELECT '127::1'::inet + 257;
- ?column? 
+ ?column?
 ----------
  127::102
 (1 row)
 
 SELECT ('127::1'::inet + 257) - 257;
- ?column? 
+ ?column?
 ----------
  127::1
 (1 row)
 
 SELECT '127.0.0.2'::inet  - ('127.0.0.2'::inet + 500);
- ?column? 
+ ?column?
 ----------
      -500
 (1 row)
 
 SELECT '127.0.0.2'::inet  - ('127.0.0.2'::inet - 500);
- ?column? 
+ ?column?
 ----------
       500
 (1 row)
 
 SELECT '127::2'::inet  - ('127::2'::inet + 500);
- ?column? 
+ ?column?
 ----------
      -500
 (1 row)
 
 SELECT '127::2'::inet  - ('127::2'::inet - 500);
- ?column? 
+ ?column?
 ----------
       500
 (1 row)
@@ -828,13 +828,13 @@ SELECT '127::1'::inet - '126::2'::inet;
 ERROR:  result is out of range
 -- but not these
 SELECT '127::1'::inet + 10000000000;
-     ?column?     
+     ?column?
 ------------------
  127::2:540b:e401
 (1 row)
 
 SELECT '127::1'::inet - '127::2'::inet;
- ?column? 
+ ?column?
 ----------
        -1
 (1 row)
@@ -846,7 +846,7 @@ SELECT inet_merge(c, i) FROM INET_TBL;
 ERROR:  cannot merge addresses from different families
 -- fix it by inet_same_family() condition
 SELECT inet_merge(c, i) FROM INET_TBL WHERE inet_same_family(c, i);
-   inet_merge    
+   inet_merge
 -----------------
  192.168.1.0/24
  192.168.1.0/24
@@ -961,7 +961,7 @@ SELECT a FROM (VALUES
   ('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/0'::inet),
   ('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128'::inet)
 ) AS i(a) ORDER BY a;
-                     a                      
+                     a
 --------------------------------------------
  0.0.0.0/0
  0.0.0.1/0
@@ -1058,38 +1058,37 @@ SELECT a FROM (VALUES
 
 -- test non-error-throwing API for some core types
 SELECT pg_input_is_valid('1234', 'cidr');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('1234', 'cidr');
-                  message                   | detail | hint | sql_error_code 
+                  message                   | detail | hint | sql_error_code
 --------------------------------------------+--------+------+----------------
  invalid input syntax for type cidr: "1234" |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('192.168.198.200/24', 'cidr');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('192.168.198.200/24', 'cidr');
-                 message                  |                detail                | hint | sql_error_code 
+                 message                  |                detail                | hint | sql_error_code
 ------------------------------------------+--------------------------------------+------+----------------
  invalid cidr value: "192.168.198.200/24" | Value has bits set to right of mask. |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('1234', 'inet');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('1234', 'inet');
-                  message                   | detail | hint | sql_error_code 
+                  message                   | detail | hint | sql_error_code
 --------------------------------------------+--------+------+----------------
  invalid input syntax for type inet: "1234" |        |      | 22P02
 (1 row)
-

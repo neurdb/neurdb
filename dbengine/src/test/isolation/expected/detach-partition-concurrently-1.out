@@ -50,7 +50,7 @@ a
 step s3i: SELECT relpartbound IS NULL FROM pg_class where relname = 'd_listp2';
 ?column?
 --------
-f       
+f
 (1 row)
 
 step s1c: COMMIT;
@@ -58,7 +58,7 @@ step s2detach: <... completed>
 step s3i: SELECT relpartbound IS NULL FROM pg_class where relname = 'd_listp2';
 ?column?
 --------
-t       
+t
 (1 row)
 
 step s2drop: DROP TABLE d_listp2;

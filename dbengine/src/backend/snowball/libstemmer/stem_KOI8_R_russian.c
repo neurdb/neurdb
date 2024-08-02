@@ -345,23 +345,23 @@ static int r_mark_regions(struct SN_env * z) {
     z->I[1] = z->l;
     z->I[0] = z->l;
     {   int c1 = z->c;
-        {   
+        {
             int ret = out_grouping(z, g_v, 192, 220, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
         z->I[1] = z->c;
-        {   
+        {
             int ret = in_grouping(z, g_v, 192, 220, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
-        {   
+        {
             int ret = out_grouping(z, g_v, 192, 220, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping(z, g_v, 192, 220, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
@@ -593,7 +593,7 @@ extern int russian_KOI8_R_stem(struct SN_env * z) {
         }
         z->c = c1;
     }
-    
+
     {   int ret = r_mark_regions(z);
         if (ret < 0) return ret;
     }
@@ -679,4 +679,3 @@ extern int russian_KOI8_R_stem(struct SN_env * z) {
 extern struct SN_env * russian_KOI8_R_create_env(void) { return SN_create_env(0, 2); }
 
 extern void russian_KOI8_R_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

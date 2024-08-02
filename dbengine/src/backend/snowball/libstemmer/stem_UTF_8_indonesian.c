@@ -145,7 +145,7 @@ static int r_remove_possessive_pronoun(struct SN_env * z) {
 }
 
 static int r_SUFFIX_KAN_OK(struct SN_env * z) {
-    
+
     if (!(z->I[0] != 3)) return 0;
     if (!(z->I[0] != 2)) return 0;
     return 1;
@@ -315,7 +315,7 @@ extern int indonesian_UTF_8_stem(struct SN_env * z) {
     {   int c1 = z->c;
         while(1) {
             int c2 = z->c;
-            {   
+            {
                 int ret = out_grouping_U(z, g_vowel, 97, 117, 1);
                 if (ret < 0) goto lab1;
                 z->c += ret;
@@ -404,4 +404,3 @@ lab2:
 extern struct SN_env * indonesian_UTF_8_create_env(void) { return SN_create_env(0, 2); }
 
 extern void indonesian_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

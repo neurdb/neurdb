@@ -721,7 +721,7 @@ static int r_mark_regions(struct SN_env * z) {
         break;
     }
     z->I[1] = z->c;
-    
+
     if (!(z->I[1] < z->I[0])) goto lab15;
     z->I[1] = z->I[0];
 lab15:
@@ -1207,7 +1207,7 @@ static int r_standard_suffix(struct SN_env * z) {
 }
 
 extern int yiddish_UTF_8_stem(struct SN_env * z) {
-    
+
     {   int ret = r_prelude(z);
         if (ret < 0) return ret;
     }
@@ -1219,7 +1219,7 @@ extern int yiddish_UTF_8_stem(struct SN_env * z) {
     }
     z->lb = z->c; z->c = z->l;
 
-    
+
     {   int ret = r_standard_suffix(z);
         if (ret < 0) return ret;
     }
@@ -1230,4 +1230,3 @@ extern int yiddish_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * yiddish_UTF_8_create_env(void) { return SN_create_env(0, 2); }
 
 extern void yiddish_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

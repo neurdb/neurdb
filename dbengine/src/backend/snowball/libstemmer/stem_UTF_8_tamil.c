@@ -1095,7 +1095,7 @@ static int r_remove_question_suffixes(struct SN_env * z) {
         z->c = z->l - m1;
     }
     z->c = z->lb;
-    
+
     {   int ret = r_fix_endings(z);
         if (ret < 0) return ret;
     }
@@ -1243,7 +1243,7 @@ static int r_remove_common_word_endings(struct SN_env * z) {
     }
 lab0:
     z->c = z->lb;
-    
+
     {   int ret = r_fix_endings(z);
         if (ret < 0) return ret;
     }
@@ -1469,7 +1469,7 @@ lab0:
         z->c = z->l - m20;
     }
     z->c = z->lb;
-    
+
     {   int ret = r_fix_endings(z);
         if (ret < 0) return ret;
     }
@@ -1797,7 +1797,7 @@ static int r_remove_tense_suffix(struct SN_env * z) {
         z->c = z->l - m17;
     }
     z->c = z->lb;
-    
+
     {   int ret = r_fix_endings(z);
         if (ret < 0) return ret;
     }
@@ -1875,4 +1875,3 @@ extern int tamil_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * tamil_UTF_8_create_env(void) { return SN_create_env(0, 2); }
 
 extern void tamil_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

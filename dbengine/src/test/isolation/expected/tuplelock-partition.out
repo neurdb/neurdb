@@ -6,7 +6,7 @@ step s1update_nokey: INSERT INTO parttab (key, col1, col2) VALUES (1, 'a', 'b') 
 step s2locktuple: SELECT * FROM parttab FOR KEY SHARE;
 col1|key|col2
 ----+---+----
-a   |  1|b   
+a   |  1|b
 (1 row)
 
 step s1c: COMMIT;
@@ -19,6 +19,5 @@ step s1c: COMMIT;
 step s2locktuple: <... completed>
 col1|key|col2
 ----+---+----
-a   |  1|b   
+a   |  1|b
 (1 row)
-

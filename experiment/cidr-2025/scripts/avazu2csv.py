@@ -21,8 +21,12 @@ def avazu2csv(input_file: str, output_file: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Combine three avazu npy (train, val, split) files into one csv file.")
-    parser.add_argument("--avazue_path", help="path to the directory containing the avazu npy file")
+    parser = argparse.ArgumentParser(
+        description="Combine three avazu npy (train, val, split) files into one csv file."
+    )
+    parser.add_argument(
+        "--avazue_path", help="path to the directory containing the avazu npy file"
+    )
     parser.add_argument("--output_file", help="path to the output file")
     args = parser.parse_args()
 

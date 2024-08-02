@@ -5,28 +5,28 @@ CREATE OR REPLACE FUNCTION perl_int(int) RETURNS INTEGER AS $$
 return undef;
 $$ LANGUAGE plperl;
 SELECT perl_int(11);
- perl_int 
+ perl_int
 ----------
-         
+
 (1 row)
 
 SELECT * FROM perl_int(42);
- perl_int 
+ perl_int
 ----------
-         
+
 (1 row)
 
 CREATE OR REPLACE FUNCTION perl_int(int) RETURNS INTEGER AS $$
 return $_[0] + 1;
 $$ LANGUAGE plperl;
 SELECT perl_int(11);
- perl_int 
+ perl_int
 ----------
        12
 (1 row)
 
 SELECT * FROM perl_int(42);
- perl_int 
+ perl_int
 ----------
        43
 (1 row)
@@ -35,12 +35,12 @@ CREATE OR REPLACE FUNCTION perl_set_int(int) RETURNS SETOF INTEGER AS $$
 return undef;
 $$ LANGUAGE plperl;
 SELECT perl_set_int(5);
- perl_set_int 
+ perl_set_int
 --------------
 (0 rows)
 
 SELECT * FROM perl_set_int(5);
- perl_set_int 
+ perl_set_int
 --------------
 (0 rows)
 
@@ -48,7 +48,7 @@ CREATE OR REPLACE FUNCTION perl_set_int(int) RETURNS SETOF INTEGER AS $$
 return [0..$_[0]];
 $$ LANGUAGE plperl;
 SELECT perl_set_int(5);
- perl_set_int 
+ perl_set_int
 --------------
             0
             1
@@ -59,7 +59,7 @@ SELECT perl_set_int(5);
 (6 rows)
 
 SELECT * FROM perl_set_int(5);
- perl_set_int 
+ perl_set_int
 --------------
             0
             1
@@ -75,28 +75,28 @@ CREATE OR REPLACE FUNCTION perl_row() RETURNS testrowperl AS $$
     return undef;
 $$ LANGUAGE plperl;
 SELECT perl_row();
- perl_row 
+ perl_row
 ----------
- 
+
 (1 row)
 
 SELECT * FROM perl_row();
- f1 | f2 | f3 | f4 
+ f1 | f2 | f3 | f4
 ----+----+----+----
-    |    |    | 
+    |    |    |
 (1 row)
 
 CREATE OR REPLACE FUNCTION perl_row() RETURNS testrowperl AS $$
     return {f2 => 'hello', f1 => 1, f3 => 'world', 'f4' => { 'f5' => [[1]] } };
 $$ LANGUAGE plperl;
 SELECT perl_row();
-         perl_row          
+         perl_row
 ---------------------------
  (1,hello,world,"({{1}})")
 (1 row)
 
 SELECT * FROM perl_row();
- f1 |  f2   |  f3   |   f4    
+ f1 |  f2   |  f3   |   f4
 ----+-------+-------+---------
   1 | hello | world | ({{1}})
 (1 row)
@@ -106,7 +106,7 @@ CREATE OR REPLACE FUNCTION perl_row_lit() RETURNS testrowperl AS $$
     return '(1,hello,world,"({{1}})")';
 $$ LANGUAGE plperl;
 SELECT perl_row_lit();
-       perl_row_lit        
+       perl_row_lit
 ---------------------------
  (1,hello,world,"({{1}})")
 (1 row)
@@ -115,12 +115,12 @@ CREATE OR REPLACE FUNCTION perl_set() RETURNS SETOF testrowperl AS $$
     return undef;
 $$  LANGUAGE plperl;
 SELECT perl_set();
- perl_set 
+ perl_set
 ----------
 (0 rows)
 
 SELECT * FROM perl_set();
- f1 | f2 | f3 | f4 
+ f1 | f2 | f3 | f4
 ----+----+----+----
 (0 rows)
 
@@ -152,7 +152,7 @@ CREATE OR REPLACE FUNCTION perl_set() RETURNS SETOF testrowperl AS $$
     ];
 $$  LANGUAGE plperl;
 SELECT perl_set();
-         perl_set          
+         perl_set
 ---------------------------
  (1,Hello,World,)
  (2,Hello,PostgreSQL,)
@@ -164,10 +164,10 @@ SELECT perl_set();
 (7 rows)
 
 SELECT * FROM perl_set();
- f1 |  f2   |     f3     |  f4   
+ f1 |  f2   |     f3     |  f4
 ----+-------+------------+-------
-  1 | Hello | World      | 
-  2 | Hello | PostgreSQL | 
+  1 | Hello | World      |
+  2 | Hello | PostgreSQL |
   3 | Hello | PL/Perl    | ()
   4 | Hello | PL/Perl    | ()
   5 | Hello | PL/Perl    | ({1})
@@ -179,9 +179,9 @@ CREATE OR REPLACE FUNCTION perl_record() RETURNS record AS $$
     return undef;
 $$ LANGUAGE plperl;
 SELECT perl_record();
- perl_record 
+ perl_record
 -------------
- 
+
 (1 row)
 
 SELECT * FROM perl_record();
@@ -189,9 +189,9 @@ ERROR:  a column definition list is required for functions returning "record"
 LINE 1: SELECT * FROM perl_record();
                       ^
 SELECT * FROM perl_record() AS (f1 integer, f2 text, f3 text, f4 testnestperl);
- f1 | f2 | f3 | f4 
+ f1 | f2 | f3 | f4
 ----+----+----+----
-    |    |    | 
+    |    |    |
 (1 row)
 
 CREATE OR REPLACE FUNCTION perl_record() RETURNS record AS $$
@@ -205,7 +205,7 @@ ERROR:  a column definition list is required for functions returning "record"
 LINE 1: SELECT * FROM perl_record();
                       ^
 SELECT * FROM perl_record() AS (f1 integer, f2 text, f3 text, f4 testnestperl);
- f1 |  f2   |  f3   |  f4   
+ f1 |  f2   |  f3   |  f4
 ----+-------+-------+-------
   1 | hello | world | ({1})
 (1 row)
@@ -214,7 +214,7 @@ CREATE OR REPLACE FUNCTION perl_record_set() RETURNS SETOF record AS $$
     return undef;
 $$  LANGUAGE plperl;
 SELECT perl_record_set();
- perl_record_set 
+ perl_record_set
 -----------------
 (0 rows)
 
@@ -223,7 +223,7 @@ ERROR:  a column definition list is required for functions returning "record"
 LINE 1: SELECT * FROM perl_record_set();
                       ^
 SELECT * FROM perl_record_set() AS (f1 integer, f2 text, f3 text);
- f1 | f2 | f3 
+ f1 | f2 | f3
 ----+----+----
 (0 rows)
 
@@ -259,7 +259,7 @@ ERROR:  a column definition list is required for functions returning "record"
 LINE 1: SELECT * FROM perl_record_set();
                       ^
 SELECT * FROM perl_record_set() AS (f1 integer, f2 text, f3 text);
- f1 |  f2   |     f3     
+ f1 |  f2   |     f3
 ----+-------+------------
   1 | Hello | World
   2 | Hello | PostgreSQL
@@ -271,19 +271,19 @@ perl_out_params(f1 out integer, f2 out text, f3 out text) AS $$
     return {f2 => 'hello', f1 => 1, f3 => 'world'};
 $$ LANGUAGE plperl;
 SELECT perl_out_params();
- perl_out_params 
+ perl_out_params
 -----------------
  (1,hello,world)
 (1 row)
 
 SELECT * FROM perl_out_params();
- f1 |  f2   |  f3   
+ f1 |  f2   |  f3
 ----+-------+-------
   1 | hello | world
 (1 row)
 
 SELECT (perl_out_params()).f2;
-  f2   
+  f2
 -------
  hello
 (1 row)
@@ -298,7 +298,7 @@ RETURNS SETOF record AS $$
     ];
 $$  LANGUAGE plperl;
 SELECT perl_out_params_set();
- perl_out_params_set  
+ perl_out_params_set
 ----------------------
  (1,Hello,World)
  (2,Hello,PostgreSQL)
@@ -306,7 +306,7 @@ SELECT perl_out_params_set();
 (3 rows)
 
 SELECT * FROM perl_out_params_set();
- f1 |  f2   |     f3     
+ f1 |  f2   |     f3
 ----+-------+------------
   1 | Hello | World
   2 | Hello | PostgreSQL
@@ -314,7 +314,7 @@ SELECT * FROM perl_out_params_set();
 (3 rows)
 
 SELECT (perl_out_params_set()).f3;
-     f3     
+     f3
 ------------
  World
  PostgreSQL
@@ -332,7 +332,7 @@ return [
 ];
 $$ LANGUAGE plperl;
 SELECT * FROM foo_good();
- x | y 
+ x | y
 ---+---
  1 | 2
  3 | 4
@@ -394,7 +394,7 @@ CREATE OR REPLACE FUNCTION foo_ordered() RETURNS orderedfootype AS $$
     return {x => 3, y => 4};
 $$ LANGUAGE plperl;
 SELECT * FROM foo_ordered();
- x | y 
+ x | y
 ---+---
  3 | 4
 (1 row)
@@ -412,7 +412,7 @@ return [
 ];
 $$ LANGUAGE plperl;
 SELECT * FROM foo_ordered_set();
- x | y 
+ x | y
 ---+---
  3 | 4
  4 | 7
@@ -434,34 +434,34 @@ CREATE OR REPLACE FUNCTION perl_get_field(footype, text) RETURNS integer AS $$
     return $_[0]->{$_[1]};
 $$ LANGUAGE plperl;
 SELECT perl_get_field((11,12), 'x');
- perl_get_field 
+ perl_get_field
 ----------------
              11
 (1 row)
 
 SELECT perl_get_field((11,12), 'y');
- perl_get_field 
+ perl_get_field
 ----------------
              12
 (1 row)
 
 SELECT perl_get_field((11,12), 'z');
- perl_get_field 
+ perl_get_field
 ----------------
-               
+
 (1 row)
 
 CREATE OR REPLACE FUNCTION perl_get_cfield(orderedfootype, text) RETURNS integer AS $$
     return $_[0]->{$_[1]};
 $$ LANGUAGE plperl;
 SELECT perl_get_cfield((11,12), 'x');
- perl_get_cfield 
+ perl_get_cfield
 -----------------
               11
 (1 row)
 
 SELECT perl_get_cfield((11,12), 'y');
- perl_get_cfield 
+ perl_get_cfield
 -----------------
               12
 (1 row)
@@ -472,19 +472,19 @@ CREATE OR REPLACE FUNCTION perl_get_rfield(record, text) RETURNS integer AS $$
     return $_[0]->{$_[1]};
 $$ LANGUAGE plperl;
 SELECT perl_get_rfield((11,12), 'f1');
- perl_get_rfield 
+ perl_get_rfield
 -----------------
               11
 (1 row)
 
 SELECT perl_get_rfield((11,12)::footype, 'y');
- perl_get_rfield 
+ perl_get_rfield
 -----------------
               12
 (1 row)
 
 SELECT perl_get_rfield((11,12)::orderedfootype, 'x');
- perl_get_rfield 
+ perl_get_rfield
 -----------------
               11
 (1 row)
@@ -502,7 +502,7 @@ for ("World", "PostgreSQL", "PL/Perl") {
 return;
 $$ language plperl;
 SELECT * from perl_srf_rn() AS (f1 INTEGER, f2 TEXT, f3 TEXT);
- f1 |  f2   |     f3     
+ f1 |  f2   |     f3
 ----+-------+------------
   1 | Hello | World
   2 | Hello | PostgreSQL
@@ -520,7 +520,7 @@ while (defined (my $y = spi_fetchrow($x))) {
 return;
 $$ LANGUAGE plperl;
 SELECT * from perl_spi_func();
- perl_spi_func 
+ perl_spi_func
 ---------------
              1
              2
@@ -535,7 +535,7 @@ spi_cursor_close( $x);
 return 0;
 $$ LANGUAGE plperl;
 SELECT * from perl_spi_func2();
- perl_spi_func2 
+ perl_spi_func2
 ----------------
               0
 (1 row)
@@ -564,14 +564,14 @@ AS $$
 
 $$;
 SELECT * FROM recurse(2);
- recurse 
+ recurse
 ---------
  hello 1
  hello 2
 (2 rows)
 
 SELECT * FROM recurse(3);
-      recurse       
+      recurse
 --------------------
  hello 1
  hello 2
@@ -588,7 +588,7 @@ LANGUAGE plperl as $$
     return [['a"b',undef,'c,d'],['e\\f',undef,'g']];
 $$;
 SELECT array_of_text();
-             array_of_text             
+             array_of_text
 ---------------------------------------
  {{"a\"b",NULL,"c,d"},{"e\\f",NULL,g}}
 (1 row)
@@ -603,7 +603,7 @@ CREATE OR REPLACE FUNCTION perl_spi_prepared(INTEGER) RETURNS INTEGER AS $$
 return $q->{rows}->[0]->{a};
 $$ LANGUAGE plperl;
 SELECT * from perl_spi_prepared(42);
- perl_spi_prepared 
+ perl_spi_prepared
 -------------------
                 43
 (1 row)
@@ -621,7 +621,7 @@ CREATE OR REPLACE FUNCTION perl_spi_prepared_set(INTEGER, INTEGER) RETURNS SETOF
   return;
 $$ LANGUAGE plperl;
 SELECT * from perl_spi_prepared_set(1,2);
- perl_spi_prepared_set 
+ perl_spi_prepared_set
 -----------------------
                      2
                      4
@@ -641,7 +641,7 @@ CREATE OR REPLACE FUNCTION perl_spi_prepared_double(double precision) RETURNS do
   return $result;
 $$ LANGUAGE plperl;
 SELECT perl_spi_prepared_double(4.35) as "double precision";
- double precision 
+ double precision
 ------------------
              43.5
 (1 row)
@@ -670,7 +670,7 @@ CREATE OR REPLACE FUNCTION perl_spi_prepared() RETURNS INTEGER AS $$
 return $q->{rows}->[0]->{a}->{x};
 $$ LANGUAGE plperl;
 SELECT * from perl_spi_prepared();
- perl_spi_prepared 
+ perl_spi_prepared
 -------------------
                  1
 (1 row)
@@ -683,7 +683,7 @@ CREATE OR REPLACE FUNCTION perl_spi_prepared_row(footype) RETURNS footype AS $$
 return $q->{rows}->[0]->{a};
 $$ LANGUAGE plperl;
 SELECT * from perl_spi_prepared_row('(1, 2)');
- x | y 
+ x | y
 ---+---
  1 | 2
 (1 row)
@@ -737,9 +737,9 @@ CREATE OR REPLACE FUNCTION myfuncs() RETURNS void AS $$
    };
 $$ LANGUAGE plperl;
 SELECT myfuncs();
- myfuncs 
+ myfuncs
 ---------
- 
+
 (1 row)
 
 -- make sure we can't return an array as a scalar
@@ -769,7 +769,7 @@ CREATE OR REPLACE FUNCTION text_scalarref() RETURNS text AS $$
 	return \$str;
 $$ LANGUAGE plperl;
 SELECT text_scalarref();
- text_scalarref 
+ text_scalarref
 ----------------
  str
 (1 row)
@@ -781,14 +781,13 @@ CREATE OR REPLACE FUNCTION self_modify(INTEGER) RETURNS INTEGER AS $$
    return $_[0] * 2;
 $$ LANGUAGE plperl;
 SELECT self_modify(42);
- self_modify 
+ self_modify
 -------------
           84
 (1 row)
 
 SELECT self_modify(42);
- self_modify 
+ self_modify
 -------------
          126
 (1 row)
-

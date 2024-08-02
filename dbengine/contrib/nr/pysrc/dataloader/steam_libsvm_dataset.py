@@ -6,10 +6,10 @@ import time
 
 class StreamingDataSet:
     def __init__(
-            self,
-            data_cache: DataCache,
-            stage_counts: Dict[Bufferkey, int] = None,
-            data_key: Bufferkey = Bufferkey.TRAIN_KEY,
+        self,
+        data_cache: DataCache,
+        stage_counts: Dict[Bufferkey, int] = None,
+        data_key: Bufferkey = Bufferkey.TRAIN_KEY,
     ):
 
         self.data_cache = data_cache
@@ -56,11 +56,14 @@ class StreamingDataSet:
         if self.current_stage_batch_count >= self.stage_counts[self.current_stage]:
             _pre_stage_for_log = self.current_stage
             # switch to next stage
-            self.current_stage_index = (self.current_stage_index + 1) % len(self.ml_stages)
+            self.current_stage_index = (self.current_stage_index + 1) % len(
+                self.ml_stages
+            )
             self.current_stage = self.ml_stages[self.current_stage_index]
             logger.debug(
                 f"[Streaming Dataloader]: stage {_pre_stage_for_log} finished batch "
-                f"{self.current_stage_batch_count} and switch to stage {self.current_stage}!!")
+                f"{self.current_stage_batch_count} and switch to stage {self.current_stage}!!"
+            )
             self.current_stage_batch_count = 0
         return batch_data
 
@@ -69,7 +72,7 @@ class StreamingDataSet:
         return self.stage_counts[self.current_stage]
 
     def setup_for_train_task(
-            self, train_batch_num: int, eva_batch_num: int, test_batch_num: int
+        self, train_batch_num: int, eva_batch_num: int, test_batch_num: int
     ):
 
         self.stage_counts = {

@@ -34,7 +34,7 @@ ERROR:  invalid input syntax for type path: "(1,2),(3,4)]"
 LINE 1: INSERT INTO PATH_TBL VALUES ('(1,2),(3,4)]');
                                      ^
 SELECT f1 AS open_path FROM PATH_TBL WHERE isopen(f1);
-         open_path         
+         open_path
 ---------------------------
  [(1,2),(3,4)]
  [(0,0),(3,0),(4,5),(1,6)]
@@ -43,7 +43,7 @@ SELECT f1 AS open_path FROM PATH_TBL WHERE isopen(f1);
 (4 rows)
 
 SELECT f1 AS closed_path FROM PATH_TBL WHERE isclosed(f1);
-    closed_path    
+    closed_path
 -------------------
  ((1,2),(3,4))
  ((1,2),(3,4))
@@ -53,7 +53,7 @@ SELECT f1 AS closed_path FROM PATH_TBL WHERE isclosed(f1);
 (5 rows)
 
 SELECT pclose(f1) AS closed_path FROM PATH_TBL;
-        closed_path        
+        closed_path
 ---------------------------
  ((1,2),(3,4))
  ((1,2),(3,4))
@@ -67,7 +67,7 @@ SELECT pclose(f1) AS closed_path FROM PATH_TBL;
 (9 rows)
 
 SELECT popen(f1) AS open_path FROM PATH_TBL;
-         open_path         
+         open_path
 ---------------------------
  [(1,2),(3,4)]
  [(1,2),(3,4)]
@@ -82,26 +82,25 @@ SELECT popen(f1) AS open_path FROM PATH_TBL;
 
 -- test non-error-throwing API for some core types
 SELECT pg_input_is_valid('[(1,2),(3)]', 'path');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('[(1,2),(3)]', 'path');
-                      message                      | detail | hint | sql_error_code 
+                      message                      | detail | hint | sql_error_code
 ---------------------------------------------------+--------+------+----------------
  invalid input syntax for type path: "[(1,2),(3)]" |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('[(1,2,6),(3,4,6)]', 'path');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('[(1,2,6),(3,4,6)]', 'path');
-                         message                         | detail | hint | sql_error_code 
+                         message                         | detail | hint | sql_error_code
 ---------------------------------------------------------+--------+------+----------------
  invalid input syntax for type path: "[(1,2,6),(3,4,6)]" |        |      | 22P02
 (1 row)
-

@@ -24,8 +24,7 @@ NOTICE:  testing intset with pattern "sparse"
 NOTICE:  testing intset with pattern "single values, distance > 2^32"
 NOTICE:  testing intset with pattern "clusters, distance > 2^32"
 NOTICE:  testing intset with pattern "clusters, distance > 2^60"
- test_integerset 
+ test_integerset
 -----------------
- 
-(1 row)
 
+(1 row)

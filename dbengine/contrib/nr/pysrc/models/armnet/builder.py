@@ -38,14 +38,14 @@ class ARMNetModelBuilder(BuilderBase):
             ).to(DEVICE)
 
     def train(
-            self,
-            train_loader: Union[DataLoader, StreamingDataSet],
-            val_loader: Union[DataLoader, StreamingDataSet],
-            test_loader: Union[DataLoader, StreamingDataSet],
-            epochs: int,
-            train_batch_num: int,
-            eva_batch_num: int,
-            test_batch_num: int,
+        self,
+        train_loader: Union[DataLoader, StreamingDataSet],
+        val_loader: Union[DataLoader, StreamingDataSet],
+        test_loader: Union[DataLoader, StreamingDataSet],
+        epochs: int,
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int,
     ):
         logger = self._logger.bind(task="train")
 
@@ -210,17 +210,19 @@ class ARMNetModelBuilder(BuilderBase):
         self._logger.info("Train end", time=timeSince(since=start_time))
 
         if isinstance(train_loader, StreamingDataSet):
-            self._logger.info(f"streaming dataloader time usage = {train_loader.total_time_fetching}")
+            self._logger.info(
+                f"streaming dataloader time usage = {train_loader.total_time_fetching}"
+            )
         # logger.info(
         #     f"Total running time for training/validation/test: {timeSince(since=start_time)}"
         # )
 
     def _evaluate(
-            self,
-            data_loader: Union[DataLoader, StreamingDataSet],
-            opt_metric,
-            namespace: str,
-            batch_num: int,
+        self,
+        data_loader: Union[DataLoader, StreamingDataSet],
+        opt_metric,
+        namespace: str,
+        batch_num: int,
     ):
         logger = self._logger.bind(task=namespace)
 
@@ -265,7 +267,7 @@ class ARMNetModelBuilder(BuilderBase):
         return auc_avg.avg
 
     def inference(
-            self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
+        self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
     ):
         logger = self._logger.bind(task="inference")
         print(f"begin inference for {inf_batch_num} batches ")

@@ -35,7 +35,7 @@ SELECT explain_memoize('
 SELECT COUNT(*),AVG(t1.unique1) FROM tenk1 t1
 INNER JOIN tenk1 t2 ON t1.unique1 = t2.twenty
 WHERE t2.unique1 < 1000;', false);
-                                      explain_memoize                                      
+                                      explain_memoize
 -------------------------------------------------------------------------------------------
  Aggregate (actual rows=1 loops=N)
    ->  Nested Loop (actual rows=1000 loops=N)
@@ -55,7 +55,7 @@ WHERE t2.unique1 < 1000;', false);
 SELECT COUNT(*),AVG(t1.unique1) FROM tenk1 t1
 INNER JOIN tenk1 t2 ON t1.unique1 = t2.twenty
 WHERE t2.unique1 < 1000;
- count |        avg         
+ count |        avg
 -------+--------------------
   1000 | 9.5000000000000000
 (1 row)
@@ -66,7 +66,7 @@ SELECT COUNT(*),AVG(t2.unique1) FROM tenk1 t1,
 LATERAL (SELECT t2.unique1 FROM tenk1 t2
          WHERE t1.twenty = t2.unique1 OFFSET 0) t2
 WHERE t1.unique1 < 1000;', false);
-                                      explain_memoize                                      
+                                      explain_memoize
 -------------------------------------------------------------------------------------------
  Aggregate (actual rows=1 loops=N)
    ->  Nested Loop (actual rows=1000 loops=N)
@@ -87,7 +87,7 @@ SELECT COUNT(*),AVG(t2.unique1) FROM tenk1 t1,
 LATERAL (SELECT t2.unique1 FROM tenk1 t2
          WHERE t1.twenty = t2.unique1 OFFSET 0) t2
 WHERE t1.unique1 < 1000;
- count |        avg         
+ count |        avg
 -------+--------------------
   1000 | 9.5000000000000000
 (1 row)
@@ -107,7 +107,7 @@ VACUUM ANALYZE expr_key;
 SELECT explain_memoize('
 SELECT * FROM expr_key t1 INNER JOIN expr_key t2
 ON t1.x = t2.t::numeric AND t1.t::numeric = t2.x;', false);
-                                      explain_memoize                                      
+                                      explain_memoize
 -------------------------------------------------------------------------------------------
  Nested Loop (actual rows=80 loops=N)
    ->  Seq Scan on expr_key t1 (actual rows=40 loops=N)
@@ -132,7 +132,7 @@ SELECT explain_memoize('
 SELECT COUNT(*),AVG(t1.unique1) FROM tenk1 t1
 INNER JOIN tenk1 t2 ON t1.unique1 = t2.thousand
 WHERE t2.unique1 < 1200;', true);
-                                      explain_memoize                                      
+                                      explain_memoize
 -------------------------------------------------------------------------------------------
  Aggregate (actual rows=1 loops=N)
    ->  Nested Loop (actual rows=1200 loops=N)
@@ -156,7 +156,7 @@ SET enable_seqscan TO off;
 -- Ensure memoize operates in logical mode
 SELECT explain_memoize('
 SELECT * FROM flt f1 INNER JOIN flt f2 ON f1.f = f2.f;', false);
-                                explain_memoize                                
+                                explain_memoize
 -------------------------------------------------------------------------------
  Nested Loop (actual rows=4 loops=N)
    ->  Index Only Scan using flt_f_idx on flt f1 (actual rows=2 loops=N)
@@ -173,7 +173,7 @@ SELECT * FROM flt f1 INNER JOIN flt f2 ON f1.f = f2.f;', false);
 -- Ensure memoize operates in binary mode
 SELECT explain_memoize('
 SELECT * FROM flt f1 INNER JOIN flt f2 ON f1.f >= f2.f;', false);
-                                explain_memoize                                
+                                explain_memoize
 -------------------------------------------------------------------------------
  Nested Loop (actual rows=4 loops=N)
    ->  Index Only Scan using flt_f_idx on flt f1 (actual rows=2 loops=N)
@@ -200,7 +200,7 @@ ANALYZE strtest;
 -- Ensure we get 3 hits and 3 misses
 SELECT explain_memoize('
 SELECT * FROM strtest s1 INNER JOIN strtest s2 ON s1.n >= s2.n;', false);
-                                 explain_memoize                                  
+                                 explain_memoize
 ----------------------------------------------------------------------------------
  Nested Loop (actual rows=24 loops=N)
    ->  Seq Scan on strtest s1 (actual rows=6 loops=N)
@@ -215,7 +215,7 @@ SELECT * FROM strtest s1 INNER JOIN strtest s2 ON s1.n >= s2.n;', false);
 -- Ensure we get 3 hits and 3 misses
 SELECT explain_memoize('
 SELECT * FROM strtest s1 INNER JOIN strtest s2 ON s1.t >= s2.t;', false);
-                                 explain_memoize                                  
+                                 explain_memoize
 ----------------------------------------------------------------------------------
  Nested Loop (actual rows=24 loops=N)
    ->  Seq Scan on strtest s1 (actual rows=6 loops=N)
@@ -240,7 +240,7 @@ CREATE INDEX iprt_p2_a ON prt_p2 (a);
 ANALYZE prt;
 SELECT explain_memoize('
 SELECT * FROM prt t1 INNER JOIN prt t2 ON t1.a = t2.a;', false);
-                                     explain_memoize                                      
+                                     explain_memoize
 ------------------------------------------------------------------------------------------
  Append (actual rows=32 loops=N)
    ->  Nested Loop (actual rows=16 loops=N)
@@ -271,7 +271,7 @@ SELECT explain_memoize('
 SELECT * FROM prt_p1 t1 INNER JOIN
 (SELECT * FROM prt_p1 UNION ALL SELECT * FROM prt_p2) t2
 ON t1.a = t2.a;', false);
-                                   explain_memoize                                   
+                                   explain_memoize
 -------------------------------------------------------------------------------------
  Nested Loop (actual rows=16 loops=N)
    ->  Index Only Scan using iprt_p1_a on prt_p1 t1 (actual rows=4 loops=N)
@@ -301,7 +301,7 @@ WHERE unique1 < 3
 	SELECT 1 FROM tenk1 t1
 	INNER JOIN tenk1 t2 ON t1.unique1 = t2.hundred
 	WHERE t0.ten = t1.twenty AND t0.two <> t2.four OFFSET 0);
-                           QUERY PLAN                           
+                           QUERY PLAN
 ----------------------------------------------------------------
  Index Scan using tenk1_unique1 on tenk1 t0
    Index Cond: (unique1 < 3)
@@ -325,7 +325,7 @@ WHERE unique1 < 3
 	SELECT 1 FROM tenk1 t1
 	INNER JOIN tenk1 t2 ON t1.unique1 = t2.hundred
 	WHERE t0.ten = t1.twenty AND t0.two <> t2.four OFFSET 0);
- unique1 
+ unique1
 ---------
        2
 (1 row)
@@ -346,7 +346,7 @@ EXPLAIN (COSTS OFF)
 SELECT COUNT(*),AVG(t2.unique1) FROM tenk1 t1,
 LATERAL (SELECT t2.unique1 FROM tenk1 t2 WHERE t1.twenty = t2.unique1) t2
 WHERE t1.unique1 < 1000;
-                                  QUERY PLAN                                   
+                                  QUERY PLAN
 -------------------------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -368,7 +368,7 @@ WHERE t1.unique1 < 1000;
 SELECT COUNT(*),AVG(t2.unique1) FROM tenk1 t1,
 LATERAL (SELECT t2.unique1 FROM tenk1 t2 WHERE t1.twenty = t2.unique1) t2
 WHERE t1.unique1 < 1000;
- count |        avg         
+ count |        avg
 -------+--------------------
   1000 | 9.5000000000000000
 (1 row)

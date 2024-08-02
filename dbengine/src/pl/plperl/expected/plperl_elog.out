@@ -7,9 +7,9 @@ create or replace function perl_elog(text) returns void language plperl as $$
 $$;
 select perl_elog('explicit elog');
 NOTICE:  explicit elog
- perl_elog 
+ perl_elog
 -----------
- 
+
 (1 row)
 
 create or replace function perl_warn(text) returns void language plperl as $$
@@ -20,9 +20,9 @@ create or replace function perl_warn(text) returns void language plperl as $$
 $$;
 select perl_warn('implicit elog via warn');
 WARNING:  implicit elog via warn at line 4.
- perl_warn 
+ perl_warn
 -----------
- 
+
 (1 row)
 
 -- test strict mode on/off
@@ -51,7 +51,7 @@ create or replace function uses_global() returns text language plperl as $$
 
 $$;
 select uses_global();
-    uses_global     
+    uses_global
 --------------------
  uses_global worked
 (1 row)
@@ -78,7 +78,7 @@ END;
 $$;
 select die_caller();
 NOTICE:  caught die
- die_caller 
+ die_caller
 ------------
           1
 (1 row)
@@ -92,7 +92,7 @@ $$;
 select indirect_die_caller();
 NOTICE:  caught die
 NOTICE:  caught die
- indirect_die_caller 
+ indirect_die_caller
 ---------------------
                    2
 (1 row)

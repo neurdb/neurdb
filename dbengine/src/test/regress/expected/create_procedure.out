@@ -17,26 +17,26 @@ INSERT INTO cp_test VALUES (1, x);
 $$;
 \df ptest1
                         List of functions
- Schema |  Name  | Result data type | Argument data types | Type 
+ Schema |  Name  | Result data type | Argument data types | Type
 --------+--------+------------------+---------------------+------
  public | ptest1 |                  | IN x text           | proc
 (1 row)
 
 SELECT pg_get_functiondef('ptest1'::regproc);
-                  pg_get_functiondef                  
+                  pg_get_functiondef
 ------------------------------------------------------
  CREATE OR REPLACE PROCEDURE public.ptest1(IN x text)+
   LANGUAGE sql                                       +
  AS $procedure$                                      +
  INSERT INTO cp_test VALUES (1, x);                  +
  $procedure$                                         +
- 
+
 (1 row)
 
 -- show only normal functions
 \dfn public.*test*1
                            List of functions
- Schema |     Name     | Result data type | Argument data types | Type 
+ Schema |     Name     | Result data type | Argument data types | Type
 --------+--------------+------------------+---------------------+------
  public | cp_testfunc1 | integer          | a integer           | func
 (1 row)
@@ -44,7 +44,7 @@ SELECT pg_get_functiondef('ptest1'::regproc);
 -- show only procedures
 \dfp public.*test*1
                         List of functions
- Schema |  Name  | Result data type | Argument data types | Type 
+ Schema |  Name  | Result data type | Argument data types | Type
 --------+--------+------------------+---------------------+------
  public | ptest1 |                  | IN x text           | proc
 (1 row)
@@ -58,7 +58,7 @@ CALL ptest1('a');  -- ok
 CALL ptest1('xy' || 'zzy');  -- ok, constant-folded arg
 CALL ptest1(substring(random()::numeric(20,15)::text, 1, 1));  -- ok, volatile arg
 SELECT * FROM cp_test ORDER BY b COLLATE "C";
- a |   b   
+ a |   b
 ---+-------
  1 | 0
  1 | a
@@ -73,13 +73,13 @@ BEGIN ATOMIC
 END;
 \df ptest1s
                         List of functions
- Schema |  Name   | Result data type | Argument data types | Type 
+ Schema |  Name   | Result data type | Argument data types | Type
 --------+---------+------------------+---------------------+------
  public | ptest1s |                  | IN x text           | proc
 (1 row)
 
 SELECT pg_get_functiondef('ptest1s'::regproc);
-                  pg_get_functiondef                   
+                  pg_get_functiondef
 -------------------------------------------------------
  CREATE OR REPLACE PROCEDURE public.ptest1s(IN x text)+
   LANGUAGE sql                                        +
@@ -87,12 +87,12 @@ SELECT pg_get_functiondef('ptest1s'::regproc);
   INSERT INTO cp_test (a, b)                          +
     VALUES (1, ptest1s.x);                            +
  END                                                  +
- 
+
 (1 row)
 
 CALL ptest1s('b');
 SELECT * FROM cp_test ORDER BY b COLLATE "C";
- a |   b   
+ a |   b
 ---+-------
  1 | 0
  1 | a
@@ -123,7 +123,7 @@ CALL ptest1($1);
 $$;
 CALL ptest3('b');
 SELECT * FROM cp_test;
- a | b 
+ a | b
 ---+---
  1 | b
  1 | b
@@ -136,7 +136,7 @@ AS $$
 SELECT 1, 2;
 $$;
 CALL ptest4a(NULL, NULL);
- a | b 
+ a | b
 ---+---
  1 | 2
 (1 row)
@@ -155,7 +155,7 @@ AS $$
 SELECT ROW(1, 2);
 $$;
 CALL ptest4c(NULL);
- comp  
+ comp
 -------
  (1,2)
 (1 row)
@@ -174,7 +174,7 @@ CALL ptest5(10, 'Hello');
 CALL ptest5(10, b => 'Hello');
 CALL ptest5(b => 'Hello', a => 10);
 SELECT * FROM cp_test;
-  a  |   b   
+  a  |   b
 -----+-------
   10 | Hello
   20 | Hello
@@ -206,19 +206,19 @@ BEGIN ATOMIC
 END;
 \df ptest8
                         List of functions
- Schema |  Name  | Result data type | Argument data types | Type 
+ Schema |  Name  | Result data type | Argument data types | Type
 --------+--------+------------------+---------------------+------
  public | ptest8 |                  | IN x text           | proc
 (1 row)
 
 SELECT pg_get_functiondef('ptest8'::regproc);
-                  pg_get_functiondef                  
+                  pg_get_functiondef
 ------------------------------------------------------
  CREATE OR REPLACE PROCEDURE public.ptest8(IN x text)+
   LANGUAGE sql                                       +
  BEGIN ATOMIC                                        +
  END                                                 +
- 
+
 (1 row)
 
 CALL ptest8('');
@@ -231,14 +231,14 @@ SELECT 1;
 $$;
 -- standard way to do a call:
 CALL ptest9(NULL);
- a 
+ a
 ---
  1
 (1 row)
 
 -- you can write an expression, but it's not evaluated
 CALL ptest9(1/0);  -- no error
- a 
+ a
 ---
  1
 (1 row)
@@ -253,31 +253,31 @@ HINT:  No procedure matches the given name and argument types. You might need to
 CREATE PROCEDURE ptest10(OUT a int, IN b int, IN c int)
 LANGUAGE SQL AS $$ SELECT b - c $$;
 CALL ptest10(null, 7, 4);
- a 
+ a
 ---
  3
 (1 row)
 
 CALL ptest10(a => null, b => 8, c => 2);
- a 
+ a
 ---
  6
 (1 row)
 
 CALL ptest10(null, 7, c => 2);
- a 
+ a
 ---
  5
 (1 row)
 
 CALL ptest10(null, c => 4, b => 11);
- a 
+ a
 ---
  7
 (1 row)
 
 CALL ptest10(b => 8, c => 2, a => 0);
- a 
+ a
 ---
  6
 (1 row)
@@ -285,7 +285,7 @@ CALL ptest10(b => 8, c => 2, a => 0);
 CREATE PROCEDURE ptest11(a OUT int, VARIADIC b int[]) LANGUAGE SQL
   AS $$ SELECT b[1] + b[2] $$;
 CALL ptest11(null, 11, 12, 13);
- a  
+ a
 ----
  23
 (1 row)
@@ -295,7 +295,7 @@ CREATE PROCEDURE ptest10(IN a int, IN b int, IN c int)
 LANGUAGE SQL AS $$ SELECT a + b - c $$;
 \df ptest10
                                    List of functions
- Schema |  Name   | Result data type |            Argument data types            | Type 
+ Schema |  Name   | Result data type |            Argument data types            | Type
 --------+---------+------------------+-------------------------------------------+------
  public | ptest10 |                  | IN a integer, IN b integer, IN c integer  | proc
  public | ptest10 |                  | OUT a integer, IN b integer, IN c integer | proc
@@ -310,7 +310,7 @@ begin;
 drop procedure ptest10(out int, int, int);
 \df ptest10
                                    List of functions
- Schema |  Name   | Result data type |           Argument data types            | Type 
+ Schema |  Name   | Result data type |           Argument data types            | Type
 --------+---------+------------------+------------------------------------------+------
  public | ptest10 |                  | IN a integer, IN b integer, IN c integer | proc
 (1 row)
@@ -321,7 +321,7 @@ begin;
 drop procedure ptest10(in int, int, int);
 \df ptest10
                                    List of functions
- Schema |  Name   | Result data type |            Argument data types            | Type 
+ Schema |  Name   | Result data type |            Argument data types            | Type
 --------+---------+------------------+-------------------------------------------+------
  public | ptest10 |                  | OUT a integer, IN b integer, IN c integer | proc
 (1 row)

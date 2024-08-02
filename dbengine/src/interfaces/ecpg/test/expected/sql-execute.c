@@ -31,24 +31,24 @@ int
 main(void)
 {
 /* exec sql begin declare section */
-	 
-	 
-	 
-	 
-	 
+
+
+
+
+
 
 #line 14 "execute.pgc"
  int amount [ 8 ] ;
- 
+
 #line 15 "execute.pgc"
  int increment = 100 ;
- 
+
 #line 16 "execute.pgc"
  char name [ 8 ] [ 8 ] ;
- 
+
 #line 17 "execute.pgc"
  char letter [ 8 ] [ 1 ] ;
- 
+
 #line 18 "execute.pgc"
  char command [ 128 ] ;
 /* exec sql end declare section */
@@ -58,7 +58,7 @@ main(void)
 
 	ECPGdebug(1, stderr);
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , "main", 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , "main", 0);
 #line 24 "execute.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -110,8 +110,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 40 "execute.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "i", 
-	ECPGt_int,&(increment),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "i",
+	ECPGt_int,&(increment),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 41 "execute.pgc"
 
@@ -140,20 +140,20 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 50 "execute.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare CUR cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare CUR cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 52 "execute.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 52 "execute.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch 8 in CUR", ECPGt_EOIT, 
-	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,(amount),(long)1,(long)8,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch 8 in CUR", ECPGt_EOIT,
+	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,(amount),(long)1,(long)8,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 53 "execute.pgc"
 
@@ -164,12 +164,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 	for (i=0, j=sqlca.sqlerrd[2]; i<j; i++)
 	{
 		/* exec sql begin declare section */
-		    
-		   
-		
+
+
+
 #line 58 "execute.pgc"
  char n [ 8 ] , l = letter [ i ] [ 0 ] ;
- 
+
 #line 59 "execute.pgc"
  int a = amount [ i ] ;
 /* exec sql end declare section */
@@ -205,22 +205,22 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 72 "execute.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare CUR2 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_const,"1",(long)1,(long)1,strlen("1"), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare CUR2 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_const,"1",(long)1,(long)1,strlen("1"),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 74 "execute.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 74 "execute.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch in CUR2", ECPGt_EOIT, 
-	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,(amount),(long)1,(long)8,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch in CUR2", ECPGt_EOIT,
+	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,(amount),(long)1,(long)8,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 75 "execute.pgc"
 
@@ -231,12 +231,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 	for (i=0, j=sqlca.sqlerrd[2]; i<j; i++)
 	{
 		/* exec sql begin declare section */
-		    
-		   
-		
+
+
+
 #line 80 "execute.pgc"
  char n [ 8 ] , l = letter [ i ] [ 0 ] ;
- 
+
 #line 81 "execute.pgc"
  int a = amount [ i ] ;
 /* exec sql end declare section */
@@ -268,14 +268,14 @@ if (sqlca.sqlcode < 0) sqlprint();}
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 93 "execute.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "f", 
-	ECPGt_const,"2",(long)1,(long)1,strlen("2"), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,(amount),(long)1,(long)8,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "f",
+	ECPGt_const,"2",(long)1,(long)1,strlen("2"),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,(amount),(long)1,(long)8,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 94 "execute.pgc"
 
@@ -286,12 +286,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 	for (i=0, j=sqlca.sqlerrd[2]; i<j; i++)
 	{
 		/* exec sql begin declare section */
-		    
-		   
-		
+
+
+
 #line 99 "execute.pgc"
  char n [ 8 ] , l = letter [ i ] [ 0 ] ;
- 
+
 #line 100 "execute.pgc"
  int a = amount [ i ] ;
 /* exec sql end declare section */

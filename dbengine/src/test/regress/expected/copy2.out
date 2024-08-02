@@ -143,7 +143,7 @@ LINE 1: COPY x from stdin WHERE a = row_number() over(b);
                                     ^
 -- check results of copy in
 SELECT * FROM x;
-   a   | b  |     c      |   d    |          e           
+   a   | b  |     c      |   d    |          e
 -------+----+------------+--------+----------------------
   9999 |    | \N         | NN     | before trigger fired
  10000 | 21 | 31         | 41     | before trigger fired
@@ -272,11 +272,11 @@ INSERT INTO y VALUES ('It is "perfect".',E'\t');
 INSERT INTO y VALUES ('', NULL);
 COPY y TO stdout WITH CSV;
 "Jackson, Sam",\h
-"It is ""perfect"".",	
+"It is ""perfect"".",
 "",
 COPY y TO stdout WITH CSV QUOTE '''' DELIMITER '|';
 Jackson, Sam|\h
-It is "perfect".|	
+It is "perfect".|
 ''|
 COPY y TO stdout WITH CSV FORCE QUOTE col2 ESCAPE E'\\' ENCODING 'sql_ascii';
 "Jackson, Sam","\\h"
@@ -289,11 +289,11 @@ COPY y TO stdout WITH CSV FORCE QUOTE *;
 -- Repeat above tests with new 9.0 option syntax
 COPY y TO stdout (FORMAT CSV);
 "Jackson, Sam",\h
-"It is ""perfect"".",	
+"It is ""perfect"".",
 "",
 COPY y TO stdout (FORMAT CSV, QUOTE '''', DELIMITER '|');
 Jackson, Sam|\h
-It is "perfect".|	
+It is "perfect".|
 ''|
 COPY y TO stdout (FORMAT CSV, FORCE_QUOTE (col2), ESCAPE E'\\');
 "Jackson, Sam","\\h"
@@ -305,11 +305,11 @@ COPY y TO stdout (FORMAT CSV, FORCE_QUOTE *);
 "",
 \copy y TO stdout (FORMAT CSV)
 "Jackson, Sam",\h
-"It is ""perfect"".",	
+"It is ""perfect"".",
 "",
 \copy y TO stdout (FORMAT CSV, QUOTE '''', DELIMITER '|')
 Jackson, Sam|\h
-It is "perfect".|	
+It is "perfect".|
 ''|
 \copy y TO stdout (FORMAT CSV, FORCE_QUOTE (col2), ESCAPE E'\\')
 "Jackson, Sam","\\h"
@@ -338,12 +338,12 @@ COPY testnull TO stdout WITH NULL AS E'\\0';
 \0	\0
 COPY testnull FROM stdin WITH NULL AS E'\\0';
 SELECT * FROM testnull;
- a  | b  
+ a  | b
 ----+----
   1 | \0
-    | 
+    |
  42 | \0
-    | 
+    |
 (4 rows)
 
 BEGIN;
@@ -351,7 +351,7 @@ CREATE TABLE vistest (LIKE testeoc);
 COPY vistest FROM stdin CSV;
 COMMIT;
 SELECT * FROM vistest;
- a  
+ a
 ----
  a0
  b
@@ -361,7 +361,7 @@ BEGIN;
 TRUNCATE vistest;
 COPY vistest FROM stdin CSV;
 SELECT * FROM vistest;
- a  
+ a
 ----
  a1
  b
@@ -371,7 +371,7 @@ SAVEPOINT s1;
 TRUNCATE vistest;
 COPY vistest FROM stdin CSV;
 SELECT * FROM vistest;
- a  
+ a
 ----
  d1
  e
@@ -379,7 +379,7 @@ SELECT * FROM vistest;
 
 COMMIT;
 SELECT * FROM vistest;
- a  
+ a
 ----
  d1
  e
@@ -389,7 +389,7 @@ BEGIN;
 TRUNCATE vistest;
 COPY vistest FROM stdin CSV FREEZE;
 SELECT * FROM vistest;
- a  
+ a
 ----
  a2
  b
@@ -399,7 +399,7 @@ SAVEPOINT s1;
 TRUNCATE vistest;
 COPY vistest FROM stdin CSV FREEZE;
 SELECT * FROM vistest;
- a  
+ a
 ----
  d2
  e
@@ -407,7 +407,7 @@ SELECT * FROM vistest;
 
 COMMIT;
 SELECT * FROM vistest;
- a  
+ a
 ----
  d2
  e
@@ -417,7 +417,7 @@ BEGIN;
 TRUNCATE vistest;
 COPY vistest FROM stdin CSV FREEZE;
 SELECT * FROM vistest;
- a 
+ a
 ---
  x
  y
@@ -453,14 +453,14 @@ $$ language plpgsql;
 BEGIN;
 INSERT INTO vistest VALUES ('z');
 SELECT truncate_in_subxact();
- truncate_in_subxact 
+ truncate_in_subxact
 ---------------------
- 
+
 (1 row)
 
 COPY vistest FROM stdin CSV FREEZE;
 SELECT * FROM vistest;
- a  
+ a
 ----
  d4
  e
@@ -468,7 +468,7 @@ SELECT * FROM vistest;
 
 COMMIT;
 SELECT * FROM vistest;
- a  
+ a
 ----
  d4
  e
@@ -488,7 +488,7 @@ BEGIN;
 COPY forcetest (a, b, c) FROM STDIN WITH (FORMAT csv, FORCE_NOT_NULL(b), FORCE_NULL(c));
 COMMIT;
 SELECT b, c FROM forcetest WHERE a = 1;
- b |  c   
+ b |  c
 ---+------
    | NULL
 (1 row)
@@ -498,7 +498,7 @@ BEGIN;
 COPY forcetest (a, b, c, d) FROM STDIN WITH (FORMAT csv, FORCE_NOT_NULL(c,d), FORCE_NULL(c,d));
 COMMIT;
 SELECT c, d FROM forcetest WHERE a = 2;
- c |  d   
+ c |  d
 ---+------
    | NULL
 (1 row)
@@ -531,9 +531,9 @@ end $$ language plpgsql immutable;
 alter table check_con_tbl add check (check_con_function(check_con_tbl.*));
 \d+ check_con_tbl
                                Table "public.check_con_tbl"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- f1     | integer |           |          |         | plain   |              | 
+ f1     | integer |           |          |         | plain   |              |
 Check constraints:
     "check_con_tbl_check" CHECK (check_con_function(check_con_tbl.*))
 
@@ -546,10 +546,10 @@ ERROR:  new row for relation "check_con_tbl" violates check constraint "check_co
 DETAIL:  Failing row contains (0).
 CONTEXT:  COPY check_con_tbl, line 1: "0"
 select * from check_con_tbl;
- f1 
+ f1
 ----
   1
-   
+
 (2 rows)
 
 -- test with RLS enabled.
@@ -644,7 +644,7 @@ CREATE TRIGGER trig_instead_of_insert_tbl_view
   FOR EACH ROW EXECUTE PROCEDURE fun_instead_of_insert_tbl();
 COPY instead_of_insert_tbl_view FROM stdin;
 SELECT * FROM instead_of_insert_tbl;
- id | name  
+ id | name
 ----+-------
   1 | test1
 (1 row)
@@ -659,7 +659,7 @@ CREATE TRIGGER trig_instead_of_insert_tbl_view_2
   FOR EACH ROW EXECUTE PROCEDURE fun_instead_of_insert_tbl();
 COPY instead_of_insert_tbl_view_2 FROM stdin;
 SELECT * FROM instead_of_insert_tbl;
- id | name  
+ id | name
 ----+-------
   1 | test1
   2 | test1
@@ -691,7 +691,7 @@ create temp table copy_default (
 -- if DEFAULT is not specified, then the marker will be regular data
 copy copy_default from stdin;
 select id, text_value, ts_value from copy_default;
- id | text_value |         ts_value         
+ id | text_value |         ts_value
 ----+------------+--------------------------
   1 | value      | Mon Jul 04 00:00:00 2022
   2 | D          | Tue Jul 05 00:00:00 2022
@@ -700,7 +700,7 @@ select id, text_value, ts_value from copy_default;
 truncate copy_default;
 copy copy_default from stdin with (format csv);
 select id, text_value, ts_value from copy_default;
- id | text_value |         ts_value         
+ id | text_value |         ts_value
 ----+------------+--------------------------
   1 | value      | Mon Jul 04 00:00:00 2022
   2 | \D         | Tue Jul 05 00:00:00 2022
@@ -736,7 +736,7 @@ CONTEXT:  COPY copy_default, line 1: "\D,value,2022-07-04"
 -- The DEFAULT marker must be unquoted and unescaped or it's not recognized
 copy copy_default from stdin with (default '\D');
 select id, text_value, ts_value from copy_default;
- id | text_value |         ts_value         
+ id | text_value |         ts_value
 ----+------------+--------------------------
   1 | test       | Mon Jul 04 00:00:00 2022
   2 | \D         | Mon Jul 04 00:00:00 2022
@@ -746,7 +746,7 @@ select id, text_value, ts_value from copy_default;
 truncate copy_default;
 copy copy_default from stdin with (format csv, default '\D');
 select id, text_value, ts_value from copy_default;
- id | text_value |         ts_value         
+ id | text_value |         ts_value
 ----+------------+--------------------------
   1 | test       | Mon Jul 04 00:00:00 2022
   2 | \\D        | Mon Jul 04 00:00:00 2022
@@ -757,7 +757,7 @@ truncate copy_default;
 -- successful usage of DEFAULT option in COPY
 copy copy_default from stdin with (default '\D');
 select id, text_value, ts_value from copy_default;
- id | text_value |         ts_value         
+ id | text_value |         ts_value
 ----+------------+--------------------------
   1 | value      | Mon Jul 04 00:00:00 2022
   2 | test       | Sun Jul 03 00:00:00 2022
@@ -767,7 +767,7 @@ select id, text_value, ts_value from copy_default;
 truncate copy_default;
 copy copy_default from stdin with (format csv, default '\D');
 select id, text_value, ts_value from copy_default;
- id | text_value |         ts_value         
+ id | text_value |         ts_value
 ----+------------+--------------------------
   1 | value      | Mon Jul 04 00:00:00 2022
   2 | test       | Sun Jul 03 00:00:00 2022

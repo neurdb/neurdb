@@ -6,7 +6,7 @@ step s2b1: BEGIN ISOLATION LEVEL READ COMMITTED;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -15,25 +15,25 @@ step s1c: COMMIT;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -43,7 +43,7 @@ step s2b1: BEGIN ISOLATION LEVEL READ COMMITTED;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
@@ -52,25 +52,25 @@ step s1c: COMMIT;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -80,14 +80,14 @@ step s2b1: BEGIN ISOLATION LEVEL READ COMMITTED;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -95,19 +95,19 @@ step s1c: COMMIT;
 step s2l: <... completed>
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -117,7 +117,7 @@ step s2b1: BEGIN ISOLATION LEVEL READ COMMITTED;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -126,32 +126,32 @@ step s1c: COMMIT;
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -161,7 +161,7 @@ step s2b1: BEGIN ISOLATION LEVEL READ COMMITTED;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
@@ -170,32 +170,32 @@ step s1c: COMMIT;
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -205,14 +205,14 @@ step s2b1: BEGIN ISOLATION LEVEL READ COMMITTED;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -220,26 +220,26 @@ step s1c: COMMIT;
 step s2l: <... completed>
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -249,7 +249,7 @@ step s2b2: BEGIN ISOLATION LEVEL REPEATABLE READ;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -258,7 +258,7 @@ step s1c: COMMIT;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -266,12 +266,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -281,7 +281,7 @@ step s2b2: BEGIN ISOLATION LEVEL REPEATABLE READ;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
@@ -290,7 +290,7 @@ step s1c: COMMIT;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -298,12 +298,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -313,14 +313,14 @@ step s2b2: BEGIN ISOLATION LEVEL REPEATABLE READ;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -330,12 +330,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -345,7 +345,7 @@ step s2b2: BEGIN ISOLATION LEVEL REPEATABLE READ;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -354,14 +354,14 @@ step s1c: COMMIT;
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -369,12 +369,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -384,7 +384,7 @@ step s2b2: BEGIN ISOLATION LEVEL REPEATABLE READ;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
@@ -393,14 +393,14 @@ step s1c: COMMIT;
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -408,12 +408,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -423,14 +423,14 @@ step s2b2: BEGIN ISOLATION LEVEL REPEATABLE READ;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -440,19 +440,19 @@ ERROR:  could not serialize access due to concurrent update
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -462,7 +462,7 @@ step s2b3: BEGIN ISOLATION LEVEL SERIALIZABLE;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -471,7 +471,7 @@ step s1c: COMMIT;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -479,12 +479,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -494,7 +494,7 @@ step s2b3: BEGIN ISOLATION LEVEL SERIALIZABLE;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
@@ -503,7 +503,7 @@ step s1c: COMMIT;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -511,12 +511,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -526,14 +526,14 @@ step s2b3: BEGIN ISOLATION LEVEL SERIALIZABLE;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -543,12 +543,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -558,7 +558,7 @@ step s2b3: BEGIN ISOLATION LEVEL SERIALIZABLE;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -567,14 +567,14 @@ step s1c: COMMIT;
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -582,12 +582,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -597,7 +597,7 @@ step s2b3: BEGIN ISOLATION LEVEL SERIALIZABLE;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
@@ -606,14 +606,14 @@ step s1c: COMMIT;
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: <... completed>
@@ -621,12 +621,12 @@ ERROR:  could not serialize access due to concurrent update
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 
@@ -636,14 +636,14 @@ step s2b3: BEGIN ISOLATION LEVEL SERIALIZABLE;
 step s1l: SELECT pg_advisory_lock(578902068);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1u: UPDATE lcku_table SET id = 2 WHERE id = 3;
 step s1ul: SELECT pg_advisory_unlock(578902068);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s2l: SELECT * FROM lcku_table WHERE pg_advisory_lock(578902068) IS NOT NULL FOR KEY SHARE; <waiting ...>
@@ -653,18 +653,17 @@ ERROR:  could not serialize access due to concurrent update
 step s1hint: SELECT * FROM lcku_table;
 id|value
 --+-----
- 1|one  
- 2|two  
+ 1|one
+ 2|two
 (2 rows)
 
 step s2c: COMMIT;
 pg_advisory_unlock_all
 ----------------------
-                      
+
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-                      
-(1 row)
 
+(1 row)

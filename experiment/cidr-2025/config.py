@@ -18,7 +18,7 @@ def _try_get_cpu_count():
     return nw
 
 
-DATALOADER_NUM_WORKERS = 0 #_try_get_cpu_count()
+DATALOADER_NUM_WORKERS = 0  # _try_get_cpu_count()
 LOG_LEVEL = os.environ["NR_LOG_LEVEL"] if ("NR_LOG_LEVEL" in os.environ) else "DEBUG"
 
 

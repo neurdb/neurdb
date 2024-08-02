@@ -29,18 +29,18 @@ static void
 check_result_of_insert(void)
 {
 	/* exec sql begin declare section */
-	      
-	
+
+
 #line 12 "prepareas.pgc"
  int ivar1 = 0 , ivar2 = 0 ;
 /* exec sql end declare section */
 #line 13 "prepareas.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select c1 , c2 from test", ECPGt_EOIT, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select c1 , c2 from test", ECPGt_EOIT,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 15 "prepareas.pgc"
 
@@ -53,12 +53,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 int main(void)
 {
 	/* exec sql begin declare section */
-	      
-	    
-	
+
+
+
 #line 22 "prepareas.pgc"
  int ivar1 = 1 , ivar2 = 2 ;
- 
+
 #line 23 "prepareas.pgc"
  char v_include_dq_name [ 16 ] , v_include_ws_name [ 16 ] , v_normal_name [ 16 ] , v_query [ 64 ] ;
 /* exec sql end declare section */
@@ -73,7 +73,7 @@ int main(void)
 	/*
 	 * preparing for test
 	 */
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 34 "prepareas.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -115,10 +115,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	printf("+++++ Test for prepnormal +++++\n");
 	printf("insert into test values(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test values ( $1  , $2  )", 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test values ( $1  , $2  )",
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 46 "prepareas.pgc"
 
@@ -161,10 +161,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 61 "prepareas.pgc"
 
 	printf("execute ident_name using :ivar1,:ivar2\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "ident_name", 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "ident_name",
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 63 "prepareas.pgc"
 
@@ -188,10 +188,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 69 "prepareas.pgc"
 
 	printf("execute :v_normal_name using :ivar1,:ivar2\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, v_normal_name, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, v_normal_name,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 71 "prepareas.pgc"
 
@@ -215,10 +215,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 77 "prepareas.pgc"
 
 	printf("execute :v_include_dq_name using :ivar1,:ivar2\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, v_include_dq_name, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, v_include_dq_name,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 79 "prepareas.pgc"
 
@@ -242,10 +242,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 85 "prepareas.pgc"
 
 	printf("execute :v_include_ws_name using :ivar1,:ivar2\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, v_include_ws_name, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, v_include_ws_name,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 87 "prepareas.pgc"
 
@@ -269,10 +269,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 93 "prepareas.pgc"
 
 	printf("exec sql execute \"include_ _name\" using :ivar1,:ivar2\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "include_ _name", 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "include_ _name",
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 95 "prepareas.pgc"
 
@@ -296,10 +296,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 101 "prepareas.pgc"
 
 	printf("exec sql execute \"normal_name\" using :ivar1,:ivar2\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "normal_name", 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "normal_name",
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 103 "prepareas.pgc"
 
@@ -338,8 +338,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	printf("+++++ Test for PREPARE ident(typelist) AS +++++\n");
 	printf("prepare ident_name(int,int) as insert into test values($1,$2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )", 
-	ECPGt_const,"ident_name",(long)10,(long)1,strlen("ident_name"), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )",
+	ECPGt_const,"ident_name",(long)10,(long)1,strlen("ident_name"),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 116 "prepareas.pgc"
 
@@ -347,12 +347,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 116 "prepareas.pgc"
 
 	printf("execute ident_name(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )", 
-	ECPGt_const,"ident_name",(long)10,(long)1,strlen("ident_name"), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )",
+	ECPGt_const,"ident_name",(long)10,(long)1,strlen("ident_name"),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 118 "prepareas.pgc"
 
@@ -375,8 +375,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	printf("+++++ Test for PREPARE CString_normal_name(typelist) AS +++++\n");
 	printf("prepare \"normal_name\"(int,int) as insert into test values($1,$2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )", 
-	ECPGt_const,"normal_name",(long)11,(long)1,strlen("normal_name"), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )",
+	ECPGt_const,"normal_name",(long)11,(long)1,strlen("normal_name"),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 125 "prepareas.pgc"
 
@@ -384,12 +384,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 125 "prepareas.pgc"
 
 	printf("execute \"normal_name\"(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )", 
-	ECPGt_const,"normal_name",(long)11,(long)1,strlen("normal_name"), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )",
+	ECPGt_const,"normal_name",(long)11,(long)1,strlen("normal_name"),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 127 "prepareas.pgc"
 
@@ -412,8 +412,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	printf("+++++ Test for PREPARE CString_include_ws_name(typelist) AS +++++\n");
 	printf("prepare \"include_ _name\"(int,int) as insert into test values($1,$2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )", 
-	ECPGt_const,"include_ _name",(long)14,(long)1,strlen("include_ _name"), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )",
+	ECPGt_const,"include_ _name",(long)14,(long)1,strlen("include_ _name"),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 134 "prepareas.pgc"
 
@@ -421,12 +421,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 134 "prepareas.pgc"
 
 	printf("execute \"include_ _name\"(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )", 
-	ECPGt_const,"include_ _name",(long)14,(long)1,strlen("include_ _name"), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )",
+	ECPGt_const,"include_ _name",(long)14,(long)1,strlen("include_ _name"),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 136 "prepareas.pgc"
 
@@ -449,8 +449,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	printf("+++++ Test for PREPARE char_variable_normal_name(typelist) AS +++++\n");
 	printf("prepare :v_normal_name(int,int) as insert into test values($1,$2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )", 
-	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )",
+	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 143 "prepareas.pgc"
 
@@ -458,12 +458,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 143 "prepareas.pgc"
 
 	printf("execute :v_normal_name(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )", 
-	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )",
+	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 145 "prepareas.pgc"
 
@@ -486,8 +486,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	printf("+++++ Test for PREPARE char_variable_include_ws_name(typelist) AS +++++\n");
 	printf("prepare :v_include_ws_name(int,int) as insert into test values($1,$2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )", 
-	ECPGt_char,(v_include_ws_name),(long)16,(long)1,(16)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepare, "prepare $0 ( int , int ) as insert into test values ( $1 , $2 )",
+	ECPGt_char,(v_include_ws_name),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 152 "prepareas.pgc"
 
@@ -495,12 +495,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 152 "prepareas.pgc"
 
 	printf("execute :v_include_ws_name(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )", 
-	ECPGt_char,(v_include_ws_name),(long)16,(long)1,(16)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )",
+	ECPGt_char,(v_include_ws_name),(long)16,(long)1,(16)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 154 "prepareas.pgc"
 
@@ -530,8 +530,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 161 "prepareas.pgc"
 
 	printf("execute :v_normal_name(1,2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( 1 , 2 )", 
-	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( 1 , 2 )",
+	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 163 "prepareas.pgc"
 
@@ -561,8 +561,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 170 "prepareas.pgc"
 
 	printf("execute :v_normal_name(0+1,1+1)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( 0 + 1 , 1 + 1 )", 
-	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( 0 + 1 , 1 + 1 )",
+	ECPGt_char,(v_normal_name),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 172 "prepareas.pgc"
 
@@ -592,12 +592,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 179 "prepareas.pgc"
 
 	printf("execute ident_name(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )", 
-	ECPGt_const,"ident_name",(long)10,(long)1,strlen("ident_name"), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )",
+	ECPGt_const,"ident_name",(long)10,(long)1,strlen("ident_name"),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 181 "prepareas.pgc"
 
@@ -627,12 +627,12 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 188 "prepareas.pgc"
 
 	printf("execute \"include_ _name\"(:ivar1,:ivar2)\n");
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )", 
-	ECPGt_const,"include_ _name",(long)14,(long)1,strlen("include_ _name"), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_exec_with_exprlist, "execute $0 ( $1  , $2  )",
+	ECPGt_const,"include_ _name",(long)14,(long)1,strlen("include_ _name"),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar1),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(ivar2),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 190 "prepareas.pgc"
 

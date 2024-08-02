@@ -5,57 +5,57 @@ CREATE TABLE test_bpchar (
 INSERT INTO test_bpchar VALUES ('a'),('ab'),('abc'),('abc   '),('abb'),('axy'),('xyz'),('xyz  ');
 CREATE INDEX idx_bpchar ON test_bpchar USING gin (i);
 SELECT * FROM test_bpchar WHERE i<'abc' ORDER BY i;
-     i      
+     i
 ------------
- a         
- ab        
- abb       
+ a
+ ab
+ abb
 (3 rows)
 
 SELECT * FROM test_bpchar WHERE i<='abc' ORDER BY i;
-     i      
+     i
 ------------
- a         
- ab        
- abb       
- abc       
- abc       
+ a
+ ab
+ abb
+ abc
+ abc
 (5 rows)
 
 SELECT * FROM test_bpchar WHERE i='abc' ORDER BY i;
-     i      
+     i
 ------------
- abc       
- abc       
+ abc
+ abc
 (2 rows)
 
 SELECT * FROM test_bpchar WHERE i='abc  ' ORDER BY i;
-     i      
+     i
 ------------
- abc       
- abc       
+ abc
+ abc
 (2 rows)
 
 SELECT * FROM test_bpchar WHERE i>='abc' ORDER BY i;
-     i      
+     i
 ------------
- abc       
- abc       
- axy       
- xyz       
- xyz       
+ abc
+ abc
+ axy
+ xyz
+ xyz
 (5 rows)
 
 SELECT * FROM test_bpchar WHERE i>'abc' ORDER BY i;
-     i      
+     i
 ------------
- axy       
- xyz       
- xyz       
+ axy
+ xyz
+ xyz
 (3 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i<'abc' ORDER BY i;
-                  QUERY PLAN                   
+                  QUERY PLAN
 -----------------------------------------------
  Sort
    Sort Key: i
@@ -66,7 +66,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i<'abc' ORDER BY i;
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i<='abc' ORDER BY i;
-                   QUERY PLAN                   
+                   QUERY PLAN
 ------------------------------------------------
  Sort
    Sort Key: i
@@ -77,7 +77,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i<='abc' ORDER BY i;
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i='abc' ORDER BY i;
-               QUERY PLAN                
+               QUERY PLAN
 -----------------------------------------
  Bitmap Heap Scan on test_bpchar
    Recheck Cond: (i = 'abc'::bpchar)
@@ -86,7 +86,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i='abc' ORDER BY i;
 (4 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i>='abc' ORDER BY i;
-                   QUERY PLAN                   
+                   QUERY PLAN
 ------------------------------------------------
  Sort
    Sort Key: i
@@ -97,7 +97,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i>='abc' ORDER BY i;
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i>'abc' ORDER BY i;
-                  QUERY PLAN                   
+                  QUERY PLAN
 -----------------------------------------------
  Sort
    Sort Key: i
@@ -106,4 +106,3 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_bpchar WHERE i>'abc' ORDER BY i;
          ->  Bitmap Index Scan on idx_bpchar
                Index Cond: (i > 'abc'::bpchar)
 (6 rows)
-

@@ -2710,4 +2710,3 @@ msgid "\n"
 "If no input file name is supplied, then standard input is used.\n\n"
 msgstr "\n"
 "Якщо ім'я файлу введеня не вказано, тоді використовується стандартне введення.\n\n"
-

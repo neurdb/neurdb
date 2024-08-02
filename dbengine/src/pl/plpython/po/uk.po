@@ -449,4 +449,3 @@ msgstr "не вдалося конвертувати об'єкт Python Unicode 
 #, c-format
 msgid "could not extract bytes from encoded string"
 msgstr "не можливо отримати байт з закодованого рядка"
-

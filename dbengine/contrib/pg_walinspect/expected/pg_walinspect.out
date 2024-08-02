@@ -3,7 +3,7 @@ CREATE EXTENSION pg_walinspect;
 \set VERBOSITY terse
 -- Make sure checkpoints don't interfere with the test.
 SELECT 'init' FROM pg_create_physical_replication_slot('regress_pg_walinspect_slot', true, false);
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -39,19 +39,19 @@ SELECT * FROM pg_get_wal_record_info('FFFFFFFF/FFFFFFFF');
 ERROR:  WAL input LSN must be less than current LSN
 -- Success with end LSNs.
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_records_info(:'wal_lsn1', 'FFFFFFFF/FFFFFFFF');
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_stats(:'wal_lsn1', 'FFFFFFFF/FFFFFFFF');
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_block_info(:'wal_lsn1', 'FFFFFFFF/FFFFFFFF');
- ok 
+ ok
 ----
  t
 (1 row)
@@ -67,25 +67,25 @@ ERROR:  WAL start LSN must be less than current LSN
 -- Tests for all function executions
 -- ===================================================================
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_record_info(:'wal_lsn1');
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_records_info(:'wal_lsn1', :'wal_lsn2');
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_stats(:'wal_lsn1', :'wal_lsn2');
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_block_info(:'wal_lsn1', :'wal_lsn2');
- ok 
+ ok
 ----
  t
 (1 row)
@@ -96,7 +96,7 @@ SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_block_info(:'wal_lsn1', :'wal_lsn2');
 SELECT oid AS sample_tbl_oid FROM pg_class WHERE relname = 'sample_tbl' \gset
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_records_info(:'wal_lsn1', :'wal_lsn2')
 			WHERE block_ref LIKE concat('%', :'sample_tbl_oid', '%') AND resource_manager = 'Heap';
- ok 
+ ok
 ----
  t
 (1 row)
@@ -107,7 +107,7 @@ SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_records_info(:'wal_lsn1', :'wal_lsn2'
 -- ===================================================================
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_records_info(:'wal_lsn1', :'wal_lsn2')
 			WHERE resource_manager = 'Heap' AND record_type = 'INSERT';
- ok 
+ ok
 ----
  t
 (1 row)
@@ -122,7 +122,7 @@ SELECT pg_current_wal_lsn() AS wal_lsn4 \gset
 -- Check if we get block data from WAL record.
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_block_info(:'wal_lsn3', :'wal_lsn4')
   WHERE relfilenode = :'sample_tbl_oid' AND block_data IS NOT NULL;
- ok 
+ ok
 ----
  t
 (1 row)
@@ -135,7 +135,7 @@ SELECT pg_current_wal_lsn() AS wal_lsn6 \gset
 -- Check if we get FPI from WAL record.
 SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_block_info(:'wal_lsn5', :'wal_lsn6')
   WHERE relfilenode = :'sample_tbl_oid' AND block_fpi_data IS NOT NULL;
- ok 
+ ok
 ----
  t
 (1 row)
@@ -146,28 +146,28 @@ SELECT COUNT(*) >= 1 AS ok FROM pg_get_wal_block_info(:'wal_lsn5', :'wal_lsn6')
 CREATE ROLE regress_pg_walinspect;
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_record_info(pg_lsn)', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_records_info(pg_lsn, pg_lsn) ', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_stats(pg_lsn, pg_lsn, boolean) ', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_block_info(pg_lsn, pg_lsn, boolean) ', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
@@ -176,28 +176,28 @@ SELECT has_function_privilege('regress_pg_walinspect',
 GRANT pg_read_server_files TO regress_pg_walinspect;
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_record_info(pg_lsn)', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_records_info(pg_lsn, pg_lsn) ', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_stats(pg_lsn, pg_lsn, boolean) ', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_block_info(pg_lsn, pg_lsn, boolean) ', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
@@ -214,28 +214,28 @@ GRANT EXECUTE ON FUNCTION pg_get_wal_block_info(pg_lsn, pg_lsn, boolean)
   TO regress_pg_walinspect;
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_record_info(pg_lsn)', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_records_info(pg_lsn, pg_lsn) ', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_stats(pg_lsn, pg_lsn, boolean) ', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_pg_walinspect',
   'pg_get_wal_block_info(pg_lsn, pg_lsn, boolean) ', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
@@ -253,9 +253,9 @@ REVOKE EXECUTE ON FUNCTION pg_get_wal_block_info(pg_lsn, pg_lsn, boolean)
 -- ===================================================================
 DROP ROLE regress_pg_walinspect;
 SELECT pg_drop_replication_slot('regress_pg_walinspect_slot');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
+
 (1 row)
 
 DROP TABLE sample_tbl;

@@ -1,37 +1,37 @@
 char#  char alnum alpha cntrl digit lower graph print punct space upper xdigit lo up
-chr#0                      +                                                        
-chr#1                      +                                                        
-chr#2                      +                                                        
-chr#3                      +                                                        
-chr#4                      +                                                        
-chr#5                      +                                                        
-chr#6                      +                                                        
-chr#7                      +                                                        
-chr#8                      +                                                        
-chr#9                      +                                   +                    
-chr#10                     +                                   +                    
-chr#11                     +                                   +                    
-chr#12                     +                                   +                    
-chr#13                     +                                   +                    
-chr#14                     +                                                        
-chr#15                     +                                                        
-chr#16                     +                                                        
-chr#17                     +                                                        
-chr#18                     +                                                        
-chr#19                     +                                                        
-chr#20                     +                                                        
-chr#21                     +                                                        
-chr#22                     +                                                        
-chr#23                     +                                                        
-chr#24                     +                                                        
-chr#25                     +                                                        
-chr#26                     +                                                        
-chr#27                     +                                                        
-chr#28                     +                                                        
-chr#29                     +                                                        
-chr#30                     +                                                        
-chr#31                     +                                                        
-chr#32                                             +           +                    
+chr#0                      +
+chr#1                      +
+chr#2                      +
+chr#3                      +
+chr#4                      +
+chr#5                      +
+chr#6                      +
+chr#7                      +
+chr#8                      +
+chr#9                      +                                   +
+chr#10                     +                                   +
+chr#11                     +                                   +
+chr#12                     +                                   +
+chr#13                     +                                   +
+chr#14                     +
+chr#15                     +
+chr#16                     +
+chr#17                     +
+chr#18                     +
+chr#19                     +
+chr#20                     +
+chr#21                     +
+chr#22                     +
+chr#23                     +
+chr#24                     +
+chr#25                     +
+chr#26                     +
+chr#27                     +
+chr#28                     +
+chr#29                     +
+chr#30                     +
+chr#31                     +
+chr#32                                             +           +
 chr#33   !                                   +     +     +                     !   !
 chr#34   "                                   +     +     +                     "   "
 chr#35   #                                   +     +     +                     #   #
@@ -126,7 +126,7 @@ chr#123  {                                   +     +     +                     {
 chr#124  |                                   +     +     +                     |   |
 chr#125  }                                   +     +     +                     }   }
 chr#126  ~                                   +     +     +                     ~   ~
-chr#127                    +                                                        
+chr#127                    +
 chr#128  Ä                                   +     +     +                     Ä   Ä
 chr#129  Å                                   +     +     +                     Å   Å
 chr#130  Ç                                   +     +     +                     Ç   Ç
@@ -153,7 +153,7 @@ chr#150  ñ                                   +     +     +                     ñ
 chr#151  ó                                   +     +     +                     ó   ó
 chr#152  ò                                   +     +     +                     ò   ò
 chr#153  ô                                   +     +     +                     ô   ô
-chr#154                                                        +                    
+chr#154                                                        +
 chr#155  õ                                   +     +     +                     õ   õ
 chr#156  ú                                   +     +     +                     ú   ú
 chr#157  ù                                   +     +     +                     ù   ù
@@ -222,7 +222,7 @@ chr#219  €     +     +                 +     +     +                           €
 chr#220  ‹     +     +                 +     +     +                           ‹   ¸
 chr#221  ›     +     +                 +     +     +                           ›   ˝
 chr#222  ﬁ     +     +                 +     +     +                           ﬁ   ˛
-chr#223  ﬂ     +     +                 +     +     +                           ﬂ    
+chr#223  ﬂ     +     +                 +     +     +                           ﬂ
 chr#224  ‡     +     +                       +     +                 +         ¿   ‡
 chr#225  ·     +     +                       +     +                 +         ¡   ·
 chr#226  ‚     +     +                       +     +                 +         ¬   ‚
@@ -254,4 +254,4 @@ chr#251  ˚     +     +                       +     +                 +         €
 chr#252  ¸     +     +                       +     +                 +         ‹   ¸
 chr#253  ˝     +     +                       +     +                 +         ›   ˝
 chr#254  ˛     +     +                       +     +                 +         ﬁ   ˛
-chr#255        +     +                       +     +                 +         ﬂ    
+chr#255        +     +                       +     +                 +         ﬂ

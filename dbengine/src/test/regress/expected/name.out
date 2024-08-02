@@ -4,13 +4,13 @@
 --
 -- fixed-length by reference
 SELECT name 'name string' = name 'name string' AS "True";
- True 
+ True
 ------
  t
 (1 row)
 
 SELECT name 'name string' = name 'name string ' AS "False";
- False 
+ False
 -------
  f
 (1 row)
@@ -27,50 +27,50 @@ INSERT INTO NAME_TBL(f1) VALUES ('d34aaasdf');
 INSERT INTO NAME_TBL(f1) VALUES ('');
 INSERT INTO NAME_TBL(f1) VALUES ('1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 SELECT * FROM NAME_TBL;
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
  1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopq
  asdfghjkl;
  343f%2a
  d34aaasdf
- 
+
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
 (7 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 <> '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQR';
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopq
  asdfghjkl;
  343f%2a
  d34aaasdf
- 
+
 (5 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQR';
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
 (2 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 < '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQR';
- f1 
+ f1
 ----
- 
+
 (1 row)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 <= '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQR';
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
- 
+
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
 (3 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 > '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQR';
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopq
  asdfghjkl;
@@ -79,7 +79,7 @@ SELECT c.f1 FROM NAME_TBL c WHERE c.f1 > '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ12
 (4 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 >= '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQR';
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
  1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopq
@@ -90,24 +90,24 @@ SELECT c.f1 FROM NAME_TBL c WHERE c.f1 >= '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1
 (6 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 ~ '.*';
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
  1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopq
  asdfghjkl;
  343f%2a
  d34aaasdf
- 
+
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
 (7 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 !~ '.*';
- f1 
+ f1
 ----
 (0 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 ~ '[0-9]';
-                               f1                                
+                               f1
 -----------------------------------------------------------------
  1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQ
  1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopq
@@ -117,7 +117,7 @@ SELECT c.f1 FROM NAME_TBL c WHERE c.f1 ~ '[0-9]';
 (5 rows)
 
 SELECT c.f1 FROM NAME_TBL c WHERE c.f1 ~ '.*asdf.*';
-     f1     
+     f1
 ------------
  asdfghjkl;
  d34aaasdf
@@ -136,7 +136,7 @@ $$;
 NOTICE:  schemax.tabley
 NOTICE:  "SchemaX"."TableY"
 SELECT parse_ident('foo.boo');
- parse_ident 
+ parse_ident
 -------------
  {foo,boo}
 (1 row)
@@ -144,7 +144,7 @@ SELECT parse_ident('foo.boo');
 SELECT parse_ident('foo.boo[]'); -- should fail
 ERROR:  string is not a valid identifier: "foo.boo[]"
 SELECT parse_ident('foo.boo[]', strict => false); -- ok
- parse_ident 
+ parse_ident
 -------------
  {foo,boo}
 (1 row)
@@ -163,19 +163,19 @@ ERROR:  string is not a valid identifier: "aaa.a%b"
 SELECT parse_ident(E'X\rXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
 ERROR:  string is not a valid identifier: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 SELECT length(a[1]), length(a[2]) from parse_ident('"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy') as a ;
- length | length 
+ length | length
 --------+--------
     414 |    289
 (1 row)
 
 SELECT parse_ident(' first . "  second  " ."   third   ". "  ' || repeat('x',66) || '"');
-                                                parse_ident                                                
+                                                parse_ident
 -----------------------------------------------------------------------------------------------------------
  {first,"  second  ","   third   ","  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
 (1 row)
 
 SELECT parse_ident(' first . "  second  " ."   third   ". "  ' || repeat('x',66) || '"')::name[];
-                                             parse_ident                                              
+                                             parse_ident
 ------------------------------------------------------------------------------------------------------
  {first,"  second  ","   third   ","  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
 (1 row)

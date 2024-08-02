@@ -15,12 +15,12 @@
 #include "pgtypes_interval.h"
 
 /* exec sql begin declare section */
-       
-     
+
+
 
 #line 7 "intoasc.pgc"
  char dirty_str [ 100 ] = "aaaaaaaaa_bbbbbbbb_ccccccccc_ddddddddd_" ;
- 
+
 #line 8 "intoasc.pgc"
  interval * interval_ptr ;
 /* exec sql end declare section */

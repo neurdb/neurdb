@@ -118,7 +118,7 @@ ALTER FOREIGN TABLE agg_bad ADD CHECK (a >= 0);
 CREATE FOREIGN TABLE header_match ("1" int, foo text) SERVER file_server
 OPTIONS (format 'csv', filename :'filename', delimiter ',', header 'match');
 SELECT * FROM header_match;
- 1 | foo 
+ 1 | foo
 ---+-----
  1 | bar
 (1 row)
@@ -142,13 +142,13 @@ ERROR:  COPY force not null available only in CSV mode
 ALTER FOREIGN TABLE text_csv OPTIONS (SET format 'csv');
 \pset null _null_
 SELECT * FROM text_csv;
- word1 | word2  | word3  | word4  
+ word1 | word2  | word3  | word4
 -------+--------+--------+--------
- AAA   | aaa    | 123    | 
+ AAA   | aaa    | 123    |
  XYZ   | xyz    |        | 321
  NULL  | _null_ | _null_ | _null_
  NULL  | _null_ | _null_ | _null_
- ABC   | abc    |        | 
+ ABC   | abc    |        |
 (5 rows)
 
 -- force_not_null and force_null can be used together on the same column
@@ -180,14 +180,14 @@ CREATE FOREIGN TABLE tbl () SERVER file_server OPTIONS (force_null '*'); -- ERRO
 ERROR:  invalid option "force_null"
 -- basic query tests
 SELECT * FROM agg_text WHERE b > 10.0 ORDER BY a;
-  a  |   b    
+  a  |   b
 -----+--------
   42 | 324.78
  100 | 99.097
 (2 rows)
 
 SELECT * FROM agg_csv ORDER BY a;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
   42 |  324.78
@@ -195,7 +195,7 @@ SELECT * FROM agg_csv ORDER BY a;
 (3 rows)
 
 SELECT * FROM agg_csv c JOIN agg_text t ON (t.a = c.a) ORDER BY c.a;
-  a  |    b    |  a  |    b    
+  a  |    b    |  a  |    b
 -----+---------+-----+---------
    0 | 0.09561 |   0 | 0.09561
   42 |  324.78 |  42 |  324.78
@@ -216,13 +216,13 @@ SELECT explain_filter('EXPLAIN (VERBOSE, COSTS FALSE) SELECT * FROM agg_csv');
 \t off
 PREPARE st(int) AS SELECT * FROM agg_csv WHERE a = $1;
 EXECUTE st(100);
-  a  |   b    
+  a  |   b
 -----+--------
  100 | 99.097
 (1 row)
 
 EXECUTE st(100);
-  a  |   b    
+  a  |   b
 -----+--------
  100 | 99.097
 (1 row)
@@ -230,7 +230,7 @@ EXECUTE st(100);
 DEALLOCATE st;
 -- tableoid
 SELECT tableoid::regclass, b FROM agg_csv;
- tableoid |    b    
+ tableoid |    b
 ----------+---------
  agg_csv  |  99.097
  agg_csv  | 0.09561
@@ -248,7 +248,7 @@ TRUNCATE agg_csv;
 ERROR:  cannot truncate foreign table "agg_csv"
 -- but this should be allowed
 SELECT * FROM agg_csv FOR UPDATE;
-  a  |    b    
+  a  |    b
 -----+---------
  100 |  99.097
    0 | 0.09561
@@ -268,7 +268,7 @@ SELECT explain_filter('EXPLAIN (VERBOSE, COSTS FALSE) SELECT * FROM agg_csv WHER
 
 \t off
 SELECT * FROM agg_csv WHERE a < 0;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -281,7 +281,7 @@ SELECT explain_filter('EXPLAIN (VERBOSE, COSTS FALSE) SELECT * FROM agg_csv WHER
 
 \t off
 SELECT * FROM agg_csv WHERE a < 0;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -290,7 +290,7 @@ RESET constraint_exclusion;
 CREATE TABLE agg (a int2, b float4);
 ALTER FOREIGN TABLE agg_csv INHERIT agg;
 SELECT tableoid::regclass, * FROM agg;
- tableoid |  a  |    b    
+ tableoid |  a  |    b
 ----------+-----+---------
  agg_csv  | 100 |  99.097
  agg_csv  |   0 | 0.09561
@@ -298,7 +298,7 @@ SELECT tableoid::regclass, * FROM agg;
 (3 rows)
 
 SELECT tableoid::regclass, * FROM agg_csv;
- tableoid |  a  |    b    
+ tableoid |  a  |    b
 ----------+-----+---------
  agg_csv  | 100 |  99.097
  agg_csv  |   0 | 0.09561
@@ -306,7 +306,7 @@ SELECT tableoid::regclass, * FROM agg_csv;
 (3 rows)
 
 SELECT tableoid::regclass, * FROM ONLY agg;
- tableoid | a | b 
+ tableoid | a | b
 ----------+---+---
 (0 rows)
 
@@ -317,7 +317,7 @@ DELETE FROM agg WHERE a = 100;
 ERROR:  cannot delete from foreign table "agg_csv"
 -- but this should be allowed
 SELECT tableoid::regclass, * FROM agg FOR UPDATE;
- tableoid |  a  |    b    
+ tableoid |  a  |    b
 ----------+-----+---------
  agg_csv  | 100 |  99.097
  agg_csv  |   0 | 0.09561
@@ -334,21 +334,21 @@ CREATE FOREIGN TABLE p1 partition of pt for values in (1) SERVER file_server
 OPTIONS (format 'csv', filename :'filename', delimiter ',');
 CREATE TABLE p2 partition of pt for values in (2);
 SELECT tableoid::regclass, * FROM pt;
- tableoid | a |  b  
+ tableoid | a |  b
 ----------+---+-----
  p1       | 1 | foo
  p1       | 1 | bar
 (2 rows)
 
 SELECT tableoid::regclass, * FROM p1;
- tableoid | a |  b  
+ tableoid | a |  b
 ----------+---+-----
  p1       | 1 | foo
  p1       | 1 | bar
 (2 rows)
 
 SELECT tableoid::regclass, * FROM p2;
- tableoid | a | b 
+ tableoid | a | b
 ----------+---+---
 (0 rows)
 
@@ -359,7 +359,7 @@ CONTEXT:  COPY pt, line 2: "1,qux"
 \set filename :abs_srcdir '/data/list2.csv'
 COPY pt FROM :'filename' with (format 'csv', delimiter ',');
 SELECT tableoid::regclass, * FROM pt;
- tableoid | a |  b  
+ tableoid | a |  b
 ----------+---+-----
  p1       | 1 | foo
  p1       | 1 | bar
@@ -368,14 +368,14 @@ SELECT tableoid::regclass, * FROM pt;
 (4 rows)
 
 SELECT tableoid::regclass, * FROM p1;
- tableoid | a |  b  
+ tableoid | a |  b
 ----------+---+-----
  p1       | 1 | foo
  p1       | 1 | bar
 (2 rows)
 
 SELECT tableoid::regclass, * FROM p2;
- tableoid | a |  b  
+ tableoid | a |  b
 ----------+---+-----
  p2       | 2 | baz
  p2       | 2 | qux
@@ -387,7 +387,7 @@ INSERT INTO pt VALUES (2, 'xyzzy');
 UPDATE pt set a = 1 where a = 2; -- ERROR
 ERROR:  cannot insert into foreign table "p1"
 SELECT tableoid::regclass, * FROM pt;
- tableoid | a |   b   
+ tableoid | a |   b
 ----------+---+-------
  p1       | 1 | foo
  p1       | 1 | bar
@@ -397,14 +397,14 @@ SELECT tableoid::regclass, * FROM pt;
 (5 rows)
 
 SELECT tableoid::regclass, * FROM p1;
- tableoid | a |  b  
+ tableoid | a |  b
 ----------+---+-----
  p1       | 1 | foo
  p1       | 1 | bar
 (2 rows)
 
 SELECT tableoid::regclass, * FROM p2;
- tableoid | a |   b   
+ tableoid | a |   b
 ----------+---+-------
  p2       | 2 | baz
  p2       | 2 | qux
@@ -417,7 +417,7 @@ DROP TABLE pt;
 CREATE FOREIGN TABLE gft1 (a int, b text, c text GENERATED ALWAYS AS ('foo') STORED) SERVER file_server
 OPTIONS (format 'csv', filename :'filename', delimiter ',');
 SELECT a, c FROM gft1;
- a |   c    
+ a |   c
 ---+--------
  1 | _null_
  1 | _null_
@@ -433,7 +433,7 @@ CREATE FOREIGN TABLE copy_default (
 ) SERVER file_server
 OPTIONS (format 'csv', filename :'filename', default '\D');
 SELECT id, text_value, ts_value FROM copy_default;
- id | text_value |         ts_value         
+ id | text_value |         ts_value
 ----+------------+--------------------------
   1 | value      | Mon Jul 04 00:00:00 2022
   2 | test       | Sun Jul 03 00:00:00 2022
@@ -444,7 +444,7 @@ DROP FOREIGN TABLE copy_default;
 -- privilege tests
 SET ROLE regress_file_fdw_superuser;
 SELECT * FROM agg_text ORDER BY a;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
   42 |  324.78
@@ -454,7 +454,7 @@ SELECT * FROM agg_text ORDER BY a;
 
 SET ROLE regress_file_fdw_user;
 SELECT * FROM agg_text ORDER BY a;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
   42 |  324.78
@@ -477,7 +477,7 @@ SELECT explain_filter('EXPLAIN (VERBOSE, COSTS FALSE) SELECT * FROM agg_text WHE
 -- file FDW allows foreign tables to be accessed without user mapping
 DROP USER MAPPING FOR regress_file_fdw_user SERVER file_server;
 SELECT * FROM agg_text ORDER BY a;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
   42 |  324.78

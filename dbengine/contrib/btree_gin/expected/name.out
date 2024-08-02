@@ -5,7 +5,7 @@ CREATE TABLE test_name (
 INSERT INTO test_name VALUES ('a'),('ab'),('abc'),('abb'),('axy'),('xyz');
 CREATE INDEX idx_name ON test_name USING gin (i);
 SELECT * FROM test_name WHERE i<'abc' ORDER BY i;
-  i  
+  i
 -----
  a
  ab
@@ -13,7 +13,7 @@ SELECT * FROM test_name WHERE i<'abc' ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_name WHERE i<='abc' ORDER BY i;
-  i  
+  i
 -----
  a
  ab
@@ -22,13 +22,13 @@ SELECT * FROM test_name WHERE i<='abc' ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_name WHERE i='abc' ORDER BY i;
-  i  
+  i
 -----
  abc
 (1 row)
 
 SELECT * FROM test_name WHERE i>='abc' ORDER BY i;
-  i  
+  i
 -----
  abc
  axy
@@ -36,14 +36,14 @@ SELECT * FROM test_name WHERE i>='abc' ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_name WHERE i>'abc' ORDER BY i;
-  i  
+  i
 -----
  axy
  xyz
 (2 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i<'abc' ORDER BY i;
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Sort
    Sort Key: i
@@ -54,7 +54,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i<'abc' ORDER BY i;
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i<='abc' ORDER BY i;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Sort
    Sort Key: i
@@ -65,7 +65,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i<='abc' ORDER BY i;
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i='abc' ORDER BY i;
-              QUERY PLAN               
+              QUERY PLAN
 ---------------------------------------
  Bitmap Heap Scan on test_name
    Recheck Cond: (i = 'abc'::name)
@@ -74,7 +74,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i='abc' ORDER BY i;
 (4 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i>='abc' ORDER BY i;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Sort
    Sort Key: i
@@ -85,7 +85,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i>='abc' ORDER BY i;
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i>'abc' ORDER BY i;
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Sort
    Sort Key: i
@@ -94,4 +94,3 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_name WHERE i>'abc' ORDER BY i;
          ->  Bitmap Index Scan on idx_name
                Index Cond: (i > 'abc'::name)
 (6 rows)
-

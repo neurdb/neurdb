@@ -5,16 +5,16 @@ CREATE TABLE persons OF person_type;
 CREATE TABLE IF NOT EXISTS persons OF person_type;
 NOTICE:  relation "persons" already exists, skipping
 SELECT * FROM persons;
- id | name 
+ id | name
 ----+------
 (0 rows)
 
 \d persons
               Table "public.persons"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- id     | integer |           |          | 
- name   | text    |           |          | 
+ id     | integer |           |          |
+ name   | text    |           |          |
 Typed table of type: person_type
 
 CREATE FUNCTION get_all_persons() RETURNS SETOF person_type
@@ -23,7 +23,7 @@ AS $$
     SELECT * FROM persons;
 $$;
 SELECT * FROM get_all_persons();
- id | name 
+ id | name
 ----+------
 (0 rows)
 
@@ -47,10 +47,10 @@ CREATE TABLE persons2 OF person_type (
 );
 \d persons2
               Table "public.persons2"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- id     | integer |           | not null | 
- name   | text    |           |          | 
+ id     | integer |           | not null |
+ name   | text    |           |          |
 Indexes:
     "persons2_pkey" PRIMARY KEY, btree (id)
     "persons2_name_key" UNIQUE CONSTRAINT, btree (name)
@@ -62,9 +62,9 @@ CREATE TABLE persons3 OF person_type (
 );
 \d persons3
               Table "public.persons3"
- Column |  Type   | Collation | Nullable | Default  
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+----------
- id     | integer |           | not null | 
+ id     | integer |           | not null |
  name   | text    |           |          | ''::text
 Indexes:
     "persons3_pkey" PRIMARY KEY, btree (id)
@@ -97,7 +97,7 @@ CREATE TABLE persons OF person_type;
 INSERT INTO persons VALUES (1, 'test');
 CREATE FUNCTION namelen(person_type) RETURNS int LANGUAGE SQL AS $$ SELECT length($1.name) $$;
 SELECT id, namelen(persons) FROM persons;
- id | namelen 
+ id | namelen
 ----+---------
   1 |       4
 (1 row)
@@ -108,10 +108,10 @@ CREATE TABLE persons2 OF person_type (
 );
 \d persons2
               Table "public.persons2"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- id     | integer |           | not null | 
- name   | text    |           |          | 
+ id     | integer |           | not null |
+ name   | text    |           |          |
 Indexes:
     "persons2_pkey" PRIMARY KEY, btree (id)
     "persons2_name_key" UNIQUE CONSTRAINT, btree (name)
@@ -123,11 +123,10 @@ CREATE TABLE persons3 OF person_type (
 );
 \d persons3
               Table "public.persons3"
- Column |  Type   | Collation | Nullable | Default  
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+----------
- id     | integer |           | not null | 
+ id     | integer |           | not null |
  name   | text    |           | not null | ''::text
 Indexes:
     "persons3_pkey" PRIMARY KEY, btree (id)
 Typed table of type: person_type
-

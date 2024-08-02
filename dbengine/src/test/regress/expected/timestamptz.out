@@ -14,31 +14,31 @@ INSERT INTO TIMESTAMPTZ_TBL VALUES ('tomorrow');
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('tomorrow EST');
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('tomorrow zulu');
 SELECT count(*) AS One FROM TIMESTAMPTZ_TBL WHERE d1 = timestamp with time zone 'today';
- one 
+ one
 -----
    1
 (1 row)
 
 SELECT count(*) AS One FROM TIMESTAMPTZ_TBL WHERE d1 = timestamp with time zone 'tomorrow';
- one 
+ one
 -----
    1
 (1 row)
 
 SELECT count(*) AS One FROM TIMESTAMPTZ_TBL WHERE d1 = timestamp with time zone 'yesterday';
- one 
+ one
 -----
    1
 (1 row)
 
 SELECT count(*) AS One FROM TIMESTAMPTZ_TBL WHERE d1 = timestamp with time zone 'tomorrow EST';
- one 
+ one
 -----
    1
 (1 row)
 
 SELECT count(*) AS One FROM TIMESTAMPTZ_TBL WHERE d1 = timestamp with time zone 'tomorrow zulu';
- one 
+ one
 -----
    1
 (1 row)
@@ -49,34 +49,34 @@ DELETE FROM TIMESTAMPTZ_TBL;
 -- and that it doesn't change over the same interval within a transaction block
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('now');
 SELECT pg_sleep(0.1);
- pg_sleep 
+ pg_sleep
 ----------
- 
+
 (1 row)
 
 BEGIN;
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('now');
 SELECT pg_sleep(0.1);
- pg_sleep 
+ pg_sleep
 ----------
- 
+
 (1 row)
 
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('now');
 SELECT pg_sleep(0.1);
- pg_sleep 
+ pg_sleep
 ----------
- 
+
 (1 row)
 
 SELECT count(*) AS two FROM TIMESTAMPTZ_TBL WHERE d1 = timestamp(2) with time zone 'now';
- two 
+ two
 -----
    2
 (1 row)
 
 SELECT count(d1) AS three, count(DISTINCT d1) AS two FROM TIMESTAMPTZ_TBL;
- three | two 
+ three | two
 -------+-----
      3 |   2
 (1 row)
@@ -88,7 +88,7 @@ INSERT INTO TIMESTAMPTZ_TBL VALUES ('-infinity');
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('infinity');
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('epoch');
 SELECT timestamptz 'infinity' = timestamptz '+infinity' AS t;
- t 
+ t
 ---
  t
 (1 row)
@@ -133,14 +133,14 @@ INSERT INTO TIMESTAMPTZ_TBL VALUES ('1997.041 17:32:01 UTC');
 -- timestamps at different timezones
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('19970210 173201 America/New_York');
 SELECT '19970210 173201' AT TIME ZONE 'America/New_York';
-         timezone         
+         timezone
 --------------------------
  Mon Feb 10 20:32:01 1997
 (1 row)
 
 INSERT INTO TIMESTAMPTZ_TBL VALUES ('19970710 173201 America/New_York');
 SELECT '19970710 173201' AT TIME ZONE 'America/New_York';
-         timezone         
+         timezone
 --------------------------
  Thu Jul 10 20:32:01 1997
 (1 row)
@@ -153,56 +153,56 @@ SELECT '19970710 173201' AT TIME ZONE 'America/Does_not_exist';
 ERROR:  time zone "America/Does_not_exist" not recognized
 -- Daylight saving time for timestamps beyond 32-bit time_t range.
 SELECT '20500710 173201 Europe/Helsinki'::timestamptz; -- DST
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Jul 10 07:32:01 2050 PDT
 (1 row)
 
 SELECT '20500110 173201 Europe/Helsinki'::timestamptz; -- non-DST
-         timestamptz          
+         timestamptz
 ------------------------------
  Mon Jan 10 07:32:01 2050 PST
 (1 row)
 
 SELECT '205000-07-10 17:32:01 Europe/Helsinki'::timestamptz; -- DST
-          timestamptz           
+          timestamptz
 --------------------------------
  Thu Jul 10 07:32:01 205000 PDT
 (1 row)
 
 SELECT '205000-01-10 17:32:01 Europe/Helsinki'::timestamptz; -- non-DST
-          timestamptz           
+          timestamptz
 --------------------------------
  Fri Jan 10 07:32:01 205000 PST
 (1 row)
 
 -- Test non-error-throwing API
 SELECT pg_input_is_valid('now', 'timestamptz');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('garbage', 'timestamptz');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT pg_input_is_valid('2001-01-01 00:00 Nehwon/Lankhmar', 'timestamptz');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('garbage', 'timestamptz');
-                              message                              | detail | hint | sql_error_code 
+                              message                              | detail | hint | sql_error_code
 -------------------------------------------------------------------+--------+------+----------------
  invalid input syntax for type timestamp with time zone: "garbage" |        |      | 22007
 (1 row)
 
 SELECT * FROM pg_input_error_info('2001-01-01 00:00 Nehwon/Lankhmar', 'timestamptz');
-                  message                   | detail | hint | sql_error_code 
+                  message                   | detail | hint | sql_error_code
 --------------------------------------------+--------+------+----------------
  time zone "nehwon/lankhmar" not recognized |        |      | 22023
 (1 row)
@@ -255,37 +255,37 @@ LINE 1: INSERT INTO TIMESTAMPTZ_TBL VALUES ('Feb 16 17:32:01 5097 BC...
 -- Alternative field order that we've historically supported (sort of)
 -- with regular and POSIXy timezone specs
 SELECT 'Wed Jul 11 10:51:14 America/New_York 2001'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Wed Jul 11 07:51:14 2001 PDT
 (1 row)
 
 SELECT 'Wed Jul 11 10:51:14 GMT-4 2001'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Tue Jul 10 23:51:14 2001 PDT
 (1 row)
 
 SELECT 'Wed Jul 11 10:51:14 GMT+4 2001'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Wed Jul 11 07:51:14 2001 PDT
 (1 row)
 
 SELECT 'Wed Jul 11 10:51:14 PST-03:00 2001'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Wed Jul 11 00:51:14 2001 PDT
 (1 row)
 
 SELECT 'Wed Jul 11 10:51:14 PST+03:00 2001'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Wed Jul 11 06:51:14 2001 PDT
 (1 row)
 
 SELECT d1 FROM TIMESTAMPTZ_TBL;
-               d1                
+               d1
 ---------------------------------
  -infinity
  infinity
@@ -357,19 +357,19 @@ SELECT d1 FROM TIMESTAMPTZ_TBL;
 
 -- Check behavior at the boundaries of the timestamp range
 SELECT '4714-11-24 00:00:00+00 BC'::timestamptz;
-           timestamptz           
+           timestamptz
 ---------------------------------
  Sun Nov 23 16:00:00 4714 PST BC
 (1 row)
 
 SELECT '4714-11-23 16:00:00-08 BC'::timestamptz;
-           timestamptz           
+           timestamptz
 ---------------------------------
  Sun Nov 23 16:00:00 4714 PST BC
 (1 row)
 
 SELECT 'Sun Nov 23 16:00:00 4714 PST BC'::timestamptz;
-           timestamptz           
+           timestamptz
 ---------------------------------
  Sun Nov 23 16:00:00 4714 PST BC
 (1 row)
@@ -379,13 +379,13 @@ ERROR:  timestamp out of range: "4714-11-23 23:59:59+00 BC"
 LINE 1: SELECT '4714-11-23 23:59:59+00 BC'::timestamptz;
                ^
 SELECT '294276-12-31 23:59:59+00'::timestamptz;
-          timestamptz           
+          timestamptz
 --------------------------------
  Sun Dec 31 15:59:59 294276 PST
 (1 row)
 
 SELECT '294276-12-31 15:59:59-08'::timestamptz;
-          timestamptz           
+          timestamptz
 --------------------------------
  Sun Dec 31 15:59:59 294276 PST
 (1 row)
@@ -401,7 +401,7 @@ LINE 1: SELECT '294277-12-31 16:00:00-08'::timestamptz;
 -- Demonstrate functions and operators
 SELECT d1 FROM TIMESTAMPTZ_TBL
    WHERE d1 > timestamp with time zone '1997-01-02';
-               d1               
+               d1
 --------------------------------
  infinity
  Mon Feb 10 17:32:01 1997 PST
@@ -457,7 +457,7 @@ SELECT d1 FROM TIMESTAMPTZ_TBL
 
 SELECT d1 FROM TIMESTAMPTZ_TBL
    WHERE d1 < timestamp with time zone '1997-01-02';
-               d1                
+               d1
 ---------------------------------
  -infinity
  Wed Dec 31 16:00:00 1969 PST
@@ -478,14 +478,14 @@ SELECT d1 FROM TIMESTAMPTZ_TBL
 
 SELECT d1 FROM TIMESTAMPTZ_TBL
    WHERE d1 = timestamp with time zone '1997-01-02';
-              d1              
+              d1
 ------------------------------
  Thu Jan 02 00:00:00 1997 PST
 (1 row)
 
 SELECT d1 FROM TIMESTAMPTZ_TBL
    WHERE d1 != timestamp with time zone '1997-01-02';
-               d1                
+               d1
 ---------------------------------
  -infinity
  infinity
@@ -556,7 +556,7 @@ SELECT d1 FROM TIMESTAMPTZ_TBL
 
 SELECT d1 FROM TIMESTAMPTZ_TBL
    WHERE d1 <= timestamp with time zone '1997-01-02';
-               d1                
+               d1
 ---------------------------------
  -infinity
  Wed Dec 31 16:00:00 1969 PST
@@ -578,7 +578,7 @@ SELECT d1 FROM TIMESTAMPTZ_TBL
 
 SELECT d1 FROM TIMESTAMPTZ_TBL
    WHERE d1 >= timestamp with time zone '1997-01-02';
-               d1               
+               d1
 --------------------------------
  infinity
  Mon Feb 10 17:32:01 1997 PST
@@ -635,7 +635,7 @@ SELECT d1 FROM TIMESTAMPTZ_TBL
 
 SELECT d1 - timestamp with time zone '1997-01-02' AS diff
    FROM TIMESTAMPTZ_TBL WHERE d1 BETWEEN '1902-01-01' AND '2038-01-01';
-                  diff                  
+                  diff
 ----------------------------------------
  @ 9863 days 8 hours ago
  @ 39 days 17 hours 32 mins 1 sec
@@ -696,25 +696,25 @@ SELECT d1 - timestamp with time zone '1997-01-02' AS diff
 (56 rows)
 
 SELECT date_trunc( 'week', timestamp with time zone '2004-02-29 15:44:17.71393' ) AS week_trunc;
-          week_trunc          
+          week_trunc
 ------------------------------
  Mon Feb 23 00:00:00 2004 PST
 (1 row)
 
 SELECT date_trunc('day', timestamp with time zone '2001-02-16 20:38:40+00', 'Australia/Sydney') as sydney_trunc;  -- zone name
-         sydney_trunc         
+         sydney_trunc
 ------------------------------
  Fri Feb 16 05:00:00 2001 PST
 (1 row)
 
 SELECT date_trunc('day', timestamp with time zone '2001-02-16 20:38:40+00', 'GMT') as gmt_trunc;  -- fixed-offset abbreviation
-          gmt_trunc           
+          gmt_trunc
 ------------------------------
  Thu Feb 15 16:00:00 2001 PST
 (1 row)
 
 SELECT date_trunc('day', timestamp with time zone '2001-02-16 20:38:40+00', 'VET') as vet_trunc;  -- variable-offset abbreviation
-          vet_trunc           
+          vet_trunc
 ------------------------------
  Thu Feb 15 20:00:00 2001 PST
 (1 row)
@@ -734,7 +734,7 @@ FROM (
   ('microsecond', '1 us')
 ) intervals (str, interval),
 (VALUES (timestamptz '2020-02-29 15:44:17.71393+00')) ts (ts);
-     str     | interval | equal 
+     str     | interval | equal
 -------------+----------+-------
  day         | 1 d      | t
  hour        | 1 h      | t
@@ -762,7 +762,7 @@ FROM (
 ) intervals (interval),
 (VALUES (timestamptz '2020-02-11 15:44:17.71393')) ts (ts),
 (VALUES (timestamptz '2001-01-01')) origin (origin);
-     interval      |                 ts                 |            origin            |              date_bin              
+     interval      |                 ts                 |            origin            |              date_bin
 -------------------+------------------------------------+------------------------------+------------------------------------
  15 days           | Tue Feb 11 15:44:17.71393 2020 PST | Mon Jan 01 00:00:00 2001 PST | Thu Feb 06 00:00:00 2020 PST
  2 hours           | Tue Feb 11 15:44:17.71393 2020 PST | Mon Jan 01 00:00:00 2001 PST | Tue Feb 11 14:00:00 2020 PST
@@ -775,14 +775,14 @@ FROM (
 
 -- shift bins using the origin parameter:
 SELECT date_bin('5 min'::interval, timestamptz '2020-02-01 01:01:01+00', timestamptz '2020-02-01 00:02:30+00');
-           date_bin           
+           date_bin
 ------------------------------
  Fri Jan 31 16:57:30 2020 PST
 (1 row)
 
 -- test roundoff edge case when source < origin
 SELECT date_bin('30 minutes'::interval, timestamptz '2024-02-01 15:00:00', timestamptz '2024-02-01 17:00:00');
-           date_bin           
+           date_bin
 ------------------------------
  Thu Feb 01 15:00:00 2024 PST
 (1 row)
@@ -809,7 +809,7 @@ ERROR:  timestamp out of range
 SELECT d1 - timestamp with time zone '1997-01-02' AS diff
   FROM TIMESTAMPTZ_TBL
   WHERE d1 BETWEEN timestamp with time zone '1902-01-01' AND timestamp with time zone '2038-01-01';
-                  diff                  
+                  diff
 ----------------------------------------
  @ 9863 days 8 hours ago
  @ 39 days 17 hours 32 mins 1 sec
@@ -875,10 +875,10 @@ SELECT d1 as timestamptz,
    date_part( 'day', d1) AS day, date_part( 'hour', d1) AS hour,
    date_part( 'minute', d1) AS minute, date_part( 'second', d1) AS second
    FROM TIMESTAMPTZ_TBL;
-           timestamptz           |   year    | month | day | hour | minute | second 
+           timestamptz           |   year    | month | day | hour | minute | second
 ---------------------------------+-----------+-------+-----+------+--------+--------
- -infinity                       | -Infinity |       |     |      |        |       
- infinity                        |  Infinity |       |     |      |        |       
+ -infinity                       | -Infinity |       |     |      |        |
+ infinity                        |  Infinity |       |     |      |        |
  Wed Dec 31 16:00:00 1969 PST    |      1969 |    12 |  31 |   16 |      0 |      0
  Mon Feb 10 17:32:01 1997 PST    |      1997 |     2 |  10 |   17 |     32 |      1
  Mon Feb 10 17:32:01 1997 PST    |      1997 |     2 |  10 |   17 |     32 |      1
@@ -949,10 +949,10 @@ SELECT d1 as timestamptz,
    date_part( 'quarter', d1) AS quarter, date_part( 'msec', d1) AS msec,
    date_part( 'usec', d1) AS usec
    FROM TIMESTAMPTZ_TBL;
-           timestamptz           | quarter | msec  |   usec   
+           timestamptz           | quarter | msec  |   usec
 ---------------------------------+---------+-------+----------
- -infinity                       |         |       |         
- infinity                        |         |       |         
+ -infinity                       |         |       |
+ infinity                        |         |       |
  Wed Dec 31 16:00:00 1969 PST    |       4 |     0 |        0
  Mon Feb 10 17:32:01 1997 PST    |       1 |  1000 |  1000000
  Mon Feb 10 17:32:01 1997 PST    |       1 |  1000 |  1000000
@@ -1024,10 +1024,10 @@ SELECT d1 as timestamptz,
    date_part( 'isodow', d1) AS isodow, date_part( 'dow', d1) AS dow,
    date_part( 'doy', d1) AS doy
    FROM TIMESTAMPTZ_TBL;
-           timestamptz           |  isoyear  | week | isodow | dow | doy 
+           timestamptz           |  isoyear  | week | isodow | dow | doy
 ---------------------------------+-----------+------+--------+-----+-----
- -infinity                       | -Infinity |      |        |     |    
- infinity                        |  Infinity |      |        |     |    
+ -infinity                       | -Infinity |      |        |     |
+ infinity                        |  Infinity |      |        |     |
  Wed Dec 31 16:00:00 1969 PST    |      1970 |    1 |      3 |   3 | 365
  Mon Feb 10 17:32:01 1997 PST    |      1997 |    7 |      1 |   1 |  41
  Mon Feb 10 17:32:01 1997 PST    |      1997 |    7 |      1 |   1 |  41
@@ -1101,7 +1101,7 @@ SELECT d1 as timestamptz,
    round(date_part( 'julian', d1)) AS julian,
    date_part( 'epoch', d1) AS epoch
    FROM TIMESTAMPTZ_TBL;
-           timestamptz           |  decade   |  century  | millennium |  julian   |    epoch     
+           timestamptz           |  decade   |  century  | millennium |  julian   |    epoch
 ---------------------------------+-----------+-----------+------------+-----------+--------------
  -infinity                       | -Infinity | -Infinity |  -Infinity | -Infinity |    -Infinity
  infinity                        |  Infinity |  Infinity |   Infinity |  Infinity |     Infinity
@@ -1176,10 +1176,10 @@ SELECT d1 as timestamptz,
    date_part( 'timezone_hour', d1) AS timezone_hour,
    date_part( 'timezone_minute', d1) AS timezone_minute
    FROM TIMESTAMPTZ_TBL;
-           timestamptz           | timezone | timezone_hour | timezone_minute 
+           timestamptz           | timezone | timezone_hour | timezone_minute
 ---------------------------------+----------+---------------+-----------------
- -infinity                       |          |               |                
- infinity                        |          |               |                
+ -infinity                       |          |               |
+ infinity                        |          |               |
  Wed Dec 31 16:00:00 1969 PST    |   -28800 |            -8 |               0
  Mon Feb 10 17:32:01 1997 PST    |   -28800 |            -8 |               0
  Mon Feb 10 17:32:01 1997 PST    |   -28800 |            -8 |               0
@@ -1255,7 +1255,7 @@ SELECT d1 as "timestamp",
    round(extract(julian from d1)) AS julian,
    extract(epoch from d1) AS epoch
    FROM TIMESTAMPTZ_TBL;
-            timestamp            | microseconds | milliseconds |  seconds  |  julian   |        epoch        
+            timestamp            | microseconds | milliseconds |  seconds  |  julian   |        epoch
 ---------------------------------+--------------+--------------+-----------+-----------+---------------------
  -infinity                       |              |              |           | -Infinity |           -Infinity
  infinity                        |              |              |           |  Infinity |            Infinity
@@ -1327,27 +1327,27 @@ SELECT d1 as "timestamp",
 
 -- value near upper bound uses special case in code
 SELECT date_part('epoch', '294270-01-01 00:00:00+00'::timestamptz);
-   date_part   
+   date_part
 ---------------
  9224097091200
 (1 row)
 
 SELECT extract(epoch from '294270-01-01 00:00:00+00'::timestamptz);
-       extract        
+       extract
 ----------------------
  9224097091200.000000
 (1 row)
 
 -- another internal overflow test case
 SELECT extract(epoch from '5000-01-01 00:00:00+00'::timestamptz);
-      extract       
+      extract
 --------------------
  95617584000.000000
 (1 row)
 
 -- test edge-case overflow in timestamp subtraction
 SELECT timestamptz '294276-12-31 23:59:59 UTC' - timestamptz '1999-12-23 19:59:04.224193 UTC' AS ok;
-                   ok                    
+                   ok
 -----------------------------------------
  @ 106751991 days 4 hours 54.775807 secs
 (1 row)
@@ -1357,10 +1357,10 @@ ERROR:  interval out of range
 -- TO_CHAR()
 SELECT to_char(d1, 'DAY Day day DY Dy dy MONTH Month month RM MON Mon mon')
    FROM TIMESTAMPTZ_TBL;
-                                         to_char                                          
+                                         to_char
 ------------------------------------------------------------------------------------------
- 
- 
+
+
  WEDNESDAY Wednesday wednesday WED Wed wed DECEMBER  December  december  XII  DEC Dec dec
  MONDAY    Monday    monday    MON Mon mon FEBRUARY  February  february  II   FEB Feb feb
  MONDAY    Monday    monday    MON Mon mon FEBRUARY  February  february  II   FEB Feb feb
@@ -1429,10 +1429,10 @@ SELECT to_char(d1, 'DAY Day day DY Dy dy MONTH Month month RM MON Mon mon')
 
 SELECT to_char(d1, 'FMDAY FMDay FMday FMMONTH FMMonth FMmonth FMRM')
    FROM TIMESTAMPTZ_TBL;
-                           to_char                            
+                           to_char
 --------------------------------------------------------------
- 
- 
+
+
  WEDNESDAY Wednesday wednesday DECEMBER December december XII
  MONDAY Monday monday FEBRUARY February february II
  MONDAY Monday monday FEBRUARY February february II
@@ -1501,10 +1501,10 @@ SELECT to_char(d1, 'FMDAY FMDay FMday FMMONTH FMMonth FMmonth FMRM')
 
 SELECT to_char(d1, 'Y,YYY YYYY YYY YY Y CC Q MM WW DDD DD D J')
    FROM TIMESTAMPTZ_TBL;
-                     to_char                      
+                     to_char
 --------------------------------------------------
- 
- 
+
+
  1,969 1969 969 69 9 20 4 12 53 365 31 4 2440587
  1,997 1997 997 97 7 20 1 02 06 041 10 2 2450490
  1,997 1997 997 97 7 20 1 02 06 041 10 2 2450490
@@ -1573,10 +1573,10 @@ SELECT to_char(d1, 'Y,YYY YYYY YYY YY Y CC Q MM WW DDD DD D J')
 
 SELECT to_char(d1, 'FMY,YYY FMYYYY FMYYY FMYY FMY FMCC FMQ FMMM FMWW FMDDD FMDD FMD FMJ')
    FROM TIMESTAMPTZ_TBL;
-                     to_char                     
+                     to_char
 -------------------------------------------------
- 
- 
+
+
  1,969 1969 969 69 9 20 4 12 53 365 31 4 2440587
  1,997 1997 997 97 7 20 1 2 6 41 10 2 2450490
  1,997 1997 997 97 7 20 1 2 6 41 10 2 2450490
@@ -1645,10 +1645,10 @@ SELECT to_char(d1, 'FMY,YYY FMYYYY FMYYY FMYY FMY FMCC FMQ FMMM FMWW FMDDD FMDD 
 
 SELECT to_char(d1, 'HH HH12 HH24 MI SS SSSS')
    FROM TIMESTAMPTZ_TBL;
-       to_char        
+       to_char
 ----------------------
- 
- 
+
+
  04 04 16 00 00 57600
  05 05 17 32 01 63121
  05 05 17 32 01 63121
@@ -1717,10 +1717,10 @@ SELECT to_char(d1, 'HH HH12 HH24 MI SS SSSS')
 
 SELECT to_char(d1, E'"HH:MI:SS is" HH:MI:SS "\\"text between quote marks\\""')
    FROM TIMESTAMPTZ_TBL;
-                     to_char                     
+                     to_char
 -------------------------------------------------
- 
- 
+
+
  HH:MI:SS is 04:00:00 "text between quote marks"
  HH:MI:SS is 05:32:01 "text between quote marks"
  HH:MI:SS is 05:32:01 "text between quote marks"
@@ -1789,10 +1789,10 @@ SELECT to_char(d1, E'"HH:MI:SS is" HH:MI:SS "\\"text between quote marks\\""')
 
 SELECT to_char(d1, 'HH24--text--MI--text--SS')
    FROM TIMESTAMPTZ_TBL;
-        to_char         
+        to_char
 ------------------------
- 
- 
+
+
  16--text--00--text--00
  17--text--32--text--01
  17--text--32--text--01
@@ -1861,10 +1861,10 @@ SELECT to_char(d1, 'HH24--text--MI--text--SS')
 
 SELECT to_char(d1, 'YYYYTH YYYYth Jth')
    FROM TIMESTAMPTZ_TBL;
-         to_char         
+         to_char
 -------------------------
- 
- 
+
+
  1969TH 1969th 2440587th
  1997TH 1997th 2450490th
  1997TH 1997th 2450490th
@@ -1933,10 +1933,10 @@ SELECT to_char(d1, 'YYYYTH YYYYth Jth')
 
 SELECT to_char(d1, 'YYYY A.D. YYYY a.d. YYYY bc HH:MI:SS P.M. HH:MI:SS p.m. HH:MI:SS pm')
    FROM TIMESTAMPTZ_TBL;
-                               to_char                               
+                               to_char
 ---------------------------------------------------------------------
- 
- 
+
+
  1969 A.D. 1969 a.d. 1969 ad 04:00:00 P.M. 04:00:00 p.m. 04:00:00 pm
  1997 A.D. 1997 a.d. 1997 ad 05:32:01 P.M. 05:32:01 p.m. 05:32:01 pm
  1997 A.D. 1997 a.d. 1997 ad 05:32:01 P.M. 05:32:01 p.m. 05:32:01 pm
@@ -2005,10 +2005,10 @@ SELECT to_char(d1, 'YYYY A.D. YYYY a.d. YYYY bc HH:MI:SS P.M. HH:MI:SS p.m. HH:M
 
 SELECT to_char(d1, 'IYYY IYY IY I IW IDDD ID')
    FROM TIMESTAMPTZ_TBL;
-        to_char         
+        to_char
 ------------------------
- 
- 
+
+
  1970 970 70 0 01 003 3
  1997 997 97 7 07 043 1
  1997 997 97 7 07 043 1
@@ -2077,10 +2077,10 @@ SELECT to_char(d1, 'IYYY IYY IY I IW IDDD ID')
 
 SELECT to_char(d1, 'FMIYYY FMIYY FMIY FMI FMIW FMIDDD FMID')
    FROM TIMESTAMPTZ_TBL;
-        to_char         
+        to_char
 ------------------------
- 
- 
+
+
  1970 970 70 0 1 3 3
  1997 997 97 7 7 43 1
  1997 997 97 7 7 43 1
@@ -2154,7 +2154,7 @@ SELECT to_char(d, 'FF1 FF2 FF3 FF4 FF5 FF6  ff1 ff2 ff3 ff4 ff5 ff6  MS US')
        ('2018-11-02 12:34:56.78901'),
        ('2018-11-02 12:34:56.78901234')
    ) d(d);
-                              to_char                               
+                              to_char
 --------------------------------------------------------------------
  0 00 000 0000 00000 000000  0 00 000 0000 00000 000000  000 000000
  7 78 780 7800 78000 780000  7 78 780 7800 78000 780000  780 780000
@@ -2165,63 +2165,63 @@ SELECT to_char(d, 'FF1 FF2 FF3 FF4 FF5 FF6  ff1 ff2 ff3 ff4 ff5 ff6  MS US')
 -- Check OF, TZH, TZM with various zone offsets, particularly fractional hours
 SET timezone = '00:00';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
- OF  | TZH:TZM 
+ OF  | TZH:TZM
 -----+---------
  +00 | +00:00
 (1 row)
 
 SET timezone = '+02:00';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
- OF  | TZH:TZM 
+ OF  | TZH:TZM
 -----+---------
  -02 | -02:00
 (1 row)
 
 SET timezone = '-13:00';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
- OF  | TZH:TZM 
+ OF  | TZH:TZM
 -----+---------
  +13 | +13:00
 (1 row)
 
 SET timezone = '-00:30';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
-   OF   | TZH:TZM 
+   OF   | TZH:TZM
 --------+---------
  +00:30 | +00:30
 (1 row)
 
 SET timezone = '00:30';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
-   OF   | TZH:TZM 
+   OF   | TZH:TZM
 --------+---------
  -00:30 | -00:30
 (1 row)
 
 SET timezone = '-04:30';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
-   OF   | TZH:TZM 
+   OF   | TZH:TZM
 --------+---------
  +04:30 | +04:30
 (1 row)
 
 SET timezone = '04:30';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
-   OF   | TZH:TZM 
+   OF   | TZH:TZM
 --------+---------
  -04:30 | -04:30
 (1 row)
 
 SET timezone = '-04:15';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
-   OF   | TZH:TZM 
+   OF   | TZH:TZM
 --------+---------
  +04:15 | +04:15
 (1 row)
 
 SET timezone = '04:15';
 SELECT to_char(now(), 'OF') as "OF", to_char(now(), 'TZH:TZM') as "TZH:TZM";
-   OF   | TZH:TZM 
+   OF   | TZH:TZM
 --------+---------
  -04:15 | -04:15
 (1 row)
@@ -2230,63 +2230,63 @@ RESET timezone;
 -- Check of, tzh, tzm with various zone offsets.
 SET timezone = '00:00';
 SELECT to_char(now(), 'of') as "Of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
- Of  | tzh:tzm 
+ Of  | tzh:tzm
 -----+---------
  +00 | +00:00
 (1 row)
 
 SET timezone = '+02:00';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
- of  | tzh:tzm 
+ of  | tzh:tzm
 -----+---------
  -02 | -02:00
 (1 row)
 
 SET timezone = '-13:00';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
- of  | tzh:tzm 
+ of  | tzh:tzm
 -----+---------
  +13 | +13:00
 (1 row)
 
 SET timezone = '-00:30';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
-   of   | tzh:tzm 
+   of   | tzh:tzm
 --------+---------
  +00:30 | +00:30
 (1 row)
 
 SET timezone = '00:30';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
-   of   | tzh:tzm 
+   of   | tzh:tzm
 --------+---------
  -00:30 | -00:30
 (1 row)
 
 SET timezone = '-04:30';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
-   of   | tzh:tzm 
+   of   | tzh:tzm
 --------+---------
  +04:30 | +04:30
 (1 row)
 
 SET timezone = '04:30';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
-   of   | tzh:tzm 
+   of   | tzh:tzm
 --------+---------
  -04:30 | -04:30
 (1 row)
 
 SET timezone = '-04:15';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
-   of   | tzh:tzm 
+   of   | tzh:tzm
 --------+---------
  +04:15 | +04:15
 (1 row)
 
 SET timezone = '04:15';
 SELECT to_char(now(), 'of') as "of", to_char(now(), 'tzh:tzm') as "tzh:tzm";
-   of   | tzh:tzm 
+   of   | tzh:tzm
 --------+---------
  -04:15 | -04:15
 (1 row)
@@ -2302,7 +2302,7 @@ INSERT INTO TIMESTAMPTZ_TST VALUES(4, '100000312 23:58:48 IST');
 INSERT INTO TIMESTAMPTZ_TST VALUES(4, '1000000312 23:58:48 IST');
 --Verify data
 SELECT * FROM TIMESTAMPTZ_TST ORDER BY a;
- a |               b                
+ a |               b
 ---+--------------------------------
  1 | Wed Mar 12 13:58:48 1000 PST
  2 | Sun Mar 12 14:58:48 10000 PDT
@@ -2318,19 +2318,19 @@ DROP TABLE TIMESTAMPTZ_TST;
 set TimeZone to 'America/New_York';
 -- numeric timezone
 SELECT make_timestamptz(1973, 07, 15, 08, 15, 55.33);
-        make_timestamptz         
+        make_timestamptz
 ---------------------------------
  Sun Jul 15 08:15:55.33 1973 EDT
 (1 row)
 
 SELECT make_timestamptz(1973, 07, 15, 08, 15, 55.33, '+2');
-        make_timestamptz         
+        make_timestamptz
 ---------------------------------
  Sun Jul 15 02:15:55.33 1973 EDT
 (1 row)
 
 SELECT make_timestamptz(1973, 07, 15, 08, 15, 55.33, '-2');
-        make_timestamptz         
+        make_timestamptz
 ---------------------------------
  Sun Jul 15 06:15:55.33 1973 EDT
 (1 row)
@@ -2341,7 +2341,7 @@ WITH tzs (tz) AS (VALUES
     ('+10:00:1'), ('+10:00:01'),
     ('+10:00:10'))
      SELECT make_timestamptz(2010, 2, 27, 3, 45, 00, tz), tz FROM tzs;
-       make_timestamptz       |    tz     
+       make_timestamptz       |    tz
 ------------------------------+-----------
  Fri Feb 26 21:45:00 2010 EST | +1
  Fri Feb 26 21:45:00 2010 EST | +1:
@@ -2370,32 +2370,32 @@ SELECT make_timestamptz(2014, 12, 10, 10, 10, 10, '-16');
 ERROR:  numeric time zone "-16" out of range
 -- should be true
 SELECT make_timestamptz(1973, 07, 15, 08, 15, 55.33, '+2') = '1973-07-15 08:15:55.33+02'::timestamptz;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- full timezone names
 SELECT make_timestamptz(2014, 12, 10, 0, 0, 0, 'Europe/Prague') = timestamptz '2014-12-10 00:00:00 Europe/Prague';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT make_timestamptz(2014, 12, 10, 0, 0, 0, 'Europe/Prague') AT TIME ZONE 'UTC';
-         timezone         
+         timezone
 --------------------------
  Tue Dec 09 23:00:00 2014
 (1 row)
 
 SELECT make_timestamptz(1846, 12, 10, 0, 0, 0, 'Asia/Manila') AT TIME ZONE 'UTC';
-         timezone         
+         timezone
 --------------------------
  Wed Dec 09 15:56:00 1846
 (1 row)
 
 SELECT make_timestamptz(1881, 12, 10, 0, 0, 0, 'Europe/Paris') AT TIME ZONE 'UTC';
-         timezone         
+         timezone
 --------------------------
  Fri Dec 09 23:50:39 1881
 (1 row)
@@ -2404,19 +2404,19 @@ SELECT make_timestamptz(1910, 12, 24, 0, 0, 0, 'Nehwon/Lankhmar');
 ERROR:  time zone "Nehwon/Lankhmar" not recognized
 -- abbreviations
 SELECT make_timestamptz(2008, 12, 10, 10, 10, 10, 'EST');
-       make_timestamptz       
+       make_timestamptz
 ------------------------------
  Wed Dec 10 10:10:10 2008 EST
 (1 row)
 
 SELECT make_timestamptz(2008, 12, 10, 10, 10, 10, 'EDT');
-       make_timestamptz       
+       make_timestamptz
 ------------------------------
  Wed Dec 10 09:10:10 2008 EST
 (1 row)
 
 SELECT make_timestamptz(2014, 12, 10, 10, 10, 10, 'PST8PDT');
-       make_timestamptz       
+       make_timestamptz
 ------------------------------
  Wed Dec 10 13:10:10 2014 EST
 (1 row)
@@ -2426,7 +2426,7 @@ RESET TimeZone;
 select * from generate_series('2020-01-01 00:00'::timestamptz,
                               '2020-01-02 03:00'::timestamptz,
                               '1 hour'::interval);
-       generate_series        
+       generate_series
 ------------------------------
  Wed Jan 01 00:00:00 2020 PST
  Wed Jan 01 01:00:00 2020 PST
@@ -2463,7 +2463,7 @@ select * from generate_series('2020-01-01 00:00'::timestamptz,
 select generate_series('2022-01-01 00:00'::timestamptz,
                        'infinity'::timestamptz,
                        '1 month'::interval) limit 10;
-       generate_series        
+       generate_series
 ------------------------------
  Sat Jan 01 00:00:00 2022 PST
  Tue Feb 01 00:00:00 2022 PST
@@ -2486,7 +2486,7 @@ ERROR:  step size cannot equal zero
 SET TimeZone to 'UTC';
 SELECT date_add('2022-10-30 00:00:00+01'::timestamptz,
                 '1 day'::interval);
-           date_add           
+           date_add
 ------------------------------
  Sun Oct 30 23:00:00 2022 UTC
 (1 row)
@@ -2494,14 +2494,14 @@ SELECT date_add('2022-10-30 00:00:00+01'::timestamptz,
 SELECT date_add('2021-10-31 00:00:00+02'::timestamptz,
                 '1 day'::interval,
                 'Europe/Warsaw');
-           date_add           
+           date_add
 ------------------------------
  Sun Oct 31 23:00:00 2021 UTC
 (1 row)
 
 SELECT date_subtract('2022-10-30 00:00:00+01'::timestamptz,
                      '1 day'::interval);
-        date_subtract         
+        date_subtract
 ------------------------------
  Fri Oct 28 23:00:00 2022 UTC
 (1 row)
@@ -2509,7 +2509,7 @@ SELECT date_subtract('2022-10-30 00:00:00+01'::timestamptz,
 SELECT date_subtract('2021-10-31 00:00:00+02'::timestamptz,
                      '1 day'::interval,
                      'Europe/Warsaw');
-        date_subtract         
+        date_subtract
 ------------------------------
  Fri Oct 29 22:00:00 2021 UTC
 (1 row)
@@ -2518,7 +2518,7 @@ SELECT * FROM generate_series('2021-12-31 23:00:00+00'::timestamptz,
                               '2020-12-31 23:00:00+00'::timestamptz,
                               '-1 month'::interval,
                               'Europe/Warsaw');
-       generate_series        
+       generate_series
 ------------------------------
  Fri Dec 31 23:00:00 2021 UTC
  Tue Nov 30 23:00:00 2021 UTC
@@ -2543,374 +2543,374 @@ RESET TimeZone;
 --
 SET TimeZone to 'UTC';
 SELECT '2011-03-27 00:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 21:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 22:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:59:59 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 22:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 23:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:01 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 23:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:59:59 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 23:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 23:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:01 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 23:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 04:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 00:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 00:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 21:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 22:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:59:59 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 22:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 22:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:01 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 22:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:59:59 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 22:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 23:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:01 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Mar 26 23:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 04:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 00:00:00 2011 UTC
 (1 row)
 
 SELECT '2014-10-26 00:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 20:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 00:59:59 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 20:59:59 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 22:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:01 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 22:00:01 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 02:00:00 Europe/Moscow'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 23:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 00:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 20:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 00:59:59 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 20:59:59 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 22:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:01 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 22:00:01 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 02:00:00 MSK'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sat Oct 25 23:00:00 2014 UTC
 (1 row)
 
 SELECT '2011-03-27 00:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 21:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 22:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:59:59'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 22:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 23:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:01'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 23:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:59:59'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 23:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 23:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:01'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 23:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 04:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sun Mar 27 00:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 00:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 21:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 22:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 01:59:59'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 22:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 22:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:00:01'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 22:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 02:59:59'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 22:59:59 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 23:00:00 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 03:00:01'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Mar 26 23:00:01 2011 UTC
 (1 row)
 
 SELECT '2011-03-27 04:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sun Mar 27 00:00:00 2011 UTC
 (1 row)
 
 SELECT '2014-10-26 00:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 20:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 00:59:59'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 20:59:59 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 22:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:01'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 22:00:01 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 02:00:00'::timestamp AT TIME ZONE 'Europe/Moscow';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 23:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 00:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 20:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 00:59:59'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 20:59:59 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 22:00:00 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 01:00:01'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 22:00:01 2014 UTC
 (1 row)
 
 SELECT '2014-10-26 02:00:00'::timestamp AT TIME ZONE 'MSK';
-           timezone           
+           timezone
 ------------------------------
  Sat Oct 25 23:00:00 2014 UTC
 (1 row)
 
 SELECT make_timestamptz(2014, 10, 26, 0, 0, 0, 'MSK');
-       make_timestamptz       
+       make_timestamptz
 ------------------------------
  Sat Oct 25 20:00:00 2014 UTC
 (1 row)
 
 SELECT make_timestamptz(2014, 10, 26, 1, 0, 0, 'MSK');
-       make_timestamptz       
+       make_timestamptz
 ------------------------------
  Sat Oct 25 22:00:00 2014 UTC
 (1 row)
 
 SELECT to_timestamp(         0);          -- 1970-01-01 00:00:00+00
-         to_timestamp         
+         to_timestamp
 ------------------------------
  Thu Jan 01 00:00:00 1970 UTC
 (1 row)
 
 SELECT to_timestamp( 946684800);          -- 2000-01-01 00:00:00+00
-         to_timestamp         
+         to_timestamp
 ------------------------------
  Sat Jan 01 00:00:00 2000 UTC
 (1 row)
 
 SELECT to_timestamp(1262349296.7890123);  -- 2010-01-01 12:34:56.789012+00
-            to_timestamp             
+            to_timestamp
 -------------------------------------
  Fri Jan 01 12:34:56.789012 2010 UTC
 (1 row)
 
 -- edge cases
 SELECT to_timestamp(-210866803200);       --   4714-11-24 00:00:00+00 BC
-          to_timestamp           
+          to_timestamp
 ---------------------------------
  Mon Nov 24 00:00:00 4714 UTC BC
 (1 row)
@@ -2918,13 +2918,13 @@ SELECT to_timestamp(-210866803200);       --   4714-11-24 00:00:00+00 BC
 -- upper limit varies between integer and float timestamps, so hard to test
 -- nonfinite values
 SELECT to_timestamp(' Infinity'::float);
- to_timestamp 
+ to_timestamp
 --------------
  infinity
 (1 row)
 
 SELECT to_timestamp('-Infinity'::float);
- to_timestamp 
+ to_timestamp
 --------------
  -infinity
 (1 row)
@@ -2933,218 +2933,218 @@ SELECT to_timestamp('NaN'::float);
 ERROR:  timestamp cannot be NaN
 SET TimeZone to 'Europe/Moscow';
 SELECT '2011-03-26 21:00:00 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 00:00:00 2011 MSK
 (1 row)
 
 SELECT '2011-03-26 22:00:00 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 01:00:00 2011 MSK
 (1 row)
 
 SELECT '2011-03-26 22:59:59 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 01:59:59 2011 MSK
 (1 row)
 
 SELECT '2011-03-26 23:00:00 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 03:00:00 2011 MSK
 (1 row)
 
 SELECT '2011-03-26 23:00:01 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 03:00:01 2011 MSK
 (1 row)
 
 SELECT '2011-03-26 23:59:59 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 03:59:59 2011 MSK
 (1 row)
 
 SELECT '2011-03-27 00:00:00 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Mar 27 04:00:00 2011 MSK
 (1 row)
 
 SELECT '2014-10-25 21:00:00 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Oct 26 01:00:00 2014 MSK
 (1 row)
 
 SELECT '2014-10-25 21:59:59 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Oct 26 01:59:59 2014 MSK
 (1 row)
 
 SELECT '2014-10-25 22:00:00 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Oct 26 01:00:00 2014 MSK
 (1 row)
 
 SELECT '2014-10-25 22:00:01 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Oct 26 01:00:01 2014 MSK
 (1 row)
 
 SELECT '2014-10-25 23:00:00 UTC'::timestamptz;
-         timestamptz          
+         timestamptz
 ------------------------------
  Sun Oct 26 02:00:00 2014 MSK
 (1 row)
 
 RESET TimeZone;
 SELECT '2011-03-26 21:00:00 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 00:00:00 2011
 (1 row)
 
 SELECT '2011-03-26 22:00:00 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 01:00:00 2011
 (1 row)
 
 SELECT '2011-03-26 22:59:59 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 01:59:59 2011
 (1 row)
 
 SELECT '2011-03-26 23:00:00 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 03:00:00 2011
 (1 row)
 
 SELECT '2011-03-26 23:00:01 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 03:00:01 2011
 (1 row)
 
 SELECT '2011-03-26 23:59:59 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 03:59:59 2011
 (1 row)
 
 SELECT '2011-03-27 00:00:00 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 04:00:00 2011
 (1 row)
 
 SELECT '2014-10-25 21:00:00 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:00:00 2014
 (1 row)
 
 SELECT '2014-10-25 21:59:59 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:59:59 2014
 (1 row)
 
 SELECT '2014-10-25 22:00:00 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:00:00 2014
 (1 row)
 
 SELECT '2014-10-25 22:00:01 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:00:01 2014
 (1 row)
 
 SELECT '2014-10-25 23:00:00 UTC'::timestamptz AT TIME ZONE 'Europe/Moscow';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 02:00:00 2014
 (1 row)
 
 SELECT '2011-03-26 21:00:00 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 00:00:00 2011
 (1 row)
 
 SELECT '2011-03-26 22:00:00 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 01:00:00 2011
 (1 row)
 
 SELECT '2011-03-26 22:59:59 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 01:59:59 2011
 (1 row)
 
 SELECT '2011-03-26 23:00:00 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 03:00:00 2011
 (1 row)
 
 SELECT '2011-03-26 23:00:01 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 03:00:01 2011
 (1 row)
 
 SELECT '2011-03-26 23:59:59 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 03:59:59 2011
 (1 row)
 
 SELECT '2011-03-27 00:00:00 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Mar 27 04:00:00 2011
 (1 row)
 
 SELECT '2014-10-25 21:00:00 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:00:00 2014
 (1 row)
 
 SELECT '2014-10-25 21:59:59 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:59:59 2014
 (1 row)
 
 SELECT '2014-10-25 22:00:00 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:00:00 2014
 (1 row)
 
 SELECT '2014-10-25 22:00:01 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 01:00:01 2014
 (1 row)
 
 SELECT '2014-10-25 23:00:00 UTC'::timestamptz AT TIME ZONE 'MSK';
-         timezone         
+         timezone
 --------------------------
  Sun Oct 26 02:00:00 2014
 (1 row)
@@ -3156,15 +3156,14 @@ create temp table tmptz (f1 timestamptz primary key);
 insert into tmptz values ('2017-01-18 00:00+00');
 explain (costs off)
 select * from tmptz where f1 at time zone 'utc' = '2017-01-18 00:00';
-                                             QUERY PLAN                                              
+                                             QUERY PLAN
 -----------------------------------------------------------------------------------------------------
  Seq Scan on tmptz
    Filter: ((f1 AT TIME ZONE 'utc'::text) = 'Wed Jan 18 00:00:00 2017'::timestamp without time zone)
 (2 rows)
 
 select * from tmptz where f1 at time zone 'utc' = '2017-01-18 00:00';
-              f1              
+              f1
 ------------------------------
  Tue Jan 17 16:00:00 2017 PST
 (1 row)
-

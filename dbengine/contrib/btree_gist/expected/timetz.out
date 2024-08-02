@@ -36,8 +36,7 @@ UPDATE timetzcmp SET b=c FROM ( SELECT count(*) AS c FROM timetztmp WHERE a  = '
 UPDATE timetzcmp SET b=c FROM ( SELECT count(*) AS c FROM timetztmp WHERE a >= '07:46:45 GMT+4'::timetz ) q WHERE r_id=24 ;
 UPDATE timetzcmp SET b=c FROM ( SELECT count(*) AS c FROM timetztmp WHERE a >  '07:46:45 GMT+4'::timetz ) q WHERE r_id=25 ;
 SELECT count(*) FROM timetzcmp WHERE a=b;
- count 
+ count
 -------
     15
 (1 row)
-

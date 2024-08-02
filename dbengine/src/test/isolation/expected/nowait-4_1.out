@@ -4,7 +4,7 @@ starting permutation: s2a s1a s2b s2c s2d s2e s1b s2f
 step s2a: SELECT pg_advisory_lock(0);
 pg_advisory_lock
 ----------------
-                
+
 (1 row)
 
 step s1a: SELECT * FROM foo WHERE pg_advisory_lock(0) IS NOT NULL FOR UPDATE NOWAIT; <waiting ...>
@@ -14,7 +14,7 @@ step s2d: UPDATE foo SET data = data;
 step s2e: SELECT pg_advisory_unlock(0);
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s1a: <... completed>

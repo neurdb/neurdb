@@ -136,24 +136,24 @@ static void sql_check(const char *fn, const char *caller, int ignore)
 int main(void)
 {
 	/* exec sql begin declare section */
-		 
-		 
-		 
-		 
-		 
-	
+
+
+
+
+
+
 #line 47 "test_informix2.pgc"
  int c ;
- 
+
 #line 48 "test_informix2.pgc"
  timestamp d ;
- 
+
 #line 49 "test_informix2.pgc"
  timestamp e ;
- 
+
 #line 50 "test_informix2.pgc"
  timestamp maxd ;
- 
+
 #line 51 "test_informix2.pgc"
  char dbname [ 30 ] ;
 /* exec sql end declare section */
@@ -169,7 +169,7 @@ int main(void)
 	ECPGdebug(1, stderr);
 
 	strcpy(dbname, "ecpg1_regression");
-	{ ECPGconnect(__LINE__, 1, dbname , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 1, dbname , NULL, NULL , NULL, 0);
 #line 61 "test_informix2.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
@@ -200,8 +200,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	sql_check("main", "insert", 0);
 
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "select max ( timestamp ) from history", ECPGt_EOIT, 
-	ECPGt_timestamp,&(maxd),(long)1,(long)1,sizeof(timestamp), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "select max ( timestamp ) from history", ECPGt_EOIT,
+	ECPGt_timestamp,&(maxd),(long)1,(long)1,sizeof(timestamp),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 76 "test_informix2.pgc"
 
@@ -210,12 +210,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	sql_check("main", "select max", 100);
 
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "select customerid , timestamp from history where timestamp = $1  limit 1", 
-	ECPGt_timestamp,&(maxd),(long)1,(long)1,sizeof(timestamp), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(c),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_timestamp,&(d),(long)1,(long)1,sizeof(timestamp), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "select customerid , timestamp from history where timestamp = $1  limit 1",
+	ECPGt_timestamp,&(maxd),(long)1,(long)1,sizeof(timestamp),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(c),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_timestamp,&(d),(long)1,(long)1,sizeof(timestamp),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 83 "test_informix2.pgc"
 
@@ -231,10 +231,10 @@ if (sqlca.sqlcode < 0) exit (1);}
 	free(intvl);
 	c++;
 
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "insert into history ( customerid , timestamp , action_taken , narrative ) values ( $1  , $2  , 'test' , 'test' )", 
-	ECPGt_int,&(c),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_timestamp,&(e),(long)1,(long)1,sizeof(timestamp), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "insert into history ( customerid , timestamp , action_taken , narrative ) values ( $1  , $2  , 'test' , 'test' )",
+	ECPGt_int,&(c),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_timestamp,&(e),(long)1,(long)1,sizeof(timestamp),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 95 "test_informix2.pgc"
 

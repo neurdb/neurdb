@@ -1,7 +1,7 @@
 -- predictability
 SET synchronous_commit = on;
 SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding');
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -9,7 +9,7 @@ SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_d
 CREATE TABLE spill_test(data text);
 -- consume DDL
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
- data 
+ data
 ------
 (0 rows)
 
@@ -20,7 +20,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
- regexp_split_to_array | count |                              array_agg                              |                               array_agg                                
+ regexp_split_to_array | count |                              array_agg                              |                               array_agg
 -----------------------+-------+---------------------------------------------------------------------+------------------------------------------------------------------------
  'serialize-topbig--1  |  5000 | table public.spill_test: INSERT: data[text]:'serialize-topbig--1:1' | table public.spill_test: INSERT: data[text]:'serialize-topbig--1:5000'
 (1 row)
@@ -34,7 +34,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
- regexp_split_to_array | count |                              array_agg                              |                               array_agg                                
+ regexp_split_to_array | count |                              array_agg                              |                               array_agg
 -----------------------+-------+---------------------------------------------------------------------+------------------------------------------------------------------------
  'serialize-subbig--1  |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig--1:1' | table public.spill_test: INSERT: data[text]:'serialize-subbig--1:5000'
 (1 row)
@@ -49,7 +49,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg                                    
+    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg
 -----------------------------+-------+-------------------------------------------------------------------------------+--------------------------------------------------------------------------------
  'serialize-subbig-topbig--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--1:5000'
  'serialize-subbig-topbig--2 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--2:10000'
@@ -65,7 +65,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-     regexp_split_to_array     | count |                                    array_agg                                    |                                    array_agg                                    
+     regexp_split_to_array     | count |                                    array_agg                                    |                                    array_agg
 -------------------------------+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------
  'serialize-subbig-topsmall--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-topsmall--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-subbig-topsmall--1:5000'
  'serialize-subbig-topsmall--2 |     1 | table public.spill_test: INSERT: data[text]:'serialize-subbig-topsmall--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-subbig-topsmall--2:5001'
@@ -81,7 +81,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg                                    
+    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg
 -----------------------------+-------+-------------------------------------------------------------------------------+--------------------------------------------------------------------------------
  'serialize-subbig-topbig--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--1:5000'
  'serialize-subbig-topbig--2 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-subbig-topbig--2:10000'
@@ -97,7 +97,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg                                    
+    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg
 -----------------------------+-------+-------------------------------------------------------------------------------+--------------------------------------------------------------------------------
  'serialize-topbig-subbig--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-topbig-subbig--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-topbig-subbig--1:5000'
  'serialize-topbig-subbig--2 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-topbig-subbig--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-topbig-subbig--2:10000'
@@ -113,7 +113,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-     regexp_split_to_array     | count |                                    array_agg                                    |                                    array_agg                                    
+     regexp_split_to_array     | count |                                    array_agg                                    |                                    array_agg
 -------------------------------+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------
  'serialize-topbig-subsmall--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-topbig-subsmall--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-topbig-subsmall--1:5000'
  'serialize-topbig-subsmall--2 |     1 | table public.spill_test: INSERT: data[text]:'serialize-topbig-subsmall--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-topbig-subsmall--2:5001'
@@ -131,7 +131,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg                                    
+    regexp_split_to_array    | count |                                   array_agg                                   |                                   array_agg
 -----------------------------+-------+-------------------------------------------------------------------------------+--------------------------------------------------------------------------------
  'serialize-subbig-subbig--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-subbig--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-subbig-subbig--1:5000'
  'serialize-subbig-subbig--2 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-subbig--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-subbig-subbig--2:10000'
@@ -149,7 +149,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4], COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-     regexp_split_to_array     | count |                                    array_agg                                    |                                    array_agg                                    
+     regexp_split_to_array     | count |                                    array_agg                                    |                                    array_agg
 -------------------------------+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------
  'serialize-subbig-subsmall--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subbig-subsmall--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-subbig-subsmall--1:5000'
  'serialize-subbig-subsmall--2 |     1 | table public.spill_test: INSERT: data[text]:'serialize-subbig-subsmall--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-subbig-subsmall--2:5001'
@@ -167,7 +167,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4] COLLATE "C", COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-     regexp_split_to_array     | count |                                  array_agg                                   |                                    array_agg                                    
+     regexp_split_to_array     | count |                                  array_agg                                   |                                    array_agg
 -------------------------------+-------+------------------------------------------------------------------------------+---------------------------------------------------------------------------------
  'serialize-subsmall-subbig--1 |     1 | table public.spill_test: INSERT: data[text]:'serialize-subsmall-subbig--1:1' | table public.spill_test: INSERT: data[text]:'serialize-subsmall-subbig--1:1'
  'serialize-subsmall-subbig--2 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-subsmall-subbig--2:2' | table public.spill_test: INSERT: data[text]:'serialize-subsmall-subbig--2:5001'
@@ -185,7 +185,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4] COLLATE "C", COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-       regexp_split_to_array        | count |                                      array_agg                                       |                                       array_agg                                       
+       regexp_split_to_array        | count |                                      array_agg                                       |                                       array_agg
 ------------------------------------+-------+--------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------
  'serialize-nested-subbig-subbig--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbig--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbig--1:5000'
  'serialize-nested-subbig-subbig--2 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbig--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbig--2:10000'
@@ -203,7 +203,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4] COLLATE "C", COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-        regexp_split_to_array         | count |                                       array_agg                                        |                                       array_agg                                        
+        regexp_split_to_array         | count |                                       array_agg                                        |                                       array_agg
 --------------------------------------+-------+----------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------
  'serialize-nested-subbig-subsmall--1 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subsmall--1:1'    | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subsmall--1:5000'
  'serialize-nested-subbig-subsmall--2 |     1 | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subsmall--2:5001' | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subsmall--2:5001'
@@ -221,7 +221,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4] COLLATE "C", COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-        regexp_split_to_array         | count |                                      array_agg                                      |                                       array_agg                                        
+        regexp_split_to_array         | count |                                      array_agg                                      |                                       array_agg
 --------------------------------------+-------+-------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------
  'serialize-nested-subsmall-subbig--1 |     1 | table public.spill_test: INSERT: data[text]:'serialize-nested-subsmall-subbig--1:1' | table public.spill_test: INSERT: data[text]:'serialize-nested-subsmall-subbig--1:1'
  'serialize-nested-subsmall-subbig--2 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-nested-subsmall-subbig--2:2' | table public.spill_test: INSERT: data[text]:'serialize-nested-subsmall-subbig--2:5001'
@@ -241,7 +241,7 @@ COMMIT;
 SELECT (regexp_split_to_array(data, ':'))[4] COLLATE "C", COUNT(*), (array_agg(data))[1], (array_agg(data))[count(*)]
 FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL) WHERE data ~ 'INSERT'
 GROUP BY 1 ORDER BY 1;
-             regexp_split_to_array             | count |                                            array_agg                                            |                                            array_agg                                             
+             regexp_split_to_array             | count |                                            array_agg                                            |                                            array_agg
 -----------------------------------------------+-------+-------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------
  'serialize-nested-subbig-subbigabort--1       |  5000 | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbigabort--1:1'          | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbigabort--1:5000'
  'serialize-nested-subbig-subbigabort-subbig-3 |  5000 | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbigabort-subbig-3:5001' | table public.spill_test: INSERT: data[text]:'serialize-nested-subbig-subbigabort-subbig-3:10000'
@@ -249,8 +249,7 @@ GROUP BY 1 ORDER BY 1;
 
 DROP TABLE spill_test;
 SELECT pg_drop_replication_slot('regression_slot');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
-(1 row)
 
+(1 row)

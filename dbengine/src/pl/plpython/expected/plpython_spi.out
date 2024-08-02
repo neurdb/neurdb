@@ -82,31 +82,31 @@ return a + r
 -- spi and nested calls
 --
 select nested_call_one('pass this along');
-                         nested_call_one                         
+                         nested_call_one
 -----------------------------------------------------------------
  {'nested_call_two': "{'nested_call_three': 'pass this along'}"}
 (1 row)
 
 select spi_prepared_plan_test_one('doe');
- spi_prepared_plan_test_one 
+ spi_prepared_plan_test_one
 ----------------------------
  there are 3 does
 (1 row)
 
 select spi_prepared_plan_test_two('smith');
- spi_prepared_plan_test_two 
+ spi_prepared_plan_test_two
 ----------------------------
  there are 1 smiths
 (1 row)
 
 select spi_prepared_plan_test_nested('smith');
- spi_prepared_plan_test_nested 
+ spi_prepared_plan_test_nested
 -------------------------------
  there are 1 smiths
 (1 row)
 
 SELECT join_sequences(sequences) FROM sequences;
- join_sequences 
+ join_sequences
 ----------------
  ABCDEFGHIJKL
  ABCDEF
@@ -118,7 +118,7 @@ SELECT join_sequences(sequences) FROM sequences;
 
 SELECT join_sequences(sequences) FROM sequences
 	WHERE join_sequences(sequences) ~* '^A';
- join_sequences 
+ join_sequences
 ----------------
  ABCDEFGHIJKL
  ABCDEF
@@ -130,12 +130,12 @@ SELECT join_sequences(sequences) FROM sequences
 
 SELECT join_sequences(sequences) FROM sequences
 	WHERE join_sequences(sequences) ~* '^B';
- join_sequences 
+ join_sequences
 ----------------
 (0 rows)
 
 SELECT spi_recursive_sum(10);
- spi_recursive_sum 
+ spi_recursive_sum
 -------------------
                 55
 (1 row)
@@ -161,7 +161,7 @@ INFO:  True
 INFO:  ['foo', 'bar']
 INFO:  [23, 25]
 INFO:  [-1, -1]
- result_metadata_test 
+ result_metadata_test
 ----------------------
                     2
 (1 row)
@@ -179,25 +179,25 @@ result = plpy.execute(cmd)
 return result.nrows()
 $$ LANGUAGE plpython3u;
 SELECT result_nrows_test($$SELECT 1$$);
- result_nrows_test 
+ result_nrows_test
 -------------------
                  1
 (1 row)
 
 SELECT result_nrows_test($$CREATE TEMPORARY TABLE foo2 (a int, b text)$$);
- result_nrows_test 
+ result_nrows_test
 -------------------
                  0
 (1 row)
 
 SELECT result_nrows_test($$INSERT INTO foo2 VALUES (1, 'one'), (2, 'two')$$);
- result_nrows_test 
+ result_nrows_test
 -------------------
                  2
 (1 row)
 
 SELECT result_nrows_test($$UPDATE foo2 SET b = '' WHERE a = 2$$);
- result_nrows_test 
+ result_nrows_test
 -------------------
                  1
 (1 row)
@@ -208,25 +208,25 @@ result = plpy.execute(cmd)
 return len(result)
 $$ LANGUAGE plpython3u;
 SELECT result_len_test($$SELECT 1$$);
- result_len_test 
+ result_len_test
 -----------------
                1
 (1 row)
 
 SELECT result_len_test($$CREATE TEMPORARY TABLE foo3 (a int, b text)$$);
- result_len_test 
+ result_len_test
 -----------------
                0
 (1 row)
 
 SELECT result_len_test($$INSERT INTO foo3 VALUES (1, 'one'), (2, 'two')$$);
- result_len_test 
+ result_len_test
 -----------------
                0
 (1 row)
 
 SELECT result_len_test($$UPDATE foo3 SET b= '' WHERE a = 2$$);
- result_len_test 
+ result_len_test
 -----------------
                0
 (1 row)
@@ -261,9 +261,9 @@ INFO:  4
 INFO:  [2, 3]
 INFO:  [1, 3]
 INFO:  [10, 100, 3, 1000]
- result_subscript_test 
+ result_subscript_test
 -----------------------
- 
+
 (1 row)
 
 CREATE FUNCTION result_empty_test() RETURNS void
@@ -275,9 +275,9 @@ plpy.info(result[:])
 $$ LANGUAGE plpython3u;
 SELECT result_empty_test();
 INFO:  []
- result_empty_test 
+ result_empty_test
 -------------------
- 
+
 (1 row)
 
 CREATE FUNCTION result_str_test(cmd text) RETURNS text
@@ -287,13 +287,13 @@ result = plpy.execute(plan)
 return str(result)
 $$ LANGUAGE plpython3u;
 SELECT result_str_test($$SELECT 1 AS foo UNION SELECT 2$$);
-                      result_str_test                       
+                      result_str_test
 ------------------------------------------------------------
  <PLyResult status=5 nrows=2 rows=[{'foo': 1}, {'foo': 2}]>
 (1 row)
 
 SELECT result_str_test($$CREATE TEMPORARY TABLE foo1 (a int, b text)$$);
-           result_str_test            
+           result_str_test
 --------------------------------------
  <PLyResult status=4 nrows=0 rows=[]>
 (1 row)
@@ -403,49 +403,49 @@ res = plpy.execute(plan, [{"a1": 3, "a2": "label"}])
 return res[0]["c1"]
 $$ LANGUAGE plpython3u;
 SELECT simple_cursor_test();
- simple_cursor_test 
+ simple_cursor_test
 --------------------
                   3
 (1 row)
 
 SELECT double_cursor_close();
- double_cursor_close 
+ double_cursor_close
 ---------------------
-                    
+
 (1 row)
 
 SELECT cursor_fetch();
- cursor_fetch 
+ cursor_fetch
 --------------
-             
+
 (1 row)
 
 SELECT cursor_mix_next_and_fetch();
- cursor_mix_next_and_fetch 
+ cursor_mix_next_and_fetch
 ---------------------------
-                          
+
 (1 row)
 
 SELECT fetch_after_close();
- fetch_after_close 
+ fetch_after_close
 -------------------
-                  
+
 (1 row)
 
 SELECT next_after_close();
- next_after_close 
+ next_after_close
 ------------------
-                 
+
 (1 row)
 
 SELECT cursor_fetch_next_empty();
- cursor_fetch_next_empty 
+ cursor_fetch_next_empty
 -------------------------
-                        
+
 (1 row)
 
 SELECT cursor_plan();
- cursor_plan 
+ cursor_plan
 -------------
  willem
  jane
@@ -459,8 +459,7 @@ CONTEXT:  Traceback (most recent call last):
     c = plpy.cursor(plan, ["a", "b"])
 PL/Python function "cursor_plan_wrong_args"
 SELECT plan_composite_args();
- plan_composite_args 
+ plan_composite_args
 ---------------------
  (3,label)
 (1 row)
-

@@ -4,7 +4,7 @@ starting permutation: chkiso prepi preps begin disableseq explaini enableseq exp
 step chkiso: SELECT (setting in ('read committed','read uncommitted')) AS is_read_committed FROM pg_settings WHERE name = 'default_transaction_isolation';
 is_read_committed
 -----------------
-f                
+f
 (1 row)
 
 step prepi: PREPARE getrow_idxscan AS SELECT * FROM test_dc WHERE data = 34 ORDER BY id,data;
@@ -12,21 +12,21 @@ step preps: PREPARE getrow_seqscan AS SELECT * FROM test_dc WHERE data = 34 ORDE
 step begin: BEGIN;
 step disableseq: SET enable_seqscan = false;
 step explaini: EXPLAIN (COSTS OFF) EXECUTE getrow_idxscan;
-QUERY PLAN                                    
+QUERY PLAN
 ----------------------------------------------
-Sort                                          
-  Sort Key: id                                
+Sort
+  Sort Key: id
   ->  Index Scan using test_dc_data on test_dc
-        Index Cond: (data = 34)               
+        Index Cond: (data = 34)
 (4 rows)
 
 step enableseq: SET enable_seqscan = true;
 step explains: EXPLAIN (COSTS OFF) EXECUTE getrow_seqscan;
-QUERY PLAN                 
+QUERY PLAN
 ---------------------------
-Sort                       
-  Sort Key: id             
-  ->  Seq Scan on test_dc  
+Sort
+  Sort Key: id
+  ->  Seq Scan on test_dc
         Filter: (data = 34)
 (4 rows)
 

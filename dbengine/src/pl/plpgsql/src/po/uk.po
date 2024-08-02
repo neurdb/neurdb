@@ -849,4 +849,3 @@ msgstr "%s в кінці введення"
 #, c-format
 msgid "%s at or near \"%s\""
 msgstr "%s в або поблизу \"%s\""
-

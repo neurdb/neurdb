@@ -52,18 +52,24 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
     for i in range(nsamples):
         ids = torch.tensor(ids_list[i], dtype=torch.long)
         values = torch.tensor(values_list[i], dtype=torch.float)
-        feat_id[i, :len(ids)] = ids
-        feat_value[i, :len(values)] = values
+        feat_id[i, : len(ids)] = ids
+        feat_value[i, : len(values)] = values
     populate_end_time = time.time()
 
     # Log timings
-    logger.debug(f"[Data Preprocessing, Timing]: Parsing time: {parse_end_time - parse_start_time:.4f} seconds")
     logger.debug(
-        f"[Data Preprocessing, Timing]: Tensor creation time: {tensor_end_time - tensor_start_time:.4f} seconds")
+        f"[Data Preprocessing, Timing]: Parsing time: {parse_end_time - parse_start_time:.4f} seconds"
+    )
     logger.debug(
-        f"[Data Preprocessing, Timing]: Tensor population time: {populate_end_time - populate_start_time:.4f} seconds")
+        f"[Data Preprocessing, Timing]: Tensor creation time: {tensor_end_time - tensor_start_time:.4f} seconds"
+    )
+    logger.debug(
+        f"[Data Preprocessing, Timing]: Tensor population time: {populate_end_time - populate_start_time:.4f} seconds"
+    )
 
-    logger.debug(f"[Data Preprocessing]: # {nsamples} data samples loaded successfully.")
+    logger.debug(
+        f"[Data Preprocessing]: # {nsamples} data samples loaded successfully."
+    )
 
     return {"id": feat_id, "value": feat_value, "y": y}
 
@@ -90,9 +96,12 @@ def libsvm_batch_preprocess_id_only(data: str, max_nfileds: int):
     _fill_data_into_tensor(nsamples, ids_list, feat_id)
 
     logger.debug(
-        f"[Data Preprocessing, Timing]: Tensor creation time: {tensor_end_time - tensor_start_time:.4f} seconds")
+        f"[Data Preprocessing, Timing]: Tensor creation time: {tensor_end_time - tensor_start_time:.4f} seconds"
+    )
 
-    logger.debug(f"[Data Preprocessing]: # {nsamples} data samples loaded successfully.")
+    logger.debug(
+        f"[Data Preprocessing]: # {nsamples} data samples loaded successfully."
+    )
 
     return {"id": feat_id, "value": feat_value, "y": y}
 
@@ -117,7 +126,9 @@ def _parser_data(data: str):
             labels_list.append(label)
 
     parse_end_time = time.time()
-    logger.debug(f"[Data Preprocessing, Timing]: Parsing time: {parse_end_time - parse_start_time:.4f} seconds")
+    logger.debug(
+        f"[Data Preprocessing, Timing]: Parsing time: {parse_end_time - parse_start_time:.4f} seconds"
+    )
     return len(ids_list), ids_list, labels_list
 
 
@@ -126,10 +137,11 @@ def _fill_data_into_tensor(nsamples: int, ids_list, feat_id):
     populate_start_time = time.time()
     for i in range(nsamples):
         ids = torch.tensor(ids_list[i], dtype=torch.long)
-        feat_id[i, :len(ids)] = ids
+        feat_id[i, : len(ids)] = ids
     populate_end_time = time.time()
     logger.debug(
-        f"[Data Preprocessing, Timing]: Tensor population time: {populate_end_time - populate_start_time:.4f} seconds")
+        f"[Data Preprocessing, Timing]: Tensor population time: {populate_end_time - populate_start_time:.4f} seconds"
+    )
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ INSERT INTO test_cidr VALUES
 ;
 CREATE INDEX idx_cidr ON test_cidr USING gin (i);
 SELECT * FROM test_cidr WHERE i<'1.2.6.4'::cidr ORDER BY i;
-     i      
+     i
 ------------
  1.2.3.4/32
  1.2.4.4/32
@@ -20,7 +20,7 @@ SELECT * FROM test_cidr WHERE i<'1.2.6.4'::cidr ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_cidr WHERE i<='1.2.6.4'::cidr ORDER BY i;
-     i      
+     i
 ------------
  1.2.3.4/32
  1.2.4.4/32
@@ -29,13 +29,13 @@ SELECT * FROM test_cidr WHERE i<='1.2.6.4'::cidr ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_cidr WHERE i='1.2.6.4'::cidr ORDER BY i;
-     i      
+     i
 ------------
  1.2.6.4/32
 (1 row)
 
 SELECT * FROM test_cidr WHERE i>='1.2.6.4'::cidr ORDER BY i;
-     i      
+     i
 ------------
  1.2.6.4/32
  1.2.7.4/32
@@ -43,9 +43,8 @@ SELECT * FROM test_cidr WHERE i>='1.2.6.4'::cidr ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_cidr WHERE i>'1.2.6.4'::cidr ORDER BY i;
-     i      
+     i
 ------------
  1.2.7.4/32
  1.2.8.4/32
 (2 rows)
-

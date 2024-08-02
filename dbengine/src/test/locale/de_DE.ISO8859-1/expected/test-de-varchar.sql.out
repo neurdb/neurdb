@@ -1,4 +1,4 @@
-       name_en        | name_de  
+       name_en        | name_de
 ----------------------+----------
  AAA                  | ִִִ
  aaaaaa               | הההה
@@ -20,4 +20,3 @@
  uuuu                 | üüüü
  UUUUU                | ÜÜÜÜÜ
 (19 rows)
-

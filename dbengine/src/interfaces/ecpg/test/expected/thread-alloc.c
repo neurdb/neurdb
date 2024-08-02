@@ -130,16 +130,16 @@ static void* fn(void* arg)
 	int i;
 
 	/* exec sql begin declare section */
-	  
-	 
-	   
-	
+
+
+
+
 #line 41 "alloc.pgc"
  int value ;
- 
+
 #line 42 "alloc.pgc"
  char name [ 100 ] ;
- 
+
 #line 43 "alloc.pgc"
  char ** r = NULL ;
 /* exec sql end declare section */
@@ -149,7 +149,7 @@ static void* fn(void* arg)
 	value = (intptr_t) arg;
 	sprintf(name, "Connection: %d", value);
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , name, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , name, 0);
 #line 49 "alloc.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -163,8 +163,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	for (i = 1; i <= REPEATS; ++i)
 	{
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select relname from pg_class where relname = 'pg_class'", ECPGt_EOIT, 
-	ECPGt_char,&(r),(long)0,(long)0,(1)*sizeof(char), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select relname from pg_class where relname = 'pg_class'", ECPGt_EOIT,
+	ECPGt_char,&(r),(long)0,(long)0,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 53 "alloc.pgc"
 

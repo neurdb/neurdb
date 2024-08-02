@@ -28,14 +28,14 @@ SELECT satisfies_hash_partition('mchash'::regclass, 1, 1, NULL);
 ERROR:  remainder for hash partition must be less than modulus
 -- modulus is null
 SELECT satisfies_hash_partition('mchash'::regclass, NULL, 0, NULL);
- satisfies_hash_partition 
+ satisfies_hash_partition
 --------------------------
  f
 (1 row)
 
 -- remainder is null
 SELECT satisfies_hash_partition('mchash'::regclass, 4, NULL, NULL);
- satisfies_hash_partition 
+ satisfies_hash_partition
 --------------------------
  f
 (1 row)
@@ -51,14 +51,14 @@ SELECT satisfies_hash_partition('mchash'::regclass, 2, 1, NULL::int, NULL::int);
 ERROR:  column 2 of the partition key has type text, but supplied value is of type integer
 -- ok, should be false
 SELECT satisfies_hash_partition('mchash'::regclass, 4, 0, 0, ''::text);
- satisfies_hash_partition 
+ satisfies_hash_partition
 --------------------------
  f
 (1 row)
 
 -- ok, should be true
 SELECT satisfies_hash_partition('mchash'::regclass, 4, 0, 2, ''::text);
- satisfies_hash_partition 
+ satisfies_hash_partition
 --------------------------
  t
 (1 row)
@@ -74,7 +74,7 @@ CREATE TABLE mcinthash (a int, b int, c jsonb)
 -- now variadic should work, should be false
 SELECT satisfies_hash_partition('mcinthash'::regclass, 4, 0,
 								variadic array[0, 0]);
- satisfies_hash_partition 
+ satisfies_hash_partition
 --------------------------
  f
 (1 row)
@@ -82,7 +82,7 @@ SELECT satisfies_hash_partition('mcinthash'::regclass, 4, 0,
 -- should be true
 SELECT satisfies_hash_partition('mcinthash'::regclass, 4, 0,
 								variadic array[0, 1]);
- satisfies_hash_partition 
+ satisfies_hash_partition
 --------------------------
  t
 (1 row)
@@ -103,7 +103,7 @@ create table text_hashp1 partition of text_hashp for values with (modulus 2, rem
 -- one of the two defined partitions
 select satisfies_hash_partition('text_hashp'::regclass, 2, 0, 'xxx'::text) OR
 	   satisfies_hash_partition('text_hashp'::regclass, 2, 1, 'xxx'::text) AS satisfies;
- satisfies 
+ satisfies
 -----------
  t
 (1 row)

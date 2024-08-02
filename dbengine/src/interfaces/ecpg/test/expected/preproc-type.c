@@ -57,19 +57,19 @@ typedef char string[11];
 typedef char* c;
 
 /* exec sql begin declare section */
- 
 
-   
-   
-   
 
-struct TBempl { 
+
+
+
+
+struct TBempl {
 #line 20 "type.pgc"
  mmInteger idnum ;
- 
+
 #line 21 "type.pgc"
  mmChar name [ 21 ] ;
- 
+
 #line 22 "type.pgc"
  access accs ;
  } ;/* exec sql end declare section */
@@ -80,33 +80,33 @@ int
 main (void)
 {
   /* exec sql begin declare section */
-    
-   
-     
-     
-   
-  
-	 
-	 
-   
-  
+
+
+
+
+
+
+
+
+
+
 #line 30 "type.pgc"
  struct TBempl empl ;
- 
+
 #line 31 "type.pgc"
  string str ;
- 
+
 #line 32 "type.pgc"
  access accs_val = 320 ;
- 
+
 #line 33 "type.pgc"
  c ptr = NULL ;
- 
+
 #line 38 "type.pgc"
- struct varchar { 
+ struct varchar {
 #line 36 "type.pgc"
  int len ;
- 
+
 #line 37 "type.pgc"
  char text [ 10 ] ;
  } vc ;
@@ -138,8 +138,8 @@ main (void)
       exit (sqlca.sqlcode);
     }
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into empl values ( 1 , 'user name' , $1  , 'first str' , 'second str' , 'third str' )", 
-	ECPGt_short,&(accs_val),(long)1,(long)1,sizeof(short), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into empl values ( 1 , 'user name' , $1  , 'first str' , 'second str' , 'third str' )",
+	ECPGt_short,&(accs_val),(long)1,(long)1,sizeof(short),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);}
 #line 60 "type.pgc"
 
@@ -149,20 +149,20 @@ main (void)
       exit (sqlca.sqlcode);
     }
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select idnum , name , accs , string1 , string2 , string3 from empl where idnum = $1 ", 
-	ECPGt_long,&(empl.idnum),(long)1,(long)1,sizeof(long), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_long,&(empl.idnum),(long)1,(long)1,sizeof( struct TBempl ), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(empl.name),(long)21,(long)1,sizeof( struct TBempl ), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_short,&(empl.accs),(long)1,(long)1,sizeof( struct TBempl ), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(str),(long)11,(long)1,(11)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(ptr),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_varchar,&(vc),(long)10,(long)1,sizeof(struct varchar), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select idnum , name , accs , string1 , string2 , string3 from empl where idnum = $1 ",
+	ECPGt_long,&(empl.idnum),(long)1,(long)1,sizeof(long),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_long,&(empl.idnum),(long)1,(long)1,sizeof( struct TBempl ),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(empl.name),(long)21,(long)1,sizeof( struct TBempl ),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_short,&(empl.accs),(long)1,(long)1,sizeof( struct TBempl ),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(str),(long)11,(long)1,(11)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(ptr),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_varchar,&(vc),(long)10,(long)1,sizeof(struct varchar),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 70 "type.pgc"
 

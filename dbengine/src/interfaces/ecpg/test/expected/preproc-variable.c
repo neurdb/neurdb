@@ -30,10 +30,10 @@
 
 typedef char* c;
 
-/* exec sql type ind is union { 
+/* exec sql type ind is union {
 #line 11 "variable.pgc"
  int integer ;
- 
+
 #line 11 "variable.pgc"
  short smallint ;
  } */
@@ -53,76 +53,76 @@ typedef union { int integer; short smallint; } ind;
 int
 main (void)
 {
-	struct birthinfo { 
+	struct birthinfo {
 #line 23 "variable.pgc"
  long born ;
- 
+
 #line 23 "variable.pgc"
  short age ;
  } ;
 #line 23 "variable.pgc"
 
 /* exec sql begin declare section */
-	 		 
-					  
-				  
-	  	 
-					  
-				    
-	 
-	           
-	    
-	    
+
+
+
+
+
+
+
+
+
+
 
 #line 27 "variable.pgc"
- struct personal_struct { 
+ struct personal_struct {
 #line 25 "variable.pgc"
   struct varchar_1  { int len; char arr[ BUFFERSIZ ]; }  name ;
- 
+
 #line 26 "variable.pgc"
  struct birthinfo birth ;
  } personal , * p ;
- 
+
 #line 30 "variable.pgc"
- struct personal_indicator { 
+ struct personal_indicator {
 #line 28 "variable.pgc"
  int ind_name ;
- 
+
 #line 29 "variable.pgc"
  struct birthinfo ind_birth ;
  } ind_personal , * i ;
- 
+
 #line 31 "variable.pgc"
  ind ind_children ;
- struct t1 { 
+ struct t1 {
 #line 32 "variable.pgc"
   struct varchar_2  { int len; char arr[ BUFFERSIZ ]; }  name ;
- } ; struct t2 { 
+ } ; struct t2 {
 #line 32 "variable.pgc"
   struct varchar_3  { int len; char arr[ BUFFERSIZ ]; }  name ;
- } ; 
+ } ;
 #line 33 "variable.pgc"
  static  struct varchar_4  { int len; char arr[ 50 ]; }  vc1 ; static  struct varchar_5  { int len; char arr[ 50 ]; }  vc2 ; static  struct varchar_6  { int len; char arr[ 255 ]; }  vc3 ;
- 
+
 #line 34 "variable.pgc"
  static int i1 , i2 , i3 ;
 /* exec sql end declare section */
 #line 35 "variable.pgc"
 
 
-	
+
 #line 37 "variable.pgc"
  char * married = NULL ;
 
 #line 37 "variable.pgc"
 
-	
+
 #line 38 "variable.pgc"
  long ind_married ;
 
 #line 38 "variable.pgc"
 
-	
+
 #line 39 "variable.pgc"
  ind children ;
 
@@ -134,7 +134,7 @@ main (void)
         ECPGdebug(1, stderr);
 
 	strcpy(msg, "connect");
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 46 "variable.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
@@ -214,16 +214,16 @@ if (sqlca.sqlcode < 0) exit (1);}
 	memset(i, 0, sizeof(ind_personal));
 	for (loopcount = 0; loopcount < 100; loopcount++) {
 		strcpy(msg, "fetch");
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch cur", ECPGt_EOIT, 
-	ECPGt_varchar,&(p->name),(long)BUFFERSIZ,(long)-1,sizeof( struct birthinfo ), 
-	ECPGt_int,&(i->ind_name),(long)1,(long)-1,sizeof( struct birthinfo ), 
-	ECPGt_long,&(p->birth.born),(long)1,(long)1,sizeof( struct birthinfo ), 
-	ECPGt_long,&(i->ind_birth.born),(long)1,(long)1,sizeof( struct birthinfo ), 
-	ECPGt_short,&(p->birth.age),(long)1,(long)1,sizeof( struct birthinfo ), 
-	ECPGt_short,&(i->ind_birth.age),(long)1,(long)1,sizeof( struct birthinfo ), 
-	ECPGt_char,&(married),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_long,&(ind_married),(long)1,(long)1,sizeof(long), 
-	ECPGt_int,&(children.integer),(long)1,(long)1,sizeof(int), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch cur", ECPGt_EOIT,
+	ECPGt_varchar,&(p->name),(long)BUFFERSIZ,(long)-1,sizeof( struct birthinfo ),
+	ECPGt_int,&(i->ind_name),(long)1,(long)-1,sizeof( struct birthinfo ),
+	ECPGt_long,&(p->birth.born),(long)1,(long)1,sizeof( struct birthinfo ),
+	ECPGt_long,&(i->ind_birth.born),(long)1,(long)1,sizeof( struct birthinfo ),
+	ECPGt_short,&(p->birth.age),(long)1,(long)1,sizeof( struct birthinfo ),
+	ECPGt_short,&(i->ind_birth.age),(long)1,(long)1,sizeof( struct birthinfo ),
+	ECPGt_char,&(married),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_long,&(ind_married),(long)1,(long)1,sizeof(long),
+	ECPGt_int,&(children.integer),(long)1,(long)1,sizeof(int),
 	ECPGt_short,&(ind_children.smallint),(long)1,(long)1,sizeof(short), ECPGt_EORT);
 #line 74 "variable.pgc"
 

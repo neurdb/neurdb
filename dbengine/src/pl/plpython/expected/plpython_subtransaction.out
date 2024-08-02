@@ -16,13 +16,13 @@ with plpy.subtransaction():
         raise Exception("Python exception")
 $$ LANGUAGE plpython3u;
 SELECT subtransaction_ctx_test();
- subtransaction_ctx_test 
+ subtransaction_ctx_test
 -------------------------
- 
+
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
  2
@@ -39,7 +39,7 @@ CONTEXT:  Traceback (most recent call last):
     plpy.execute("INSERT INTO subtransaction_tbl VALUES ('oops')")
 PL/Python function "subtransaction_ctx_test"
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
 (0 rows)
 
@@ -51,7 +51,7 @@ CONTEXT:  Traceback (most recent call last):
     raise Exception("Python exception")
 PL/Python function "subtransaction_ctx_test"
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
 (0 rows)
 
@@ -82,20 +82,20 @@ CONTEXT:  Traceback (most recent call last):
     plpy.execute("error")
 PL/Python function "subtransaction_nested_test"
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
 (0 rows)
 
 TRUNCATE subtransaction_tbl;
 SELECT subtransaction_nested_test('t');
 NOTICE:  Swallowed SyntaxError('syntax error at or near "error"')
- subtransaction_nested_test 
+ subtransaction_nested_test
 ----------------------------
  ok
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
  2
@@ -114,13 +114,13 @@ return "ok"
 $$ LANGUAGE plpython3u;
 SELECT subtransaction_deeply_nested_test();
 NOTICE:  Swallowed SyntaxError('syntax error at or near "error"')
- subtransaction_deeply_nested_test 
+ subtransaction_deeply_nested_test
 -----------------------------------
  ok
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
  2
@@ -185,9 +185,9 @@ CONTEXT:  Traceback (most recent call last):
 PL/Python function "subtransaction_exit_without_enter"
 SELECT subtransaction_enter_without_exit();
 WARNING:  forcibly aborting a subtransaction that has not been exited
- subtransaction_enter_without_exit 
+ subtransaction_enter_without_exit
 -----------------------------------
- 
+
 (1 row)
 
 SELECT subtransaction_exit_twice();
@@ -200,9 +200,9 @@ PL/Python function "subtransaction_exit_twice"
 SELECT subtransaction_enter_twice();
 WARNING:  forcibly aborting a subtransaction that has not been exited
 WARNING:  forcibly aborting a subtransaction that has not been exited
- subtransaction_enter_twice 
+ subtransaction_enter_twice
 ----------------------------
- 
+
 (1 row)
 
 SELECT subtransaction_exit_same_subtransaction_twice();
@@ -232,7 +232,7 @@ CONTEXT:  Traceback (most recent call last):
 PL/Python function "subtransaction_exit_subtransaction_in_with"
 -- Make sure we don't get a "current transaction is aborted" error
 SELECT 1 as test;
- test 
+ test
 ------
     1
 (1 row)
@@ -259,13 +259,13 @@ $$ LANGUAGE plpython3u;
 SELECT subtransaction_mix_explicit_and_implicit();
 WARNING:  Caught a SPI error from an explicit subtransaction
 WARNING:  Caught a SPI error
- subtransaction_mix_explicit_and_implicit 
+ subtransaction_mix_explicit_and_implicit
 ------------------------------------------
- 
+
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
  2
@@ -280,9 +280,9 @@ s.enter()
 s.exit(None, None, None)
 $$ LANGUAGE plpython3u;
 SELECT subtransaction_alternative_names();
- subtransaction_alternative_names 
+ subtransaction_alternative_names
 ----------------------------------
- 
+
 (1 row)
 
 -- try/catch inside a subtransaction block
@@ -297,13 +297,13 @@ with plpy.subtransaction():
 $$ LANGUAGE plpython3u;
 SELECT try_catch_inside_subtransaction();
 NOTICE:  caught
- try_catch_inside_subtransaction 
+ try_catch_inside_subtransaction
 ---------------------------------
- 
+
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
 (1 row)
@@ -321,13 +321,13 @@ with plpy.subtransaction():
 $$ LANGUAGE plpython3u;
 SELECT pk_violation_inside_subtransaction();
 NOTICE:  caught
- pk_violation_inside_subtransaction 
+ pk_violation_inside_subtransaction
 ------------------------------------
- 
+
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
 (1 row)
@@ -376,7 +376,7 @@ except plpy.SPIError:
 return False # not reached
 $$ LANGUAGE plpython3u;
 SELECT cursor_in_subxact();
- cursor_in_subxact 
+ cursor_in_subxact
 -------------------
                 16
 (1 row)

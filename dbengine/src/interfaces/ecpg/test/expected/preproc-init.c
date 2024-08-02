@@ -136,49 +136,49 @@ int main(void)
 {
 	struct sa x = { 14 },*y = &x;
 	/* exec sql begin declare section */
-		 
-		 
-		 
-		 
-		 
-		 
-		 
 
-		 
-		 
-		 
-		  /* = 1L */ 
-	
+
+
+
+
+
+
+
+
+
+
+		  /* = 1L */
+
 #line 60 "init.pgc"
  int a = ( int ) 2 ;
- 
+
 #line 61 "init.pgc"
  int b = 2 + 2 ;
- 
+
 #line 62 "init.pgc"
  int b2 = ( 14 * 7 ) ;
- 
+
 #line 63 "init.pgc"
  int d = x . member ;
- 
+
 #line 64 "init.pgc"
  int g = fb ( 2 ) ;
- 
+
 #line 65 "init.pgc"
  int i = 3 ^ 1 ;
- 
+
 #line 66 "init.pgc"
  int j = 1 ? 1 : 2 ;
- 
+
 #line 68 "init.pgc"
  int e = y -> member ;
- 
+
 #line 69 "init.pgc"
  int c = 10 >> 2 ;
- 
+
 #line 70 "init.pgc"
  bool h = 2 || 1 ;
- 
+
 #line 71 "init.pgc"
  long iay ;
 /* exec sql end declare section */
@@ -190,7 +190,7 @@ int main(void)
 #ifdef _cplusplus
 	/* exec sql begin declare section */
 	  /* compile error */
-	
+
 #line 78 "init.pgc"
  int k = N : : i ;
 /* exec sql end declare section */

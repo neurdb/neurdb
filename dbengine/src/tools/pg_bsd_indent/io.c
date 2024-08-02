@@ -602,4 +602,3 @@ diag2(int level, const char *msg)
 	fprintf(stderr, "\n");
     }
 }
-

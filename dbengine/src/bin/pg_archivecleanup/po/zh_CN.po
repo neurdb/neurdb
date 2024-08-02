@@ -176,4 +176,3 @@ msgstr "必须指定最早保存的WAL文件"
 #, c-format
 msgid "too many command-line arguments"
 msgstr "命令行参数太多"
-

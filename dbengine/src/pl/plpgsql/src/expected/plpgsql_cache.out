@@ -13,7 +13,7 @@ create table c_mutable(f1 int, f2 text);
 create function c_sillyaddone(int) returns int language plpgsql as
 $$ declare r c_mutable; begin r.f1 := $1; return r.f1 + 1; end $$;
 select c_sillyaddone(42);
- c_sillyaddone 
+ c_sillyaddone
 ---------------
             43
 (1 row)
@@ -28,7 +28,7 @@ CONTEXT:  PL/pgSQL function c_sillyaddone(integer) line 1 at RETURN
 -- but it's OK if we force plan rebuilding
 discard plans;
 select c_sillyaddone(42);
- c_sillyaddone 
+ c_sillyaddone
 ---------------
             43
 (1 row)
@@ -46,7 +46,7 @@ $$
     end;
 $$;
 select show_result_type('select 1 as a');
-   show_result_type   
+   show_result_type
 ----------------------
  type integer value 1
 (1 row)
@@ -60,8 +60,7 @@ PL/pgSQL function show_result_type(text) line 7 at SQL statement
 -- but it's OK if we force plan rebuilding
 discard plans;
 select show_result_type('select 2.0 as a');
-    show_result_type    
+    show_result_type
 ------------------------
  type numeric value 2.0
 (1 row)
-

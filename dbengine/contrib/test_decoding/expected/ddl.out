@@ -1,7 +1,7 @@
 -- predictability
 SET synchronous_commit = on;
 SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding');
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -25,9 +25,9 @@ ERROR:  could not parse value "frakbar" for parameter "include-xids"
 CONTEXT:  slot "regression_slot", output plugin "test_decoding", in the startup callback
 -- succeed once
 SELECT pg_drop_replication_slot('regression_slot');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
+
 (1 row)
 
 -- fail
@@ -35,7 +35,7 @@ SELECT pg_drop_replication_slot('regression_slot');
 ERROR:  replication slot "regression_slot" does not exist
 -- check that we're detecting a streaming rep slot used for logical decoding
 SELECT 'init' FROM pg_create_physical_replication_slot('repl');
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -43,13 +43,13 @@ SELECT 'init' FROM pg_create_physical_replication_slot('repl');
 SELECT data FROM pg_logical_slot_get_changes('repl', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
 ERROR:  cannot use physical replication slot for logical decoding
 SELECT pg_drop_replication_slot('repl');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
+
 (1 row)
 
 SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding');
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -60,7 +60,7 @@ SELECT slot_name, plugin, slot_type, active,
     xmin IS NULl  AS data_xmin_not_set,
     pg_wal_lsn_diff(restart_lsn, '0/01000000') > 0 AS some_wal
 FROM pg_replication_slots;
-    slot_name    |    plugin     | slot_type | active | catalog_xmin_set | data_xmin_not_set | some_wal 
+    slot_name    |    plugin     | slot_type | active | catalog_xmin_set | data_xmin_not_set | some_wal
 -----------------+---------------+-----------+--------+------------------+-------------------+----------
  regression_slot | test_decoding | logical   | f      | t                | t                 | t
 (1 row)
@@ -90,7 +90,7 @@ ALTER TABLE replication_example RENAME COLUMN text TO somenum;
 INSERT INTO replication_example(somedata, somenum) VALUES (4, 1);
 -- collect all changes
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                           data                                                            
+                                                           data
 ---------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.replication_example: INSERT: id[integer]:1 somedata[integer]:1 text[character varying]:'1'
@@ -119,7 +119,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 ALTER TABLE replication_example ALTER COLUMN somenum TYPE int4 USING (somenum::int4);
 -- check that this doesn't produce any changes from the heap rewrite
 SELECT count(data) FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
- count 
+ count
 -------
      0
 (1 row)
@@ -135,7 +135,7 @@ INSERT INTO replication_example(somedata, somenum, zaphod1) VALUES (6, 4, 2);
 COMMIT;
 -- show changes
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                   data                                                                   
+                                                                   data
 ------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.replication_example: INSERT: id[integer]:11 somedata[integer]:5 somenum[integer]:1
@@ -155,7 +155,7 @@ INSERT INTO replication_example(id, somedata, somenum) SELECT i, i, i FROM gener
 COMMIT;
 /* display results */
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                       data                                                                       
+                                                                       data
 --------------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.replication_example: INSERT: id[integer]:-15 somedata[integer]:-15 somenum[integer]:-15 zaphod1[integer]:null zaphod2[integer]:null
@@ -206,7 +206,7 @@ MERGE INTO replication_example t
 COMMIT;
 /* display results */
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                       data                                                                       
+                                                                       data
 --------------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.replication_example: INSERT: id[integer]:-20 somedata[integer]:-20 somenum[integer]:-20 zaphod1[integer]:null zaphod2[integer]:null
@@ -243,7 +243,7 @@ INSERT INTO tr_unique(data) VALUES(10);
 ALTER TABLE tr_unique RENAME TO tr_pkey;
 ALTER TABLE tr_pkey ADD COLUMN id serial primary key;
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1', 'include-rewrites', '1');
-                                    data                                     
+                                    data
 -----------------------------------------------------------------------------
  BEGIN
  table public.tr_unique: INSERT: id2[integer]:1 data[integer]:10
@@ -258,7 +258,7 @@ INSERT INTO tr_pkey(data) VALUES(1);
 DELETE FROM tr_pkey;
 /* display results */
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                    data                                    
+                                    data
 ----------------------------------------------------------------------------
  BEGIN
  table public.tr_pkey: INSERT: id2[integer]:2 data[integer]:1 id[integer]:2
@@ -276,7 +276,7 @@ BEGIN;
 CREATE TABLE tr_etoomuch (id serial primary key, data int);
 INSERT INTO tr_etoomuch(data) SELECT g.i FROM generate_series(1, 10234) g(i);
 SELECT 'tx logical msg' FROM pg_logical_emit_message(true, 'test', 'tx logical msg');
-    ?column?    
+    ?column?
 ----------------
  tx logical msg
 (1 row)
@@ -291,7 +291,7 @@ SELECT count(*), min(data), max(data)
 FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1')
 GROUP BY substring(data, 1, 24)
 ORDER BY 1,2;
- count |                                  min                                  |                                  max                                   
+ count |                                  min                                  |                                  max
 -------+-----------------------------------------------------------------------+------------------------------------------------------------------------
      1 | BEGIN                                                                 | BEGIN
      1 | COMMIT                                                                | COMMIT
@@ -312,7 +312,7 @@ COMMIT;
 SELECT data
 FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1')
 WHERE data ~ 'UPDATE';
-                                                    data                                                     
+                                                    data
 -------------------------------------------------------------------------------------------------------------
  table public.tr_etoomuch: UPDATE: old-key: id[integer]:5000 new-tuple: id[integer]:-5000 data[integer]:5000
  table public.tr_oddlength: UPDATE: old-key: id[text]:'ab' new-tuple: id[text]:'x' data[text]:'quux'
@@ -327,7 +327,7 @@ SELECT substring(data, 1, 29), count(*)
 FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1') WITH ORDINALITY
 GROUP BY 1
 ORDER BY min(ordinality);
-           substring           | count 
+           substring           | count
 -------------------------------+-------
  BEGIN                         |     1
  table public.tr_etoomuch: UPD |  2235
@@ -356,7 +356,7 @@ INSERT INTO tr_sub(path) VALUES ('1-top-2-#1');
 RELEASE SAVEPOINT b;
 COMMIT;
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                 data                                 
+                                 data
 ----------------------------------------------------------------------
  BEGIN
  table public.tr_sub: INSERT: id[integer]:1 path[text]:'1-top-#1'
@@ -395,7 +395,7 @@ RELEASE SAVEPOINT subtop;
 INSERT INTO tr_sub(path) VALUES ('2-top-#1');
 COMMIT;
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                  data                                  
+                                  data
 ------------------------------------------------------------------------
  BEGIN
  table public.tr_sub: INSERT: id[integer]:7 path[text]:'2-top-1...--#1'
@@ -416,7 +416,7 @@ ROLLBACK TO SAVEPOINT b;
 INSERT INTO tr_sub(path) VALUES ('3-top-2-#2');
 COMMIT;
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                 data                                  
+                                 data
 -----------------------------------------------------------------------
  BEGIN
  table public.tr_sub: INSERT: id[integer]:11 path[text]:'3-top-2-#1'
@@ -429,7 +429,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 -- subxact commit is handled correctly
 BEGIN;
 SELECT pg_current_xact_id() != '0'; -- so no fixed xid appears in the outfile
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -445,7 +445,7 @@ SAVEPOINT a;
 INSERT INTO tr_sub(path) VALUES ('5-top-1-#1');
 COMMIT;
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                data                                 
+                                data
 ---------------------------------------------------------------------
  BEGIN
  table public.tr_sub: INSERT: id[integer]:15 path[text]:'4-top-1-#1'
@@ -466,7 +466,7 @@ ALTER TABLE tr_sub_ddl ALTER COLUMN data TYPE bigint;
 INSERT INTO tr_sub_ddl VALUES(43);
 COMMIT;
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                       data                       
+                       data
 --------------------------------------------------
  BEGIN
  table public.tr_sub_ddl: INSERT: data[bigint]:43
@@ -485,11 +485,11 @@ WITH (user_catalog_table = true)
 ;
 \d+ replication_metadata
                                                  Table "public.replication_metadata"
-  Column  |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description 
+  Column  |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description
 ----------+---------+-----------+----------+--------------------------------------------------+----------+--------------+-------------
- id       | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              | 
- relation | name    |           | not null |                                                  | plain    |              | 
- options  | text[]  |           |          |                                                  | extended |              | 
+ id       | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              |
+ relation | name    |           | not null |                                                  | plain    |              |
+ options  | text[]  |           |          |                                                  | extended |              |
 Indexes:
     "replication_metadata_pkey" PRIMARY KEY, btree (id)
 Options: user_catalog_table=true
@@ -499,11 +499,11 @@ VALUES ('foo', ARRAY['a', 'b']);
 ALTER TABLE replication_metadata RESET (user_catalog_table);
 \d+ replication_metadata
                                                  Table "public.replication_metadata"
-  Column  |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description 
+  Column  |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description
 ----------+---------+-----------+----------+--------------------------------------------------+----------+--------------+-------------
- id       | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              | 
- relation | name    |           | not null |                                                  | plain    |              | 
- options  | text[]  |           |          |                                                  | extended |              | 
+ id       | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              |
+ relation | name    |           | not null |                                                  | plain    |              |
+ options  | text[]  |           |          |                                                  | extended |              |
 Indexes:
     "replication_metadata_pkey" PRIMARY KEY, btree (id)
 
@@ -512,11 +512,11 @@ VALUES ('bar', ARRAY['a', 'b']);
 ALTER TABLE replication_metadata SET (user_catalog_table = true);
 \d+ replication_metadata
                                                  Table "public.replication_metadata"
-  Column  |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description 
+  Column  |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description
 ----------+---------+-----------+----------+--------------------------------------------------+----------+--------------+-------------
- id       | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              | 
- relation | name    |           | not null |                                                  | plain    |              | 
- options  | text[]  |           |          |                                                  | extended |              | 
+ id       | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              |
+ relation | name    |           | not null |                                                  | plain    |              |
+ options  | text[]  |           |          |                                                  | extended |              |
 Indexes:
     "replication_metadata_pkey" PRIMARY KEY, btree (id)
 Options: user_catalog_table=true
@@ -530,12 +530,12 @@ ERROR:  cannot rewrite table "replication_metadata" used as a catalog table
 ALTER TABLE replication_metadata SET (user_catalog_table = false);
 \d+ replication_metadata
                                                     Table "public.replication_metadata"
-     Column     |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description 
+     Column     |  Type   | Collation | Nullable |                     Default                      | Storage  | Stats target | Description
 ----------------+---------+-----------+----------+--------------------------------------------------+----------+--------------+-------------
- id             | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              | 
- relation       | name    |           | not null |                                                  | plain    |              | 
- options        | text[]  |           |          |                                                  | extended |              | 
- rewritemeornot | integer |           |          |                                                  | plain    |              | 
+ id             | integer |           | not null | nextval('replication_metadata_id_seq'::regclass) | plain    |              |
+ relation       | name    |           | not null |                                                  | plain    |              |
+ options        | text[]  |           |          |                                                  | extended |              |
+ rewritemeornot | integer |           |          |                                                  | plain    |              |
 Indexes:
     "replication_metadata_pkey" PRIMARY KEY, btree (id)
 Options: user_catalog_table=false
@@ -543,7 +543,7 @@ Options: user_catalog_table=false
 INSERT INTO replication_metadata(relation, options)
 VALUES ('zaphod', NULL);
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                data                                                                
+                                                                data
 ------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.replication_metadata: INSERT: id[integer]:1 relation[name]:'foo' options[text[]]:'{a,b}'
@@ -832,9 +832,9 @@ data
 (0 rows)
 \pset format aligned
 SELECT pg_drop_replication_slot('regression_slot');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
+
 (1 row)
 
 /* check that the slot is gone */

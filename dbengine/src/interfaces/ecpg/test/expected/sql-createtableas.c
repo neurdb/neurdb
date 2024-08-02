@@ -31,8 +31,8 @@ int
 main(void)
 {
 	/* exec sql begin declare section */
-		 
-	
+
+
 #line 14 "createtableas.pgc"
  int id ;
 /* exec sql end declare section */
@@ -40,7 +40,7 @@ main(void)
 
 
 	ECPGdebug(1, stderr);
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 18 "createtableas.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -88,8 +88,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 27 "createtableas.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select id from cta_test1", ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select id from cta_test1", ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 28 "createtableas.pgc"
 
@@ -110,8 +110,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 31 "createtableas.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select count ( id ) from cta_test2", ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select count ( id ) from cta_test2", ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 32 "createtableas.pgc"
 

@@ -27,30 +27,30 @@
 int main(void)
 {
 	/* exec sql begin declare section */
-	
-	
-		 
-		 
-		 
-	 
-	 
-	 
-	
+
+
+
+
+
+
+
+
+
 #line 15 "whenever_do_continue.pgc"
- struct { 
+ struct {
 #line 12 "whenever_do_continue.pgc"
  char ename [ 12 ] ;
- 
+
 #line 13 "whenever_do_continue.pgc"
  float sal ;
- 
+
 #line 14 "whenever_do_continue.pgc"
  float comm ;
  } emp ;
- 
+
 #line 16 "whenever_do_continue.pgc"
  int loopcount ;
- 
+
 #line 17 "whenever_do_continue.pgc"
  char msg [ 128 ] ;
 /* exec sql end declare section */
@@ -60,7 +60,7 @@ int main(void)
 	ECPGdebug(1, stderr);
 
 	strcpy(msg, "connect");
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 23 "whenever_do_continue.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
@@ -124,12 +124,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	for (loopcount = 0; loopcount < 100; loopcount++)
 	{
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch c", ECPGt_EOIT, 
-	ECPGt_char,&(emp.ename),(long)12,(long)1,(12)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_float,&(emp.sal),(long)1,(long)1,sizeof(float), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_float,&(emp.comm),(long)1,(long)1,sizeof(float), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch c", ECPGt_EOIT,
+	ECPGt_char,&(emp.ename),(long)12,(long)1,(12)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_float,&(emp.sal),(long)1,(long)1,sizeof(float),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_float,&(emp.comm),(long)1,(long)1,sizeof(float),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 46 "whenever_do_continue.pgc"
 

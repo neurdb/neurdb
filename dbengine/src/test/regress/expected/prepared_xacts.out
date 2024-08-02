@@ -12,21 +12,21 @@ INSERT INTO pxtest1 VALUES ('aaa');
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 UPDATE pxtest1 SET foobar = 'bbb' WHERE foobar = 'aaa';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  bbb
 (1 row)
 
 PREPARE TRANSACTION 'foo1';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
 
 -- Test pg_prepared_xacts system view
 SELECT gid FROM pg_prepared_xacts;
- gid  
+ gid
 ------
  foo1
 (1 row)
@@ -34,13 +34,13 @@ SELECT gid FROM pg_prepared_xacts;
 -- Test ROLLBACK PREPARED
 ROLLBACK PREPARED 'foo1';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
 
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -48,7 +48,7 @@ SELECT gid FROM pg_prepared_xacts;
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 INSERT INTO pxtest1 VALUES ('ddd');
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  ddd
@@ -56,14 +56,14 @@ SELECT * FROM pxtest1;
 
 PREPARE TRANSACTION 'foo2';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
 (1 row)
 
 COMMIT PREPARED 'foo2';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  ddd
@@ -73,7 +73,7 @@ SELECT * FROM pxtest1;
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 UPDATE pxtest1 SET foobar = 'eee' WHERE foobar = 'ddd';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  eee
@@ -81,7 +81,7 @@ SELECT * FROM pxtest1;
 
 PREPARE TRANSACTION 'foo3';
 SELECT gid FROM pg_prepared_xacts;
- gid  
+ gid
 ------
  foo3
 (1 row)
@@ -92,7 +92,7 @@ INSERT INTO pxtest1 VALUES ('fff');
 PREPARE TRANSACTION 'foo3';
 ERROR:  transaction identifier "foo3" is already in use
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  ddd
@@ -100,7 +100,7 @@ SELECT * FROM pxtest1;
 
 ROLLBACK PREPARED 'foo3';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  ddd
@@ -110,7 +110,7 @@ SELECT * FROM pxtest1;
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 UPDATE pxtest1 SET foobar = 'eee' WHERE foobar = 'ddd';
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  eee
@@ -118,14 +118,14 @@ SELECT * FROM pxtest1;
 
 PREPARE TRANSACTION 'foo4';
 SELECT gid FROM pg_prepared_xacts;
- gid  
+ gid
 ------
  foo4
 (1 row)
 
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 SELECT * FROM pxtest1;
- foobar 
+ foobar
 --------
  aaa
  ddd
@@ -138,14 +138,14 @@ DETAIL:  Reason code: Canceled on identification as a pivot, during write.
 HINT:  The transaction might succeed if retried.
 PREPARE TRANSACTION 'foo5';
 SELECT gid FROM pg_prepared_xacts;
- gid  
+ gid
 ------
  foo4
 (1 row)
 
 ROLLBACK PREPARED 'foo4';
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 
@@ -154,15 +154,15 @@ DROP TABLE pxtest1;
 -- Test detection of session-level and xact-level locks on same object
 BEGIN;
 SELECT pg_advisory_lock(1);
- pg_advisory_lock 
+ pg_advisory_lock
 ------------------
- 
+
 (1 row)
 
 SELECT pg_advisory_xact_lock_shared(1);
- pg_advisory_xact_lock_shared 
+ pg_advisory_xact_lock_shared
 ------------------------------
- 
+
 (1 row)
 
 PREPARE TRANSACTION 'foo6';  -- fails
@@ -187,7 +187,7 @@ BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
   DECLARE foo CURSOR FOR SELECT * FROM pxtest4;
   -- Fetch 1 tuple, keeping the cursor open
   FETCH 1 FROM foo;
- a 
+ a
 ---
  1
 (1 row)
@@ -203,7 +203,7 @@ LINE 1: SELECT * FROM pxtest2;
                       ^
 -- There should be two prepared transactions
 SELECT gid FROM pg_prepared_xacts;
-     gid     
+     gid
 -------------
  regress-one
  regress-two
@@ -218,7 +218,7 @@ rollback;
 \c -
 -- There should still be two prepared transactions
 SELECT gid FROM pg_prepared_xacts;
-     gid     
+     gid
 -------------
  regress-one
  regress-two
@@ -233,12 +233,12 @@ rollback;
 COMMIT PREPARED 'regress-one';
 \d pxtest2
               Table "public.pxtest2"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
+ a      | integer |           |          |
 
 SELECT * FROM pxtest2;
- a 
+ a
 ---
  1
  3
@@ -246,7 +246,7 @@ SELECT * FROM pxtest2;
 
 -- There should be one prepared transaction
 SELECT gid FROM pg_prepared_xacts;
-     gid     
+     gid
 -------------
  regress-two
 (1 row)
@@ -259,7 +259,7 @@ LINE 1: SELECT * FROM pxtest3;
                       ^
 -- There should be no prepared transactions
 SELECT gid FROM pg_prepared_xacts;
- gid 
+ gid
 -----
 (0 rows)
 

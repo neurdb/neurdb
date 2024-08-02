@@ -31,19 +31,19 @@ static void dosqlprint(void) {
 
 int main(void)
 {
-	
+
 #line 14 "test_informix.pgc"
  int i = 14 , loopcount ;
 
 #line 14 "test_informix.pgc"
 
-	
+
 #line 15 "test_informix.pgc"
  decimal j , m , n ;
 
 #line 15 "test_informix.pgc"
 
-	
+
 #line 16 "test_informix.pgc"
  char c [ 10 ] ;
 
@@ -55,7 +55,7 @@ int main(void)
 #line 19 "test_informix.pgc"
 
 
-	{ ECPGconnect(__LINE__, 1, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 1, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 21 "test_informix.pgc"
 
 if (sqlca.sqlcode < 0) dosqlprint ( );}
@@ -72,8 +72,8 @@ if (sqlca.sqlcode < 0) dosqlprint ( );}
 
 	/* this INSERT works */
 	rsetnull(CDECIMALTYPE, (char *)&j);
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "insert into test ( i , j , c ) values ( 7 , $1  , 'test   ' )", 
-	ECPGt_decimal,&(j),(long)1,(long)1,sizeof(decimal), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "insert into test ( i , j , c ) values ( 7 , $1  , 'test   ' )",
+	ECPGt_decimal,&(j),(long)1,(long)1,sizeof(decimal),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 28 "test_informix.pgc"
 
@@ -102,8 +102,8 @@ if (sqlca.sqlcode < 0) dosqlprint ( );}
 #line 34 "test_informix.pgc"
 
 
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "insert into test ( i , j , c ) values ( $1  , 1 , 'a      ' )", 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "insert into test ( i , j , c ) values ( $1  , 1 , 'a      ' )",
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 36 "test_informix.pgc"
 
@@ -163,12 +163,12 @@ if (sqlca.sqlcode < 0) dosqlprint ( );
 
 	for (loopcount = 0; loopcount < 100; loopcount++)
 	{
-		{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "fetch forward c", ECPGt_EOIT, 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_decimal,&(j),(long)1,(long)1,sizeof(decimal), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_string,(c),(long)10,(long)1,(10)*sizeof(char), 
+		{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "fetch forward c", ECPGt_EOIT,
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_decimal,&(j),(long)1,(long)1,sizeof(decimal),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_string,(c),(long)10,(long)1,(10)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 57 "test_informix.pgc"
 
@@ -191,8 +191,8 @@ if (sqlca.sqlcode < 0) dosqlprint ( );}
 	deccvint(7, &j);
 	deccvint(14, &m);
 	decadd(&j, &m, &n);
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "delete from test where i = $1  :: decimal", 
-	ECPGt_decimal,&(n),(long)1,(long)1,sizeof(decimal), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "delete from test where i = $1  :: decimal",
+	ECPGt_decimal,&(n),(long)1,(long)1,sizeof(decimal),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 74 "test_informix.pgc"
 
@@ -248,8 +248,8 @@ if (sqlca.sqlcode < 0) dosqlprint ( );}
 
 static void openit(void)
 {
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "declare c cursor for select * from test where i <= $1 ", 
-	ECPGt_int,&(*( int  *)(ECPGget_var( 0))),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "declare c cursor for select * from test where i <= $1 ",
+	ECPGt_int,&(*( int  *)(ECPGget_var( 0))),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 94 "test_informix.pgc"
 

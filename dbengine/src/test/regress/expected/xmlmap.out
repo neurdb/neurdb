@@ -12,7 +12,7 @@ INSERT INTO testxmlschema.test2 VALUES (55, 'abc', 'def',
     '21:07', '21:11 +05', '2009-06-08 21:07:30', '2009-06-08 21:07:30 -07', '2009-06-08',
     NULL, 'ABC', true, 'XYZ');
 SELECT table_to_xml('testxmlschema.test1', false, false, '');
-                         table_to_xml                          
+                         table_to_xml
 ---------------------------------------------------------------
  <test1 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
                                                               +
@@ -31,11 +31,11 @@ SELECT table_to_xml('testxmlschema.test1', false, false, '');
  </row>                                                       +
                                                               +
  </test1>                                                     +
- 
+
 (1 row)
 
 SELECT table_to_xml('testxmlschema.test1', true, false, 'foo');
-                               table_to_xml                                
+                               table_to_xml
 ---------------------------------------------------------------------------
  <test1 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="foo">+
                                                                           +
@@ -55,11 +55,11 @@ SELECT table_to_xml('testxmlschema.test1', true, false, 'foo');
  </row>                                                                   +
                                                                           +
  </test1>                                                                 +
- 
+
 (1 row)
 
 SELECT table_to_xml('testxmlschema.test1', false, true, '');
-                         table_to_xml                          
+                         table_to_xml
 ---------------------------------------------------------------
  <test1 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
    <a>1</a>                                                   +
@@ -75,11 +75,11 @@ SELECT table_to_xml('testxmlschema.test1', false, true, '');
    <a>-1</a>                                                  +
  </test1>                                                     +
                                                               +
- 
+
 (1 row)
 
 SELECT table_to_xml('testxmlschema.test1', true, true, '');
-                         table_to_xml                          
+                         table_to_xml
 ---------------------------------------------------------------
  <test1 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
    <a>1</a>                                                   +
@@ -96,11 +96,11 @@ SELECT table_to_xml('testxmlschema.test1', true, true, '');
    <b xsi:nil="true"/>                                        +
  </test1>                                                     +
                                                               +
- 
+
 (1 row)
 
 SELECT table_to_xml('testxmlschema.test2', false, false, '');
-                         table_to_xml                          
+                         table_to_xml
 ---------------------------------------------------------------
  <test2 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
                                                               +
@@ -123,11 +123,11 @@ SELECT table_to_xml('testxmlschema.test2', false, false, '');
  </row>                                                       +
                                                               +
  </test2>                                                     +
- 
+
 (1 row)
 
 SELECT table_to_xmlschema('testxmlschema.test1', false, false, '');
-                                               table_to_xmlschema                                                
+                                               table_to_xmlschema
 -----------------------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                                    +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                                              +
@@ -163,7 +163,7 @@ SELECT table_to_xmlschema('testxmlschema.test1', false, false, '');
 (1 row)
 
 SELECT table_to_xmlschema('testxmlschema.test1', true, false, '');
-                                               table_to_xmlschema                                                
+                                               table_to_xmlschema
 -----------------------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                                    +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                                              +
@@ -199,7 +199,7 @@ SELECT table_to_xmlschema('testxmlschema.test1', true, false, '');
 (1 row)
 
 SELECT table_to_xmlschema('testxmlschema.test1', false, true, 'foo');
-                                      table_to_xmlschema                                      
+                                      table_to_xmlschema
 ----------------------------------------------------------------------------------------------
  <xsd:schema                                                                                 +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema"                                            +
@@ -231,7 +231,7 @@ SELECT table_to_xmlschema('testxmlschema.test1', false, true, 'foo');
 (1 row)
 
 SELECT table_to_xmlschema('testxmlschema.test1', true, true, '');
-                                       table_to_xmlschema                                       
+                                       table_to_xmlschema
 ------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                   +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                             +
@@ -261,7 +261,7 @@ SELECT table_to_xmlschema('testxmlschema.test1', true, true, '');
 (1 row)
 
 SELECT table_to_xmlschema('testxmlschema.test2', false, false, '');
-                                                     table_to_xmlschema                                                     
+                                                     table_to_xmlschema
 ----------------------------------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                                               +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                                                         +
@@ -386,7 +386,7 @@ SELECT table_to_xmlschema('testxmlschema.test2', false, false, '');
 (1 row)
 
 SELECT table_to_xml_and_xmlschema('testxmlschema.test1', false, false, '');
-                                           table_to_xml_and_xmlschema                                            
+                                           table_to_xml_and_xmlschema
 -----------------------------------------------------------------------------------------------------------------
  <test1 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="#">                +
                                                                                                                 +
@@ -437,11 +437,11 @@ SELECT table_to_xml_and_xmlschema('testxmlschema.test1', false, false, '');
  </row>                                                                                                         +
                                                                                                                 +
  </test1>                                                                                                       +
- 
+
 (1 row)
 
 SELECT table_to_xml_and_xmlschema('testxmlschema.test1', true, false, '');
-                                           table_to_xml_and_xmlschema                                            
+                                           table_to_xml_and_xmlschema
 -----------------------------------------------------------------------------------------------------------------
  <test1 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="#">                +
                                                                                                                 +
@@ -493,11 +493,11 @@ SELECT table_to_xml_and_xmlschema('testxmlschema.test1', true, false, '');
  </row>                                                                                                         +
                                                                                                                 +
  </test1>                                                                                                       +
- 
+
 (1 row)
 
 SELECT table_to_xml_and_xmlschema('testxmlschema.test1', false, true, '');
-                                  table_to_xml_and_xmlschema                                  
+                                  table_to_xml_and_xmlschema
 ----------------------------------------------------------------------------------------------
  <xsd:schema                                                                                 +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                           +
@@ -539,11 +539,11 @@ SELECT table_to_xml_and_xmlschema('testxmlschema.test1', false, true, '');
    <a>-1</a>                                                                                 +
  </test1>                                                                                    +
                                                                                              +
- 
+
 (1 row)
 
 SELECT table_to_xml_and_xmlschema('testxmlschema.test1', true, true, 'foo');
-                                   table_to_xml_and_xmlschema                                   
+                                   table_to_xml_and_xmlschema
 ------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                   +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema"                                              +
@@ -588,11 +588,11 @@ SELECT table_to_xml_and_xmlschema('testxmlschema.test1', true, true, 'foo');
    <b xsi:nil="true"/>                                                                         +
  </test1>                                                                                      +
                                                                                                +
- 
+
 (1 row)
 
 SELECT query_to_xml('SELECT * FROM testxmlschema.test1', false, false, '');
-                         query_to_xml                          
+                         query_to_xml
 ---------------------------------------------------------------
  <table xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
                                                               +
@@ -611,11 +611,11 @@ SELECT query_to_xml('SELECT * FROM testxmlschema.test1', false, false, '');
  </row>                                                       +
                                                               +
  </table>                                                     +
- 
+
 (1 row)
 
 SELECT query_to_xmlschema('SELECT * FROM testxmlschema.test1', false, false, '');
-                                      query_to_xmlschema                                      
+                                      query_to_xmlschema
 ----------------------------------------------------------------------------------------------
  <xsd:schema                                                                                 +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                           +
@@ -651,7 +651,7 @@ SELECT query_to_xmlschema('SELECT * FROM testxmlschema.test1', false, false, '')
 (1 row)
 
 SELECT query_to_xml_and_xmlschema('SELECT * FROM testxmlschema.test1', true, true, '');
-                                   query_to_xml_and_xmlschema                                   
+                                   query_to_xml_and_xmlschema
 ------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                   +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                             +
@@ -694,12 +694,12 @@ SELECT query_to_xml_and_xmlschema('SELECT * FROM testxmlschema.test1', true, tru
    <b xsi:nil="true"/>                                                                         +
  </row>                                                                                        +
                                                                                                +
- 
+
 (1 row)
 
 DECLARE xc CURSOR WITH HOLD FOR SELECT * FROM testxmlschema.test1 ORDER BY 1, 2;
 SELECT cursor_to_xml('xc'::refcursor, 5, false, true, '');
-                        cursor_to_xml                        
+                        cursor_to_xml
 -------------------------------------------------------------
  <row xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
    <a>-1</a>                                                +
@@ -715,11 +715,11 @@ SELECT cursor_to_xml('xc'::refcursor, 5, false, true, '');
    <b>two</b>                                               +
  </row>                                                     +
                                                             +
- 
+
 (1 row)
 
 SELECT cursor_to_xmlschema('xc'::refcursor, false, true, '');
-                                     cursor_to_xmlschema                                      
+                                     cursor_to_xmlschema
 ----------------------------------------------------------------------------------------------
  <xsd:schema                                                                                 +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                           +
@@ -750,7 +750,7 @@ SELECT cursor_to_xmlschema('xc'::refcursor, false, true, '');
 
 MOVE BACKWARD ALL IN xc;
 SELECT cursor_to_xml('xc'::refcursor, 5, true, false, '');
-                         cursor_to_xml                         
+                         cursor_to_xml
 ---------------------------------------------------------------
  <table xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
                                                               +
@@ -770,11 +770,11 @@ SELECT cursor_to_xml('xc'::refcursor, 5, true, false, '');
  </row>                                                       +
                                                               +
  </table>                                                     +
- 
+
 (1 row)
 
 SELECT cursor_to_xmlschema('xc'::refcursor, true, false, '');
-                                      cursor_to_xmlschema                                       
+                                      cursor_to_xmlschema
 ------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                   +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                             +
@@ -810,7 +810,7 @@ SELECT cursor_to_xmlschema('xc'::refcursor, true, false, '');
 (1 row)
 
 SELECT schema_to_xml('testxmlschema', false, true, '');
-                             schema_to_xml                             
+                             schema_to_xml
 -----------------------------------------------------------------------
  <testxmlschema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
                                                                       +
@@ -849,11 +849,11 @@ SELECT schema_to_xml('testxmlschema', false, true, '');
                                                                       +
                                                                       +
  </testxmlschema>                                                     +
- 
+
 (1 row)
 
 SELECT schema_to_xml('testxmlschema', true, false, '');
-                             schema_to_xml                             
+                             schema_to_xml
 -----------------------------------------------------------------------
  <testxmlschema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
                                                                       +
@@ -900,11 +900,11 @@ SELECT schema_to_xml('testxmlschema', true, false, '');
  </test2>                                                             +
                                                                       +
  </testxmlschema>                                                     +
- 
+
 (1 row)
 
 SELECT schema_to_xmlschema('testxmlschema', false, true, '');
-                                                    schema_to_xmlschema                                                     
+                                                    schema_to_xmlschema
 ----------------------------------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                                               +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                                                         +
@@ -1014,7 +1014,7 @@ SELECT schema_to_xmlschema('testxmlschema', false, true, '');
 (1 row)
 
 SELECT schema_to_xmlschema('testxmlschema', true, false, '');
-                                                    schema_to_xmlschema                                                     
+                                                    schema_to_xmlschema
 ----------------------------------------------------------------------------------------------------------------------------
  <xsd:schema                                                                                                               +
      xmlns:xsd="http://www.w3.org/2001/XMLSchema">                                                                         +
@@ -1124,7 +1124,7 @@ SELECT schema_to_xmlschema('testxmlschema', true, false, '');
 (1 row)
 
 SELECT schema_to_xml_and_xmlschema('testxmlschema', true, true, 'foo');
-                                                schema_to_xml_and_xmlschema                                                 
+                                                schema_to_xml_and_xmlschema
 ----------------------------------------------------------------------------------------------------------------------------
  <testxmlschema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="foo" xsi:schemaLocation="foo #">              +
                                                                                                                            +
@@ -1273,7 +1273,7 @@ SELECT schema_to_xml_and_xmlschema('testxmlschema', true, true, 'foo');
                                                                                                                            +
                                                                                                                            +
  </testxmlschema>                                                                                                          +
- 
+
 (1 row)
 
 -- test that domains are transformed like their base types
@@ -1285,13 +1285,13 @@ CREATE TABLE testxmlschema.test3
               '2013-02-21'::date c3,
               '2013-02-21'::testdatexmldomain c4;
 SELECT xmlforest(c1, c2, c3, c4) FROM testxmlschema.test3;
-                            xmlforest                             
+                            xmlforest
 ------------------------------------------------------------------
  <c1>true</c1><c2>true</c2><c3>2013-02-21</c3><c4>2013-02-21</c4>
 (1 row)
 
 SELECT table_to_xml('testxmlschema.test3', true, true, '');
-                         table_to_xml                          
+                         table_to_xml
 ---------------------------------------------------------------
  <test3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
    <c1>true</c1>                                              +
@@ -1300,6 +1300,5 @@ SELECT table_to_xml('testxmlschema.test3', true, true, '');
    <c4>2013-02-21</c4>                                        +
  </test3>                                                     +
                                                               +
- 
-(1 row)
 
+(1 row)

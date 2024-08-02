@@ -37,13 +37,16 @@ class NRDataManager(Namespace):
         """
         try:
             sid = request.sid
-            logger.info(f"[socket: Discinnect & Recording] : {sid} Client disconnected: ")
+            logger.info(
+                f"[socket: Discinnect & Recording] : {sid} Client disconnected: "
+            )
             current_app.config["clients"].pop(sid, None)
             current_app.config["data_cache"].remove(sid)
 
             for dataset_name, ele in current_app.config["dispatchers"].get(sid).items():
                 print(
-                    f"[socket: Discinnect & Recording] dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
+                    f"[socket: Discinnect & Recording] dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}"
+                )
             current_app.config["dispatchers"].remove(sid)
 
             current_app.config["dispatchers"].remove(sid)
@@ -105,18 +108,22 @@ class NRDataManager(Namespace):
         dataset_name = data["dataset_name"]
         dataset = data["dataset"]
 
-        logger.debug(f"[socket: on_batch_data]: {socket_id} receive_db_data name {dataset_name} and data {dataset[:10]}...")
+        logger.debug(
+            f"[socket: on_batch_data]: {socket_id} receive_db_data name {dataset_name} and data {dataset[:10]}..."
+        )
 
         # Check if dispatcher is launched for this dataset
         dispatchers = current_app.config["dispatchers"]
         if not dispatchers.contains(socket_id, dataset_name):
-            logger.debug(f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
-                         f"wait for train/inference/finetune request")
+            logger.debug(
+                f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
+                f"wait for train/inference/finetune request"
+            )
             emit(
                 "response",
                 {
                     "message": f"dispatchers is not initialized for dataset {dataset_name} and client {socket_id}, "
-                               f"wait for train/inference/finetune request"
+                    f"wait for train/inference/finetune request"
                 },
             )
         else:
@@ -140,10 +147,13 @@ class NRDataManager(Namespace):
 
         for dataset_name, ele in current_app.config["dispatchers"].get(sid).items():
             print(
-                f"[socket: Discinnect & Recording] dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}")
+                f"[socket: Discinnect & Recording] dataset {dataset_name}, sid {sid} time usage {ele.total_preprocessing_time}"
+            )
         current_app.config["dispatchers"].remove(sid)
 
-        logger.info(f"[socket: Discinnect & Recording] Forcefully disconnecting client: {sid}")
+        logger.info(
+            f"[socket: Discinnect & Recording] Forcefully disconnecting client: {sid}"
+        )
         disconnect(sid)
 
 

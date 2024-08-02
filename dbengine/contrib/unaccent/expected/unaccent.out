@@ -1,134 +1,134 @@
 CREATE EXTENSION unaccent;
 -- must have a UTF8 database
 SELECT getdatabaseencoding();
- getdatabaseencoding 
+ getdatabaseencoding
 ---------------------
  UTF8
 (1 row)
 
 SET client_encoding TO 'UTF8';
 SELECT unaccent('foobar');
- unaccent 
+ unaccent
 ----------
  foobar
 (1 row)
 
 SELECT unaccent('ёлка');
- unaccent 
+ unaccent
 ----------
  елка
 (1 row)
 
 SELECT unaccent('ЁЖИК');
- unaccent 
+ unaccent
 ----------
  ЕЖИК
 (1 row)
 
 SELECT unaccent('˃˖˗˜');
- unaccent 
+ unaccent
 ----------
  >+-~
 (1 row)
 
 SELECT unaccent('À');  -- Remove combining diacritical 0x0300
- unaccent 
+ unaccent
 ----------
  A
 (1 row)
 
 SELECT unaccent('℃℉'); -- degree signs
- unaccent 
+ unaccent
 ----------
  °C°F
 (1 row)
 
 SELECT unaccent('℗'); -- sound recording copyright
- unaccent 
+ unaccent
 ----------
  (P)
 (1 row)
 
 SELECT unaccent('unaccent', 'foobar');
- unaccent 
+ unaccent
 ----------
  foobar
 (1 row)
 
 SELECT unaccent('unaccent', 'ёлка');
- unaccent 
+ unaccent
 ----------
  елка
 (1 row)
 
 SELECT unaccent('unaccent', 'ЁЖИК');
- unaccent 
+ unaccent
 ----------
  ЕЖИК
 (1 row)
 
 SELECT unaccent('unaccent', '˃˖˗˜');
- unaccent 
+ unaccent
 ----------
  >+-~
 (1 row)
 
 SELECT unaccent('unaccent', 'À');
- unaccent 
+ unaccent
 ----------
  A
 (1 row)
 
 SELECT unaccent('unaccent', '℃℉');
- unaccent 
+ unaccent
 ----------
  °C°F
 (1 row)
 
 SELECT unaccent('unaccent', '℗');
- unaccent 
+ unaccent
 ----------
  (P)
 (1 row)
 
 SELECT ts_lexize('unaccent', 'foobar');
- ts_lexize 
+ ts_lexize
 -----------
- 
+
 (1 row)
 
 SELECT ts_lexize('unaccent', 'ёлка');
- ts_lexize 
+ ts_lexize
 -----------
  {елка}
 (1 row)
 
 SELECT ts_lexize('unaccent', 'ЁЖИК');
- ts_lexize 
+ ts_lexize
 -----------
  {ЕЖИК}
 (1 row)
 
 SELECT ts_lexize('unaccent', '˃˖˗˜');
- ts_lexize 
+ ts_lexize
 -----------
  {>+-~}
 (1 row)
 
 SELECT ts_lexize('unaccent', 'À');
- ts_lexize 
+ ts_lexize
 -----------
  {A}
 (1 row)
 
 SELECT ts_lexize('unaccent', '℃℉');
- ts_lexize 
+ ts_lexize
 -----------
  {°C°F}
 (1 row)
 
 SELECT ts_lexize('unaccent', '℗');
- ts_lexize 
+ ts_lexize
 -----------
  {(P)}
 (1 row)
@@ -136,8 +136,7 @@ SELECT ts_lexize('unaccent', '℗');
 -- Controversial case.  Black-Letter Capital H (U+210C) is translated by
 -- Latin-ASCII.xml as 'x', but it should be 'H'.
 SELECT unaccent('ℌ');
- unaccent 
+ unaccent
 ----------
  x
 (1 row)
-

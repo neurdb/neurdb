@@ -25,16 +25,16 @@
 
 static void test(void) {
   /* exec sql begin declare section */
-	     
-	  
-	   
-  
+
+
+
+
 #line 10 "autoprep.pgc"
  int item [ 4 ] , ind [ 4 ] , i = 1 ;
- 
+
 #line 11 "autoprep.pgc"
  int item1 , ind1 ;
- 
+
 #line 12 "autoprep.pgc"
  char sqlstr [ 64 ] = "SELECT item2 FROM T ORDER BY item2 NULLS LAST" ;
 /* exec sql end declare section */
@@ -72,8 +72,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 23 "autoprep.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepnormal, "insert into T values ( 1 , $1  )", 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepnormal, "insert into T values ( 1 , $1  )",
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 24 "autoprep.pgc"
 
@@ -84,8 +84,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 24 "autoprep.pgc"
 
   i++;
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepnormal, "insert into T values ( 1 , $1  )", 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepnormal, "insert into T values ( 1 , $1  )",
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 26 "autoprep.pgc"
 
@@ -114,8 +114,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 28 "autoprep.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepnormal, "select Item2 from T order by Item2 nulls last", ECPGt_EOIT, 
-	ECPGt_int,(item),(long)1,(long)4,sizeof(int), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_prepnormal, "select Item2 from T order by Item2 nulls last", ECPGt_EOIT,
+	ECPGt_int,(item),(long)1,(long)4,sizeof(int),
 	ECPGt_int,(ind),(long)1,(long)4,sizeof(int), ECPGt_EORT);
 #line 30 "autoprep.pgc"
 
@@ -143,8 +143,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 37 "autoprep.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch 1 in C", ECPGt_EOIT, 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch 1 in C", ECPGt_EOIT,
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 39 "autoprep.pgc"
 
@@ -180,8 +180,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 46 "autoprep.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare cur1 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "stmt1", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare cur1 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "stmt1", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 48 "autoprep.pgc"
 
@@ -199,8 +199,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
   i = 0;
   while (i < 100)
   {
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch cur1", ECPGt_EOIT, 
-	ECPGt_int,&(item1),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch cur1", ECPGt_EOIT,
+	ECPGt_int,&(item1),(long)1,(long)1,sizeof(int),
 	ECPGt_int,&(ind1),(long)1,(long)1,sizeof(int), ECPGt_EORT);
 #line 55 "autoprep.pgc"
 

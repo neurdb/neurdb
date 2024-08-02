@@ -31,24 +31,24 @@ int
 main(void)
 {
 /* exec sql begin declare section */
-	 
-	 
-	 
-	 
-	 
+
+
+
+
+
 
 #line 14 "oldexec.pgc"
  int amount [ 8 ] ;
- 
+
 #line 15 "oldexec.pgc"
  int increment = 100 ;
- 
+
 #line 16 "oldexec.pgc"
  char name [ 8 ] [ 8 ] ;
- 
+
 #line 17 "oldexec.pgc"
  char letter [ 8 ] [ 1 ] ;
- 
+
 #line 18 "oldexec.pgc"
  char command [ 128 ] ;
 /* exec sql end declare section */
@@ -58,7 +58,7 @@ main(void)
 
 	ECPGdebug(1, stderr);
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , "main", 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , "main", 0);
 #line 24 "oldexec.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -111,8 +111,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 41 "oldexec.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_execute, "i", 
-	ECPGt_int,&(increment),(long)1,(long)1,sizeof(int), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_execute, "i",
+	ECPGt_int,&(increment),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 42 "oldexec.pgc"
 
@@ -141,20 +141,20 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 51 "oldexec.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "declare CUR cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "declare CUR cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 53 "oldexec.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 53 "oldexec.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "fetch 8 in CUR", ECPGt_EOIT, 
-	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,(amount),(long)1,(long)8,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "fetch 8 in CUR", ECPGt_EOIT,
+	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,(amount),(long)1,(long)8,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 54 "oldexec.pgc"
 
@@ -190,22 +190,22 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 70 "oldexec.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "declare CUR3 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_const,"1",(long)1,(long)1,strlen("1"), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "declare CUR3 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "f", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_const,"1",(long)1,(long)1,strlen("1"),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 72 "oldexec.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 72 "oldexec.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "fetch in CUR3", ECPGt_EOIT, 
-	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,(amount),(long)1,(long)8,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 1, ECPGst_normal, "fetch in CUR3", ECPGt_EOIT,
+	ECPGt_char,(name),(long)8,(long)8,(8)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,(amount),(long)1,(long)8,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(letter),(long)1,(long)8,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 73 "oldexec.pgc"
 

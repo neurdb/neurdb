@@ -11,26 +11,25 @@ SET client_encoding = utf8;
 -- UTF-8 locale bug on macOS: isspace(0x85) returns true.  \u0105 encodes
 -- as 0xc4 0x85 in UTF-8; the 0x85 was interpreted here as a whitespace.
 SELECT E'key\u0105=>value\u0105'::hstore;
-      hstore      
+      hstore
 ------------------
  "keyą"=>"valueą"
 (1 row)
 
 SELECT 'keyą=>valueą'::hstore;
-      hstore      
+      hstore
 ------------------
  "keyą"=>"valueą"
 (1 row)
 
 SELECT 'ą=>ą'::hstore;
-  hstore  
+  hstore
 ----------
  "ą"=>"ą"
 (1 row)
 
 SELECT 'keyąfoo=>valueą'::hstore;
-       hstore        
+       hstore
 ---------------------
  "keyąfoo"=>"valueą"
 (1 row)
-

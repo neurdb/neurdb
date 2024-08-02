@@ -228,4 +228,3 @@ msgstr "%s: не вдалося знайти ехе файл власної пр
 #, c-format
 msgid "%s: invalid argument: %s\n"
 msgstr "%s: недопустимий аргумент: %s\n"
-

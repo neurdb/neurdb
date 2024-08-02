@@ -3,9 +3,9 @@
 LOAD 'plperl';
 SET SESSION plperl.on_plperl_init = ' system("/nonesuch"); ';
 SHOW plperl.on_plperl_init;
- plperl.on_plperl_init  
+ plperl.on_plperl_init
 ------------------------
-  system("/nonesuch"); 
+  system("/nonesuch");
 (1 row)
 
 DO $$ warn 42 $$ language plperl;
@@ -25,9 +25,9 @@ RESET ROLE;
 LOAD 'plperl';
 WARNING:  permission denied to set parameter "plperl.on_plperl_init"
 SHOW plperl.on_plperl_init;
- plperl.on_plperl_init 
+ plperl.on_plperl_init
 -----------------------
- 
+
 (1 row)
 
 DO $$ warn 42 $$ language plperl;

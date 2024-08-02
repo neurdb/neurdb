@@ -1,32 +1,32 @@
 -- predictability
 SET synchronous_commit = on;
 SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding');
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
 
 SELECT 'msg1' FROM pg_logical_emit_message(true, 'test', 'msg1');
- ?column? 
+ ?column?
 ----------
  msg1
 (1 row)
 
 SELECT 'msg2' FROM pg_logical_emit_message(false, 'test', 'msg2');
- ?column? 
+ ?column?
 ----------
  msg2
 (1 row)
 
 BEGIN;
 SELECT 'msg3' FROM pg_logical_emit_message(true, 'test', 'msg3');
- ?column? 
+ ?column?
 ----------
  msg3
 (1 row)
 
 SELECT 'msg4' FROM pg_logical_emit_message(false, 'test', 'msg4');
- ?column? 
+ ?column?
 ----------
  msg4
 (1 row)
@@ -34,32 +34,32 @@ SELECT 'msg4' FROM pg_logical_emit_message(false, 'test', 'msg4');
 ROLLBACK;
 BEGIN;
 SELECT 'msg5' FROM pg_logical_emit_message(true, 'test', 'msg5');
- ?column? 
+ ?column?
 ----------
  msg5
 (1 row)
 
 SELECT 'msg6' FROM pg_logical_emit_message(false, 'test', 'msg6');
- ?column? 
+ ?column?
 ----------
  msg6
 (1 row)
 
 SELECT 'msg7' FROM pg_logical_emit_message(true, 'test', 'msg7');
- ?column? 
+ ?column?
 ----------
  msg7
 (1 row)
 
 COMMIT;
 SELECT 'ignorethis' FROM pg_logical_emit_message(true, 'test', 'czechtastic');
-  ?column?  
+  ?column?
 ------------
  ignorethis
 (1 row)
 
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'force-binary', '0', 'skip-empty-xacts', '1');
-                                data                                
+                                data
 --------------------------------------------------------------------
  message: transactional: 1 prefix: test, sz: 4 content:msg1
  message: transactional: 0 prefix: test, sz: 4 content:msg2
@@ -74,26 +74,25 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'for
 \set prevdb :DBNAME
 \c template1
 SELECT 'otherdb1' FROM pg_logical_emit_message(false, 'test', 'otherdb1');
- ?column? 
+ ?column?
 ----------
  otherdb1
 (1 row)
 
 SELECT 'otherdb2' FROM pg_logical_emit_message(true, 'test', 'otherdb2');
- ?column? 
+ ?column?
 ----------
  otherdb2
 (1 row)
 
 \c :prevdb
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'force-binary', '0', 'skip-empty-xacts', '1');
- data 
+ data
 ------
 (0 rows)
 
 SELECT 'cleanup' FROM pg_drop_replication_slot('regression_slot');
- ?column? 
+ ?column?
 ----------
  cleanup
 (1 row)
-

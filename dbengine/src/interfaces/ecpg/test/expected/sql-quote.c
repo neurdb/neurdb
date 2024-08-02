@@ -24,12 +24,12 @@
 
 int main() {
   /* exec sql begin declare section */
-     
-      
-  
+
+
+
 #line 9 "quote.pgc"
  char var [ 25 ] ;
- 
+
 #line 10 "quote.pgc"
  int i , loopcount ;
 /* exec sql end declare section */
@@ -71,8 +71,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 #line 22 "quote.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show standard_conforming_strings", ECPGt_EOIT, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show standard_conforming_strings", ECPGt_EOIT,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 24 "quote.pgc"
 
@@ -115,8 +115,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 #line 32 "quote.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show standard_conforming_strings", ECPGt_EOIT, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show standard_conforming_strings", ECPGt_EOIT,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 34 "quote.pgc"
 
@@ -178,10 +178,10 @@ if (sqlca.sqlcode < 0) exit (1);}
 
   for (loopcount = 0; loopcount < 100; loopcount++)
   {
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch C", ECPGt_EOIT, 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch C", ECPGt_EOIT,
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 51 "quote.pgc"
 

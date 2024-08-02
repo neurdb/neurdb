@@ -16,7 +16,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -48,7 +48,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1insert: INSERT INTO d3_listp VALUES (1);
@@ -71,7 +71,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1insert: INSERT INTO d3_listp VALUES (1);
@@ -100,7 +100,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -122,7 +122,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -154,7 +154,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -191,7 +191,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -219,7 +219,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -247,10 +247,10 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
-step s1noop: 
+step s1noop:
 step s2detach2: ALTER TABLE d3_listp DETACH PARTITION d3_listp2 CONCURRENTLY;
 ERROR:  partition "d3_listp1" already pending detach in partitioned table "public.d3_listp"
 step s1c: COMMIT;
@@ -271,10 +271,10 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
-step s1noop: 
+step s1noop:
 step s2detachfinal: ALTER TABLE d3_listp DETACH PARTITION d3_listp1 FINALIZE; <waiting ...>
 step s1c: COMMIT;
 step s2detachfinal: <... completed>
@@ -296,7 +296,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -319,7 +319,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -349,7 +349,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -380,7 +380,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -409,7 +409,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -440,7 +440,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -464,7 +464,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;
@@ -495,7 +495,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t                
+t
 (1 row)
 
 step s1c: COMMIT;

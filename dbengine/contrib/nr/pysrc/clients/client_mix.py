@@ -13,6 +13,7 @@ def main():
 
     # Run the SocketClient in a separate thread to handle the asynchronous nature
     import threading
+
     socket_thread = threading.Thread(target=socket_client.run)
     socket_thread.start()
 
@@ -38,8 +39,6 @@ def main():
     )
 
     socket_client.disconnect()
-
-
 
 
 if __name__ == "__main__":

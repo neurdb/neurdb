@@ -3,37 +3,37 @@ CREATE TABLE float4tmp (a float4);
 \copy float4tmp from 'data/float4.data'
 SET enable_seqscan=on;
 SELECT count(*) FROM float4tmp WHERE a <  -179.0;
- count 
+ count
 -------
    244
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a <= -179.0;
- count 
+ count
 -------
    245
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a  = -179.0;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a >= -179.0;
- count 
+ count
 -------
    303
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a >  -179.0;
- count 
+ count
 -------
    302
 (1 row)
 
 SELECT a, a <-> '-179.0' FROM float4tmp ORDER BY a <-> '-179.0' LIMIT 3;
-     a      | ?column?  
+     a      | ?column?
 ------------+-----------
        -179 |         0
  -189.02386 | 10.023865
@@ -43,38 +43,38 @@ SELECT a, a <-> '-179.0' FROM float4tmp ORDER BY a <-> '-179.0' LIMIT 3;
 CREATE INDEX float4idx ON float4tmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM float4tmp WHERE a <  -179.0::float4;
- count 
+ count
 -------
    244
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a <= -179.0::float4;
- count 
+ count
 -------
    245
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a  = -179.0::float4;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a >= -179.0::float4;
- count 
+ count
 -------
    303
 (1 row)
 
 SELECT count(*) FROM float4tmp WHERE a >  -179.0::float4;
- count 
+ count
 -------
    302
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT a, a <-> '-179.0' FROM float4tmp ORDER BY a <-> '-179.0' LIMIT 3;
-                     QUERY PLAN                     
+                     QUERY PLAN
 ----------------------------------------------------
  Limit
    ->  Index Only Scan using float4idx on float4tmp
@@ -82,10 +82,9 @@ SELECT a, a <-> '-179.0' FROM float4tmp ORDER BY a <-> '-179.0' LIMIT 3;
 (3 rows)
 
 SELECT a, a <-> '-179.0' FROM float4tmp ORDER BY a <-> '-179.0' LIMIT 3;
-     a      | ?column?  
+     a      | ?column?
 ------------+-----------
        -179 |         0
  -189.02386 | 10.023865
  -158.17741 | 20.822586
 (3 rows)
-

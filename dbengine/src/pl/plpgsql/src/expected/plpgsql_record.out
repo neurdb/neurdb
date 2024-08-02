@@ -9,7 +9,7 @@ create type nested_int8s as (c1 two_int8s, c2 two_int8s);
 create function retc(int) returns two_int8s language plpgsql as
 $$ begin return row($1,1)::two_int8s; end $$;
 select retc(42);
-  retc  
+  retc
 --------
  (42,1)
 (1 row)
@@ -18,7 +18,7 @@ select retc(42);
 create or replace function retc(int) returns two_int8s language plpgsql as
 $$ begin return row($1::int8, 1::int8); end $$;
 select retc(42);
-  retc  
+  retc
 --------
  (42,1)
 (1 row)
@@ -41,7 +41,7 @@ CONTEXT:  PL/pgSQL function retc(integer) while casting return value to function
 create or replace function retc(int) returns two_int8s language plpgsql as
 $$ declare r record; begin r := row($1::int8, 1::int8); return r; end $$;
 select retc(42);
-  retc  
+  retc
 --------
  (42,1)
 (1 row)
@@ -63,7 +63,7 @@ CONTEXT:  PL/pgSQL function retc(integer) while casting return value to function
 create or replace function retc(int) returns two_int8s language plpgsql as
 $$ declare r two_int8s; begin r := row($1::int8, 1::int8, 42); return r; end $$;
 select retc(42);
-  retc  
+  retc
 --------
  (42,1)
 (1 row)
@@ -170,13 +170,13 @@ LINE 1: do $$ <<b>> declare c nested_int8s; begin b.d.c2.x = 1; end ...
 create function getq1(two_int8s) returns int8 language plpgsql as $$
 declare r two_int8s; begin r := $1; return r.q1; end $$;
 select getq1(retc(344));
- getq1 
+ getq1
 -------
    344
 (1 row)
 
 select getq1(row(1,2));
- getq1 
+ getq1
 -------
      1
 (1 row)
@@ -323,13 +323,13 @@ NOTICE:  r = (78,"skidoo 1 2 3 4 5 6 7 8 9 10")
 create function returnsrecord(int) returns record language plpgsql as
 $$ begin return row($1,$1+1); end $$;
 select returnsrecord(42);
- returnsrecord 
+ returnsrecord
 ---------------
  (42,43)
 (1 row)
 
 select * from returnsrecord(42) as r(x int, y int);
- x  | y  
+ x  | y
 ----+----
  42 | 43
 (1 row)
@@ -346,13 +346,13 @@ CONTEXT:  PL/pgSQL function returnsrecord(integer) while casting return value to
 create or replace function returnsrecord(int) returns record language plpgsql as
 $$ declare r record; begin r := row($1,$1+1); return r; end $$;
 select returnsrecord(42);
- returnsrecord 
+ returnsrecord
 ---------------
  (42,43)
 (1 row)
 
 select * from returnsrecord(42) as r(x int, y int);
- x  | y  
+ x  | y
 ----+----
  42 | 43
 (1 row)
@@ -371,13 +371,13 @@ alter table has_hole drop column f2;
 create or replace function returnsrecord(int) returns record language plpgsql as
 $$ begin return row($1,$1+1)::has_hole; end $$;
 select returnsrecord(42);
- returnsrecord 
+ returnsrecord
 ---------------
  (42,43)
 (1 row)
 
 select * from returnsrecord(42) as r(x int, y int);
- x  | y  
+ x  | y
 ----+----
  42 | 43
 (1 row)
@@ -394,13 +394,13 @@ CONTEXT:  PL/pgSQL function returnsrecord(integer) while casting return value to
 create or replace function returnsrecord(int) returns record language plpgsql as
 $$ declare r record; begin r := row($1,$1+1)::has_hole; return r; end $$;
 select returnsrecord(42);
- returnsrecord 
+ returnsrecord
 ---------------
  (42,43)
 (1 row)
 
 select * from returnsrecord(42) as r(x int, y int);
- x  | y  
+ x  | y
 ----+----
  42 | 43
 (1 row)
@@ -422,19 +422,19 @@ LINE 1: select getf1(1);
                ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 select getf1(row(1,2));
- getf1 
+ getf1
 -------
      1
 (1 row)
 
 select getf1(row(1,2)::two_int4s);
- getf1 
+ getf1
 -------
      1
 (1 row)
 
 select getf1(row('foo',123,456)::more_int4s);
- getf1 
+ getf1
 -------
    123
 (1 row)
@@ -446,7 +446,7 @@ select getf1(row(1,2)::two_int8s);
 ERROR:  record "x" has no field "f1"
 \set SHOW_CONTEXT errors
 select getf1(row(1,2));
- getf1 
+ getf1
 -------
      1
 (1 row)
@@ -462,13 +462,13 @@ LINE 1: $1.f2
 QUERY:  $1.f2
 CONTEXT:  PL/pgSQL function getf2(record) line 1 at RETURN
 select getf2(row(1,2)::two_int4s);
- getf2 
+ getf2
 -------
      2
 (1 row)
 
 select getf2(row('foo',123,456)::more_int4s);
- getf2 
+ getf2
 -------
    456
 (1 row)
@@ -501,7 +501,7 @@ begin
   return next row(7,8)::has_hole;
 end$$;
 select returnssetofholes();
- returnssetofholes 
+ returnssetofholes
 -------------------
  (,)
  (1,2)
@@ -534,7 +534,7 @@ create table mutable(f1 int, f2 text);
 create function sillyaddone(int) returns int language plpgsql as
 $$ declare r mutable; begin r.f1 := $1; return r.f1 + 1; end $$;
 select sillyaddone(42);
- sillyaddone 
+ sillyaddone
 -------------
           43
 (1 row)
@@ -556,9 +556,9 @@ CONTEXT:  SQL expression "x.f3"
 PL/pgSQL function getf3(mutable) line 1 at RETURN
 alter table mutable add column f3 int;
 select getf3(null::mutable);  -- now it works
- getf3 
+ getf3
 -------
-      
+
 (1 row)
 
 alter table mutable drop column f3;
@@ -575,13 +575,13 @@ $$ declare r mutable2; begin r.f1 := $1; return r.f1 + 2; end $$;
 reset check_function_bodies;
 select sillyaddtwo(42);  -- fail
 ERROR:  type "mutable2" does not exist
-LINE 1:  declare r mutable2; begin r.f1 := $1; return r.f1 + 2; end 
+LINE 1:  declare r mutable2; begin r.f1 := $1; return r.f1 + 2; end
                    ^
-QUERY:   declare r mutable2; begin r.f1 := $1; return r.f1 + 2; end 
+QUERY:   declare r mutable2; begin r.f1 := $1; return r.f1 + 2; end
 CONTEXT:  compilation of PL/pgSQL function "sillyaddtwo" near line 1
 create table mutable2(f1 int, f2 text);
 select sillyaddtwo(42);
- sillyaddtwo 
+ sillyaddtwo
 -------------
           44
 (1 row)
@@ -595,13 +595,13 @@ ERROR:  type "mutable2" does not exist
 \set SHOW_CONTEXT errors
 create table mutable2(f0 text, f1 int, f2 text);
 select sillyaddtwo(42);
- sillyaddtwo 
+ sillyaddtwo
 -------------
           44
 (1 row)
 
 select sillyaddtwo(43);
- sillyaddtwo 
+ sillyaddtwo
 -------------
           45
 (1 row)
@@ -622,7 +622,7 @@ NOTICE:  old.tableoid = mutable
 NOTICE:  old.ctid = (0,2)
 NOTICE:  old.tableoid = mutable
 table mutable;
-   f2    
+   f2
 ---------
  foo baz
  bar baz
@@ -635,7 +635,7 @@ $$begin
 end$$;
 update mutable set f2 = f2 || ' baz';
 table mutable;
-     f2      
+     f2
 -------------
  foo baz baz
  bar baz baz
@@ -649,7 +649,7 @@ begin
 end$$;
 update mutable set f2 = f2 || ' baz';
 table mutable;
-       f2        
+       f2
 -----------------
  foo baz baz baz
  bar baz baz baz
@@ -663,7 +663,7 @@ create function read_ordered_int8s(p ordered_int8s) returns int8 as $$
 begin return p.q1 + p.q2; end
 $$ language plpgsql;
 select read_ordered_int8s(row(1, 2));
- read_ordered_int8s 
+ read_ordered_int8s
 --------------------
                   3
 (1 row)
@@ -674,7 +674,7 @@ create function build_ordered_int8s(i int8, j int8) returns ordered_int8s as $$
 begin return row(i,j); end
 $$ language plpgsql;
 select build_ordered_int8s(1,2);
- build_ordered_int8s 
+ build_ordered_int8s
 ---------------------
  (1,2)
 (1 row)
@@ -686,7 +686,7 @@ create function build_ordered_int8s_2(i int8, j int8) returns ordered_int8s as $
 declare r record; begin r := row(i,j); return r; end
 $$ language plpgsql;
 select build_ordered_int8s_2(1,2);
- build_ordered_int8s_2 
+ build_ordered_int8s_2
 -----------------------
  (1,2)
 (1 row)
@@ -698,7 +698,7 @@ create function build_ordered_int8s_3(i int8, j int8) returns ordered_int8s as $
 declare r two_int8s; begin r := row(i,j); return r; end
 $$ language plpgsql;
 select build_ordered_int8s_3(1,2);
- build_ordered_int8s_3 
+ build_ordered_int8s_3
 -----------------------
  (1,2)
 (1 row)
@@ -710,7 +710,7 @@ create function build_ordered_int8s_4(i int8, j int8) returns ordered_int8s as $
 declare r ordered_int8s; begin r := row(i,j); return r; end
 $$ language plpgsql;
 select build_ordered_int8s_4(1,2);
- build_ordered_int8s_4 
+ build_ordered_int8s_4
 -----------------------
  (1,2)
 (1 row)
@@ -722,7 +722,7 @@ create function build_ordered_int8s_a(i int8, j int8) returns ordered_int8s[] as
 begin return array[row(i,j), row(i,j+1)]; end
 $$ language plpgsql;
 select build_ordered_int8s_a(1,2);
- build_ordered_int8s_a 
+ build_ordered_int8s_a
 -----------------------
  {"(1,2)","(1,3)"}
 (1 row)
@@ -821,8 +821,7 @@ insert into two_int8s_tab values (compresult(42));
 -- reconnect so we lose any local knowledge of anonymous record types
 \c -
 table two_int8s_tab;
-   f1    
+   f1
 ---------
  (42,42)
 (1 row)
-

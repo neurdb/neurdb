@@ -14,7 +14,7 @@ INSERT INTO test_interval VALUES
 ;
 CREATE INDEX idx_interval ON test_interval USING gin (i);
 SELECT * FROM test_interval WHERE i<'08:55:08'::interval ORDER BY i;
-            i             
+            i
 --------------------------
  @ 178000000 years ago
  @ 3 hours 55 mins 8 secs
@@ -23,7 +23,7 @@ SELECT * FROM test_interval WHERE i<'08:55:08'::interval ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_interval WHERE i<='08:55:08'::interval ORDER BY i;
-            i             
+            i
 --------------------------
  @ 178000000 years ago
  @ 3 hours 55 mins 8 secs
@@ -33,13 +33,13 @@ SELECT * FROM test_interval WHERE i<='08:55:08'::interval ORDER BY i;
 (5 rows)
 
 SELECT * FROM test_interval WHERE i='08:55:08'::interval ORDER BY i;
-            i             
+            i
 --------------------------
  @ 8 hours 55 mins 8 secs
 (1 row)
 
 SELECT * FROM test_interval WHERE i>='08:55:08'::interval ORDER BY i;
-             i             
+             i
 ---------------------------
  @ 8 hours 55 mins 8 secs
  @ 9 hours 55 mins 8 secs
@@ -48,10 +48,9 @@ SELECT * FROM test_interval WHERE i>='08:55:08'::interval ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_interval WHERE i>'08:55:08'::interval ORDER BY i;
-             i             
+             i
 ---------------------------
  @ 9 hours 55 mins 8 secs
  @ 10 hours 55 mins 8 secs
  @ 178000000 years
 (3 rows)
-

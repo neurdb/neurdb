@@ -12,7 +12,7 @@ INSERT INTO test_inet VALUES
 ;
 CREATE INDEX idx_inet ON test_inet USING gin (i);
 SELECT * FROM test_inet WHERE i<'1.2.6.4/16'::inet ORDER BY i;
-     i      
+     i
 ------------
  1.2.3.4/16
  1.2.4.4/16
@@ -20,7 +20,7 @@ SELECT * FROM test_inet WHERE i<'1.2.6.4/16'::inet ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_inet WHERE i<='1.2.6.4/16'::inet ORDER BY i;
-     i      
+     i
 ------------
  1.2.3.4/16
  1.2.4.4/16
@@ -29,13 +29,13 @@ SELECT * FROM test_inet WHERE i<='1.2.6.4/16'::inet ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_inet WHERE i='1.2.6.4/16'::inet ORDER BY i;
-     i      
+     i
 ------------
  1.2.6.4/16
 (1 row)
 
 SELECT * FROM test_inet WHERE i>='1.2.6.4/16'::inet ORDER BY i;
-     i      
+     i
 ------------
  1.2.6.4/16
  1.2.7.4/16
@@ -43,9 +43,8 @@ SELECT * FROM test_inet WHERE i>='1.2.6.4/16'::inet ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_inet WHERE i>'1.2.6.4/16'::inet ORDER BY i;
-     i      
+     i
 ------------
  1.2.7.4/16
  1.2.8.4/16
 (2 rows)
-

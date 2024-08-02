@@ -4,7 +4,7 @@
 -- Per SQL standard, CHAR means character(1), that is a varlena type
 -- with a constraint restricting it to one character (not byte)
 SELECT char 'c' = char 'c' AS true;
- true 
+ true
 ------
  t
 (1 row)
@@ -27,34 +27,34 @@ INSERT INTO CHAR_TBL (f1) VALUES ('cd');
 ERROR:  value too long for type character(1)
 INSERT INTO CHAR_TBL (f1) VALUES ('c     ');
 SELECT * FROM CHAR_TBL;
- f1 
+ f1
 ----
  a
  A
  1
  2
  3
-  
+
  c
 (7 rows)
 
 SELECT c.*
    FROM CHAR_TBL c
    WHERE c.f1 <> 'a';
- f1 
+ f1
 ----
  A
  1
  2
  3
-  
+
  c
 (6 rows)
 
 SELECT c.*
    FROM CHAR_TBL c
    WHERE c.f1 = 'a';
- f1 
+ f1
 ----
  a
 (1 row)
@@ -62,32 +62,32 @@ SELECT c.*
 SELECT c.*
    FROM CHAR_TBL c
    WHERE c.f1 < 'a';
- f1 
+ f1
 ----
  A
  1
  2
  3
-  
+
 (5 rows)
 
 SELECT c.*
    FROM CHAR_TBL c
    WHERE c.f1 <= 'a';
- f1 
+ f1
 ----
  a
  A
  1
  2
  3
-  
+
 (6 rows)
 
 SELECT c.*
    FROM CHAR_TBL c
    WHERE c.f1 > 'a';
- f1 
+ f1
 ----
  c
 (1 row)
@@ -95,7 +95,7 @@ SELECT c.*
 SELECT c.*
    FROM CHAR_TBL c
    WHERE c.f1 >= 'a';
- f1 
+ f1
 ----
  a
  c
@@ -111,29 +111,29 @@ DROP TABLE CHAR_TBL;
 INSERT INTO CHAR_TBL (f1) VALUES ('abcde');
 ERROR:  value too long for type character(4)
 SELECT * FROM CHAR_TBL;
-  f1  
+  f1
 ------
- a   
- ab  
+ a
+ ab
  abcd
  abcd
 (4 rows)
 
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('abcd  ', 'char(4)');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('abcde', 'char(4)');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('abcde', 'char(4)');
-               message                | detail | hint | sql_error_code 
+               message                | detail | hint | sql_error_code
 --------------------------------------+--------+------+----------------
  value too long for type character(4) |        |      | 22001
 (1 row)
@@ -144,56 +144,55 @@ SELECT * FROM pg_input_error_info('abcde', 'char(4)');
 -- to be accessed via bytea-like escapes.
 --
 SELECT 'a'::"char";
- char 
+ char
 ------
  a
 (1 row)
 
 SELECT '\101'::"char";
- char 
+ char
 ------
  A
 (1 row)
 
 SELECT '\377'::"char";
- char 
+ char
 ------
  \377
 (1 row)
 
 SELECT 'a'::"char"::text;
- text 
+ text
 ------
  a
 (1 row)
 
 SELECT '\377'::"char"::text;
- text 
+ text
 ------
  \377
 (1 row)
 
 SELECT '\000'::"char"::text;
- text 
+ text
 ------
- 
+
 (1 row)
 
 SELECT 'a'::text::"char";
- char 
+ char
 ------
  a
 (1 row)
 
 SELECT '\377'::text::"char";
- char 
+ char
 ------
  \377
 (1 row)
 
 SELECT ''::text::"char";
- char 
+ char
 ------
- 
-(1 row)
 
+(1 row)

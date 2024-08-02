@@ -2018,7 +2018,7 @@ static int r_more_than_one_syllable_word(struct SN_env * z) {
         {   int i = 2;
             while(1) {
                 int c2 = z->c;
-                {   
+                {
                     int ret = out_grouping_U(z, g_vowel, 97, 305, 1);
                     if (ret < 0) goto lab0;
                     z->c += ret;
@@ -2093,4 +2093,3 @@ extern int turkish_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * turkish_UTF_8_create_env(void) { return SN_create_env(0, 1); }
 
 extern void turkish_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

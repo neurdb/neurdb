@@ -266,4 +266,3 @@ msgstr "துணைச் செயல் %d சமிக்ஞையால் 
 #, c-format
 msgid "child process exited with unrecognized status %d"
 msgstr "இனம்புரியாத நிலை %d யால் துணைச் செயல் வெளிவந்தது"
-

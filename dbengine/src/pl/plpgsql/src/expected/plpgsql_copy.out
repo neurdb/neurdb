@@ -39,7 +39,7 @@ CONTEXT:  PL/pgSQL function inline_code_block line 3 at EXECUTE
 \set dobody 'BEGIN COPY copy1 FROM ' :'srcfilename' '; END'
 DO LANGUAGE plpgsql :'dobody';
 SELECT * FROM copy1 ORDER BY 1;
- a |  b  
+ a |  b
 ---+-----
  1 | 1.1
  2 | 2.2
@@ -51,7 +51,7 @@ TRUNCATE copy1;
 \set dobody 'BEGIN EXECUTE ' :'cmd' '; END'
 DO LANGUAGE plpgsql :'dobody';
 SELECT * FROM copy1 ORDER BY 1;
- a |  b  
+ a |  b
 ---+-----
  1 | 1.1
  2 | 2.2
@@ -69,7 +69,7 @@ DO LANGUAGE plpgsql :'dobody';
 \set dobody 'BEGIN EXECUTE ' :'cmd' '; END'
 DO LANGUAGE plpgsql :'dobody';
 SELECT * FROM copy1 ORDER BY 1;
- a |  b  
+ a |  b
 ---+-----
  1 | 1.1
  1 | 1.1

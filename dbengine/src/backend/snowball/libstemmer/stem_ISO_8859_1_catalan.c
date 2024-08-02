@@ -1184,23 +1184,23 @@ static int r_mark_regions(struct SN_env * z) {
     z->I[1] = z->l;
     z->I[0] = z->l;
     {   int c1 = z->c;
-        {   
+        {
             int ret = out_grouping(z, g_v, 97, 252, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping(z, g_v, 97, 252, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
         z->I[1] = z->c;
-        {   
+        {
             int ret = out_grouping(z, g_v, 97, 252, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping(z, g_v, 97, 252, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
@@ -1394,7 +1394,7 @@ static int r_residual_suffix(struct SN_env * z) {
 }
 
 extern int catalan_ISO_8859_1_stem(struct SN_env * z) {
-    
+
     {   int ret = r_mark_regions(z);
         if (ret < 0) return ret;
     }
@@ -1443,4 +1443,3 @@ extern int catalan_ISO_8859_1_stem(struct SN_env * z) {
 extern struct SN_env * catalan_ISO_8859_1_create_env(void) { return SN_create_env(0, 2); }
 
 extern void catalan_ISO_8859_1_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

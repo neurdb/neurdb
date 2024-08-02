@@ -182,4 +182,3 @@ msgstr "compilare a funcției PL/Perl \"%s\""
 #: plperl.c:3676
 msgid "PL/Perl anonymous code block"
 msgstr "bloc de cod PL/Perl anonim"
-

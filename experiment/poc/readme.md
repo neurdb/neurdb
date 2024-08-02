@@ -53,4 +53,3 @@ Number of samples: 1,000,000	Device: Intel(R) Xeon(R) W-2133 CPU @ 3.60GHz
 
 ![time vs batch size](./image/poc_time_vs_batch_size.png)
 <div style="text-align: center; color: grey; font-size: 0.9em;">Figure 2: Time vs Batch Size</div>
-

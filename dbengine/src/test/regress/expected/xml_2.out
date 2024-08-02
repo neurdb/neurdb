@@ -10,7 +10,7 @@ LINE 1: INSERT INTO xmltest VALUES (3, '<wrong');
                                        ^
 DETAIL:  line 1: Couldn't find end of Start Tag wrong line 1
 SELECT * FROM xmltest;
- id |        data        
+ id |        data
 ----+--------------------
   1 | <value>one</value>
   2 | <value>two</value>
@@ -18,43 +18,43 @@ SELECT * FROM xmltest;
 
 -- test non-throwing API, too
 SELECT pg_input_is_valid('<value>one</value>', 'xml');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('<value>one</', 'xml');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT message FROM pg_input_error_info('<value>one</', 'xml');
-       message       
+       message
 ---------------------
  invalid XML content
 (1 row)
 
 SELECT pg_input_is_valid('<?xml version="1.0" standalone="y"?><foo/>', 'xml');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT message FROM pg_input_error_info('<?xml version="1.0" standalone="y"?><foo/>', 'xml');
-                   message                    
+                   message
 ----------------------------------------------
  invalid XML content: invalid XML declaration
 (1 row)
 
 SELECT xmlcomment('test');
- xmlcomment  
+ xmlcomment
 -------------
  <!--test-->
 (1 row)
 
 SELECT xmlcomment('-test');
-  xmlcomment  
+  xmlcomment
 --------------
  <!---test-->
 (1 row)
@@ -64,7 +64,7 @@ ERROR:  invalid XML comment
 SELECT xmlcomment('--test');
 ERROR:  invalid XML comment
 SELECT xmlcomment('te st');
-  xmlcomment  
+  xmlcomment
 --------------
  <!--te st-->
 (1 row)
@@ -72,13 +72,13 @@ SELECT xmlcomment('te st');
 SELECT xmlconcat(xmlcomment('hello'),
                  xmlelement(NAME qux, 'foo'),
                  xmlcomment('world'));
-               xmlconcat                
+               xmlconcat
 ----------------------------------------
  <!--hello--><qux>foo</qux><!--world-->
 (1 row)
 
 SELECT xmlconcat('hello', 'you');
- xmlconcat 
+ xmlconcat
 -----------
  helloyou
 (1 row)
@@ -93,33 +93,33 @@ LINE 1: SELECT xmlconcat('bad', '<syntax');
                                 ^
 DETAIL:  line 1: Couldn't find end of Start Tag syntax line 1
 SELECT xmlconcat('<foo/>', NULL, '<?xml version="1.1" standalone="no"?><bar/>');
-  xmlconcat   
+  xmlconcat
 --------------
  <foo/><bar/>
 (1 row)
 
 SELECT xmlconcat('<?xml version="1.1"?><foo/>', NULL, '<?xml version="1.1" standalone="no"?><bar/>');
-             xmlconcat             
+             xmlconcat
 -----------------------------------
  <?xml version="1.1"?><foo/><bar/>
 (1 row)
 
 SELECT xmlconcat(NULL);
- xmlconcat 
+ xmlconcat
 -----------
- 
+
 (1 row)
 
 SELECT xmlconcat(NULL, NULL);
- xmlconcat 
+ xmlconcat
 -----------
- 
+
 (1 row)
 
 SELECT xmlelement(name element,
                   xmlattributes (1 as one, 'deuce' as two),
                   'content');
-                   xmlelement                   
+                   xmlelement
 ------------------------------------------------
  <element one="1" two="deuce">content</element>
 (1 row)
@@ -130,13 +130,13 @@ ERROR:  unnamed XML attribute value must be a column reference
 LINE 2:                   xmlattributes ('unnamed and wrong'));
                                          ^
 SELECT xmlelement(name element, xmlelement(name nested, 'stuff'));
-                xmlelement                 
+                xmlelement
 -------------------------------------------
  <element><nested>stuff</nested></element>
 (1 row)
 
 SELECT xmlelement(name employee, xmlforest(name, age, salary as pay)) FROM emp;
-                              xmlelement                              
+                              xmlelement
 ----------------------------------------------------------------------
  <employee><name>sharon</name><age>25</age><pay>1000</pay></employee>
  <employee><name>sam</name><age>30</age><pay>2000</pay></employee>
@@ -151,63 +151,63 @@ ERROR:  XML attribute name "a" appears more than once
 LINE 1: ...ment(name duplicate, xmlattributes(1 as a, 2 as b, 3 as a));
                                                               ^
 SELECT xmlelement(name num, 37);
-  xmlelement   
+  xmlelement
 ---------------
  <num>37</num>
 (1 row)
 
 SELECT xmlelement(name foo, text 'bar');
-   xmlelement   
+   xmlelement
 ----------------
  <foo>bar</foo>
 (1 row)
 
 SELECT xmlelement(name foo, xml 'bar');
-   xmlelement   
+   xmlelement
 ----------------
  <foo>bar</foo>
 (1 row)
 
 SELECT xmlelement(name foo, text 'b<a/>r');
-       xmlelement        
+       xmlelement
 -------------------------
  <foo>b&lt;a/&gt;r</foo>
 (1 row)
 
 SELECT xmlelement(name foo, xml 'b<a/>r');
-    xmlelement     
+    xmlelement
 -------------------
  <foo>b<a/>r</foo>
 (1 row)
 
 SELECT xmlelement(name foo, array[1, 2, 3]);
-                               xmlelement                                
+                               xmlelement
 -------------------------------------------------------------------------
  <foo><element>1</element><element>2</element><element>3</element></foo>
 (1 row)
 
 SET xmlbinary TO base64;
 SELECT xmlelement(name foo, bytea 'bar');
-   xmlelement    
+   xmlelement
 -----------------
  <foo>YmFy</foo>
 (1 row)
 
 SET xmlbinary TO hex;
 SELECT xmlelement(name foo, bytea 'bar');
-    xmlelement     
+    xmlelement
 -------------------
  <foo>626172</foo>
 (1 row)
 
 SELECT xmlelement(name foo, xmlattributes(true as bar));
-    xmlelement     
+    xmlelement
 -------------------
  <foo bar="true"/>
 (1 row)
 
 SELECT xmlelement(name foo, xmlattributes('2009-04-09 00:24:37'::timestamp as bar));
-            xmlelement            
+            xmlelement
 ----------------------------------
  <foo bar="2009-04-09T00:24:37"/>
 (1 row)
@@ -216,31 +216,31 @@ SELECT xmlelement(name foo, xmlattributes('infinity'::timestamp as bar));
 ERROR:  timestamp out of range
 DETAIL:  XML does not support infinite timestamp values.
 SELECT xmlelement(name foo, xmlattributes('<>&"''' as funny, xml 'b<a/>r' as funnier));
-                         xmlelement                         
+                         xmlelement
 ------------------------------------------------------------
  <foo funny="&lt;&gt;&amp;&quot;'" funnier="b&lt;a/&gt;r"/>
 (1 row)
 
 SELECT xmlparse(content '');
- xmlparse 
+ xmlparse
 ----------
- 
+
 (1 row)
 
 SELECT xmlparse(content '  ');
- xmlparse 
+ xmlparse
 ----------
-   
+
 (1 row)
 
 SELECT xmlparse(content 'abc');
- xmlparse 
+ xmlparse
 ----------
  abc
 (1 row)
 
 SELECT xmlparse(content '<abc>x</abc>');
-   xmlparse   
+   xmlparse
 --------------
  <abc>x</abc>
 (1 row)
@@ -258,13 +258,13 @@ DETAIL:  line 1: Entity 'idontexist' not defined
                              ^
 line 1: chunk is not well balanced
 SELECT xmlparse(content '<invalidns xmlns=''&lt;''/>');
-         xmlparse          
+         xmlparse
 ---------------------------
  <invalidns xmlns='&lt;'/>
 (1 row)
 
 SELECT xmlparse(content '<relativens xmlns=''relative''/>');
-            xmlparse            
+            xmlparse
 --------------------------------
  <relativens xmlns='relative'/>
 (1 row)
@@ -277,7 +277,7 @@ DETAIL:  line 1: Entity 'idontexist' not defined
 line 1: Opening and ending tag mismatch: twoerrors line 1 and unbalanced
 line 1: chunk is not well balanced
 SELECT xmlparse(content '<nosuchprefix:tag/>');
-      xmlparse       
+      xmlparse
 ---------------------
  <nosuchprefix:tag/>
 (1 row)
@@ -291,7 +291,7 @@ DETAIL:  line 1: Start tag expected, '<' not found
 abc
 ^
 SELECT xmlparse(document '<abc>x</abc>');
-   xmlparse   
+   xmlparse
 --------------
  <abc>x</abc>
 (1 row)
@@ -309,13 +309,13 @@ DETAIL:  line 1: Entity 'idontexist' not defined
                              ^
 line 1: Opening and ending tag mismatch: undefinedentity line 1 and abc
 SELECT xmlparse(document '<invalidns xmlns=''&lt;''/>');
-         xmlparse          
+         xmlparse
 ---------------------------
  <invalidns xmlns='&lt;'/>
 (1 row)
 
 SELECT xmlparse(document '<relativens xmlns=''relative''/>');
-            xmlparse            
+            xmlparse
 --------------------------------
  <relativens xmlns='relative'/>
 (1 row)
@@ -327,13 +327,13 @@ DETAIL:  line 1: Entity 'idontexist' not defined
                        ^
 line 1: Opening and ending tag mismatch: twoerrors line 1 and unbalanced
 SELECT xmlparse(document '<nosuchprefix:tag/>');
-      xmlparse       
+      xmlparse
 ---------------------
  <nosuchprefix:tag/>
 (1 row)
 
 SELECT xmlpi(name foo);
-  xmlpi  
+  xmlpi
 ---------
  <?foo?>
 (1 row)
@@ -342,13 +342,13 @@ SELECT xmlpi(name xml);
 ERROR:  invalid XML processing instruction
 DETAIL:  XML processing instruction target name cannot be "xml".
 SELECT xmlpi(name xmlstuff);
-    xmlpi     
+    xmlpi
 --------------
  <?xmlstuff?>
 (1 row)
 
 SELECT xmlpi(name foo, 'bar');
-    xmlpi    
+    xmlpi
 -------------
  <?foo bar?>
 (1 row)
@@ -357,76 +357,76 @@ SELECT xmlpi(name foo, 'in?>valid');
 ERROR:  invalid XML processing instruction
 DETAIL:  XML processing instruction cannot contain "?>".
 SELECT xmlpi(name foo, null);
- xmlpi 
+ xmlpi
 -------
- 
+
 (1 row)
 
 SELECT xmlpi(name xml, null);
 ERROR:  invalid XML processing instruction
 DETAIL:  XML processing instruction target name cannot be "xml".
 SELECT xmlpi(name xmlstuff, null);
- xmlpi 
+ xmlpi
 -------
- 
+
 (1 row)
 
 SELECT xmlpi(name "xml-stylesheet", 'href="mystyle.css" type="text/css"');
-                         xmlpi                         
+                         xmlpi
 -------------------------------------------------------
  <?xml-stylesheet href="mystyle.css" type="text/css"?>
 (1 row)
 
 SELECT xmlpi(name foo, '   bar');
-    xmlpi    
+    xmlpi
 -------------
  <?foo bar?>
 (1 row)
 
 SELECT xmlroot(xml '<foo/>', version no value, standalone no value);
- xmlroot 
+ xmlroot
 ---------
  <foo/>
 (1 row)
 
 SELECT xmlroot(xml '<foo/>', version '2.0');
-           xmlroot           
+           xmlroot
 -----------------------------
  <?xml version="2.0"?><foo/>
 (1 row)
 
 SELECT xmlroot(xml '<foo/>', version no value, standalone yes);
-                   xmlroot                    
+                   xmlroot
 ----------------------------------------------
  <?xml version="1.0" standalone="yes"?><foo/>
 (1 row)
 
 SELECT xmlroot(xml '<?xml version="1.1"?><foo/>', version no value, standalone yes);
-                   xmlroot                    
+                   xmlroot
 ----------------------------------------------
  <?xml version="1.0" standalone="yes"?><foo/>
 (1 row)
 
 SELECT xmlroot(xmlroot(xml '<foo/>', version '1.0'), version '1.1', standalone no);
-                   xmlroot                   
+                   xmlroot
 ---------------------------------------------
  <?xml version="1.1" standalone="no"?><foo/>
 (1 row)
 
 SELECT xmlroot('<?xml version="1.1" standalone="yes"?><foo/>', version no value, standalone no);
-                   xmlroot                   
+                   xmlroot
 ---------------------------------------------
  <?xml version="1.0" standalone="no"?><foo/>
 (1 row)
 
 SELECT xmlroot('<?xml version="1.1" standalone="yes"?><foo/>', version no value, standalone no value);
- xmlroot 
+ xmlroot
 ---------
  <foo/>
 (1 row)
 
 SELECT xmlroot('<?xml version="1.1" standalone="yes"?><foo/>', version no value);
-                   xmlroot                    
+                   xmlroot
 ----------------------------------------------
  <?xml version="1.0" standalone="yes"?><foo/>
 (1 row)
@@ -446,40 +446,40 @@ SELECT xmlroot (
   version '1.0',
   standalone yes
 );
-                                         xmlroot                                          
+                                         xmlroot
 ------------------------------------------------------------------------------------------
  <?xml version="1.0" standalone="yes"?><gazonk name="val" num="2"><qux>foo</qux></gazonk>
 (1 row)
 
 SELECT xmlserialize(content data as character varying(20)) FROM xmltest;
-    xmlserialize    
+    xmlserialize
 --------------------
  <value>one</value>
  <value>two</value>
 (2 rows)
 
 SELECT xmlserialize(content 'good' as char(10));
- xmlserialize 
+ xmlserialize
 --------------
- good      
+ good
 (1 row)
 
 SELECT xmlserialize(document 'bad' as text);
 ERROR:  not an XML document
 -- indent
 SELECT xmlserialize(DOCUMENT '<foo><bar><val x="y">42</val></bar></foo>' AS text INDENT);
-      xmlserialize       
+      xmlserialize
 -------------------------
  <foo>                  +
    <bar>                +
      <val x="y">42</val>+
    </bar>               +
  </foo>                 +
- 
+
 (1 row)
 
 SELECT xmlserialize(CONTENT  '<foo><bar><val x="y">42</val></bar></foo>' AS text INDENT);
-      xmlserialize       
+      xmlserialize
 -------------------------
  <foo>                  +
    <bar>                +
@@ -490,13 +490,13 @@ SELECT xmlserialize(CONTENT  '<foo><bar><val x="y">42</val></bar></foo>' AS text
 
 -- no indent
 SELECT xmlserialize(DOCUMENT '<foo><bar><val x="y">42</val></bar></foo>' AS text NO INDENT);
-               xmlserialize                
+               xmlserialize
 -------------------------------------------
  <foo><bar><val x="y">42</val></bar></foo>
 (1 row)
 
 SELECT xmlserialize(CONTENT  '<foo><bar><val x="y">42</val></bar></foo>' AS text NO INDENT);
-               xmlserialize                
+               xmlserialize
 -------------------------------------------
  <foo><bar><val x="y">42</val></bar></foo>
 (1 row)
@@ -505,7 +505,7 @@ SELECT xmlserialize(CONTENT  '<foo><bar><val x="y">42</val></bar></foo>' AS text
 SELECT xmlserialize(DOCUMENT '<foo>73</foo><bar><val x="y">42</val></bar>' AS text INDENT);
 ERROR:  not an XML document
 SELECT xmlserialize(CONTENT  '<foo>73</foo><bar><val x="y">42</val></bar>' AS text INDENT);
-     xmlserialize      
+     xmlserialize
 -----------------------
  <foo>73</foo>        +
  <bar>                +
@@ -517,7 +517,7 @@ SELECT xmlserialize(CONTENT  '<foo>73</foo><bar><val x="y">42</val></bar>' AS te
 SELECT xmlserialize(DOCUMENT 'text node<foo>73</foo>text node<bar><val x="y">42</val></bar>' AS text INDENT);
 ERROR:  not an XML document
 SELECT xmlserialize(CONTENT  'text node<foo>73</foo>text node<bar><val x="y">42</val></bar>' AS text INDENT);
-      xmlserialize      
+      xmlserialize
 ------------------------
  text node             +
  <foo>73</foo>text node+
@@ -528,7 +528,7 @@ SELECT xmlserialize(CONTENT  'text node<foo>73</foo>text node<bar><val x="y">42<
 
 -- indent singly-rooted xml with mixed contents
 SELECT xmlserialize(DOCUMENT '<foo><bar><val x="y">42</val><val x="y">text node<val>73</val></val></bar></foo>' AS text INDENT);
-                xmlserialize                 
+                xmlserialize
 ---------------------------------------------
  <foo>                                      +
    <bar>                                    +
@@ -536,11 +536,11 @@ SELECT xmlserialize(DOCUMENT '<foo><bar><val x="y">42</val><val x="y">text node<
      <val x="y">text node<val>73</val></val>+
    </bar>                                   +
  </foo>                                     +
- 
+
 (1 row)
 
 SELECT xmlserialize(CONTENT  '<foo><bar><val x="y">42</val><val x="y">text node<val>73</val></val></bar></foo>' AS text INDENT);
-                xmlserialize                 
+                xmlserialize
 ---------------------------------------------
  <foo>                                      +
    <bar>                                    +
@@ -554,36 +554,36 @@ SELECT xmlserialize(CONTENT  '<foo><bar><val x="y">42</val><val x="y">text node<
 SELECT xmlserialize(DOCUMENT '' AS text INDENT);
 ERROR:  not an XML document
 SELECT xmlserialize(CONTENT  '' AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
- 
+
 (1 row)
 
 -- whitespaces
 SELECT xmlserialize(DOCUMENT '  ' AS text INDENT);
 ERROR:  not an XML document
 SELECT xmlserialize(CONTENT  '  ' AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
-   
+
 (1 row)
 
 -- indent null
 SELECT xmlserialize(DOCUMENT NULL AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
- 
+
 (1 row)
 
 SELECT xmlserialize(CONTENT  NULL AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
- 
+
 (1 row)
 
 -- indent with XML declaration
 SELECT xmlserialize(DOCUMENT '<?xml version="1.0" encoding="UTF-8"?><foo><bar><val>73</val></bar></foo>' AS text INDENT);
-              xmlserialize              
+              xmlserialize
 ----------------------------------------
  <?xml version="1.0" encoding="UTF-8"?>+
  <foo>                                 +
@@ -591,11 +591,11 @@ SELECT xmlserialize(DOCUMENT '<?xml version="1.0" encoding="UTF-8"?><foo><bar><v
      <val>73</val>                     +
    </bar>                              +
  </foo>                                +
- 
+
 (1 row)
 
 SELECT xmlserialize(CONTENT  '<?xml version="1.0" encoding="UTF-8"?><foo><bar><val>73</val></bar></foo>' AS text INDENT);
-   xmlserialize    
+   xmlserialize
 -------------------
  <foo>            +
    <bar>          +
@@ -606,33 +606,33 @@ SELECT xmlserialize(CONTENT  '<?xml version="1.0" encoding="UTF-8"?><foo><bar><v
 
 -- indent containing DOCTYPE declaration
 SELECT xmlserialize(DOCUMENT '<!DOCTYPE a><a/>' AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
  <!DOCTYPE a>+
  <a/>        +
- 
+
 (1 row)
 
 SELECT xmlserialize(CONTENT  '<!DOCTYPE a><a/>' AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
  <!DOCTYPE a>+
  <a/>        +
- 
+
 (1 row)
 
 -- indent xml with empty element
 SELECT xmlserialize(DOCUMENT '<foo><bar></bar></foo>' AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
  <foo>       +
    <bar/>    +
  </foo>      +
- 
+
 (1 row)
 
 SELECT xmlserialize(CONTENT  '<foo><bar></bar></foo>' AS text INDENT);
- xmlserialize 
+ xmlserialize
 --------------
  <foo>       +
    <bar/>    +
@@ -641,37 +641,37 @@ SELECT xmlserialize(CONTENT  '<foo><bar></bar></foo>' AS text INDENT);
 
 -- 'no indent' = not using 'no indent'
 SELECT xmlserialize(DOCUMENT '<foo><bar><val x="y">42</val></bar></foo>' AS text) = xmlserialize(DOCUMENT '<foo><bar><val x="y">42</val></bar></foo>' AS text NO INDENT);
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT xmlserialize(CONTENT  '<foo><bar><val x="y">42</val></bar></foo>' AS text) = xmlserialize(CONTENT '<foo><bar><val x="y">42</val></bar></foo>' AS text NO INDENT);
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT xml '<foo>bar</foo>' IS DOCUMENT;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT xml '<foo>bar</foo><bar>foo</bar>' IS DOCUMENT;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT xml '<abc/>' IS NOT DOCUMENT;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT xml 'abc' IS NOT DOCUMENT;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -684,32 +684,32 @@ DETAIL:  line 1: StartTag: invalid element name
 <>
  ^
 SELECT xmlagg(data) FROM xmltest;
-                xmlagg                
+                xmlagg
 --------------------------------------
  <value>one</value><value>two</value>
 (1 row)
 
 SELECT xmlagg(data) FROM xmltest WHERE id > 10;
- xmlagg 
+ xmlagg
 --------
- 
+
 (1 row)
 
 SELECT xmlelement(name employees, xmlagg(xmlelement(name name, name))) FROM emp;
-                                                           xmlelement                                                           
+                                                           xmlelement
 --------------------------------------------------------------------------------------------------------------------------------
  <employees><name>sharon</name><name>sam</name><name>bill</name><name>jeff</name><name>cim</name><name>linda</name></employees>
 (1 row)
 
 -- Check mapping SQL identifier to XML name
 SELECT xmlpi(name ":::_xml_abc135.%-&_");
-                      xmlpi                      
+                      xmlpi
 -------------------------------------------------
  <?_x003A_::_x005F_xml_abc135._x0025_-_x0026__?>
 (1 row)
 
 SELECT xmlpi(name "123");
-     xmlpi     
+     xmlpi
 ---------------
  <?_x0031_23?>
 (1 row)
@@ -717,7 +717,7 @@ SELECT xmlpi(name "123");
 PREPARE foo (xml) AS SELECT xmlconcat('<foo/>', $1);
 SET XML OPTION DOCUMENT;
 EXECUTE foo ('<bar/>');
-  xmlconcat   
+  xmlconcat
 --------------
  <foo/><bar/>
 (1 row)
@@ -738,31 +738,31 @@ DETAIL:  line 1: Extra content at the end of the document
                 ^
 SET XML OPTION CONTENT;
 EXECUTE foo ('<bar/>');
-  xmlconcat   
+  xmlconcat
 --------------
  <foo/><bar/>
 (1 row)
 
 EXECUTE foo ('good');
- xmlconcat  
+ xmlconcat
 ------------
  <foo/>good
 (1 row)
 
 SELECT xml '<!-- in SQL:2006+ a doc is content too--> <?y z?> <!DOCTYPE a><a/>';
-                                xml                                 
+                                xml
 --------------------------------------------------------------------
  <!-- in SQL:2006+ a doc is content too--> <?y z?> <!DOCTYPE a><a/>
 (1 row)
 
 SELECT xml '<?xml version="1.0"?> <!-- hi--> <!DOCTYPE a><a/>';
-             xml              
+             xml
 ------------------------------
   <!-- hi--> <!DOCTYPE a><a/>
 (1 row)
 
 SELECT xml '<!DOCTYPE a><a/>';
-       xml        
+       xml
 ------------------
  <!DOCTYPE a><a/>
 (1 row)
@@ -800,7 +800,7 @@ CREATE VIEW xmlview8 AS SELECT xmlserialize(content 'good' as char(10));
 CREATE VIEW xmlview9 AS SELECT xmlserialize(content 'good' as text);
 SELECT table_name, view_definition FROM information_schema.views
   WHERE table_name LIKE 'xmlview%' ORDER BY 1;
- table_name |                                              view_definition                                               
+ table_name |                                              view_definition
 ------------+------------------------------------------------------------------------------------------------------------
  xmlview1   |  SELECT xmlcomment('test'::text) AS xmlcomment;
  xmlview2   |  SELECT XMLCONCAT('hello'::xml, 'you'::xml) AS "xmlconcat";
@@ -816,14 +816,14 @@ SELECT table_name, view_definition FROM information_schema.views
 
 -- Text XPath expressions evaluation
 SELECT xpath('/value', data) FROM xmltest;
-        xpath         
+        xpath
 ----------------------
  {<value>one</value>}
  {<value>two</value>}
 (2 rows)
 
 SELECT xpath(NULL, NULL) IS NULL FROM xmltest;
- ?column? 
+ ?column?
 ----------
  t
  t
@@ -833,85 +833,85 @@ SELECT xpath('', '<!-- error -->');
 ERROR:  empty XPath expression
 CONTEXT:  SQL function "xpath" statement 1
 SELECT xpath('//text()', '<local:data xmlns:local="http://127.0.0.1"><local:piece id="1">number one</local:piece><local:piece id="2" /></local:data>');
-     xpath      
+     xpath
 ----------------
  {"number one"}
 (1 row)
 
 SELECT xpath('//loc:piece/@id', '<local:data xmlns:local="http://127.0.0.1"><local:piece id="1">number one</local:piece><local:piece id="2" /></local:data>', ARRAY[ARRAY['loc', 'http://127.0.0.1']]);
- xpath 
+ xpath
 -------
  {1,2}
 (1 row)
 
 SELECT xpath('//loc:piece', '<local:data xmlns:local="http://127.0.0.1"><local:piece id="1">number one</local:piece><local:piece id="2" /></local:data>', ARRAY[ARRAY['loc', 'http://127.0.0.1']]);
-                                                                     xpath                                                                      
+                                                                     xpath
 ------------------------------------------------------------------------------------------------------------------------------------------------
  {"<local:piece xmlns:local=\"http://127.0.0.1\" id=\"1\">number one</local:piece>","<local:piece xmlns:local=\"http://127.0.0.1\" id=\"2\"/>"}
 (1 row)
 
 SELECT xpath('//loc:piece', '<local:data xmlns:local="http://127.0.0.1" xmlns="http://127.0.0.2"><local:piece id="1"><internal>number one</internal><internal2/></local:piece><local:piece id="2" /></local:data>', ARRAY[ARRAY['loc', 'http://127.0.0.1']]);
-                                                                                                   xpath                                                                                                    
+                                                                                                   xpath
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {"<local:piece xmlns:local=\"http://127.0.0.1\" xmlns=\"http://127.0.0.2\" id=\"1\"><internal>number one</internal><internal2/></local:piece>","<local:piece xmlns:local=\"http://127.0.0.1\" id=\"2\"/>"}
 (1 row)
 
 SELECT xpath('//b', '<a>one <b>two</b> three <b>etc</b></a>');
-          xpath          
+          xpath
 -------------------------
  {<b>two</b>,<b>etc</b>}
 (1 row)
 
 SELECT xpath('//text()', '<root>&lt;</root>');
- xpath  
+ xpath
 --------
  {&lt;}
 (1 row)
 
 SELECT xpath('//@value', '<root value="&lt;"/>');
- xpath  
+ xpath
 --------
  {&lt;}
 (1 row)
 
 SELECT xpath('''<<invalid>>''', '<root/>');
-           xpath           
+           xpath
 ---------------------------
  {&lt;&lt;invalid&gt;&gt;}
 (1 row)
 
 SELECT xpath('count(//*)', '<root><sub/><sub/></root>');
- xpath 
+ xpath
 -------
  {3}
 (1 row)
 
 SELECT xpath('count(//*)=0', '<root><sub/><sub/></root>');
-  xpath  
+  xpath
 ---------
  {false}
 (1 row)
 
 SELECT xpath('count(//*)=3', '<root><sub/><sub/></root>');
- xpath  
+ xpath
 --------
  {true}
 (1 row)
 
 SELECT xpath('name(/*)', '<root><sub/><sub/></root>');
- xpath  
+ xpath
 --------
  {root}
 (1 row)
 
 SELECT xpath('/nosuchtag', '<root/>');
- xpath 
+ xpath
 -------
  {}
 (1 row)
 
 SELECT xpath('root', '<root/>');
-   xpath   
+   xpath
 -----------
  {<root/>}
 (1 row)
@@ -953,37 +953,37 @@ END
 $$;
 -- Test xmlexists and xpath_exists
 SELECT xmlexists('//town[text() = ''Toronto'']' PASSING BY REF '<towns><town>Bidford-on-Avon</town><town>Cwmbran</town><town>Bristol</town></towns>');
- xmlexists 
+ xmlexists
 -----------
  f
 (1 row)
 
 SELECT xmlexists('//town[text() = ''Cwmbran'']' PASSING BY REF '<towns><town>Bidford-on-Avon</town><town>Cwmbran</town><town>Bristol</town></towns>');
- xmlexists 
+ xmlexists
 -----------
  t
 (1 row)
 
 SELECT xmlexists('count(/nosuchtag)' PASSING BY REF '<root/>');
- xmlexists 
+ xmlexists
 -----------
  t
 (1 row)
 
 SELECT xpath_exists('//town[text() = ''Toronto'']','<towns><town>Bidford-on-Avon</town><town>Cwmbran</town><town>Bristol</town></towns>'::xml);
- xpath_exists 
+ xpath_exists
 --------------
  f
 (1 row)
 
 SELECT xpath_exists('//town[text() = ''Cwmbran'']','<towns><town>Bidford-on-Avon</town><town>Cwmbran</town><town>Bristol</town></towns>'::xml);
- xpath_exists 
+ xpath_exists
 --------------
  t
 (1 row)
 
 SELECT xpath_exists('count(/nosuchtag)', '<root/>'::xml);
- xpath_exists 
+ xpath_exists
 --------------
  t
 (1 row)
@@ -993,61 +993,61 @@ INSERT INTO xmltest VALUES (5, '<menu><beers><name>Molson</name><cost>free</cost
 INSERT INTO xmltest VALUES (6, '<myns:menu xmlns:myns="http://myns.com"><myns:beers><myns:name>Budvar</myns:name><myns:cost>free</myns:cost><myns:name>Carling</myns:name><myns:cost>lots</myns:cost></myns:beers></myns:menu>'::xml);
 INSERT INTO xmltest VALUES (7, '<myns:menu xmlns:myns="http://myns.com"><myns:beers><myns:name>Molson</myns:name><myns:cost>free</myns:cost><myns:name>Carling</myns:name><myns:cost>lots</myns:cost></myns:beers></myns:menu>'::xml);
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beer' PASSING data);
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beer' PASSING BY REF data BY REF);
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beers' PASSING BY REF data);
- count 
+ count
 -------
      2
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beers/name[text() = ''Molson'']' PASSING BY REF data);
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/menu/beer',data);
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/menu/beers',data);
- count 
+ count
 -------
      2
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/menu/beers/name[text() = ''Molson'']',data);
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beer',data,ARRAY[ARRAY['myns','http://myns.com']]);
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beers',data,ARRAY[ARRAY['myns','http://myns.com']]);
- count 
+ count
 -------
      2
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beers/myns:name[text() = ''Molson'']',data,ARRAY[ARRAY['myns','http://myns.com']]);
- count 
+ count
 -------
      1
 (1 row)
@@ -1055,124 +1055,124 @@ SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beers/myns:nam
 CREATE TABLE query ( expr TEXT );
 INSERT INTO query VALUES ('/menu/beers/cost[text() = ''lots'']');
 SELECT COUNT(id) FROM xmltest, query WHERE xmlexists(expr PASSING BY REF data);
- count 
+ count
 -------
      2
 (1 row)
 
 -- Test xml_is_well_formed and variants
 SELECT xml_is_well_formed_document('<foo>bar</foo>');
- xml_is_well_formed_document 
+ xml_is_well_formed_document
 -----------------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed_document('abc');
- xml_is_well_formed_document 
+ xml_is_well_formed_document
 -----------------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed_content('<foo>bar</foo>');
- xml_is_well_formed_content 
+ xml_is_well_formed_content
 ----------------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed_content('abc');
- xml_is_well_formed_content 
+ xml_is_well_formed_content
 ----------------------------
  t
 (1 row)
 
 SET xmloption TO DOCUMENT;
 SELECT xml_is_well_formed('abc');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed('<>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed('<abc/>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed('<foo>bar</foo>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed('<foo>bar</foo');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed('<foo><bar>baz</foo>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed('<local:data xmlns:local="http://127.0.0.1"><local:piece id="1">number one</local:piece><local:piece id="2" /></local:data>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed('<pg:foo xmlns:pg="http://postgresql.org/stuff">bar</my:foo>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed('<pg:foo xmlns:pg="http://postgresql.org/stuff">bar</pg:foo>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed('<invalidentity>&</abc>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed('<undefinedentity>&idontexist;</abc>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SELECT xml_is_well_formed('<invalidns xmlns=''&lt;''/>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed('<relativens xmlns=''relative''/>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  t
 (1 row)
 
 SELECT xml_is_well_formed('<twoerrors>&idontexist;</unbalanced>');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  f
 (1 row)
 
 SET xmloption TO CONTENT;
 SELECT xml_is_well_formed('abc');
- xml_is_well_formed 
+ xml_is_well_formed
 --------------------
  t
 (1 row)
@@ -1204,27 +1204,27 @@ SELECT xpath('/*', '<relativens xmlns=''relative''/>');
 WARNING:  line 1: xmlns: URI relative is not absolute
 <relativens xmlns='relative'/>
                             ^
-                xpath                 
+                xpath
 --------------------------------------
  {"<relativens xmlns=\"relative\"/>"}
 (1 row)
 
 -- External entity references should not leak filesystem information.
 SELECT XMLPARSE(DOCUMENT '<!DOCTYPE foo [<!ENTITY c SYSTEM "/etc/passwd">]><foo>&c;</foo>');
-                            xmlparse                             
+                            xmlparse
 -----------------------------------------------------------------
  <!DOCTYPE foo [<!ENTITY c SYSTEM "/etc/passwd">]><foo>&c;</foo>
 (1 row)
 
 SELECT XMLPARSE(DOCUMENT '<!DOCTYPE foo [<!ENTITY c SYSTEM "/etc/no.such.file">]><foo>&c;</foo>');
-                               xmlparse                                
+                               xmlparse
 -----------------------------------------------------------------------
  <!DOCTYPE foo [<!ENTITY c SYSTEM "/etc/no.such.file">]><foo>&c;</foo>
 (1 row)
 
 -- This might or might not load the requested DTD, but it mustn't throw error.
 SELECT XMLPARSE(DOCUMENT '<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd"><chapter>&nbsp;</chapter>');
-                                                                       xmlparse                                                                       
+                                                                       xmlparse
 ------------------------------------------------------------------------------------------------------------------------------------------------------
  <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd"><chapter>&nbsp;</chapter>
 (1 row)
@@ -1276,7 +1276,7 @@ SELECT  xmltable.*
                                   size float PATH 'SIZE',
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
- id | _id | country_name | country_id | region_id | size | unit | premier_name  
+ id | _id | country_name | country_id | region_id | size | unit | premier_name
 ----+-----+--------------+------------+-----------+------+------+---------------
   1 |   1 | Australia    | AU         |         3 |      |      | not specified
   2 |   2 | China        | CN         |         3 |      |      | not specified
@@ -1299,7 +1299,7 @@ CREATE VIEW xmltableview1 AS SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
 SELECT * FROM xmltableview1;
- id | _id | country_name | country_id | region_id | size | unit | premier_name  
+ id | _id | country_name | country_id | region_id | size | unit | premier_name
 ----+-----+--------------+------------+-----------+------+------+---------------
   1 |   1 | Australia    | AU         |         3 |      |      | not specified
   2 |   2 | China        | CN         |         3 |      |      | not specified
@@ -1323,7 +1323,7 @@ CREATE OR REPLACE VIEW public.xmltableview1 AS
            FROM xmldata) x,
     LATERAL XMLTABLE(('/ROWS/ROW'::text) PASSING (x.data) COLUMNS id integer PATH ('@id'::text), _id FOR ORDINALITY, country_name text PATH ('COUNTRY_NAME/text()'::text) NOT NULL, country_id text PATH ('COUNTRY_ID'::text), region_id integer PATH ('REGION_ID'::text), size double precision PATH ('SIZE'::text), unit text PATH ('SIZE/@unit'::text), premier_name text DEFAULT ('not specified'::text) PATH ('PREMIER_NAME'::text))
 EXPLAIN (COSTS OFF) SELECT * FROM xmltableview1;
-               QUERY PLAN                
+               QUERY PLAN
 -----------------------------------------
  Nested Loop
    ->  Seq Scan on xmldata
@@ -1331,7 +1331,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM xmltableview1;
 (3 rows)
 
 EXPLAIN (COSTS OFF, VERBOSE) SELECT * FROM xmltableview1;
-                                                                                                                                                                                                                            QUERY PLAN                                                                                                                                                                                                                            
+                                                                                                                                                                                                                            QUERY PLAN
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable".id, "xmltable"._id, "xmltable".country_name, "xmltable".country_id, "xmltable".region_id, "xmltable".size, "xmltable".unit, "xmltable".premier_name
@@ -1350,7 +1350,7 @@ SELECT * FROM XMLTABLE(XMLNAMESPACES('http://x.y' AS zz),
                       '/zz:rows/zz:row'
                       PASSING '<rows xmlns="http://x.y"><row><a>10</a></row></rows>'
                       COLUMNS a int PATH 'zz:a');
- a  
+ a
 ----
  10
 (1 row)
@@ -1360,7 +1360,7 @@ CREATE VIEW xmltableview2 AS SELECT * FROM XMLTABLE(XMLNAMESPACES('http://x.y' A
                       PASSING '<rows xmlns="http://x.y"><row><a>10</a></row></rows>'
                       COLUMNS a int PATH 'zz:a');
 SELECT * FROM xmltableview2;
- a  
+ a
 ----
  10
 (1 row)
@@ -1373,7 +1373,7 @@ ERROR:  DEFAULT namespace is not supported
 SELECT * FROM XMLTABLE('.'
                        PASSING '<foo/>'
                        COLUMNS a text PATH 'foo/namespace::node()');
-                  a                   
+                  a
 --------------------------------------
  http://www.w3.org/XML/1998/namespace
 (1 row)
@@ -1393,7 +1393,7 @@ SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
 EXECUTE pp;
- id | _id | country_name | country_id | region_id | size | unit | premier_name  
+ id | _id | country_name | country_id | region_id | size | unit | premier_name
 ----+-----+--------------+------------+-----------+------+------+---------------
   1 |   1 | Australia    | AU         |         3 |      |      | not specified
   2 |   2 | China        | CN         |         3 |      |      | not specified
@@ -1404,42 +1404,42 @@ EXECUTE pp;
 (6 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS "COUNTRY_NAME" text, "REGION_ID" int);
- COUNTRY_NAME | REGION_ID 
+ COUNTRY_NAME | REGION_ID
 --------------+-----------
  India        |         3
  Japan        |         3
 (2 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id FOR ORDINALITY, "COUNTRY_NAME" text, "REGION_ID" int);
- id | COUNTRY_NAME | REGION_ID 
+ id | COUNTRY_NAME | REGION_ID
 ----+--------------+-----------
   1 | India        |         3
   2 | Japan        |         3
 (2 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id', "COUNTRY_NAME" text, "REGION_ID" int);
- id | COUNTRY_NAME | REGION_ID 
+ id | COUNTRY_NAME | REGION_ID
 ----+--------------+-----------
   4 | India        |         3
   5 | Japan        |         3
 (2 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id');
- id 
+ id
 ----
   4
   5
 (2 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id FOR ORDINALITY);
- id 
+ id
 ----
   1
   2
 (2 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id', "COUNTRY_NAME" text, "REGION_ID" int, rawdata xml PATH '.');
- id | COUNTRY_NAME | REGION_ID |                             rawdata                              
+ id | COUNTRY_NAME | REGION_ID |                             rawdata
 ----+--------------+-----------+------------------------------------------------------------------
   4 | India        |         3 | <ROW id="4">                                                    +
     |              |           |   <COUNTRY_ID>IN</COUNTRY_ID>                                   +
@@ -1454,14 +1454,14 @@ SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan"
 (2 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id', "COUNTRY_NAME" text, "REGION_ID" int, rawdata xml PATH './*');
- id | COUNTRY_NAME | REGION_ID |                                                           rawdata                                                           
+ id | COUNTRY_NAME | REGION_ID |                                                           rawdata
 ----+--------------+-----------+-----------------------------------------------------------------------------------------------------------------------------
   4 | India        |         3 | <COUNTRY_ID>IN</COUNTRY_ID><COUNTRY_NAME>India</COUNTRY_NAME><REGION_ID>3</REGION_ID>
   5 | Japan        |         3 | <COUNTRY_ID>JP</COUNTRY_ID><COUNTRY_NAME>Japan</COUNTRY_NAME><REGION_ID>3</REGION_ID><PREMIER_NAME>Sinzo Abe</PREMIER_NAME>
 (2 rows)
 
 SELECT * FROM xmltable('/root' passing '<root><element>a1a<!-- aaaa -->a2a<?aaaaa?> <!--z-->  bbbb<x>xxx</x>cccc</element></root>' COLUMNS element text);
-       element        
+       element
 ----------------------
  a1aa2a   bbbbxxxcccc
 (1 row)
@@ -1470,7 +1470,7 @@ SELECT * FROM xmltable('/root' passing '<root><element>a1a<!-- aaaa -->a2a<?aaaa
 ERROR:  more than one value returned by column XPath expression
 -- CDATA test
 select * from xmltable('d/r' passing '<d><r><c><![CDATA[<hello> &"<>!<a>foo</a>]]></c></r><r><c>2</c></r></d>' columns c text);
-            c            
+            c
 -------------------------
  <hello> &"<>!<a>foo</a>
  2
@@ -1478,7 +1478,7 @@ select * from xmltable('d/r' passing '<d><r><c><![CDATA[<hello> &"<>!<a>foo</a>]
 
 -- XML builtin entities
 SELECT * FROM xmltable('/x/a' PASSING '<x><a><ent>&apos;</ent></a><a><ent>&quot;</ent></a><a><ent>&amp;</ent></a><a><ent>&lt;</ent></a><a><ent>&gt;</ent></a></x>' COLUMNS ent text);
- ent 
+ ent
 -----
  '
  "
@@ -1488,7 +1488,7 @@ SELECT * FROM xmltable('/x/a' PASSING '<x><a><ent>&apos;</ent></a><a><ent>&quot;
 (5 rows)
 
 SELECT * FROM xmltable('/x/a' PASSING '<x><a><ent>&apos;</ent></a><a><ent>&quot;</ent></a><a><ent>&amp;</ent></a><a><ent>&lt;</ent></a><a><ent>&gt;</ent></a></x>' COLUMNS ent xml);
-       ent        
+       ent
 ------------------
  <ent>'</ent>
  <ent>"</ent>
@@ -1510,7 +1510,7 @@ SELECT  xmltable.*
                                   size float PATH 'SIZE',
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
-                                                                                                                                                                                                                        QUERY PLAN                                                                                                                                                                                                                         
+                                                                                                                                                                                                                        QUERY PLAN
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable".id, "xmltable"._id, "xmltable".country_name, "xmltable".country_id, "xmltable".region_id, "xmltable".size, "xmltable".unit, "xmltable".premier_name
@@ -1523,14 +1523,14 @@ SELECT  xmltable.*
 
 -- test qual
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS "COUNTRY_NAME" text, "REGION_ID" int) WHERE "COUNTRY_NAME" = 'Japan';
- COUNTRY_NAME | REGION_ID 
+ COUNTRY_NAME | REGION_ID
 --------------+-----------
  Japan        |         3
 (1 row)
 
 EXPLAIN (VERBOSE, COSTS OFF)
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS "COUNTRY_NAME" text, "REGION_ID" int) WHERE "COUNTRY_NAME" = 'Japan';
-                                                                                    QUERY PLAN                                                                                    
+                                                                                    QUERY PLAN
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable"."COUNTRY_NAME", "xmltable"."REGION_ID"
@@ -1584,7 +1584,7 @@ SELECT  xmltable.*
                                   size float PATH 'SIZE',
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
- id | _id |  country_name  | country_id | region_id | size | unit | premier_name  
+ id | _id |  country_name  | country_id | region_id | size | unit | premier_name
 ----+-----+----------------+------------+-----------+------+------+---------------
   1 |   1 | Australia      | AU         |         3 |      |      | not specified
   2 |   2 | China          | CN         |         3 |      |      | not specified
@@ -1612,7 +1612,7 @@ SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified')
   WHERE region_id = 2;
- id | _id |  country_name  | country_id | region_id | size | unit | premier_name  
+ id | _id |  country_name  | country_id | region_id | size | unit | premier_name
 ----+-----+----------------+------------+-----------+------+------+---------------
  10 |   1 | Czech Republic | CZ         |         2 |      |      | Milos Zeman
  11 |   2 | Germany        | DE         |         2 |      |      | not specified
@@ -1633,7 +1633,7 @@ SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified')
   WHERE region_id = 2;
-                                                                                                                                                                                                                        QUERY PLAN                                                                                                                                                                                                                         
+                                                                                                                                                                                                                        QUERY PLAN
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable".id, "xmltable"._id, "xmltable".country_name, "xmltable".country_id, "xmltable".region_id, "xmltable".size, "xmltable".unit, "xmltable".premier_name
@@ -1682,7 +1682,7 @@ WITH
                                          proargtypes text))
    SELECT * FROM z
    EXCEPT SELECT * FROM x;
- proname | proowner | procost | pronargs | proargnames | proargtypes 
+ proname | proowner | procost | pronargs | proargnames | proargtypes
 ---------+----------+---------+----------+-------------+-------------
 (0 rows)
 
@@ -1708,7 +1708,7 @@ WITH
                                          proargtypes text))
    SELECT * FROM z
    EXCEPT SELECT * FROM x;
- proname | proowner | procost | pronargs | proargnames | proargtypes 
+ proname | proowner | procost | pronargs | proargnames | proargtypes
 ---------+----------+---------+----------+-------------+-------------
 (0 rows)
 
@@ -1718,7 +1718,7 @@ INSERT INTO xmltest2 VALUES('<d><r><bc>2</bc></r></d>', 'B');
 INSERT INTO xmltest2 VALUES('<d><r><cc>3</cc></r></d>', 'C');
 INSERT INTO xmltest2 VALUES('<d><r><dc>2</dc></r></d>', 'D');
 SELECT xmltable.* FROM xmltest2, LATERAL xmltable('/d/r' PASSING x COLUMNS a int PATH '' || lower(_path) || 'c');
- a 
+ a
 ---
  1
  2
@@ -1727,7 +1727,7 @@ SELECT xmltable.* FROM xmltest2, LATERAL xmltable('/d/r' PASSING x COLUMNS a int
 (4 rows)
 
 SELECT xmltable.* FROM xmltest2, LATERAL xmltable(('/d/r/' || lower(_path) || 'c') PASSING x COLUMNS a int PATH '.');
- a 
+ a
 ---
  1
  2
@@ -1736,7 +1736,7 @@ SELECT xmltable.* FROM xmltest2, LATERAL xmltable(('/d/r/' || lower(_path) || 'c
 (4 rows)
 
 SELECT xmltable.* FROM xmltest2, LATERAL xmltable(('/d/r/' || lower(_path) || 'c') PASSING x COLUMNS a int PATH 'x' DEFAULT ascii(_path) - 54);
- a  
+ a
 ----
  11
  12
@@ -1746,7 +1746,7 @@ SELECT xmltable.* FROM xmltest2, LATERAL xmltable(('/d/r/' || lower(_path) || 'c
 
 -- XPath result can be boolean or number too
 SELECT * FROM XMLTABLE('*' PASSING '<a>a</a>' COLUMNS a xml PATH '.', b text PATH '.', c text PATH '"hi"', d boolean PATH '. = "a"', e integer PATH 'string-length(.)');
-    a     | b | c  | d | e 
+    a     | b | c  | d | e
 ----------+---+----+---+---
  <a>a</a> | a | hi | t | 1
 (1 row)
@@ -1756,12 +1756,11 @@ SELECT * FROM XMLTABLE('*' PASSING '<e>pre<!--c1--><?pi arg?><![CDATA[&ent1]]><n
 -[ RECORD 1 ]-----------------------------------------------------------
 x | <n2>&amp;deep</n2>
 y | <e>pre<!--c1--><?pi arg?><![CDATA[&ent1]]><n2>&amp;deep</n2>post</e>+
-  | 
+  |
 
 \x
 SELECT * FROM XMLTABLE('.' PASSING XMLELEMENT(NAME a) columns a varchar(20) PATH '"<foo/>"', b xml PATH '"<foo/>"');
-   a    |      b       
+   a    |      b
 --------+--------------
  <foo/> | &lt;foo/&gt;
 (1 row)
-

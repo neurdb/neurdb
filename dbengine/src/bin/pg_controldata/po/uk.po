@@ -477,4 +477,3 @@ msgstr "Версія контрольних сум сторінок даних: 
 #, c-format
 msgid "Mock authentication nonce:            %s\n"
 msgstr "Імітувати нонс для аутентифікації: %s\n"
-

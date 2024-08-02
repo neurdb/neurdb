@@ -3,7 +3,7 @@ SET synchronous_commit = on;
 DROP TABLE IF EXISTS xpto;
 NOTICE:  table "xpto" does not exist, skipping
 SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding');
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -53,7 +53,7 @@ CREATE TABLE toasted_copy (
 ALTER TABLE toasted_copy ALTER COLUMN data SET STORAGE EXTERNAL;
 \copy toasted_copy FROM STDIN
 SELECT substr(data, 1, 200) FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                                                  substr                                                                                                  
+                                                                                                  substr
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.xpto: INSERT: id[integer]:1 toasted_col1[text]:'1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374
@@ -311,13 +311,13 @@ ALTER TABLE toasted_several ALTER COLUMN toasted_col2 SET STORAGE EXTERNAL;
 UPDATE pg_attribute SET attstorage = 'x' WHERE attrelid = 'toasted_several_pkey'::regclass AND attname = 'toasted_key';
 INSERT INTO toasted_several(toasted_key) VALUES(repeat('9876543210', 10000));
 SELECT pg_column_size(toasted_key) > 2^16 FROM toasted_several;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT regexp_replace(data, '^(.{100}).*(.{100})$', '\1..\2') FROM pg_logical_slot_peek_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                                               regexp_replace                                                                                               
+                                                                                               regexp_replace
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.toasted_several: INSERT: id[integer]:1 toasted_key[text]:'98765432109876543210987654321..098765432109876543210987654321098765432109876543210' toasted_col1[text]:null toasted_col2[text]:null
@@ -328,7 +328,7 @@ SELECT regexp_replace(data, '^(.{100}).*(.{100})$', '\1..\2') FROM pg_logical_sl
 UPDATE toasted_several SET toasted_col1 = toasted_key;
 UPDATE toasted_several SET toasted_col2 = toasted_col1;
 SELECT regexp_replace(data, '^(.{100}).*(.{100})$', '\1..\2') FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                                               regexp_replace                                                                                               
+                                                                                               regexp_replace
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.toasted_several: INSERT: id[integer]:1 toasted_key[text]:'98765432109876543210987654321..098765432109876543210987654321098765432109876543210' toasted_col1[text]:null toasted_col2[text]:null
@@ -352,7 +352,7 @@ COMMIT;
 DROP TABLE toasted_several;
 SELECT regexp_replace(data, '^(.{100}).*(.{100})$', '\1..\2') FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1')
 WHERE data NOT LIKE '%INSERT: %';
-                                                                                               regexp_replace                                                                                               
+                                                                                               regexp_replace
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.toasted_several: UPDATE: old-key: id[integer]:1 toasted_key[text]:'98765432109876543210..7654321098765432109876543210987654321098765432109876543210' toasted_col2[text]:unchanged-toast-datum
@@ -374,7 +374,7 @@ ALTER TABLE tbl1 ADD COLUMN id serial primary key;
 INSERT INTO tbl2 VALUES(1);
 commit;
 SELECT substr(data, 1, 200) FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                                                                                  substr                                                                                                  
+                                                                                                  substr
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  BEGIN
  table public.tbl1: INSERT: a[integer]:1 b[text]:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -383,8 +383,7 @@ SELECT substr(data, 1, 200) FROM pg_logical_slot_get_changes('regression_slot', 
 (4 rows)
 
 SELECT pg_drop_replication_slot('regression_slot');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
-(1 row)
 
+(1 row)

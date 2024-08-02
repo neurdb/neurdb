@@ -424,12 +424,12 @@ static int r_mark_regions(struct SN_env * z) {
             goto lab1;
         lab2:
             z->c = c2;
-            {   
+            {
                 int ret = out_grouping_U(z, g_v, 97, 121, 1);
                 if (ret < 0) goto lab0;
                 z->c += ret;
             }
-            {   
+            {
                 int ret = in_grouping_U(z, g_v, 97, 121, 1);
                 if (ret < 0) goto lab0;
                 z->c += ret;
@@ -437,12 +437,12 @@ static int r_mark_regions(struct SN_env * z) {
         }
     lab1:
         z->I[1] = z->c;
-        {   
+        {
             int ret = out_grouping_U(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping_U(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
@@ -527,7 +527,7 @@ static int r_Step_1a(struct SN_env * z) {
                 if (ret < 0) return 0;
                 z->c = ret;
             }
-            {   
+            {
                 int ret = out_grouping_b_U(z, g_v, 97, 121, 1);
                 if (ret < 0) return 0;
                 z->c -= ret;
@@ -558,7 +558,7 @@ static int r_Step_1b(struct SN_env * z) {
             break;
         case 2:
             {   int m_test1 = z->l - z->c;
-                {   
+                {
                     int ret = out_grouping_b_U(z, g_v, 97, 121, 1);
                     if (ret < 0) return 0;
                     z->c -= ret;
@@ -631,7 +631,7 @@ static int r_Step_1c(struct SN_env * z) {
 lab0:
     z->bra = z->c;
     if (out_grouping_b_U(z, g_v, 97, 121, 0)) return 0;
-    
+
     if (z->c > z->lb) goto lab2;
     return 0;
 lab2:
@@ -994,11 +994,11 @@ extern int english_UTF_8_stem(struct SN_env * z) {
         goto lab0;
     lab2:
         z->c = c1;
-        
+
         {   int ret = r_prelude(z);
             if (ret < 0) return ret;
         }
-        
+
         {   int ret = r_mark_regions(z);
             if (ret < 0) return ret;
         }
@@ -1071,4 +1071,3 @@ lab0:
 extern struct SN_env * english_UTF_8_create_env(void) { return SN_create_env(0, 3); }
 
 extern void english_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

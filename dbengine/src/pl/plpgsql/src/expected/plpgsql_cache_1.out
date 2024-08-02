@@ -13,7 +13,7 @@ create table c_mutable(f1 int, f2 text);
 create function c_sillyaddone(int) returns int language plpgsql as
 $$ declare r c_mutable; begin r.f1 := $1; return r.f1 + 1; end $$;
 select c_sillyaddone(42);
- c_sillyaddone 
+ c_sillyaddone
 ---------------
             43
 (1 row)
@@ -23,7 +23,7 @@ alter table c_mutable add column f1 float8;
 -- currently, this fails due to cached plan for "r.f1 + 1" expression
 -- (but if debug_discard_caches is on, it will succeed)
 select c_sillyaddone(42);
- c_sillyaddone 
+ c_sillyaddone
 ---------------
             43
 (1 row)
@@ -31,7 +31,7 @@ select c_sillyaddone(42);
 -- but it's OK if we force plan rebuilding
 discard plans;
 select c_sillyaddone(42);
- c_sillyaddone 
+ c_sillyaddone
 ---------------
             43
 (1 row)
@@ -49,7 +49,7 @@ $$
     end;
 $$;
 select show_result_type('select 1 as a');
-   show_result_type   
+   show_result_type
 ----------------------
  type integer value 1
 (1 row)
@@ -57,7 +57,7 @@ select show_result_type('select 1 as a');
 -- currently this fails due to cached plan for pg_typeof expression
 -- (but if debug_discard_caches is on, it will succeed)
 select show_result_type('select 2.0 as a');
-    show_result_type    
+    show_result_type
 ------------------------
  type numeric value 2.0
 (1 row)
@@ -65,8 +65,7 @@ select show_result_type('select 2.0 as a');
 -- but it's OK if we force plan rebuilding
 discard plans;
 select show_result_type('select 2.0 as a');
-    show_result_type    
+    show_result_type
 ------------------------
  type numeric value 2.0
 (1 row)
-

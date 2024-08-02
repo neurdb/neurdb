@@ -71,7 +71,7 @@ echo "Python Server started!"
 #cp sql/pg_model--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
 #cp build/libpg_model.so $NEURDBPATH/psql/lib/postgresql
 #echo "Install NR Model Extension Done"
- 
+
 # Compile nr_preprocessing extension
 cd $NEURDBPATH/contrib/nr_preprocessing/lib
 git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git # socket.io-client-cpp
@@ -89,4 +89,3 @@ echo "Please use 'control + c' to exist the logging print"
 
 # Continue
 tail -f /dev/null
-

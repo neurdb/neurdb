@@ -94,24 +94,24 @@ struct sqlca_t *ECPGget_sqlca(void);
 int main(void)
 {
    /* exec sql begin declare section */
-    
-    
-    
-    
-    
-   
+
+
+
+
+
+
 #line 9 "dynalloc2.pgc"
  int * ip1 = 0 ;
- 
+
 #line 10 "dynalloc2.pgc"
  char ** cp2 = 0 ;
- 
+
 #line 11 "dynalloc2.pgc"
  int * ipointer1 = 0 ;
- 
+
 #line 12 "dynalloc2.pgc"
  int * ipointer2 = 0 ;
- 
+
 #line 13 "dynalloc2.pgc"
  int colnum ;
 /* exec sql end declare section */
@@ -124,7 +124,7 @@ int main(void)
    /* exec sql whenever sqlerror  do sqlprint ( ) ; */
 #line 19 "dynalloc2.pgc"
 
-   { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+   { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 20 "dynalloc2.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
@@ -187,8 +187,8 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 if (sqlca.sqlcode < 0) sqlprint ( );
 #line 32 "dynalloc2.pgc"
 
-   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select * from test", ECPGt_EOIT, 
-	ECPGt_descriptor, "mydesc", 1L, 1L, 1L, 
+   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select * from test", ECPGt_EOIT,
+	ECPGt_descriptor, "mydesc", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 33 "dynalloc2.pgc"
 

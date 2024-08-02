@@ -690,4 +690,3 @@ msgstr "для цього типу даних вказівники на вказ
 #, c-format
 msgid "multidimensional arrays for structures are not supported"
 msgstr "багатовимірні масиви структур не підтримуються"
-

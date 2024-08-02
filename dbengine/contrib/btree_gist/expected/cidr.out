@@ -3,31 +3,31 @@ CREATE TABLE cidrtmp AS
   SELECT cidr(a) AS a FROM inettmp ;
 SET enable_seqscan=on;
 SELECT count(*) FROM cidrtmp WHERE a <  '121.111.63.82';
- count 
+ count
 -------
    290
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a <= '121.111.63.82';
- count 
+ count
 -------
    291
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a  = '121.111.63.82';
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a >= '121.111.63.82';
- count 
+ count
 -------
    310
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a >  '121.111.63.82';
- count 
+ count
 -------
    309
 (1 row)
@@ -35,32 +35,31 @@ SELECT count(*) FROM cidrtmp WHERE a >  '121.111.63.82';
 CREATE INDEX cidridx ON cidrtmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM cidrtmp WHERE a <  '121.111.63.82'::cidr;
- count 
+ count
 -------
    290
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a <= '121.111.63.82'::cidr;
- count 
+ count
 -------
    291
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a  = '121.111.63.82'::cidr;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a >= '121.111.63.82'::cidr;
- count 
+ count
 -------
    310
 (1 row)
 
 SELECT count(*) FROM cidrtmp WHERE a >  '121.111.63.82'::cidr;
- count 
+ count
 -------
    309
 (1 row)
-

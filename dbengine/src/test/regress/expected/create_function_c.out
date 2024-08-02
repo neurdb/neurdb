@@ -26,7 +26,7 @@ CREATE FUNCTION test1 (int) RETURNS int LANGUAGE C
 ERROR:  42883
 \set VERBOSITY default
 SELECT regexp_replace(:'LAST_ERROR_MESSAGE', 'file ".*"', 'file "..."');
-                    regexp_replace                    
+                    regexp_replace
 ------------------------------------------------------
  could not find function "nosuchsymbol" in file "..."
 (1 row)

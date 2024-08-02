@@ -8,7 +8,9 @@ from util.database import connect_db
 import pandas as pd
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Put a csv file into a table in a database.")
+    parser = argparse.ArgumentParser(
+        description="Put a csv file into a table in a database."
+    )
     parser.add_argument("--csv_file", help="Path to the csv file")
     parser.add_argument("--table_name", help="Name of the table")
     args = parser.parse_args()
@@ -22,12 +24,19 @@ if __name__ == "__main__":
     # first column is the label, the rest are feature1, feature2, ...
     conn, cursor = connect_db()
     feature_columns = ", ".join([f"feature{i} INT" for i in range(1, num_columns)])
-    create_table_query = f"CREATE TABLE {args.table_name} (label INT, {feature_columns})"
+    create_table_query = (
+        f"CREATE TABLE {args.table_name} (label INT, {feature_columns})"
+    )
     cursor.execute(create_table_query)
     conn.commit()
 
     with open(args.csv_file, "r") as f:
-        cursor.copy_from(f, args.table_name, sep=",", columns=[f"label"] + [f"feature{i}" for i in range(1, num_columns)])
+        cursor.copy_from(
+            f,
+            args.table_name,
+            sep=",",
+            columns=[f"label"] + [f"feature{i}" for i in range(1, num_columns)],
+        )
     conn.commit()
     cursor.close()
     conn.close()

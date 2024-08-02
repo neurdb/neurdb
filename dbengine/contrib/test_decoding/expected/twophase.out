@@ -2,7 +2,7 @@
 -- decoded at PREPARE time rather than at COMMIT PREPARED time.
 SET synchronous_commit = on;
 SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding', false, true);
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -16,14 +16,14 @@ INSERT INTO test_prepared1 VALUES (1);
 INSERT INTO test_prepared1 VALUES (2);
 -- should show nothing because the xact has not been prepared yet.
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
- data 
+ data
 ------
 (0 rows)
 
 PREPARE TRANSACTION 'test_prepared#1';
 -- should show both the above inserts and the PREPARE TRANSACTION.
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                        data                        
+                        data
 ----------------------------------------------------
  BEGIN
  table public.test_prepared1: INSERT: id[integer]:1
@@ -33,7 +33,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 
 COMMIT PREPARED 'test_prepared#1';
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-               data                
+               data
 -----------------------------------
  COMMIT PREPARED 'test_prepared#1'
 (1 row)
@@ -43,7 +43,7 @@ BEGIN;
 INSERT INTO test_prepared1 VALUES (3);
 PREPARE TRANSACTION 'test_prepared#2';
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                        data                        
+                        data
 ----------------------------------------------------
  BEGIN
  table public.test_prepared1: INSERT: id[integer]:3
@@ -52,7 +52,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 
 ROLLBACK PREPARED 'test_prepared#2';
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                data                 
+                data
 -------------------------------------
  ROLLBACK PREPARED 'test_prepared#2'
 (1 row)
@@ -67,7 +67,7 @@ SELECT 'test_prepared_1' AS relation, locktype, mode
 FROM pg_locks
 WHERE locktype = 'relation'
   AND relation = 'test_prepared1'::regclass;
-    relation     | locktype |        mode         
+    relation     | locktype |        mode
 -----------------+----------+---------------------
  test_prepared_1 | relation | RowExclusiveLock
  test_prepared_1 | relation | AccessExclusiveLock
@@ -75,7 +75,7 @@ WHERE locktype = 'relation'
 
 -- The insert should show the newly altered column but not the DDL.
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                  data                                   
+                                  data
 -------------------------------------------------------------------------
  BEGIN
  table public.test_prepared1: INSERT: id[integer]:4 data[text]:'frakbar'
@@ -90,7 +90,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 --
 INSERT INTO test_prepared2 VALUES (5);
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                        data                        
+                        data
 ----------------------------------------------------
  BEGIN
  table public.test_prepared2: INSERT: id[integer]:5
@@ -99,7 +99,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 
 COMMIT PREPARED 'test_prepared#3';
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-               data                
+               data
 -----------------------------------
  COMMIT PREPARED 'test_prepared#3'
 (1 row)
@@ -108,7 +108,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 INSERT INTO test_prepared1 VALUES (6);
 INSERT INTO test_prepared2 VALUES (7);
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                data                                
+                                data
 --------------------------------------------------------------------
  BEGIN
  table public.test_prepared1: INSERT: id[integer]:6 data[text]:null
@@ -129,7 +129,7 @@ SELECT 'test_prepared1' AS relation, locktype, mode
 FROM pg_locks
 WHERE locktype = 'relation'
   AND relation = 'test_prepared1'::regclass;
-    relation    | locktype |        mode         
+    relation    | locktype |        mode
 ----------------+----------+---------------------
  test_prepared1 | relation | RowExclusiveLock
  test_prepared1 | relation | ShareLock
@@ -142,7 +142,7 @@ WHERE locktype = 'relation'
 SELECT COALESCE(NULLIF(:'env_timeout', ''), '180') || 's' AS timeout \gset
 SET statement_timeout = :'timeout';
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                   data                                    
+                                   data
 ---------------------------------------------------------------------------
  BEGIN
  table public.test_prepared1: INSERT: id[integer]:8 data[text]:'othercol'
@@ -154,7 +154,7 @@ RESET statement_timeout;
 COMMIT PREPARED 'test_prepared_lock';
 -- consume the commit
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                 data                 
+                 data
 --------------------------------------
  COMMIT PREPARED 'test_prepared_lock'
 (1 row)
@@ -170,7 +170,7 @@ ROLLBACK TO SAVEPOINT test_savepoint;
 PREPARE TRANSACTION 'test_prepared_savepoint';
 -- should show only 1, not 2
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                            data                            
+                            data
 ------------------------------------------------------------
  BEGIN
  table public.test_prepared_savepoint: INSERT: a[integer]:1
@@ -180,7 +180,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 COMMIT PREPARED 'test_prepared_savepoint';
 -- consume the commit
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                   data                    
+                   data
 -------------------------------------------
  COMMIT PREPARED 'test_prepared_savepoint'
 (1 row)
@@ -191,14 +191,14 @@ INSERT INTO test_prepared1 VALUES (20);
 PREPARE TRANSACTION 'test_prepared_nodecode';
 -- should show nothing
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
- data 
+ data
 ------
 (0 rows)
 
 COMMIT PREPARED 'test_prepared_nodecode';
 -- should be decoded now
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-                                data                                 
+                                data
 ---------------------------------------------------------------------
  BEGIN
  table public.test_prepared1: INSERT: id[integer]:20 data[text]:null
@@ -211,13 +211,12 @@ DROP TABLE test_prepared1;
 DROP TABLE test_prepared2;
 -- show results. There should be nothing to show
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
- data 
+ data
 ------
 (0 rows)
 
 SELECT pg_drop_replication_slot('regression_slot');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
-(1 row)
 
+(1 row)

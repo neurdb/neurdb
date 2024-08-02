@@ -12,7 +12,7 @@ INSERT INTO test_date VALUES
 ;
 CREATE INDEX idx_date ON test_date USING gin (i);
 SELECT * FROM test_date WHERE i<'2004-10-26'::date ORDER BY i;
-     i      
+     i
 ------------
  10-23-2004
  10-24-2004
@@ -20,7 +20,7 @@ SELECT * FROM test_date WHERE i<'2004-10-26'::date ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_date WHERE i<='2004-10-26'::date ORDER BY i;
-     i      
+     i
 ------------
  10-23-2004
  10-24-2004
@@ -29,13 +29,13 @@ SELECT * FROM test_date WHERE i<='2004-10-26'::date ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_date WHERE i='2004-10-26'::date ORDER BY i;
-     i      
+     i
 ------------
  10-26-2004
 (1 row)
 
 SELECT * FROM test_date WHERE i>='2004-10-26'::date ORDER BY i;
-     i      
+     i
 ------------
  10-26-2004
  10-27-2004
@@ -43,9 +43,8 @@ SELECT * FROM test_date WHERE i>='2004-10-26'::date ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_date WHERE i>'2004-10-26'::date ORDER BY i;
-     i      
+     i
 ------------
  10-27-2004
  10-28-2004
 (2 rows)
-

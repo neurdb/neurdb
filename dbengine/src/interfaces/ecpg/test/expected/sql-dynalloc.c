@@ -94,70 +94,70 @@ struct sqlca_t *ECPGget_sqlca(void);
 int main(void)
 {
    /* exec sql begin declare section */
-        
-     
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 /*   char **d8=0; */
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
 /*   int *i8=0; */
-    
-   
+
+
 #line 9 "dynalloc.pgc"
  int * d1 = 0 ;
- 
+
 #line 10 "dynalloc.pgc"
  double * d2 = 0 ;
- 
+
 #line 11 "dynalloc.pgc"
  char ** d3 = 0 ;
- 
+
 #line 12 "dynalloc.pgc"
  char ** d4 = 0 ;
- 
+
 #line 13 "dynalloc.pgc"
  char ** d5 = 0 ;
- 
+
 #line 14 "dynalloc.pgc"
  char ** d6 = 0 ;
- 
+
 #line 15 "dynalloc.pgc"
  char ** d7 = 0 ;
- 
+
 #line 17 "dynalloc.pgc"
  char ** d9 = 0 ;
- 
+
 #line 18 "dynalloc.pgc"
  int * i1 = 0 ;
- 
+
 #line 19 "dynalloc.pgc"
  int * i2 = 0 ;
- 
+
 #line 20 "dynalloc.pgc"
  int * i3 = 0 ;
- 
+
 #line 21 "dynalloc.pgc"
  int * i4 = 0 ;
- 
+
 #line 22 "dynalloc.pgc"
  int * i5 = 0 ;
- 
+
 #line 23 "dynalloc.pgc"
  int * i6 = 0 ;
- 
+
 #line 24 "dynalloc.pgc"
  int * i7 = 0 ;
- 
+
 #line 26 "dynalloc.pgc"
  int * i9 = 0 ;
 /* exec sql end declare section */
@@ -170,7 +170,7 @@ int main(void)
    /* exec sql whenever sqlerror  do sqlprint ( ) ; */
 #line 32 "dynalloc.pgc"
 
-   { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+   { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 33 "dynalloc.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
@@ -209,8 +209,8 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 if (sqlca.sqlcode < 0) sqlprint ( );
 #line 41 "dynalloc.pgc"
 
-   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select a , b , c , d , e , f , g , h , i from test order by a", ECPGt_EOIT, 
-	ECPGt_descriptor, "mydesc", 1L, 1L, 1L, 
+   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select a , b , c , d , e , f , g , h , i from test order by a", ECPGt_EOIT,
+	ECPGt_descriptor, "mydesc", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 42 "dynalloc.pgc"
 

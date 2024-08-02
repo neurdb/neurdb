@@ -15,13 +15,13 @@ for {set i 0} {$i < 10} {incr i} {
 $$;
 CALL transaction_test1();
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
- 6 | 
- 8 | 
+ 0 |
+ 2 |
+ 4 |
+ 6 |
+ 8 |
 (5 rows)
 
 TRUNCATE test1;
@@ -42,7 +42,7 @@ $$;
 SELECT transaction_test2();
 ERROR:  invalid transaction termination
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -56,7 +56,7 @@ $$;
 SELECT transaction_test3();
 ERROR:  invalid transaction termination
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -75,7 +75,7 @@ $$;
 CALL transaction_test4a();
 ERROR:  cannot commit while a subtransaction is active
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -92,7 +92,7 @@ $$;
 CALL transaction_test4b();
 ERROR:  cannot roll back while a subtransaction is active
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -110,12 +110,12 @@ $$;
 CALL transaction_testfk();
 ERROR:  insert or update on table "testfk" violates foreign key constraint "testfk_f1_fkey"
 SELECT * FROM testpk;
- id 
+ id
 ----
 (0 rows)
 
 SELECT * FROM testfk;
- f1 
+ f1
 ----
 (0 rows)
 
@@ -134,13 +134,13 @@ $$;
 CALL transaction_testfk();
 INFO:  insert or update on table "testfk" violates foreign key constraint "testfk_f1_fkey"
 SELECT * FROM testpk;
- id 
+ id
 ----
   1
 (1 row)
 
 SELECT * FROM testfk;
- f1 
+ f1
 ----
   1
 (1 row)

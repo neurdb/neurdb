@@ -6284,4 +6284,3 @@ msgid "unrecognized value \"%s\" for \"%s\"\n"
 "Available values are: %s."
 msgstr "нерозпізнане значення \"%s\" для \"%s\"\n"
 "Допустимі значення: %s."
-

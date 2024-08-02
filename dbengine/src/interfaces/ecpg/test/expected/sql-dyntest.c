@@ -154,44 +154,44 @@ int
 main ()
 {
   /* exec sql begin declare section */
-   
-   
-   
-   
-        
-   
-    
-   
-   
-   
-  
+
+
+
+
+
+
+
+
+
+
+
 #line 22 "dyntest.pgc"
  int COUNT ;
- 
+
 #line 23 "dyntest.pgc"
  int INTVAR ;
- 
+
 #line 24 "dyntest.pgc"
  int INDEX ;
- 
+
 #line 25 "dyntest.pgc"
  int INDICATOR ;
- 
+
 #line 26 "dyntest.pgc"
  int TYPE , LENGTH , OCTET_LENGTH , PRECISION , SCALE , RETURNED_OCTET_LENGTH ;
- 
+
 #line 27 "dyntest.pgc"
  int DATETIME_INTERVAL_CODE ;
- 
+
 #line 28 "dyntest.pgc"
  char NAME [ 120 ] , BOOLVAR ;
- 
+
 #line 29 "dyntest.pgc"
  char STRINGVAR [ 1024 ] ;
- 
+
 #line 30 "dyntest.pgc"
  double DOUBLEVAR ;
- 
+
 #line 31 "dyntest.pgc"
  char * QUERY ;
 /* exec sql end declare section */
@@ -218,7 +218,7 @@ if (sqlca.sqlcode < 0) error ( );
 #line 45 "dyntest.pgc"
 
 
-  { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+  { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 47 "dyntest.pgc"
 
 if (sqlca.sqlcode < 0) error ( );}
@@ -261,8 +261,8 @@ if (sqlca.sqlcode < 0) error ( );}
 #line 58 "dyntest.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare MYCURS cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "myquery", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare MYCURS cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "myquery", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 60 "dyntest.pgc"
 
@@ -272,8 +272,8 @@ if (sqlca.sqlcode < 0) error ( );}
 
   while (1)
     {
-      { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch in MYCURS", ECPGt_EOIT, 
-	ECPGt_descriptor, "MYDESC", 1L, 1L, 1L, 
+      { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch in MYCURS", ECPGt_EOIT,
+	ECPGt_descriptor, "MYDESC", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 64 "dyntest.pgc"
 

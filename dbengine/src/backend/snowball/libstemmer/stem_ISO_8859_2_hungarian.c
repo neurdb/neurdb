@@ -496,7 +496,7 @@ static int r_mark_regions(struct SN_env * z) {
     lab1:
         z->c = c1;
         if (out_grouping(z, g_v, 97, 252, 0)) return 0;
-        {   
+        {
             int ret = out_grouping(z, g_v, 97, 252, 1);
             if (ret < 0) return 0;
             z->c += ret;
@@ -859,4 +859,3 @@ extern int hungarian_ISO_8859_2_stem(struct SN_env * z) {
 extern struct SN_env * hungarian_ISO_8859_2_create_env(void) { return SN_create_env(0, 1); }
 
 extern void hungarian_ISO_8859_2_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

@@ -20,21 +20,21 @@ CONTEXT:  PL/Perl function "foo"
 -- plperl first
 create or replace function foo(text) returns text language plperl  as 'shift';
 select foo('hey');
- foo 
+ foo
 -----
  hey
 (1 row)
 
 create or replace function foo(text) returns text language plperlu as 'shift';
 select foo('hey');
- foo 
+ foo
 -----
  hey
 (1 row)
 
 create or replace function foo(text) returns text language plperl  as 'shift';
 select foo('hey');
- foo 
+ foo
 -----
  hey
 (1 row)
@@ -42,21 +42,21 @@ select foo('hey');
 -- plperlu first
 create or replace function bar(text) returns text language plperlu as 'shift';
 select bar('hey');
- bar 
+ bar
 -----
  hey
 (1 row)
 
 create or replace function bar(text) returns text language plperl  as 'shift';
 select bar('hey');
- bar 
+ bar
 -----
  hey
 (1 row)
 
 create or replace function bar(text) returns text language plperlu as 'shift';
 select bar('hey');
- bar 
+ bar
 -----
  hey
 (1 row)
@@ -77,9 +77,9 @@ BEGIN failed--compilation aborted at line 2.
 CONTEXT:  compilation of PL/Perl function "use_plperl"
 -- make sure our overloaded require op gets restored/set correctly
 select use_plperlu();
- use_plperlu 
+ use_plperlu
 -------------
- 
+
 (1 row)
 
 CREATE OR REPLACE FUNCTION use_plperl() RETURNS void LANGUAGE plperl

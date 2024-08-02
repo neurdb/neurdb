@@ -28,14 +28,14 @@ $$ LANGUAGE pltcl;
 BEGIN;
 INSERT INTO subtransaction_tbl VALUES(0);
 SELECT subtransaction_ctx_success();
- subtransaction_ctx_success 
+ subtransaction_ctx_success
 ----------------------------
- 
+
 (1 row)
 
 COMMIT;
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  0
  1
@@ -57,13 +57,13 @@ AS $$
     }
 $$ LANGUAGE pltcl;
 SELECT pltcl_wrapper('SELECT subtransaction_ctx_test()');
- pltcl_wrapper 
+ pltcl_wrapper
 ---------------
  SUCCESS: 1
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
  2
@@ -71,25 +71,25 @@ SELECT * FROM subtransaction_tbl;
 
 TRUNCATE subtransaction_tbl;
 SELECT pltcl_wrapper('SELECT subtransaction_ctx_test(''SPI'')');
-                    pltcl_wrapper                     
+                    pltcl_wrapper
 ------------------------------------------------------
  ERROR: invalid input syntax for type integer: "oops"
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
 (0 rows)
 
 TRUNCATE subtransaction_tbl;
 SELECT pltcl_wrapper('SELECT subtransaction_ctx_test(''Tcl'')');
-  pltcl_wrapper   
+  pltcl_wrapper
 ------------------
  ERROR: Tcl error
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
 (0 rows)
 
@@ -115,26 +115,26 @@ subtransaction {
 return "ok"
 $$ LANGUAGE pltcl;
 SELECT pltcl_wrapper('SELECT subtransaction_nested_test()');
-             pltcl_wrapper              
+             pltcl_wrapper
 ----------------------------------------
  ERROR: syntax error at or near "error"
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
 (0 rows)
 
 TRUNCATE subtransaction_tbl;
 SELECT pltcl_wrapper('SELECT subtransaction_nested_test(''t'')');
 NOTICE:  Swallowed syntax error at or near "error"
- pltcl_wrapper 
+ pltcl_wrapper
 ---------------
  SUCCESS: 1
 (1 row)
 
 SELECT * FROM subtransaction_tbl;
- i 
+ i
 ---
  1
  2

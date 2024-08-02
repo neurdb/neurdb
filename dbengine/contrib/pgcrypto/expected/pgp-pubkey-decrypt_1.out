@@ -588,7 +588,7 @@ blH2nKZC9d6fi4YzSYMepZpMOFR65M80MCMiDUGnZBB8sEADu2/iVtqDUeG8mAA=
 -- successful decrypt
 select pgp_pub_decrypt(dearmor(data), dearmor(seckey))
 from keytbl, encdata where keytbl.id=1 and encdata.id=1;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret msg
 (1 row)
@@ -598,14 +598,14 @@ from keytbl, encdata where keytbl.id=2 and encdata.id=2;
 ERROR:  Wrong key or corrupt data
 select pgp_pub_decrypt(dearmor(data), dearmor(seckey))
 from keytbl, encdata where keytbl.id=3 and encdata.id=3;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret msg
 (1 row)
 
 select pgp_pub_decrypt(dearmor(data), dearmor(seckey))
 from keytbl, encdata where keytbl.id=6 and encdata.id=4;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret message.
 (1 row)
@@ -625,7 +625,7 @@ ERROR:  Wrong key or corrupt data
 -- rsa: password-protected secret key, right password
 select pgp_pub_decrypt(dearmor(data), dearmor(seckey), 'parool')
 from keytbl, encdata where keytbl.id=7 and encdata.id=4;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret message.
 (1 row)
@@ -641,7 +641,7 @@ ERROR:  Wrong key or corrupt data
 -- password-protected secret key, right password
 select pgp_pub_decrypt(dearmor(data), dearmor(seckey), 'parool')
 from keytbl, encdata where keytbl.id=5 and encdata.id=1;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret msg
 (1 row)

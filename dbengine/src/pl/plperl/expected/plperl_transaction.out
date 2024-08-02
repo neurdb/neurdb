@@ -13,13 +13,13 @@ foreach my $i (0..9) {
 $$;
 CALL transaction_test1();
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
- 6 | 
- 8 | 
+ 0 |
+ 2 |
+ 4 |
+ 6 |
+ 8 |
 (5 rows)
 
 TRUNCATE test1;
@@ -36,13 +36,13 @@ foreach my $i (0..9) {
 }
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
- 6 | 
- 8 | 
+ 0 |
+ 2 |
+ 4 |
+ 6 |
+ 8 |
 (5 rows)
 
 TRUNCATE test1;
@@ -64,7 +64,7 @@ SELECT transaction_test2();
 ERROR:  invalid transaction termination at line 5.
 CONTEXT:  PL/Perl function "transaction_test2"
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -79,7 +79,7 @@ SELECT transaction_test3();
 ERROR:  invalid transaction termination at line 5. at line 2.
 CONTEXT:  PL/Perl function "transaction_test3"
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -106,18 +106,18 @@ while (defined($row = spi_fetchrow($sth))) {
 }
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 1 | 
- 2 | 
- 3 | 
- 4 | 
+ 0 |
+ 1 |
+ 2 |
+ 3 |
+ 4 |
 (5 rows)
 
 -- check that this doesn't leak a holdable portal
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -134,14 +134,14 @@ $$;
 ERROR:  division by zero at line 5.
 CONTEXT:  PL/Perl anonymous code block
 SELECT * FROM test1;
-  a  | b 
+  a  | b
 -----+---
-  -6 | 
- -12 | 
+  -6 |
+ -12 |
 (2 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -156,12 +156,12 @@ while (defined($row = spi_fetchrow($sth))) {
 }
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -180,15 +180,15 @@ while (defined($row = spi_fetchrow($sth))) {
 }
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
+ 0 |
+ 2 |
+ 4 |
 (3 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -204,12 +204,12 @@ $$;
 ERROR:  insert or update on table "testfk" violates foreign key constraint "testfk_f1_fkey" at line 4.
 CONTEXT:  PL/Perl anonymous code block
 SELECT * FROM testpk;
- id 
+ id
 ----
 (0 rows)
 
 SELECT * FROM testfk;
- f1 
+ f1
 ----
 (0 rows)
 
@@ -229,13 +229,13 @@ $$;
 INFO:  insert or update on table "testfk" violates foreign key constraint "testfk_f1_fkey" at line 5.
 
 SELECT * FROM testpk;
- id 
+ id
 ----
   1
 (1 row)
 
 SELECT * FROM testfk;
- f1 
+ f1
 ----
   1
 (1 row)

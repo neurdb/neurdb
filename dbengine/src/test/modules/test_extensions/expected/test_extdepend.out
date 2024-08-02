@@ -5,23 +5,23 @@
 CREATE TABLE test_extdep_commands (command text);
 COPY test_extdep_commands FROM stdin;
 SELECT * FROM test_extdep_commands;
-                                 command                                 
+                                 command
 -------------------------------------------------------------------------
   CREATE SCHEMA test_ext
   CREATE EXTENSION test_ext5 SCHEMA test_ext
   SET search_path TO test_ext
   CREATE TABLE a (a1 int)
- 
+
   CREATE FUNCTION b() RETURNS TRIGGER LANGUAGE plpgsql AS               +
     $$ BEGIN NEW.a1 := NEW.a1 + 42; RETURN NEW; END; $$
   ALTER FUNCTION b() DEPENDS ON EXTENSION test_ext5
- 
+
   CREATE TRIGGER c BEFORE INSERT ON a FOR EACH ROW EXECUTE PROCEDURE b()
   ALTER TRIGGER c ON a DEPENDS ON EXTENSION test_ext5
- 
+
   CREATE MATERIALIZED VIEW d AS SELECT * FROM a
   ALTER MATERIALIZED VIEW d DEPENDS ON EXTENSION test_ext5
- 
+
   CREATE INDEX e ON a (a1)
   ALTER INDEX e DEPENDS ON EXTENSION test_ext5
   RESET search_path
@@ -55,7 +55,7 @@ SELECT deptype, p.*
  WHERE refclassid = 'pg_extension'::regclass AND
        refobjid = (SELECT oid FROM pg_extension WHERE extname = 'test_ext5')
 ORDER BY type;
- deptype |       type        |  schema  | name |    identity     
+ deptype |       type        |  schema  | name |    identity
 ---------+-------------------+----------+------+-----------------
  x       | function          | test_ext |      | test_ext.b()
  x       | index             | test_ext | e    | test_ext.e
@@ -69,7 +69,7 @@ SELECT deptype, i.*
   FROM pg_catalog.pg_depend, pg_identify_object(classid, objid, objsubid) i
 WHERE refclassid='pg_class'::regclass AND
  refobjid='test_ext.a'::regclass AND NOT deptype IN ('i', 'a');
- deptype | type | schema | name | identity 
+ deptype | type | schema | name | identity
 ---------+------+--------+------+----------
 (0 rows)
 
@@ -107,7 +107,7 @@ SELECT deptype, i.*
   FROM pg_catalog.pg_depend, pg_identify_object(classid, objid, objsubid) i
  WHERE refclassid='pg_extension'::regclass AND
  refobjid=(SELECT oid FROM pg_extension WHERE extname='test_ext5');
- deptype |   type   |  schema  | name |   identity   
+ deptype |   type   |  schema  | name |   identity
 ---------+----------+----------+------+--------------
  x       | function | test_ext |      | test_ext.b()
 (1 row)
@@ -145,7 +145,7 @@ SELECT deptype, i.*
         refobjid=(SELECT oid FROM pg_extension WHERE extname='test_ext5'))
 	OR (refclassid='pg_class'::regclass AND refobjid='test_ext.a'::regclass)
    AND NOT deptype IN ('i', 'a');
- deptype | type | schema | name | identity 
+ deptype | type | schema | name | identity
 ---------+------+--------+------+----------
 (0 rows)
 

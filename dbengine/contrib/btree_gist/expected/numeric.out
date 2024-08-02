@@ -5,91 +5,91 @@ CREATE TABLE numerictmp (a numeric);
 \copy numerictmp from 'data/float8.data'
 SET enable_seqscan=on;
 SELECT count(*) FROM numerictmp WHERE a <  -1890.0;
- count 
+ count
 -------
    505
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <= -1890.0;
- count 
+ count
 -------
    506
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a  = -1890.0;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >= -1890.0;
- count 
+ count
 -------
    597
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >  -1890.0;
- count 
+ count
 -------
    596
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <  'NaN' ;
- count 
+ count
 -------
   1100
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <= 'NaN' ;
- count 
+ count
 -------
   1102
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a  = 'NaN' ;
- count 
+ count
 -------
      2
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >= 'NaN' ;
- count 
+ count
 -------
      2
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >  'NaN' ;
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <  0 ;
- count 
+ count
 -------
    523
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <= 0 ;
- count 
+ count
 -------
    526
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a  = 0 ;
- count 
+ count
 -------
      3
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >= 0 ;
- count 
+ count
 -------
    579
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >  0 ;
- count 
+ count
 -------
    576
 (1 row)
@@ -97,91 +97,91 @@ SELECT count(*) FROM numerictmp WHERE a >  0 ;
 CREATE INDEX numericidx ON numerictmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM numerictmp WHERE a <  -1890.0;
- count 
+ count
 -------
    505
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <= -1890.0;
- count 
+ count
 -------
    506
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a  = -1890.0;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >= -1890.0;
- count 
+ count
 -------
    597
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >  -1890.0;
- count 
+ count
 -------
    596
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <  'NaN' ;
- count 
+ count
 -------
   1100
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <= 'NaN' ;
- count 
+ count
 -------
   1102
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a  = 'NaN' ;
- count 
+ count
 -------
      2
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >= 'NaN' ;
- count 
+ count
 -------
      2
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >  'NaN' ;
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <  0 ;
- count 
+ count
 -------
    523
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a <= 0 ;
- count 
+ count
 -------
    526
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a  = 0 ;
- count 
+ count
 -------
      3
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >= 0 ;
- count 
+ count
 -------
    579
 (1 row)
 
 SELECT count(*) FROM numerictmp WHERE a >  0 ;
- count 
+ count
 -------
    576
 (1 row)
@@ -190,7 +190,7 @@ SELECT count(*) FROM numerictmp WHERE a >  0 ;
 SET enable_bitmapscan=off;
 EXPLAIN (COSTS OFF)
 SELECT * FROM numerictmp WHERE a BETWEEN 1 AND 300 ORDER BY a;
-                             QUERY PLAN                              
+                             QUERY PLAN
 ---------------------------------------------------------------------
  Sort
    Sort Key: a
@@ -199,9 +199,8 @@ SELECT * FROM numerictmp WHERE a BETWEEN 1 AND 300 ORDER BY a;
 (4 rows)
 
 SELECT * FROM numerictmp WHERE a BETWEEN 1 AND 300 ORDER BY a;
-     a      
+     a
 ------------
  204.035430
  207.400532
 (2 rows)
-

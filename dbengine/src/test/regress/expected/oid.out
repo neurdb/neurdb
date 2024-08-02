@@ -53,7 +53,7 @@ ERROR:  value "-23582358720398502385" is out of range for type oid
 LINE 1: INSERT INTO OID_TBL(f1) VALUES ('-23582358720398502385');
                                         ^
 SELECT * FROM OID_TBL;
-     f1     
+     f1
 ------------
        1234
        1235
@@ -67,74 +67,74 @@ SELECT * FROM OID_TBL;
 
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('1234', 'oid');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('01XYZ', 'oid');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('01XYZ', 'oid');
-                  message                   | detail | hint | sql_error_code 
+                  message                   | detail | hint | sql_error_code
 --------------------------------------------+--------+------+----------------
  invalid input syntax for type oid: "01XYZ" |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('9999999999', 'oid');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('9999999999', 'oid');
-                     message                     | detail | hint | sql_error_code 
+                     message                     | detail | hint | sql_error_code
 -------------------------------------------------+--------+------+----------------
  value "9999999999" is out of range for type oid |        |      | 22003
 (1 row)
 
 -- While we're here, check oidvector as well
 SELECT pg_input_is_valid(' 1 2  4 ', 'oidvector');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('01 01XYZ', 'oidvector');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('01 01XYZ', 'oidvector');
-                 message                  | detail | hint | sql_error_code 
+                 message                  | detail | hint | sql_error_code
 ------------------------------------------+--------+------+----------------
  invalid input syntax for type oid: "XYZ" |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('01 9999999999', 'oidvector');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('01 9999999999', 'oidvector');
-                     message                     | detail | hint | sql_error_code 
+                     message                     | detail | hint | sql_error_code
 -------------------------------------------------+--------+------+----------------
  value "9999999999" is out of range for type oid |        |      | 22003
 (1 row)
 
 SELECT o.* FROM OID_TBL o WHERE o.f1 = 1234;
-  f1  
+  f1
 ------
  1234
 (1 row)
 
 SELECT o.* FROM OID_TBL o WHERE o.f1 <> '1234';
-     f1     
+     f1
 ------------
        1235
         987
@@ -146,7 +146,7 @@ SELECT o.* FROM OID_TBL o WHERE o.f1 <> '1234';
 (7 rows)
 
 SELECT o.* FROM OID_TBL o WHERE o.f1 <= '1234';
-  f1  
+  f1
 ------
  1234
   987
@@ -156,7 +156,7 @@ SELECT o.* FROM OID_TBL o WHERE o.f1 <= '1234';
 (5 rows)
 
 SELECT o.* FROM OID_TBL o WHERE o.f1 < '1234';
- f1  
+ f1
 -----
  987
    5
@@ -165,7 +165,7 @@ SELECT o.* FROM OID_TBL o WHERE o.f1 < '1234';
 (4 rows)
 
 SELECT o.* FROM OID_TBL o WHERE o.f1 >= '1234';
-     f1     
+     f1
 ------------
        1234
        1235
@@ -174,7 +174,7 @@ SELECT o.* FROM OID_TBL o WHERE o.f1 >= '1234';
 (4 rows)
 
 SELECT o.* FROM OID_TBL o WHERE o.f1 > '1234';
-     f1     
+     f1
 ------------
        1235
  4294966256

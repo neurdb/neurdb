@@ -1,140 +1,140 @@
 select jsonb '{"a": 12}' @? '$';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": 12}' @? '1';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": 12}' @? '$.a.b';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": 12}' @? '$.b';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": 12}' @? '$.a + 2';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": 12}' @? '$.b + 2';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '{"a": {"a": 12}}' @? '$.a.a';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"a": 12}}' @? '$.*.a';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"b": {"a": 12}}' @? '$.*.a';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"b": {"a": 12}}' @? '$.*.b';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"b": {"a": 12}}' @? 'strict $.*.b';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '{}' @? '$.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": 1}' @? '$.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? 'lax $.**{1}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? 'lax $.**{2}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? 'lax $.**{3}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '[]' @? '$[*]';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '[1]' @? '$[*]';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1]' @? '$[1]';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '[1]' @? 'strict $[1]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb_path_query('[1]', 'strict $[1]');
 ERROR:  jsonpath array subscript is out of bounds
 select jsonb_path_query('[1]', 'strict $[1]', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb '[1]' @? 'lax $[10000000000000000]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '[1]' @? 'strict $[10000000000000000]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb_path_query('[1]', 'lax $[10000000000000000]');
@@ -142,97 +142,97 @@ ERROR:  jsonpath array subscript is out of integer range
 select jsonb_path_query('[1]', 'strict $[10000000000000000]');
 ERROR:  jsonpath array subscript is out of integer range
 select jsonb '[1]' @? '$[0]';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1]' @? '$[0.3]';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1]' @? '$[0.5]';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1]' @? '$[0.9]';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1]' @? '$[1.2]';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '[1]' @? 'strict $[1.2]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '{"a": [1,2,3], "b": [3,4,5]}' @? '$ ? (@.a[*] >  @.b[*])';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": [1,2,3], "b": [3,4,5]}' @? '$ ? (@.a[*] >= @.b[*])';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": [1,2,3], "b": [3,4,"5"]}' @? '$ ? (@.a[*] >= @.b[*])';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": [1,2,3], "b": [3,4,"5"]}' @? 'strict $ ? (@.a[*] >= @.b[*])';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": [1,2,3], "b": [3,4,null]}' @? '$ ? (@.a[*] >= @.b[*])';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '1' @? '$ ? ((@ == "1") is unknown)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '1' @? '$ ? ((@ == 1) is unknown)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '[{"a": 1}, {"a": 2}]' @? '$[0 to 1] ? (@.a > 1)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb_path_exists('[{"a": 1}, {"a": 2}, 3]', 'lax $[*].a', silent => false);
- jsonb_path_exists 
+ jsonb_path_exists
 -------------------
  t
 (1 row)
 
 select jsonb_path_exists('[{"a": 1}, {"a": 2}, 3]', 'lax $[*].a', silent => true);
- jsonb_path_exists 
+ jsonb_path_exists
 -------------------
  t
 (1 row)
@@ -240,13 +240,13 @@ select jsonb_path_exists('[{"a": 1}, {"a": 2}, 3]', 'lax $[*].a', silent => true
 select jsonb_path_exists('[{"a": 1}, {"a": 2}, 3]', 'strict $[*].a', silent => false);
 ERROR:  jsonpath member accessor can only be applied to an object
 select jsonb_path_exists('[{"a": 1}, {"a": 2}, 3]', 'strict $[*].a', silent => true);
- jsonb_path_exists 
+ jsonb_path_exists
 -------------------
- 
+
 (1 row)
 
 select jsonb_path_query('1', 'lax $.a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
@@ -255,36 +255,36 @@ ERROR:  jsonpath member accessor can only be applied to an object
 select jsonb_path_query('1', 'strict $.*');
 ERROR:  jsonpath wildcard member accessor can only be applied to an object
 select jsonb_path_query('1', 'strict $.a', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('1', 'strict $.*', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', 'lax $.a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', 'strict $.a');
 ERROR:  jsonpath member accessor can only be applied to an object
 select jsonb_path_query('[]', 'strict $.a', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{}', 'lax $.a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{}', 'strict $.a');
 ERROR:  JSON object does not contain key "a"
 select jsonb_path_query('{}', 'strict $.a', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
@@ -297,87 +297,87 @@ ERROR:  jsonpath array subscript is out of bounds
 select jsonb_path_query('[]', 'strict $["a"]');
 ERROR:  jsonpath array subscript is not a single numeric value
 select jsonb_path_query('1', 'strict $[1]', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('1', 'strict $[*]', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', 'strict $[1]', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', 'strict $["a"]', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"a": 12, "b": {"a": 13}}', '$.a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  12
 (1 row)
 
 select jsonb_path_query('{"a": 12, "b": {"a": 13}}', '$.b');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 13}
 (1 row)
 
 select jsonb_path_query('{"a": 12, "b": {"a": 13}}', '$.*');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  12
  {"a": 13}
 (2 rows)
 
 select jsonb_path_query('{"a": 12, "b": {"a": 13}}', 'lax $.*.a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  13
 (1 row)
 
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[*].a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  13
 (1 row)
 
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[*].*');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  13
  14
 (2 rows)
 
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[0].a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[1].a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  13
 (1 row)
 
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[2].a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[0,1].a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  13
 (1 row)
 
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[0 to 10].a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  13
 (1 row)
@@ -385,7 +385,7 @@ select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[0 to 10].a');
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}]', 'lax $[0 to 10 / 0].a');
 ERROR:  division by zero
 select jsonb_path_query('[12, {"a": 13}, {"b": 14}, "ccc", true]', '$[2.5 - 1 to $.size() - 2]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 13}
  {"b": 14}
@@ -393,31 +393,31 @@ select jsonb_path_query('[12, {"a": 13}, {"b": 14}, "ccc", true]', '$[2.5 - 1 to
 (3 rows)
 
 select jsonb_path_query('1', 'lax $[0]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('1', 'lax $[*]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('[1]', 'lax $[0]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('[1]', 'lax $[*]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('[1,2,3]', 'lax $[*]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
  2
@@ -427,47 +427,47 @@ select jsonb_path_query('[1,2,3]', 'lax $[*]');
 select jsonb_path_query('[1,2,3]', 'strict $[*].a');
 ERROR:  jsonpath member accessor can only be applied to an object
 select jsonb_path_query('[1,2,3]', 'strict $[*].a', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', '$[last]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', '$[last ? (exists(last))]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', 'strict $[last]');
 ERROR:  jsonpath array subscript is out of bounds
 select jsonb_path_query('[]', 'strict $[last]', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[1]', '$[last]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('[1,2,3]', '$[last]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  3
 (1 row)
 
 select jsonb_path_query('[1,2,3]', '$[last - 1]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  2
 (1 row)
 
 select jsonb_path_query('[1,2,3]', '$[last ? (@.type() == "number")]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  3
 (1 row)
@@ -475,12 +475,12 @@ select jsonb_path_query('[1,2,3]', '$[last ? (@.type() == "number")]');
 select jsonb_path_query('[1,2,3]', '$[last ? (@.type() == "string")]');
 ERROR:  jsonpath array subscript is not a single numeric value
 select jsonb_path_query('[1,2,3]', '$[last ? (@.type() == "string")]', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select * from jsonb_path_query('{"a": 10}', '$');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 10}
 (1 row)
@@ -494,24 +494,24 @@ select * from jsonb_path_query('{"a": 10}', '$ ? (@.a < $value)', '[{"value" : 1
 ERROR:  "vars" argument is not an object
 DETAIL:  Jsonpath parameters should be encoded as key-value pairs of "vars" object.
 select * from jsonb_path_query('{"a": 10}', '$ ? (@.a < $value)', '{"value" : 13}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 10}
 (1 row)
 
 select * from jsonb_path_query('{"a": 10}', '$ ? (@.a < $value)', '{"value" : 8}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select * from jsonb_path_query('{"a": 10}', '$.a ? (@ < $value)', '{"value" : 13}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  10
 (1 row)
 
 select * from jsonb_path_query('[10,11,12,13,14,15]', '$[*] ? (@ < $value)', '{"value" : 13}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  10
  11
@@ -519,14 +519,14 @@ select * from jsonb_path_query('[10,11,12,13,14,15]', '$[*] ? (@ < $value)', '{"
 (3 rows)
 
 select * from jsonb_path_query('[10,11,12,13,14,15]', '$[0,1] ? (@ < $x.value)', '{"x": {"value" : 13}}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  10
  11
 (2 rows)
 
 select * from jsonb_path_query('[10,11,12,13,14,15]', '$[0 to 2] ? (@ < $value)', '{"value" : 15}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  10
  11
@@ -534,48 +534,48 @@ select * from jsonb_path_query('[10,11,12,13,14,15]', '$[0 to 2] ? (@ < $value)'
 (3 rows)
 
 select * from jsonb_path_query('[1,"1",2,"2",null]', '$[*] ? (@ == "1")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "1"
 (1 row)
 
 select * from jsonb_path_query('[1,"1",2,"2",null]', '$[*] ? (@ == $value)', '{"value" : "1"}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "1"
 (1 row)
 
 select * from jsonb_path_query('[1,"1",2,"2",null]', '$[*] ? (@ == $value)', '{"value" : null}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  null
 (1 row)
 
 select * from jsonb_path_query('[1, "2", null]', '$[*] ? (@ != null)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
  "2"
 (2 rows)
 
 select * from jsonb_path_query('[1, "2", null]', '$[*] ? (@ == null)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  null
 (1 row)
 
 select * from jsonb_path_query('{}', '$ ? (@ == @)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select * from jsonb_path_query('[]', 'strict $ ? (@ == @)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": {"b": 1}}
  {"b": 1}
@@ -583,13 +583,13 @@ select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**');
 (3 rows)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{0}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": {"b": 1}}
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{0 to last}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": {"b": 1}}
  {"b": 1}
@@ -597,248 +597,248 @@ select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{0 to last}');
 (3 rows)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{1}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"b": 1}
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{1 to last}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"b": 1}
  1
 (2 rows)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{2}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{2 to last}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{3 to last}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{last}');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{0}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{1}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{0 to last}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{1 to last}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"b": 1}}', 'lax $.**{1 to 2}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"c": {"b": 1}}}', 'lax $.**.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"c": {"b": 1}}}', 'lax $.**{0}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"a": {"c": {"b": 1}}}', 'lax $.**{1}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"a": {"c": {"b": 1}}}', 'lax $.**{0 to last}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"c": {"b": 1}}}', 'lax $.**{1 to last}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"c": {"b": 1}}}', 'lax $.**{1 to 2}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb_path_query('{"a": {"c": {"b": 1}}}', 'lax $.**{2 to 3}.b ? (@ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? '$.**.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? '$.**{0}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? '$.**{1}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? '$.**{0 to last}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? '$.**{1 to last}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"b": 1}}' @? '$.**{1 to 2}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"c": {"b": 1}}}' @? '$.**.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"c": {"b": 1}}}' @? '$.**{0}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": {"c": {"b": 1}}}' @? '$.**{1}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"a": {"c": {"b": 1}}}' @? '$.**{0 to last}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"c": {"b": 1}}}' @? '$.**{1 to last}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"c": {"b": 1}}}' @? '$.**{1 to 2}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": {"c": {"b": 1}}}' @? '$.**{2 to 3}.b ? ( @ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb_path_query('{"g": {"x": 2}}', '$.g ? (exists (@.x))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"x": 2}
 (1 row)
 
 select jsonb_path_query('{"g": {"x": 2}}', '$.g ? (exists (@.y))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"g": {"x": 2}}', '$.g ? (exists (@.x ? (@ >= 2) ))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"x": 2}
 (1 row)
 
 select jsonb_path_query('{"g": [{"x": 2}, {"y": 3}]}', 'lax $.g ? (exists (@.x))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"x": 2}
 (1 row)
 
 select jsonb_path_query('{"g": [{"x": 2}, {"y": 3}]}', 'lax $.g ? (exists (@.x + "3"))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"g": [{"x": 2}, {"y": 3}]}', 'lax $.g ? ((exists (@.x + "3")) is unknown)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"x": 2}
  {"y": 3}
 (2 rows)
 
 select jsonb_path_query('{"g": [{"x": 2}, {"y": 3}]}', 'strict $.g[*] ? (exists (@.x))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"x": 2}
 (1 row)
 
 select jsonb_path_query('{"g": [{"x": 2}, {"y": 3}]}', 'strict $.g[*] ? ((exists (@.x)) is unknown)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"y": 3}
 (1 row)
 
 select jsonb_path_query('{"g": [{"x": 2}, {"y": 3}]}', 'strict $.g ? (exists (@[*].x))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"g": [{"x": 2}, {"y": 3}]}', 'strict $.g ? ((exists (@[*].x)) is unknown)');
-   jsonb_path_query   
+   jsonb_path_query
 ----------------------
  [{"x": 2}, {"y": 3}]
 (1 row)
@@ -856,7 +856,7 @@ select
 from
 	(values (jsonb 'true'), ('false'), ('"null"')) x(x),
 	(values (jsonb 'true'), ('false'), ('"null"')) y(y);
-   x    |   y    | x && y 
+   x    |   y    | x && y
 --------+--------+--------
  true   | true   | true
  true   | false  | false
@@ -881,7 +881,7 @@ select
 from
 	(values (jsonb 'true'), ('false'), ('"null"')) x(x),
 	(values (jsonb 'true'), ('false'), ('"null"')) y(y);
-   x    |   y    | x || y 
+   x    |   y    | x || y
 --------+--------+--------
  true   | true   | true
  true   | false  | true
@@ -895,146 +895,146 @@ from
 (9 rows)
 
 select jsonb '{"a": 1, "b":1}' @? '$ ? (@.a == @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": 1, "b":1}}' @? '$ ? (@.a == @.b)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '{"c": {"a": 1, "b":1}}' @? '$.c ? (@.a == @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": 1, "b":1}}' @? '$.c ? ($.c.a == @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": 1, "b":1}}' @? '$.* ? (@.a == @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": 1, "b":1}' @? '$.** ? (@.a == @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": 1, "b":1}}' @? '$.** ? (@.a == @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb_path_query('{"c": {"a": 2, "b":1}}', '$.** ? (@.a == 1 + 1)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 2, "b": 1}
 (1 row)
 
 select jsonb_path_query('{"c": {"a": 2, "b":1}}', '$.** ? (@.a == (1 + 1))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 2, "b": 1}
 (1 row)
 
 select jsonb_path_query('{"c": {"a": 2, "b":1}}', '$.** ? (@.a == @.b + 1)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 2, "b": 1}
 (1 row)
 
 select jsonb_path_query('{"c": {"a": 2, "b":1}}', '$.** ? (@.a == (@.b + 1))');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 2, "b": 1}
 (1 row)
 
 select jsonb '{"c": {"a": -1, "b":1}}' @? '$.** ? (@.a == - 1)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": -1, "b":1}}' @? '$.** ? (@.a == -1)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": -1, "b":1}}' @? '$.** ? (@.a == -@.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": -1, "b":1}}' @? '$.** ? (@.a == - @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": 0, "b":1}}' @? '$.** ? (@.a == 1 - @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": 2, "b":1}}' @? '$.** ? (@.a == 1 - - @.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"c": {"a": 0, "b":1}}' @? '$.** ? (@.a == 1 - +@.b)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1,2,3]' @? '$ ? (+@[*] > +2)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1,2,3]' @? '$ ? (+@[*] > +3)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '[1,2,3]' @? '$ ? (-@[*] < -2)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1,2,3]' @? '$ ? (-@[*] < -3)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '1' @? '$ ? ($ > 0)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- arithmetic errors
 select jsonb_path_query('[1,2,0,3]', '$[*] ? (2 / @ > 0)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
  2
@@ -1042,7 +1042,7 @@ select jsonb_path_query('[1,2,0,3]', '$[*] ? (2 / @ > 0)');
 (3 rows)
 
 select jsonb_path_query('[1,2,0,3]', '$[*] ? ((2 / @ > 0) is unknown)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  0
 (1 row)
@@ -1062,65 +1062,65 @@ ERROR:  operand of unary jsonpath operator - is not a numeric value
 select jsonb_path_query('[1,"2",3]', '+$');
 ERROR:  operand of unary jsonpath operator + is not a numeric value
 select jsonb_path_query('1', '$ + "2"', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[1, 2]', '3 * $', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('"a"', '-$', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[1,"2",3]', '+$', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
 (1 row)
 
 select jsonb '["1",2,0,3]' @? '-$[*]';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '[1,"2",0,3]' @? '-$[*]';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '["1",2,0,3]' @? 'strict -$[*]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '[1,"2",0,3]' @? 'strict -$[*]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 -- unwrapping of operator arguments in lax mode
 select jsonb_path_query('{"a": [2]}', 'lax $.a * 3');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  6
 (1 row)
 
 select jsonb_path_query('{"a": [2]}', 'lax $.a + 3');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  5
 (1 row)
 
 select jsonb_path_query('{"a": [2, 3, 4]}', 'lax -$.a');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  -2
  -3
@@ -1131,133 +1131,133 @@ select jsonb_path_query('{"a": [2, 3, 4]}', 'lax -$.a');
 select jsonb_path_query('{"a": [1, 2]}', 'lax $.a * 3');
 ERROR:  left operand of jsonpath operator * is not a single numeric value
 select jsonb_path_query('{"a": [1, 2]}', 'lax $.a * 3', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 -- extension: boolean expressions
 select jsonb_path_query('2', '$ > 1');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  true
 (1 row)
 
 select jsonb_path_query('2', '$ <= 1');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  false
 (1 row)
 
 select jsonb_path_query('2', '$ == "2"');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  null
 (1 row)
 
 select jsonb '2' @? '$ == "2"';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '2' @@ '$ > 1';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '2' @@ '$ <= 1';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select jsonb '2' @@ '$ == "2"';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '2' @@ '1';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '{}' @@ '$';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '[]' @@ '$';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '[1,2,3]' @@ '$[*]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb '[]' @@ '$[*]';
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select jsonb_path_match('[[1, true], [2, false]]', 'strict $[*] ? (@[0] > $x) [1]', '{"x": 1}');
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  f
 (1 row)
 
 select jsonb_path_match('[[1, true], [2, false]]', 'strict $[*] ? (@[0] < $x) [1]', '{"x": 2}');
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  t
 (1 row)
 
 select jsonb_path_match('[{"a": 1}, {"a": 2}, 3]', 'lax exists($[*].a)', silent => false);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  t
 (1 row)
 
 select jsonb_path_match('[{"a": 1}, {"a": 2}, 3]', 'lax exists($[*].a)', silent => true);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  t
 (1 row)
 
 select jsonb_path_match('[{"a": 1}, {"a": 2}, 3]', 'strict exists($[*].a)', silent => false);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
- 
+
 (1 row)
 
 select jsonb_path_match('[{"a": 1}, {"a": 2}, 3]', 'strict exists($[*].a)', silent => true);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
- 
+
 (1 row)
 
 select jsonb_path_query('[null,1,true,"a",[],{}]', '$.type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "array"
 (1 row)
 
 select jsonb_path_query('[null,1,true,"a",[],{}]', 'lax $.type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "array"
 (1 row)
 
 select jsonb_path_query('[null,1,true,"a",[],{}]', '$[*].type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "null"
  "number"
@@ -1268,61 +1268,61 @@ select jsonb_path_query('[null,1,true,"a",[],{}]', '$[*].type()');
 (6 rows)
 
 select jsonb_path_query('null', 'null.type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "null"
 (1 row)
 
 select jsonb_path_query('null', 'true.type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "boolean"
 (1 row)
 
 select jsonb_path_query('null', '(123).type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "number"
 (1 row)
 
 select jsonb_path_query('null', '"123".type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "string"
 (1 row)
 
 select jsonb_path_query('{"a": 2}', '($.a - 5).abs() + 10');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  13
 (1 row)
 
 select jsonb_path_query('{"a": 2.5}', '-($.a * $.a).floor() % 4.3');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  -1.7
 (1 row)
 
 select jsonb_path_query('[1, 2, 3]', '($[*] > 2) ? (@ == true)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  true
 (1 row)
 
 select jsonb_path_query('[1, 2, 3]', '($[*] > 3).type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "boolean"
 (1 row)
 
 select jsonb_path_query('[1, 2, 3]', '($[*].a > 3).type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "boolean"
 (1 row)
 
 select jsonb_path_query('[1, 2, 3]', 'strict ($[*].a > 3).type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "null"
 (1 row)
@@ -1330,12 +1330,12 @@ select jsonb_path_query('[1, 2, 3]', 'strict ($[*].a > 3).type()');
 select jsonb_path_query('[1,null,true,"11",[],[1],[1,2,3],{},{"a":1,"b":2}]', 'strict $[*].size()');
 ERROR:  jsonpath item method .size() can only be applied to an array
 select jsonb_path_query('[1,null,true,"11",[],[1],[1,2,3],{},{"a":1,"b":2}]', 'strict $[*].size()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[1,null,true,"11",[],[1],[1,2,3],{},{"a":1,"b":2}]', 'lax $[*].size()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1
  1
@@ -1349,7 +1349,7 @@ select jsonb_path_query('[1,null,true,"11",[],[1],[1,2,3],{},{"a":1,"b":2}]', 'l
 (9 rows)
 
 select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].abs()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  0
  1
@@ -1359,7 +1359,7 @@ select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].abs()');
 (5 rows)
 
 select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].floor()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  0
  1
@@ -1369,7 +1369,7 @@ select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].floor()');
 (5 rows)
 
 select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].ceiling()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  0
  1
@@ -1379,7 +1379,7 @@ select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].ceiling()');
 (5 rows)
 
 select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].ceiling().abs()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  0
  1
@@ -1389,7 +1389,7 @@ select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].ceiling().abs()');
 (5 rows)
 
 select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].ceiling().abs().type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "number"
  "number"
@@ -1401,17 +1401,17 @@ select jsonb_path_query('[0, 1, -2, -3.4, 5.6]', '$[*].ceiling().abs().type()');
 select jsonb_path_query('[{},1]', '$[*].keyvalue()');
 ERROR:  jsonpath item method .keyvalue() can only be applied to an object
 select jsonb_path_query('[{},1]', '$[*].keyvalue()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{}', '$.keyvalue()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{"a": 1, "b": [1, 2], "c": {"a": "bbb"}}', '$.keyvalue()');
-               jsonb_path_query               
+               jsonb_path_query
 ----------------------------------------------
  {"id": 0, "key": "a", "value": 1}
  {"id": 0, "key": "b", "value": [1, 2]}
@@ -1419,7 +1419,7 @@ select jsonb_path_query('{"a": 1, "b": [1, 2], "c": {"a": "bbb"}}', '$.keyvalue(
 (3 rows)
 
 select jsonb_path_query('[{"a": 1, "b": [1, 2]}, {"c": {"a": "bbb"}}]', '$[*].keyvalue()');
-               jsonb_path_query                
+               jsonb_path_query
 -----------------------------------------------
  {"id": 12, "key": "a", "value": 1}
  {"id": 12, "key": "b", "value": [1, 2]}
@@ -1429,7 +1429,7 @@ select jsonb_path_query('[{"a": 1, "b": [1, 2]}, {"c": {"a": "bbb"}}]', '$[*].ke
 select jsonb_path_query('[{"a": 1, "b": [1, 2]}, {"c": {"a": "bbb"}}]', 'strict $.keyvalue()');
 ERROR:  jsonpath item method .keyvalue() can only be applied to an object
 select jsonb_path_query('[{"a": 1, "b": [1, 2]}, {"c": {"a": "bbb"}}]', 'lax $.keyvalue()');
-               jsonb_path_query                
+               jsonb_path_query
 -----------------------------------------------
  {"id": 12, "key": "a", "value": 1}
  {"id": 12, "key": "b", "value": [1, 2]}
@@ -1439,13 +1439,13 @@ select jsonb_path_query('[{"a": 1, "b": [1, 2]}, {"c": {"a": "bbb"}}]', 'lax $.k
 select jsonb_path_query('[{"a": 1, "b": [1, 2]}, {"c": {"a": "bbb"}}]', 'strict $.keyvalue().a');
 ERROR:  jsonpath item method .keyvalue() can only be applied to an object
 select jsonb '{"a": 1, "b": [1, 2]}' @? 'lax $.keyvalue()';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb '{"a": 1, "b": [1, 2]}' @? 'lax $.keyvalue().key';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -1455,17 +1455,17 @@ ERROR:  jsonpath item method .double() can only be applied to a string or numeri
 select jsonb_path_query('true', '$.double()');
 ERROR:  jsonpath item method .double() can only be applied to a string or numeric value
 select jsonb_path_query('null', '$.double()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('true', '$.double()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[]', '$.double()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
@@ -1474,23 +1474,23 @@ ERROR:  jsonpath item method .double() can only be applied to a string or numeri
 select jsonb_path_query('{}', '$.double()');
 ERROR:  jsonpath item method .double() can only be applied to a string or numeric value
 select jsonb_path_query('[]', 'strict $.double()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('{}', '$.double()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('1.23', '$.double()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1.23
 (1 row)
 
 select jsonb_path_query('"1.23"', '$.double()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  1.23
 (1 row)
@@ -1508,12 +1508,12 @@ ERROR:  string argument of jsonpath item method .double() is not a valid represe
 select jsonb_path_query('"-inf"', '$.double()');
 ERROR:  string argument of jsonpath item method .double() is not a valid representation of a double precision number
 select jsonb_path_query('"inf"', '$.double()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('"-inf"', '$.double()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
@@ -1524,77 +1524,77 @@ ERROR:  jsonpath item method .floor() can only be applied to a numeric value
 select jsonb_path_query('"1.2"', '$.ceiling()');
 ERROR:  jsonpath item method .ceiling() can only be applied to a numeric value
 select jsonb_path_query('{}', '$.abs()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('true', '$.floor()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('"1.2"', '$.ceiling()', silent => true);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('["", "a", "abc", "abcabc"]', '$[*] ? (@ starts with "abc")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "abc"
  "abcabc"
 (2 rows)
 
 select jsonb_path_query('["", "a", "abc", "abcabc"]', 'strict $ ? (@[*] starts with "abc")');
-      jsonb_path_query      
+      jsonb_path_query
 ----------------------------
  ["", "a", "abc", "abcabc"]
 (1 row)
 
 select jsonb_path_query('["", "a", "abd", "abdabc"]', 'strict $ ? (@[*] starts with "abc")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('["abc", "abcabc", null, 1]', 'strict $ ? (@[*] starts with "abc")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('["abc", "abcabc", null, 1]', 'strict $ ? ((@[*] starts with "abc") is unknown)');
-      jsonb_path_query      
+      jsonb_path_query
 ----------------------------
  ["abc", "abcabc", null, 1]
 (1 row)
 
 select jsonb_path_query('[[null, 1, "abc", "abcabc"]]', 'lax $ ? (@[*] starts with "abc")');
-      jsonb_path_query      
+      jsonb_path_query
 ----------------------------
  [null, 1, "abc", "abcabc"]
 (1 row)
 
 select jsonb_path_query('[[null, 1, "abd", "abdabc"]]', 'lax $ ? ((@[*] starts with "abc") is unknown)');
-      jsonb_path_query      
+      jsonb_path_query
 ----------------------------
  [null, 1, "abd", "abdabc"]
 (1 row)
 
 select jsonb_path_query('[null, 1, "abd", "abdabc"]', 'lax $[*] ? ((@ starts with "abc") is unknown)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  null
  1
 (2 rows)
 
 select jsonb_path_query('[null, 1, "abc", "abd", "aBdC", "abdacb", "babc", "adc\nabc", "ab\nadc"]', 'lax $[*] ? (@ like_regex "^ab.*c")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "abc"
  "abdacb"
 (2 rows)
 
 select jsonb_path_query('[null, 1, "abc", "abd", "aBdC", "abdacb", "babc", "adc\nabc", "ab\nadc"]', 'lax $[*] ? (@ like_regex "^ab.*c" flag "i")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "abc"
  "aBdC"
@@ -1602,7 +1602,7 @@ select jsonb_path_query('[null, 1, "abc", "abd", "aBdC", "abdacb", "babc", "adc\
 (3 rows)
 
 select jsonb_path_query('[null, 1, "abc", "abd", "aBdC", "abdacb", "babc", "adc\nabc", "ab\nadc"]', 'lax $[*] ? (@ like_regex "^ab.*c" flag "m")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "abc"
  "abdacb"
@@ -1610,7 +1610,7 @@ select jsonb_path_query('[null, 1, "abc", "abd", "aBdC", "abdacb", "babc", "adc\
 (3 rows)
 
 select jsonb_path_query('[null, 1, "abc", "abd", "aBdC", "abdacb", "babc", "adc\nabc", "ab\nadc"]', 'lax $[*] ? (@ like_regex "^ab.*c" flag "s")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "abc"
  "abdacb"
@@ -1618,37 +1618,37 @@ select jsonb_path_query('[null, 1, "abc", "abd", "aBdC", "abdacb", "babc", "adc\
 (3 rows)
 
 select jsonb_path_query('[null, 1, "a\b", "a\\b", "^a\\b$"]', 'lax $[*] ? (@ like_regex "a\\b" flag "q")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "a\\b"
  "^a\\b$"
 (2 rows)
 
 select jsonb_path_query('[null, 1, "a\b", "a\\b", "^a\\b$"]', 'lax $[*] ? (@ like_regex "a\\b" flag "")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "a\b"
 (1 row)
 
 select jsonb_path_query('[null, 1, "a\b", "a\\b", "^a\\b$"]', 'lax $[*] ? (@ like_regex "^a\\b$" flag "q")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "^a\\b$"
 (1 row)
 
 select jsonb_path_query('[null, 1, "a\b", "a\\b", "^a\\b$"]', 'lax $[*] ? (@ like_regex "^a\\B$" flag "q")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 select jsonb_path_query('[null, 1, "a\b", "a\\b", "^a\\b$"]', 'lax $[*] ? (@ like_regex "^a\\B$" flag "iq")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "^a\\b$"
 (1 row)
 
 select jsonb_path_query('[null, 1, "a\b", "a\\b", "^a\\b$"]', 'lax $[*] ? (@ like_regex "^a\\b$" flag "")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "a\b"
 (1 row)
@@ -1660,7 +1660,7 @@ ERROR:  jsonpath item method .datetime() can only be applied to a string
 select jsonb_path_query('1', '$.datetime()');
 ERROR:  jsonpath item method .datetime() can only be applied to a string
 select jsonb_path_query('[]', '$.datetime()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
@@ -1677,19 +1677,19 @@ select jsonb_path_query('"aaaa"', '$.datetime("HH24")');
 ERROR:  invalid value "aa" for "HH24"
 DETAIL:  Value must be an integer.
 select jsonb '"10-03-2017"' @? '$.datetime("dd-mm-yyyy")';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select jsonb_path_query('"10-03-2017"', '$.datetime("dd-mm-yyyy")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "2017-03-10"
 (1 row)
 
 select jsonb_path_query('"10-03-2017"', '$.datetime("dd-mm-yyyy").type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "date"
 (1 row)
@@ -1699,31 +1699,31 @@ ERROR:  trailing characters remain in input string after datetime format
 select jsonb_path_query('"10-03-2017 12:34"', '$.datetime("dd-mm-yyyy").type()');
 ERROR:  trailing characters remain in input string after datetime format
 select jsonb_path_query('"10-03-2017 12:34"', '       $.datetime("dd-mm-yyyy HH24:MI").type()');
-       jsonb_path_query        
+       jsonb_path_query
 -------------------------------
  "timestamp without time zone"
 (1 row)
 
 select jsonb_path_query('"10-03-2017 12:34 +05:20"', '$.datetime("dd-mm-yyyy HH24:MI TZH:TZM").type()');
-      jsonb_path_query      
+      jsonb_path_query
 ----------------------------
  "timestamp with time zone"
 (1 row)
 
 select jsonb_path_query('"12:34:56"', '$.datetime("HH24:MI:SS").type()');
-     jsonb_path_query     
+     jsonb_path_query
 --------------------------
  "time without time zone"
 (1 row)
 
 select jsonb_path_query('"12:34:56 +05:20"', '$.datetime("HH24:MI:SS TZH:TZM").type()');
-   jsonb_path_query    
+   jsonb_path_query
 -----------------------
  "time with time zone"
 (1 row)
 
 select jsonb_path_query('"10-03-2017T12:34:56"', '$.datetime("dd-mm-yyyy\"T\"HH24:MI:SS")');
-   jsonb_path_query    
+   jsonb_path_query
 -----------------------
  "2017-03-10T12:34:56"
 (1 row)
@@ -1734,7 +1734,7 @@ select jsonb_path_query('"10-03-2017 12:34:56"', '$.datetime("dd-mm-yyyy\"T\"HH2
 ERROR:  unmatched format character "T"
 set time zone '+00';
 select jsonb_path_query('"10-03-2017 12:34"', '$.datetime("dd-mm-yyyy HH24:MI")');
-   jsonb_path_query    
+   jsonb_path_query
 -----------------------
  "2017-03-10T12:34:00"
 (1 row)
@@ -1742,31 +1742,31 @@ select jsonb_path_query('"10-03-2017 12:34"', '$.datetime("dd-mm-yyyy HH24:MI")'
 select jsonb_path_query('"10-03-2017 12:34"', '$.datetime("dd-mm-yyyy HH24:MI TZH")');
 ERROR:  input string is too short for datetime format
 select jsonb_path_query('"10-03-2017 12:34 +05"', '$.datetime("dd-mm-yyyy HH24:MI TZH")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00+05:00"
 (1 row)
 
 select jsonb_path_query('"10-03-2017 12:34 -05"', '$.datetime("dd-mm-yyyy HH24:MI TZH")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00-05:00"
 (1 row)
 
 select jsonb_path_query('"10-03-2017 12:34 +05:20"', '$.datetime("dd-mm-yyyy HH24:MI TZH:TZM")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00+05:20"
 (1 row)
 
 select jsonb_path_query('"10-03-2017 12:34 -05:20"', '$.datetime("dd-mm-yyyy HH24:MI TZH:TZM")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00-05:20"
 (1 row)
 
 select jsonb_path_query('"12:34"', '$.datetime("HH24:MI")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00"
 (1 row)
@@ -1774,32 +1774,32 @@ select jsonb_path_query('"12:34"', '$.datetime("HH24:MI")');
 select jsonb_path_query('"12:34"', '$.datetime("HH24:MI TZH")');
 ERROR:  input string is too short for datetime format
 select jsonb_path_query('"12:34 +05"', '$.datetime("HH24:MI TZH")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00+05:00"
 (1 row)
 
 select jsonb_path_query('"12:34 -05"', '$.datetime("HH24:MI TZH")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00-05:00"
 (1 row)
 
 select jsonb_path_query('"12:34 +05:20"', '$.datetime("HH24:MI TZH:TZM")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00+05:20"
 (1 row)
 
 select jsonb_path_query('"12:34 -05:20"', '$.datetime("HH24:MI TZH:TZM")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00-05:20"
 (1 row)
 
 set time zone '+10';
 select jsonb_path_query('"10-03-2017 12:34"', '$.datetime("dd-mm-yyyy HH24:MI")');
-   jsonb_path_query    
+   jsonb_path_query
 -----------------------
  "2017-03-10T12:34:00"
 (1 row)
@@ -1807,31 +1807,31 @@ select jsonb_path_query('"10-03-2017 12:34"', '$.datetime("dd-mm-yyyy HH24:MI")'
 select jsonb_path_query('"10-03-2017 12:34"', '$.datetime("dd-mm-yyyy HH24:MI TZH")');
 ERROR:  input string is too short for datetime format
 select jsonb_path_query('"10-03-2017 12:34 +05"', '$.datetime("dd-mm-yyyy HH24:MI TZH")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00+05:00"
 (1 row)
 
 select jsonb_path_query('"10-03-2017 12:34 -05"', '$.datetime("dd-mm-yyyy HH24:MI TZH")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00-05:00"
 (1 row)
 
 select jsonb_path_query('"10-03-2017 12:34 +05:20"', '$.datetime("dd-mm-yyyy HH24:MI TZH:TZM")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00+05:20"
 (1 row)
 
 select jsonb_path_query('"10-03-2017 12:34 -05:20"', '$.datetime("dd-mm-yyyy HH24:MI TZH:TZM")');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:00-05:20"
 (1 row)
 
 select jsonb_path_query('"12:34"', '$.datetime("HH24:MI")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00"
 (1 row)
@@ -1839,80 +1839,80 @@ select jsonb_path_query('"12:34"', '$.datetime("HH24:MI")');
 select jsonb_path_query('"12:34"', '$.datetime("HH24:MI TZH")');
 ERROR:  input string is too short for datetime format
 select jsonb_path_query('"12:34 +05"', '$.datetime("HH24:MI TZH")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00+05:00"
 (1 row)
 
 select jsonb_path_query('"12:34 -05"', '$.datetime("HH24:MI TZH")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00-05:00"
 (1 row)
 
 select jsonb_path_query('"12:34 +05:20"', '$.datetime("HH24:MI TZH:TZM")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00+05:20"
 (1 row)
 
 select jsonb_path_query('"12:34 -05:20"', '$.datetime("HH24:MI TZH:TZM")');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:00-05:20"
 (1 row)
 
 set time zone default;
 select jsonb_path_query('"2017-03-10"', '$.datetime().type()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "date"
 (1 row)
 
 select jsonb_path_query('"2017-03-10"', '$.datetime()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "2017-03-10"
 (1 row)
 
 select jsonb_path_query('"2017-03-10 12:34:56"', '$.datetime().type()');
-       jsonb_path_query        
+       jsonb_path_query
 -------------------------------
  "timestamp without time zone"
 (1 row)
 
 select jsonb_path_query('"2017-03-10 12:34:56"', '$.datetime()');
-   jsonb_path_query    
+   jsonb_path_query
 -----------------------
  "2017-03-10T12:34:56"
 (1 row)
 
 select jsonb_path_query('"2017-03-10 12:34:56+3"', '$.datetime().type()');
-      jsonb_path_query      
+      jsonb_path_query
 ----------------------------
  "timestamp with time zone"
 (1 row)
 
 select jsonb_path_query('"2017-03-10 12:34:56+3"', '$.datetime()');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:56+03:00"
 (1 row)
 
 select jsonb_path_query('"2017-03-10 12:34:56+3:10"', '$.datetime().type()');
-      jsonb_path_query      
+      jsonb_path_query
 ----------------------------
  "timestamp with time zone"
 (1 row)
 
 select jsonb_path_query('"2017-03-10 12:34:56+3:10"', '$.datetime()');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:56+03:10"
 (1 row)
 
 select jsonb_path_query('"2017-03-10T12:34:56+3:10"', '$.datetime()');
-      jsonb_path_query       
+      jsonb_path_query
 -----------------------------
  "2017-03-10T12:34:56+03:10"
 (1 row)
@@ -1921,13 +1921,13 @@ select jsonb_path_query('"2017-03-10t12:34:56+3:10"', '$.datetime()');
 ERROR:  datetime format is not recognized: "2017-03-10t12:34:56+3:10"
 HINT:  Use a datetime template argument to specify the input data format.
 select jsonb_path_query('"2017-03-10 12:34:56.789+3:10"', '$.datetime()');
-        jsonb_path_query         
+        jsonb_path_query
 ---------------------------------
  "2017-03-10T12:34:56.789+03:10"
 (1 row)
 
 select jsonb_path_query('"2017-03-10T12:34:56.789+3:10"', '$.datetime()');
-        jsonb_path_query         
+        jsonb_path_query
 ---------------------------------
  "2017-03-10T12:34:56.789+03:10"
 (1 row)
@@ -1936,37 +1936,37 @@ select jsonb_path_query('"2017-03-10t12:34:56.789+3:10"', '$.datetime()');
 ERROR:  datetime format is not recognized: "2017-03-10t12:34:56.789+3:10"
 HINT:  Use a datetime template argument to specify the input data format.
 select jsonb_path_query('"12:34:56"', '$.datetime().type()');
-     jsonb_path_query     
+     jsonb_path_query
 --------------------------
  "time without time zone"
 (1 row)
 
 select jsonb_path_query('"12:34:56"', '$.datetime()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:56"
 (1 row)
 
 select jsonb_path_query('"12:34:56+3"', '$.datetime().type()');
-   jsonb_path_query    
+   jsonb_path_query
 -----------------------
  "time with time zone"
 (1 row)
 
 select jsonb_path_query('"12:34:56+3"', '$.datetime()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:56+03:00"
 (1 row)
 
 select jsonb_path_query('"12:34:56+3:10"', '$.datetime().type()');
-   jsonb_path_query    
+   jsonb_path_query
 -----------------------
  "time with time zone"
 (1 row)
 
 select jsonb_path_query('"12:34:56+3:10"', '$.datetime()');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  "12:34:56+03:10"
 (1 row)
@@ -1991,7 +1991,7 @@ HINT:  Use *_tz() function for time zone support.
 select jsonb_path_query_tz(
 	'["2017-03-10", "2017-03-11", "2017-03-09", "12:34:56", "01:02:03+04", "2017-03-10 00:00:00", "2017-03-10 12:34:56", "2017-03-10 01:02:03+04", "2017-03-10 03:00:00+03"]',
 	'$[*].datetime() ? (@ == "10.03.2017".datetime("dd.mm.yyyy"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10"
  "2017-03-10T00:00:00"
@@ -2001,7 +2001,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["2017-03-10", "2017-03-11", "2017-03-09", "12:34:56", "01:02:03+04", "2017-03-10 00:00:00", "2017-03-10 12:34:56", "2017-03-10 01:02:03+04", "2017-03-10 03:00:00+03"]',
 	'$[*].datetime() ? (@ >= "10.03.2017".datetime("dd.mm.yyyy"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10"
  "2017-03-11"
@@ -2013,7 +2013,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["2017-03-10", "2017-03-11", "2017-03-09", "12:34:56", "01:02:03+04", "2017-03-10 00:00:00", "2017-03-10 12:34:56", "2017-03-10 01:02:03+04", "2017-03-10 03:00:00+03"]',
 	'$[*].datetime() ? (@ <  "10.03.2017".datetime("dd.mm.yyyy"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-09"
  "2017-03-10T01:02:03+04:00"
@@ -2038,7 +2038,7 @@ HINT:  Use *_tz() function for time zone support.
 select jsonb_path_query_tz(
 	'["12:34:00", "12:35:00", "12:36:00", "12:35:00+00", "12:35:00+01", "13:35:00+01", "2017-03-10", "2017-03-10 12:35:00", "2017-03-10 12:35:00+01"]',
 	'$[*].datetime() ? (@ == "12:35".datetime("HH24:MI"))');
- jsonb_path_query_tz 
+ jsonb_path_query_tz
 ---------------------
  "12:35:00"
  "12:35:00+00:00"
@@ -2047,7 +2047,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["12:34:00", "12:35:00", "12:36:00", "12:35:00+00", "12:35:00+01", "13:35:00+01", "2017-03-10", "2017-03-10 12:35:00", "2017-03-10 12:35:00+01"]',
 	'$[*].datetime() ? (@ >= "12:35".datetime("HH24:MI"))');
- jsonb_path_query_tz 
+ jsonb_path_query_tz
 ---------------------
  "12:35:00"
  "12:36:00"
@@ -2057,7 +2057,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["12:34:00", "12:35:00", "12:36:00", "12:35:00+00", "12:35:00+01", "13:35:00+01", "2017-03-10", "2017-03-10 12:35:00", "2017-03-10 12:35:00+01"]',
 	'$[*].datetime() ? (@ <  "12:35".datetime("HH24:MI"))');
- jsonb_path_query_tz 
+ jsonb_path_query_tz
 ---------------------
  "12:34:00"
  "12:35:00+01:00"
@@ -2083,7 +2083,7 @@ HINT:  Use *_tz() function for time zone support.
 select jsonb_path_query_tz(
 	'["12:34:00+01", "12:35:00+01", "12:36:00+01", "12:35:00+02", "12:35:00-02", "10:35:00", "11:35:00", "12:35:00", "2017-03-10", "2017-03-10 12:35:00", "2017-03-10 12:35:00 +1"]',
 	'$[*].datetime() ? (@ == "12:35 +1".datetime("HH24:MI TZH"))');
- jsonb_path_query_tz 
+ jsonb_path_query_tz
 ---------------------
  "12:35:00+01:00"
 (1 row)
@@ -2091,7 +2091,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["12:34:00+01", "12:35:00+01", "12:36:00+01", "12:35:00+02", "12:35:00-02", "10:35:00", "11:35:00", "12:35:00", "2017-03-10", "2017-03-10 12:35:00", "2017-03-10 12:35:00 +1"]',
 	'$[*].datetime() ? (@ >= "12:35 +1".datetime("HH24:MI TZH"))');
- jsonb_path_query_tz 
+ jsonb_path_query_tz
 ---------------------
  "12:35:00+01:00"
  "12:36:00+01:00"
@@ -2103,7 +2103,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["12:34:00+01", "12:35:00+01", "12:36:00+01", "12:35:00+02", "12:35:00-02", "10:35:00", "11:35:00", "12:35:00", "2017-03-10", "2017-03-10 12:35:00", "2017-03-10 12:35:00 +1"]',
 	'$[*].datetime() ? (@ <  "12:35 +1".datetime("HH24:MI TZH"))');
- jsonb_path_query_tz 
+ jsonb_path_query_tz
 ---------------------
  "12:34:00+01:00"
  "12:35:00+02:00"
@@ -2129,7 +2129,7 @@ HINT:  Use *_tz() function for time zone support.
 select jsonb_path_query_tz(
 	'["2017-03-10 12:34:00", "2017-03-10 12:35:00", "2017-03-10 12:36:00", "2017-03-10 12:35:00+01", "2017-03-10 13:35:00+01", "2017-03-10 12:35:00-01", "2017-03-10", "2017-03-11", "12:34:56", "12:34:56+01"]',
 	'$[*].datetime() ? (@ == "10.03.2017 12:35".datetime("dd.mm.yyyy HH24:MI"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10T12:35:00"
  "2017-03-10T13:35:00+01:00"
@@ -2138,7 +2138,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["2017-03-10 12:34:00", "2017-03-10 12:35:00", "2017-03-10 12:36:00", "2017-03-10 12:35:00+01", "2017-03-10 13:35:00+01", "2017-03-10 12:35:00-01", "2017-03-10", "2017-03-11", "12:34:56", "12:34:56+01"]',
 	'$[*].datetime() ? (@ >= "10.03.2017 12:35".datetime("dd.mm.yyyy HH24:MI"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10T12:35:00"
  "2017-03-10T12:36:00"
@@ -2150,7 +2150,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["2017-03-10 12:34:00", "2017-03-10 12:35:00", "2017-03-10 12:36:00", "2017-03-10 12:35:00+01", "2017-03-10 13:35:00+01", "2017-03-10 12:35:00-01", "2017-03-10", "2017-03-11", "12:34:56", "12:34:56+01"]',
 	'$[*].datetime() ? (@ < "10.03.2017 12:35".datetime("dd.mm.yyyy HH24:MI"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10T12:34:00"
  "2017-03-10T12:35:00+01:00"
@@ -2176,7 +2176,7 @@ HINT:  Use *_tz() function for time zone support.
 select jsonb_path_query_tz(
 	'["2017-03-10 12:34:00+01", "2017-03-10 12:35:00+01", "2017-03-10 12:36:00+01", "2017-03-10 12:35:00+02", "2017-03-10 12:35:00-02", "2017-03-10 10:35:00", "2017-03-10 11:35:00", "2017-03-10 12:35:00", "2017-03-10", "2017-03-11", "12:34:56", "12:34:56+01"]',
 	'$[*].datetime() ? (@ == "10.03.2017 12:35 +1".datetime("dd.mm.yyyy HH24:MI TZH"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10T12:35:00+01:00"
  "2017-03-10T11:35:00"
@@ -2185,7 +2185,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["2017-03-10 12:34:00+01", "2017-03-10 12:35:00+01", "2017-03-10 12:36:00+01", "2017-03-10 12:35:00+02", "2017-03-10 12:35:00-02", "2017-03-10 10:35:00", "2017-03-10 11:35:00", "2017-03-10 12:35:00", "2017-03-10", "2017-03-11", "12:34:56", "12:34:56+01"]',
 	'$[*].datetime() ? (@ >= "10.03.2017 12:35 +1".datetime("dd.mm.yyyy HH24:MI TZH"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10T12:35:00+01:00"
  "2017-03-10T12:36:00+01:00"
@@ -2198,7 +2198,7 @@ select jsonb_path_query_tz(
 select jsonb_path_query_tz(
 	'["2017-03-10 12:34:00+01", "2017-03-10 12:35:00+01", "2017-03-10 12:36:00+01", "2017-03-10 12:35:00+02", "2017-03-10 12:35:00-02", "2017-03-10 10:35:00", "2017-03-10 11:35:00", "2017-03-10 12:35:00", "2017-03-10", "2017-03-11", "12:34:56", "12:34:56+01"]',
 	'$[*].datetime() ? (@ < "10.03.2017 12:35 +1".datetime("dd.mm.yyyy HH24:MI TZH"))');
-     jsonb_path_query_tz     
+     jsonb_path_query_tz
 -----------------------------
  "2017-03-10T12:34:00+01:00"
  "2017-03-10T12:35:00+02:00"
@@ -2208,7 +2208,7 @@ select jsonb_path_query_tz(
 
 -- overflow during comparison
 select jsonb_path_query('"1000000-01-01"', '$.datetime() > "2020-01-01 12:00:00".datetime()'::jsonpath);
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  true
 (1 row)
@@ -2216,21 +2216,21 @@ select jsonb_path_query('"1000000-01-01"', '$.datetime() > "2020-01-01 12:00:00"
 set time zone default;
 -- jsonpath operators
 SELECT jsonb_path_query('[{"a": 1}, {"a": 2}]', '$[*]');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  {"a": 1}
  {"a": 2}
 (2 rows)
 
 SELECT jsonb_path_query('[{"a": 1}, {"a": 2}]', '$[*] ? (@.a > 10)');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
 (0 rows)
 
 SELECT jsonb_path_query('[{"a": 1}]', '$undefined_var');
 ERROR:  could not find jsonpath variable "undefined_var"
 SELECT jsonb_path_query('[{"a": 1}]', 'false');
- jsonb_path_query 
+ jsonb_path_query
 ------------------
  false
 (1 row)
@@ -2238,31 +2238,31 @@ SELECT jsonb_path_query('[{"a": 1}]', 'false');
 SELECT jsonb_path_query_array('[{"a": 1}, {"a": 2}, {}]', 'strict $[*].a');
 ERROR:  JSON object does not contain key "a"
 SELECT jsonb_path_query_array('[{"a": 1}, {"a": 2}]', '$[*].a');
- jsonb_path_query_array 
+ jsonb_path_query_array
 ------------------------
  [1, 2]
 (1 row)
 
 SELECT jsonb_path_query_array('[{"a": 1}, {"a": 2}]', '$[*].a ? (@ == 1)');
- jsonb_path_query_array 
+ jsonb_path_query_array
 ------------------------
  [1]
 (1 row)
 
 SELECT jsonb_path_query_array('[{"a": 1}, {"a": 2}]', '$[*].a ? (@ > 10)');
- jsonb_path_query_array 
+ jsonb_path_query_array
 ------------------------
  []
 (1 row)
 
 SELECT jsonb_path_query_array('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*].a ? (@ > $min && @ < $max)', vars => '{"min": 1, "max": 4}');
- jsonb_path_query_array 
+ jsonb_path_query_array
 ------------------------
  [2, 3]
 (1 row)
 
 SELECT jsonb_path_query_array('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*].a ? (@ > $min && @ < $max)', vars => '{"min": 3, "max": 4}');
- jsonb_path_query_array 
+ jsonb_path_query_array
 ------------------------
  []
 (1 row)
@@ -2270,75 +2270,75 @@ SELECT jsonb_path_query_array('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*].
 SELECT jsonb_path_query_first('[{"a": 1}, {"a": 2}, {}]', 'strict $[*].a');
 ERROR:  JSON object does not contain key "a"
 SELECT jsonb_path_query_first('[{"a": 1}, {"a": 2}, {}]', 'strict $[*].a', silent => true);
- jsonb_path_query_first 
+ jsonb_path_query_first
 ------------------------
  1
 (1 row)
 
 SELECT jsonb_path_query_first('[{"a": 1}, {"a": 2}]', '$[*].a');
- jsonb_path_query_first 
+ jsonb_path_query_first
 ------------------------
  1
 (1 row)
 
 SELECT jsonb_path_query_first('[{"a": 1}, {"a": 2}]', '$[*].a ? (@ == 1)');
- jsonb_path_query_first 
+ jsonb_path_query_first
 ------------------------
  1
 (1 row)
 
 SELECT jsonb_path_query_first('[{"a": 1}, {"a": 2}]', '$[*].a ? (@ > 10)');
- jsonb_path_query_first 
+ jsonb_path_query_first
 ------------------------
- 
+
 (1 row)
 
 SELECT jsonb_path_query_first('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*].a ? (@ > $min && @ < $max)', vars => '{"min": 1, "max": 4}');
- jsonb_path_query_first 
+ jsonb_path_query_first
 ------------------------
  2
 (1 row)
 
 SELECT jsonb_path_query_first('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*].a ? (@ > $min && @ < $max)', vars => '{"min": 3, "max": 4}');
- jsonb_path_query_first 
+ jsonb_path_query_first
 ------------------------
- 
+
 (1 row)
 
 SELECT jsonb_path_query_first('[{"a": 1}]', '$undefined_var');
 ERROR:  could not find jsonpath variable "undefined_var"
 SELECT jsonb_path_query_first('[{"a": 1}]', 'false');
- jsonb_path_query_first 
+ jsonb_path_query_first
 ------------------------
  false
 (1 row)
 
 SELECT jsonb '[{"a": 1}, {"a": 2}]' @? '$[*].a ? (@ > 1)';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT jsonb '[{"a": 1}, {"a": 2}]' @? '$[*] ? (@.a > 2)';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT jsonb_path_exists('[{"a": 1}, {"a": 2}]', '$[*].a ? (@ > 1)');
- jsonb_path_exists 
+ jsonb_path_exists
 -------------------
  t
 (1 row)
 
 SELECT jsonb_path_exists('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*] ? (@.a > $min && @.a < $max)', vars => '{"min": 1, "max": 4}');
- jsonb_path_exists 
+ jsonb_path_exists
 -------------------
  t
 (1 row)
 
 SELECT jsonb_path_exists('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*] ? (@.a > $min && @.a < $max)', vars => '{"min": 3, "max": 4}');
- jsonb_path_exists 
+ jsonb_path_exists
 -------------------
  f
 (1 row)
@@ -2346,33 +2346,33 @@ SELECT jsonb_path_exists('[{"a": 1}, {"a": 2}, {"a": 3}, {"a": 5}]', '$[*] ? (@.
 SELECT jsonb_path_exists('[{"a": 1}]', '$undefined_var');
 ERROR:  could not find jsonpath variable "undefined_var"
 SELECT jsonb_path_exists('[{"a": 1}]', 'false');
- jsonb_path_exists 
+ jsonb_path_exists
 -------------------
  t
 (1 row)
 
 SELECT jsonb_path_match('true', '$', silent => false);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  t
 (1 row)
 
 SELECT jsonb_path_match('false', '$', silent => false);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  f
 (1 row)
 
 SELECT jsonb_path_match('null', '$', silent => false);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
- 
+
 (1 row)
 
 SELECT jsonb_path_match('1', '$', silent => true);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
- 
+
 (1 row)
 
 SELECT jsonb_path_match('1', '$', silent => false);
@@ -2388,27 +2388,27 @@ ERROR:  single boolean result is expected
 SELECT jsonb_path_match('{}', 'strict $.a', silent => false);
 ERROR:  JSON object does not contain key "a"
 SELECT jsonb_path_match('{}', 'strict $.a', silent => true);
- jsonb_path_match 
+ jsonb_path_match
 ------------------
- 
+
 (1 row)
 
 SELECT jsonb_path_match('[true, true]', '$[*]', silent => false);
 ERROR:  single boolean result is expected
 SELECT jsonb '[{"a": 1}, {"a": 2}]' @@ '$[*].a > 1';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT jsonb '[{"a": 1}, {"a": 2}]' @@ '$[*].a > 2';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT jsonb_path_match('[{"a": 1}, {"a": 2}]', '$[*].a > 1');
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  t
 (1 row)
@@ -2416,7 +2416,7 @@ SELECT jsonb_path_match('[{"a": 1}, {"a": 2}]', '$[*].a > 1');
 SELECT jsonb_path_match('[{"a": 1}]', '$undefined_var');
 ERROR:  could not find jsonpath variable "undefined_var"
 SELECT jsonb_path_match('[{"a": 1}]', 'false');
- jsonb_path_match 
+ jsonb_path_match
 ------------------
  f
 (1 row)
@@ -2436,7 +2436,7 @@ SELECT
 	jsonb_path_query_first(s1.j, '$.s > $s', vars => s2.j) gt
 FROM str s1, str s2
 ORDER BY s1.num, s2.num;
-       j       |       j       |  lt   |  le   |  eq   |  ge   |  gt   
+       j       |       j       |  lt   |  le   |  eq   |  ge   |  gt
 ---------------+---------------+-------+-------+-------+-------+-------
  {"s": ""}     | {"s": ""}     | false | true  | true  | true  | false
  {"s": ""}     | {"s": "a"}    | true  | true  | false | false | false
@@ -2583,4 +2583,3 @@ ORDER BY s1.num, s2.num;
  {"s": "B"}    | {"s": "ABcD"} | false | false | false | true  | true
  {"s": "B"}    | {"s": "B"}    | false | true  | true  | true  | false
 (144 rows)
-

@@ -6,7 +6,7 @@ select pgp_pub_decrypt(
 	pgp_pub_encrypt('Secret msg', dearmor(pubkey)),
 	dearmor(seckey))
 from keytbl where keytbl.id=1;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret msg
 (1 row)
@@ -15,7 +15,7 @@ select pgp_pub_decrypt(
 		pgp_pub_encrypt('Secret msg', dearmor(pubkey)),
 		dearmor(seckey))
 from keytbl where keytbl.id=2;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret msg
 (1 row)
@@ -24,7 +24,7 @@ select pgp_pub_decrypt(
 		pgp_pub_encrypt('Secret msg', dearmor(pubkey)),
 		dearmor(seckey))
 from keytbl where keytbl.id=3;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret msg
 (1 row)
@@ -33,7 +33,7 @@ select pgp_pub_decrypt(
 		pgp_pub_encrypt('Secret msg', dearmor(pubkey)),
 		dearmor(seckey))
 from keytbl where keytbl.id=6;
- pgp_pub_decrypt 
+ pgp_pub_decrypt
 -----------------
  Secret msg
 (1 row)
@@ -55,7 +55,7 @@ select encode(pgp_pub_decrypt_bytea(
 		pgp_pub_encrypt('Secret msg', dearmor(pubkey)),
 		dearmor(seckey)), 'escape')
 from keytbl where keytbl.id=1;
-   encode   
+   encode
 ------------
  Secret msg
 (1 row)

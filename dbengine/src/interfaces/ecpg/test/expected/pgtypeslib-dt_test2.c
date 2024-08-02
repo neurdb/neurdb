@@ -77,24 +77,24 @@ int
 main(void)
 {
 	/* exec sql begin declare section */
-		 
-		  
-		 
-		 
-		 
-	
+
+
+
+
+
+
 #line 62 "dt_test2.pgc"
  date date1 ;
- 
+
 #line 63 "dt_test2.pgc"
  timestamp ts1 , ts2 ;
- 
+
 #line 64 "dt_test2.pgc"
  char * text ;
- 
+
 #line 65 "dt_test2.pgc"
  interval * i1 ;
- 
+
 #line 66 "dt_test2.pgc"
  date * dc ;
 /* exec sql end declare section */

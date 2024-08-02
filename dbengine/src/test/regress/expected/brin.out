@@ -395,9 +395,9 @@ INSERT INTO brintest SELECT
 	box(point(odd, even), point(thousand, twothousand))
 FROM tenk1 ORDER BY unique2 LIMIT 5 OFFSET 5;
 SELECT brin_desummarize_range('brinidx', 0);
- brin_desummarize_range 
+ brin_desummarize_range
 ------------------------
- 
+
 (1 row)
 
 VACUUM brintest;  -- force a summarization cycle in brinidx
@@ -409,7 +409,7 @@ ERROR:  "brintest" is not an index
 SELECT brin_summarize_new_values('tenk1_unique1'); -- error, not a BRIN index
 ERROR:  "tenk1_unique1" is not a BRIN index
 SELECT brin_summarize_new_values('brinidx'); -- ok, no change expected
- brin_summarize_new_values 
+ brin_summarize_new_values
 ---------------------------
                          0
 (1 row)
@@ -418,21 +418,21 @@ SELECT brin_summarize_new_values('brinidx'); -- ok, no change expected
 SELECT brin_desummarize_range('brinidx', -1); -- error, invalid range
 ERROR:  block number out of range: -1
 SELECT brin_desummarize_range('brinidx', 0);
- brin_desummarize_range 
+ brin_desummarize_range
 ------------------------
- 
+
 (1 row)
 
 SELECT brin_desummarize_range('brinidx', 0);
- brin_desummarize_range 
+ brin_desummarize_range
 ------------------------
- 
+
 (1 row)
 
 SELECT brin_desummarize_range('brinidx', 100000000);
- brin_desummarize_range 
+ brin_desummarize_range
 ------------------------
- 
+
 (1 row)
 
 -- Test brin_summarize_range
@@ -452,28 +452,28 @@ END;
 $$;
 -- summarize one range
 SELECT brin_summarize_range('brin_summarize_idx', 0);
- brin_summarize_range 
+ brin_summarize_range
 ----------------------
                     0
 (1 row)
 
 -- nothing: already summarized
 SELECT brin_summarize_range('brin_summarize_idx', 1);
- brin_summarize_range 
+ brin_summarize_range
 ----------------------
                     0
 (1 row)
 
 -- summarize one range
 SELECT brin_summarize_range('brin_summarize_idx', 2);
- brin_summarize_range 
+ brin_summarize_range
 ----------------------
                     1
 (1 row)
 
 -- nothing: page doesn't exist in table
 SELECT brin_summarize_range('brin_summarize_idx', 4294967295);
- brin_summarize_range 
+ brin_summarize_range
 ----------------------
                     0
 (1 row)
@@ -490,13 +490,13 @@ INSERT INTO brintest_2 VALUES ('empty');
 INSERT INTO brintest_2 VALUES (numrange(0, 2^1000::numeric));
 INSERT INTO brintest_2 VALUES ('(-1, 0)');
 SELECT brin_desummarize_range('brinidx', 0);
- brin_desummarize_range 
+ brin_desummarize_range
 ------------------------
- 
+
 (1 row)
 
 SELECT brin_summarize_range('brinidx', 0);
- brin_summarize_range 
+ brin_summarize_range
 ----------------------
                     1
 (1 row)
@@ -510,7 +510,7 @@ CREATE INDEX brin_test_b_idx ON brin_test USING brin (b) WITH (pages_per_range =
 VACUUM ANALYZE brin_test;
 -- Ensure brin index is used when columns are perfectly correlated
 EXPLAIN (COSTS OFF) SELECT * FROM brin_test WHERE a = 1;
-                 QUERY PLAN                 
+                 QUERY PLAN
 --------------------------------------------
  Bitmap Heap Scan on brin_test
    Recheck Cond: (a = 1)
@@ -520,7 +520,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM brin_test WHERE a = 1;
 
 -- Ensure brin index is not used when values are not correlated
 EXPLAIN (COSTS OFF) SELECT * FROM brin_test WHERE b = 1;
-      QUERY PLAN       
+      QUERY PLAN
 -----------------------
  Seq Scan on brin_test
    Filter: (b = 1)
@@ -552,7 +552,7 @@ SELECT val, val, val, val FROM rand_value;
 SET enable_seqscan = off;
 EXPLAIN (COSTS OFF)
 SELECT * FROM brintest_3 WHERE b < '0';
-                   QUERY PLAN                   
+                   QUERY PLAN
 ------------------------------------------------
  Bitmap Heap Scan on brintest_3
    Recheck Cond: (b < '0'::text)
@@ -561,7 +561,7 @@ SELECT * FROM brintest_3 WHERE b < '0';
 (4 rows)
 
 SELECT * FROM brintest_3 WHERE b < '0';
- a | b | c | d 
+ a | b | c | d
 ---+---+---+---
 (0 rows)
 

@@ -11,7 +11,7 @@ return len(val)
 $$;
 SELECT test1('aa=>bb, cc=>NULL'::hstore);
 INFO:  [('aa', 'bb'), ('cc', None)]
- test1 
+ test1
 -------
      2
 (1 row)
@@ -27,7 +27,7 @@ return len(val)
 $$;
 SELECT test1n('aa=>bb, cc=>NULL'::hstore);
 INFO:  [('aa', 'bb'), ('cc', None)]
- test1n 
+ test1n
 --------
       2
 (1 row)
@@ -52,7 +52,7 @@ assert(val == [{'aa': 'bb', 'cc': None}, {'dd': 'ee'}])
 return len(val)
 $$;
 SELECT test1arr(array['aa=>bb, cc=>NULL'::hstore, 'dd=>ee']);
- test1arr 
+ test1arr
 ----------
         2
 (1 row)
@@ -66,7 +66,7 @@ val = {'a': a, 'b': b, 'c': None}
 return val
 $$;
 SELECT test2(1, 'boo');
-              test2              
+              test2
 ---------------------------------
  "a"=>"1", "b"=>"boo", "c"=>NULL
 (1 row)
@@ -90,7 +90,7 @@ val = [{'a': 1, 'b': 'boo', 'c': None}, {'d': 2}]
 return val
 $$;
 SELECT test2arr();
-                           test2arr                           
+                           test2arr
 --------------------------------------------------------------
  {"\"a\"=>\"1\", \"b\"=>\"boo\", \"c\"=>NULL","\"d\"=>\"2\""}
 (1 row)
@@ -104,7 +104,7 @@ AS $$
 return {'a': 1, fn: 'boo', 'c': None}
 $$;
 SELECT test2dom('foo');
-             test2dom              
+             test2dom
 -----------------------------------
  "a"=>"1", "c"=>NULL, "foo"=>"boo"
 (1 row)
@@ -127,16 +127,16 @@ rv = plpy.execute(plan, [val])
 assert(rv[0]["col1"] == '"a"=>"1", "b"=>"boo", "c"=>NULL')
 $$;
 SELECT test3();
- test3 
+ test3
 -------
- 
+
 (1 row)
 
 -- test trigger
 CREATE TABLE test1 (a int, b hstore);
 INSERT INTO test1 VALUES (1, 'aa=>bb, cc=>NULL');
 SELECT * FROM test1;
- a |           b            
+ a |           b
 ---+------------------------
  1 | "aa"=>"bb", "cc"=>NULL
 (1 row)
@@ -154,8 +154,7 @@ $$;
 CREATE TRIGGER test4 BEFORE UPDATE ON test1 FOR EACH ROW EXECUTE PROCEDURE test4();
 UPDATE test1 SET a = a;
 SELECT * FROM test1;
- a |                b                
+ a |                b
 ---+---------------------------------
  1 | "a"=>"1", "b"=>"boo", "c"=>NULL
 (1 row)
-

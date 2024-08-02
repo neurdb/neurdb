@@ -3,31 +3,31 @@ CREATE TABLE macaddr8tmp (a macaddr8);
 \copy macaddr8tmp from 'data/macaddr.data'
 SET enable_seqscan=on;
 SELECT count(*) FROM macaddr8tmp WHERE a <  '22:00:5c:e5:9b:0d';
- count 
+ count
 -------
     56
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a <= '22:00:5c:e5:9b:0d';
- count 
+ count
 -------
     60
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a  = '22:00:5c:e5:9b:0d';
- count 
+ count
 -------
      4
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a >= '22:00:5c:e5:9b:0d';
- count 
+ count
 -------
    544
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a >  '22:00:5c:e5:9b:0d';
- count 
+ count
 -------
    540
 (1 row)
@@ -35,31 +35,31 @@ SELECT count(*) FROM macaddr8tmp WHERE a >  '22:00:5c:e5:9b:0d';
 CREATE INDEX macaddr8idx ON macaddr8tmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM macaddr8tmp WHERE a <  '22:00:5c:e5:9b:0d'::macaddr8;
- count 
+ count
 -------
     56
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a <= '22:00:5c:e5:9b:0d'::macaddr8;
- count 
+ count
 -------
     60
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a  = '22:00:5c:e5:9b:0d'::macaddr8;
- count 
+ count
 -------
      4
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a >= '22:00:5c:e5:9b:0d'::macaddr8;
- count 
+ count
 -------
    544
 (1 row)
 
 SELECT count(*) FROM macaddr8tmp WHERE a >  '22:00:5c:e5:9b:0d'::macaddr8;
- count 
+ count
 -------
    540
 (1 row)
@@ -68,14 +68,14 @@ SELECT count(*) FROM macaddr8tmp WHERE a >  '22:00:5c:e5:9b:0d'::macaddr8;
 SET enable_bitmapscan=off;
 EXPLAIN (COSTS OFF)
 SELECT * FROM macaddr8tmp WHERE a < '02:03:04:05:06:07'::macaddr8;
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Index Only Scan using macaddr8idx on macaddr8tmp
    Index Cond: (a < '02:03:04:ff:fe:05:06:07'::macaddr8)
 (2 rows)
 
 SELECT * FROM macaddr8tmp WHERE a < '02:03:04:05:06:07'::macaddr8;
-            a            
+            a
 -------------------------
  01:02:37:ff:fe:05:4f:36
  01:02:37:ff:fe:05:4f:36
@@ -86,4 +86,3 @@ SELECT * FROM macaddr8tmp WHERE a < '02:03:04:05:06:07'::macaddr8;
  01:43:b5:ff:fe:79:eb:0f
  01:43:b5:ff:fe:79:eb:0f
 (8 rows)
-

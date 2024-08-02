@@ -9,7 +9,7 @@ SELECT getdatabaseencoding() NOT IN ('UTF8', 'SQL_ASCII')
 \quit
 \endif
 SELECT getdatabaseencoding();           -- just to label the results files
- getdatabaseencoding 
+ getdatabaseencoding
 ---------------------
  SQL_ASCII
 (1 row)
@@ -68,13 +68,13 @@ ERROR:  conversion between UTF8 and SQL_ASCII is not supported
 LINE 1: select '"the Copyright \u00a9 sign"'::jsonpath as correct_in...
                ^
 select '"dollar \u0024 character"'::jsonpath as correct_everywhere;
-  correct_everywhere  
+  correct_everywhere
 ----------------------
  "dollar $ character"
 (1 row)
 
 select '"dollar \\u0024 character"'::jsonpath as not_an_escape;
-       not_an_escape        
+       not_an_escape
 ----------------------------
  "dollar \\u0024 character"
 (1 row)
@@ -85,7 +85,7 @@ LINE 1: select '"null \u0000 escape"'::jsonpath as not_unescaped;
                ^
 DETAIL:  \u0000 cannot be converted to text.
 select '"null \\u0000 escape"'::jsonpath as not_an_escape;
-     not_an_escape     
+     not_an_escape
 -----------------------
  "null \\u0000 escape"
 (1 row)
@@ -144,13 +144,13 @@ ERROR:  conversion between UTF8 and SQL_ASCII is not supported
 LINE 1: select '$."the Copyright \u00a9 sign"'::jsonpath as correct_...
                ^
 select '$."dollar \u0024 character"'::jsonpath as correct_everywhere;
-   correct_everywhere   
+   correct_everywhere
 ------------------------
  $."dollar $ character"
 (1 row)
 
 select '$."dollar \\u0024 character"'::jsonpath as not_an_escape;
-        not_an_escape         
+        not_an_escape
 ------------------------------
  $."dollar \\u0024 character"
 (1 row)
@@ -161,8 +161,7 @@ LINE 1: select '$."null \u0000 escape"'::jsonpath as not_unescaped;
                ^
 DETAIL:  \u0000 cannot be converted to text.
 select '$."null \\u0000 escape"'::jsonpath as not_an_escape;
-      not_an_escape      
+      not_an_escape
 -------------------------
  $."null \\u0000 escape"
 (1 row)
-

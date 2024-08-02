@@ -55,8 +55,8 @@ int main()
 #endif
   intptr_t n;
   /* exec sql begin declare section */
-   
-  
+
+
 #line 40 "thread_implicit.pgc"
  int l_rows ;
 /* exec sql end declare section */
@@ -118,8 +118,8 @@ int main()
   { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); }
 #line 87 "thread_implicit.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select count ( * ) from test_thread", ECPGt_EOIT, 
-	ECPGt_int,&(l_rows),(long)1,(long)1,sizeof(int), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select count ( * ) from test_thread", ECPGt_EOIT,
+	ECPGt_int,&(l_rows),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 88 "thread_implicit.pgc"
 
@@ -142,12 +142,12 @@ void *test_thread(void *arg)
   long threadnum = (intptr_t) arg;
 
   /* exec sql begin declare section */
-    
-   
-  
+
+
+
 #line 104 "thread_implicit.pgc"
  int l_i ;
- 
+
 #line 105 "thread_implicit.pgc"
  char l_connection [ 128 ] ;
 /* exec sql end declare section */
@@ -163,7 +163,7 @@ void *test_thread(void *arg)
   /* exec sql whenever sqlerror  sqlprint ; */
 #line 114 "thread_implicit.pgc"
 
-  { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , l_connection, 0); 
+  { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , l_connection, 0);
 #line 115 "thread_implicit.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -184,10 +184,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
   /* insert into test_thread table */
   for( l_i = 1; l_i <= iterations; l_i++ )
     {
-      { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test_thread ( thread , iteration ) values ( $1  , $2  )", 
-	ECPGt_char,(l_connection),(long)128,(long)1,(128)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_int,&(l_i),(long)1,(long)1,sizeof(int), 
+      { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test_thread ( thread , iteration ) values ( $1  , $2  )",
+	ECPGt_char,(l_connection),(long)128,(long)1,(128)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_int,&(l_i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 126 "thread_implicit.pgc"
 

@@ -3,97 +3,97 @@ CREATE TABLE timestamptztmp (a timestamptz);
 \copy timestamptztmp from 'data/timestamptz.data'
 SET enable_seqscan=on;
 SELECT count(*) FROM timestamptztmp WHERE a <  '2018-12-18 10:59:54 GMT+3';
- count 
+ count
 -------
    391
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <= '2018-12-18 10:59:54 GMT+3';
- count 
+ count
 -------
    392
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a  = '2018-12-18 10:59:54 GMT+3';
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >= '2018-12-18 10:59:54 GMT+3';
- count 
+ count
 -------
    158
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >  '2018-12-18 10:59:54 GMT+3';
- count 
+ count
 -------
    157
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <  '2018-12-18 10:59:54 GMT+2';
- count 
+ count
 -------
    391
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <= '2018-12-18 10:59:54 GMT+2';
- count 
+ count
 -------
    391
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a  = '2018-12-18 10:59:54 GMT+2';
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >= '2018-12-18 10:59:54 GMT+2';
- count 
+ count
 -------
    158
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >  '2018-12-18 10:59:54 GMT+2';
- count 
+ count
 -------
    158
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <  '2018-12-18 10:59:54 GMT+4';
- count 
+ count
 -------
    392
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <= '2018-12-18 10:59:54 GMT+4';
- count 
+ count
 -------
    392
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a  = '2018-12-18 10:59:54 GMT+4';
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >= '2018-12-18 10:59:54 GMT+4';
- count 
+ count
 -------
    157
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >  '2018-12-18 10:59:54 GMT+4';
- count 
+ count
 -------
    157
 (1 row)
 
 SELECT a, a <-> '2018-12-18 10:59:54 GMT+2' FROM timestamptztmp ORDER BY a <-> '2018-12-18 10:59:54 GMT+2' LIMIT 3;
-              a               |             ?column?              
+              a               |             ?column?
 ------------------------------+-----------------------------------
  Tue Dec 18 05:59:54 2018 PST | @ 1 hour
  Thu Jan 10 03:01:34 2019 PST | @ 22 days 22 hours 1 min 40 secs
@@ -103,98 +103,98 @@ SELECT a, a <-> '2018-12-18 10:59:54 GMT+2' FROM timestamptztmp ORDER BY a <-> '
 CREATE INDEX timestamptzidx ON timestamptztmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM timestamptztmp WHERE a <  '2018-12-18 10:59:54 GMT+3'::timestamptz;
- count 
+ count
 -------
    391
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <= '2018-12-18 10:59:54 GMT+3'::timestamptz;
- count 
+ count
 -------
    392
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a  = '2018-12-18 10:59:54 GMT+3'::timestamptz;
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >= '2018-12-18 10:59:54 GMT+3'::timestamptz;
- count 
+ count
 -------
    158
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >  '2018-12-18 10:59:54 GMT+3'::timestamptz;
- count 
+ count
 -------
    157
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <  '2018-12-18 10:59:54 GMT+2'::timestamptz;
- count 
+ count
 -------
    391
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <= '2018-12-18 10:59:54 GMT+2'::timestamptz;
- count 
+ count
 -------
    391
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a  = '2018-12-18 10:59:54 GMT+2'::timestamptz;
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >= '2018-12-18 10:59:54 GMT+2'::timestamptz;
- count 
+ count
 -------
    158
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >  '2018-12-18 10:59:54 GMT+2'::timestamptz;
- count 
+ count
 -------
    158
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <  '2018-12-18 10:59:54 GMT+4'::timestamptz;
- count 
+ count
 -------
    392
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a <= '2018-12-18 10:59:54 GMT+4'::timestamptz;
- count 
+ count
 -------
    392
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a  = '2018-12-18 10:59:54 GMT+4'::timestamptz;
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >= '2018-12-18 10:59:54 GMT+4'::timestamptz;
- count 
+ count
 -------
    157
 (1 row)
 
 SELECT count(*) FROM timestamptztmp WHERE a >  '2018-12-18 10:59:54 GMT+4'::timestamptz;
- count 
+ count
 -------
    157
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT a, a <-> '2018-12-18 10:59:54 GMT+2' FROM timestamptztmp ORDER BY a <-> '2018-12-18 10:59:54 GMT+2' LIMIT 3;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Limit
    ->  Index Only Scan using timestamptzidx on timestamptztmp
@@ -202,10 +202,9 @@ SELECT a, a <-> '2018-12-18 10:59:54 GMT+2' FROM timestamptztmp ORDER BY a <-> '
 (3 rows)
 
 SELECT a, a <-> '2018-12-18 10:59:54 GMT+2' FROM timestamptztmp ORDER BY a <-> '2018-12-18 10:59:54 GMT+2' LIMIT 3;
-              a               |             ?column?              
+              a               |             ?column?
 ------------------------------+-----------------------------------
  Tue Dec 18 05:59:54 2018 PST | @ 1 hour
  Thu Jan 10 03:01:34 2019 PST | @ 22 days 22 hours 1 min 40 secs
  Thu Jan 24 12:28:12 2019 PST | @ 37 days 7 hours 28 mins 18 secs
 (3 rows)
-

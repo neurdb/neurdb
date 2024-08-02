@@ -5,7 +5,7 @@ step s0_begin: BEGIN;
 step s0_getxid: SELECT pg_current_xact_id() IS NULL;
 ?column?
 --------
-f       
+f
 (1 row)
 
 step s1_begin: BEGIN;
@@ -26,15 +26,14 @@ data
 step s1_commit: COMMIT;
 step s0_vacuum: VACUUM pg_attribute;
 step s0_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
-data                                                  
+data
 ------------------------------------------------------
-BEGIN                                                 
+BEGIN
 table public.harvest: INSERT: fruits[basket]:'(1,2,3)'
-COMMIT                                                
+COMMIT
 (3 rows)
 
 ?column?
 --------
-stop    
+stop
 (1 row)
-

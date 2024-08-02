@@ -16,25 +16,25 @@ CREATE OR REPLACE FUNCTION plperl_sum_array(INTEGER[]) RETURNS text AS $$
 	return $result.' '.$array_arg;
 $$ LANGUAGE plperl;
 select plperl_sum_array('{1,2,NULL}');
- plperl_sum_array 
+ plperl_sum_array
 ------------------
  3 {1,2,NULL}
 (1 row)
 
 select plperl_sum_array('{}');
- plperl_sum_array 
+ plperl_sum_array
 ------------------
  0 {}
 (1 row)
 
 select plperl_sum_array('{{1,2,3}, {4,5,6}}');
-   plperl_sum_array   
+   plperl_sum_array
 ----------------------
  21 {{1,2,3},{4,5,6}}
 (1 row)
 
 select plperl_sum_array('{{{1,2,3}, {4,5,6}}, {{7,8,9}, {10,11,12}}}');
-              plperl_sum_array               
+              plperl_sum_array
 ---------------------------------------------
  78 {{{1,2,3},{4,5,6}},{{7,8,9},{10,11,12}}}
 (1 row)
@@ -45,7 +45,7 @@ select plperl_sum_array(ARRAY[[[[[[1,2],[3,4]],[[5,6],[7,8]]],[[[9,10],[11,12]],
 [[[[17,18],[19,20]],[[21,22],[23,24]]],[[[25,26],[27,28]],[[29,30],[31,32]]]]],
 [[[[[1,2],[3,4]],[[5,6],[7,8]]],[[[9,10],[11,12]],[[13,14],[15,16]]]],
 [[[[17,18],[19,20]],[[21,22],[23,24]]],[[[25,26],[27,28]],[[29,30],[31,32]]]]]]);
-                                                                                                                                                 plperl_sum_array                                                                                                                                                 
+                                                                                                                                                 plperl_sum_array
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  1056 {{{{{{1,2},{3,4}},{{5,6},{7,8}}},{{{9,10},{11,12}},{{13,14},{15,16}}}},{{{{17,18},{19,20}},{{21,22},{23,24}}},{{{25,26},{27,28}},{{29,30},{31,32}}}}},{{{{{1,2},{3,4}},{{5,6},{7,8}}},{{{9,10},{11,12}},{{13,14},{15,16}}}},{{{{17,18},{19,20}},{{21,22},{23,24}}},{{{25,26},{27,28}},{{29,30},{31,32}}}}}}
 (1 row)
@@ -86,19 +86,19 @@ CREATE OR REPLACE FUNCTION plperl_concat(TEXT[]) RETURNS TEXT AS $$
 	return $result.' '.$array_arg;
 $$ LANGUAGE plperl;
 select plperl_concat('{"NULL","NULL","NULL''"}');
-            plperl_concat            
+            plperl_concat
 -------------------------------------
  NULLNULLNULL' {"NULL","NULL",NULL'}
 (1 row)
 
 select plperl_concat('{{NULL,NULL,NULL}}');
-    plperl_concat    
+    plperl_concat
 ---------------------
   {{NULL,NULL,NULL}}
 (1 row)
 
 select plperl_concat('{"hello"," ","world!"}');
-          plperl_concat          
+          plperl_concat
 ---------------------------------
  hello world! {hello," ",world!}
 (1 row)
@@ -116,7 +116,7 @@ CREATE OR REPLACE FUNCTION plperl_array_of_rows(foo[]) RETURNS TEXT AS $$
 	return $result .' '. $array_arg;
 $$ LANGUAGE plperl;
 select plperl_array_of_rows(ARRAY[ ROW(2, 'coffee'), ROW(0, 'sugar')]::foo[]);
-                      plperl_array_of_rows                      
+                      plperl_array_of_rows
 ----------------------------------------------------------------
  2 items of coffee;0 items of sugar; {"(2,coffee)","(0,sugar)"}
 (1 row)
@@ -142,7 +142,7 @@ CREATE OR REPLACE FUNCTION plperl_sum_row_elements(rowfoo) RETURNS TEXT AS $$
 	return $result;
 $$ LANGUAGE plperl;
 select plperl_sum_row_elements(ROW(1, ARRAY[2,3,4,5,6,7,8,9,10])::rowfoo);
- plperl_sum_row_elements 
+ plperl_sum_row_elements
 -------------------------
  55
 (1 row)
@@ -180,7 +180,7 @@ CREATE OR REPLACE FUNCTION plperl_sum_array_of_rows(rowbar) RETURNS TEXT AS $$
 $$ LANGUAGE plperl;
 select plperl_sum_array_of_rows(ROW(ARRAY[ROW(1, ARRAY[2,3,4,5,6,7,8,9,10])::rowfoo,
 ROW(11, ARRAY[12,13,14,15,16,17,18,19,20])::rowfoo])::rowbar);
- plperl_sum_array_of_rows 
+ plperl_sum_array_of_rows
 --------------------------
  210
 (1 row)
@@ -190,7 +190,7 @@ CREATE OR REPLACE FUNCTION plperl_arrays_out(OUT INTEGER[]) AS $$
 	return [[1,2,3],[4,5,6]];
 $$ LANGUAGE plperl;
 select plperl_arrays_out();
- plperl_arrays_out 
+ plperl_arrays_out
 -------------------
  {{1,2,3},{4,5,6}}
 (1 row)
@@ -200,7 +200,7 @@ CREATE OR REPLACE FUNCTION plperl_arrays_inout(INTEGER[]) returns INTEGER[] AS $
 	return shift;
 $$ LANGUAGE plperl;
 select plperl_arrays_inout('{{1}, {2}, {3}}');
- plperl_arrays_inout 
+ plperl_arrays_inout
 ---------------------
  {{1},{2},{3}}
 (1 row)
@@ -210,7 +210,7 @@ CREATE OR REPLACE FUNCTION plperl_arrays_inout_l(INTEGER[]) returns INTEGER[] AS
 	return shift.''; # stringify it
 $$ LANGUAGE plperl;
 select plperl_arrays_inout_l('{{1}, {2}, {3}}');
- plperl_arrays_inout_l 
+ plperl_arrays_inout_l
 -----------------------
  {{1},{2},{3}}
 (1 row)
@@ -220,7 +220,7 @@ CREATE FUNCTION plperl_md_array_out() RETURNS text[] AS $$
 	return [['a'], ['b'], ['c']];
 $$ LANGUAGE plperl;
 select plperl_md_array_out();
- plperl_md_array_out 
+ plperl_md_array_out
 ---------------------
  {{a},{b},{c}}
 (1 row)
@@ -229,7 +229,7 @@ CREATE OR REPLACE FUNCTION plperl_md_array_out() RETURNS text[] AS $$
 	return [[], []];
 $$ LANGUAGE plperl;
 select plperl_md_array_out();
- plperl_md_array_out 
+ plperl_md_array_out
 ---------------------
  {}
 (1 row)
@@ -267,10 +267,9 @@ create or replace function perl_setof_array(integer[]) returns setof integer[] l
 	return undef;
 $$;
 select perl_setof_array('{{1}, {2}, {3}}');
- perl_setof_array 
+ perl_setof_array
 ------------------
  {1}
  {2}
  {3}
 (3 rows)
-

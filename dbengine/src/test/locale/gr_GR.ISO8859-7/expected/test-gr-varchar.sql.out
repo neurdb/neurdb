@@ -1,4 +1,4 @@
- abbrev |       name_en        |      name_gr       
+ abbrev |       name_en        |      name_gr
 --------+----------------------+--------------------
  ID     | Idaho                | Αϊνταχο
  IA     | Iowa                 | Αϊόβα
@@ -51,4 +51,3 @@
  DC     | Washington DC        | Γουόσινγτον Ντί Σι
  RI     | Rhode Island         | Ρόουντ Αϊλαντ
 (50 rows)
-

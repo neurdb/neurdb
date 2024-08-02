@@ -9,7 +9,7 @@ DMcmR53SXfLoDJOv/M8uKj3QSq7oWNIp95pxfA==
 =tbSn
 -----END PGP MESSAGE-----
 '), 'key', 'expect-compress-algo=1');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret message
 (1 row)
@@ -17,7 +17,7 @@ DMcmR53SXfLoDJOv/M8uKj3QSq7oWNIp95pxfA==
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret message', 'key', 'compress-algo=0'),
 	'key', 'expect-compress-algo=0');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret message
 (1 row)
@@ -25,7 +25,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret message', 'key', 'compress-algo=1'),
 	'key', 'expect-compress-algo=1');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret message
 (1 row)
@@ -33,7 +33,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret message', 'key', 'compress-algo=2'),
 	'key', 'expect-compress-algo=2');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret message
 (1 row)
@@ -43,16 +43,16 @@ select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret message', 'key',
 			'compress-algo=2, compress-level=0'),
 	'key', 'expect-compress-algo=0');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret message
 (1 row)
 
 -- check corner case involving an input string of 16kB, as per bug #16476.
 SELECT setseed(0);
- setseed 
+ setseed
 ---------
- 
+
 (1 row)
 
 WITH random_string AS
@@ -73,8 +73,7 @@ SELECT bytes =
                             'key', 'expect-compress-algo=1')
     AS is_same
   FROM random_string;
- is_same 
+ is_same
 ---------
  t
 (1 row)
-

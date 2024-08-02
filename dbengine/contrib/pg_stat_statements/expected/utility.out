@@ -4,9 +4,9 @@
 -- These tests require track_utility to be enabled.
 SET pg_stat_statements.track_utility = TRUE;
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- Tables, indexes, triggers
@@ -24,7 +24,7 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 NOTICE:  table "tab_stats" does not exist, skipping
 NOTICE:  table "tab_stats" does not exist, skipping
 NOTICE:  table "tab_stats" does not exist, skipping
- calls | rows |                                        query                                         
+ calls | rows |                                        query
 -------+------+--------------------------------------------------------------------------------------
      1 |    0 | ALTER TABLE tab_stats ADD CONSTRAINT a_nonzero CHECK (a <> 0)
      1 |    0 | ALTER TABLE tab_stats ALTER COLUMN b TYPE text USING 'data' || b
@@ -37,9 +37,9 @@ NOTICE:  table "tab_stats" does not exist, skipping
 (8 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- Partitions
@@ -96,7 +96,7 @@ CREATE TABLE tab_expr_stats (a int, b int);
 CREATE STATISTICS tab_expr_stats_1 (mcv) ON a, (2*a), (3*b) FROM tab_expr_stats;
 DROP TABLE tab_expr_stats;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                                        query                                        
+ calls | rows |                                        query
 -------+------+-------------------------------------------------------------------------------------
      1 |    0 | ALTER FOREIGN TABLE foreign_stats ADD COLUMN b integer DEFAULT 1
      1 |    0 | ALTER FOREIGN TABLE foreign_stats ADD CONSTRAINT b_nonzero CHECK (b <> 0)
@@ -146,9 +146,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 (39 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- Transaction statements
@@ -179,7 +179,7 @@ COMMIT;
 BEGIN TRANSACTION NOT DEFERRABLE, READ ONLY, READ WRITE, DEFERRABLE;
 COMMIT;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                                query                                
+ calls | rows |                                query
 -------+------+---------------------------------------------------------------------
      4 |    0 | ABORT
      6 |    0 | BEGIN
@@ -192,41 +192,41 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 (8 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- EXPLAIN statements
 -- A Query is used, normalized by the query jumbling.
 EXPLAIN (costs off) SELECT 1;
- QUERY PLAN 
+ QUERY PLAN
 ------------
  Result
 (1 row)
 
 EXPLAIN (costs off) SELECT 2;
- QUERY PLAN 
+ QUERY PLAN
 ------------
  Result
 (1 row)
 
 EXPLAIN (costs off) SELECT a FROM generate_series(1,10) AS tab(a) WHERE a = 3;
-              QUERY PLAN              
+              QUERY PLAN
 --------------------------------------
  Function Scan on generate_series tab
    Filter: (a = 3)
 (2 rows)
 
 EXPLAIN (costs off) SELECT a FROM generate_series(1,10) AS tab(a) WHERE a = 7;
-              QUERY PLAN              
+              QUERY PLAN
 --------------------------------------
  Function Scan on generate_series tab
    Filter: (a = 7)
 (2 rows)
 
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                                      query                                      
+ calls | rows |                                      query
 -------+------+---------------------------------------------------------------------------------
      2 |    0 | EXPLAIN (costs off) SELECT $1
      2 |    0 | EXPLAIN (costs off) SELECT a FROM generate_series($1,$2) AS tab(a) WHERE a = $3
@@ -247,9 +247,9 @@ BEGIN
   SELECT (i + j)::int INTO r;
 END; $$ LANGUAGE plpgsql;
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 CALL sum_one(3);
@@ -257,7 +257,7 @@ CALL sum_one(199);
 CALL sum_two(1,1);
 CALL sum_two(1,2);
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |               query               
+ calls | rows |               query
 -------+------+-----------------------------------
      1 |    0 | CALL sum_one(199)
      1 |    0 | CALL sum_one(3)
@@ -269,9 +269,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 -- COPY
 CREATE TABLE copy_stats (a int, b int);
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- Some queries with A_Const nodes.
@@ -292,7 +292,7 @@ COPY (UPDATE copy_stats SET b = b + 2 RETURNING *) TO STDOUT;
 COPY (DELETE FROM copy_stats WHERE a = 1 RETURNING *) TO STDOUT;
 1	4
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                               query                               
+ calls | rows |                               query
 -------+------+-------------------------------------------------------------------
      1 |    1 | COPY (DELETE FROM copy_stats WHERE a = 1 RETURNING *) TO STDOUT
      1 |    1 | COPY (INSERT INTO copy_stats VALUES (1, 1) RETURNING *) TO STDOUT
@@ -306,9 +306,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 
 DROP TABLE copy_stats;
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- CREATE TABLE AS
@@ -326,7 +326,7 @@ CREATE TABLE ctas_stats_2 AS
     FROM generate_series(1, 5) AS tab(a) WHERE a < 4 AND a > 1;
 DROP TABLE ctas_stats_2;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                               query                                
+ calls | rows |                               query
 -------+------+--------------------------------------------------------------------
      2 |    2 | CREATE TABLE ctas_stats_1 AS SELECT $1 AS a
      2 |    4 | CREATE TABLE ctas_stats_2 AS                                      +
@@ -338,9 +338,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 (5 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- CREATE MATERIALIZED VIEW
@@ -354,7 +354,7 @@ CREATE MATERIALIZED VIEW matview_stats_1 AS
     FROM generate_series(1, 5) AS tab(a) WHERE a < 4 AND a > 3;
 DROP MATERIALIZED VIEW matview_stats_1;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                               query                                
+ calls | rows |                               query
 -------+------+--------------------------------------------------------------------
      2 |    2 | CREATE MATERIALIZED VIEW matview_stats_1 AS                       +
        |      |   SELECT a AS col1, $1::int AS col2                               +
@@ -364,9 +364,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 (3 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- CREATE VIEW
@@ -379,7 +379,7 @@ CREATE VIEW view_stats_1 AS
     FROM generate_series(1, 5) AS tab(a) WHERE a < 4 AND a > 3;
 DROP VIEW view_stats_1;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                              query                              
+ calls | rows |                              query
 -------+------+-----------------------------------------------------------------
      1 |    0 | CREATE VIEW view_stats_1 AS                                    +
        |      |   SELECT a AS col1, 2::int AS col2                             +
@@ -392,9 +392,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 (4 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- Domains
@@ -403,7 +403,7 @@ ALTER DOMAIN domain_stats SET DEFAULT '3';
 ALTER DOMAIN domain_stats ADD CONSTRAINT higher_than_one CHECK (VALUE > 1);
 DROP DOMAIN domain_stats;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                                   query                                    
+ calls | rows |                                   query
 -------+------+----------------------------------------------------------------------------
      1 |    0 | ALTER DOMAIN domain_stats ADD CONSTRAINT higher_than_one CHECK (VALUE > 1)
      1 |    0 | ALTER DOMAIN domain_stats SET DEFAULT '3'
@@ -413,9 +413,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 (5 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 -- SET statements.
@@ -441,7 +441,7 @@ SET LOCAL SESSION AUTHORIZATION DEFAULT;
 RESET SESSION AUTHORIZATION;
 COMMIT;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                      query                      
+ calls | rows |                      query
 -------+------+-------------------------------------------------
      2 |    0 | BEGIN
      2 |    0 | COMMIT
@@ -461,9 +461,9 @@ SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
 (15 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
+
 (1 row)
 
 --
@@ -479,13 +479,13 @@ REFRESH MATERIALIZED VIEW pgss_matv;
 BEGIN;
 DECLARE pgss_cursor CURSOR FOR SELECT * FROM pgss_matv;
 FETCH NEXT pgss_cursor;
- a |  b   
+ a |  b
 ---+------
  1 | ctas
 (1 row)
 
 FETCH FORWARD 5 pgss_cursor;
- a |  b   
+ a |  b
 ---+------
  2 | ctas
  3 | ctas
@@ -495,7 +495,7 @@ FETCH FORWARD 5 pgss_cursor;
 (5 rows)
 
 FETCH FORWARD ALL pgss_cursor;
- a  |  b   
+ a  |  b
 ----+------
   7 | ctas
   8 | ctas
@@ -508,7 +508,7 @@ FETCH FORWARD ALL pgss_cursor;
 
 COMMIT;
 SELECT calls, rows, query FROM pg_stat_statements ORDER BY query COLLATE "C";
- calls | rows |                                  query                                  
+ calls | rows |                                  query
 -------+------+-------------------------------------------------------------------------
      1 |    0 | BEGIN
      1 |    0 | COMMIT
@@ -528,8 +528,7 @@ DROP MATERIALIZED VIEW pgss_matv;
 DROP TABLE pgss_ctas;
 DROP TABLE pgss_select_into;
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
-(1 row)
 
+(1 row)

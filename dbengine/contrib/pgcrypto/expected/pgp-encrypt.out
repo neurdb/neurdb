@@ -2,7 +2,7 @@
 -- PGP encrypt
 --
 select pgp_sym_decrypt(pgp_sym_encrypt('Secret.', 'key'), 'key');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -16,7 +16,7 @@ select pgp_sym_decrypt(pgp_sym_encrypt('Secret.', 'key'),
 		expect-s2k-digest-algo=sha1,
 		expect-compress-algo=0
 		');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -36,7 +36,7 @@ NOTICE:  pgp_decrypt: unexpected s2k_digest_algo: expected 1 got 2
 NOTICE:  pgp_decrypt: unexpected use_sess_key: expected 1 got 0
 NOTICE:  pgp_decrypt: unexpected disable_mdc: expected 1 got 0
 NOTICE:  pgp_decrypt: unexpected compress_algo: expected 1 got 0
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -46,7 +46,7 @@ select pgp_sym_decrypt(pgp_sym_encrypt_bytea('Binary', 'baz'), 'baz');
 ERROR:  Not text data
 -- text as bytea
 select encode(pgp_sym_decrypt_bytea(pgp_sym_encrypt('Text', 'baz'), 'baz'), 'escape');
- encode 
+ encode
 --------
  Text
 (1 row)
@@ -55,7 +55,7 @@ select encode(pgp_sym_decrypt_bytea(pgp_sym_encrypt('Text', 'baz'), 'baz'), 'esc
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'cipher-algo=bf'),
 	'key', 'expect-cipher-algo=bf');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -63,7 +63,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'cipher-algo=aes'),
 	'key', 'expect-cipher-algo=aes128');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -71,7 +71,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'cipher-algo=aes192'),
 	'key', 'expect-cipher-algo=aes192');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -80,7 +80,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 's2k-mode=0'),
 	'key', 'expect-s2k-mode=0');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -88,7 +88,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 's2k-mode=1'),
 	'key', 'expect-s2k-mode=1');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -96,7 +96,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 's2k-mode=3'),
 	'key', 'expect-s2k-mode=3');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -105,7 +105,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 's2k-count=1024'),
 	'key', 'expect-s2k-count=1024');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -115,7 +115,7 @@ select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 's2k-count=65000000'),
 	'key', 'expect-s2k-count=65000000');
 NOTICE:  pgp_decrypt: unexpected s2k_count: expected 65000000 got 65011712
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -124,7 +124,7 @@ NOTICE:  pgp_decrypt: unexpected s2k_count: expected 65000000 got 65011712
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 's2k-digest-algo=md5'),
 	'key', 'expect-s2k-digest-algo=md5');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -132,7 +132,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 		pgp_sym_encrypt('Secret.', 'key', 's2k-digest-algo=sha1'),
 	'key', 'expect-s2k-digest-algo=sha1');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -141,7 +141,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'sess-key=0'),
 	'key', 'expect-sess-key=0');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -149,7 +149,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'sess-key=1'),
 	'key', 'expect-sess-key=1');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -157,7 +157,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'sess-key=1, cipher-algo=bf'),
 	'key', 'expect-sess-key=1, expect-cipher-algo=bf');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -165,7 +165,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'sess-key=1, cipher-algo=aes192'),
 	'key', 'expect-sess-key=1, expect-cipher-algo=aes192');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -173,7 +173,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 	pgp_sym_encrypt('Secret.', 'key', 'sess-key=1, cipher-algo=aes256'),
 	'key', 'expect-sess-key=1, expect-cipher-algo=aes256');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -182,7 +182,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt(
 		pgp_sym_encrypt('Secret.', 'key', 'disable-mdc=1'),
 	'key', 'expect-disable-mdc=1');
- pgp_sym_decrypt 
+ pgp_sym_decrypt
 -----------------
  Secret.
 (1 row)
@@ -191,7 +191,7 @@ select pgp_sym_decrypt(
 select pgp_sym_decrypt_bytea(
 	pgp_sym_encrypt(E'1\n2\n3\r\n', 'key', 'convert-crlf=1'),
 	'key');
- pgp_sym_decrypt_bytea  
+ pgp_sym_decrypt_bytea
 ------------------------
  \x310d0a320d0a330d0d0a
 (1 row)
@@ -201,8 +201,7 @@ select digest(pgp_sym_decrypt(
   pgp_sym_encrypt(E'\r\n0\n1\r\r\n\n2\r', 'key', 'convert-crlf=1'),
 	'key', 'convert-crlf=1'), 'sha1') as result,
   digest(E'\r\n0\n1\r\r\n\n2\r', 'sha1') as expect;
-                   result                   |                   expect                   
+                   result                   |                   expect
 --------------------------------------------+--------------------------------------------
  \x47bde5d88d6ef8770572b9cbb4278b402aa69966 | \x47bde5d88d6ef8770572b9cbb4278b402aa69966
 (1 row)
-

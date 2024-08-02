@@ -28,7 +28,7 @@ select trap_zero_divide(50);
 NOTICE:  should see this
 NOTICE:  should see this only if 50 <> 0
 NOTICE:  should see this only if 50 fits in smallint
- trap_zero_divide 
+ trap_zero_divide
 ------------------
                 2
 (1 row)
@@ -36,7 +36,7 @@ NOTICE:  should see this only if 50 fits in smallint
 select trap_zero_divide(0);
 NOTICE:  should see this
 NOTICE:  caught division_by_zero
- trap_zero_divide 
+ trap_zero_divide
 ------------------
                -1
 (1 row)
@@ -45,7 +45,7 @@ select trap_zero_divide(100000);
 NOTICE:  should see this
 NOTICE:  should see this only if 100000 <> 0
 NOTICE:  caught numeric_value_out_of_range
- trap_zero_divide 
+ trap_zero_divide
 ------------------
                -2
 (1 row)
@@ -79,28 +79,28 @@ begin
 	return x;
 end$$ language plpgsql;
 select trap_matching_test(50);
- trap_matching_test 
+ trap_matching_test
 --------------------
                   2
 (1 row)
 
 select trap_matching_test(0);
 NOTICE:  caught data_exception
- trap_matching_test 
+ trap_matching_test
 --------------------
                  -1
 (1 row)
 
 select trap_matching_test(100000);
 NOTICE:  caught data_exception
- trap_matching_test 
+ trap_matching_test
 --------------------
                  -1
 (1 row)
 
 select trap_matching_test(1);
 NOTICE:  caught numeric_value_out_of_range or cardinality_violation
- trap_matching_test 
+ trap_matching_test
 --------------------
                  -2
 (1 row)
@@ -123,13 +123,13 @@ begin
   return x;
 end$$ language plpgsql;
 select subxact_rollback_semantics();
- subxact_rollback_semantics 
+ subxact_rollback_semantics
 ----------------------------
                          20
 (1 row)
 
 select * from foo;
- f1 
+ f1
 ----
   1
  20
@@ -178,7 +178,7 @@ select test_variable_storage();
 NOTICE:  should see this
 NOTICE:  should see this only if -100 <> 0
 NOTICE:  should see this only if -100 fits in smallint
- test_variable_storage 
+ test_variable_storage
 -----------------------
  123456789012
 (1 row)
@@ -216,14 +216,14 @@ begin
 	return 1;
 end$$ language plpgsql;
 select trap_foreign_key(1);
- trap_foreign_key 
+ trap_foreign_key
 ------------------
                 1
 (1 row)
 
 select trap_foreign_key(2);	-- detects FK violation
 NOTICE:  caught foreign_key_violation
- trap_foreign_key 
+ trap_foreign_key
 ------------------
                 0
 (1 row)
@@ -231,7 +231,7 @@ NOTICE:  caught foreign_key_violation
 begin;
   set constraints all deferred;
   select trap_foreign_key(2);	-- should not detect FK violation
- trap_foreign_key 
+ trap_foreign_key
 ------------------
                 1
 (1 row)
@@ -243,7 +243,7 @@ DETAIL:  Key (f1)=(2) is not present in table "root".
   rollback to x;
   select trap_foreign_key_2();  -- detects FK violation
 NOTICE:  caught foreign_key_violation
- trap_foreign_key_2 
+ trap_foreign_key_2
 --------------------
                   0
 (1 row)

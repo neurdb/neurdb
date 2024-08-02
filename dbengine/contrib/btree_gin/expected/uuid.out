@@ -12,7 +12,7 @@ INSERT INTO test_uuid VALUES
 ;
 CREATE INDEX idx_uuid ON test_uuid USING gin (i);
 SELECT * FROM test_uuid WHERE i<'ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                  i                   
+                  i
 --------------------------------------
  00000000-0000-0000-0000-000000000000
  299bc99f-2f79-4e3e-bfea-2cbfd62a7c27
@@ -20,7 +20,7 @@ SELECT * FROM test_uuid WHERE i<'ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORD
 (3 rows)
 
 SELECT * FROM test_uuid WHERE i<='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                  i                   
+                  i
 --------------------------------------
  00000000-0000-0000-0000-000000000000
  299bc99f-2f79-4e3e-bfea-2cbfd62a7c27
@@ -29,13 +29,13 @@ SELECT * FROM test_uuid WHERE i<='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid OR
 (4 rows)
 
 SELECT * FROM test_uuid WHERE i='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                  i                   
+                  i
 --------------------------------------
  ce41c936-6acb-4feb-8c91-852a673e5a5c
 (1 row)
 
 SELECT * FROM test_uuid WHERE i>='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                  i                   
+                  i
 --------------------------------------
  ce41c936-6acb-4feb-8c91-852a673e5a5c
  d2ce731f-f2a8-4a2b-be37-8f0ba637427f
@@ -43,14 +43,14 @@ SELECT * FROM test_uuid WHERE i>='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid OR
 (3 rows)
 
 SELECT * FROM test_uuid WHERE i>'ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                  i                   
+                  i
 --------------------------------------
  d2ce731f-f2a8-4a2b-be37-8f0ba637427f
  ffffffff-ffff-ffff-ffff-ffffffffffff
 (2 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i<'ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                                  QUERY PLAN                                  
+                                  QUERY PLAN
 ------------------------------------------------------------------------------
  Sort
    Sort Key: i
@@ -61,7 +61,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i<'ce41c936-6acb-4feb-8c91-852
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i<='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                                  QUERY PLAN                                   
+                                  QUERY PLAN
 -------------------------------------------------------------------------------
  Sort
    Sort Key: i
@@ -72,7 +72,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i<='ce41c936-6acb-4feb-8c91-85
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                               QUERY PLAN                               
+                               QUERY PLAN
 ------------------------------------------------------------------------
  Bitmap Heap Scan on test_uuid
    Recheck Cond: (i = 'ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid)
@@ -81,7 +81,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i='ce41c936-6acb-4feb-8c91-852
 (4 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i>='ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                                  QUERY PLAN                                   
+                                  QUERY PLAN
 -------------------------------------------------------------------------------
  Sort
    Sort Key: i
@@ -92,7 +92,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i>='ce41c936-6acb-4feb-8c91-85
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i>'ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid ORDER BY i;
-                                  QUERY PLAN                                  
+                                  QUERY PLAN
 ------------------------------------------------------------------------------
  Sort
    Sort Key: i
@@ -101,4 +101,3 @@ EXPLAIN (COSTS OFF) SELECT * FROM test_uuid WHERE i>'ce41c936-6acb-4feb-8c91-852
          ->  Bitmap Index Scan on idx_uuid
                Index Cond: (i > 'ce41c936-6acb-4feb-8c91-852a673e5a5c'::uuid)
 (6 rows)
-

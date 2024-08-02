@@ -18,19 +18,19 @@ create function getme(key text) returns text language plperl as $$
 
 $$;
 select setme('ourkey','ourval');
- setme 
+ setme
 -------
- 
+
 (1 row)
 
 select getme('ourkey');
- getme  
+ getme
 --------
  ourval
 (1 row)
 
 select getme('on_init');
- getme 
+ getme
 -------
  42
 (1 row)
@@ -43,14 +43,13 @@ $_SHARED{'stuff'} = '1';
 return $val;
 $$ language plperl;
 select perl_shared();
- perl_shared 
+ perl_shared
 -------------
-            
+
 (1 row)
 
 select perl_shared();
- perl_shared 
+ perl_shared
 -------------
            1
 (1 row)
-

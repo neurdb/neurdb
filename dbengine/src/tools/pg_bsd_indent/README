@@ -90,7 +90,7 @@ by the folks at Sun Microsystems.
 > From: yunexus!oz@uunet.UU.NET (Ozan Yigit)
 > To: bostic@okeeffe.berkeley.edu
 > Cc: ccvaxa!willcox@uunet.UU.NET, jag@sun.com, rsalz@uunet.UU.NET
-> In-Reply-To: Keith Bostic's message of Tue, 16 Feb 88 16:09:06 PST 
+> In-Reply-To: Keith Bostic's message of Tue, 16 Feb 88 16:09:06 PST
 > Subject: Re: Indent...
 
 Thank you for your response about indent. I was wrong in my original
@@ -102,7 +102,7 @@ version. David Willcox (the author) states that:
 
 | Several people have asked me on what basis I claim that indent is in
 | the public domain.  I knew I would be sorry I made that posting.
-| 
+|
 | Some history.  Way back in 1976, the project I worked on at the
 | University of Illinois Center for Advanced Computation had a huge
 | battle about how to format C code.  After about a week of fighting, I
@@ -110,39 +110,39 @@ version. David Willcox (the author) states that:
 | code.  It had a bunch of different options that would let you format
 | the output the way you liked.  In particular, all of the different
 | formats being championed were supported.
-| 
+|
 | It was my first big C program.  It was ugly.  It wasn't designed, it
 | just sort of grew.  But it pretty much worked, and it stopped most of
 | the fighting.
-| 
+|
 | As a matter of form, I included a University of Illinois Copyright
 | notice.  However, my understanding was that, since the work was done
 | on an ARPA contract, it was in the public domain.
-| 
+|
 | Time passed.  Some years later, indent showed up on one of the early
 | emacs distributions.
-| 
+|
 | Later still, someone from UC Berkeley called the UofI and asked if
 | indent was in the public domain.  They wanted to include it in their
 | UNIX distributions, along with the emacs stuff.  I was no longer at the
 | UofI, but Rob Kolstad, who was, asked me about it.  I told him I didn't
 | care if they used it, and since then it has been on the BSD distributions.
-| 
+|
 | Somewhere along the way, several other unnamed people have had their
 | hands in it.  It was converted to understand version 7 C.  (The
 | original was version 6.)  It was converted from its original filter
 | interface to its current "blow away the user's file" interface.
 | The $HOME/.indent.pro file parsing was added.  Some more formatting
 | options were added.
-| 
+|
 | The source I have right now has two copyright notices.  One is the
 | original from the UofI.  One is from Berkeley.
-| 
+|
 | I am not a lawyer, and I certainly do not understand copyright law.  As
 | far as I am concerned, the bulk of this program, everything covered by
 | the UofI copyright, is in the public domain, and worth every penny.
 | Berkeley's copyright probably should only cover their changes, and I
-| don't know their feelings about sending it out.  
+| don't know their feelings about sending it out.
 
 In any case, there appears to be none at UofI to clarify/and change
 that copyright, but I am confident (based on the statements of its
@@ -171,4 +171,3 @@ regards..	oz
 cc: ccvaxa!willcox
     sun.com!jar
     uunet!rsalz
-

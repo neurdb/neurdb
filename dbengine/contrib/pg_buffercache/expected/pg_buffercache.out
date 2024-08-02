@@ -3,7 +3,7 @@ select count(*) = (select setting::bigint
                    from pg_settings
                    where name = 'shared_buffers')
 from pg_buffercache;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -12,13 +12,13 @@ select buffers_used + buffers_unused > 0,
         buffers_dirty <= buffers_used,
         buffers_pinned <= buffers_used
 from pg_buffercache_summary();
- ?column? | ?column? | ?column? 
+ ?column? | ?column? | ?column?
 ----------+----------+----------
  t        | t        | t
 (1 row)
 
 SELECT count(*) > 0 FROM pg_buffercache_usage_counts() WHERE buffers >= 0;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -38,20 +38,19 @@ RESET role;
 -- Check that pg_monitor is allowed to query view / function
 SET ROLE pg_monitor;
 SELECT count(*) > 0 FROM pg_buffercache;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT buffers_used + buffers_unused > 0 FROM pg_buffercache_summary();
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT count(*) > 0 FROM pg_buffercache_usage_counts();
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
-

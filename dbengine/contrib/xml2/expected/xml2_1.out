@@ -1,6 +1,6 @@
 CREATE EXTENSION xml2;
 select query_to_xml('select 1 as x',true,false,'');
-                         query_to_xml                          
+                         query_to_xml
 ---------------------------------------------------------------
  <table xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">+
                                                               +
@@ -9,7 +9,7 @@ select query_to_xml('select 1 as x',true,false,'');
  </row>                                                       +
                                                               +
  </table>                                                     +
- 
+
 (1 row)
 
 select xslt_process( query_to_xml('select x from generate_series(1,5) as
@@ -33,13 +33,13 @@ CREATE TABLE xpath_test (id integer NOT NULL, t xml);
 INSERT INTO xpath_test VALUES (1, '<doc><int>1</int></doc>');
 SELECT * FROM xpath_table('id', 't', 'xpath_test', '/doc/int', 'true')
 as t(id int4);
- id 
+ id
 ----
 (0 rows)
 
 SELECT * FROM xpath_table('id', 't', 'xpath_test', '/doc/int', 'true')
 as t(id int4, doc int4);
- id | doc 
+ id | doc
 ----+-----
   1 |   1
 (1 row)
@@ -49,13 +49,13 @@ CREATE TABLE xpath_test (id integer NOT NULL, t text);
 INSERT INTO xpath_test VALUES (1, '<doc><int>1</int></doc>');
 SELECT * FROM xpath_table('id', 't', 'xpath_test', '/doc/int', 'true')
 as t(id int4);
- id 
+ id
 ----
 (0 rows)
 
 SELECT * FROM xpath_table('id', 't', 'xpath_test', '/doc/int', 'true')
 as t(id int4, doc int4);
- id | doc 
+ id | doc
 ----+-----
   1 |   1
 (1 row)
@@ -70,9 +70,9 @@ xpath_table('article_id',
             '/article/author|/article/pages|/article/title',
             'date_entered > ''2003-01-01'' ')
 AS t(article_id integer, author text, page_count integer, title text);
- article_id | author | page_count | title 
+ article_id | author | page_count | title
 ------------+--------+------------+-------
-          2 | test   |         37 | 
+          2 | test   |         37 |
 (1 row)
 
 -- this used to fail when invoked a second time

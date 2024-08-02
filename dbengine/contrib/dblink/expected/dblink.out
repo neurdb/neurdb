@@ -34,7 +34,7 @@ INSERT INTO foo VALUES (9,'j','{"a9","b9","c9"}');
 -- list the primary key fields
 SELECT *
 FROM dblink_get_pkey('foo');
- position | colname 
+ position | colname
 ----------+---------
         1 | f1
         2 | f2
@@ -43,7 +43,7 @@ FROM dblink_get_pkey('foo');
 -- build an insert statement based on a local tuple,
 -- replacing the primary key values with new ones
 SELECT dblink_build_sql_insert('foo','1 2',2,'{"0", "a"}','{"99", "xyz"}');
-                  dblink_build_sql_insert                  
+                  dblink_build_sql_insert
 -----------------------------------------------------------
  INSERT INTO foo(f1,f2,f3) VALUES('99','xyz','{a0,b0,c0}')
 (1 row)
@@ -54,7 +54,7 @@ ERROR:  invalid attribute number 4
 -- build an update statement based on a local tuple,
 -- replacing the primary key values with new ones
 SELECT dblink_build_sql_update('foo','1 2',2,'{"0", "a"}','{"99", "xyz"}');
-                                dblink_build_sql_update                                 
+                                dblink_build_sql_update
 ----------------------------------------------------------------------------------------
  UPDATE foo SET f1 = '99', f2 = 'xyz', f3 = '{a0,b0,c0}' WHERE f1 = '99' AND f2 = 'xyz'
 (1 row)
@@ -64,7 +64,7 @@ SELECT dblink_build_sql_update('foo','1 2 3 4',4,'{"0", "a", "{a0,b0,c0}"}','{"9
 ERROR:  invalid attribute number 4
 -- build a delete statement based on a local tuple,
 SELECT dblink_build_sql_delete('foo','1 2',2,'{"0", "a"}');
-           dblink_build_sql_delete           
+           dblink_build_sql_delete
 ---------------------------------------------
  DELETE FROM foo WHERE f1 = '0' AND f2 = 'a'
 (1 row)
@@ -88,7 +88,7 @@ INSERT INTO foo_1 VALUES (9,'j','{"a9","b9","c9"}');
 -- list the primary key fields
 SELECT *
 FROM dblink_get_pkey('foo_1');
- position | colname 
+ position | colname
 ----------+---------
         1 | f1
         2 | f2
@@ -97,7 +97,7 @@ FROM dblink_get_pkey('foo_1');
 -- build an insert statement based on a local tuple,
 -- replacing the primary key values with new ones
 SELECT dblink_build_sql_insert('foo_1','1 2',2,'{"0", "a"}','{"99", "xyz"}');
-                   dblink_build_sql_insert                   
+                   dblink_build_sql_insert
 -------------------------------------------------------------
  INSERT INTO foo_1(f1,f2,f3) VALUES('99','xyz','{a0,b0,c0}')
 (1 row)
@@ -108,7 +108,7 @@ ERROR:  invalid attribute number 4
 -- build an update statement based on a local tuple,
 -- replacing the primary key values with new ones
 SELECT dblink_build_sql_update('foo_1','1 2',2,'{"0", "a"}','{"99", "xyz"}');
-                                 dblink_build_sql_update                                  
+                                 dblink_build_sql_update
 ------------------------------------------------------------------------------------------
  UPDATE foo_1 SET f1 = '99', f2 = 'xyz', f3 = '{a0,b0,c0}' WHERE f1 = '99' AND f2 = 'xyz'
 (1 row)
@@ -118,7 +118,7 @@ SELECT dblink_build_sql_update('foo_1','1 2 3 4',4,'{"0", "a", "{a0,b0,c0}"}','{
 ERROR:  invalid attribute number 4
 -- build a delete statement based on a local tuple,
 SELECT dblink_build_sql_delete('foo_1','1 2',2,'{"0", "a"}');
-            dblink_build_sql_delete            
+            dblink_build_sql_delete
 -----------------------------------------------
  DELETE FROM foo_1 WHERE f1 = '0' AND f2 = 'a'
 (1 row)
@@ -134,7 +134,7 @@ INSERT INTO "MySchema"."Foo" VALUES (0,'a','{"a0","b0","c0"}');
 -- list the primary key fields
 SELECT *
 FROM dblink_get_pkey('"MySchema"."Foo"');
- position | colname 
+ position | colname
 ----------+---------
         1 | f1
         2 | f2
@@ -143,7 +143,7 @@ FROM dblink_get_pkey('"MySchema"."Foo"');
 -- build an insert statement based on a local tuple,
 -- replacing the primary key values with new ones
 SELECT dblink_build_sql_insert('"MySchema"."Foo"','1 2',2,'{"0", "a"}','{"99", "xyz"}');
-                        dblink_build_sql_insert                         
+                        dblink_build_sql_insert
 ------------------------------------------------------------------------
  INSERT INTO "MySchema"."Foo"(f1,f2,f3) VALUES('99','xyz','{a0,b0,c0}')
 (1 row)
@@ -151,14 +151,14 @@ SELECT dblink_build_sql_insert('"MySchema"."Foo"','1 2',2,'{"0", "a"}','{"99", "
 -- build an update statement based on a local tuple,
 -- replacing the primary key values with new ones
 SELECT dblink_build_sql_update('"MySchema"."Foo"','1 2',2,'{"0", "a"}','{"99", "xyz"}');
-                                       dblink_build_sql_update                                       
+                                       dblink_build_sql_update
 -----------------------------------------------------------------------------------------------------
  UPDATE "MySchema"."Foo" SET f1 = '99', f2 = 'xyz', f3 = '{a0,b0,c0}' WHERE f1 = '99' AND f2 = 'xyz'
 (1 row)
 
 -- build a delete statement based on a local tuple,
 SELECT dblink_build_sql_delete('"MySchema"."Foo"','1 2',2,'{"0", "a"}');
-                 dblink_build_sql_delete                  
+                 dblink_build_sql_delete
 ----------------------------------------------------------
  DELETE FROM "MySchema"."Foo" WHERE f1 = '0' AND f2 = 'a'
 (1 row)
@@ -170,7 +170,7 @@ $f$;
 SELECT *
 FROM dblink(connection_parameters(),'SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE t.a > 7;
- a | b |     c      
+ a | b |     c
 ---+---+------------
  8 | i | {a8,b8,c8}
  9 | j | {a9,b9,c9}
@@ -210,7 +210,7 @@ END
 $pl$;
 -- create a persistent connection
 SELECT dblink_connect(connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
@@ -219,7 +219,7 @@ SELECT dblink_connect(connection_parameters());
 SELECT *
 FROM dblink('SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE t.a > 7;
- a | b |     c      
+ a | b |     c
 ---+---+------------
  8 | i | {a8,b8,c8}
  9 | j | {a9,b9,c9}
@@ -229,35 +229,35 @@ WHERE t.a > 7;
 SELECT dblink_open('rmt_foo_cursor','SELECT * FROM foobar',false);
 NOTICE:  relation "foobar" does not exist
 CONTEXT:  while opening cursor "rmt_foo_cursor" on unnamed dblink connection
- dblink_open 
+ dblink_open
 -------------
  ERROR
 (1 row)
 
 -- reset remote transaction state
 SELECT dblink_exec('ABORT');
- dblink_exec 
+ dblink_exec
 -------------
  ROLLBACK
 (1 row)
 
 -- open a cursor
 SELECT dblink_open('rmt_foo_cursor','SELECT * FROM foo');
- dblink_open 
+ dblink_open
 -------------
  OK
 (1 row)
 
 -- close the cursor
 SELECT dblink_close('rmt_foo_cursor',false);
- dblink_close 
+ dblink_close
 --------------
  OK
 (1 row)
 
 -- open the cursor again
 SELECT dblink_open('rmt_foo_cursor','SELECT * FROM foo');
- dblink_open 
+ dblink_open
 -------------
  OK
 (1 row)
@@ -265,7 +265,7 @@ SELECT dblink_open('rmt_foo_cursor','SELECT * FROM foo');
 -- fetch some data
 SELECT *
 FROM dblink_fetch('rmt_foo_cursor',4) AS t(a int, b text, c text[]);
- a | b |     c      
+ a | b |     c
 ---+---+------------
  0 | a | {a0,b0,c0}
  1 | b | {a1,b1,c1}
@@ -275,7 +275,7 @@ FROM dblink_fetch('rmt_foo_cursor',4) AS t(a int, b text, c text[]);
 
 SELECT *
 FROM dblink_fetch('rmt_foo_cursor',4) AS t(a int, b text, c text[]);
- a | b |     c      
+ a | b |     c
 ---+---+------------
  4 | e | {a4,b4,c4}
  5 | f | {a5,b5,c5}
@@ -286,7 +286,7 @@ FROM dblink_fetch('rmt_foo_cursor',4) AS t(a int, b text, c text[]);
 -- this one only finds two rows left
 SELECT *
 FROM dblink_fetch('rmt_foo_cursor',4) AS t(a int, b text, c text[]);
- a | b |     c      
+ a | b |     c
 ---+---+------------
  8 | i | {a8,b8,c8}
  9 | j | {a9,b9,c9}
@@ -297,13 +297,13 @@ SELECT *
 FROM dblink_fetch('rmt_foobar_cursor',4,false) AS t(a int, b text, c text[]);
 NOTICE:  cursor "rmt_foobar_cursor" does not exist
 CONTEXT:  while fetching from cursor "rmt_foobar_cursor" on unnamed dblink connection
- a | b | c 
+ a | b | c
 ---+---+---
 (0 rows)
 
 -- reset remote transaction state
 SELECT dblink_exec('ABORT');
- dblink_exec 
+ dblink_exec
 -------------
  ROLLBACK
 (1 row)
@@ -312,7 +312,7 @@ SELECT dblink_exec('ABORT');
 SELECT dblink_close('rmt_foobar_cursor',false);
 NOTICE:  cursor "rmt_foobar_cursor" does not exist
 CONTEXT:  while closing cursor "rmt_foobar_cursor" on unnamed dblink connection
- dblink_close 
+ dblink_close
 --------------
  ERROR
 (1 row)
@@ -327,13 +327,13 @@ SELECT *
 FROM dblink_fetch('rmt_foo_cursor',4,false) AS t(a int, b text, c text[]);
 NOTICE:  cursor "rmt_foo_cursor" does not exist
 CONTEXT:  while fetching from cursor "rmt_foo_cursor" on unnamed dblink connection
- a | b | c 
+ a | b | c
 ---+---+---
 (0 rows)
 
 -- close the persistent connection
 SELECT dblink_disconnect();
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
@@ -346,14 +346,14 @@ ERROR:  connection not available
 -- put more data into our table, first using arbitrary connection syntax
 -- but truncate the actual return value so we can use diff to check for success
 SELECT substr(dblink_exec(connection_parameters(),'INSERT INTO foo VALUES(10,''k'',''{"a10","b10","c10"}'')'),1,6);
- substr 
+ substr
 --------
  INSERT
 (1 row)
 
 -- create a persistent connection
 SELECT dblink_connect(connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
@@ -361,7 +361,7 @@ SELECT dblink_connect(connection_parameters());
 -- put more data into our table, using persistent connection syntax
 -- but truncate the actual return value so we can use diff to check for success
 SELECT substr(dblink_exec('INSERT INTO foo VALUES(11,''l'',''{"a11","b11","c11"}'')'),1,6);
- substr 
+ substr
 --------
  INSERT
 (1 row)
@@ -369,7 +369,7 @@ SELECT substr(dblink_exec('INSERT INTO foo VALUES(11,''l'',''{"a11","b11","c11"}
 -- let's see it
 SELECT *
 FROM dblink('SELECT * FROM foo') AS t(a int, b text, c text[]);
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
   0 | a | {a0,b0,c0}
   1 | b | {a1,b1,c1}
@@ -390,13 +390,13 @@ SELECT *
 FROM dblink('SELECT * FROM foobar',false) AS t(a int, b text, c text[]);
 NOTICE:  relation "foobar" does not exist
 CONTEXT:  while executing query on unnamed dblink connection
- a | b | c 
+ a | b | c
 ---+---+---
 (0 rows)
 
 -- change some data
 SELECT dblink_exec('UPDATE foo SET f3[2] = ''b99'' WHERE f1 = 11');
- dblink_exec 
+ dblink_exec
 -------------
  UPDATE 1
 (1 row)
@@ -405,7 +405,7 @@ SELECT dblink_exec('UPDATE foo SET f3[2] = ''b99'' WHERE f1 = 11');
 SELECT *
 FROM dblink('SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE a = 11;
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
  11 | l | {a11,b99,c11}
 (1 row)
@@ -414,14 +414,14 @@ WHERE a = 11;
 SELECT dblink_exec('UPDATE foobar SET f3[2] = ''b99'' WHERE f1 = 11',false);
 NOTICE:  relation "foobar" does not exist
 CONTEXT:  while executing command on unnamed dblink connection
- dblink_exec 
+ dblink_exec
 -------------
  ERROR
 (1 row)
 
 -- delete some data
 SELECT dblink_exec('DELETE FROM foo WHERE f1 = 11');
- dblink_exec 
+ dblink_exec
 -------------
  DELETE 1
 (1 row)
@@ -430,13 +430,13 @@ SELECT dblink_exec('DELETE FROM foo WHERE f1 = 11');
 SELECT *
 FROM dblink('SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE a = 11;
- a | b | c 
+ a | b | c
 ---+---+---
 (0 rows)
 
 -- close the persistent connection
 SELECT dblink_disconnect();
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
@@ -452,7 +452,7 @@ ERROR:  could not establish connection
 DETAIL:  missing "=" after "myconn" in connection info string
 -- create a named persistent connection
 SELECT dblink_connect('myconn',connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
@@ -461,7 +461,7 @@ SELECT dblink_connect('myconn',connection_parameters());
 SELECT *
 FROM dblink('myconn','SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE t.a > 7;
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
   8 | i | {a8,b8,c8}
   9 | j | {a9,b9,c9}
@@ -474,7 +474,7 @@ FROM dblink('myconn','SELECT * FROM foobar',false) AS t(a int, b text, c text[])
 WHERE t.a > 7;
 NOTICE:  relation "foobar" does not exist
 CONTEXT:  while executing query on dblink connection named "myconn"
- a | b | c 
+ a | b | c
 ---+---+---
 (0 rows)
 
@@ -484,7 +484,7 @@ SELECT dblink_connect('myconn',connection_parameters());
 ERROR:  duplicate connection name
 -- create a second named persistent connection with a new name
 SELECT dblink_connect('myconn2',connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
@@ -493,7 +493,7 @@ SELECT dblink_connect('myconn2',connection_parameters());
 SELECT *
 FROM dblink('myconn2','SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE t.a > 7;
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
   8 | i | {a8,b8,c8}
   9 | j | {a9,b9,c9}
@@ -502,7 +502,7 @@ WHERE t.a > 7;
 
 -- close the second named persistent connection
 SELECT dblink_disconnect('myconn2');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
@@ -511,84 +511,84 @@ SELECT dblink_disconnect('myconn2');
 SELECT dblink_open('myconn','rmt_foo_cursor','SELECT * FROM foobar',false);
 NOTICE:  relation "foobar" does not exist
 CONTEXT:  while opening cursor "rmt_foo_cursor" on dblink connection named "myconn"
- dblink_open 
+ dblink_open
 -------------
  ERROR
 (1 row)
 
 -- reset remote transaction state
 SELECT dblink_exec('myconn','ABORT');
- dblink_exec 
+ dblink_exec
 -------------
  ROLLBACK
 (1 row)
 
 -- test opening cursor in a transaction
 SELECT dblink_exec('myconn','BEGIN');
- dblink_exec 
+ dblink_exec
 -------------
  BEGIN
 (1 row)
 
 -- an open transaction will prevent dblink_open() from opening its own
 SELECT dblink_open('myconn','rmt_foo_cursor','SELECT * FROM foo');
- dblink_open 
+ dblink_open
 -------------
  OK
 (1 row)
 
 -- this should not commit the transaction because the client opened it
 SELECT dblink_close('myconn','rmt_foo_cursor');
- dblink_close 
+ dblink_close
 --------------
  OK
 (1 row)
 
 -- this should succeed because we have an open transaction
 SELECT dblink_exec('myconn','DECLARE xact_test CURSOR FOR SELECT * FROM foo');
-  dblink_exec   
+  dblink_exec
 ----------------
  DECLARE CURSOR
 (1 row)
 
 -- commit remote transaction
 SELECT dblink_exec('myconn','COMMIT');
- dblink_exec 
+ dblink_exec
 -------------
  COMMIT
 (1 row)
 
 -- test automatic transactions for multiple cursor opens
 SELECT dblink_open('myconn','rmt_foo_cursor','SELECT * FROM foo');
- dblink_open 
+ dblink_open
 -------------
  OK
 (1 row)
 
 -- the second cursor
 SELECT dblink_open('myconn','rmt_foo_cursor2','SELECT * FROM foo');
- dblink_open 
+ dblink_open
 -------------
  OK
 (1 row)
 
 -- this should not commit the transaction
 SELECT dblink_close('myconn','rmt_foo_cursor2');
- dblink_close 
+ dblink_close
 --------------
  OK
 (1 row)
 
 -- this should succeed because we have an open transaction
 SELECT dblink_exec('myconn','DECLARE xact_test CURSOR FOR SELECT * FROM foo');
-  dblink_exec   
+  dblink_exec
 ----------------
  DECLARE CURSOR
 (1 row)
 
 -- this should commit the transaction
 SELECT dblink_close('myconn','rmt_foo_cursor');
- dblink_close 
+ dblink_close
 --------------
  OK
 (1 row)
@@ -599,14 +599,14 @@ ERROR:  DECLARE CURSOR can only be used in transaction blocks
 CONTEXT:  while executing command on dblink connection named "myconn"
 -- reset remote transaction state
 SELECT dblink_exec('myconn','ABORT');
- dblink_exec 
+ dblink_exec
 -------------
  ROLLBACK
 (1 row)
 
 -- open a cursor
 SELECT dblink_open('myconn','rmt_foo_cursor','SELECT * FROM foo');
- dblink_open 
+ dblink_open
 -------------
  OK
 (1 row)
@@ -614,7 +614,7 @@ SELECT dblink_open('myconn','rmt_foo_cursor','SELECT * FROM foo');
 -- fetch some data
 SELECT *
 FROM dblink_fetch('myconn','rmt_foo_cursor',4) AS t(a int, b text, c text[]);
- a | b |     c      
+ a | b |     c
 ---+---+------------
  0 | a | {a0,b0,c0}
  1 | b | {a1,b1,c1}
@@ -624,7 +624,7 @@ FROM dblink_fetch('myconn','rmt_foo_cursor',4) AS t(a int, b text, c text[]);
 
 SELECT *
 FROM dblink_fetch('myconn','rmt_foo_cursor',4) AS t(a int, b text, c text[]);
- a | b |     c      
+ a | b |     c
 ---+---+------------
  4 | e | {a4,b4,c4}
  5 | f | {a5,b5,c5}
@@ -635,7 +635,7 @@ FROM dblink_fetch('myconn','rmt_foo_cursor',4) AS t(a int, b text, c text[]);
 -- this one only finds three rows left
 SELECT *
 FROM dblink_fetch('myconn','rmt_foo_cursor',4) AS t(a int, b text, c text[]);
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
   8 | i | {a8,b8,c8}
   9 | j | {a9,b9,c9}
@@ -647,13 +647,13 @@ SELECT *
 FROM dblink_fetch('myconn','rmt_foobar_cursor',4,false) AS t(a int, b text, c text[]);
 NOTICE:  cursor "rmt_foobar_cursor" does not exist
 CONTEXT:  while fetching from cursor "rmt_foobar_cursor" on dblink connection named "myconn"
- a | b | c 
+ a | b | c
 ---+---+---
 (0 rows)
 
 -- reset remote transaction state
 SELECT dblink_exec('myconn','ABORT');
- dblink_exec 
+ dblink_exec
 -------------
  ROLLBACK
 (1 row)
@@ -665,7 +665,7 @@ ERROR:  cursor "rmt_foo_cursor" does not exist
 CONTEXT:  while fetching from cursor "rmt_foo_cursor" on dblink connection named "myconn"
 -- close the named persistent connection
 SELECT dblink_disconnect('myconn');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
@@ -678,7 +678,7 @@ ERROR:  could not establish connection
 DETAIL:  missing "=" after "myconn" in connection info string
 -- create a named persistent connection
 SELECT dblink_connect('myconn',connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
@@ -686,7 +686,7 @@ SELECT dblink_connect('myconn',connection_parameters());
 -- put more data into our table, using named persistent connection syntax
 -- but truncate the actual return value so we can use diff to check for success
 SELECT substr(dblink_exec('myconn','INSERT INTO foo VALUES(11,''l'',''{"a11","b11","c11"}'')'),1,6);
- substr 
+ substr
 --------
  INSERT
 (1 row)
@@ -694,7 +694,7 @@ SELECT substr(dblink_exec('myconn','INSERT INTO foo VALUES(11,''l'',''{"a11","b1
 -- let's see it
 SELECT *
 FROM dblink('myconn','SELECT * FROM foo') AS t(a int, b text, c text[]);
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
   0 | a | {a0,b0,c0}
   1 | b | {a1,b1,c1}
@@ -712,7 +712,7 @@ FROM dblink('myconn','SELECT * FROM foo') AS t(a int, b text, c text[]);
 
 -- change some data
 SELECT dblink_exec('myconn','UPDATE foo SET f3[2] = ''b99'' WHERE f1 = 11');
- dblink_exec 
+ dblink_exec
 -------------
  UPDATE 1
 (1 row)
@@ -721,14 +721,14 @@ SELECT dblink_exec('myconn','UPDATE foo SET f3[2] = ''b99'' WHERE f1 = 11');
 SELECT *
 FROM dblink('myconn','SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE a = 11;
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
  11 | l | {a11,b99,c11}
 (1 row)
 
 -- delete some data
 SELECT dblink_exec('myconn','DELETE FROM foo WHERE f1 = 11');
- dblink_exec 
+ dblink_exec
 -------------
  DELETE 1
 (1 row)
@@ -737,13 +737,13 @@ SELECT dblink_exec('myconn','DELETE FROM foo WHERE f1 = 11');
 SELECT *
 FROM dblink('myconn','SELECT * FROM foo') AS t(a int, b text, c text[])
 WHERE a = 11;
- a | b | c 
+ a | b | c
 ---+---+---
 (0 rows)
 
 -- close the named persistent connection
 SELECT dblink_disconnect('myconn');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
@@ -754,40 +754,40 @@ SELECT dblink_disconnect('myconn');
 ERROR:  connection "myconn" not available
 -- test asynchronous queries
 SELECT dblink_connect('dtest1', connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 SELECT * from
  dblink_send_query('dtest1', 'select * from foo where f1 < 3') as t1;
- t1 
+ t1
 ----
   1
 (1 row)
 
 SELECT dblink_connect('dtest2', connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 SELECT * from
  dblink_send_query('dtest2', 'select * from foo where f1 > 2 and f1 < 7') as t1;
- t1 
+ t1
 ----
   1
 (1 row)
 
 SELECT dblink_connect('dtest3', connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 SELECT * from
  dblink_send_query('dtest3', 'select * from foo where f1 > 6') as t1;
- t1 
+ t1
 ----
   1
 (1 row)
@@ -806,7 +806,7 @@ language sql strict immutable as $$
 select $1[i] from generate_series(array_lower($1,1), array_upper($1,1)) as i
 $$;
 SELECT * FROM unnest(dblink_get_connections()) ORDER BY 1;
- unnest 
+ unnest
 --------
  dtest1
  dtest2
@@ -814,31 +814,31 @@ SELECT * FROM unnest(dblink_get_connections()) ORDER BY 1;
 (3 rows)
 
 SELECT dblink_is_busy('dtest1');
- dblink_is_busy 
+ dblink_is_busy
 ----------------
               0
 (1 row)
 
 SELECT dblink_disconnect('dtest1');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
 
 SELECT dblink_disconnect('dtest2');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
 
 SELECT dblink_disconnect('dtest3');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
 
 SELECT * from result;
- f1 | f2 |      f3       
+ f1 | f2 |      f3
 ----+----+---------------
   0 | a  | {a0,b0,c0}
   1 | b  | {a1,b1,c1}
@@ -854,32 +854,32 @@ SELECT * from result;
 (11 rows)
 
 SELECT dblink_connect('dtest1', connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 SELECT * from
  dblink_send_query('dtest1', 'select * from foo where f1 < 3') as t1;
- t1 
+ t1
 ----
   1
 (1 row)
 
 SELECT dblink_cancel_query('dtest1');
- dblink_cancel_query 
+ dblink_cancel_query
 ---------------------
  OK
 (1 row)
 
 SELECT dblink_error_message('dtest1');
- dblink_error_message 
+ dblink_error_message
 ----------------------
  OK
 (1 row)
 
 SELECT dblink_disconnect('dtest1');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
@@ -907,13 +907,13 @@ ERROR:  password or GSSAPI delegated credentials required
 DETAIL:  Non-superusers must provide a password in the connection string or send delegated GSSAPI credentials.
 -- should succeed
 SELECT dblink_connect_u('myconn', 'fdtest');
- dblink_connect_u 
+ dblink_connect_u
 ------------------
  OK
 (1 row)
 
 SELECT * FROM dblink('myconn','SELECT * FROM foo') AS t(a int, b text, c text[]);
- a  | b |       c       
+ a  | b |       c
 ----+---+---------------
   0 | a | {a0,b0,c0}
   1 | b | {a1,b1,c1}
@@ -940,70 +940,70 @@ ERROR:  invalid option "nonexistent"
 HINT:  There are no valid options in this context.
 -- test repeated calls to dblink_connect
 SELECT dblink_connect(connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 SELECT dblink_connect(connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 SELECT dblink_disconnect();
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
 
 -- test asynchronous notifications
 SELECT dblink_connect(connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 --should return listen
 SELECT dblink_exec('LISTEN regression');
- dblink_exec 
+ dblink_exec
 -------------
  LISTEN
 (1 row)
 
 --should return listen
 SELECT dblink_exec('LISTEN foobar');
- dblink_exec 
+ dblink_exec
 -------------
  LISTEN
 (1 row)
 
 SELECT dblink_exec('NOTIFY regression');
- dblink_exec 
+ dblink_exec
 -------------
  NOTIFY
 (1 row)
 
 SELECT dblink_exec('NOTIFY foobar');
- dblink_exec 
+ dblink_exec
 -------------
  NOTIFY
 (1 row)
 
 SELECT notify_name, be_pid = (select t.be_pid from dblink('select pg_backend_pid()') as t(be_pid int)) AS is_self_notify, extra from dblink_get_notify();
- notify_name | is_self_notify | extra 
+ notify_name | is_self_notify | extra
 -------------+----------------+-------
- regression  | t              | 
- foobar      | t              | 
+ regression  | t              |
+ foobar      | t              |
 (2 rows)
 
 SELECT * from dblink_get_notify();
- notify_name | be_pid | extra 
+ notify_name | be_pid | extra
 -------------+--------+-------
 (0 rows)
 
 SELECT dblink_disconnect();
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)
@@ -1024,21 +1024,21 @@ ALTER TABLE test_dropped
 	ADD COLUMN col4 INT NOT NULL DEFAULT 42;
 SELECT dblink_build_sql_insert('test_dropped', '1', 1,
                                ARRAY['1'::TEXT], ARRAY['2'::TEXT]);
-                          dblink_build_sql_insert                          
+                          dblink_build_sql_insert
 ---------------------------------------------------------------------------
  INSERT INTO test_dropped(id,col2b,col3,col4) VALUES('2','113','foo','42')
 (1 row)
 
 SELECT dblink_build_sql_update('test_dropped', '1', 1,
                                ARRAY['1'::TEXT], ARRAY['2'::TEXT]);
-                                  dblink_build_sql_update                                  
+                                  dblink_build_sql_update
 -------------------------------------------------------------------------------------------
  UPDATE test_dropped SET id = '2', col2b = '113', col3 = 'foo', col4 = '42' WHERE id = '2'
 (1 row)
 
 SELECT dblink_build_sql_delete('test_dropped', '1', 1,
                                ARRAY['2'::TEXT]);
-         dblink_build_sql_delete         
+         dblink_build_sql_delete
 -----------------------------------------
  DELETE FROM test_dropped WHERE id = '2'
 (1 row)
@@ -1048,13 +1048,13 @@ SET datestyle = ISO, MDY;
 SET intervalstyle = postgres;
 SET timezone = UTC;
 SELECT dblink_connect('myconn',connection_parameters());
- dblink_connect 
+ dblink_connect
 ----------------
  OK
 (1 row)
 
 SELECT dblink_exec('myconn', 'SET datestyle = GERMAN, DMY;');
- dblink_exec 
+ dblink_exec
 -------------
  SET
 (1 row)
@@ -1064,7 +1064,7 @@ SELECT *
 FROM dblink('myconn',
     'SELECT * FROM (VALUES (''12.03.2013 00:00:00+00'')) t')
   AS t(a timestamptz);
-           a            
+           a
 ------------------------
  2013-03-12 00:00:00+00
 (1 row)
@@ -1076,7 +1076,7 @@ FROM dblink('myconn',
      (VALUES (''12.03.2013 00:00:00+00''),
              (''12.03.2013 00:00:00+00'')) t')
   AS t(a timestamptz);
-           a            
+           a
 ------------------------
  2013-03-12 00:00:00+00
  2013-03-12 00:00:00+00
@@ -1087,7 +1087,7 @@ SELECT *
 FROM dblink_send_query('myconn',
     'SELECT * FROM
      (VALUES (''12.03.2013 00:00:00+00'')) t');
- dblink_send_query 
+ dblink_send_query
 -------------------
                  1
 (1 row)
@@ -1097,7 +1097,7 @@ CREATE TEMPORARY TABLE result AS
 UNION ALL
 (SELECT * from dblink_get_result('myconn') as t(t timestamptz));
 SELECT * FROM result;
-           t            
+           t
 ------------------------
  2013-03-12 00:00:00+00
 (1 row)
@@ -1109,7 +1109,7 @@ FROM dblink_send_query('myconn',
     'SELECT * FROM
      (VALUES (''12.03.2013 00:00:00+00''),
              (''12.03.2013 00:00:00+00'')) t');
- dblink_send_query 
+ dblink_send_query
 -------------------
                  1
 (1 row)
@@ -1121,7 +1121,7 @@ UNION ALL
 UNION ALL
 (SELECT * from dblink_get_result('myconn') as t(t timestamptz));
 SELECT * FROM result;
-           t            
+           t
 ------------------------
  2013-03-12 00:00:00+00
  2013-03-12 00:00:00+00
@@ -1130,7 +1130,7 @@ SELECT * FROM result;
 DROP TABLE result;
 -- Try an ambiguous interval
 SELECT dblink_exec('myconn', 'SET intervalstyle = sql_standard;');
- dblink_exec 
+ dblink_exec
 -------------
  SET
 (1 row)
@@ -1139,7 +1139,7 @@ SELECT *
 FROM dblink('myconn',
     'SELECT * FROM (VALUES (''-1 2:03:04'')) i')
   AS i(i interval);
-         i         
+         i
 -------------------
  -1 days -02:03:04
 (1 row)
@@ -1148,7 +1148,7 @@ FROM dblink('myconn',
 -- properly through a change.
 CREATE TEMPORARY TABLE result (t timestamptz);
 SELECT dblink_exec('myconn', 'SET datestyle = ISO, MDY;');
- dblink_exec 
+ dblink_exec
 -------------
  SET
 (1 row)
@@ -1159,7 +1159,7 @@ INSERT INTO result
               'SELECT * FROM (VALUES (''03.12.2013 00:00:00+00'')) t')
     AS t(a timestamptz);
 SELECT dblink_exec('myconn', 'SET datestyle = GERMAN, DMY;');
- dblink_exec 
+ dblink_exec
 -------------
  SET
 (1 row)
@@ -1170,7 +1170,7 @@ INSERT INTO result
               'SELECT * FROM (VALUES (''12.03.2013 00:00:00+00'')) t')
     AS t(a timestamptz);
 SELECT * FROM result;
-           t            
+           t
 ------------------------
  2013-03-12 00:00:00+00
  2013-03-12 00:00:00+00
@@ -1180,14 +1180,14 @@ DROP TABLE result;
 -- Check error throwing in dblink_fetch
 SELECT dblink_open('myconn','error_cursor',
        'SELECT * FROM (VALUES (''1''), (''not an int'')) AS t(text);');
- dblink_open 
+ dblink_open
 -------------
  OK
 (1 row)
 
 SELECT *
 FROM dblink_fetch('myconn','error_cursor', 1) AS t(i int);
- i 
+ i
 ---
  1
 (1 row)
@@ -1198,20 +1198,20 @@ ERROR:  invalid input syntax for type integer: "not an int"
 -- Make sure that the local settings have retained their values in spite
 -- of shenanigans on the connection.
 SHOW datestyle;
- DateStyle 
+ DateStyle
 -----------
  ISO, MDY
 (1 row)
 
 SHOW intervalstyle;
- IntervalStyle 
+ IntervalStyle
 ---------------
  postgres
 (1 row)
 
 -- Clean up GUC-setting tests
 SELECT dblink_disconnect('myconn');
- dblink_disconnect 
+ dblink_disconnect
 -------------------
  OK
 (1 row)

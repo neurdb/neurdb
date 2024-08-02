@@ -38,7 +38,7 @@ CREATE TRIGGER users_delete_trig BEFORE DELETE ON users FOR EACH ROW
 -- quick peek at the table
 --
 SELECT * FROM users;
- fname  | lname | username | userid 
+ fname  | lname | username | userid
 --------+-------+----------+--------
  jane   | doe   | j_doe    |      1
  john   | doe   | johnd    |      2
@@ -54,7 +54,7 @@ UPDATE users SET fname = 'william' WHERE fname = 'willem';
 INSERT INTO users (fname, lname) VALUES ('william', 'smith');
 INSERT INTO users (fname, lname, username) VALUES ('charles', 'darwin', 'beagle');
 SELECT * FROM users;
-  fname  | lname  | username | userid 
+  fname  | lname  | username | userid
 ---------+--------+----------+--------
  jane    | doe    | j_doe    |      1
  john    | doe    | johnd    |      2
@@ -452,7 +452,7 @@ ERROR:  trigger functions can only be called as triggers
 -- Null values
 --
 SELECT * FROM trigger_test;
- i |  v   
+ i |  v
 ---+------
  0 | zero
 (1 row)
@@ -468,9 +468,9 @@ FOR EACH ROW EXECUTE PROCEDURE test_null();
 UPDATE trigger_test SET v = 'null' WHERE i = 0;
 DROP TRIGGER test_null_trigger ON trigger_test;
 SELECT * FROM trigger_test;
- i | v 
+ i | v
 ---+---
- 0 | 
+ 0 |
 (1 row)
 
 --
@@ -487,14 +487,14 @@ CREATE TRIGGER set_modif_time BEFORE UPDATE ON pb
   FOR EACH ROW EXECUTE PROCEDURE set_modif_time();
 INSERT INTO pb VALUES ('a', '2010-10-09 21:57:33.930486');
 SELECT * FROM pb;
- a |     modif_time      
+ a |     modif_time
 ---+---------------------
  a | 2010-10-09 21:57:34
 (1 row)
 
 UPDATE pb SET a = 'b';
 SELECT * FROM pb;
- a |     modif_time      
+ a |     modif_time
 ---+---------------------
  b | 2010-10-13 21:57:29
 (1 row)
@@ -512,7 +512,7 @@ CREATE TRIGGER composite_trigger BEFORE INSERT ON composite_trigger_test
   FOR EACH ROW EXECUTE PROCEDURE composite_trigger_f();
 INSERT INTO composite_trigger_test VALUES (NULL, NULL);
 SELECT * FROM composite_trigger_test;
-  f1   |  f2   
+  f1   |  f2
 -------+-------
  (3,f) | (7,t)
 (1 row)
@@ -528,10 +528,10 @@ INSERT INTO composite_trigger_noop_test VALUES (NULL, NULL);
 INSERT INTO composite_trigger_noop_test VALUES (ROW(1, 'f'), NULL);
 INSERT INTO composite_trigger_noop_test VALUES (ROW(NULL, 't'), ROW(1, 'f'));
 SELECT * FROM composite_trigger_noop_test;
-  f1   |  f2   
+  f1   |  f2
 -------+-------
-       | 
- (1,f) | 
+       |
+ (1,f) |
  (,t)  | (1,f)
 (3 rows)
 
@@ -547,9 +547,9 @@ INSERT INTO composite_trigger_nested_test VALUES (NULL);
 INSERT INTO composite_trigger_nested_test VALUES (ROW(ROW(1, 'f'), NULL, 3));
 INSERT INTO composite_trigger_nested_test VALUES (ROW(ROW(NULL, 't'), ROW(1, 'f'), NULL));
 SELECT * FROM composite_trigger_nested_test;
-         c         
+         c
 -------------------
- 
+
  ("(1,f)",,3)
  ("(,t)","(1,f)",)
 (3 rows)
@@ -565,7 +565,7 @@ CREATE TRIGGER a_t BEFORE INSERT ON a FOR EACH ROW EXECUTE PROCEDURE trig1234();
 CREATE TRIGGER b_t BEFORE INSERT ON b FOR EACH ROW EXECUTE PROCEDURE trig1234();
 INSERT INTO a DEFAULT VALUES;
 SELECT * FROM a;
- data 
+ data
 ------
  1234
 (1 row)
@@ -573,7 +573,7 @@ SELECT * FROM a;
 DROP TABLE a;
 INSERT INTO b DEFAULT VALUES;
 SELECT * FROM b;
- data 
+ data
 ------
  1234
 (1 row)
@@ -614,7 +614,6 @@ ERROR:  cannot set generated column "j"
 CONTEXT:  while modifying trigger row
 PL/Python function "generated_test_func1"
 SELECT * FROM trigger_test_generated;
- i | j 
+ i | j
 ---+---
 (0 rows)
-

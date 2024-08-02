@@ -53,4 +53,3 @@ msgstr "funcțiile PL/Tcl nu pot returna tipul compozit"
 #, c-format
 msgid "PL/Tcl functions cannot accept type %s"
 msgstr "funcțiile PL/Tcl nu pot accepta tipul %s"
-

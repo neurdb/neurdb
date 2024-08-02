@@ -30,7 +30,7 @@ SET search_path = plperl_setup_scratch;
 GRANT ALL ON SCHEMA plperl_setup_scratch TO regress_plperl_user2;
 CREATE FUNCTION foo1() returns int language plperl as '1;';
 SELECT foo1();
- foo1 
+ foo1
 ------
     1
 (1 row)
@@ -49,7 +49,7 @@ grant usage on language plperl to regress_plperl_user2;
 SET ROLE regress_plperl_user2;
 CREATE FUNCTION foo2() returns int language plperl as '2;';
 SELECT foo2();
- foo2 
+ foo2
 ------
     2
 (1 row)

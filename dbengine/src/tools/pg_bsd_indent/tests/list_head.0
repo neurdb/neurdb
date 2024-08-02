@@ -11,5 +11,3 @@ struct mac *mac_p)
 static LIST_HEAD(, alq) ald_active;
 static int ald_shuttingdown = 0;
 struct thread *ald_thread;
-
-

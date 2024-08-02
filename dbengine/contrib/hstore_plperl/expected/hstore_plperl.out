@@ -7,7 +7,7 @@ SELECT transforms.udt_schema, transforms.udt_name,
 FROM information_schema.transforms JOIN information_schema.routines
      USING (specific_catalog, specific_schema, specific_name)
 ORDER BY 1, 2, 5, 6;
- udt_schema | udt_name | routine_schema |   routine_name   | group_name | transform_type 
+ udt_schema | udt_name | routine_schema |   routine_name   | group_name | transform_type
 ------------+----------+----------------+------------------+------------+----------------
  public     | hstore   | public         | hstore_to_plperl | plperl     | FROM SQL
  public     | hstore   | public         | plperl_to_hstore | plperl     | TO SQL
@@ -22,7 +22,7 @@ $val = {a => 1, b => 'boo', c => undef};
 return $val;
 $$;
 SELECT test2();
-              test2              
+              test2
 ---------------------------------
  "a"=>"1", "b"=>"boo", "c"=>NULL
 (1 row)
@@ -36,7 +36,7 @@ $val = [{a => 1, b => 'boo', c => undef}, {d => 2}];
 return $val;
 $$;
 SELECT test2arr();
-                           test2arr                           
+                           test2arr
 --------------------------------------------------------------
  {"\"a\"=>\"1\", \"b\"=>\"boo\", \"c\"=>NULL","\"d\"=>\"2\""}
 (1 row)

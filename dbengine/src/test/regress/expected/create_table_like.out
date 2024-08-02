@@ -15,24 +15,24 @@ LINE 1: CREATE TABLE foo (LIKE nonexistent);
 CREATE TABLE inhe (ee text, LIKE inhx) inherits (ctlb);
 INSERT INTO inhe VALUES ('ee-col1', 'ee-col2', DEFAULT, 'ee-col4');
 SELECT * FROM inhe; /* Columns aa, bb, xx value NULL, ee */
-   aa    |   bb    | ee |   xx    
+   aa    |   bb    | ee |   xx
 ---------+---------+----+---------
  ee-col1 | ee-col2 |    | ee-col4
 (1 row)
 
 SELECT * FROM inhx; /* Empty set since LIKE inherits structure only */
- xx 
+ xx
 ----
 (0 rows)
 
 SELECT * FROM ctlb; /* Has ee entry */
-   aa    |   bb    
+   aa    |   bb
 ---------+---------
  ee-col1 | ee-col2
 (1 row)
 
 SELECT * FROM ctla; /* Has ee entry */
-   aa    
+   aa
 ---------
  ee-col1
 (1 row)
@@ -42,7 +42,7 @@ ERROR:  column "xx" specified more than once
 CREATE TABLE inhf (LIKE inhx INCLUDING DEFAULTS INCLUDING CONSTRAINTS);
 INSERT INTO inhf DEFAULT VALUES;
 SELECT * FROM inhf; /* Single entry with value 'text' */
-  xx  
+  xx
 ------
  text
 (1 row)
@@ -59,7 +59,7 @@ INSERT INTO inhg VALUES ('x', 'foo',  'y');  /* fails due to constraint */
 ERROR:  new row for relation "inhg" violates check constraint "foo"
 DETAIL:  Failing row contains (x, foo, y).
 SELECT * FROM inhg; /* Two records with three columns in order x=x, xx=text, y=y */
- x |  xx  | y 
+ x |  xx  | y
 ---+------+---
  x | text | y
  x | text | y
@@ -69,14 +69,14 @@ DROP TABLE inhg;
 CREATE TABLE test_like_id_1 (a bigint GENERATED ALWAYS AS IDENTITY, b text);
 \d test_like_id_1
                      Table "public.test_like_id_1"
- Column |  Type  | Collation | Nullable |           Default            
+ Column |  Type  | Collation | Nullable |           Default
 --------+--------+-----------+----------+------------------------------
  a      | bigint |           | not null | generated always as identity
- b      | text   |           |          | 
+ b      | text   |           |          |
 
 INSERT INTO test_like_id_1 (b) VALUES ('b1');
 SELECT * FROM test_like_id_1;
- a | b  
+ a | b
 ---+----
  1 | b1
 (1 row)
@@ -84,30 +84,30 @@ SELECT * FROM test_like_id_1;
 CREATE TABLE test_like_id_2 (LIKE test_like_id_1);
 \d test_like_id_2
           Table "public.test_like_id_2"
- Column |  Type  | Collation | Nullable | Default 
+ Column |  Type  | Collation | Nullable | Default
 --------+--------+-----------+----------+---------
- a      | bigint |           | not null | 
- b      | text   |           |          | 
+ a      | bigint |           | not null |
+ b      | text   |           |          |
 
 INSERT INTO test_like_id_2 (b) VALUES ('b2');
 ERROR:  null value in column "a" of relation "test_like_id_2" violates not-null constraint
 DETAIL:  Failing row contains (null, b2).
 SELECT * FROM test_like_id_2;  -- identity was not copied
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 CREATE TABLE test_like_id_3 (LIKE test_like_id_1 INCLUDING IDENTITY);
 \d test_like_id_3
                      Table "public.test_like_id_3"
- Column |  Type  | Collation | Nullable |           Default            
+ Column |  Type  | Collation | Nullable |           Default
 --------+--------+-----------+----------+------------------------------
  a      | bigint |           | not null | generated always as identity
- b      | text   |           |          | 
+ b      | text   |           |          |
 
 INSERT INTO test_like_id_3 (b) VALUES ('b3');
 SELECT * FROM test_like_id_3;  -- identity was copied and applied
- a | b  
+ a | b
 ---+----
  1 | b3
 (1 row)
@@ -116,14 +116,14 @@ DROP TABLE test_like_id_1, test_like_id_2, test_like_id_3;
 CREATE TABLE test_like_gen_1 (a int, b int GENERATED ALWAYS AS (a * 2) STORED);
 \d test_like_gen_1
                         Table "public.test_like_gen_1"
- Column |  Type   | Collation | Nullable |              Default               
+ Column |  Type   | Collation | Nullable |              Default
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           |          | 
+ a      | integer |           |          |
  b      | integer |           |          | generated always as (a * 2) stored
 
 INSERT INTO test_like_gen_1 (a) VALUES (1);
 SELECT * FROM test_like_gen_1;
- a | b 
+ a | b
 ---+---
  1 | 2
 (1 row)
@@ -131,29 +131,29 @@ SELECT * FROM test_like_gen_1;
 CREATE TABLE test_like_gen_2 (LIKE test_like_gen_1);
 \d test_like_gen_2
           Table "public.test_like_gen_2"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
- b      | integer |           |          | 
+ a      | integer |           |          |
+ b      | integer |           |          |
 
 INSERT INTO test_like_gen_2 (a) VALUES (1);
 SELECT * FROM test_like_gen_2;
- a | b 
+ a | b
 ---+---
- 1 |  
+ 1 |
 (1 row)
 
 CREATE TABLE test_like_gen_3 (LIKE test_like_gen_1 INCLUDING GENERATED);
 \d test_like_gen_3
                         Table "public.test_like_gen_3"
- Column |  Type   | Collation | Nullable |              Default               
+ Column |  Type   | Collation | Nullable |              Default
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           |          | 
+ a      | integer |           |          |
  b      | integer |           |          | generated always as (a * 2) stored
 
 INSERT INTO test_like_gen_3 (a) VALUES (1);
 SELECT * FROM test_like_gen_3;
- a | b 
+ a | b
 ---+---
  1 | 2
 (1 row)
@@ -165,11 +165,11 @@ CREATE TABLE test_like_4 (b int DEFAULT 42,
   a int CHECK (a > 0));
 \d test_like_4
                           Table "public.test_like_4"
- Column |  Type   | Collation | Nullable |              Default               
+ Column |  Type   | Collation | Nullable |              Default
 --------+---------+-----------+----------+------------------------------------
  b      | integer |           |          | 42
  c      | integer |           |          | generated always as (a * 2) stored
- a      | integer |           |          | 
+ a      | integer |           |          |
 Check constraints:
     "test_like_4_a_check" CHECK (a > 0)
 
@@ -179,60 +179,60 @@ CREATE TABLE test_like_4c (LIKE test_like_4 INCLUDING GENERATED);
 CREATE TABLE test_like_4d (LIKE test_like_4 INCLUDING DEFAULTS INCLUDING GENERATED);
 \d test_like_4a
             Table "public.test_like_4a"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- b      | integer |           |          | 
- c      | integer |           |          | 
- a      | integer |           |          | 
+ b      | integer |           |          |
+ c      | integer |           |          |
+ a      | integer |           |          |
 
 INSERT INTO test_like_4a (a) VALUES(11);
 SELECT a, b, c FROM test_like_4a;
- a  | b | c 
+ a  | b | c
 ----+---+---
- 11 |   |  
+ 11 |   |
 (1 row)
 
 \d test_like_4b
             Table "public.test_like_4b"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
  b      | integer |           |          | 42
- c      | integer |           |          | 
- a      | integer |           |          | 
+ c      | integer |           |          |
+ a      | integer |           |          |
 
 INSERT INTO test_like_4b (a) VALUES(11);
 SELECT a, b, c FROM test_like_4b;
- a  | b  | c 
+ a  | b  | c
 ----+----+---
- 11 | 42 |  
+ 11 | 42 |
 (1 row)
 
 \d test_like_4c
                          Table "public.test_like_4c"
- Column |  Type   | Collation | Nullable |              Default               
+ Column |  Type   | Collation | Nullable |              Default
 --------+---------+-----------+----------+------------------------------------
- b      | integer |           |          | 
+ b      | integer |           |          |
  c      | integer |           |          | generated always as (a * 2) stored
- a      | integer |           |          | 
+ a      | integer |           |          |
 
 INSERT INTO test_like_4c (a) VALUES(11);
 SELECT a, b, c FROM test_like_4c;
- a  | b | c  
+ a  | b | c
 ----+---+----
  11 |   | 22
 (1 row)
 
 \d test_like_4d
                          Table "public.test_like_4d"
- Column |  Type   | Collation | Nullable |              Default               
+ Column |  Type   | Collation | Nullable |              Default
 --------+---------+-----------+----------+------------------------------------
  b      | integer |           |          | 42
  c      | integer |           |          | generated always as (a * 2) stored
- a      | integer |           |          | 
+ a      | integer |           |          |
 
 INSERT INTO test_like_4d (a) VALUES(11);
 SELECT a, b, c FROM test_like_4d;
- a  | b  | c  
+ a  | b  | c
 ----+----+----
  11 | 42 | 22
 (1 row)
@@ -245,16 +245,16 @@ CREATE TABLE test_like_5c (LIKE test_like_4 INCLUDING ALL)
   INHERITS (test_like_5, test_like_5x);
 \d test_like_5c
                          Table "public.test_like_5c"
- Column |  Type   | Collation | Nullable |              Default               
+ Column |  Type   | Collation | Nullable |              Default
 --------+---------+-----------+----------+------------------------------------
- x      | point   |           |          | 
- y      | point   |           |          | 
- z      | point   |           |          | 
- p      | integer |           |          | 
+ x      | point   |           |          |
+ y      | point   |           |          |
+ z      | point   |           |          |
+ p      | integer |           |          |
  q      | integer |           |          | generated always as (p * 2) stored
  b      | integer |           |          | 42
  c      | integer |           |          | generated always as (a * 2) stored
- a      | integer |           |          | 
+ a      | integer |           |          |
 Check constraints:
     "test_like_4_a_check" CHECK (a > 0)
     "test_like_5x_p_check" CHECK (p > 0)
@@ -287,10 +287,10 @@ DROP TABLE inhz;
 CREATE TABLE inhz (x text REFERENCES inhz, LIKE inhx INCLUDING INDEXES);
 \d inhz
               Table "public.inhz"
- Column | Type | Collation | Nullable | Default 
+ Column | Type | Collation | Nullable | Default
 --------+------+-----------+----------+---------
- x      | text |           |          | 
- xx     | text |           | not null | 
+ x      | text |           |          |
+ xx     | text |           | not null |
 Indexes:
     "inhz_pkey" PRIMARY KEY, btree (xx)
 Foreign-key constraints:
@@ -328,16 +328,16 @@ ALTER TABLE ctlt4 ALTER COLUMN c SET STORAGE EXTERNAL;
 CREATE TABLE ctlt12_storage (LIKE ctlt1 INCLUDING STORAGE, LIKE ctlt2 INCLUDING STORAGE);
 \d+ ctlt12_storage
                              Table "public.ctlt12_storage"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
- a      | text |           | not null |         | main     |              | 
- b      | text |           |          |         | extended |              | 
- c      | text |           |          |         | external |              | 
+ a      | text |           | not null |         | main     |              |
+ b      | text |           |          |         | extended |              |
+ c      | text |           |          |         | external |              |
 
 CREATE TABLE ctlt12_comments (LIKE ctlt1 INCLUDING COMMENTS, LIKE ctlt2 INCLUDING COMMENTS);
 \d+ ctlt12_comments
                              Table "public.ctlt12_comments"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
  a      | text |           | not null |         | extended |              | A
  b      | text |           |          |         | extended |              | B
@@ -349,7 +349,7 @@ NOTICE:  merging column "b" with inherited definition
 NOTICE:  merging constraint "ctlt1_a_check" with inherited definition
 \d+ ctlt1_inh
                                 Table "public.ctlt1_inh"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
  a      | text |           | not null |         | main     |              | A
  b      | text |           |          |         | extended |              | B
@@ -358,7 +358,7 @@ Check constraints:
 Inherits: ctlt1
 
 SELECT description FROM pg_description, pg_constraint c WHERE classoid = 'pg_constraint'::regclass AND objoid = c.oid AND c.conrelid = 'ctlt1_inh'::regclass;
- description 
+ description
 -------------
  t1_a_check
 (1 row)
@@ -367,11 +367,11 @@ CREATE TABLE ctlt13_inh () INHERITS (ctlt1, ctlt3);
 NOTICE:  merging multiple inherited definitions of column "a"
 \d+ ctlt13_inh
                                Table "public.ctlt13_inh"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
- a      | text |           | not null |         | main     |              | 
- b      | text |           |          |         | extended |              | 
- c      | text |           |          |         | external |              | 
+ a      | text |           | not null |         | main     |              |
+ b      | text |           |          |         | extended |              |
+ c      | text |           |          |         | external |              |
 Check constraints:
     "ctlt1_a_check" CHECK (length(a) > 2)
     "ctlt3_a_check" CHECK (length(a) < 5)
@@ -383,10 +383,10 @@ CREATE TABLE ctlt13_like (LIKE ctlt3 INCLUDING CONSTRAINTS INCLUDING INDEXES INC
 NOTICE:  merging column "a" with inherited definition
 \d+ ctlt13_like
                                Table "public.ctlt13_like"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
  a      | text |           | not null |         | main     |              | A3
- b      | text |           |          |         | extended |              | 
+ b      | text |           |          |         | extended |              |
  c      | text |           |          |         | external |              | C
 Indexes:
     "ctlt13_like_expr_idx" btree ((a || c))
@@ -397,7 +397,7 @@ Check constraints:
 Inherits: ctlt1
 
 SELECT description FROM pg_description, pg_constraint c WHERE classoid = 'pg_constraint'::regclass AND objoid = c.oid AND c.conrelid = 'ctlt13_like'::regclass;
- description 
+ description
 -------------
  t3_a_check
 (1 row)
@@ -405,7 +405,7 @@ SELECT description FROM pg_description, pg_constraint c WHERE classoid = 'pg_con
 CREATE TABLE ctlt_all (LIKE ctlt1 INCLUDING ALL);
 \d+ ctlt_all
                                 Table "public.ctlt_all"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
  a      | text |           | not null |         | main     |              | A
  b      | text |           |          |         | extended |              | B
@@ -420,14 +420,14 @@ Statistics objects:
     "public.ctlt_all_expr_stat" ON (a || b) FROM ctlt_all
 
 SELECT c.relname, objsubid, description FROM pg_description, pg_index i, pg_class c WHERE classoid = 'pg_class'::regclass AND objoid = i.indexrelid AND c.oid = i.indexrelid AND i.indrelid = 'ctlt_all'::regclass ORDER BY c.relname, objsubid;
-    relname     | objsubid | description 
+    relname     | objsubid | description
 ----------------+----------+-------------
  ctlt_all_b_idx |        0 | index b_key
  ctlt_all_pkey  |        0 | index pkey
 (2 rows)
 
 SELECT s.stxname, objsubid, description FROM pg_description, pg_statistic_ext s WHERE classoid = 'pg_statistic_ext'::regclass AND objoid = s.oid AND s.stxrelid = 'ctlt_all'::regclass ORDER BY s.stxname, objsubid;
-      stxname       | objsubid |  description  
+      stxname       | objsubid |  description
 --------------------+----------+---------------
  ctlt_all_a_b_stat  |        0 | ab stats
  ctlt_all_expr_stat |        0 | ab expr stats
@@ -445,7 +445,7 @@ DETAIL:  MAIN versus EXTENDED
 CREATE TABLE pg_attrdef (LIKE ctlt1 INCLUDING ALL);
 \d+ public.pg_attrdef
                                Table "public.pg_attrdef"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
  a      | text |           | not null |         | main     |              | A
  b      | text |           |          |         | extended |              | B
@@ -467,7 +467,7 @@ SET LOCAL search_path = ctl_schema, public;
 CREATE TABLE ctlt1 (LIKE ctlt1 INCLUDING ALL);
 \d+ ctlt1
                                 Table "ctl_schema.ctlt1"
- Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column | Type | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+------+-----------+----------+---------+----------+--------------+-------------
  a      | text |           | not null |         | main     |              | A
  b      | text |           |          |         | extended |              | B
@@ -489,9 +489,9 @@ CREATE TABLE noinh_con_copy (a int CHECK (a > 0) NO INHERIT);
 CREATE TABLE noinh_con_copy1 (LIKE noinh_con_copy INCLUDING CONSTRAINTS);
 \d noinh_con_copy1
           Table "public.noinh_con_copy1"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
+ a      | integer |           |          |
 Check constraints:
     "noinh_con_copy_a_check" CHECK (a > 0) NO INHERIT
 

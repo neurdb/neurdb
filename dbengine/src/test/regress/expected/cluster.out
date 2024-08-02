@@ -54,191 +54,191 @@ INSERT INTO clstr_tst (b, c) VALUES (8, 'ocho');
 INSERT INTO clstr_tst (b, c, d) VALUES (6, 'seis', repeat('xyzzy', 100000));
 CLUSTER clstr_tst_c ON clstr_tst;
 SELECT a,b,c,substring(d for 30), length(d) from clstr_tst;
- a  | b  |       c       |           substring            | length 
+ a  | b  |       c       |           substring            | length
 ----+----+---------------+--------------------------------+--------
- 10 | 14 | catorce       |                                |       
- 18 |  5 | cinco         |                                |       
-  9 |  4 | cuatro        |                                |       
- 26 | 19 | diecinueve    |                                |       
- 12 | 18 | dieciocho     |                                |       
- 30 | 16 | dieciseis     |                                |       
- 24 | 17 | diecisiete    |                                |       
-  2 | 10 | diez          |                                |       
- 23 | 12 | doce          |                                |       
- 11 |  2 | dos           |                                |       
- 25 |  9 | nueve         |                                |       
- 31 |  8 | ocho          |                                |       
-  1 | 11 | once          |                                |       
- 28 | 15 | quince        |                                |       
+ 10 | 14 | catorce       |                                |
+ 18 |  5 | cinco         |                                |
+  9 |  4 | cuatro        |                                |
+ 26 | 19 | diecinueve    |                                |
+ 12 | 18 | dieciocho     |                                |
+ 30 | 16 | dieciseis     |                                |
+ 24 | 17 | diecisiete    |                                |
+  2 | 10 | diez          |                                |
+ 23 | 12 | doce          |                                |
+ 11 |  2 | dos           |                                |
+ 25 |  9 | nueve         |                                |
+ 31 |  8 | ocho          |                                |
+  1 | 11 | once          |                                |
+ 28 | 15 | quince        |                                |
  32 |  6 | seis          | xyzzyxyzzyxyzzyxyzzyxyzzyxyzzy | 500000
- 29 |  7 | siete         |                                |       
- 15 | 13 | trece         |                                |       
- 22 | 30 | treinta       |                                |       
- 17 | 32 | treinta y dos |                                |       
-  3 | 31 | treinta y uno |                                |       
-  5 |  3 | tres          |                                |       
- 20 |  1 | uno           |                                |       
-  6 | 20 | veinte        |                                |       
- 14 | 25 | veinticinco   |                                |       
- 21 | 24 | veinticuatro  |                                |       
-  4 | 22 | veintidos     |                                |       
- 19 | 29 | veintinueve   |                                |       
- 16 | 28 | veintiocho    |                                |       
- 27 | 26 | veintiseis    |                                |       
- 13 | 27 | veintisiete   |                                |       
-  7 | 23 | veintitres    |                                |       
-  8 | 21 | veintiuno     |                                |       
+ 29 |  7 | siete         |                                |
+ 15 | 13 | trece         |                                |
+ 22 | 30 | treinta       |                                |
+ 17 | 32 | treinta y dos |                                |
+  3 | 31 | treinta y uno |                                |
+  5 |  3 | tres          |                                |
+ 20 |  1 | uno           |                                |
+  6 | 20 | veinte        |                                |
+ 14 | 25 | veinticinco   |                                |
+ 21 | 24 | veinticuatro  |                                |
+  4 | 22 | veintidos     |                                |
+ 19 | 29 | veintinueve   |                                |
+ 16 | 28 | veintiocho    |                                |
+ 27 | 26 | veintiseis    |                                |
+ 13 | 27 | veintisiete   |                                |
+  7 | 23 | veintitres    |                                |
+  8 | 21 | veintiuno     |                                |
 (32 rows)
 
 SELECT a,b,c,substring(d for 30), length(d) from clstr_tst ORDER BY a;
- a  | b  |       c       |           substring            | length 
+ a  | b  |       c       |           substring            | length
 ----+----+---------------+--------------------------------+--------
-  1 | 11 | once          |                                |       
-  2 | 10 | diez          |                                |       
-  3 | 31 | treinta y uno |                                |       
-  4 | 22 | veintidos     |                                |       
-  5 |  3 | tres          |                                |       
-  6 | 20 | veinte        |                                |       
-  7 | 23 | veintitres    |                                |       
-  8 | 21 | veintiuno     |                                |       
-  9 |  4 | cuatro        |                                |       
- 10 | 14 | catorce       |                                |       
- 11 |  2 | dos           |                                |       
- 12 | 18 | dieciocho     |                                |       
- 13 | 27 | veintisiete   |                                |       
- 14 | 25 | veinticinco   |                                |       
- 15 | 13 | trece         |                                |       
- 16 | 28 | veintiocho    |                                |       
- 17 | 32 | treinta y dos |                                |       
- 18 |  5 | cinco         |                                |       
- 19 | 29 | veintinueve   |                                |       
- 20 |  1 | uno           |                                |       
- 21 | 24 | veinticuatro  |                                |       
- 22 | 30 | treinta       |                                |       
- 23 | 12 | doce          |                                |       
- 24 | 17 | diecisiete    |                                |       
- 25 |  9 | nueve         |                                |       
- 26 | 19 | diecinueve    |                                |       
- 27 | 26 | veintiseis    |                                |       
- 28 | 15 | quince        |                                |       
- 29 |  7 | siete         |                                |       
- 30 | 16 | dieciseis     |                                |       
- 31 |  8 | ocho          |                                |       
+  1 | 11 | once          |                                |
+  2 | 10 | diez          |                                |
+  3 | 31 | treinta y uno |                                |
+  4 | 22 | veintidos     |                                |
+  5 |  3 | tres          |                                |
+  6 | 20 | veinte        |                                |
+  7 | 23 | veintitres    |                                |
+  8 | 21 | veintiuno     |                                |
+  9 |  4 | cuatro        |                                |
+ 10 | 14 | catorce       |                                |
+ 11 |  2 | dos           |                                |
+ 12 | 18 | dieciocho     |                                |
+ 13 | 27 | veintisiete   |                                |
+ 14 | 25 | veinticinco   |                                |
+ 15 | 13 | trece         |                                |
+ 16 | 28 | veintiocho    |                                |
+ 17 | 32 | treinta y dos |                                |
+ 18 |  5 | cinco         |                                |
+ 19 | 29 | veintinueve   |                                |
+ 20 |  1 | uno           |                                |
+ 21 | 24 | veinticuatro  |                                |
+ 22 | 30 | treinta       |                                |
+ 23 | 12 | doce          |                                |
+ 24 | 17 | diecisiete    |                                |
+ 25 |  9 | nueve         |                                |
+ 26 | 19 | diecinueve    |                                |
+ 27 | 26 | veintiseis    |                                |
+ 28 | 15 | quince        |                                |
+ 29 |  7 | siete         |                                |
+ 30 | 16 | dieciseis     |                                |
+ 31 |  8 | ocho          |                                |
  32 |  6 | seis          | xyzzyxyzzyxyzzyxyzzyxyzzyxyzzy | 500000
 (32 rows)
 
 SELECT a,b,c,substring(d for 30), length(d) from clstr_tst ORDER BY b;
- a  | b  |       c       |           substring            | length 
+ a  | b  |       c       |           substring            | length
 ----+----+---------------+--------------------------------+--------
- 20 |  1 | uno           |                                |       
- 11 |  2 | dos           |                                |       
-  5 |  3 | tres          |                                |       
-  9 |  4 | cuatro        |                                |       
- 18 |  5 | cinco         |                                |       
+ 20 |  1 | uno           |                                |
+ 11 |  2 | dos           |                                |
+  5 |  3 | tres          |                                |
+  9 |  4 | cuatro        |                                |
+ 18 |  5 | cinco         |                                |
  32 |  6 | seis          | xyzzyxyzzyxyzzyxyzzyxyzzyxyzzy | 500000
- 29 |  7 | siete         |                                |       
- 31 |  8 | ocho          |                                |       
- 25 |  9 | nueve         |                                |       
-  2 | 10 | diez          |                                |       
-  1 | 11 | once          |                                |       
- 23 | 12 | doce          |                                |       
- 15 | 13 | trece         |                                |       
- 10 | 14 | catorce       |                                |       
- 28 | 15 | quince        |                                |       
- 30 | 16 | dieciseis     |                                |       
- 24 | 17 | diecisiete    |                                |       
- 12 | 18 | dieciocho     |                                |       
- 26 | 19 | diecinueve    |                                |       
-  6 | 20 | veinte        |                                |       
-  8 | 21 | veintiuno     |                                |       
-  4 | 22 | veintidos     |                                |       
-  7 | 23 | veintitres    |                                |       
- 21 | 24 | veinticuatro  |                                |       
- 14 | 25 | veinticinco   |                                |       
- 27 | 26 | veintiseis    |                                |       
- 13 | 27 | veintisiete   |                                |       
- 16 | 28 | veintiocho    |                                |       
- 19 | 29 | veintinueve   |                                |       
- 22 | 30 | treinta       |                                |       
-  3 | 31 | treinta y uno |                                |       
- 17 | 32 | treinta y dos |                                |       
+ 29 |  7 | siete         |                                |
+ 31 |  8 | ocho          |                                |
+ 25 |  9 | nueve         |                                |
+  2 | 10 | diez          |                                |
+  1 | 11 | once          |                                |
+ 23 | 12 | doce          |                                |
+ 15 | 13 | trece         |                                |
+ 10 | 14 | catorce       |                                |
+ 28 | 15 | quince        |                                |
+ 30 | 16 | dieciseis     |                                |
+ 24 | 17 | diecisiete    |                                |
+ 12 | 18 | dieciocho     |                                |
+ 26 | 19 | diecinueve    |                                |
+  6 | 20 | veinte        |                                |
+  8 | 21 | veintiuno     |                                |
+  4 | 22 | veintidos     |                                |
+  7 | 23 | veintitres    |                                |
+ 21 | 24 | veinticuatro  |                                |
+ 14 | 25 | veinticinco   |                                |
+ 27 | 26 | veintiseis    |                                |
+ 13 | 27 | veintisiete   |                                |
+ 16 | 28 | veintiocho    |                                |
+ 19 | 29 | veintinueve   |                                |
+ 22 | 30 | treinta       |                                |
+  3 | 31 | treinta y uno |                                |
+ 17 | 32 | treinta y dos |                                |
 (32 rows)
 
 SELECT a,b,c,substring(d for 30), length(d) from clstr_tst ORDER BY c;
- a  | b  |       c       |           substring            | length 
+ a  | b  |       c       |           substring            | length
 ----+----+---------------+--------------------------------+--------
- 10 | 14 | catorce       |                                |       
- 18 |  5 | cinco         |                                |       
-  9 |  4 | cuatro        |                                |       
- 26 | 19 | diecinueve    |                                |       
- 12 | 18 | dieciocho     |                                |       
- 30 | 16 | dieciseis     |                                |       
- 24 | 17 | diecisiete    |                                |       
-  2 | 10 | diez          |                                |       
- 23 | 12 | doce          |                                |       
- 11 |  2 | dos           |                                |       
- 25 |  9 | nueve         |                                |       
- 31 |  8 | ocho          |                                |       
-  1 | 11 | once          |                                |       
- 28 | 15 | quince        |                                |       
+ 10 | 14 | catorce       |                                |
+ 18 |  5 | cinco         |                                |
+  9 |  4 | cuatro        |                                |
+ 26 | 19 | diecinueve    |                                |
+ 12 | 18 | dieciocho     |                                |
+ 30 | 16 | dieciseis     |                                |
+ 24 | 17 | diecisiete    |                                |
+  2 | 10 | diez          |                                |
+ 23 | 12 | doce          |                                |
+ 11 |  2 | dos           |                                |
+ 25 |  9 | nueve         |                                |
+ 31 |  8 | ocho          |                                |
+  1 | 11 | once          |                                |
+ 28 | 15 | quince        |                                |
  32 |  6 | seis          | xyzzyxyzzyxyzzyxyzzyxyzzyxyzzy | 500000
- 29 |  7 | siete         |                                |       
- 15 | 13 | trece         |                                |       
- 22 | 30 | treinta       |                                |       
- 17 | 32 | treinta y dos |                                |       
-  3 | 31 | treinta y uno |                                |       
-  5 |  3 | tres          |                                |       
- 20 |  1 | uno           |                                |       
-  6 | 20 | veinte        |                                |       
- 14 | 25 | veinticinco   |                                |       
- 21 | 24 | veinticuatro  |                                |       
-  4 | 22 | veintidos     |                                |       
- 19 | 29 | veintinueve   |                                |       
- 16 | 28 | veintiocho    |                                |       
- 27 | 26 | veintiseis    |                                |       
- 13 | 27 | veintisiete   |                                |       
-  7 | 23 | veintitres    |                                |       
-  8 | 21 | veintiuno     |                                |       
+ 29 |  7 | siete         |                                |
+ 15 | 13 | trece         |                                |
+ 22 | 30 | treinta       |                                |
+ 17 | 32 | treinta y dos |                                |
+  3 | 31 | treinta y uno |                                |
+  5 |  3 | tres          |                                |
+ 20 |  1 | uno           |                                |
+  6 | 20 | veinte        |                                |
+ 14 | 25 | veinticinco   |                                |
+ 21 | 24 | veinticuatro  |                                |
+  4 | 22 | veintidos     |                                |
+ 19 | 29 | veintinueve   |                                |
+ 16 | 28 | veintiocho    |                                |
+ 27 | 26 | veintiseis    |                                |
+ 13 | 27 | veintisiete   |                                |
+  7 | 23 | veintitres    |                                |
+  8 | 21 | veintiuno     |                                |
 (32 rows)
 
 -- Verify that inheritance link still works
 INSERT INTO clstr_tst_inh VALUES (0, 100, 'in child table');
 SELECT a,b,c,substring(d for 30), length(d) from clstr_tst;
- a  |  b  |       c        |           substring            | length 
+ a  |  b  |       c        |           substring            | length
 ----+-----+----------------+--------------------------------+--------
- 10 |  14 | catorce        |                                |       
- 18 |   5 | cinco          |                                |       
-  9 |   4 | cuatro         |                                |       
- 26 |  19 | diecinueve     |                                |       
- 12 |  18 | dieciocho      |                                |       
- 30 |  16 | dieciseis      |                                |       
- 24 |  17 | diecisiete     |                                |       
-  2 |  10 | diez           |                                |       
- 23 |  12 | doce           |                                |       
- 11 |   2 | dos            |                                |       
- 25 |   9 | nueve          |                                |       
- 31 |   8 | ocho           |                                |       
-  1 |  11 | once           |                                |       
- 28 |  15 | quince         |                                |       
+ 10 |  14 | catorce        |                                |
+ 18 |   5 | cinco          |                                |
+  9 |   4 | cuatro         |                                |
+ 26 |  19 | diecinueve     |                                |
+ 12 |  18 | dieciocho      |                                |
+ 30 |  16 | dieciseis      |                                |
+ 24 |  17 | diecisiete     |                                |
+  2 |  10 | diez           |                                |
+ 23 |  12 | doce           |                                |
+ 11 |   2 | dos            |                                |
+ 25 |   9 | nueve          |                                |
+ 31 |   8 | ocho           |                                |
+  1 |  11 | once           |                                |
+ 28 |  15 | quince         |                                |
  32 |   6 | seis           | xyzzyxyzzyxyzzyxyzzyxyzzyxyzzy | 500000
- 29 |   7 | siete          |                                |       
- 15 |  13 | trece          |                                |       
- 22 |  30 | treinta        |                                |       
- 17 |  32 | treinta y dos  |                                |       
-  3 |  31 | treinta y uno  |                                |       
-  5 |   3 | tres           |                                |       
- 20 |   1 | uno            |                                |       
-  6 |  20 | veinte         |                                |       
- 14 |  25 | veinticinco    |                                |       
- 21 |  24 | veinticuatro   |                                |       
-  4 |  22 | veintidos      |                                |       
- 19 |  29 | veintinueve    |                                |       
- 16 |  28 | veintiocho     |                                |       
- 27 |  26 | veintiseis     |                                |       
- 13 |  27 | veintisiete    |                                |       
-  7 |  23 | veintitres     |                                |       
-  8 |  21 | veintiuno      |                                |       
-  0 | 100 | in child table |                                |       
+ 29 |   7 | siete          |                                |
+ 15 |  13 | trece          |                                |
+ 22 |  30 | treinta        |                                |
+ 17 |  32 | treinta y dos  |                                |
+  3 |  31 | treinta y uno  |                                |
+  5 |   3 | tres           |                                |
+ 20 |   1 | uno            |                                |
+  6 |  20 | veinte         |                                |
+ 14 |  25 | veinticinco    |                                |
+ 21 |  24 | veinticuatro   |                                |
+  4 |  22 | veintidos      |                                |
+ 19 |  29 | veintinueve    |                                |
+ 16 |  28 | veintiocho     |                                |
+ 27 |  26 | veintiseis     |                                |
+ 13 |  27 | veintisiete    |                                |
+  7 |  23 | veintitres     |                                |
+  8 |  21 | veintiuno      |                                |
+  0 | 100 | in child table |                                |
 (33 rows)
 
 -- Verify that foreign key link still works
@@ -247,7 +247,7 @@ ERROR:  insert or update on table "clstr_tst" violates foreign key constraint "c
 DETAIL:  Key (b)=(1111) is not present in table "clstr_tst_s".
 SELECT conname FROM pg_constraint WHERE conrelid = 'clstr_tst'::regclass
 ORDER BY 1;
-    conname     
+    conname
 ----------------
  clstr_tst_con
  clstr_tst_pkey
@@ -256,7 +256,7 @@ ORDER BY 1;
 SELECT relname, relkind,
     EXISTS(SELECT 1 FROM pg_class WHERE oid = c.reltoastrelid) AS hastoast
 FROM pg_class c WHERE relname LIKE 'clstr_tst%' ORDER BY relname;
-       relname        | relkind | hastoast 
+       relname        | relkind | hastoast
 ----------------------+---------+----------
  clstr_tst            | r       | t
  clstr_tst_a_seq      | S       | f
@@ -277,7 +277,7 @@ WHERE pg_class.oid=indexrelid
 	AND indrelid=pg_class_2.oid
 	AND pg_class_2.relname = 'clstr_tst'
 	AND indisclustered;
-   relname   
+   relname
 -------------
  clstr_tst_c
 (1 row)
@@ -289,7 +289,7 @@ WHERE pg_class.oid=indexrelid
 	AND indrelid=pg_class_2.oid
 	AND pg_class_2.relname = 'clstr_tst'
 	AND indisclustered;
-    relname    
+    relname
 ---------------
  clstr_tst_b_c
 (1 row)
@@ -301,7 +301,7 @@ WHERE pg_class.oid=indexrelid
 	AND indrelid=pg_class_2.oid
 	AND pg_class_2.relname = 'clstr_tst'
 	AND indisclustered;
- relname 
+ relname
 ---------
 (0 rows)
 
@@ -329,7 +329,7 @@ CLUSTER clstr_2 USING clstr_2_pkey;
 SELECT * FROM clstr_1 UNION ALL
   SELECT * FROM clstr_2 UNION ALL
   SELECT * FROM clstr_3;
- a 
+ a
 ---
  1
  2
@@ -356,7 +356,7 @@ CLUSTER;
 SELECT * FROM clstr_1 UNION ALL
   SELECT * FROM clstr_2 UNION ALL
   SELECT * FROM clstr_3;
- a 
+ a
 ---
  1
  2
@@ -372,7 +372,7 @@ INSERT INTO clstr_1 VALUES (2);
 INSERT INTO clstr_1 VALUES (1);
 CLUSTER clstr_1;
 SELECT * FROM clstr_1;
- a 
+ a
 ---
  1
  2
@@ -397,7 +397,7 @@ UPDATE clustertest SET key = 60 WHERE key = 50;
 UPDATE clustertest SET key = 70 WHERE key = 60;
 UPDATE clustertest SET key = 80 WHERE key = 70;
 SELECT * FROM clustertest;
- key 
+ key
 -----
   20
   30
@@ -408,7 +408,7 @@ SELECT * FROM clustertest;
 
 CLUSTER clustertest_pkey ON clustertest;
 SELECT * FROM clustertest;
- key 
+ key
 -----
   20
   30
@@ -419,7 +419,7 @@ SELECT * FROM clustertest;
 
 COMMIT;
 SELECT * FROM clustertest;
- key 
+ key
 -----
   20
   30
@@ -433,7 +433,7 @@ create temp table clstr_temp (col1 int primary key, col2 text);
 insert into clstr_temp values (2, 'two'), (1, 'one');
 cluster clstr_temp using clstr_temp_pkey;
 select * from clstr_temp;
- col1 | col2 
+ col1 | col2
 ------+------
     1 | one
     2 | two
@@ -464,7 +464,7 @@ CREATE TEMP TABLE old_cluster_info AS SELECT relname, level, relfilenode, relkin
 CLUSTER clstrpart USING clstrpart_idx;
 CREATE TEMP TABLE new_cluster_info AS SELECT relname, level, relfilenode, relkind FROM pg_partition_tree('clstrpart'::regclass) AS tree JOIN pg_class c ON c.oid=tree.relid ;
 SELECT relname, old.level, old.relkind, old.relfilenode = new.relfilenode FROM old_cluster_info AS old JOIN new_cluster_info AS new USING (relname) ORDER BY relname COLLATE "C";
-   relname   | level | relkind | ?column? 
+   relname   | level | relkind | ?column?
 -------------+-------+---------+----------
  clstrpart   |     0 | p       | t
  clstrpart1  |     1 | p       | t
@@ -478,9 +478,9 @@ SELECT relname, old.level, old.relkind, old.relfilenode = new.relfilenode FROM o
 -- Partitioned indexes aren't and can't be marked un/clustered:
 \d clstrpart
        Partitioned table "public.clstrpart"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
+ a      | integer |           |          |
 Partition key: RANGE (a)
 Indexes:
     "clstrpart_idx" btree (a)
@@ -509,7 +509,7 @@ CLUSTER ptnowner USING ptnowner_i_idx;
 RESET SESSION AUTHORIZATION;
 SELECT a.relname, a.relfilenode=b.relfilenode FROM pg_class a
   JOIN ptnowner_oldnodes b USING (oid) ORDER BY a.relname COLLATE "C";
-  relname  | ?column? 
+  relname  | ?column?
 -----------+----------
  ptnowner  | t
  ptnowner1 | f
@@ -531,7 +531,7 @@ select * from
         thousand, lag(thousand) over () as lthousand,
         tenthous, lag(tenthous) over () as ltenthous from clstr_4) ss
 where row(hundred, thousand, tenthous) <= row(lhundred, lthousand, ltenthous);
- hundred | lhundred | thousand | lthousand | tenthous | ltenthous 
+ hundred | lhundred | thousand | lthousand | tenthous | ltenthous
 ---------+----------+----------+-----------+----------+-----------
 (0 rows)
 
@@ -546,27 +546,27 @@ CREATE INDEX clstr_expression_upper_b ON clstr_expression ((upper(b)));
 BEGIN;
 SET LOCAL enable_seqscan = false;
 EXPLAIN (COSTS OFF) SELECT * FROM clstr_expression WHERE upper(b) = 'PREFIX3';
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Index Scan using clstr_expression_upper_b on clstr_expression
    Index Cond: (upper(b) = 'PREFIX3'::text)
 (2 rows)
 
 SELECT * FROM clstr_expression WHERE upper(b) = 'PREFIX3';
- id | a |    b    
+ id | a |    b
 ----+---+---------
   3 | 3 | prefix3
 (1 row)
 
 EXPLAIN (COSTS OFF) SELECT * FROM clstr_expression WHERE -a = -3 ORDER BY -a, b;
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Index Scan using clstr_expression_minus_a on clstr_expression
    Index Cond: ((- a) = '-3'::integer)
 (2 rows)
 
 SELECT * FROM clstr_expression WHERE -a = -3 ORDER BY -a, b;
- id  | a |     b     
+ id  | a |     b
 -----+---+-----------
  129 | 3 | prefix129
    3 | 3 | prefix3
@@ -580,34 +580,34 @@ CLUSTER clstr_expression USING clstr_expression_minus_a;
 WITH rows AS
   (SELECT ctid, lag(a) OVER (ORDER BY ctid) AS la, a FROM clstr_expression)
 SELECT * FROM rows WHERE la < a;
- ctid | la | a 
+ ctid | la | a
 ------+----+---
 (0 rows)
 
 BEGIN;
 SET LOCAL enable_seqscan = false;
 EXPLAIN (COSTS OFF) SELECT * FROM clstr_expression WHERE upper(b) = 'PREFIX3';
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Index Scan using clstr_expression_upper_b on clstr_expression
    Index Cond: (upper(b) = 'PREFIX3'::text)
 (2 rows)
 
 SELECT * FROM clstr_expression WHERE upper(b) = 'PREFIX3';
- id | a |    b    
+ id | a |    b
 ----+---+---------
   3 | 3 | prefix3
 (1 row)
 
 EXPLAIN (COSTS OFF) SELECT * FROM clstr_expression WHERE -a = -3 ORDER BY -a, b;
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Index Scan using clstr_expression_minus_a on clstr_expression
    Index Cond: ((- a) = '-3'::integer)
 (2 rows)
 
 SELECT * FROM clstr_expression WHERE -a = -3 ORDER BY -a, b;
- id  | a |     b     
+ id  | a |     b
 -----+---+-----------
  129 | 3 | prefix129
    3 | 3 | prefix3
@@ -621,34 +621,34 @@ CLUSTER clstr_expression USING clstr_expression_upper_b;
 WITH rows AS
   (SELECT ctid, lag(b) OVER (ORDER BY ctid) AS lb, b FROM clstr_expression)
 SELECT * FROM rows WHERE upper(lb) > upper(b);
- ctid | lb | b 
+ ctid | lb | b
 ------+----+---
 (0 rows)
 
 BEGIN;
 SET LOCAL enable_seqscan = false;
 EXPLAIN (COSTS OFF) SELECT * FROM clstr_expression WHERE upper(b) = 'PREFIX3';
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Index Scan using clstr_expression_upper_b on clstr_expression
    Index Cond: (upper(b) = 'PREFIX3'::text)
 (2 rows)
 
 SELECT * FROM clstr_expression WHERE upper(b) = 'PREFIX3';
- id | a |    b    
+ id | a |    b
 ----+---+---------
   3 | 3 | prefix3
 (1 row)
 
 EXPLAIN (COSTS OFF) SELECT * FROM clstr_expression WHERE -a = -3 ORDER BY -a, b;
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Index Scan using clstr_expression_minus_a on clstr_expression
    Index Cond: ((- a) = '-3'::integer)
 (2 rows)
 
 SELECT * FROM clstr_expression WHERE -a = -3 ORDER BY -a, b;
- id  | a |     b     
+ id  | a |     b
 -----+---+-----------
  129 | 3 | prefix129
    3 | 3 | prefix3

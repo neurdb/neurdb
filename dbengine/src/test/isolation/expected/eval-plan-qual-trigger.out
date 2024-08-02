@@ -10,13 +10,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -38,14 +38,14 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
@@ -56,24 +56,24 @@ s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1-ups1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-ups2)
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-ups2)
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
-key-b|val-b-s1          
+key-b|val-b-s1
 (2 rows)
 
 
@@ -81,13 +81,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -109,14 +109,14 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
@@ -127,24 +127,24 @@ s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
@@ -154,13 +154,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -182,14 +182,14 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
@@ -200,21 +200,21 @@ s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1-ups1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1-ups1) new: <NULL>
 s2: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1-ups1) new: <NULL>
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -226,13 +226,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -254,14 +254,14 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
@@ -272,21 +272,21 @@ s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -296,13 +296,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -324,21 +324,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -352,17 +352,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
-key-b|val-b-s1          
+key-b|val-b-s1
 (2 rows)
 
 
@@ -370,13 +370,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -398,21 +398,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -424,17 +424,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
@@ -444,13 +444,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -472,21 +472,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -500,17 +500,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
-key-b|val-b-s1          
+key-b|val-b-s1
 (2 rows)
 
 
@@ -520,13 +520,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -548,21 +548,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -574,17 +574,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
@@ -594,13 +594,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -622,21 +622,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -652,7 +652,7 @@ key|data
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -664,13 +664,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -692,21 +692,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -718,17 +718,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
@@ -752,7 +752,7 @@ step s2_b_rc: BEGIN ISOLATION LEVEL READ COMMITTED; SELECT 1;
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -764,7 +764,7 @@ step s2_ins_a: <... completed>
 ERROR:  duplicate key value violates unique constraint "trigtest_pkey"
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -790,7 +790,7 @@ step s2_b_rc: BEGIN ISOLATION LEVEL READ COMMITTED; SELECT 1;
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -800,14 +800,14 @@ step s2_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s2') RETURNING *; <w
 step s1_r: ROLLBACK;
 s2: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s2)
 step s2_ins_a: <... completed>
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s2
 (1 row)
@@ -823,7 +823,7 @@ step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH R
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -831,7 +831,7 @@ key-a|val-a-s1
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-b,val-b-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-b,val-b-s1)
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -853,20 +853,20 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
-step s2_upsert_a_data: 
+step s2_upsert_a_data:
     INSERT INTO trigtest VALUES ('key-a', 'val-a-upss2')
     ON CONFLICT (key)
         DO UPDATE SET data = trigtest.data || '-upserts2'
@@ -881,17 +881,17 @@ s2: NOTICE:  upk: text val-a-s1-ups1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-upserts2)
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-upserts2)
 step s2_upsert_a_data: <... completed>
-key  |data                  
+key  |data
 -----+----------------------
 key-a|val-a-s1-ups1-upserts2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data                  
+key  |data
 -----+----------------------
 key-a|val-a-s1-ups1-upserts2
-key-b|val-b-s1              
+key-b|val-b-s1
 (2 rows)
 
 
@@ -905,7 +905,7 @@ step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH R
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -913,7 +913,7 @@ key-a|val-a-s1
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-b,val-b-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-b,val-b-s1)
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -935,20 +935,20 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
-step s2_upsert_a_data: 
+step s2_upsert_a_data:
     INSERT INTO trigtest VALUES ('key-a', 'val-a-upss2')
     ON CONFLICT (key)
         DO UPDATE SET data = trigtest.data || '-upserts2'
@@ -963,17 +963,17 @@ s2: NOTICE:  upk: text val-a-s1-ups1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-upserts2)
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-upserts2)
 step s2_upsert_a_data: <... completed>
-key  |data                  
+key  |data
 -----+----------------------
 key-a|val-a-s1-ups1-upserts2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data                  
+key  |data
 -----+----------------------
 key-a|val-a-s1-ups1-upserts2
-key-b|val-b-s1              
+key-b|val-b-s1
 (2 rows)
 
 
@@ -999,13 +999,13 @@ step s2_b_rc: BEGIN ISOLATION LEVEL READ COMMITTED; SELECT 1;
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
-step s2_upsert_a_data: 
+step s2_upsert_a_data:
     INSERT INTO trigtest VALUES ('key-a', 'val-a-upss2')
     ON CONFLICT (key)
         DO UPDATE SET data = trigtest.data || '-upserts2'
@@ -1020,14 +1020,14 @@ s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-upserts2)
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-upserts2)
 step s2_upsert_a_data: <... completed>
-key  |data             
+key  |data
 -----+-----------------
 key-a|val-a-s1-upserts2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data             
+key  |data
 -----+-----------------
 key-a|val-a-s1-upserts2
 (1 row)
@@ -1055,13 +1055,13 @@ step s2_b_rc: BEGIN ISOLATION LEVEL READ COMMITTED; SELECT 1;
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
-step s2_upsert_a_data: 
+step s2_upsert_a_data:
     INSERT INTO trigtest VALUES ('key-a', 'val-a-upss2')
     ON CONFLICT (key)
         DO UPDATE SET data = trigtest.data || '-upserts2'
@@ -1073,14 +1073,14 @@ step s2_upsert_a_data:
 step s1_r: ROLLBACK;
 s2: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
 step s2_upsert_a_data: <... completed>
-key  |data       
+key  |data
 -----+-----------
 key-a|val-a-upss2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data       
+key  |data
 -----+-----------
 key-a|val-a-upss2
 (1 row)
@@ -1108,7 +1108,7 @@ step s2_b_rc: BEGIN ISOLATION LEVEL READ COMMITTED; SELECT 1;
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -1117,20 +1117,20 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
-step s2_upsert_a_data: 
+step s2_upsert_a_data:
     INSERT INTO trigtest VALUES ('key-a', 'val-a-upss2')
     ON CONFLICT (key)
         DO UPDATE SET data = trigtest.data || '-upserts2'
@@ -1145,14 +1145,14 @@ s2: NOTICE:  upk: text val-a-s1-ups1 <> text mismatch: t
 s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-upserts2)
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-upserts2)
 step s2_upsert_a_data: <... completed>
-key  |data                  
+key  |data
 -----+----------------------
 key-a|val-a-s1-ups1-upserts2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data                  
+key  |data
 -----+----------------------
 key-a|val-a-s1-ups1-upserts2
 (1 row)
@@ -1180,7 +1180,7 @@ step s2_b_rc: BEGIN ISOLATION LEVEL READ COMMITTED; SELECT 1;
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -1189,20 +1189,20 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
-step s2_upsert_a_data: 
+step s2_upsert_a_data:
     INSERT INTO trigtest VALUES ('key-a', 'val-a-upss2')
     ON CONFLICT (key)
         DO UPDATE SET data = trigtest.data || '-upserts2'
@@ -1214,14 +1214,14 @@ step s2_upsert_a_data:
 step s1_r: ROLLBACK;
 s2: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-upss2)
 step s2_upsert_a_data: <... completed>
-key  |data       
+key  |data
 -----+-----------
 key-a|val-a-upss2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data       
+key  |data
 -----+-----------
 key-a|val-a-upss2
 (1 row)
@@ -1230,13 +1230,13 @@ key-a|val-a-upss2
 starting permutation: s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc s2_b_rc s1_upd_a_data s2_upd_a_data s1_c s2_c s0_rep
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1257,21 +1257,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1284,30 +1284,30 @@ s2: NOTICE:  upk: text val-a-s1-ups1 <> text mismatch: t
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1-ups1) new: (key-a,val-a-s1-ups1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data              
+key  |data
 -----+------------------
 key-a|val-a-s1-ups1-ups2
-key-b|val-b-s1          
+key-b|val-b-s1
 (2 rows)
 
 
 starting permutation: s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc s2_b_rc s1_upd_a_data s2_upd_a_data s1_r s2_c s0_rep
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1328,21 +1328,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1353,17 +1353,17 @@ step s1_r: ROLLBACK;
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
@@ -1371,13 +1371,13 @@ starting permutation: s1_trig_rep_a_d s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1398,21 +1398,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1425,14 +1425,14 @@ s2: NOTICE:  upk: text val-a-s1-ups1 <> text mismatch: t
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1-ups1) new: <NULL>
 step s2_del_a: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1442,13 +1442,13 @@ starting permutation: s1_trig_rep_a_d s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1469,21 +1469,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1494,14 +1494,14 @@ step s1_r: ROLLBACK;
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 step s2_del_a: <... completed>
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1511,13 +1511,13 @@ starting permutation: s1_trig_rep_a_d s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1538,21 +1538,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1568,7 +1568,7 @@ key|data
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1578,13 +1578,13 @@ starting permutation: s1_trig_rep_a_d s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rc 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1605,21 +1605,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1630,30 +1630,30 @@ step s1_r: ROLLBACK;
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
 starting permutation: s1_trig_rep_a_d s1_ins_a s1_ins_b s1_b_rc s2_b_rc s1_del_a s2_del_a s1_c s2_c s0_rep
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1674,21 +1674,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1704,7 +1704,7 @@ key|data
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1713,13 +1713,13 @@ key-b|val-b-s1
 starting permutation: s1_trig_rep_a_d s1_ins_a s1_ins_b s1_b_rc s2_b_rc s1_del_a s2_del_a s1_r s2_c s0_rep
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1740,21 +1740,21 @@ s1: NOTICE:  upd: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1765,14 +1765,14 @@ step s1_r: ROLLBACK;
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 step s2_del_a: <... completed>
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -1782,13 +1782,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_c s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -1810,21 +1810,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
 s1: NOTICE:  upk: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
-step s1_upd_a_tob: 
+step s1_upd_a_tob:
     UPDATE trigtest SET key = 'key-b', data = data || '-tobs1'
     WHERE
         noisy_oper('upk', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1841,10 +1841,10 @@ key|data
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
-key-c|val-c-s1      
+key-c|val-c-s1
 (2 rows)
 
 
@@ -1852,13 +1852,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_c s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -1880,21 +1880,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
 s1: NOTICE:  upk: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
-step s1_upd_a_tob: 
+step s1_upd_a_tob:
     UPDATE trigtest SET key = 'key-b', data = data || '-tobs1'
     WHERE
         noisy_oper('upk', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -1906,17 +1906,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-c = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-c|val-c-s1     
+key-c|val-c-s1
 (2 rows)
 
 
@@ -1924,13 +1924,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_c s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -1952,21 +1952,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
 s1: NOTICE:  upk: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
-step s1_upd_a_tob: 
+step s1_upd_a_tob:
     UPDATE trigtest SET key = 'key-b', data = data || '-tobs1'
     WHERE
         noisy_oper('upk', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-b: f
 s2: NOTICE:  upd: text key-c = text key-b: f
-step s2_upd_b_data: 
+step s2_upd_b_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-b') AND
@@ -1980,10 +1980,10 @@ key|data
 step s1_c: COMMIT;
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
-key-c|val-c-s1      
+key-c|val-c-s1
 (2 rows)
 
 
@@ -1991,13 +1991,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_c s1_b_rc 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2019,21 +2019,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
 s1: NOTICE:  upk: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
-step s1_upd_a_tob: 
+step s1_upd_a_tob:
     UPDATE trigtest SET key = 'key-b', data = data || '-tobs1'
     WHERE
         noisy_oper('upk', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
 (1 row)
 
 s2: NOTICE:  upd: text key-a <> text mismatch: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_all_data: 
+step s2_upd_all_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '<>', 'mismatch') AND
@@ -2050,18 +2050,18 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-b,val-a-s1-tobs1) new: (key-b,val-a-s1-tobs1-ups2)
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-c,val-c-s1) new: (key-c,val-c-s1-ups2)
 step s2_upd_all_data: <... completed>
-key  |data               
+key  |data
 -----+-------------------
 key-b|val-a-s1-tobs1-ups2
-key-c|val-c-s1-ups2      
+key-c|val-c-s1-ups2
 (2 rows)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data               
+key  |data
 -----+-------------------
 key-b|val-a-s1-tobs1-ups2
-key-c|val-c-s1-ups2      
+key-c|val-c-s1-ups2
 (2 rows)
 
 
@@ -2071,13 +2071,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2099,21 +2099,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2129,7 +2129,7 @@ key|data
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2141,13 +2141,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2169,21 +2169,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2195,17 +2195,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-c = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-c|val-c-s1     
+key-c|val-c-s1
 (2 rows)
 
 
@@ -2213,13 +2213,13 @@ starting permutation: s1_trig_rep_b_d s1_trig_rep_a_d s1_ins_a s1_ins_c s1_b_rc 
 step s1_trig_rep_b_d: CREATE TRIGGER rep_b_d BEFORE DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2241,21 +2241,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2271,7 +2271,7 @@ key|data
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2281,13 +2281,13 @@ starting permutation: s1_trig_rep_b_d s1_trig_rep_a_d s1_ins_a s1_ins_c s1_b_rc 
 step s1_trig_rep_b_d: CREATE TRIGGER rep_b_d BEFORE DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_c: INSERT INTO trigtest VALUES ('key-c', 'val-c-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2309,21 +2309,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-c = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_del_a: 
+step s2_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2335,14 +2335,14 @@ s2: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (k
 s2: NOTICE:  upd: text key-c = text key-a: f
 s2: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 step s2_del_a: <... completed>
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-c|val-c-s1
 (1 row)
@@ -2358,7 +2358,7 @@ step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH R
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-b,val-b-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-b,val-b-s1)
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -2378,7 +2378,7 @@ step s2_b_rc: BEGIN ISOLATION LEVEL READ COMMITTED; SELECT 1;
 s1: NOTICE:  trigger: name rep_b_i; when: BEFORE; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 s1: NOTICE:  trigger: name rep_a_i; when: AFTER; lev: ROWs; op: INSERT; old: <NULL> new: (key-a,val-a-s1)
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
@@ -2388,21 +2388,21 @@ s1: NOTICE:  upk: text val-b-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-b,val-b-s1) new: (key-b,val-b-s1-ups1)
 s1: NOTICE:  upd: text key-a = text key-b: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-b,val-b-s1) new: (key-b,val-b-s1-ups1)
-step s1_upd_b_data: 
+step s1_upd_b_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-b') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-b|val-b-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-b = text key-b: t
 s2: NOTICE:  upk: text val-b-s1 <> text mismatch: t
-step s2_upd_b_data: 
+step s2_upd_b_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-b') AND
@@ -2414,14 +2414,14 @@ s1: NOTICE:  upd: text key-b = text key-b: t
 s1: NOTICE:  upk: text val-b-s1-ups1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-b,val-b-s1-ups1) new: <NULL>
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-b,val-b-s1-ups1) new: <NULL>
-step s1_del_b: 
+step s1_del_b:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-b') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data         
+key  |data
 -----+-------------
 key-b|val-b-s1-ups1
 (1 row)
@@ -2430,14 +2430,14 @@ s1: NOTICE:  upk: text key-a = text key-a: t
 s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-b,val-a-s1-tobs1)
-step s1_upd_a_tob: 
+step s1_upd_a_tob:
     UPDATE trigtest SET key = 'key-b', data = data || '-tobs1'
     WHERE
         noisy_oper('upk', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
 (1 row)
@@ -2450,7 +2450,7 @@ key|data
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data          
+key  |data
 -----+--------------
 key-b|val-a-s1-tobs1
 (1 row)
@@ -2460,13 +2460,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rr 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -2488,21 +2488,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2514,10 +2514,10 @@ step s2_upd_a_data: <... completed>
 ERROR:  could not serialize access due to concurrent update
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
@@ -2525,13 +2525,13 @@ starting permutation: s1_trig_rep_b_u s1_trig_rep_a_u s1_ins_a s1_ins_b s1_b_rr 
 step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -2553,21 +2553,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups1)
-step s1_upd_a_data: 
+step s1_upd_a_data:
     UPDATE trigtest SET data = data || '-ups1'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *;
 
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2579,17 +2579,17 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
 
 
@@ -2599,13 +2599,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -2627,21 +2627,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2653,7 +2653,7 @@ step s2_upd_a_data: <... completed>
 ERROR:  could not serialize access due to concurrent delete
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -2665,13 +2665,13 @@ step s1_trig_rep_b_u: CREATE TRIGGER rep_b_u BEFORE UPDATE ON trigtest FOR EACH 
 step s1_trig_rep_a_d: CREATE TRIGGER rep_a_d AFTER DELETE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_trig_rep_a_u: CREATE TRIGGER rep_a_u AFTER UPDATE ON trigtest FOR EACH ROW EXECUTE PROCEDURE trig_report();
 step s1_ins_a: INSERT INTO trigtest VALUES ('key-a', 'val-a-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 step s1_ins_b: INSERT INTO trigtest VALUES ('key-b', 'val-b-s1') RETURNING *;
-key  |data    
+key  |data
 -----+--------
 key-b|val-b-s1
 (1 row)
@@ -2693,21 +2693,21 @@ s1: NOTICE:  upk: text val-a-s1 <> text mismatch: t
 s1: NOTICE:  trigger: name rep_b_d; when: BEFORE; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
 s1: NOTICE:  upd: text key-b = text key-a: f
 s1: NOTICE:  trigger: name rep_a_d; when: AFTER; lev: ROWs; op: DELETE; old: (key-a,val-a-s1) new: <NULL>
-step s1_del_a: 
+step s1_del_a:
     DELETE FROM trigtest
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
         noisy_oper('upk', data, '<>', 'mismatch')
     RETURNING *
 
-key  |data    
+key  |data
 -----+--------
 key-a|val-a-s1
 (1 row)
 
 s2: NOTICE:  upd: text key-a = text key-a: t
 s2: NOTICE:  upk: text val-a-s1 <> text mismatch: t
-step s2_upd_a_data: 
+step s2_upd_a_data:
     UPDATE trigtest SET data = data || '-ups2'
     WHERE
         noisy_oper('upd', key, '=', 'key-a') AND
@@ -2719,16 +2719,15 @@ s2: NOTICE:  trigger: name rep_b_u; when: BEFORE; lev: ROWs; op: UPDATE; old: (k
 s2: NOTICE:  upd: text key-b = text key-a: f
 s2: NOTICE:  trigger: name rep_a_u; when: AFTER; lev: ROWs; op: UPDATE; old: (key-a,val-a-s1) new: (key-a,val-a-s1-ups2)
 step s2_upd_a_data: <... completed>
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
 (1 row)
 
 step s2_c: COMMIT;
 step s0_rep: SELECT * FROM trigtest ORDER BY key, data
-key  |data         
+key  |data
 -----+-------------
 key-a|val-a-s1-ups2
-key-b|val-b-s1     
+key-b|val-b-s1
 (2 rows)
-

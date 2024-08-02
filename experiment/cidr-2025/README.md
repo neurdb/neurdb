@@ -6,7 +6,7 @@ This folder contains the code and data for the experiments in the paper "XXX" su
 
 ### Avazu
 
-The Click-Through Rate Prediction dataset contains predictions of whether a mobile ad will be clicked. The dataset is available at [Kaggle](https://www.kaggle.com/c/avazu-ctr-prediction/data). 
+The Click-Through Rate Prediction dataset contains predictions of whether a mobile ad will be clicked. The dataset is available at [Kaggle](https://www.kaggle.com/c/avazu-ctr-prediction/data).
 
 The dataset contains **40428967** samples. It has XXX columns, including the label column.
 

@@ -12,7 +12,7 @@ INSERT INTO xacttest (a, b) VALUES (777, 777.777);
 END;
 -- should retrieve one value--
 SELECT a FROM xacttest WHERE a > 100;
-  a  
+  a
 -----
  777
 (1 row)
@@ -22,20 +22,20 @@ CREATE TABLE disappear (a int4);
 DELETE FROM xacttest;
 -- should be empty
 SELECT * FROM xacttest;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 ABORT;
 -- should not exist
 SELECT oid FROM pg_class WHERE relname = 'disappear';
- oid 
+ oid
 -----
 (0 rows)
 
 -- should have members again
 SELECT * FROM xacttest;
-  a  |    b    
+  a  |    b
 -----+---------
   56 |     7.8
  100 |  99.097
@@ -47,7 +47,7 @@ SELECT * FROM xacttest;
 -- Test that transaction characteristics cannot be reset.
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 SELECT COUNT(*) FROM xacttest;
- count 
+ count
 -------
      5
 (1 row)
@@ -57,7 +57,7 @@ ERROR:  parameter "transaction_isolation" cannot be reset
 END;
 BEGIN TRANSACTION READ ONLY;
 SELECT COUNT(*) FROM xacttest;
- count 
+ count
 -------
      5
 (1 row)
@@ -67,7 +67,7 @@ ERROR:  parameter "transaction_read_only" cannot be reset
 END;
 BEGIN TRANSACTION DEFERRABLE;
 SELECT COUNT(*) FROM xacttest;
- count 
+ count
 -------
      5
 (1 row)
@@ -84,7 +84,7 @@ CREATE TEMPORARY TABLE temptest (a int);
 BEGIN;
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE; -- ok
 SELECT * FROM writetest; -- ok
- a 
+ a
 ---
 (0 rows)
 
@@ -96,28 +96,14 @@ SET TRANSACTION READ ONLY; -- ok
 SET TRANSACTION READ WRITE; -- ok
 SET TRANSACTION READ ONLY; -- ok
 SELECT * FROM writetest; -- ok
- a 
+ a
 ---
 (0 rows)
 
 SAVEPOINT x;
 SET TRANSACTION READ ONLY; -- ok
 SELECT * FROM writetest; -- ok
- a 
----
-(0 rows)
-
-SET TRANSACTION READ ONLY; -- ok
-SET TRANSACTION READ WRITE; --fail
-ERROR:  cannot set transaction read-write mode inside a read-only transaction
-COMMIT;
-BEGIN;
-SET TRANSACTION READ WRITE; -- ok
-SAVEPOINT x;
-SET TRANSACTION READ WRITE; -- ok
-SET TRANSACTION READ ONLY; -- ok
-SELECT * FROM writetest; -- ok
- a 
+ a
 ---
 (0 rows)
 
@@ -128,15 +114,29 @@ COMMIT;
 BEGIN;
 SET TRANSACTION READ WRITE; -- ok
 SAVEPOINT x;
+SET TRANSACTION READ WRITE; -- ok
 SET TRANSACTION READ ONLY; -- ok
 SELECT * FROM writetest; -- ok
- a 
+ a
+---
+(0 rows)
+
+SET TRANSACTION READ ONLY; -- ok
+SET TRANSACTION READ WRITE; --fail
+ERROR:  cannot set transaction read-write mode inside a read-only transaction
+COMMIT;
+BEGIN;
+SET TRANSACTION READ WRITE; -- ok
+SAVEPOINT x;
+SET TRANSACTION READ ONLY; -- ok
+SELECT * FROM writetest; -- ok
+ a
 ---
 (0 rows)
 
 ROLLBACK TO SAVEPOINT x;
 SHOW transaction_read_only;  -- off
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
@@ -144,13 +144,13 @@ SHOW transaction_read_only;  -- off
 SAVEPOINT y;
 SET TRANSACTION READ ONLY; -- ok
 SELECT * FROM writetest; -- ok
- a 
+ a
 ---
 (0 rows)
 
 RELEASE SAVEPOINT y;
 SHOW transaction_read_only;  -- off
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
@@ -162,7 +162,7 @@ ERROR:  cannot execute DROP TABLE in a read-only transaction
 INSERT INTO writetest VALUES (1); -- fail
 ERROR:  cannot execute INSERT in a read-only transaction
 SELECT * FROM writetest; -- ok
- a 
+ a
 ---
 (0 rows)
 
@@ -172,7 +172,7 @@ PREPARE test AS UPDATE writetest SET a = 0; -- ok
 EXECUTE test; -- fail
 ERROR:  cannot execute UPDATE in a read-only transaction
 SELECT * FROM writetest, temptest; -- ok
- a | a 
+ a | a
 ---+---
 (0 rows)
 
@@ -200,7 +200,7 @@ BEGIN;
 COMMIT;
 -- should exist: trans_barbaz, trans_baz, trans_foo
 SELECT * FROM trans_foo;		-- should be empty
- a 
+ a
 ---
 (0 rows)
 
@@ -209,12 +209,12 @@ ERROR:  relation "trans_bar" does not exist
 LINE 1: SELECT * FROM trans_bar;
                       ^
 SELECT * FROM trans_barbaz;	-- should be empty
- a 
+ a
 ---
 (0 rows)
 
 SELECT * FROM trans_baz;		-- should be empty
- a 
+ a
 ---
 (0 rows)
 
@@ -240,14 +240,14 @@ LINE 1: INSERT into trans_bar VALUES (1);
 	INSERT INTO trans_foo VALUES (3);
 COMMIT;
 SELECT * FROM trans_foo;		-- should have 1 and 3
- a 
+ a
 ---
  1
  3
 (2 rows)
 
 SELECT * FROM trans_barbaz;	-- should have 1
- a 
+ a
 ---
  1
 (1 row)
@@ -274,7 +274,7 @@ COMMIT;
 COMMIT;		-- should not be in a transaction block
 WARNING:  there is no transaction in progress
 SELECT * FROM savepoints;
- a 
+ a
 ---
  1
  2
@@ -293,7 +293,7 @@ ROLLBACK;
 COMMIT;		-- should not be in a transaction block
 WARNING:  there is no transaction in progress
 SELECT * FROM savepoints;
- a 
+ a
 ---
  1
  2
@@ -310,7 +310,7 @@ LINE 1: SELECT trans_foo;
                ^
 COMMIT;
 SELECT * FROM savepoints;
- a 
+ a
 ---
  1
  2
@@ -325,14 +325,14 @@ BEGIN;
 COMMIT;
 -- rows 6 and 8 should have been created by the same xact
 SELECT a.xmin = b.xmin FROM savepoints a, savepoints b WHERE a.a=6 AND b.a=8;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- rows 6 and 7 should have been created by different xacts
 SELECT a.xmin = b.xmin FROM savepoints a, savepoints b WHERE a.a=6 AND b.a=7;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
@@ -345,7 +345,7 @@ BEGIN;
 		INSERT INTO savepoints VALUES (11);
 COMMIT;
 SELECT a FROM savepoints WHERE a in (9, 10, 11);
- a  
+ a
 ----
   9
  11
@@ -353,7 +353,7 @@ SELECT a FROM savepoints WHERE a in (9, 10, 11);
 
 -- rows 9 and 11 should have been created by different xacts
 SELECT a.xmin = b.xmin FROM savepoints a, savepoints b WHERE a.a=9 AND b.a=11;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
@@ -372,7 +372,7 @@ BEGIN;
 				INSERT INTO savepoints VALUES (17);
 COMMIT;
 SELECT a FROM savepoints WHERE a BETWEEN 12 AND 17;
- a  
+ a
 ----
  12
  15
@@ -392,7 +392,7 @@ BEGIN;
 		INSERT INTO savepoints VALUES (22);
 COMMIT;
 SELECT a FROM savepoints WHERE a BETWEEN 18 AND 22;
- a  
+ a
 ----
  18
  22
@@ -417,14 +417,14 @@ ERROR:  current transaction is aborted, commands ignored until end of transactio
 ERROR:  current transaction is aborted, commands ignored until end of transaction block
   ROLLBACK TO SAVEPOINT one;
   SELECT 1;
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
 
 COMMIT;
 SELECT 1;			-- this should work
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -434,7 +434,7 @@ BEGIN;
 	DECLARE c CURSOR FOR SELECT unique2 FROM tenk1 ORDER BY unique2;
 	SAVEPOINT one;
 		FETCH 10 FROM c;
- unique2 
+ unique2
 ---------
        0
        1
@@ -450,7 +450,7 @@ BEGIN;
 
 	ROLLBACK TO SAVEPOINT one;
 		FETCH 10 FROM c;
- unique2 
+ unique2
 ---------
       10
       11
@@ -466,7 +466,7 @@ BEGIN;
 
 	RELEASE SAVEPOINT one;
 	FETCH 10 FROM c;
- unique2 
+ unique2
 ---------
       20
       21
@@ -501,7 +501,7 @@ COMMIT;
 -- that's a mite hard to do within the limitations of pg_regress.)
 --
 select * from xacttest;
-  a  |    b    
+  a  |    b
 -----+---------
   56 |     7.8
  100 |  99.097
@@ -515,7 +515,7 @@ create or replace function max_xacttest() returns smallint language sql as
 begin;
 update xacttest set a = max_xacttest() + 10 where a > 0;
 select * from xacttest;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
  787 |     7.8
@@ -531,7 +531,7 @@ create or replace function max_xacttest() returns smallint language sql as
 begin;
 update xacttest set a = max_xacttest() + 10 where a > 0;
 select * from xacttest;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
  787 |     7.8
@@ -547,7 +547,7 @@ create or replace function max_xacttest() returns smallint language plpgsql as
 begin;
 update xacttest set a = max_xacttest() + 10 where a > 0;
 select * from xacttest;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
  787 |     7.8
@@ -562,7 +562,7 @@ create or replace function max_xacttest() returns smallint language plpgsql as
 begin;
 update xacttest set a = max_xacttest() + 10 where a > 0;
 select * from xacttest;
-  a  |    b    
+  a  |    b
 -----+---------
    0 | 0.09561
  787 |     7.8
@@ -614,7 +614,7 @@ insert into trans_abc values (5);
 insert into trans_abc values (10);
 declare foo cursor for select * from trans_abc;
 fetch from foo;
- a 
+ a
 ---
  5
 (1 row)
@@ -631,21 +631,21 @@ insert into trans_abc values (10);
 insert into trans_abc values (15);
 declare foo cursor for select * from trans_abc;
 fetch from foo;
- a 
+ a
 ---
  5
 (1 row)
 
 savepoint x;
 fetch from foo;
- a  
+ a
 ----
  10
 (1 row)
 
 rollback to x;
 fetch from foo;
- a  
+ a
 ----
  15
 (1 row)
@@ -668,14 +668,14 @@ BEGIN;
 DECLARE ok CURSOR FOR SELECT * FROM int8_tbl;
 DECLARE ctt CURSOR FOR SELECT create_temp_tab();
 FETCH ok;
- q1  | q2  
+ q1  | q2
 -----+-----
  123 | 456
 (1 row)
 
 SAVEPOINT s1;
 FETCH ok;  -- should work
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 | 4567890123456789
 (1 row)
@@ -687,7 +687,7 @@ SQL statement "INSERT INTO new_table SELECT invert(0.0)"
 PL/pgSQL function create_temp_tab() line 6 at SQL statement
 ROLLBACK TO s1;
 FETCH ok;  -- should work
-        q1        | q2  
+        q1        | q2
 ------------------+-----
  4567890123456789 | 123
 (1 row)
@@ -703,19 +703,19 @@ CREATE TABLE trans_abc (a int);
 SET default_transaction_read_only = on;
 START TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ WRITE, DEFERRABLE;
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -724,19 +724,19 @@ INSERT INTO trans_abc VALUES (1);
 INSERT INTO trans_abc VALUES (2);
 COMMIT AND CHAIN;  -- TBLOCK_END
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -749,19 +749,19 @@ INSERT INTO trans_abc VALUES (3);  -- check it's really aborted
 ERROR:  current transaction is aborted, commands ignored until end of transaction block
 COMMIT AND CHAIN;  -- TBLOCK_ABORT_END
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -770,19 +770,19 @@ INSERT INTO trans_abc VALUES (4);
 COMMIT;
 START TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ WRITE, DEFERRABLE;
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -794,19 +794,19 @@ LINE 1: INSERT INTO trans_abc VALUES ('error');
                                       ^
 COMMIT AND CHAIN;  -- TBLOCK_ABORT_PENDING
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -815,19 +815,19 @@ INSERT INTO trans_abc VALUES (5);
 COMMIT;
 START TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ WRITE, DEFERRABLE;
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -835,19 +835,19 @@ SHOW transaction_deferrable;
 SAVEPOINT x;
 COMMIT AND CHAIN;  -- TBLOCK_SUBCOMMIT
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -855,19 +855,19 @@ SHOW transaction_deferrable;
 COMMIT;
 START TRANSACTION ISOLATION LEVEL READ COMMITTED, READ WRITE, DEFERRABLE;
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  read committed
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -875,19 +875,19 @@ SHOW transaction_deferrable;
 SAVEPOINT x;
 COMMIT AND CHAIN;  -- TBLOCK_SUBCOMMIT
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  read committed
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  on
 (1 row)
@@ -896,19 +896,19 @@ COMMIT;
 -- different mix of options just for fun
 START TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ WRITE, NOT DEFERRABLE;
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  serializable
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  off
 (1 row)
@@ -916,19 +916,19 @@ SHOW transaction_deferrable;
 INSERT INTO trans_abc VALUES (6);
 ROLLBACK AND CHAIN;  -- TBLOCK_ABORT_PENDING
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  serializable
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  off
 (1 row)
@@ -939,19 +939,19 @@ LINE 1: INSERT INTO trans_abc VALUES ('error');
                                       ^
 ROLLBACK AND CHAIN;  -- TBLOCK_ABORT_END
 SHOW transaction_isolation;
- transaction_isolation 
+ transaction_isolation
 -----------------------
  serializable
 (1 row)
 
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
 
 SHOW transaction_deferrable;
- transaction_deferrable 
+ transaction_deferrable
 ------------------------
  off
 (1 row)
@@ -963,7 +963,7 @@ ERROR:  COMMIT AND CHAIN can only be used in transaction blocks
 ROLLBACK AND CHAIN;  -- error
 ERROR:  ROLLBACK AND CHAIN can only be used in transaction blocks
 SELECT * FROM trans_abc ORDER BY 1;
- a 
+ a
 ---
  1
  2
@@ -980,31 +980,31 @@ DROP TABLE trans_abc;
 create temp table i_table (f1 int);
 -- psql will show all results of a multi-statement Query
 SELECT 1\; SELECT 2\; SELECT 3;
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
 
- ?column? 
+ ?column?
 ----------
         2
 (1 row)
 
- ?column? 
+ ?column?
 ----------
         3
 (1 row)
 
 -- this implicitly commits:
 insert into i_table values(1)\; select * from i_table;
- f1 
+ f1
 ----
   1
 (1 row)
 
 -- 1/0 error will cause rolling back the whole implicit transaction
 insert into i_table values(2)\; select * from i_table\; select 1/0;
- f1 
+ f1
 ----
   1
   2
@@ -1012,7 +1012,7 @@ insert into i_table values(2)\; select * from i_table\; select 1/0;
 
 ERROR:  division by zero
 select * from i_table;
- f1 
+ f1
 ----
   1
 (1 row)
@@ -1029,14 +1029,14 @@ WARNING:  there is no transaction in progress
 -- begin converts implicit transaction into a regular one that
 -- can extend past the end of the Query
 select 1\; begin\; insert into i_table values(5);
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
 
 commit;
 select 1\; begin\; insert into i_table values(6);
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -1049,13 +1049,13 @@ ERROR:  division by zero
 -- similarly, rollback aborts but issues a warning.
 insert into i_table values(9)\; rollback\; select 2;
 WARNING:  there is no transaction in progress
- ?column? 
+ ?column?
 ----------
         2
 (1 row)
 
 select * from i_table;
- f1 
+ f1
 ----
   1
   3
@@ -1067,7 +1067,7 @@ rollback;  -- we are not in a transaction at this point
 WARNING:  there is no transaction in progress
 -- implicit transaction block is still a transaction block, for e.g. VACUUM
 SELECT 1\; VACUUM;
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -1075,7 +1075,7 @@ SELECT 1\; VACUUM;
 ERROR:  VACUUM cannot run inside a transaction block
 SELECT 1\; COMMIT\; VACUUM;
 WARNING:  there is no transaction in progress
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -1083,7 +1083,7 @@ WARNING:  there is no transaction in progress
 ERROR:  VACUUM cannot run inside a transaction block
 -- we disallow savepoint-related commands in implicit-transaction state
 SELECT 1\; SAVEPOINT sp;
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -1091,7 +1091,7 @@ SELECT 1\; SAVEPOINT sp;
 ERROR:  SAVEPOINT can only be used in transaction blocks
 SELECT 1\; COMMIT\; SAVEPOINT sp;
 WARNING:  there is no transaction in progress
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -1100,7 +1100,7 @@ ERROR:  SAVEPOINT can only be used in transaction blocks
 ROLLBACK TO SAVEPOINT sp\; SELECT 2;
 ERROR:  ROLLBACK TO SAVEPOINT can only be used in transaction blocks
 SELECT 2\; RELEASE SAVEPOINT sp\; SELECT 3;
- ?column? 
+ ?column?
 ----------
         2
 (1 row)
@@ -1108,7 +1108,7 @@ SELECT 2\; RELEASE SAVEPOINT sp\; SELECT 3;
 ERROR:  RELEASE SAVEPOINT can only be used in transaction blocks
 -- but this is OK, because the BEGIN converts it to a regular xact
 SELECT 1\; BEGIN\; SAVEPOINT sp\; ROLLBACK TO SAVEPOINT sp\; COMMIT;
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -1117,7 +1117,7 @@ SELECT 1\; BEGIN\; SAVEPOINT sp\; ROLLBACK TO SAVEPOINT sp\; COMMIT;
 SET TRANSACTION READ ONLY\; COMMIT AND CHAIN;  -- error
 ERROR:  COMMIT AND CHAIN can only be used in transaction blocks
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
@@ -1125,7 +1125,7 @@ SHOW transaction_read_only;
 SET TRANSACTION READ ONLY\; ROLLBACK AND CHAIN;  -- error
 ERROR:  ROLLBACK AND CHAIN can only be used in transaction blocks
 SHOW transaction_read_only;
- transaction_read_only 
+ transaction_read_only
 -----------------------
  off
 (1 row)
@@ -1146,7 +1146,7 @@ ERROR:  ROLLBACK AND CHAIN can only be used in transaction blocks
 -- START TRANSACTION + COMMIT/ROLLBACK AND CHAIN
 START TRANSACTION ISOLATION LEVEL REPEATABLE READ\; INSERT INTO trans_abc VALUES (15)\; COMMIT AND CHAIN;  -- 15 ok
 SHOW transaction_isolation;  -- transaction is active at this point
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
@@ -1154,7 +1154,7 @@ SHOW transaction_isolation;  -- transaction is active at this point
 COMMIT;
 START TRANSACTION ISOLATION LEVEL REPEATABLE READ\; INSERT INTO trans_abc VALUES (16)\; ROLLBACK AND CHAIN;  -- 16 ok
 SHOW transaction_isolation;  -- transaction is active at this point
- transaction_isolation 
+ transaction_isolation
 -----------------------
  repeatable read
 (1 row)
@@ -1165,7 +1165,7 @@ SET default_transaction_isolation = 'read committed';
 START TRANSACTION ISOLATION LEVEL REPEATABLE READ\; INSERT INTO trans_abc VALUES (17)\; COMMIT\; INSERT INTO trans_abc VALUES (18)\; COMMIT AND CHAIN;  -- 17 commit, 18 error
 ERROR:  COMMIT AND CHAIN can only be used in transaction blocks
 SHOW transaction_isolation;  -- out of transaction block
- transaction_isolation 
+ transaction_isolation
 -----------------------
  read committed
 (1 row)
@@ -1173,14 +1173,14 @@ SHOW transaction_isolation;  -- out of transaction block
 START TRANSACTION ISOLATION LEVEL REPEATABLE READ\; INSERT INTO trans_abc VALUES (19)\; ROLLBACK\; INSERT INTO trans_abc VALUES (20)\; ROLLBACK AND CHAIN;  -- 19 rollback, 20 error
 ERROR:  ROLLBACK AND CHAIN can only be used in transaction blocks
 SHOW transaction_isolation;  -- out of transaction block
- transaction_isolation 
+ transaction_isolation
 -----------------------
  read committed
 (1 row)
 
 RESET default_transaction_isolation;
 SELECT * FROM trans_abc ORDER BY 1;
- a  
+ a
 ----
   7
  15

@@ -94,8 +94,12 @@ class TableDataset(Dataset):
 
         # self.batch_cache_x = batch_cache.drop(columns=["id", "label"])
         # self.batch_cache_y = batch_cache["label"]
-        self.batch_cache_x = torch.tensor(batch_cache.drop(columns=["id", "label"]).values, dtype=torch.long)
-        self.batch_cache_y = torch.tensor(batch_cache["label"].values, dtype=torch.float)
+        self.batch_cache_x = torch.tensor(
+            batch_cache.drop(columns=["id", "label"]).values, dtype=torch.long
+        )
+        self.batch_cache_y = torch.tensor(
+            batch_cache["label"].values, dtype=torch.float
+        )
         self.batch_id = batch_id
 
         # logger.debug(
@@ -113,7 +117,7 @@ class TableDataset(Dataset):
         column_names: List[str] = [r[0] for r in self.cursor.fetchall()]
         column_names = [r for r in column_names if r not in ["id", "label"]]
         logger.debug("get column names", column_names=column_names)
-        
+
         return column_names
 
     def get_nfeat(self) -> int:
@@ -162,8 +166,8 @@ def table_dataloader(database_config, table_name: str, batch_size: int):
     # )
     train_dataset, val_dataset, test_dataset = (
         Subset(dataset, range(0, train_size)),
-        Subset(dataset, range(train_size, train_size+val_size)),
-        Subset(dataset, range(train_size+val_size))
+        Subset(dataset, range(train_size, train_size + val_size)),
+        Subset(dataset, range(train_size + val_size)),
     )
 
     logger.debug("TableDataset splited")

@@ -28,20 +28,20 @@ LINE 1: INSERT INTO PG_LSN_TBL VALUES ('/ABCD');
                                        ^
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('16AE7F7', 'pg_lsn');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('16AE7F7', 'pg_lsn');
-                     message                     | detail | hint | sql_error_code 
+                     message                     | detail | hint | sql_error_code
 -------------------------------------------------+--------+------+----------------
  invalid input syntax for type pg_lsn: "16AE7F7" |        |      | 22P02
 (1 row)
 
 -- Min/Max aggregation
 SELECT MIN(f1), MAX(f1) FROM PG_LSN_TBL;
- min |        max        
+ min |        max
 -----+-------------------
  0/0 | FFFFFFFF/FFFFFFFF
 (1 row)
@@ -49,61 +49,61 @@ SELECT MIN(f1), MAX(f1) FROM PG_LSN_TBL;
 DROP TABLE PG_LSN_TBL;
 -- Operators
 SELECT '0/16AE7F8' = '0/16AE7F8'::pg_lsn;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '0/16AE7F8'::pg_lsn != '0/16AE7F7';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '0/16AE7F7' < '0/16AE7F8'::pg_lsn;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '0/16AE7F8' > pg_lsn '0/16AE7F7';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '0/16AE7F7'::pg_lsn - '0/16AE7F8'::pg_lsn;
- ?column? 
+ ?column?
 ----------
        -1
 (1 row)
 
 SELECT '0/16AE7F8'::pg_lsn - '0/16AE7F7'::pg_lsn;
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
 
 SELECT '0/16AE7F7'::pg_lsn + 16::numeric;
- ?column?  
+ ?column?
 -----------
  0/16AE807
 (1 row)
 
 SELECT 16::numeric + '0/16AE7F7'::pg_lsn;
- ?column?  
+ ?column?
 -----------
  0/16AE807
 (1 row)
 
 SELECT '0/16AE7F7'::pg_lsn - 16::numeric;
- ?column?  
+ ?column?
 -----------
  0/16AE7E7
 (1 row)
 
 SELECT 'FFFFFFFF/FFFFFFFE'::pg_lsn + 1::numeric;
-     ?column?      
+     ?column?
 -------------------
  FFFFFFFF/FFFFFFFF
 (1 row)
@@ -111,7 +111,7 @@ SELECT 'FFFFFFFF/FFFFFFFE'::pg_lsn + 1::numeric;
 SELECT 'FFFFFFFF/FFFFFFFE'::pg_lsn + 2::numeric; -- out of range error
 ERROR:  pg_lsn out of range
 SELECT '0/1'::pg_lsn - 1::numeric;
- ?column? 
+ ?column?
 ----------
  0/0
 (1 row)
@@ -119,13 +119,13 @@ SELECT '0/1'::pg_lsn - 1::numeric;
 SELECT '0/1'::pg_lsn - 2::numeric; -- out of range error
 ERROR:  pg_lsn out of range
 SELECT '0/0'::pg_lsn + ('FFFFFFFF/FFFFFFFF'::pg_lsn - '0/0'::pg_lsn);
-     ?column?      
+     ?column?
 -------------------
  FFFFFFFF/FFFFFFFF
 (1 row)
 
 SELECT 'FFFFFFFF/FFFFFFFF'::pg_lsn - ('FFFFFFFF/FFFFFFFF'::pg_lsn - '0/0'::pg_lsn);
- ?column? 
+ ?column?
 ----------
  0/0
 (1 row)
@@ -142,7 +142,7 @@ SELECT DISTINCT (i || '/' || j)::pg_lsn f
        generate_series(1, 5) k
   WHERE i <= 10 AND j > 0 AND j <= 10
   ORDER BY f;
-                                QUERY PLAN                                
+                                QUERY PLAN
 --------------------------------------------------------------------------
  Sort
    Sort Key: (((((i.i)::text || '/'::text) || (j.j)::text))::pg_lsn)
@@ -164,7 +164,7 @@ SELECT DISTINCT (i || '/' || j)::pg_lsn f
        generate_series(1, 5) k
   WHERE i <= 10 AND j > 0 AND j <= 10
   ORDER BY f;
-   f   
+   f
 -------
  1/1
  1/2
@@ -267,4 +267,3 @@ SELECT DISTINCT (i || '/' || j)::pg_lsn f
  10/9
  10/10
 (100 rows)
-

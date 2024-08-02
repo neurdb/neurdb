@@ -71,20 +71,20 @@ int main() {
   sqlda_t *sqlda = NULL;
 
   /* exec sql begin declare section */
-   
-   
-     
-     
-  
+
+
+
+
+
 #line 30 "char_array.pgc"
  char shortstr [ 5 ] ;
- 
+
 #line 31 "char_array.pgc"
  char bigstr [ 11 ] ;
- 
+
 #line 32 "char_array.pgc"
  short shstr_ind = 0 ;
- 
+
 #line 33 "char_array.pgc"
  short bigstr_ind = 0 ;
 /* exec sql end declare section */
@@ -92,7 +92,7 @@ int main() {
 
 
   ECPGdebug(1, stderr);
-  { ECPGconnect(__LINE__, 3, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+  { ECPGconnect(__LINE__, 3, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 37 "char_array.pgc"
 
 if (sqlca.sqlwarn[0] == 'W') warn ( );
@@ -187,10 +187,10 @@ if (sqlca.sqlcode < 0) exit (1);}
   for (loopcount = 0; loopcount < 100; loopcount++) {
     strncpy(shortstr, ppppp, sizeof shortstr);
     memset(bigstr, 0, sizeof bigstr);
-    { ECPGdo(__LINE__, 3, 1, NULL, 0, ECPGst_normal, "fetch C", ECPGt_EOIT, 
-	ECPGt_char,(bigstr),(long)11,(long)1,(11)*sizeof(char), 
-	ECPGt_short,&(bigstr_ind),(long)1,(long)1,sizeof(short), 
-	ECPGt_char,(shortstr),(long)5,(long)1,(5)*sizeof(char), 
+    { ECPGdo(__LINE__, 3, 1, NULL, 0, ECPGst_normal, "fetch C", ECPGt_EOIT,
+	ECPGt_char,(bigstr),(long)11,(long)1,(11)*sizeof(char),
+	ECPGt_short,&(bigstr_ind),(long)1,(long)1,sizeof(short),
+	ECPGt_char,(shortstr),(long)5,(long)1,(5)*sizeof(char),
 	ECPGt_short,&(shstr_ind),(long)1,(long)1,sizeof(short), ECPGt_EORT);
 #line 56 "char_array.pgc"
 
@@ -253,8 +253,8 @@ if (sqlca.sqlcode < 0) exit (1);}
   /* declare cur1 cursor for $1 */
 #line 68 "char_array.pgc"
 
-  { ECPGdo(__LINE__, 3, 1, NULL, 0, ECPGst_normal, "declare cur1 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "stmt1", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+  { ECPGdo(__LINE__, 3, 1, NULL, 0, ECPGst_normal, "declare cur1 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "stmt1", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 69 "char_array.pgc"
 
@@ -264,8 +264,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) exit (1);}
 #line 69 "char_array.pgc"
 
-  { ECPGdo(__LINE__, 3, 1, NULL, 0, ECPGst_normal, "fetch next from cur1", ECPGt_EOIT, 
-	ECPGt_sqlda, &sqlda, 0L, 0L, 0L, 
+  { ECPGdo(__LINE__, 3, 1, NULL, 0, ECPGst_normal, "fetch next from cur1", ECPGt_EOIT,
+	ECPGt_sqlda, &sqlda, 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 70 "char_array.pgc"
 

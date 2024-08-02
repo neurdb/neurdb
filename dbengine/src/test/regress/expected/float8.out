@@ -30,7 +30,7 @@ LINE 1: SELECT '-10e-400'::float8;
                ^
 -- test smallest normalized input
 SELECT float8send('2.2250738585072014E-308'::float8);
-     float8send     
+     float8send
 --------------------
  \x0010000000000000
 (1 row)
@@ -70,56 +70,56 @@ LINE 1: INSERT INTO FLOAT8_TBL(f1) VALUES ('123           5');
                                            ^
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('34.5', 'float8');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('xyz', 'float8');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT pg_input_is_valid('1e4000', 'float8');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('1e4000', 'float8');
-                      message                       | detail | hint | sql_error_code 
+                      message                       | detail | hint | sql_error_code
 ----------------------------------------------------+--------+------+----------------
  "1e4000" is out of range for type double precision |        |      | 22003
 (1 row)
 
 -- special inputs
 SELECT 'NaN'::float8;
- float8 
+ float8
 --------
     NaN
 (1 row)
 
 SELECT 'nan'::float8;
- float8 
+ float8
 --------
     NaN
 (1 row)
 
 SELECT '   NAN  '::float8;
- float8 
+ float8
 --------
     NaN
 (1 row)
 
 SELECT 'infinity'::float8;
-  float8  
+  float8
 ----------
  Infinity
 (1 row)
 
 SELECT '          -INFINiTY   '::float8;
-  float8   
+  float8
 -----------
  -Infinity
 (1 row)
@@ -138,43 +138,43 @@ ERROR:  invalid input syntax for type double precision: " INFINITY    x"
 LINE 1: SELECT ' INFINITY    x'::float8;
                ^
 SELECT 'Infinity'::float8 + 100.0;
- ?column? 
+ ?column?
 ----------
  Infinity
 (1 row)
 
 SELECT 'Infinity'::float8 / 'Infinity'::float8;
- ?column? 
+ ?column?
 ----------
       NaN
 (1 row)
 
 SELECT '42'::float8 / 'Infinity'::float8;
- ?column? 
+ ?column?
 ----------
         0
 (1 row)
 
 SELECT 'nan'::float8 / 'nan'::float8;
- ?column? 
+ ?column?
 ----------
       NaN
 (1 row)
 
 SELECT 'nan'::float8 / '0'::float8;
- ?column? 
+ ?column?
 ----------
       NaN
 (1 row)
 
 SELECT 'nan'::numeric::float8;
- float8 
+ float8
 --------
     NaN
 (1 row)
 
 SELECT * FROM FLOAT8_TBL;
-          f1          
+          f1
 ----------------------
                     0
                1004.3
@@ -184,7 +184,7 @@ SELECT * FROM FLOAT8_TBL;
 (5 rows)
 
 SELECT f.* FROM FLOAT8_TBL f WHERE f.f1 <> '1004.3';
-          f1          
+          f1
 ----------------------
                     0
                -34.84
@@ -193,13 +193,13 @@ SELECT f.* FROM FLOAT8_TBL f WHERE f.f1 <> '1004.3';
 (4 rows)
 
 SELECT f.* FROM FLOAT8_TBL f WHERE f.f1 = '1004.3';
-   f1   
+   f1
 --------
  1004.3
 (1 row)
 
 SELECT f.* FROM FLOAT8_TBL f WHERE '1004.3' > f.f1;
-          f1          
+          f1
 ----------------------
                     0
                -34.84
@@ -207,7 +207,7 @@ SELECT f.* FROM FLOAT8_TBL f WHERE '1004.3' > f.f1;
 (3 rows)
 
 SELECT f.* FROM FLOAT8_TBL f WHERE  f.f1 < '1004.3';
-          f1          
+          f1
 ----------------------
                     0
                -34.84
@@ -215,7 +215,7 @@ SELECT f.* FROM FLOAT8_TBL f WHERE  f.f1 < '1004.3';
 (3 rows)
 
 SELECT f.* FROM FLOAT8_TBL f WHERE '1004.3' >= f.f1;
-          f1          
+          f1
 ----------------------
                     0
                1004.3
@@ -224,7 +224,7 @@ SELECT f.* FROM FLOAT8_TBL f WHERE '1004.3' >= f.f1;
 (4 rows)
 
 SELECT f.* FROM FLOAT8_TBL f WHERE  f.f1 <= '1004.3';
-          f1          
+          f1
 ----------------------
                     0
                1004.3
@@ -235,7 +235,7 @@ SELECT f.* FROM FLOAT8_TBL f WHERE  f.f1 <= '1004.3';
 SELECT f.f1, f.f1 * '-10' AS x
    FROM FLOAT8_TBL f
    WHERE f.f1 > '0.0';
-          f1          |           x           
+          f1          |           x
 ----------------------+-----------------------
                1004.3 |                -10043
  1.2345678901234e+200 | -1.2345678901234e+201
@@ -245,7 +245,7 @@ SELECT f.f1, f.f1 * '-10' AS x
 SELECT f.f1, f.f1 + '-10' AS x
    FROM FLOAT8_TBL f
    WHERE f.f1 > '0.0';
-          f1          |          x           
+          f1          |          x
 ----------------------+----------------------
                1004.3 |                994.3
  1.2345678901234e+200 | 1.2345678901234e+200
@@ -255,7 +255,7 @@ SELECT f.f1, f.f1 + '-10' AS x
 SELECT f.f1, f.f1 / '-10' AS x
    FROM FLOAT8_TBL f
    WHERE f.f1 > '0.0';
-          f1          |           x           
+          f1          |           x
 ----------------------+-----------------------
                1004.3 |   -100.42999999999999
  1.2345678901234e+200 | -1.2345678901234e+199
@@ -265,7 +265,7 @@ SELECT f.f1, f.f1 / '-10' AS x
 SELECT f.f1, f.f1 - '-10' AS x
    FROM FLOAT8_TBL f
    WHERE f.f1 > '0.0';
-          f1          |          x           
+          f1          |          x
 ----------------------+----------------------
                1004.3 |               1014.3
  1.2345678901234e+200 | 1.2345678901234e+200
@@ -274,7 +274,7 @@ SELECT f.f1, f.f1 - '-10' AS x
 
 SELECT f.f1 ^ '2.0' AS square_f1
    FROM FLOAT8_TBL f where f.f1 = '1004.3';
-     square_f1      
+     square_f1
 --------------------
  1008618.4899999999
 (1 row)
@@ -282,7 +282,7 @@ SELECT f.f1 ^ '2.0' AS square_f1
 -- absolute value
 SELECT f.f1, @f.f1 AS abs_f1
    FROM FLOAT8_TBL f;
-          f1          |        abs_f1        
+          f1          |        abs_f1
 ----------------------+----------------------
                     0 |                    0
                1004.3 |               1004.3
@@ -294,7 +294,7 @@ SELECT f.f1, @f.f1 AS abs_f1
 -- truncate
 SELECT f.f1, trunc(f.f1) AS trunc_f1
    FROM FLOAT8_TBL f;
-          f1          |       trunc_f1       
+          f1          |       trunc_f1
 ----------------------+----------------------
                     0 |                    0
                1004.3 |                 1004
@@ -306,7 +306,7 @@ SELECT f.f1, trunc(f.f1) AS trunc_f1
 -- round
 SELECT f.f1, round(f.f1) AS round_f1
    FROM FLOAT8_TBL f;
-          f1          |       round_f1       
+          f1          |       round_f1
 ----------------------+----------------------
                     0 |                    0
                1004.3 |                 1004
@@ -317,7 +317,7 @@ SELECT f.f1, round(f.f1) AS round_f1
 
 -- ceil / ceiling
 select ceil(f1) as ceil_f1 from float8_tbl f;
-       ceil_f1        
+       ceil_f1
 ----------------------
                     0
                  1005
@@ -327,7 +327,7 @@ select ceil(f1) as ceil_f1 from float8_tbl f;
 (5 rows)
 
 select ceiling(f1) as ceiling_f1 from float8_tbl f;
-      ceiling_f1      
+      ceiling_f1
 ----------------------
                     0
                  1005
@@ -338,7 +338,7 @@ select ceiling(f1) as ceiling_f1 from float8_tbl f;
 
 -- floor
 select floor(f1) as floor_f1 from float8_tbl f;
-       floor_f1       
+       floor_f1
 ----------------------
                     0
                  1004
@@ -349,7 +349,7 @@ select floor(f1) as floor_f1 from float8_tbl f;
 
 -- sign
 select sign(f1) as sign_f1 from float8_tbl f;
- sign_f1 
+ sign_f1
 ---------
        0
        1
@@ -362,13 +362,13 @@ select sign(f1) as sign_f1 from float8_tbl f;
 SET extra_float_digits = 0;
 -- square root
 SELECT sqrt(float8 '64') AS eight;
- eight 
+ eight
 -------
      8
 (1 row)
 
 SELECT |/ float8 '64' AS eight;
- eight 
+ eight
 -------
      8
 (1 row)
@@ -376,7 +376,7 @@ SELECT |/ float8 '64' AS eight;
 SELECT f.f1, |/f.f1 AS sqrt_f1
    FROM FLOAT8_TBL f
    WHERE f.f1 > '0.0';
-          f1          |        sqrt_f1        
+          f1          |        sqrt_f1
 ----------------------+-----------------------
                1004.3 |      31.6906926399535
  1.2345678901234e+200 | 1.11111110611109e+100
@@ -385,61 +385,61 @@ SELECT f.f1, |/f.f1 AS sqrt_f1
 
 -- power
 SELECT power(float8 '144', float8 '0.5');
- power 
+ power
 -------
     12
 (1 row)
 
 SELECT power(float8 'NaN', float8 '0.5');
- power 
+ power
 -------
    NaN
 (1 row)
 
 SELECT power(float8 '144', float8 'NaN');
- power 
+ power
 -------
    NaN
 (1 row)
 
 SELECT power(float8 'NaN', float8 'NaN');
- power 
+ power
 -------
    NaN
 (1 row)
 
 SELECT power(float8 '-1', float8 'NaN');
- power 
+ power
 -------
    NaN
 (1 row)
 
 SELECT power(float8 '1', float8 'NaN');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 'NaN', float8 '0');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 'inf', float8 '0');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 '-inf', float8 '0');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 '0', float8 'inf');
- power 
+ power
 -------
      0
 (1 row)
@@ -447,97 +447,97 @@ SELECT power(float8 '0', float8 'inf');
 SELECT power(float8 '0', float8 '-inf');
 ERROR:  zero raised to a negative power is undefined
 SELECT power(float8 '1', float8 'inf');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 '1', float8 '-inf');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 '-1', float8 'inf');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 '-1', float8 '-inf');
- power 
+ power
 -------
      1
 (1 row)
 
 SELECT power(float8 '0.1', float8 'inf');
- power 
+ power
 -------
      0
 (1 row)
 
 SELECT power(float8 '-0.1', float8 'inf');
- power 
+ power
 -------
      0
 (1 row)
 
 SELECT power(float8 '1.1', float8 'inf');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 '-1.1', float8 'inf');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 '0.1', float8 '-inf');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 '-0.1', float8 '-inf');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 '1.1', float8 '-inf');
- power 
+ power
 -------
      0
 (1 row)
 
 SELECT power(float8 '-1.1', float8 '-inf');
- power 
+ power
 -------
      0
 (1 row)
 
 SELECT power(float8 'inf', float8 '-2');
- power 
+ power
 -------
      0
 (1 row)
 
 SELECT power(float8 'inf', float8 '2');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 'inf', float8 'inf');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 'inf', float8 '-inf');
- power 
+ power
 -------
      0
 (1 row)
@@ -545,25 +545,25 @@ SELECT power(float8 'inf', float8 '-inf');
 -- Intel's icc misoptimizes the code that controls the sign of this result,
 -- even with -mp1.  Pending a fix for that, only test for "is it zero".
 SELECT power(float8 '-inf', float8 '-2') = '0';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT power(float8 '-inf', float8 '-3');
- power 
+ power
 -------
     -0
 (1 row)
 
 SELECT power(float8 '-inf', float8 '2');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 '-inf', float8 '3');
-   power   
+   power
 -----------
  -Infinity
 (1 row)
@@ -571,13 +571,13 @@ SELECT power(float8 '-inf', float8 '3');
 SELECT power(float8 '-inf', float8 '3.5');
 ERROR:  a negative number raised to a non-integer power yields a complex result
 SELECT power(float8 '-inf', float8 'inf');
-  power   
+  power
 ----------
  Infinity
 (1 row)
 
 SELECT power(float8 '-inf', float8 '-inf');
- power 
+ power
 -------
      0
 (1 row)
@@ -586,7 +586,7 @@ SELECT power(float8 '-inf', float8 '-inf');
 SELECT f.f1, exp(ln(f.f1)) AS exp_ln_f1
    FROM FLOAT8_TBL f
    WHERE f.f1 > '0.0';
-          f1          |       exp_ln_f1       
+          f1          |       exp_ln_f1
 ----------------------+-----------------------
                1004.3 |                1004.3
  1.2345678901234e+200 | 1.23456789012338e+200
@@ -595,20 +595,20 @@ SELECT f.f1, exp(ln(f.f1)) AS exp_ln_f1
 
 -- check edge cases for exp
 SELECT exp('inf'::float8), exp('-inf'::float8), exp('nan'::float8);
-   exp    | exp | exp 
+   exp    | exp | exp
 ----------+-----+-----
  Infinity |   0 | NaN
 (1 row)
 
 -- cube root
 SELECT ||/ float8 '27' AS three;
- three 
+ three
 -------
      3
 (1 row)
 
 SELECT f.f1, ||/f.f1 AS cbrt_f1 FROM FLOAT8_TBL f;
-          f1          |       cbrt_f1        
+          f1          |       cbrt_f1
 ----------------------+----------------------
                     0 |                    0
                1004.3 |      10.014312837827
@@ -618,7 +618,7 @@ SELECT f.f1, ||/f.f1 AS cbrt_f1 FROM FLOAT8_TBL f;
 (5 rows)
 
 SELECT * FROM FLOAT8_TBL;
-          f1          
+          f1
 ----------------------
                     0
                1004.3
@@ -635,7 +635,7 @@ ERROR:  value out of range: overflow
 SELECT f.f1 ^ '1e200' from FLOAT8_TBL f;
 ERROR:  value out of range: overflow
 SELECT 0 ^ 0 + 0 ^ 1 + 0 ^ 0.0 + 0 ^ 0.5;
- ?column? 
+ ?column?
 ----------
         2
 (1 row)
@@ -649,7 +649,7 @@ ERROR:  value out of range: underflow
 SELECT f.f1 / '0.0' from FLOAT8_TBL f;
 ERROR:  division by zero
 SELECT * FROM FLOAT8_TBL;
-          f1           
+          f1
 -----------------------
                      0
                 -34.84
@@ -662,110 +662,110 @@ SELECT * FROM FLOAT8_TBL;
 -- we run these with extra_float_digits = 0 too, since different platforms
 -- tend to produce results that vary in the last place.
 SELECT sinh(float8 '1');
-      sinh       
+      sinh
 -----------------
  1.1752011936438
 (1 row)
 
 SELECT cosh(float8 '1');
-       cosh       
+       cosh
 ------------------
  1.54308063481524
 (1 row)
 
 SELECT tanh(float8 '1');
-       tanh        
+       tanh
 -------------------
  0.761594155955765
 (1 row)
 
 SELECT asinh(float8 '1');
-       asinh       
+       asinh
 -------------------
  0.881373587019543
 (1 row)
 
 SELECT acosh(float8 '2');
-      acosh       
+      acosh
 ------------------
  1.31695789692482
 (1 row)
 
 SELECT atanh(float8 '0.5');
-       atanh       
+       atanh
 -------------------
  0.549306144334055
 (1 row)
 
 -- test Inf/NaN cases for hyperbolic functions
 SELECT sinh(float8 'infinity');
-   sinh   
+   sinh
 ----------
  Infinity
 (1 row)
 
 SELECT sinh(float8 '-infinity');
-   sinh    
+   sinh
 -----------
  -Infinity
 (1 row)
 
 SELECT sinh(float8 'nan');
- sinh 
+ sinh
 ------
   NaN
 (1 row)
 
 SELECT cosh(float8 'infinity');
-   cosh   
+   cosh
 ----------
  Infinity
 (1 row)
 
 SELECT cosh(float8 '-infinity');
-   cosh   
+   cosh
 ----------
  Infinity
 (1 row)
 
 SELECT cosh(float8 'nan');
- cosh 
+ cosh
 ------
   NaN
 (1 row)
 
 SELECT tanh(float8 'infinity');
- tanh 
+ tanh
 ------
     1
 (1 row)
 
 SELECT tanh(float8 '-infinity');
- tanh 
+ tanh
 ------
    -1
 (1 row)
 
 SELECT tanh(float8 'nan');
- tanh 
+ tanh
 ------
   NaN
 (1 row)
 
 SELECT asinh(float8 'infinity');
-  asinh   
+  asinh
 ----------
  Infinity
 (1 row)
 
 SELECT asinh(float8 '-infinity');
-   asinh   
+   asinh
 -----------
  -Infinity
 (1 row)
 
 SELECT asinh(float8 'nan');
- asinh 
+ asinh
 -------
    NaN
 (1 row)
@@ -775,7 +775,7 @@ SELECT asinh(float8 'nan');
 SELECT acosh(float8 '-infinity');
 ERROR:  input is out of range
 SELECT acosh(float8 'nan');
- acosh 
+ acosh
 -------
    NaN
 (1 row)
@@ -785,7 +785,7 @@ ERROR:  input is out of range
 SELECT atanh(float8 '-infinity');
 ERROR:  input is out of range
 SELECT atanh(float8 'nan');
- atanh 
+ atanh
 -------
    NaN
 (1 row)
@@ -803,7 +803,7 @@ FROM (VALUES (float8 '-infinity'),
       (1.2e-17), (2.3e-13), (1.2e-9),
       (0.45), (1.1), (2.1), (3.4), (6), (28),
       (float8 'infinity'), (float8 'nan')) AS t(x);
-     x     |         erf          |        erfc         
+     x     |         erf          |        erfc
 -----------+----------------------+---------------------
  -Infinity |                   -1 |                   2
        -28 |                   -1 |                   2
@@ -850,7 +850,7 @@ LINE 1: INSERT INTO FLOAT8_TBL(f1) VALUES ('-10e-400');
 DROP TABLE FLOAT8_TBL;
 -- Check the float8 values exported for use by other tests
 SELECT * FROM FLOAT8_TBL;
-          f1           
+          f1
 -----------------------
                      0
                 -34.84
@@ -861,7 +861,7 @@ SELECT * FROM FLOAT8_TBL;
 
 -- test edge-case coercions to integer
 SELECT '32767.4'::float8::int2;
- int2  
+ int2
 -------
  32767
 (1 row)
@@ -869,7 +869,7 @@ SELECT '32767.4'::float8::int2;
 SELECT '32767.6'::float8::int2;
 ERROR:  smallint out of range
 SELECT '-32768.4'::float8::int2;
-  int2  
+  int2
 --------
  -32768
 (1 row)
@@ -877,7 +877,7 @@ SELECT '-32768.4'::float8::int2;
 SELECT '-32768.6'::float8::int2;
 ERROR:  smallint out of range
 SELECT '2147483647.4'::float8::int4;
-    int4    
+    int4
 ------------
  2147483647
 (1 row)
@@ -885,7 +885,7 @@ SELECT '2147483647.4'::float8::int4;
 SELECT '2147483647.6'::float8::int4;
 ERROR:  integer out of range
 SELECT '-2147483648.4'::float8::int4;
-    int4     
+    int4
 -------------
  -2147483648
 (1 row)
@@ -893,7 +893,7 @@ SELECT '-2147483648.4'::float8::int4;
 SELECT '-2147483648.6'::float8::int4;
 ERROR:  integer out of range
 SELECT '9223372036854773760'::float8::int8;
-        int8         
+        int8
 ---------------------
  9223372036854773760
 (1 row)
@@ -901,7 +901,7 @@ SELECT '9223372036854773760'::float8::int8;
 SELECT '9223372036854775807'::float8::int8;
 ERROR:  bigint out of range
 SELECT '-9223372036854775808.5'::float8::int8;
-         int8         
+         int8
 ----------------------
  -9223372036854775808
 (1 row)
@@ -914,7 +914,7 @@ SELECT x,
        sind(x) IN (-1,-0.5,0,0.5,1) AS sind_exact
 FROM (VALUES (0), (30), (90), (150), (180),
       (210), (270), (330), (360)) AS t(x);
-  x  | sind | sind_exact 
+  x  | sind | sind_exact
 -----+------+------------
    0 |    0 | t
   30 |  0.5 | t
@@ -932,7 +932,7 @@ SELECT x,
        cosd(x) IN (-1,-0.5,0,0.5,1) AS cosd_exact
 FROM (VALUES (0), (60), (90), (120), (180),
       (240), (270), (300), (360)) AS t(x);
-  x  | cosd | cosd_exact 
+  x  | cosd | cosd_exact
 -----+------+------------
    0 |    1 | t
   60 |  0.5 | t
@@ -954,7 +954,7 @@ SELECT x,
                    1,'Infinity'::float8) AS cotd_exact
 FROM (VALUES (0), (45), (90), (135), (180),
       (225), (270), (315), (360)) AS t(x);
-  x  |   tand    | tand_exact |   cotd    | cotd_exact 
+  x  |   tand    | tand_exact |   cotd    | cotd_exact
 -----+-----------+------------+-----------+------------
    0 |         0 | t          |  Infinity | t
   45 |         1 | t          |         1 | t
@@ -973,7 +973,7 @@ SELECT x,
        acosd(x),
        acosd(x) IN (0,60,90,120,180) AS acosd_exact
 FROM (VALUES (-1), (-0.5), (0), (0.5), (1)) AS t(x);
-  x   | asind | asind_exact | acosd | acosd_exact 
+  x   | asind | asind_exact | acosd | acosd_exact
 ------+-------+-------------+-------+-------------
    -1 |   -90 | t           |   180 | t
  -0.5 |   -30 | t           |   120 | t
@@ -987,7 +987,7 @@ SELECT x,
        atand(x) IN (-90,-45,0,45,90) AS atand_exact
 FROM (VALUES ('-Infinity'::float8), (-1), (0), (1),
       ('Infinity'::float8)) AS t(x);
-     x     | atand | atand_exact 
+     x     | atand | atand_exact
 -----------+-------+-------------
  -Infinity |   -90 | t
         -1 |   -45 | t
@@ -1001,7 +1001,7 @@ SELECT x, y,
        atan2d(y, x) IN (-90,0,90,180) AS atan2d_exact
 FROM (SELECT 10*cosd(a), 10*sind(a)
       FROM generate_series(0, 360, 90) AS t(a)) AS t(x,y);
-  x  |  y  | atan2d | atan2d_exact 
+  x  |  y  | atan2d | atan2d_exact
 -----+-----+--------+--------------
   10 |   0 |      0 | t
    0 |  10 |     90 | t
@@ -1051,7 +1051,7 @@ select float8send(flt) as ibits,
   from (select bits::bigint::xfloat8::float8 as flt
           from testdata
 	offset 0) s;
-       ibits        |           flt           
+       ibits        |           flt
 --------------------+-------------------------
  \x0000000000000001 |                  5e-324
  \x0000000000000002 |                  1e-323
@@ -1220,7 +1220,7 @@ select float8send(flt) as ibits,
   from (select bits::bigint::xfloat8::float8 as flt
           from testdata
 	offset 0) s;
-       ibits        |           flt           |          r_flt          |       obits        | correct 
+       ibits        |           flt           |          r_flt          |       obits        | correct
 --------------------+-------------------------+-------------------------+--------------------+---------
  \x0000000000000000 |                       0 |                       0 | \x0000000000000000 | t
  \x0010000000000000 | 2.2250738585072014e-308 | 2.2250738585072014e-308 | \x0010000000000000 | t

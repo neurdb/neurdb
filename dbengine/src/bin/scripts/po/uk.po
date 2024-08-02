@@ -1207,4 +1207,3 @@ msgid "\n"
 "Read the description of the SQL command VACUUM for details.\n"
 msgstr "\n"
 "Для деталей читайте опис команди SQL VACUUM.\n"
-

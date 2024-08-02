@@ -30,19 +30,19 @@ except NameError as e:
 	return True
 $$ LANGUAGE plpython3u;
 SELECT test_param_names0(2,7);
- test_param_names0 
+ test_param_names0
 -------------------
                  9
 (1 row)
 
 SELECT test_param_names1(1,'text');
- test_param_names1 
+ test_param_names1
 -------------------
  t
 (1 row)
 
 SELECT test_param_names2(users) from users;
-                           test_param_names2                           
+                           test_param_names2
 -----------------------------------------------------------------------
  {'fname': 'jane', 'lname': 'doe', 'userid': 1, 'username': 'j_doe'}
  {'fname': 'john', 'lname': 'doe', 'userid': 2, 'username': 'johnd'}
@@ -51,14 +51,13 @@ SELECT test_param_names2(users) from users;
 (4 rows)
 
 SELECT test_param_names2(NULL);
- test_param_names2 
+ test_param_names2
 -------------------
  None
 (1 row)
 
 SELECT test_param_names3(1);
- test_param_names3 
+ test_param_names3
 -------------------
  t
 (1 row)
-

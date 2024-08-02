@@ -16,7 +16,7 @@
 --
 -- This is to label the results files with blocksize:
 SHOW block_size;
- block_size 
+ block_size
 ------------
  8192
 (1 row)
@@ -31,10 +31,9 @@ SELECT blkno,
     page_checksum(decode(repeat('e6d6', :block_size / 2), 'hex'), blkno) AS checksum_e6d6,
     page_checksum(decode(repeat('4a5e', :block_size / 2), 'hex'), blkno) AS checksum_4a5e
   FROM generate_series(0, 100, 50) AS a (blkno);
- blkno | checksum_01 | checksum_04 | checksum_ff | checksum_abcd | checksum_e6d6 | checksum_4a5e 
+ blkno | checksum_01 | checksum_04 | checksum_ff | checksum_abcd | checksum_e6d6 | checksum_4a5e
 -------+-------------+-------------+-------------+---------------+---------------+---------------
      0 |        1175 |       28338 |        3612 |        -30781 |        -16269 |        -27377
     50 |        1225 |       28352 |        3598 |        -30795 |        -16251 |        -27391
    100 |        1139 |       28438 |        3648 |        -30881 |        -16305 |        -27349
 (3 rows)
-

@@ -6,7 +6,7 @@ CREATE EXTENSION cube;
 SELECT amname, opcname
 FROM pg_opclass opc LEFT JOIN pg_am am ON am.oid = opcmethod
 WHERE opc.oid >= 16384 AND NOT amvalidate(opc.oid);
- amname | opcname 
+ amname | opcname
 --------+---------
 (0 rows)
 
@@ -15,171 +15,171 @@ WHERE opc.oid >= 16384 AND NOT amvalidate(opc.oid);
 --
 -- Any number (a one-dimensional point)
 SELECT '1'::cube AS cube;
- cube 
+ cube
 ------
  (1)
 (1 row)
 
 SELECT '-1'::cube AS cube;
- cube 
+ cube
 ------
  (-1)
 (1 row)
 
 SELECT '1.'::cube AS cube;
- cube 
+ cube
 ------
  (1)
 (1 row)
 
 SELECT '-1.'::cube AS cube;
- cube 
+ cube
 ------
  (-1)
 (1 row)
 
 SELECT '.1'::cube AS cube;
- cube  
+ cube
 -------
  (0.1)
 (1 row)
 
 SELECT '-.1'::cube AS cube;
-  cube  
+  cube
 --------
  (-0.1)
 (1 row)
 
 SELECT '1.0'::cube AS cube;
- cube 
+ cube
 ------
  (1)
 (1 row)
 
 SELECT '-1.0'::cube AS cube;
- cube 
+ cube
 ------
  (-1)
 (1 row)
 
 SELECT 'infinity'::cube AS cube;
-    cube    
+    cube
 ------------
  (Infinity)
 (1 row)
 
 SELECT '-infinity'::cube AS cube;
-    cube     
+    cube
 -------------
  (-Infinity)
 (1 row)
 
 SELECT 'NaN'::cube AS cube;
- cube  
+ cube
 -------
  (NaN)
 (1 row)
 
 SELECT '.1234567890123456'::cube AS cube;
-         cube         
+         cube
 ----------------------
  (0.1234567890123456)
 (1 row)
 
 SELECT '+.1234567890123456'::cube AS cube;
-         cube         
+         cube
 ----------------------
  (0.1234567890123456)
 (1 row)
 
 SELECT '-.1234567890123456'::cube AS cube;
-         cube          
+         cube
 -----------------------
  (-0.1234567890123456)
 (1 row)
 
 -- simple lists (points)
 SELECT '()'::cube AS cube;
- cube 
+ cube
 ------
  ()
 (1 row)
 
 SELECT '1,2'::cube AS cube;
-  cube  
+  cube
 --------
  (1, 2)
 (1 row)
 
 SELECT '(1,2)'::cube AS cube;
-  cube  
+  cube
 --------
  (1, 2)
 (1 row)
 
 SELECT '1,2,3,4,5'::cube AS cube;
-      cube       
+      cube
 -----------------
  (1, 2, 3, 4, 5)
 (1 row)
 
 SELECT '(1,2,3,4,5)'::cube AS cube;
-      cube       
+      cube
 -----------------
  (1, 2, 3, 4, 5)
 (1 row)
 
 -- double lists (cubes)
 SELECT '(),()'::cube AS cube;
- cube 
+ cube
 ------
  ()
 (1 row)
 
 SELECT '(0),(0)'::cube AS cube;
- cube 
+ cube
 ------
  (0)
 (1 row)
 
 SELECT '(0),(1)'::cube AS cube;
-  cube   
+  cube
 ---------
  (0),(1)
 (1 row)
 
 SELECT '[(0),(0)]'::cube AS cube;
- cube 
+ cube
 ------
  (0)
 (1 row)
 
 SELECT '[(0),(1)]'::cube AS cube;
-  cube   
+  cube
 ---------
  (0),(1)
 (1 row)
 
 SELECT '(0,0,0,0),(0,0,0,0)'::cube AS cube;
-     cube     
+     cube
 --------------
  (0, 0, 0, 0)
 (1 row)
 
 SELECT '(0,0,0,0),(1,0,0,0)'::cube AS cube;
-           cube            
+           cube
 ---------------------------
  (0, 0, 0, 0),(1, 0, 0, 0)
 (1 row)
 
 SELECT '[(0,0,0,0),(0,0,0,0)]'::cube AS cube;
-     cube     
+     cube
 --------------
  (0, 0, 0, 0)
 (1 row)
 
 SELECT '[(0,0,0,0),(1,0,0,0)]'::cube AS cube;
-           cube            
+           cube
 ---------------------------
  (0, 0, 0, 0),(1, 0, 0, 0)
 (1 row)
@@ -327,25 +327,25 @@ LINE 1: SELECT '-1e-700'::cube AS cube;
                ^
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('(1,2)', 'cube');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('[(1),]', 'cube');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT pg_input_is_valid('-1e-700', 'cube');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('-1e-700', 'cube');
-                       message                       | detail | hint | sql_error_code 
+                       message                       | detail | hint | sql_error_code
 -----------------------------------------------------+--------+------+----------------
  "-1e-700" is out of range for type double precision |        |      | 22003
 (1 row)
@@ -354,43 +354,43 @@ SELECT * FROM pg_input_error_info('-1e-700', 'cube');
 -- Testing building cubes from float8 values
 --
 SELECT cube(0::float8);
- cube 
+ cube
 ------
  (0)
 (1 row)
 
 SELECT cube(1::float8);
- cube 
+ cube
 ------
  (1)
 (1 row)
 
 SELECT cube(1,2);
-  cube   
+  cube
 ---------
  (1),(2)
 (1 row)
 
 SELECT cube(cube(1,2),3);
-     cube      
+     cube
 ---------------
  (1, 3),(2, 3)
 (1 row)
 
 SELECT cube(cube(1,2),3,4);
-     cube      
+     cube
 ---------------
  (1, 3),(2, 4)
 (1 row)
 
 SELECT cube(cube(cube(1,2),3,4),5);
-        cube         
+        cube
 ---------------------
  (1, 3, 5),(2, 4, 5)
 (1 row)
 
 SELECT cube(cube(cube(1,2),3,4),5,6);
-        cube         
+        cube
 ---------------------
  (1, 3, 5),(2, 4, 6)
 (1 row)
@@ -399,7 +399,7 @@ SELECT cube(cube(cube(1,2),3,4),5,6);
 -- Test that the text -> cube cast was installed.
 --
 SELECT '(0)'::text::cube;
- cube 
+ cube
 ------
  (0)
 (1 row)
@@ -408,7 +408,7 @@ SELECT '(0)'::text::cube;
 -- Test the float[] -> cube cast
 --
 SELECT cube('{0,1,2}'::float[], '{3,4,5}'::float[]);
-        cube         
+        cube
 ---------------------
  (0, 1, 2),(3, 4, 5)
 (1 row)
@@ -416,25 +416,25 @@ SELECT cube('{0,1,2}'::float[], '{3,4,5}'::float[]);
 SELECT cube('{0,1,2}'::float[], '{3}'::float[]);
 ERROR:  UR and LL arrays must be of same length
 SELECT cube(NULL::float[], '{3}'::float[]);
- cube 
+ cube
 ------
- 
+
 (1 row)
 
 SELECT cube('{0,1,2}'::float[]);
-   cube    
+   cube
 -----------
  (0, 1, 2)
 (1 row)
 
 SELECT cube_subset(cube('(1,3,5),(6,7,8)'), ARRAY[3,2,1,1]);
-        cube_subset        
+        cube_subset
 ---------------------------
  (5, 3, 1, 1),(8, 7, 6, 6)
 (1 row)
 
 SELECT cube_subset(cube('(1,3,5),(1,3,5)'), ARRAY[3,2,1,1]);
- cube_subset  
+ cube_subset
 --------------
  (5, 3, 1, 1)
 (1 row)
@@ -445,7 +445,7 @@ SELECT cube_subset(cube('(6,7,8),(6,7,8)'), ARRAY[4,0]);
 ERROR:  Index out of bounds
 -- test for limits: this should pass
 SELECT cube_subset(cube('(6,7,8),(6,7,8)'), array(SELECT 1 as a FROM generate_series(1,100)));
-                                                                                                                                                 cube_subset                                                                                                                                                  
+                                                                                                                                                 cube_subset
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  (6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6)
 (1 row)
@@ -458,67 +458,67 @@ DETAIL:  A cube cannot have more than 100 dimensions.
 -- Test point processing
 --
 SELECT cube('(1,2),(1,2)'); -- cube_in
-  cube  
+  cube
 --------
  (1, 2)
 (1 row)
 
 SELECT cube('{0,1,2}'::float[], '{0,1,2}'::float[]); -- cube_a_f8_f8
-   cube    
+   cube
 -----------
  (0, 1, 2)
 (1 row)
 
 SELECT cube('{5,6,7,8}'::float[]); -- cube_a_f8
-     cube     
+     cube
 --------------
  (5, 6, 7, 8)
 (1 row)
 
 SELECT cube(1.37); -- cube_f8
-  cube  
+  cube
 --------
  (1.37)
 (1 row)
 
 SELECT cube(1.37, 1.37); -- cube_f8_f8
-  cube  
+  cube
 --------
  (1.37)
 (1 row)
 
 SELECT cube(cube(1,1), 42); -- cube_c_f8
-  cube   
+  cube
 ---------
  (1, 42)
 (1 row)
 
 SELECT cube(cube(1,2), 42); -- cube_c_f8
-      cube       
+      cube
 -----------------
  (1, 42),(2, 42)
 (1 row)
 
 SELECT cube(cube(1,1), 42, 42); -- cube_c_f8_f8
-  cube   
+  cube
 ---------
  (1, 42)
 (1 row)
 
 SELECT cube(cube(1,1), 42, 24); -- cube_c_f8_f8
-      cube       
+      cube
 -----------------
  (1, 42),(1, 24)
 (1 row)
 
 SELECT cube(cube(1,2), 42, 42); -- cube_c_f8_f8
-      cube       
+      cube
 -----------------
  (1, 42),(2, 42)
 (1 row)
 
 SELECT cube(cube(1,2), 42, 24); -- cube_c_f8_f8
-      cube       
+      cube
 -----------------
  (1, 42),(2, 24)
 (1 row)
@@ -547,13 +547,13 @@ DETAIL:  A cube cannot have more than 100 dimensions.
 -- extend cube beyond limit
 -- this should work
 select cube(array(SELECT 0 as a FROM generate_series(1,100)));
-                                                                                                                                                     cube                                                                                                                                                     
+                                                                                                                                                     cube
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 (1 row)
 
 select cube(array(SELECT 0 as a FROM generate_series(1,100)),array(SELECT 0 as a FROM generate_series(1,100)));
-                                                                                                                                                     cube                                                                                                                                                     
+                                                                                                                                                     cube
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 (1 row)
@@ -571,37 +571,37 @@ DETAIL:  A cube cannot have more than 100 dimensions.
 -- equality/inequality:
 --
 SELECT '24, 33.20'::cube    =  '24, 33.20'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '24, 33.20'::cube    != '24, 33.20'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '24, 33.20'::cube    =  '24, 33.21'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '24, 33.20'::cube    != '24, 33.21'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube  =  '(2,0,0,0,0),(3,1,0,0,0)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube  =  '(2,0,0,0,0),(3,1,0,0,1)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
@@ -610,97 +610,97 @@ SELECT '(2,0),(3,1)'::cube  =  '(2,0,0,0,0),(3,1,0,0,1)'::cube AS bool;
 -- (these operators are not useful for anything but ordering)
 --
 SELECT '1'::cube   > '2'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::cube   < '2'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1,1'::cube > '1,2'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1,1'::cube < '1,2'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube             > '(2,0,0,0,0),(3,1,0,0,1)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube             < '(2,0,0,0,0),(3,1,0,0,1)'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube             > '(2,0,0,0,1),(3,1,0,0,0)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube             < '(2,0,0,0,1),(3,1,0,0,0)'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube             > '(2,0,0,0,0),(3,1,0,0,0)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(2,0),(3,1)'::cube             < '(2,0,0,0,0),(3,1,0,0,0)'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0,0,0,0),(3,1,0,0,1)'::cube > '(2,0),(3,1)'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0,0,0,0),(3,1,0,0,1)'::cube < '(2,0),(3,1)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(2,0,0,0,1),(3,1,0,0,0)'::cube > '(2,0),(3,1)'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0,0,0,1),(3,1,0,0,0)'::cube < '(2,0),(3,1)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(2,0,0,0,0),(3,1,0,0,0)'::cube > '(2,0),(3,1)'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(2,0,0,0,0),(3,1,0,0,0)'::cube < '(2,0),(3,1)'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
@@ -708,49 +708,49 @@ SELECT '(2,0,0,0,0),(3,1,0,0,0)'::cube < '(2,0),(3,1)'::cube AS bool;
 -- "overlap"
 --
 SELECT '1'::cube && '1'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::cube && '2'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '[(-1,-1,-1),(1,1,1)]'::cube && '0'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '[(-1,-1,-1),(1,1,1)]'::cube && '1'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '[(-1,-1,-1),(1,1,1)]'::cube && '1,1,1'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '[(-1,-1,-1),(1,1,1)]'::cube && '[(1,1,1),(2,2,2)]'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '[(-1,-1,-1),(1,1,1)]'::cube && '[(1,1),(2,2)]'::cube AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '[(-1,-1,-1),(1,1,1)]'::cube && '[(2,1,1),(2,2,2)]'::cube AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
@@ -759,91 +759,91 @@ SELECT '[(-1,-1,-1),(1,1,1)]'::cube && '[(2,1,1),(2,2,2)]'::cube AS bool;
 -- the right operand):
 --
 SELECT '0'::cube                 <@ '0'::cube                        AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0,0,0'::cube             <@ '0,0,0'::cube                    AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0,0'::cube               <@ '0,0,1'::cube                    AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0,0,0'::cube             <@ '0,0,1'::cube                    AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1,0,0'::cube             <@ '0,0,1'::cube                    AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(1,0,0),(0,0,1)'::cube   <@ '(1,0,0),(0,0,1)'::cube          AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(1,0,0),(0,0,1)'::cube   <@ '(-1,-1,-1),(1,1,1)'::cube       AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(1,0,0),(0,0,1)'::cube   <@ '(-1,-1,-1,-1),(1,1,1,1)'::cube  AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0'::cube                 <@ '(-1),(1)'::cube                 AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::cube                 <@ '(-1),(1)'::cube                 AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '-1'::cube                <@ '(-1),(1)'::cube                 AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1),(1)'::cube          <@ '(-1),(1)'::cube                 AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1),(1)'::cube          <@ '(-1,-1),(1,1)'::cube            AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-2),(1)'::cube          <@ '(-1),(1)'::cube                 AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(-2),(1)'::cube          <@ '(-1,-1),(1,1)'::cube            AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
@@ -852,91 +852,91 @@ SELECT '(-2),(1)'::cube          <@ '(-1,-1),(1,1)'::cube            AS bool;
 -- right operand)
 --
 SELECT '0'::cube                        @> '0'::cube                 AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0,0,0'::cube                    @> '0,0,0'::cube             AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0,0,1'::cube                    @> '0,0'::cube               AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0,0,1'::cube                    @> '0,0,0'::cube             AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0,0,1'::cube                    @> '1,0,0'::cube             AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(1,0,0),(0,0,1)'::cube          @> '(1,0,0),(0,0,1)'::cube   AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1,-1,-1),(1,1,1)'::cube       @> '(1,0,0),(0,0,1)'::cube   AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1,-1,-1,-1),(1,1,1,1)'::cube  @> '(1,0,0),(0,0,1)'::cube   AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1),(1)'::cube                 @> '0'::cube                 AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1),(1)'::cube                 @> '1'::cube                 AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1),(1)'::cube                 @> '-1'::cube                AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1),(1)'::cube                 @> '(-1),(1)'::cube          AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1,-1),(1,1)'::cube            @> '(-1),(1)'::cube          AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '(-1),(1)'::cube                 @> '(-2),(1)'::cube          AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '(-1,-1),(1,1)'::cube            @> '(-2),(1)'::cube          AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
@@ -944,31 +944,31 @@ SELECT '(-1,-1),(1,1)'::cube            @> '(-2),(1)'::cube          AS bool;
 -- Test of distance function
 --
 SELECT cube_distance('(0)'::cube,'(2,2,2,2)'::cube);
- cube_distance 
+ cube_distance
 ---------------
              4
 (1 row)
 
 SELECT cube_distance('(0)'::cube,'(.3,.4)'::cube);
- cube_distance 
+ cube_distance
 ---------------
            0.5
 (1 row)
 
 SELECT cube_distance('(2,3,4)'::cube,'(2,3,4)'::cube);
- cube_distance 
+ cube_distance
 ---------------
              0
 (1 row)
 
 SELECT cube_distance('(42,42,42,42)'::cube,'(137,137,137,137)'::cube);
- cube_distance 
+ cube_distance
 ---------------
            190
 (1 row)
 
 SELECT cube_distance('(42,42,42)'::cube,'(137,137)'::cube);
-   cube_distance    
+   cube_distance
 --------------------
  140.76221083799445
 (1 row)
@@ -976,45 +976,45 @@ SELECT cube_distance('(42,42,42)'::cube,'(137,137)'::cube);
 -- Test of cube function (text to cube)
 --
 SELECT cube('(1,1.2)'::text);
-   cube   
+   cube
 ----------
  (1, 1.2)
 (1 row)
 
 SELECT cube(NULL);
- cube 
+ cube
 ------
- 
+
 (1 row)
 
 -- Test of cube_dim function (dimensions stored in cube)
 --
 SELECT cube_dim('(0)'::cube);
- cube_dim 
+ cube_dim
 ----------
         1
 (1 row)
 
 SELECT cube_dim('(0,0)'::cube);
- cube_dim 
+ cube_dim
 ----------
         2
 (1 row)
 
 SELECT cube_dim('(0,0,0)'::cube);
- cube_dim 
+ cube_dim
 ----------
         3
 (1 row)
 
 SELECT cube_dim('(42,42,42),(42,42,42)'::cube);
- cube_dim 
+ cube_dim
 ----------
         3
 (1 row)
 
 SELECT cube_dim('(4,8,15,16,23),(4,8,15,16,23)'::cube);
- cube_dim 
+ cube_dim
 ----------
         5
 (1 row)
@@ -1022,55 +1022,55 @@ SELECT cube_dim('(4,8,15,16,23),(4,8,15,16,23)'::cube);
 -- Test of cube_ll_coord function (retrieves LL coordinate values)
 --
 SELECT cube_ll_coord('(-1,1),(2,-2)'::cube, 1);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
             -1
 (1 row)
 
 SELECT cube_ll_coord('(-1,1),(2,-2)'::cube, 2);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
             -2
 (1 row)
 
 SELECT cube_ll_coord('(-1,1),(2,-2)'::cube, 3);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
              0
 (1 row)
 
 SELECT cube_ll_coord('(1,2),(1,2)'::cube, 1);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
              1
 (1 row)
 
 SELECT cube_ll_coord('(1,2),(1,2)'::cube, 2);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
              2
 (1 row)
 
 SELECT cube_ll_coord('(1,2),(1,2)'::cube, 3);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
              0
 (1 row)
 
 SELECT cube_ll_coord('(42,137)'::cube, 1);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
             42
 (1 row)
 
 SELECT cube_ll_coord('(42,137)'::cube, 2);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
            137
 (1 row)
 
 SELECT cube_ll_coord('(42,137)'::cube, 3);
- cube_ll_coord 
+ cube_ll_coord
 ---------------
              0
 (1 row)
@@ -1078,55 +1078,55 @@ SELECT cube_ll_coord('(42,137)'::cube, 3);
 -- Test of cube_ur_coord function (retrieves UR coordinate values)
 --
 SELECT cube_ur_coord('(-1,1),(2,-2)'::cube, 1);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
              2
 (1 row)
 
 SELECT cube_ur_coord('(-1,1),(2,-2)'::cube, 2);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
              1
 (1 row)
 
 SELECT cube_ur_coord('(-1,1),(2,-2)'::cube, 3);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
              0
 (1 row)
 
 SELECT cube_ur_coord('(1,2),(1,2)'::cube, 1);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
              1
 (1 row)
 
 SELECT cube_ur_coord('(1,2),(1,2)'::cube, 2);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
              2
 (1 row)
 
 SELECT cube_ur_coord('(1,2),(1,2)'::cube, 3);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
              0
 (1 row)
 
 SELECT cube_ur_coord('(42,137)'::cube, 1);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
             42
 (1 row)
 
 SELECT cube_ur_coord('(42,137)'::cube, 2);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
            137
 (1 row)
 
 SELECT cube_ur_coord('(42,137)'::cube, 3);
- cube_ur_coord 
+ cube_ur_coord
 ---------------
              0
 (1 row)
@@ -1134,37 +1134,37 @@ SELECT cube_ur_coord('(42,137)'::cube, 3);
 -- Test of cube_is_point
 --
 SELECT cube_is_point('(0)'::cube);
- cube_is_point 
+ cube_is_point
 ---------------
  t
 (1 row)
 
 SELECT cube_is_point('(0,1,2)'::cube);
- cube_is_point 
+ cube_is_point
 ---------------
  t
 (1 row)
 
 SELECT cube_is_point('(0,1,2),(0,1,2)'::cube);
- cube_is_point 
+ cube_is_point
 ---------------
  t
 (1 row)
 
 SELECT cube_is_point('(0,1,2),(-1,1,2)'::cube);
- cube_is_point 
+ cube_is_point
 ---------------
  f
 (1 row)
 
 SELECT cube_is_point('(0,1,2),(0,-1,2)'::cube);
- cube_is_point 
+ cube_is_point
 ---------------
  f
 (1 row)
 
 SELECT cube_is_point('(0,1,2),(0,1,-2)'::cube);
- cube_is_point 
+ cube_is_point
 ---------------
  f
 (1 row)
@@ -1172,121 +1172,121 @@ SELECT cube_is_point('(0,1,2),(0,1,-2)'::cube);
 -- Test of cube_enlarge (enlarging and shrinking cubes)
 --
 SELECT cube_enlarge('(0)'::cube, 0, 0);
- cube_enlarge 
+ cube_enlarge
 --------------
  (0)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, 0, 1);
- cube_enlarge 
+ cube_enlarge
 --------------
  (0)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, 0, 2);
- cube_enlarge 
+ cube_enlarge
 --------------
  (0)
 (1 row)
 
 SELECT cube_enlarge('(2),(-2)'::cube, 0, 4);
- cube_enlarge 
+ cube_enlarge
 --------------
  (-2),(2)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, 1, 0);
- cube_enlarge 
+ cube_enlarge
 --------------
  (-1),(1)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, 1, 1);
- cube_enlarge 
+ cube_enlarge
 --------------
  (-1),(1)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, 1, 2);
-  cube_enlarge   
+  cube_enlarge
 -----------------
  (-1, -1),(1, 1)
 (1 row)
 
 SELECT cube_enlarge('(2),(-2)'::cube, 1, 4);
-         cube_enlarge          
+         cube_enlarge
 -------------------------------
  (-3, -1, -1, -1),(3, 1, 1, 1)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, -1, 0);
- cube_enlarge 
+ cube_enlarge
 --------------
  (0)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, -1, 1);
- cube_enlarge 
+ cube_enlarge
 --------------
  (0)
 (1 row)
 
 SELECT cube_enlarge('(0)'::cube, -1, 2);
- cube_enlarge 
+ cube_enlarge
 --------------
  (0)
 (1 row)
 
 SELECT cube_enlarge('(2),(-2)'::cube, -1, 4);
- cube_enlarge 
+ cube_enlarge
 --------------
  (-1),(1)
 (1 row)
 
 SELECT cube_enlarge('(0,0,0)'::cube, 1, 0);
-      cube_enlarge      
+      cube_enlarge
 ------------------------
  (-1, -1, -1),(1, 1, 1)
 (1 row)
 
 SELECT cube_enlarge('(0,0,0)'::cube, 1, 2);
-      cube_enlarge      
+      cube_enlarge
 ------------------------
  (-1, -1, -1),(1, 1, 1)
 (1 row)
 
 SELECT cube_enlarge('(2,-2),(-3,7)'::cube, 1, 2);
-  cube_enlarge   
+  cube_enlarge
 -----------------
  (-4, -3),(3, 8)
 (1 row)
 
 SELECT cube_enlarge('(2,-2),(-3,7)'::cube, 3, 2);
-   cube_enlarge   
+   cube_enlarge
 ------------------
  (-6, -5),(5, 10)
 (1 row)
 
 SELECT cube_enlarge('(2,-2),(-3,7)'::cube, -1, 2);
-  cube_enlarge   
+  cube_enlarge
 -----------------
  (-2, -1),(1, 6)
 (1 row)
 
 SELECT cube_enlarge('(2,-2),(-3,7)'::cube, -3, 2);
-    cube_enlarge     
+    cube_enlarge
 ---------------------
  (-0.5, 1),(-0.5, 4)
 (1 row)
 
 SELECT cube_enlarge('(42,-23,-23),(42,23,23)'::cube, -23, 5);
- cube_enlarge 
+ cube_enlarge
 --------------
  (42, 0, 0)
 (1 row)
 
 SELECT cube_enlarge('(42,-23,-23),(42,23,23)'::cube, -24, 5);
- cube_enlarge 
+ cube_enlarge
 --------------
  (42, 0, 0)
 (1 row)
@@ -1294,31 +1294,31 @@ SELECT cube_enlarge('(42,-23,-23),(42,23,23)'::cube, -24, 5);
 -- Test of cube_union (MBR for two cubes)
 --
 SELECT cube_union('(1,2),(3,4)'::cube, '(5,6,7),(8,9,10)'::cube);
-      cube_union      
+      cube_union
 ----------------------
  (1, 2, 0),(8, 9, 10)
 (1 row)
 
 SELECT cube_union('(1,2)'::cube, '(4,2,0,0)'::cube);
-        cube_union         
+        cube_union
 ---------------------------
  (1, 2, 0, 0),(4, 2, 0, 0)
 (1 row)
 
 SELECT cube_union('(1,2),(1,2)'::cube, '(4,2),(4,2)'::cube);
-  cube_union   
+  cube_union
 ---------------
  (1, 2),(4, 2)
 (1 row)
 
 SELECT cube_union('(1,2),(1,2)'::cube, '(1,2),(1,2)'::cube);
- cube_union 
+ cube_union
 ------------
  (1, 2)
 (1 row)
 
 SELECT cube_union('(1,2),(1,2)'::cube, '(1,2,0),(1,2,0)'::cube);
- cube_union 
+ cube_union
 ------------
  (1, 2, 0)
 (1 row)
@@ -1326,43 +1326,43 @@ SELECT cube_union('(1,2),(1,2)'::cube, '(1,2,0),(1,2,0)'::cube);
 -- Test of cube_inter
 --
 SELECT cube_inter('(1,2),(10,11)'::cube, '(3,4), (16,15)'::cube); -- intersects
-   cube_inter    
+   cube_inter
 -----------------
  (3, 4),(10, 11)
 (1 row)
 
 SELECT cube_inter('(1,2),(10,11)'::cube, '(3,4), (6,5)'::cube); -- includes
-  cube_inter   
+  cube_inter
 ---------------
  (3, 4),(6, 5)
 (1 row)
 
 SELECT cube_inter('(1,2),(10,11)'::cube, '(13,14), (16,15)'::cube); -- no intersection
-    cube_inter     
+    cube_inter
 -------------------
  (13, 14),(10, 11)
 (1 row)
 
 SELECT cube_inter('(1,2),(10,11)'::cube, '(3,14), (16,15)'::cube); -- no intersection, but one dimension intersects
-    cube_inter    
+    cube_inter
 ------------------
  (3, 14),(10, 11)
 (1 row)
 
 SELECT cube_inter('(1,2),(10,11)'::cube, '(10,11), (16,15)'::cube); -- point intersection
- cube_inter 
+ cube_inter
 ------------
  (10, 11)
 (1 row)
 
 SELECT cube_inter('(1,2,3)'::cube, '(1,2,3)'::cube); -- point args
- cube_inter 
+ cube_inter
 ------------
  (1, 2, 3)
 (1 row)
 
 SELECT cube_inter('(1,2,3)'::cube, '(5,6,3)'::cube); -- point args
-     cube_inter      
+     cube_inter
 ---------------------
  (5, 6, 3),(1, 2, 3)
 (1 row)
@@ -1370,13 +1370,13 @@ SELECT cube_inter('(1,2,3)'::cube, '(5,6,3)'::cube); -- point args
 -- Test of cube_size
 --
 SELECT cube_size('(4,8),(15,16)'::cube);
- cube_size 
+ cube_size
 -----------
         88
 (1 row)
 
 SELECT cube_size('(42,137)'::cube);
- cube_size 
+ cube_size
 -----------
          0
 (1 row)
@@ -1385,76 +1385,76 @@ SELECT cube_size('(42,137)'::cube);
 --
 SET extra_float_digits = 0;
 SELECT cube_distance('(1,1)'::cube, '(4,5)'::cube);
- cube_distance 
+ cube_distance
 ---------------
              5
 (1 row)
 
 SELECT '(1,1)'::cube <-> '(4,5)'::cube as d_e;
- d_e 
+ d_e
 -----
    5
 (1 row)
 
 RESET extra_float_digits;
 SELECT distance_chebyshev('(1,1)'::cube, '(4,5)'::cube);
- distance_chebyshev 
+ distance_chebyshev
 --------------------
                   4
 (1 row)
 
 SELECT '(1,1)'::cube <=> '(4,5)'::cube as d_c;
- d_c 
+ d_c
 -----
    4
 (1 row)
 
 SELECT distance_taxicab('(1,1)'::cube, '(4,5)'::cube);
- distance_taxicab 
+ distance_taxicab
 ------------------
                 7
 (1 row)
 
 SELECT '(1,1)'::cube <#> '(4,5)'::cube as d_t;
- d_t 
+ d_t
 -----
    7
 (1 row)
 
 -- zero for overlapping
 SELECT cube_distance('(2,2),(10,10)'::cube, '(0,0),(5,5)'::cube);
- cube_distance 
+ cube_distance
 ---------------
              0
 (1 row)
 
 SELECT distance_chebyshev('(2,2),(10,10)'::cube, '(0,0),(5,5)'::cube);
- distance_chebyshev 
+ distance_chebyshev
 --------------------
                   0
 (1 row)
 
 SELECT distance_taxicab('(2,2),(10,10)'::cube, '(0,0),(5,5)'::cube);
- distance_taxicab 
+ distance_taxicab
 ------------------
                 0
 (1 row)
 
 -- coordinate access
 SELECT cube(array[10,20,30], array[40,50,60])->1;
- ?column? 
+ ?column?
 ----------
        10
 (1 row)
 
 SELECT cube(array[40,50,60], array[10,20,30])->1;
- ?column? 
+ ?column?
 ----------
        40
 (1 row)
 
 SELECT cube(array[10,20,30], array[40,50,60])->6;
- ?column? 
+ ?column?
 ----------
        60
 (1 row)
@@ -1468,13 +1468,13 @@ ERROR:  cube index -1 is out of bounds
 SELECT cube(array[10,20,30], array[40,50,60])->-6;
 ERROR:  cube index -6 is out of bounds
 SELECT cube(array[10,20,30])->3;
- ?column? 
+ ?column?
 ----------
        30
 (1 row)
 
 SELECT cube(array[10,20,30])->6;
- ?column? 
+ ?column?
 ----------
        30
 (1 row)
@@ -1483,37 +1483,37 @@ SELECT cube(array[10,20,30])->-6;
 ERROR:  cube index -6 is out of bounds
 -- "normalized" coordinate access
 SELECT cube(array[10,20,30], array[40,50,60])~>1;
- ?column? 
+ ?column?
 ----------
        10
 (1 row)
 
 SELECT cube(array[40,50,60], array[10,20,30])~>1;
- ?column? 
+ ?column?
 ----------
        10
 (1 row)
 
 SELECT cube(array[10,20,30], array[40,50,60])~>2;
- ?column? 
+ ?column?
 ----------
        40
 (1 row)
 
 SELECT cube(array[40,50,60], array[10,20,30])~>2;
- ?column? 
+ ?column?
 ----------
        40
 (1 row)
 
 SELECT cube(array[10,20,30], array[40,50,60])~>3;
- ?column? 
+ ?column?
 ----------
        20
 (1 row)
 
 SELECT cube(array[40,50,60], array[10,20,30])~>3;
- ?column? 
+ ?column?
 ----------
        20
 (1 row)
@@ -1521,13 +1521,13 @@ SELECT cube(array[40,50,60], array[10,20,30])~>3;
 SELECT cube(array[40,50,60], array[10,20,30])~>0;
 ERROR:  zero cube index is not defined
 SELECT cube(array[40,50,60], array[10,20,30])~>4;
- ?column? 
+ ?column?
 ----------
        50
 (1 row)
 
 SELECT cube(array[40,50,60], array[10,20,30])~>(-1);
- ?column? 
+ ?column?
 ----------
       -10
 (1 row)
@@ -1538,7 +1538,7 @@ CREATE TABLE test_cube (c cube);
 \copy test_cube from 'data/test_cube.data'
 CREATE INDEX test_cube_ix ON test_cube USING gist (c);
 SELECT * FROM test_cube WHERE c && '(3000,1000),(0,0)' ORDER BY c;
-            c             
+            c
 --------------------------
  (337, 455),(240, 359)
  (759, 187),(662, 163)
@@ -1549,7 +1549,7 @@ SELECT * FROM test_cube WHERE c && '(3000,1000),(0,0)' ORDER BY c;
 
 -- Test sorting
 SELECT * FROM test_cube WHERE c && '(3000,1000),(0,0)' GROUP BY c ORDER BY c;
-            c             
+            c
 --------------------------
  (337, 455),(240, 359)
  (759, 187),(662, 163)
@@ -1562,7 +1562,7 @@ SELECT * FROM test_cube WHERE c && '(3000,1000),(0,0)' GROUP BY c ORDER BY c;
 SET enable_bitmapscan = false;
 EXPLAIN (COSTS OFF)
 SELECT c FROM test_cube WHERE c <@ '(3000,1000),(0,0)' ORDER BY c;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Sort
    Sort Key: c
@@ -1571,7 +1571,7 @@ SELECT c FROM test_cube WHERE c <@ '(3000,1000),(0,0)' ORDER BY c;
 (4 rows)
 
 SELECT c FROM test_cube WHERE c <@ '(3000,1000),(0,0)' ORDER BY c;
-            c            
+            c
 -------------------------
  (337, 455),(240, 359)
  (759, 187),(662, 163)
@@ -1586,7 +1586,7 @@ SET enable_seqscan = false;
 -- Test different metrics
 SET extra_float_digits = 0;
 SELECT *, c <-> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c <-> '(100, 100),(500, 500)'::cube LIMIT 5;
-            c            |       dist       
+            c            |       dist
 -------------------------+------------------
  (337, 455),(240, 359)   |                0
  (1, 1)                  | 140.007142674936
@@ -1597,7 +1597,7 @@ SELECT *, c <-> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c 
 
 RESET extra_float_digits;
 SELECT *, c <=> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c <=> '(100, 100),(500, 500)'::cube LIMIT 5;
-            c            | dist 
+            c            | dist
 -------------------------+------
  (337, 455),(240, 359)   |    0
  (1, 1)                  |   99
@@ -1607,7 +1607,7 @@ SELECT *, c <=> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c 
 (5 rows)
 
 SELECT *, c <#> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c <#> '(100, 100),(500, 500)'::cube LIMIT 5;
-            c            | dist 
+            c            | dist
 -------------------------+------
  (337, 455),(240, 359)   |    0
  (759, 187),(662, 163)   |  162
@@ -1618,7 +1618,7 @@ SELECT *, c <#> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c 
 
 -- Test sorting by coordinates
 SELECT c~>1, c FROM test_cube ORDER BY c~>1 LIMIT 15; -- ascending by left bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (0, 100000)
         1 | (1, 1)
@@ -1638,7 +1638,7 @@ SELECT c~>1, c FROM test_cube ORDER BY c~>1 LIMIT 15; -- ascending by left bound
 (15 rows)
 
 SELECT c~>2, c FROM test_cube ORDER BY c~>2 LIMIT 15; -- ascending by right bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (0, 100000)
         1 | (1, 1)
@@ -1658,7 +1658,7 @@ SELECT c~>2, c FROM test_cube ORDER BY c~>2 LIMIT 15; -- ascending by right boun
 (15 rows)
 
 SELECT c~>3, c FROM test_cube ORDER BY c~>3 LIMIT 15; -- ascending by lower bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (100000)
         1 | (1, 1)
@@ -1678,7 +1678,7 @@ SELECT c~>3, c FROM test_cube ORDER BY c~>3 LIMIT 15; -- ascending by lower boun
 (15 rows)
 
 SELECT c~>4, c FROM test_cube ORDER BY c~>4 LIMIT 15; -- ascending by upper bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (100000)
         1 | (1, 1)
@@ -1698,7 +1698,7 @@ SELECT c~>4, c FROM test_cube ORDER BY c~>4 LIMIT 15; -- ascending by upper boun
 (15 rows)
 
 SELECT c~>(-1), c FROM test_cube ORDER BY c~>(-1) LIMIT 15; -- descending by left bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (100000)
    -49951 | (50027, 49230),(49951, 49214)
@@ -1718,7 +1718,7 @@ SELECT c~>(-1), c FROM test_cube ORDER BY c~>(-1) LIMIT 15; -- descending by lef
 (15 rows)
 
 SELECT c~>(-2), c FROM test_cube ORDER BY c~>(-2) LIMIT 15; -- descending by right bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (100000)
    -50027 | (50027, 49230),(49951, 49214)
@@ -1738,7 +1738,7 @@ SELECT c~>(-2), c FROM test_cube ORDER BY c~>(-2) LIMIT 15; -- descending by rig
 (15 rows)
 
 SELECT c~>(-3), c FROM test_cube ORDER BY c~>(-3) LIMIT 15; -- descending by lower bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (0, 100000)
    -49992 | (30746, 50040),(30727, 49992)
@@ -1758,7 +1758,7 @@ SELECT c~>(-3), c FROM test_cube ORDER BY c~>(-3) LIMIT 15; -- descending by low
 (15 rows)
 
 SELECT c~>(-4), c FROM test_cube ORDER BY c~>(-4) LIMIT 15; -- descending by upper bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (0, 100000)
    -50073 | (36311, 50073),(36258, 49987)
@@ -1782,7 +1782,7 @@ RESET enable_seqscan;
 SET enable_indexscan = OFF;
 SET extra_float_digits = 0;
 SELECT *, c <-> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c <-> '(100, 100),(500, 500)'::cube LIMIT 5;
-            c            |       dist       
+            c            |       dist
 -------------------------+------------------
  (337, 455),(240, 359)   |                0
  (1, 1)                  | 140.007142674936
@@ -1793,7 +1793,7 @@ SELECT *, c <-> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c 
 
 RESET extra_float_digits;
 SELECT *, c <=> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c <=> '(100, 100),(500, 500)'::cube LIMIT 5;
-            c            | dist 
+            c            | dist
 -------------------------+------
  (337, 455),(240, 359)   |    0
  (1, 1)                  |   99
@@ -1803,7 +1803,7 @@ SELECT *, c <=> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c 
 (5 rows)
 
 SELECT *, c <#> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c <#> '(100, 100),(500, 500)'::cube LIMIT 5;
-            c            | dist 
+            c            | dist
 -------------------------+------
  (337, 455),(240, 359)   |    0
  (759, 187),(662, 163)   |  162
@@ -1813,7 +1813,7 @@ SELECT *, c <#> '(100, 100),(500, 500)'::cube as dist FROM test_cube ORDER BY c 
 (5 rows)
 
 SELECT c~>1, c FROM test_cube ORDER BY c~>1 LIMIT 15; -- ascending by left bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (0, 100000)
         1 | (1, 1)
@@ -1833,7 +1833,7 @@ SELECT c~>1, c FROM test_cube ORDER BY c~>1 LIMIT 15; -- ascending by left bound
 (15 rows)
 
 SELECT c~>2, c FROM test_cube ORDER BY c~>2 LIMIT 15; -- ascending by right bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (0, 100000)
         1 | (1, 1)
@@ -1853,7 +1853,7 @@ SELECT c~>2, c FROM test_cube ORDER BY c~>2 LIMIT 15; -- ascending by right boun
 (15 rows)
 
 SELECT c~>3, c FROM test_cube ORDER BY c~>3 LIMIT 15; -- ascending by lower bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (100000)
         1 | (1, 1)
@@ -1873,7 +1873,7 @@ SELECT c~>3, c FROM test_cube ORDER BY c~>3 LIMIT 15; -- ascending by lower boun
 (15 rows)
 
 SELECT c~>4, c FROM test_cube ORDER BY c~>4 LIMIT 15; -- ascending by upper bound
- ?column? |             c             
+ ?column? |             c
 ----------+---------------------------
         0 | (100000)
         1 | (1, 1)
@@ -1893,7 +1893,7 @@ SELECT c~>4, c FROM test_cube ORDER BY c~>4 LIMIT 15; -- ascending by upper boun
 (15 rows)
 
 SELECT c~>(-1), c FROM test_cube ORDER BY c~>(-1) LIMIT 15; -- descending by left bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (100000)
    -49951 | (50027, 49230),(49951, 49214)
@@ -1913,7 +1913,7 @@ SELECT c~>(-1), c FROM test_cube ORDER BY c~>(-1) LIMIT 15; -- descending by lef
 (15 rows)
 
 SELECT c~>(-2), c FROM test_cube ORDER BY c~>(-2) LIMIT 15; -- descending by right bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (100000)
    -50027 | (50027, 49230),(49951, 49214)
@@ -1933,7 +1933,7 @@ SELECT c~>(-2), c FROM test_cube ORDER BY c~>(-2) LIMIT 15; -- descending by rig
 (15 rows)
 
 SELECT c~>(-3), c FROM test_cube ORDER BY c~>(-3) LIMIT 15; -- descending by lower bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (0, 100000)
    -49992 | (30746, 50040),(30727, 49992)
@@ -1953,7 +1953,7 @@ SELECT c~>(-3), c FROM test_cube ORDER BY c~>(-3) LIMIT 15; -- descending by low
 (15 rows)
 
 SELECT c~>(-4), c FROM test_cube ORDER BY c~>(-4) LIMIT 15; -- descending by upper bound
- ?column? |               c               
+ ?column? |               c
 ----------+-------------------------------
   -100000 | (0, 100000)
    -50073 | (36311, 50073),(36258, 49987)

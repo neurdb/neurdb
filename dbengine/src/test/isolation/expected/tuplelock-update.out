@@ -1,14 +1,14 @@
 Parsed test spec with 4 sessions
 
 starting permutation: s1_advlock s2_update s3_update s4_update s1_chain s1_begin s1_grablock s1_advunlock1 s1_advunlock2 s1_advunlock3 s1_commit
-step s1_advlock: 
+step s1_advlock:
     SELECT pg_advisory_lock(142857),
         pg_advisory_lock(285714),
         pg_advisory_lock(571428);
 
 pg_advisory_lock|pg_advisory_lock|pg_advisory_lock
 ----------------+----------------+----------------
-                |                |                
+                |                |
 (1 row)
 
 step s2_update: UPDATE pktab SET data = DEFAULT WHERE pg_advisory_lock_shared(142857) IS NOT NULL; <waiting ...>
@@ -27,7 +27,7 @@ step s2_update: <... completed>
 step s1_advunlock1: <... completed>
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s1_advunlock2: SELECT pg_advisory_unlock(285714); <waiting ...>
@@ -35,7 +35,7 @@ step s3_update: <... completed>
 step s1_advunlock2: <... completed>
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s1_advunlock3: SELECT pg_advisory_unlock(571428); <waiting ...>
@@ -43,7 +43,7 @@ step s4_update: <... completed>
 step s1_advunlock3: <... completed>
 pg_advisory_unlock
 ------------------
-t                 
+t
 (1 row)
 
 step s1_commit: COMMIT;

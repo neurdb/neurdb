@@ -1,6 +1,6 @@
 [NO_PID]: ECPGdebug: set to 1
 [NO_PID]: sqlca: code: 0, state: 00000
-[NO_PID]: ECPGconnect: opening database ecpg1_regression on <DEFAULT> port <DEFAULT>  
+[NO_PID]: ECPGconnect: opening database ecpg1_regression on <DEFAULT> port <DEFAULT>
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ECPGsetcommit on line 17: action "off"; connection "ecpg1_regression"
 [NO_PID]: sqlca: code: 0, state: 00000

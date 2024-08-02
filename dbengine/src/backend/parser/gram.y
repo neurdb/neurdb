@@ -16929,7 +16929,7 @@ BareColLabel:	IDENT								{ $$ = $1; }
  *				PREDICT STATEMENTS
  *
  *****************************************************************************/
-NeurDBPredictStmt: 
+NeurDBPredictStmt:
 			PREDICT CLASS OF neurdb_target
 				{
 					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $4;
@@ -16953,13 +16953,13 @@ neurdb_target: target_list neurdb_from opt_allow_train
 				}
 		;
 
-opt_allow_train: 
+opt_allow_train:
 			TRAIN IF_P NOT EXISTS					{ $$ = true; }
 			| /*EMPTY*/								{ $$ = false; }
 		;
 
-neurdb_from: 
-			FROM from_list 
+neurdb_from:
+			FROM from_list
 			where_clause
 			group_clause having_clause window_clause
 			opt_sort_clause opt_select_limit opt_for_locking_clause

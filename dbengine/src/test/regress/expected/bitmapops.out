@@ -22,14 +22,14 @@ set enable_seqscan=false;
 set work_mem = 64;
 -- Test bitmap-and.
 SELECT count(*) FROM bmscantest WHERE a = 1 AND b = 1;
- count 
+ count
 -------
     23
 (1 row)
 
 -- Test bitmap-or.
 SELECT count(*) FROM bmscantest WHERE a = 1 OR b = 1;
- count 
+ count
 -------
   2485
 (1 row)

@@ -196,4 +196,3 @@ msgstr "SQL语句错误: %s\n"
 #: execute.c:2196 execute.c:2203
 msgid "<empty>"
 msgstr "<空>"
-

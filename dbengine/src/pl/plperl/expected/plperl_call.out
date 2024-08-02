@@ -18,7 +18,7 @@ spi_exec_query("INSERT INTO test1 VALUES ($_[0])");
 $$;
 CALL test_proc3(55);
 SELECT * FROM test1;
- a  
+ a
 ----
  55
 (1 row)
@@ -31,7 +31,7 @@ my ($a) = @_;
 return { a => "$a+$a" };
 $$;
 CALL test_proc5('abc');
-    a    
+    a
 ---------
  abc+abc
 (1 row)
@@ -43,7 +43,7 @@ my ($a, $b, $c) = @_;
 return { b => $b * $a, c => $c * $a };
 $$;
 CALL test_proc6(2, 3, 4);
- b | c 
+ b | c
 ---+---
  6 | 8
 (1 row)
@@ -64,7 +64,7 @@ BEGIN
   RAISE NOTICE '_a: %, _b: %', _a, _b;
 END
 $$;
-NOTICE:  a: 10, b: 
+NOTICE:  a: 10, b:
 NOTICE:  _a: 10, _b: 20
 DROP PROCEDURE test_proc1;
 DROP PROCEDURE test_proc2;

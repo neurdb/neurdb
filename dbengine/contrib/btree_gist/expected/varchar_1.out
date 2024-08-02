@@ -3,31 +3,31 @@ CREATE TABLE vchartmp (a varchar(32));
 \copy vchartmp from 'data/char.data'
 SET enable_seqscan=on;
 SELECT count(*) FROM vchartmp WHERE a <   '31b0'::varchar(32);
- count 
+ count
 -------
    773
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a <=  '31b0'::varchar(32);
- count 
+ count
 -------
    774
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a  =  '31b0'::varchar(32);
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a >=  '31b0'::varchar(32);
- count 
+ count
 -------
    215
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a >   '31b0'::varchar(32);
- count 
+ count
 -------
    214
 (1 row)
@@ -35,32 +35,31 @@ SELECT count(*) FROM vchartmp WHERE a >   '31b0'::varchar(32);
 CREATE INDEX vcharidx ON vchartmp USING GIST ( text(a) );
 SET enable_seqscan=off;
 SELECT count(*) FROM vchartmp WHERE a <   '31b0'::varchar(32);
- count 
+ count
 -------
    773
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a <=  '31b0'::varchar(32);
- count 
+ count
 -------
    774
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a  =  '31b0'::varchar(32);
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a >=  '31b0'::varchar(32);
- count 
+ count
 -------
    215
 (1 row)
 
 SELECT count(*) FROM vchartmp WHERE a >   '31b0'::varchar(32);
- count 
+ count
 -------
    214
 (1 row)
-

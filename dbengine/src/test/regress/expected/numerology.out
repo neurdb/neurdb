@@ -6,165 +6,165 @@
 -- numeric literals
 --
 SELECT 0b100101;
- ?column? 
+ ?column?
 ----------
        37
 (1 row)
 
 SELECT 0o273;
- ?column? 
+ ?column?
 ----------
       187
 (1 row)
 
 SELECT 0x42F;
- ?column? 
+ ?column?
 ----------
      1071
 (1 row)
 
 -- cases near int4 overflow
 SELECT 0b1111111111111111111111111111111;
-  ?column?  
+  ?column?
 ------------
  2147483647
 (1 row)
 
 SELECT 0b10000000000000000000000000000000;
-  ?column?  
+  ?column?
 ------------
  2147483648
 (1 row)
 
 SELECT 0o17777777777;
-  ?column?  
+  ?column?
 ------------
  2147483647
 (1 row)
 
 SELECT 0o20000000000;
-  ?column?  
+  ?column?
 ------------
  2147483648
 (1 row)
 
 SELECT 0x7FFFFFFF;
-  ?column?  
+  ?column?
 ------------
  2147483647
 (1 row)
 
 SELECT 0x80000000;
-  ?column?  
+  ?column?
 ------------
  2147483648
 (1 row)
 
 SELECT -0b10000000000000000000000000000000;
-  ?column?   
+  ?column?
 -------------
  -2147483648
 (1 row)
 
 SELECT -0b10000000000000000000000000000001;
-  ?column?   
+  ?column?
 -------------
  -2147483649
 (1 row)
 
 SELECT -0o20000000000;
-  ?column?   
+  ?column?
 -------------
  -2147483648
 (1 row)
 
 SELECT -0o20000000001;
-  ?column?   
+  ?column?
 -------------
  -2147483649
 (1 row)
 
 SELECT -0x80000000;
-  ?column?   
+  ?column?
 -------------
  -2147483648
 (1 row)
 
 SELECT -0x80000001;
-  ?column?   
+  ?column?
 -------------
  -2147483649
 (1 row)
 
 -- cases near int8 overflow
 SELECT 0b111111111111111111111111111111111111111111111111111111111111111;
-      ?column?       
+      ?column?
 ---------------------
  9223372036854775807
 (1 row)
 
 SELECT 0b1000000000000000000000000000000000000000000000000000000000000000;
-      ?column?       
+      ?column?
 ---------------------
  9223372036854775808
 (1 row)
 
 SELECT 0o777777777777777777777;
-      ?column?       
+      ?column?
 ---------------------
  9223372036854775807
 (1 row)
 
 SELECT 0o1000000000000000000000;
-      ?column?       
+      ?column?
 ---------------------
  9223372036854775808
 (1 row)
 
 SELECT 0x7FFFFFFFFFFFFFFF;
-      ?column?       
+      ?column?
 ---------------------
  9223372036854775807
 (1 row)
 
 SELECT 0x8000000000000000;
-      ?column?       
+      ?column?
 ---------------------
  9223372036854775808
 (1 row)
 
 SELECT -0b1000000000000000000000000000000000000000000000000000000000000000;
-       ?column?       
+       ?column?
 ----------------------
  -9223372036854775808
 (1 row)
 
 SELECT -0b1000000000000000000000000000000000000000000000000000000000000001;
-       ?column?       
+       ?column?
 ----------------------
  -9223372036854775809
 (1 row)
 
 SELECT -0o1000000000000000000000;
-       ?column?       
+       ?column?
 ----------------------
  -9223372036854775808
 (1 row)
 
 SELECT -0o1000000000000000000001;
-       ?column?       
+       ?column?
 ----------------------
  -9223372036854775809
 (1 row)
 
 SELECT -0x8000000000000000;
-       ?column?       
+       ?column?
 ----------------------
  -9223372036854775808
 (1 row)
 
 SELECT -0x8000000000000001;
-       ?column?       
+       ?column?
 ----------------------
  -9223372036854775809
 (1 row)
@@ -244,55 +244,55 @@ LINE 1: SELECT 0x0y;
                ^
 -- underscores
 SELECT 1_000_000;
- ?column? 
+ ?column?
 ----------
   1000000
 (1 row)
 
 SELECT 1_2_3;
- ?column? 
+ ?column?
 ----------
       123
 (1 row)
 
 SELECT 0x1EEE_FFFF;
- ?column?  
+ ?column?
 -----------
  518979583
 (1 row)
 
 SELECT 0o2_73;
- ?column? 
+ ?column?
 ----------
       187
 (1 row)
 
 SELECT 0b_10_0101;
- ?column? 
+ ?column?
 ----------
        37
 (1 row)
 
 SELECT 1_000.000_005;
-  ?column?   
+  ?column?
 -------------
  1000.000005
 (1 row)
 
 SELECT 1_000.;
- ?column? 
+ ?column?
 ----------
      1000
 (1 row)
 
 SELECT .000_005;
- ?column? 
+ ?column?
 ----------
  0.000005
 (1 row)
 
 SELECT 1_000.5e0_1;
- ?column? 
+ ?column?
 ----------
     10005
 (1 row)
@@ -342,7 +342,7 @@ INSERT INTO TEMP_FLOAT (f1)
   SELECT float8(f1) FROM INT2_TBL;
 SELECT f1 FROM TEMP_FLOAT
   ORDER BY f1;
-     f1      
+     f1
 -------------
  -2147483647
      -123456
@@ -365,7 +365,7 @@ INSERT INTO TEMP_INT4 (f1)
   SELECT int4(f1) FROM INT2_TBL;
 SELECT f1 FROM TEMP_INT4
   ORDER BY f1;
-   f1   
+   f1
 --------
  -32767
   -1234
@@ -388,7 +388,7 @@ INSERT INTO TEMP_INT2 (f1)
   WHERE (f1 >= -32767) AND (f1 <= 32767);
 SELECT f1 FROM TEMP_INT2
   ORDER BY f1;
-  f1   
+  f1
 -------
  -1004
    -35
@@ -408,7 +408,7 @@ INSERT INTO TEMP_GROUP
   SELECT 2, i.f1, f.f1
   FROM INT4_TBL i, FLOAT8_TBL f;
 SELECT DISTINCT f1 AS two FROM TEMP_GROUP ORDER BY 1;
- two 
+ two
 -----
    1
    2
@@ -418,7 +418,7 @@ SELECT f1 AS two, max(f3) AS max_float, min(f3) as min_float
   FROM TEMP_GROUP
   GROUP BY f1
   ORDER BY two, max_float, min_float;
- two |      max_float       |       min_float       
+ two |      max_float       |       min_float
 -----+----------------------+-----------------------
    1 | 1.2345678901234e+200 |                    -0
    2 |                    0 | -1.2345678901234e+200
@@ -430,7 +430,7 @@ SELECT f1 AS two, max(f3) AS max_float, min(f3) AS min_float
   FROM TEMP_GROUP
   GROUP BY two
   ORDER BY two, max_float, min_float;
- two |      max_float       |       min_float       
+ two |      max_float       |       min_float
 -----+----------------------+-----------------------
    1 | 1.2345678901234e+200 |                    -0
    2 |                    0 | -1.2345678901234e+200
@@ -440,7 +440,7 @@ SELECT f1 AS two, (max(f3) + 1) AS max_plus_1, (min(f3) - 1) AS min_minus_1
   FROM TEMP_GROUP
   GROUP BY f1
   ORDER BY two, min_minus_1;
- two |      max_plus_1      |      min_minus_1      
+ two |      max_plus_1      |      min_minus_1
 -----+----------------------+-----------------------
    1 | 1.2345678901234e+200 |                    -1
    2 |                    1 | -1.2345678901234e+200
@@ -452,7 +452,7 @@ SELECT f1 AS two,
   FROM TEMP_GROUP
   GROUP BY f1
   ORDER BY two, min_minus_1;
- two | max_plus_min |      min_minus_1      
+ two | max_plus_min |      min_minus_1
 -----+--------------+-----------------------
    1 |            0 |                    -1
    2 |            0 | -1.2345678901234e+200

@@ -112,4 +112,3 @@ msgstr "не вдалося встановити системний атрибу
 #, c-format
 msgid "cannot set generated column \"%s\""
 msgstr "неможливо оновити згенерований стовпець \"%s\""
-

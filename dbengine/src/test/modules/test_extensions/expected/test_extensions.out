@@ -16,7 +16,7 @@ NOTICE:  installing required extension "test_ext3"
 NOTICE:  installing required extension "test_ext5"
 NOTICE:  installing required extension "test_ext4"
 SELECT extname, nspname, extversion, extrelocatable FROM pg_extension e, pg_namespace n WHERE extname LIKE 'test_ext%' AND e.extnamespace = n.oid ORDER BY 1;
-  extname  |  nspname   | extversion | extrelocatable 
+  extname  |  nspname   | extversion | extrelocatable
 -----------+------------+------------+----------------
  test_ext1 | test_ext1  | 1.0        | f
  test_ext2 | has$dollar | 1.0        | t
@@ -45,7 +45,7 @@ create table old_table1 (col1 serial primary key);
 create extension test_ext7;
 \dx+ test_ext7
 Objects in extension "test_ext7"
-      Object description       
+      Object description
 -------------------------------
  sequence ext7_table1_col1_seq
  sequence ext7_table2_col2_seq
@@ -58,7 +58,7 @@ Objects in extension "test_ext7"
 alter extension test_ext7 update to '2.0';
 \dx+ test_ext7
 Objects in extension "test_ext7"
-      Object description       
+      Object description
 -------------------------------
  sequence ext7_table2_col2_seq
  table ext7_table2
@@ -73,7 +73,7 @@ from pg_depend
 where refclassid = 'pg_extension'::regclass and deptype = 'e' and
   refobjid = (select oid from pg_extension where extname = 'test_ext8')
 order by 1;
-           Object description            
+           Object description
 -----------------------------------------
  function ext8_even(posint)
  function pg_temp.ext8_temp_even(posint)
@@ -91,7 +91,7 @@ from pg_depend
 where refclassid = 'pg_extension'::regclass and deptype = 'e' and
   refobjid = (select oid from pg_extension where extname = 'test_ext8')
 order by 1;
-           Object description            
+           Object description
 -----------------------------------------
  function ext8_even(posint)
  function pg_temp.ext8_temp_even(posint)
@@ -113,7 +113,7 @@ end';
 -- extension should now contain no temp objects
 \dx+ test_ext8
 Objects in extension "test_ext8"
-     Object description     
+     Object description
 ----------------------------
  function ext8_even(posint)
  table ext8_table1
@@ -143,9 +143,9 @@ CREATE OR REPLACE FUNCTION create_extension_with_temp_schema()
   END; $$ LANGUAGE plpgsql;
 BEGIN;
 SELECT create_extension_with_temp_schema();
- create_extension_with_temp_schema 
+ create_extension_with_temp_schema
 -----------------------------------
- 
+
 (1 row)
 
 PREPARE TRANSACTION 'twophase_extension';
@@ -170,7 +170,7 @@ CREATE EXTENSION test_ext_cor;  -- fail
 ERROR:  function ext_cor_func() is not a member of extension "test_ext_cor"
 DETAIL:  An extension is not allowed to replace an object that it does not own.
 SELECT ext_cor_func();
-      ext_cor_func      
+      ext_cor_func
 ------------------------
  ext_cor_func: original
 (1 row)
@@ -187,7 +187,7 @@ LINE 1: SELECT ext_cor_func();
                ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 SELECT * FROM ext_cor_view;
-          col           
+          col
 ------------------------
  ext_cor_view: original
 (1 row)
@@ -208,32 +208,32 @@ DETAIL:  An extension is not allowed to replace an object that it does not own.
 DROP OPERATOR <<@@ (point, polygon);
 CREATE EXTENSION test_ext_cor;  -- now it should work
 SELECT ext_cor_func();
-         ext_cor_func         
+         ext_cor_func
 ------------------------------
  ext_cor_func: from extension
 (1 row)
 
 SELECT * FROM ext_cor_view;
-             col              
+             col
 ------------------------------
  ext_cor_view: from extension
 (1 row)
 
 SELECT 'x'::test_ext_type;
- test_ext_type 
+ test_ext_type
 ---------------
  x
 (1 row)
 
 SELECT point(0,0) <<@@ polygon(circle(point(0,0),1));
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 \dx+ test_ext_cor
 Objects in extension "test_ext_cor"
-      Object description      
+      Object description
 ------------------------------
  function ext_cor_func()
  operator <<@@(point,polygon)
@@ -285,7 +285,7 @@ DROP TABLE ext_cine_tab2;
 CREATE EXTENSION test_ext_cine;
 \dx+ test_ext_cine
 Objects in extension "test_ext_cine"
-        Object description         
+        Object description
 -----------------------------------
  collation ext_cine_coll
  foreign-data wrapper ext_cine_fdw
@@ -300,7 +300,7 @@ Objects in extension "test_ext_cine"
 ALTER EXTENSION test_ext_cine UPDATE TO '1.1';
 \dx+ test_ext_cine
 Objects in extension "test_ext_cine"
-        Object description         
+        Object description
 -----------------------------------
  collation ext_cine_coll
  foreign-data wrapper ext_cine_fdw
@@ -335,7 +335,7 @@ SELECT pg_describe_object(classid, objid, objsubid) as obj,
   WHERE classid = 'pg_extension'::regclass AND
         objid = (SELECT oid FROM pg_extension WHERE extname = 'test_ext_req_schema1')
   ORDER BY 1, 2;
-              obj               |        objref         | deptype 
+              obj               |        objref         | deptype
 --------------------------------+-----------------------+---------
  extension test_ext_req_schema1 | schema test_func_dep1 | n
 (1 row)
@@ -354,7 +354,7 @@ SELECT pg_describe_object(classid, objid, objsubid) as obj,
   WHERE classid = 'pg_extension'::regclass AND
         objid = (SELECT oid FROM pg_extension WHERE extname = 'test_ext_req_schema1')
   ORDER BY 1, 2;
-              obj               |        objref         | deptype 
+              obj               |        objref         | deptype
 --------------------------------+-----------------------+---------
  extension test_ext_req_schema1 | schema test_func_dep3 | n
 (1 row)
@@ -376,25 +376,25 @@ CREATE EXTENSION test_ext_req_schema1 SCHEMA test_s_dep;
 CREATE EXTENSION test_ext_req_schema3 CASCADE;
 NOTICE:  installing required extension "test_ext_req_schema2"
 SELECT test_s_dep.dep_req1();
- dep_req1 
+ dep_req1
 ----------
  req1
 (1 row)
 
 SELECT dep_req2();
- dep_req2  
+ dep_req2
 -----------
  req1 req2
 (1 row)
 
 SELECT dep_req3();
- dep_req3  
+ dep_req3
 -----------
  req1 req3
 (1 row)
 
 SELECT dep_req3b();
-    dep_req3b    
+    dep_req3b
 -----------------
  req1 req2 req3b
 (1 row)
@@ -405,40 +405,40 @@ ERROR:  cannot SET SCHEMA of extension "test_ext_req_schema1" because other exte
 DETAIL:  Extension "test_ext_req_schema3" requests no relocation of extension "test_ext_req_schema1".
 ALTER EXTENSION test_ext_req_schema2 SET SCHEMA test_s_dep;  -- allowed
 SELECT test_s_dep.dep_req1();
- dep_req1 
+ dep_req1
 ----------
  req1
 (1 row)
 
 SELECT test_s_dep.dep_req2();
- dep_req2  
+ dep_req2
 -----------
  req1 req2
 (1 row)
 
 SELECT dep_req3();
- dep_req3  
+ dep_req3
 -----------
  req1 req3
 (1 row)
 
 SELECT dep_req3b();  -- fails
 ERROR:  function public.dep_req2() does not exist
-LINE 1:  SELECT public.dep_req2() || ' req3b' 
+LINE 1:  SELECT public.dep_req2() || ' req3b'
                 ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
-QUERY:   SELECT public.dep_req2() || ' req3b' 
+QUERY:   SELECT public.dep_req2() || ' req3b'
 CONTEXT:  SQL function "dep_req3b" during startup
 DROP EXTENSION test_ext_req_schema3;
 ALTER EXTENSION test_ext_req_schema1 SET SCHEMA test_s_dep2;  -- now ok
 SELECT test_s_dep2.dep_req1();
- dep_req1 
+ dep_req1
 ----------
  req1
 (1 row)
 
 SELECT test_s_dep.dep_req2();
- dep_req2  
+ dep_req2
 -----------
  req1 req2
 (1 row)

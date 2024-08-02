@@ -6,53 +6,53 @@
 --
 -- current_date  (always matches because of transactional behaviour)
 SELECT date(now())::text = current_date::text;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- current_time / localtime
 SELECT now()::timetz::text = current_time::text;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT now()::timetz(4)::text = current_time(4)::text;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT now()::time::text = localtime::text;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT now()::time(3)::text = localtime(3)::text;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- current_time[stamp]/ localtime[stamp] (always matches because of transactional behaviour)
 SELECT current_timestamp = NOW();
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- precision
 SELECT length(current_timestamp::text) >= length(current_timestamp(0)::text);
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- localtimestamp
 SELECT now()::timestamp::text = localtimestamp::text;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -60,28 +60,28 @@ SELECT now()::timestamp::text = localtimestamp::text;
 -- precision overflow
 SELECT current_time = current_time(7);
 WARNING:  TIME(7) WITH TIME ZONE precision reduced to maximum allowed, 6
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT current_timestamp = current_timestamp(7);
 WARNING:  TIMESTAMP(7) WITH TIME ZONE precision reduced to maximum allowed, 6
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT localtime = localtime(7);
 WARNING:  TIME(7) precision reduced to maximum allowed, 6
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT localtimestamp = localtimestamp(7);
 WARNING:  TIMESTAMP(7) precision reduced to maximum allowed, 6
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -89,28 +89,28 @@ WARNING:  TIMESTAMP(7) precision reduced to maximum allowed, 6
 -- current_role/user/user is tested in rolenames.sql
 -- current database / catalog
 SELECT current_catalog = current_database();
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- current_schema
 SELECT current_schema;
- current_schema 
+ current_schema
 ----------------
  public
 (1 row)
 
 SET search_path = 'notme';
 SELECT current_schema;
- current_schema 
+ current_schema
 ----------------
- 
+
 (1 row)
 
 SET search_path = 'pg_catalog';
 SELECT current_schema;
- current_schema 
+ current_schema
 ----------------
  pg_catalog
 (1 row)
@@ -128,14 +128,14 @@ create view numeric_view as
   from numeric_tbl;
 \d+ numeric_view
                            View "public.numeric_view"
- Column |     Type      | Collation | Nullable | Default | Storage | Description 
+ Column |     Type      | Collation | Nullable | Default | Storage | Description
 --------+---------------+-----------+----------+---------+---------+-------------
- f1     | numeric(18,3) |           |          |         | main    | 
- f1164  | numeric(16,4) |           |          |         | main    | 
- f1n    | numeric       |           |          |         | main    | 
- f2     | numeric       |           |          |         | main    | 
- f2164  | numeric(16,4) |           |          |         | main    | 
- f2n    | numeric       |           |          |         | main    | 
+ f1     | numeric(18,3) |           |          |         | main    |
+ f1164  | numeric(16,4) |           |          |         | main    |
+ f1n    | numeric       |           |          |         | main    |
+ f2     | numeric       |           |          |         | main    |
+ f2164  | numeric(16,4) |           |          |         | main    |
+ f2n    | numeric       |           |          |         | main    |
 View definition:
  SELECT f1,
     f1::numeric(16,4) AS f1164,
@@ -146,7 +146,7 @@ View definition:
    FROM numeric_tbl;
 
 explain (verbose, costs off) select * from numeric_view;
-                                                                      QUERY PLAN                                                                       
+                                                                      QUERY PLAN
 -------------------------------------------------------------------------------------------------------------------------------------------------------
  Seq Scan on public.numeric_tbl
    Output: numeric_tbl.f1, (numeric_tbl.f1)::numeric(16,4), (numeric_tbl.f1)::numeric, numeric_tbl.f2, (numeric_tbl.f2)::numeric(16,4), numeric_tbl.f2
@@ -162,14 +162,14 @@ create view bpchar_view as
   from bpchar_tbl;
 \d+ bpchar_view
                             View "public.bpchar_view"
- Column |     Type      | Collation | Nullable | Default | Storage  | Description 
+ Column |     Type      | Collation | Nullable | Default | Storage  | Description
 --------+---------------+-----------+----------+---------+----------+-------------
- f1     | character(16) |           |          |         | extended | 
- f114   | character(14) |           |          |         | extended | 
- f1n    | bpchar        |           |          |         | extended | 
- f2     | bpchar        |           |          |         | extended | 
- f214   | character(14) |           |          |         | extended | 
- f2n    | bpchar        |           |          |         | extended | 
+ f1     | character(16) |           |          |         | extended |
+ f114   | character(14) |           |          |         | extended |
+ f1n    | bpchar        |           |          |         | extended |
+ f2     | bpchar        |           |          |         | extended |
+ f214   | character(14) |           |          |         | extended |
+ f2n    | bpchar        |           |          |         | extended |
 View definition:
  SELECT f1,
     f1::character(14) AS f114,
@@ -181,7 +181,7 @@ View definition:
 
 explain (verbose, costs off) select * from bpchar_view
   where f1::bpchar = 'foo';
-                                                                   QUERY PLAN                                                                   
+                                                                   QUERY PLAN
 ------------------------------------------------------------------------------------------------------------------------------------------------
  Index Scan using bpchar_tbl_f1_key on public.bpchar_tbl
    Output: bpchar_tbl.f1, (bpchar_tbl.f1)::character(14), (bpchar_tbl.f1)::bpchar, bpchar_tbl.f2, (bpchar_tbl.f2)::character(14), bpchar_tbl.f2
@@ -195,7 +195,7 @@ rollback;
 --
 explain (verbose, costs off)
 select random() IN (1, 4, 8.0);
-                         QUERY PLAN                         
+                         QUERY PLAN
 ------------------------------------------------------------
  Result
    Output: (random() = ANY ('{1,4,8}'::double precision[]))
@@ -203,7 +203,7 @@ select random() IN (1, 4, 8.0);
 
 explain (verbose, costs off)
 select random()::int IN (1, 4, 8.0);
-                                QUERY PLAN                                 
+                                QUERY PLAN
 ---------------------------------------------------------------------------
  Result
    Output: (((random())::integer)::numeric = ANY ('{1,4,8.0}'::numeric[]))
@@ -236,92 +236,92 @@ begin
 end;
 $$ language plpgsql stable;
 select return_int_input(1) in (10, 9, 2, 8, 3, 7, 4, 6, 5, 1);
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select return_int_input(1) in (10, 9, 2, 8, 3, 7, 4, 6, 5, null);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_int_input(1) in (null, null, null, null, null, null, null, null, null, null, null);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_int_input(1) in (10, 9, 2, 8, 3, 7, 4, 6, 5, 1, null);
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select return_int_input(null::int) in (10, 9, 2, 8, 3, 7, 4, 6, 5, 1);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_int_input(null::int) in (10, 9, 2, 8, 3, 7, 4, 6, 5, null);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_text_input('a') in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j');
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 -- NOT IN
 select return_int_input(1) not in (10, 9, 2, 8, 3, 7, 4, 6, 5, 1);
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select return_int_input(1) not in (10, 9, 2, 8, 3, 7, 4, 6, 5, 0);
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select return_int_input(1) not in (10, 9, 2, 8, 3, 7, 4, 6, 5, 2, null);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_int_input(1) not in (10, 9, 2, 8, 3, 7, 4, 6, 5, 1, null);
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select return_int_input(1) not in (null, null, null, null, null, null, null, null, null, null, null);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_int_input(null::int) not in (10, 9, 2, 8, 3, 7, 4, 6, 5, 1);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_int_input(null::int) not in (10, 9, 2, 8, 3, 7, 4, 6, 5, null);
- ?column? 
+ ?column?
 ----------
- 
+
 (1 row)
 
 select return_text_input('a') not in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j');
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
@@ -385,38 +385,38 @@ create table inttest (a myint);
 insert into inttest values(1::myint),(null);
 -- try an array with enough elements to cause hashing
 select * from inttest where a in (1::myint,2::myint,3::myint,4::myint,5::myint,6::myint,7::myint,8::myint,9::myint, null);
- a 
+ a
 ---
  1
- 
+
 (2 rows)
 
 select * from inttest where a not in (1::myint,2::myint,3::myint,4::myint,5::myint,6::myint,7::myint,8::myint,9::myint, null);
- a 
+ a
 ---
 (0 rows)
 
 select * from inttest where a not in (0::myint,2::myint,3::myint,4::myint,5::myint,6::myint,7::myint,8::myint,9::myint, null);
- a 
+ a
 ---
 (0 rows)
 
 -- ensure the result matched with the non-hashed version.  We simply remove
 -- some array elements so that we don't reach the hashing threshold.
 select * from inttest where a in (1::myint,2::myint,3::myint,4::myint,5::myint, null);
- a 
+ a
 ---
  1
- 
+
 (2 rows)
 
 select * from inttest where a not in (1::myint,2::myint,3::myint,4::myint,5::myint, null);
- a 
+ a
 ---
 (0 rows)
 
 select * from inttest where a not in (0::myint,2::myint,3::myint,4::myint,5::myint, null);
- a 
+ a
 ---
 (0 rows)
 

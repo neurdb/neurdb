@@ -106,44 +106,44 @@ int
 main (void)
 {
 /* exec sql begin declare section */
-	    
-	   
-	   
-	 
-	 
-	 
-	 
-	   
-	    
-	 
+
+
+
+
+
+
+
+
+
+
 
 #line 19 "array.pgc"
  int i = 1 , j ;
- 
+
 #line 20 "array.pgc"
  int * did = & i ;
- 
+
 #line 21 "array.pgc"
  short a [ 10 ] = { 9 , 8 , 7 , 6 , 5 , 4 , 3 , 2 , 1 , 0 } ;
- 
+
 #line 22 "array.pgc"
  timestamp ts [ 10 ] ;
- 
+
 #line 23 "array.pgc"
  date d [ 10 ] ;
- 
+
 #line 24 "array.pgc"
  interval in [ 10 ] ;
- 
+
 #line 25 "array.pgc"
  numeric n [ 10 ] ;
- 
+
 #line 26 "array.pgc"
  char text [ 25 ] = "klmnopqrst" ;
- 
+
 #line 27 "array.pgc"
  char * t = ( char * ) malloc ( 11 ) ;
- 
+
 #line 28 "array.pgc"
  double f ;
 /* exec sql end declare section */
@@ -172,7 +172,7 @@ main (void)
 		n[j] = *value;
 	}
 
-        { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+        { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 53 "array.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -200,14 +200,14 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 59 "array.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( f , i , a , text , ts , n , d , inter ) values ( 404.90 , 3 , '{0,1,2,3,4,5,6,7,8,9}' , 'abcdefghij' , $1  , $2  , $3  , $4  )", 
-	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_date,&(d),(long)1,(long)10,sizeof(date), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( f , i , a , text , ts , n , d , inter ) values ( 404.90 , 3 , '{0,1,2,3,4,5,6,7,8,9}' , 'abcdefghij' , $1  , $2  , $3  , $4  )",
+	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_date,&(d),(long)1,(long)10,sizeof(date),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 61 "array.pgc"
 
@@ -215,18 +215,18 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 61 "array.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( f , i , a , text , ts , n , d , inter ) values ( 140787.0 , 2 , $1  , $2  , $3  , $4  , $5  , $6  )", 
-	ECPGt_short,(a),(long)1,(long)10,sizeof(short), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_date,&(d),(long)1,(long)10,sizeof(date), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( f , i , a , text , ts , n , d , inter ) values ( 140787.0 , 2 , $1  , $2  , $3  , $4  , $5  , $6  )",
+	ECPGt_short,(a),(long)1,(long)10,sizeof(short),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_date,&(d),(long)1,(long)10,sizeof(date),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 63 "array.pgc"
 
@@ -234,20 +234,20 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 63 "array.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( f , i , a , text , ts , n , d , inter ) values ( 14.07 , $1  , $2  , $3  , $4  , $5  , $6  , $7  )", 
-	ECPGt_int,&(did),(long)1,(long)0,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_short,(a),(long)1,(long)10,sizeof(short), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(t),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_date,&(d),(long)1,(long)10,sizeof(date), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( f , i , a , text , ts , n , d , inter ) values ( 14.07 , $1  , $2  , $3  , $4  , $5  , $6  , $7  )",
+	ECPGt_int,&(did),(long)1,(long)0,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_short,(a),(long)1,(long)10,sizeof(short),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(t),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_date,&(d),(long)1,(long)10,sizeof(date),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 65 "array.pgc"
 
@@ -275,10 +275,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 75 "array.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select f , text from test where i = 1", ECPGt_EOIT, 
-	ECPGt_double,&(f),(long)1,(long)1,sizeof(double), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select f , text from test where i = 1", ECPGt_EOIT,
+	ECPGt_double,&(f),(long)1,(long)1,sizeof(double),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 80 "array.pgc"
 
@@ -289,20 +289,20 @@ if (sqlca.sqlcode < 0) sqlprint();}
 	printf("Found f=%f text=%10.10s\n", f, text);
 
 	f=140787;
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select a , text , ts , n , d , inter from test where f = $1 ", 
-	ECPGt_double,&(f),(long)1,(long)1,sizeof(double), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_short,(a),(long)1,(long)10,sizeof(short), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(t),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_date,&(d),(long)1,(long)10,sizeof(date), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select a , text , ts , n , d , inter from test where f = $1 ",
+	ECPGt_double,&(f),(long)1,(long)1,sizeof(double),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_short,(a),(long)1,(long)10,sizeof(short),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(t),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_timestamp,&(ts),(long)1,(long)10,sizeof(timestamp),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_numeric,&(n),(long)1,(long)10,sizeof(numeric),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_date,&(d),(long)1,(long)10,sizeof(date),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_interval,&(in),(long)1,(long)10,sizeof(interval),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 88 "array.pgc"
 
@@ -315,10 +315,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 
 	printf("Found text=%10.10s\n", t);
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select a from test where f = $1 ", 
-	ECPGt_double,&(f),(long)1,(long)1,sizeof(double), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select a from test where f = $1 ",
+	ECPGt_double,&(f),(long)1,(long)1,sizeof(double),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 98 "array.pgc"
 

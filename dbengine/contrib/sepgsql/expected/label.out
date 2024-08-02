@@ -69,7 +69,7 @@ SECURITY LABEL ON TABLE var_ptbl
 -- Tests for default labeling behavior
 --
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0
 (1 row)
@@ -77,7 +77,7 @@ SELECT sepgsql_getcon();	-- confirm client privilege
 CREATE TABLE t3 (s int, t text);
 INSERT INTO t3 VALUES (1, 'sss'), (2, 'ttt'), (3, 'uuu');
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                   
+                   sepgsql_getcon
 ----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_dba_t:s0
 (1 row)
@@ -85,7 +85,7 @@ SELECT sepgsql_getcon();	-- confirm client privilege
 CREATE TABLE t4 (m int, n text);
 INSERT INTO t4 VALUES (1,'mmm'), (2,'nnn'), (3,'ooo');
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0
 (1 row)
@@ -93,7 +93,7 @@ SELECT sepgsql_getcon();	-- confirm client privilege
 CREATE TABLE tpart (o int, p text) PARTITION BY RANGE (o);
 CREATE TABLE tpart_ones PARTITION OF tpart FOR VALUES FROM ('0') TO ('10');
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                   
+                   sepgsql_getcon
 ----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_dba_t:s0
 (1 row)
@@ -108,7 +108,7 @@ SELECT objtype, objname, label FROM pg_seclabels
 																	 'tpart_ones',
 																	 'tpart_tens')
     ORDER BY objname COLLATE "C" ASC;
- objtype |  objname   |                     label                     
+ objtype |  objname   |                     label
 ---------+------------+-----------------------------------------------
  table   | t1         | unconfined_u:object_r:sepgsql_table_t:s0
  table   | t2         | unconfined_u:object_r:sepgsql_table_t:s0
@@ -125,7 +125,7 @@ SELECT objtype, objname, label FROM pg_seclabels
 														  OR objname like 'tpart_ones.%'
 														  OR objname like 'tpart_tens.%')
     ORDER BY objname COLLATE "C" ASC;
- objtype |       objname       |                     label                     
+ objtype |       objname       |                     label
 ---------+---------------------+-----------------------------------------------
  column  | t3.cmax             | unconfined_u:object_r:user_sepgsql_table_t:s0
  column  | t3.cmin             | unconfined_u:object_r:user_sepgsql_table_t:s0
@@ -173,7 +173,7 @@ SELECT objtype, objname, label FROM pg_seclabels
 -- Tests for SECURITY LABEL
 --
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                   
+                   sepgsql_getcon
 ----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_dba_t:s0
 (1 row)
@@ -202,7 +202,7 @@ SECURITY LABEL ON COLUMN tpart.o
 -- Tests for Trusted Procedures
 --
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0
 (1 row)
@@ -212,7 +212,7 @@ SET client_min_messages = log;
 SELECT f1();			-- normal procedure
 LOG:  SELinux: allowed { execute } scontext=unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0 tcontext=unconfined_u:object_r:sepgsql_proc_exec_t:s0 tclass=db_procedure name="public.f1()" permissive=0
 LOG:  SELinux: allowed { execute } scontext=unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0 tcontext=system_u:object_r:sepgsql_proc_exec_t:s0 tclass=db_procedure name="pg_catalog.sepgsql_getcon()" permissive=0
-                         f1                          
+                         f1
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0
 (1 row)
@@ -222,7 +222,7 @@ LOG:  SELinux: allowed { execute } scontext=unconfined_u:unconfined_r:sepgsql_re
 LOG:  SELinux: allowed { entrypoint } scontext=unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0 tcontext=system_u:object_r:sepgsql_trusted_proc_exec_t:s0 tclass=db_procedure name="function f2()" permissive=0
 LOG:  SELinux: allowed { transition } scontext=unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0 tcontext=unconfined_u:unconfined_r:sepgsql_trusted_proc_t:s0 tclass=process permissive=0
 LOG:  SELinux: allowed { execute } scontext=unconfined_u:unconfined_r:sepgsql_trusted_proc_t:s0 tcontext=system_u:object_r:sepgsql_proc_exec_t:s0 tclass=db_procedure name="pg_catalog.sepgsql_getcon()" permissive=0
-                         f2                          
+                         f2
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_trusted_proc_t:s0
 (1 row)
@@ -240,7 +240,7 @@ LOG:  SELinux: denied { transition } scontext=unconfined_u:unconfined_r:sepgsql_
 ERROR:  SELinux: security policy violation
 SELECT sepgsql_getcon();	-- client's label must be restored
 LOG:  SELinux: allowed { execute } scontext=unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0 tcontext=system_u:object_r:sepgsql_proc_exec_t:s0 tclass=db_procedure name="pg_catalog.sepgsql_getcon()" permissive=0
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0
 (1 row)
@@ -250,19 +250,19 @@ LOG:  SELinux: allowed { execute } scontext=unconfined_u:unconfined_r:sepgsql_re
 --
 -- validation of transaction aware dynamic-transition
 SELECT sepgsql_getcon();	-- confirm client privilege
-                         sepgsql_getcon                          
+                         sepgsql_getcon
 -----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c25
 (1 row)
 
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c15');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                          
+                         sepgsql_getcon
 -----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c15
 (1 row)
@@ -270,126 +270,126 @@ SELECT sepgsql_getcon();
 SELECT sepgsql_setcon(NULL);	-- failed to reset
 ERROR:  SELinux: security policy violation
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                          
+                         sepgsql_getcon
 -----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c15
 (1 row)
 
 BEGIN;
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c12');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                          
+                         sepgsql_getcon
 -----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c12
 (1 row)
 
 SAVEPOINT svpt_1;
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c9');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c9
 (1 row)
 
 SAVEPOINT svpt_2;
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c6');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c6
 (1 row)
 
 SAVEPOINT svpt_3;
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c3');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c3
 (1 row)
 
 ROLLBACK TO SAVEPOINT svpt_2;
 SELECT sepgsql_getcon();		-- should be 's0:c0.c9'
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c9
 (1 row)
 
 ROLLBACK TO SAVEPOINT svpt_1;
 SELECT sepgsql_getcon();		-- should be 's0:c0.c12'
-                         sepgsql_getcon                          
+                         sepgsql_getcon
 -----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c12
 (1 row)
 
 ABORT;
 SELECT sepgsql_getcon();		-- should be 's0:c0.c15'
-                         sepgsql_getcon                          
+                         sepgsql_getcon
 -----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c15
 (1 row)
 
 BEGIN;
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c8');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c8
 (1 row)
 
 SAVEPOINT svpt_1;
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c4');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c4
 (1 row)
 
 ROLLBACK TO SAVEPOINT svpt_1;
 SELECT sepgsql_getcon();		-- should be 's0:c0.c8'
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c8
 (1 row)
 
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c6');
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 COMMIT;
 SELECT sepgsql_getcon();		-- should be 's0:c0.c6'
-                         sepgsql_getcon                         
+                         sepgsql_getcon
 ----------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0:c0.c6
 (1 row)
@@ -397,7 +397,7 @@ SELECT sepgsql_getcon();		-- should be 's0:c0.c6'
 -- sepgsql_regtest_user_t is not available dynamic-transition,
 -- unless sepgsql_setcon() is called inside of trusted-procedure
 SELECT sepgsql_getcon();	-- confirm client privilege
-                       sepgsql_getcon                       
+                       sepgsql_getcon
 ------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c15
 (1 row)
@@ -406,20 +406,20 @@ SELECT sepgsql_getcon();	-- confirm client privilege
 SELECT sepgsql_setcon('unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0');	-- failed
 ERROR:  SELinux: security policy violation
 SELECT sepgsql_getcon();
-                       sepgsql_getcon                       
+                       sepgsql_getcon
 ------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c15
 (1 row)
 
 -- trusted procedure allows to switch, but unavailable to override MCS rules
 SELECT f5('unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c7');	-- OK
- f5 
+ f5
 ----
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                      sepgsql_getcon                       
+                      sepgsql_getcon
 -----------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c7
 (1 row)
@@ -428,7 +428,7 @@ SELECT f5('unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c31');	-- Fail
 ERROR:  SELinux: security policy violation
 CONTEXT:  SQL function "f5" statement 1
 SELECT sepgsql_getcon();
-                      sepgsql_getcon                       
+                      sepgsql_getcon
 -----------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c7
 (1 row)
@@ -437,27 +437,27 @@ SELECT f5(NULL);	-- Failed
 ERROR:  SELinux: security policy violation
 CONTEXT:  SQL function "f5" statement 1
 SELECT sepgsql_getcon();
-                      sepgsql_getcon                       
+                      sepgsql_getcon
 -----------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c7
 (1 row)
 
 BEGIN;
 SELECT f5('unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c3');	-- OK
- f5 
+ f5
 ----
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                      sepgsql_getcon                       
+                      sepgsql_getcon
 -----------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c3
 (1 row)
 
 ABORT;
 SELECT sepgsql_getcon();
-                      sepgsql_getcon                       
+                      sepgsql_getcon
 -----------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0:c0.c7
 (1 row)
@@ -466,7 +466,7 @@ SELECT sepgsql_getcon();
 -- Test for simulation of typical connection pooling server
 --
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_pool_t:s0
 (1 row)
@@ -478,19 +478,19 @@ SELECT * FROM auth_tbl;	-- failed, no permission to reference
 ERROR:  SELinux: security policy violation
 -- switch to "foo"
 SELECT auth_func('foo', 'acbd18db4cc2f85cedef654fccc4a4d8');
- auth_func 
+ auth_func
 -----------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                   sepgsql_getcon                   
+                   sepgsql_getcon
 ----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_foo_t:s0
 (1 row)
 
 SELECT * FROM foo_tbl;	-- OK
- a |  b  
+ a |  b
 ---+-----
  1 | aaa
  2 | bbb
@@ -499,7 +499,7 @@ SELECT * FROM foo_tbl;	-- OK
 (4 rows)
 
 SELECT * FROM foo_ptbl;	-- OK
- o  |  p  
+ o  |  p
 ----+-----
   0 | aaa
   9 | bbb
@@ -514,13 +514,13 @@ ERROR:  SELinux: security policy violation
 SELECT * FROM auth_tbl;	-- failed
 ERROR:  SELinux: security policy violation
 SELECT sepgsql_setcon(NULL);	-- end of session
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_pool_t:s0
 (1 row)
@@ -536,13 +536,13 @@ SELECT * FROM var_ptbl;	-- failed
 ERROR:  SELinux: security policy violation
 -- switch to "var"
 SELECT auth_func('var', 'b2145aac704ce76dbe1ac7adac535b23');
- auth_func 
+ auth_func
 -----------
  t
 (1 row)
 
 SELECT sepgsql_getcon();
-                   sepgsql_getcon                   
+                   sepgsql_getcon
 ----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_var_t:s0
 (1 row)
@@ -552,7 +552,7 @@ ERROR:  SELinux: security policy violation
 SELECT * FROM foo_ptbl;  -- failed
 ERROR:  SELinux: security policy violation
 SELECT * FROM var_tbl;  -- OK
- x |  y  
+ x |  y
 ---+-----
  2 | xxx
  3 | yyy
@@ -561,7 +561,7 @@ SELECT * FROM var_tbl;  -- OK
 (4 rows)
 
 SELECT * FROM var_ptbl;  -- OK
- q  |  r  
+ q  |  r
 ----+-----
   0 | xxx
   9 | yyy
@@ -572,20 +572,20 @@ SELECT * FROM var_ptbl;  -- OK
 SELECT * FROM auth_tbl;	-- failed
 ERROR:  SELinux: security policy violation
 SELECT sepgsql_setcon(NULL);    -- end of session
- sepgsql_setcon 
+ sepgsql_setcon
 ----------------
  t
 (1 row)
 
 -- misc checks
 SELECT auth_func('var', 'invalid credential');	-- not works
- auth_func 
+ auth_func
 -----------
- 
+
 (1 row)
 
 SELECT sepgsql_getcon();
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_pool_t:s0
 (1 row)
@@ -594,7 +594,7 @@ SELECT sepgsql_getcon();
 -- Clean up
 --
 SELECT sepgsql_getcon();	-- confirm client privilege
-                           sepgsql_getcon                            
+                           sepgsql_getcon
 ---------------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0-s0:c0.c255
 (1 row)

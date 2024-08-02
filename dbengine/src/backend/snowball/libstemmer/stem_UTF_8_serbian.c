@@ -5064,7 +5064,7 @@ static int r_prelude(struct SN_env * z) {
 static int r_mark_regions(struct SN_env * z) {
     z->I[1] = 1;
     {   int c1 = z->c;
-        {   
+        {
             int ret = out_grouping_U(z, g_sa, 263, 382, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
@@ -5075,14 +5075,14 @@ static int r_mark_regions(struct SN_env * z) {
     }
     z->I[0] = z->l;
     {   int c2 = z->c;
-        {   
+        {
             int ret = out_grouping_U(z, g_v, 97, 117, 1);
             if (ret < 0) goto lab1;
             z->c += ret;
         }
         z->I[0] = z->c;
         if (!(z->I[0] < 2)) goto lab1;
-        {   
+        {
             int ret = in_grouping_U(z, g_v, 97, 117, 1);
             if (ret < 0) goto lab1;
             z->c += ret;
@@ -5107,7 +5107,7 @@ static int r_mark_regions(struct SN_env * z) {
             goto lab4;
         lab5:
             z->c = c4;
-            {   
+            {
                 int ret = in_grouping_U(z, g_rg, 114, 114, 1);
                 if (ret < 0) goto lab2;
                 z->c += ret;
@@ -6495,15 +6495,15 @@ static int r_Step_3(struct SN_env * z) {
 }
 
 extern int serbian_UTF_8_stem(struct SN_env * z) {
-    
+
     {   int ret = r_cyr_to_lat(z);
         if (ret < 0) return ret;
     }
-    
+
     {   int ret = r_prelude(z);
         if (ret < 0) return ret;
     }
-    
+
     {   int ret = r_mark_regions(z);
         if (ret < 0) return ret;
     }
@@ -6540,4 +6540,3 @@ extern int serbian_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * serbian_UTF_8_create_env(void) { return SN_create_env(0, 2); }
 
 extern void serbian_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

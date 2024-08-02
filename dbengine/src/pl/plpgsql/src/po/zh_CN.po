@@ -839,4 +839,3 @@ msgstr "%s 在输入的末尾"
 #, c-format
 msgid "%s at or near \"%s\""
 msgstr "%s 在 \"%s\" 或附近的"
-

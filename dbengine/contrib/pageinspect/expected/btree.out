@@ -161,7 +161,7 @@ vars       | f
 data       | 01 00 00 00 00 00 00 01
 dead       | f
 htid       | (0,1)
-tids       | 
+tids       |
 
 SELECT * FROM bt_page_items('test1_a_idx', 2);
 ERROR:  block number 2 is out of range
@@ -179,7 +179,7 @@ vars       | f
 data       | 01 00 00 00 00 00 00 01
 dead       | f
 htid       | (0,1)
-tids       | 
+tids       |
 
 SELECT * FROM bt_page_items(get_raw_page('test1_a_idx', 2));
 ERROR:  block number 2 is out of range for relation "test1_a_idx"
@@ -216,6 +216,6 @@ ERROR:  input page is not a valid btree page
 SHOW block_size \gset
 SELECT bt_page_items(decode(repeat('00', :block_size), 'hex'));
 -[ RECORD 1 ]-+-
-bt_page_items | 
+bt_page_items |
 
 DROP TABLE test1;

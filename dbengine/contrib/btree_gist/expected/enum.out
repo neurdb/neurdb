@@ -4,7 +4,7 @@ CREATE TABLE enumtmp (a rainbow);
 \copy enumtmp from 'data/enum.data'
 SET enable_seqscan=on;
 select a, count(*) from enumtmp group by a order by 1;
- a | count 
+ a | count
 ---+-------
  r |    76
  o |    78
@@ -17,31 +17,31 @@ select a, count(*) from enumtmp group by a order by 1;
 (8 rows)
 
 SELECT count(*) FROM enumtmp WHERE a <  'g'::rainbow;
- count 
+ count
 -------
    227
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a <= 'g'::rainbow;
- count 
+ count
 -------
    302
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a  = 'g'::rainbow;
- count 
+ count
 -------
     75
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a >= 'g'::rainbow;
- count 
+ count
 -------
    305
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a >  'g'::rainbow;
- count 
+ count
 -------
    230
 (1 row)
@@ -49,38 +49,38 @@ SELECT count(*) FROM enumtmp WHERE a >  'g'::rainbow;
 CREATE INDEX enumidx ON enumtmp USING gist ( a );
 SET enable_seqscan=off;
 SELECT count(*) FROM enumtmp WHERE a <  'g'::rainbow;
- count 
+ count
 -------
    227
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a <= 'g'::rainbow;
- count 
+ count
 -------
    302
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a  = 'g'::rainbow;
- count 
+ count
 -------
     75
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a >= 'g'::rainbow;
- count 
+ count
 -------
    305
 (1 row)
 
 SELECT count(*) FROM enumtmp WHERE a >  'g'::rainbow;
- count 
+ count
 -------
    230
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM enumtmp WHERE a >= 'g'::rainbow;
-                  QUERY PLAN                   
+                  QUERY PLAN
 -----------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on enumtmp
@@ -88,4 +88,3 @@ SELECT count(*) FROM enumtmp WHERE a >= 'g'::rainbow;
          ->  Bitmap Index Scan on enumidx
                Index Cond: (a >= 'g'::rainbow)
 (5 rows)
-

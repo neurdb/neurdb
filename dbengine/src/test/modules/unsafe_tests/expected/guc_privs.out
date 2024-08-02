@@ -69,19 +69,19 @@ REVOKE SET, ALTER SYSTEM ON PARAMETER work_mem FROM regress_host_resource_admin;
 REVOKE SET, ALTER SYSTEM ON PARAMETER zero_damaged_pages FROM regress_host_resource_admin;
 -- Check the new role does not yet have privileges on parameters
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET, ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
@@ -95,104 +95,104 @@ SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'WHATE
 ERROR:  unrecognized privilege type: "WHATEVER"
 -- Revoke, grant, and revoke again a SUSET parameter not yet granted
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 REVOKE SET ON PARAMETER zero_damaged_pages FROM regress_host_resource_admin;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 GRANT SET ON PARAMETER zero_damaged_pages TO regress_host_resource_admin;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 REVOKE SET ON PARAMETER zero_damaged_pages FROM regress_host_resource_admin;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'zero_damaged_pages', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 -- Revoke, grant, and revoke again a USERSET parameter not yet granted
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 REVOKE SET ON PARAMETER work_mem FROM regress_host_resource_admin;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 GRANT SET ON PARAMETER work_mem TO regress_host_resource_admin;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 REVOKE SET ON PARAMETER work_mem FROM regress_host_resource_admin;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
@@ -201,7 +201,7 @@ SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'ALTER
 -- entries in the catalog.
 REVOKE ALL ON PARAMETER "none.such" FROM regress_host_resource_admin;
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'none.such';
- ?column? 
+ ?column?
 ----------
 (0 rows)
 
@@ -209,14 +209,14 @@ SELECT 1 FROM pg_parameter_acl WHERE parname = 'none.such';
 -- a do-nothing entry is not left in the catalogs after the revoke.
 GRANT ALL ON PARAMETER none.such TO regress_host_resource_admin;
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'none.such';
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
 
 REVOKE ALL ON PARAMETER "None.Such" FROM regress_host_resource_admin;
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'none.such';
- ?column? 
+ ?column?
 ----------
 (0 rows)
 
@@ -225,50 +225,50 @@ GRANT ALL ON PARAMETER no_such_guc TO regress_host_resource_admin;  -- fail
 ERROR:  invalid parameter name "no_such_guc"
 -- Initially there are no privileges and no catalog entry for this GUC.
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET, ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
- ?column? 
+ ?column?
 ----------
 (0 rows)
 
 -- GRANT SET creates an entry:
 GRANT SET ON PARAMETER enable_material TO PUBLIC;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET, ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -276,25 +276,25 @@ SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
 -- Now grant ALTER SYSTEM:
 GRANT ALL ON PARAMETER enable_material TO PUBLIC;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET, ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -302,25 +302,25 @@ SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
 -- REVOKE ALTER SYSTEM brings us back to just the SET privilege:
 REVOKE ALTER SYSTEM ON PARAMETER enable_material FROM PUBLIC;
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'enable_material', 'SET, ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -328,7 +328,7 @@ SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
 -- And this should remove the entry altogether:
 REVOKE SET ON PARAMETER enable_material FROM PUBLIC;
 SELECT 1 FROM pg_parameter_acl WHERE parname = 'enable_material';
- ?column? 
+ ?column?
 ----------
 (0 rows)
 
@@ -339,25 +339,25 @@ GRANT SET, ALTER SYSTEM ON PARAMETER
 TO regress_host_resource_admin;
 -- Check the new role now has privileges on parameters
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET, ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'ALTER SYSTEM');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('regress_host_resource_admin', 'work_mem', 'SET WITH GRANT OPTION, ALTER SYSTEM WITH GRANT OPTION');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  f
 (1 row)
@@ -376,13 +376,13 @@ ERROR:  unrecognized privilege type: "WHATEVER WITH GRANT OPTION"
 SELECT has_parameter_privilege((SELECT oid FROM pg_catalog.pg_authid WHERE rolname = 'regress_host_resource_admin'),
                               'max_stack_depth',
                               'SET');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
 
 SELECT has_parameter_privilege('hash_mem_multiplier', 'set');
- has_parameter_privilege 
+ has_parameter_privilege
 -------------------------
  t
 (1 row)
@@ -390,21 +390,21 @@ SELECT has_parameter_privilege('hash_mem_multiplier', 'set');
 -- Check object identity functions
 SELECT pg_describe_object(tableoid, oid, 0)
 FROM pg_parameter_acl WHERE parname = 'work_mem';
- pg_describe_object 
+ pg_describe_object
 --------------------
  parameter work_mem
 (1 row)
 
 SELECT pg_identify_object(tableoid, oid, 0)
 FROM pg_parameter_acl WHERE parname = 'work_mem';
-      pg_identify_object      
+      pg_identify_object
 ------------------------------
  ("parameter ACL",,,work_mem)
 (1 row)
 
 SELECT pg_identify_object_as_address(tableoid, oid, 0)
 FROM pg_parameter_acl WHERE parname = 'work_mem';
-  pg_identify_object_as_address  
+  pg_identify_object_as_address
 ---------------------------------
  ("parameter ACL",{work_mem},{})
 (1 row)
@@ -413,7 +413,7 @@ SELECT classid::regclass,
        (SELECT parname FROM pg_parameter_acl WHERE oid = goa.objid) AS parname,
        objsubid
 FROM pg_get_object_address('parameter ACL', '{work_mem}', '{}') goa;
-     classid      | parname  | objsubid 
+     classid      | parname  | objsubid
 ------------------+----------+----------
  pg_parameter_acl | work_mem |        0
 (1 row)
@@ -451,7 +451,7 @@ ERROR:  permission denied to set parameter "lc_messages"
 ALTER SYSTEM RESET lc_messages;  -- fail, insufficient privileges
 ERROR:  permission denied to set parameter "lc_messages"
 SELECT set_config ('temp_buffers', '8192', false); -- ok
- set_config 
+ set_config
 ------------
  64MB
 (1 row)
@@ -464,7 +464,7 @@ ERROR:  permission denied to set parameter "lc_messages"
 ALTER ROLE regress_host_resource_admin SET max_stack_depth = '1MB';  -- ok
 SELECT setconfig FROM pg_db_role_setting
   WHERE setrole = 'regress_host_resource_admin'::regrole;
-              setconfig              
+              setconfig
 -------------------------------------
  {lc_messages=C,max_stack_depth=1MB}
 (1 row)
@@ -472,7 +472,7 @@ SELECT setconfig FROM pg_db_role_setting
 ALTER ROLE regress_host_resource_admin RESET max_stack_depth;  -- ok
 SELECT setconfig FROM pg_db_role_setting
   WHERE setrole = 'regress_host_resource_admin'::regrole;
-    setconfig    
+    setconfig
 -----------------
  {lc_messages=C}
 (1 row)
@@ -480,7 +480,7 @@ SELECT setconfig FROM pg_db_role_setting
 ALTER ROLE regress_host_resource_admin SET max_stack_depth = '1MB';  -- ok
 SELECT setconfig FROM pg_db_role_setting
   WHERE setrole = 'regress_host_resource_admin'::regrole;
-              setconfig              
+              setconfig
 -------------------------------------
  {lc_messages=C,max_stack_depth=1MB}
 (1 row)
@@ -488,7 +488,7 @@ SELECT setconfig FROM pg_db_role_setting
 ALTER ROLE regress_host_resource_admin RESET ALL;  -- doesn't reset lc_messages
 SELECT setconfig FROM pg_db_role_setting
   WHERE setrole = 'regress_host_resource_admin'::regrole;
-    setconfig    
+    setconfig
 -----------------
  {lc_messages=C}
 (1 row)

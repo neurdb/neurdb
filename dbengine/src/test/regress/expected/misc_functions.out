@@ -6,122 +6,122 @@
 -- num_nulls()
 --
 SELECT num_nonnulls(NULL);
- num_nonnulls 
+ num_nonnulls
 --------------
             0
 (1 row)
 
 SELECT num_nonnulls('1');
- num_nonnulls 
+ num_nonnulls
 --------------
             1
 (1 row)
 
 SELECT num_nonnulls(NULL::text);
- num_nonnulls 
+ num_nonnulls
 --------------
             0
 (1 row)
 
 SELECT num_nonnulls(NULL::text, NULL::int);
- num_nonnulls 
+ num_nonnulls
 --------------
             0
 (1 row)
 
 SELECT num_nonnulls(1, 2, NULL::text, NULL::point, '', int8 '9', 1.0 / NULL);
- num_nonnulls 
+ num_nonnulls
 --------------
             4
 (1 row)
 
 SELECT num_nonnulls(VARIADIC '{1,2,NULL,3}'::int[]);
- num_nonnulls 
+ num_nonnulls
 --------------
             3
 (1 row)
 
 SELECT num_nonnulls(VARIADIC '{"1","2","3","4"}'::text[]);
- num_nonnulls 
+ num_nonnulls
 --------------
             4
 (1 row)
 
 SELECT num_nonnulls(VARIADIC ARRAY(SELECT CASE WHEN i <> 40 THEN i END FROM generate_series(1, 100) i));
- num_nonnulls 
+ num_nonnulls
 --------------
            99
 (1 row)
 
 SELECT num_nulls(NULL);
- num_nulls 
+ num_nulls
 -----------
          1
 (1 row)
 
 SELECT num_nulls('1');
- num_nulls 
+ num_nulls
 -----------
          0
 (1 row)
 
 SELECT num_nulls(NULL::text);
- num_nulls 
+ num_nulls
 -----------
          1
 (1 row)
 
 SELECT num_nulls(NULL::text, NULL::int);
- num_nulls 
+ num_nulls
 -----------
          2
 (1 row)
 
 SELECT num_nulls(1, 2, NULL::text, NULL::point, '', int8 '9', 1.0 / NULL);
- num_nulls 
+ num_nulls
 -----------
          3
 (1 row)
 
 SELECT num_nulls(VARIADIC '{1,2,NULL,3}'::int[]);
- num_nulls 
+ num_nulls
 -----------
          1
 (1 row)
 
 SELECT num_nulls(VARIADIC '{"1","2","3","4"}'::text[]);
- num_nulls 
+ num_nulls
 -----------
          0
 (1 row)
 
 SELECT num_nulls(VARIADIC ARRAY(SELECT CASE WHEN i <> 40 THEN i END FROM generate_series(1, 100) i));
- num_nulls 
+ num_nulls
 -----------
          1
 (1 row)
 
 -- special cases
 SELECT num_nonnulls(VARIADIC NULL::text[]);
- num_nonnulls 
+ num_nonnulls
 --------------
-             
+
 (1 row)
 
 SELECT num_nonnulls(VARIADIC '{}'::int[]);
- num_nonnulls 
+ num_nonnulls
 --------------
             0
 (1 row)
 
 SELECT num_nulls(VARIADIC NULL::text[]);
- num_nulls 
+ num_nulls
 -----------
-          
+
 (1 row)
 
 SELECT num_nulls(VARIADIC '{}'::int[]);
- num_nulls 
+ num_nulls
 -----------
          0
 (1 row)
@@ -145,133 +145,133 @@ CREATE FUNCTION test_canonicalize_path(text)
    AS :'regresslib'
    LANGUAGE C STRICT IMMUTABLE;
 SELECT test_canonicalize_path('/');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /
 (1 row)
 
 SELECT test_canonicalize_path('/./abc/def/');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /abc/def
 (1 row)
 
 SELECT test_canonicalize_path('/./../abc/def');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /abc/def
 (1 row)
 
 SELECT test_canonicalize_path('/./../../abc/def/');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /abc/def
 (1 row)
 
 SELECT test_canonicalize_path('/abc/.././def/ghi');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /def/ghi
 (1 row)
 
 SELECT test_canonicalize_path('/abc/./../def/ghi//');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /def/ghi
 (1 row)
 
 SELECT test_canonicalize_path('/abc/def/../..');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /
 (1 row)
 
 SELECT test_canonicalize_path('/abc/def/../../..');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /
 (1 row)
 
 SELECT test_canonicalize_path('/abc/def/../../../../ghi/jkl');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  /ghi/jkl
 (1 row)
 
 SELECT test_canonicalize_path('.');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  .
 (1 row)
 
 SELECT test_canonicalize_path('./');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  .
 (1 row)
 
 SELECT test_canonicalize_path('./abc/..');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  .
 (1 row)
 
 SELECT test_canonicalize_path('abc/../');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  .
 (1 row)
 
 SELECT test_canonicalize_path('abc/../def');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  def
 (1 row)
 
 SELECT test_canonicalize_path('..');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  ..
 (1 row)
 
 SELECT test_canonicalize_path('../abc/def');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  ../abc/def
 (1 row)
 
 SELECT test_canonicalize_path('../abc/..');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  ..
 (1 row)
 
 SELECT test_canonicalize_path('../abc/../def');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  ../def
 (1 row)
 
 SELECT test_canonicalize_path('../abc/../../def/ghi');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  ../../def/ghi
 (1 row)
 
 SELECT test_canonicalize_path('./abc/./def/.');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  abc/def
 (1 row)
 
 SELECT test_canonicalize_path('./abc/././def/.');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  abc/def
 (1 row)
 
 SELECT test_canonicalize_path('./abc/./def/.././ghi/../../../jkl/mno');
- test_canonicalize_path 
+ test_canonicalize_path
 ------------------------
  ../jkl/mno
 (1 row)
@@ -285,14 +285,14 @@ SELECT test_canonicalize_path('./abc/./def/.././ghi/../../../jkl/mno');
 -- permissions are set properly.
 --
 SELECT pg_log_backend_memory_contexts(pg_backend_pid());
- pg_log_backend_memory_contexts 
+ pg_log_backend_memory_contexts
 --------------------------------
  t
 (1 row)
 
 SELECT pg_log_backend_memory_contexts(pid) FROM pg_stat_activity
   WHERE backend_type = 'checkpointer';
- pg_log_backend_memory_contexts 
+ pg_log_backend_memory_contexts
 --------------------------------
  t
 (1 row)
@@ -300,7 +300,7 @@ SELECT pg_log_backend_memory_contexts(pid) FROM pg_stat_activity
 CREATE ROLE regress_log_memory;
 SELECT has_function_privilege('regress_log_memory',
   'pg_log_backend_memory_contexts(integer)', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
@@ -309,14 +309,14 @@ GRANT EXECUTE ON FUNCTION pg_log_backend_memory_contexts(integer)
   TO regress_log_memory;
 SELECT has_function_privilege('regress_log_memory',
   'pg_log_backend_memory_contexts(integer)', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SET ROLE regress_log_memory;
 SELECT pg_log_backend_memory_contexts(pg_backend_pid());
- pg_log_backend_memory_contexts 
+ pg_log_backend_memory_contexts
 --------------------------------
  t
 (1 row)
@@ -335,52 +335,52 @@ select setting as segsize
 from pg_settings where name = 'wal_segment_size'
 \gset
 select count(*) > 0 as ok from pg_ls_waldir();
- ok 
+ ok
 ----
  t
 (1 row)
 
 -- Test ProjectSet as well as FunctionScan
 select count(*) > 0 as ok from (select pg_ls_waldir()) ss;
- ok 
+ ok
 ----
  t
 (1 row)
 
 -- Test not-run-to-completion cases.
 select * from pg_ls_waldir() limit 0;
- name | size | modification 
+ name | size | modification
 ------+------+--------------
 (0 rows)
 
 select count(*) > 0 as ok from (select * from pg_ls_waldir() limit 1) ss;
- ok 
+ ok
 ----
  t
 (1 row)
 
 select (w).size = :segsize as ok
 from (select pg_ls_waldir() w) ss where length((w).name) = 24 limit 1;
- ok 
+ ok
 ----
  t
 (1 row)
 
 select count(*) >= 0 as ok from pg_ls_archive_statusdir();
- ok 
+ ok
 ----
  t
 (1 row)
 
 -- pg_read_file()
 select length(pg_read_file('postmaster.pid')) > 20;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select length(pg_read_file('postmaster.pid', 1, 20));
- length 
+ length
 --------
      20
 (1 row)
@@ -389,7 +389,7 @@ select length(pg_read_file('postmaster.pid', 1, 20));
 select pg_read_file('does not exist'); -- error
 ERROR:  could not open file "does not exist" for reading: No such file or directory
 select pg_read_file('does not exist', true) IS NULL; -- ok
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -401,13 +401,13 @@ select pg_read_file('does not exist', 0, -1, true); -- error
 ERROR:  requested length cannot be negative
 -- pg_read_binary_file()
 select length(pg_read_binary_file('postmaster.pid')) > 20;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select length(pg_read_binary_file('postmaster.pid', 1, 20));
- length 
+ length
 --------
      20
 (1 row)
@@ -416,7 +416,7 @@ select length(pg_read_binary_file('postmaster.pid', 1, 20));
 select pg_read_binary_file('does not exist'); -- error
 ERROR:  could not open file "does not exist" for reading: No such file or directory
 select pg_read_binary_file('does not exist', true) IS NULL; -- ok
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -428,14 +428,14 @@ select pg_read_binary_file('does not exist', 0, -1, true); -- error
 ERROR:  requested length cannot be negative
 -- pg_stat_file()
 select size > 20, isdir from pg_stat_file('postmaster.pid');
- ?column? | isdir 
+ ?column? | isdir
 ----------+-------
  t        | f
 (1 row)
 
 -- pg_ls_dir()
 select * from (select pg_ls_dir('.') a) a where a = 'base' limit 1;
-  a   
+  a
 ------
  base
 (1 row)
@@ -444,28 +444,28 @@ select * from (select pg_ls_dir('.') a) a where a = 'base' limit 1;
 select pg_ls_dir('does not exist', false, false); -- error
 ERROR:  could not open directory "does not exist": No such file or directory
 select pg_ls_dir('does not exist', true, false); -- ok
- pg_ls_dir 
+ pg_ls_dir
 -----------
 (0 rows)
 
 -- Test include_dot_dirs (third argument)
 select count(*) = 1 as dot_found
   from pg_ls_dir('.', false, true) as ls where ls = '.';
- dot_found 
+ dot_found
 -----------
  t
 (1 row)
 
 select count(*) = 1 as dot_found
   from pg_ls_dir('.', false, false) as ls where ls = '.';
- dot_found 
+ dot_found
 -----------
  f
 (1 row)
 
 -- pg_timezone_names()
 select * from (select (pg_timezone_names()).name) ptn where name='UTC' limit 1;
- name 
+ name
 ------
  UTC
 (1 row)
@@ -475,7 +475,7 @@ select count(*) > 0 from
   (select pg_tablespace_databases(oid) as pts from pg_tablespace
    where spcname = 'pg_default') pts
   join pg_database db on pts.pts = db.oid;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -487,21 +487,21 @@ CREATE ROLE regress_slot_dir_funcs;
 -- Not available by default.
 SELECT has_function_privilege('regress_slot_dir_funcs',
   'pg_ls_logicalsnapdir()', 'EXECUTE');
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_slot_dir_funcs',
   'pg_ls_logicalmapdir()', 'EXECUTE');
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_slot_dir_funcs',
   'pg_ls_replslotdir(text)', 'EXECUTE');
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
@@ -510,21 +510,21 @@ GRANT pg_monitor TO regress_slot_dir_funcs;
 -- Role is now part of pg_monitor, so these are available.
 SELECT has_function_privilege('regress_slot_dir_funcs',
   'pg_ls_logicalsnapdir()', 'EXECUTE');
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_slot_dir_funcs',
   'pg_ls_logicalmapdir()', 'EXECUTE');
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_slot_dir_funcs',
   'pg_ls_replslotdir(text)', 'EXECUTE');
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
@@ -540,7 +540,7 @@ CREATE FUNCTION my_int_eq(int, int) RETURNS bool
 EXPLAIN (COSTS OFF)
 SELECT * FROM tenk1 a JOIN tenk1 b ON a.unique1 = b.unique1
 WHERE my_int_eq(a.unique2, 42);
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Hash Join
    Hash Cond: (b.unique1 = a.unique1)
@@ -559,7 +559,7 @@ ALTER FUNCTION my_int_eq(int, int) SUPPORT test_support_func;
 EXPLAIN (COSTS OFF)
 SELECT * FROM tenk1 a JOIN tenk1 b ON a.unique1 = b.unique1
 WHERE my_int_eq(a.unique2, 42);
-                   QUERY PLAN                    
+                   QUERY PLAN
 -------------------------------------------------
  Nested Loop
    ->  Seq Scan on tenk1 a
@@ -575,7 +575,7 @@ CREATE FUNCTION my_gen_series(int, int) RETURNS SETOF integer
   SUPPORT test_support_func;
 EXPLAIN (COSTS OFF)
 SELECT * FROM tenk1 a JOIN my_gen_series(1,1000) g ON a.unique1 = g;
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Hash Join
    Hash Cond: (g.g = a.unique1)
@@ -586,7 +586,7 @@ SELECT * FROM tenk1 a JOIN my_gen_series(1,1000) g ON a.unique1 = g;
 
 EXPLAIN (COSTS OFF)
 SELECT * FROM tenk1 a JOIN my_gen_series(1,10) g ON a.unique1 = g;
-                   QUERY PLAN                    
+                   QUERY PLAN
 -------------------------------------------------
  Nested Loop
    ->  Function Scan on my_gen_series g
@@ -596,49 +596,48 @@ SELECT * FROM tenk1 a JOIN my_gen_series(1,10) g ON a.unique1 = g;
 
 -- Test functions for control data
 SELECT count(*) > 0 AS ok FROM pg_control_checkpoint();
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT count(*) > 0 AS ok FROM pg_control_init();
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT count(*) > 0 AS ok FROM pg_control_recovery();
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT count(*) > 0 AS ok FROM pg_control_system();
- ok 
+ ok
 ----
  t
 (1 row)
 
 -- pg_split_walfile_name
 SELECT * FROM pg_split_walfile_name(NULL);
- segment_number | timeline_id 
+ segment_number | timeline_id
 ----------------+-------------
-                |            
+                |
 (1 row)
 
 SELECT * FROM pg_split_walfile_name('invalid');
 ERROR:  invalid WAL file name "invalid"
 SELECT segment_number > 0 AS ok_segment_number, timeline_id
   FROM pg_split_walfile_name('000000010000000100000000');
- ok_segment_number | timeline_id 
+ ok_segment_number | timeline_id
 -------------------+-------------
  t                 |           1
 (1 row)
 
 SELECT segment_number > 0 AS ok_segment_number, timeline_id
   FROM pg_split_walfile_name('ffffffFF00000001000000af');
- ok_segment_number | timeline_id 
+ ok_segment_number | timeline_id
 -------------------+-------------
  t                 |  4294967295
 (1 row)
-

@@ -6,59 +6,59 @@ ERROR:  invalid skip option
 HINT:  Valid skip options are "all-visible", "all-frozen", and "none".
 -- Check specifying invalid block ranges when verifying an empty table
 SELECT * FROM verify_heapam(relation := 'heaptest', startblock := 0, endblock := 0);
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', startblock := 5, endblock := 8);
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 -- Check that valid options are not rejected nor corruption reported
 -- for an empty table, and that skip enum-like parameter is case-insensitive
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'none');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'all-frozen');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'all-visible');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'None');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'All-Frozen');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'All-Visible');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'NONE');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'ALL-FROZEN');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'ALL-VISIBLE');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
@@ -89,22 +89,22 @@ ALTER TABLE heaptest SET TABLESPACE regress_test_stats_tblspc;
 -- Check that valid options are not rejected nor corruption reported
 -- for a non-empty table
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'none');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'all-frozen');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'all-visible');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', startblock := 0, endblock := 0);
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
@@ -113,15 +113,15 @@ COMMIT;
 --   ALTER TABLE ... SET TABLESPACE ...
 -- causing an additional bulkread, which should be reflected in pg_stat_io.
 SELECT pg_stat_force_next_flush();
- pg_stat_force_next_flush 
+ pg_stat_force_next_flush
 --------------------------
- 
+
 (1 row)
 
 SELECT sum(reads) AS stats_bulkreads_after
   FROM pg_stat_io WHERE context = 'bulkread' \gset
 SELECT :stats_bulkreads_after > :stats_bulkreads_before;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
@@ -136,7 +136,7 @@ GRANT EXECUTE ON FUNCTION verify_heapam(regclass, boolean, boolean, text, bigint
 -- verify permissions are now sufficient
 SET ROLE regress_heaptest_role;
 SELECT * FROM verify_heapam(relation := 'heaptest');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
@@ -151,22 +151,22 @@ VACUUM (FREEZE, DISABLE_PAGE_SKIPPING) heaptest;
 -- Check that valid options are not rejected nor corruption reported
 -- for a non-empty frozen table
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'none');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'all-frozen');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', skip := 'all-visible');
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
 SELECT * FROM verify_heapam(relation := 'heaptest', startblock := 0, endblock := 0);
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
@@ -185,7 +185,7 @@ CREATE TABLE test_partition partition OF test_partitioned FOR VALUES IN (1);
 SELECT * FROM verify_heapam('test_partition',
 							startblock := NULL,
 							endblock := NULL);
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
@@ -195,7 +195,7 @@ INSERT INTO test_partitioned (a) (SELECT 1 FROM generate_series(1,1000) gs);
 SELECT * FROM verify_heapam('test_partition',
 							startblock := NULL,
 							endblock := NULL);
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 
@@ -218,7 +218,7 @@ CREATE SEQUENCE test_sequence;
 SELECT * FROM verify_heapam('test_sequence',
 							startblock := NULL,
 							endblock := NULL);
- blkno | offnum | attnum | msg 
+ blkno | offnum | attnum | msg
 -------+--------+--------+-----
 (0 rows)
 

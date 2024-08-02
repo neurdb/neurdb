@@ -248,4 +248,3 @@ msgstr "underprosess ble avsluttet med signal %d"
 #, c-format
 msgid "child process exited with unrecognized status %d"
 msgstr "underprosess avsluttet med ukjent status %d"
-

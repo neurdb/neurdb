@@ -57,7 +57,7 @@ src/tools/pg_bsd_indent/.*
 # ... and for paranoia's sake, don't touch git stuff.
 /\.git/
 #
-# NeurDB 
+# NeurDB
 #   Extension
 /contrib/nr/
 #   venv

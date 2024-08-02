@@ -13,7 +13,7 @@ set standard_conforming_strings = on;
 -- expectMatch	9.44 EMP*	{a[\u00fe-\u0507][\u00ff-\u0300]b} \
 -- 	"a\u0102\u02ffb"	"a\u0102\u02ffb"
 select * from test_regex('a[\u00fe-\u0507][\u00ff-\u0300]b', E'a\u0102\u02ffb', 'EMP*');
-               test_regex               
+               test_regex
 ----------------------------------------
  {0,REG_UBBS,REG_UNONPOSIX,REG_UUNPORT}
  {aĂ˿b}
@@ -21,7 +21,7 @@ select * from test_regex('a[\u00fe-\u0507][\u00ff-\u0300]b', E'a\u0102\u02ffb', 
 
 -- expectMatch	13.27 P		"a\\U00001234x"	"a\u1234x"	"a\u1234x"
 select * from test_regex('a\U00001234x', E'a\u1234x', 'P');
-    test_regex     
+    test_regex
 -------------------
  {0,REG_UNONPOSIX}
  {aሴx}
@@ -29,7 +29,7 @@ select * from test_regex('a\U00001234x', E'a\u1234x', 'P');
 
 -- expectMatch	13.28 P		{a\U00001234x}	"a\u1234x"	"a\u1234x"
 select * from test_regex('a\U00001234x', E'a\u1234x', 'P');
-    test_regex     
+    test_regex
 -------------------
  {0,REG_UNONPOSIX}
  {aሴx}
@@ -45,7 +45,7 @@ select * from test_regex('a\U0001234x', E'a\u1234x', 'P');
 ERROR:  invalid regular expression: invalid escape \ sequence
 -- expectMatch	13.31 P		"a\\U000012345x"	"a\u12345x"	"a\u12345x"
 select * from test_regex('a\U000012345x', E'a\u12345x', 'P');
-    test_regex     
+    test_regex
 -------------------
  {0,REG_UNONPOSIX}
  {aሴ5x}
@@ -53,7 +53,7 @@ select * from test_regex('a\U000012345x', E'a\u12345x', 'P');
 
 -- expectMatch	13.32 P		{a\U000012345x}	"a\u12345x"	"a\u12345x"
 select * from test_regex('a\U000012345x', E'a\u12345x', 'P');
-    test_regex     
+    test_regex
 -------------------
  {0,REG_UNONPOSIX}
  {aሴ5x}
@@ -77,7 +77,7 @@ select * from test_regex('a
   [\u2600-\u2f00]*
   \u1236\u1236x',
   E'a\u1234\u1236\u1236x', 'xEMP');
-               test_regex               
+               test_regex
 ----------------------------------------
  {0,REG_UBBS,REG_UNONPOSIX,REG_UUNPORT}
  {aሴሶሶx}
@@ -85,7 +85,7 @@ select * from test_regex('a
 
 select * from test_regex('[[:alnum:]]*[[:upper:]]*[\u1000-\u2000]*\u1237',
   E'\u1500\u1237', 'ELMP');
-                     test_regex                     
+                     test_regex
 ----------------------------------------------------
  {0,REG_UBBS,REG_UNONPOSIX,REG_UUNPORT,REG_ULOCALE}
  {ᔀሷ}
@@ -93,14 +93,14 @@ select * from test_regex('[[:alnum:]]*[[:upper:]]*[\u1000-\u2000]*\u1237',
 
 select * from test_regex('[[:alnum:]]*[[:upper:]]*[\u1000-\u2000]*\u1237',
   E'A\u1239', 'ELMP');
-                     test_regex                     
+                     test_regex
 ----------------------------------------------------
  {0,REG_UBBS,REG_UNONPOSIX,REG_UUNPORT,REG_ULOCALE}
 (1 row)
 
 select * from test_regex('[[:alnum:]]*[[:upper:]]*[\u1000-\u2000]*\u1237',
   E'\u1500\u1237', 'iELMP');
-                     test_regex                     
+                     test_regex
 ----------------------------------------------------
  {0,REG_UBBS,REG_UNONPOSIX,REG_UUNPORT,REG_ULOCALE}
  {ᔀሷ}
@@ -108,99 +108,98 @@ select * from test_regex('[[:alnum:]]*[[:upper:]]*[\u1000-\u2000]*\u1237',
 
 -- systematically test char classes
 select * from test_regex('[[:alnum:]]+',  E'x*\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {x}
 (2 rows)
 
 select * from test_regex('[[:alpha:]]+',  E'x*\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {x}
 (2 rows)
 
 select * from test_regex('[[:ascii:]]+',  E'x\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {x}
 (2 rows)
 
 select * from test_regex('[[:blank:]]+',  E'x \t\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {"      "}
 (2 rows)
 
 select * from test_regex('[[:cntrl:]]+',  E'x\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
 (1 row)
 
 select * from test_regex('[[:digit:]]+',  E'x9\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {9}
 (2 rows)
 
 select * from test_regex('[[:graph:]]+',  E'x\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {xᔀሷ}
 (2 rows)
 
 select * from test_regex('[[:lower:]]+',  E'x\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {x}
 (2 rows)
 
 select * from test_regex('[[:print:]]+',  E'x\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {xᔀሷ}
 (2 rows)
 
 select * from test_regex('[[:punct:]]+',  E'x.\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {.}
 (2 rows)
 
 select * from test_regex('[[:space:]]+',  E'x \t\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {"      "}
 (2 rows)
 
 select * from test_regex('[[:upper:]]+',  E'xX\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {X}
 (2 rows)
 
 select * from test_regex('[[:xdigit:]]+',  E'xa9\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {a9}
 (2 rows)
 
 select * from test_regex('[[:word:]]+',  E'x_*\u1500\u1237', 'L');
-   test_regex    
+   test_regex
 -----------------
  {0,REG_ULOCALE}
  {x_}
 (2 rows)
-

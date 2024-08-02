@@ -1190,4 +1190,3 @@ msgstr "无法向服务器发送数据: %s\n"
 #, c-format
 msgid "unrecognized socket error: 0x%08X/%d"
 msgstr "不可识别的套接字错误: 0x%08X/%d"
-

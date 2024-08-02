@@ -4,7 +4,7 @@ starting permutation: s0_init s0_begin s0_savepoint s0_truncate s1_checkpoint s1
 step s0_init: SELECT 'init' FROM pg_create_logical_replication_slot('isolation_slot', 'test_decoding');
 ?column?
 --------
-init    
+init
 (1 row)
 
 step s0_begin: BEGIN;
@@ -21,25 +21,25 @@ step s0_begin: BEGIN;
 step s0_insert: INSERT INTO tbl1 VALUES (1);
 step s1_checkpoint: CHECKPOINT;
 step s1_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'skip-empty-xacts', '1', 'include-xids', '0');
-data                                   
+data
 ---------------------------------------
-BEGIN                                  
+BEGIN
 table public.tbl1: TRUNCATE: (no-flags)
-COMMIT                                 
+COMMIT
 (3 rows)
 
 step s0_commit: COMMIT;
 step s1_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'skip-empty-xacts', '1', 'include-xids', '0');
-data                                                         
+data
 -------------------------------------------------------------
-BEGIN                                                        
+BEGIN
 table public.tbl1: INSERT: val1[integer]:1 val2[integer]:null
-COMMIT                                                       
+COMMIT
 (3 rows)
 
 ?column?
 --------
-stop    
+stop
 (1 row)
 
 
@@ -47,7 +47,7 @@ starting permutation: s0_init s0_begin s0_truncate s2_begin s2_truncate s1_check
 step s0_init: SELECT 'init' FROM pg_create_logical_replication_slot('isolation_slot', 'test_decoding');
 ?column?
 --------
-init    
+init
 (1 row)
 
 step s0_begin: BEGIN;
@@ -65,35 +65,35 @@ step s0_begin: BEGIN;
 step s0_insert: INSERT INTO tbl1 VALUES (1);
 step s1_checkpoint: CHECKPOINT;
 step s1_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'skip-empty-xacts', '1', 'include-xids', '0');
-data                                   
+data
 ---------------------------------------
-BEGIN                                  
+BEGIN
 table public.tbl1: TRUNCATE: (no-flags)
-COMMIT                                 
+COMMIT
 (3 rows)
 
 step s2_commit: COMMIT;
 step s1_checkpoint: CHECKPOINT;
 step s1_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'skip-empty-xacts', '1', 'include-xids', '0');
-data                                   
+data
 ---------------------------------------
-BEGIN                                  
+BEGIN
 table public.tbl2: TRUNCATE: (no-flags)
-COMMIT                                 
+COMMIT
 (3 rows)
 
 step s0_commit: COMMIT;
 step s1_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'skip-empty-xacts', '1', 'include-xids', '0');
-data                                                         
+data
 -------------------------------------------------------------
-BEGIN                                                        
+BEGIN
 table public.tbl1: INSERT: val1[integer]:1 val2[integer]:null
-COMMIT                                                       
+COMMIT
 (3 rows)
 
 ?column?
 --------
-stop    
+stop
 (1 row)
 
 
@@ -101,7 +101,7 @@ starting permutation: s0_init s0_begin s0_savepoint s0_insert s1_checkpoint s1_g
 step s0_init: SELECT 'init' FROM pg_create_logical_replication_slot('isolation_slot', 'test_decoding');
 ?column?
 --------
-init    
+init
 (1 row)
 
 step s0_begin: BEGIN;
@@ -119,25 +119,24 @@ step s0_begin: BEGIN;
 step s0_insert: INSERT INTO tbl1 VALUES (1);
 step s1_checkpoint: CHECKPOINT;
 step s1_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'skip-empty-xacts', '1', 'include-xids', '0');
-data                                                         
+data
 -------------------------------------------------------------
-BEGIN                                                        
+BEGIN
 table public.tbl1: INSERT: val1[integer]:1 val2[integer]:null
-table public.user_cat: INSERT: val1[integer]:1               
-COMMIT                                                       
+table public.user_cat: INSERT: val1[integer]:1
+COMMIT
 (4 rows)
 
 step s0_commit: COMMIT;
 step s1_get_changes: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'skip-empty-xacts', '1', 'include-xids', '0');
-data                                                         
+data
 -------------------------------------------------------------
-BEGIN                                                        
+BEGIN
 table public.tbl1: INSERT: val1[integer]:1 val2[integer]:null
-COMMIT                                                       
+COMMIT
 (3 rows)
 
 ?column?
 --------
-stop    
+stop
 (1 row)
-

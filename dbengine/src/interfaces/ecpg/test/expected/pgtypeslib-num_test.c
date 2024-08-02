@@ -65,9 +65,9 @@ main(void)
 	char *text="error\n";
 	numeric *value1, *value2, *res;
 	/* exec sql begin declare section */
-		 
+
 		/* = {0, 0, 0, 0, 0, NULL, NULL} ; */
-	
+
 #line 17 "num_test.pgc"
  numeric * des ;
 /* exec sql end declare section */
@@ -82,7 +82,7 @@ main(void)
 #line 25 "num_test.pgc"
 
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 27 "num_test.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
@@ -125,8 +125,8 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
 	des = PGTYPESnumeric_new();
 	PGTYPESnumeric_copy(res, des);
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( text , num ) values ( 'test' , $1  )", 
-	ECPGt_numeric,&(des),(long)1,(long)0,sizeof(numeric), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( text , num ) values ( 'test' , $1  )",
+	ECPGt_numeric,&(des),(long)1,(long)0,sizeof(numeric),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 55 "num_test.pgc"
 
@@ -138,8 +138,8 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 	PGTYPESnumeric_mul(value1, value2, res);
 	PGTYPESnumeric_free(value2);
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select num from test where text = 'test'", ECPGt_EOIT, 
-	ECPGt_numeric,&(des),(long)1,(long)0,sizeof(numeric), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select num from test where text = 'test'", ECPGt_EOIT,
+	ECPGt_numeric,&(des),(long)1,(long)0,sizeof(numeric),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 61 "num_test.pgc"
 

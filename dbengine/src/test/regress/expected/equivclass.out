@@ -104,7 +104,7 @@ set enable_mergejoin = off;
 --
 explain (costs off)
   select * from ec0 where ff = f1 and f1 = '42'::int8;
-            QUERY PLAN             
+            QUERY PLAN
 -----------------------------------
  Index Scan using ec0_pkey on ec0
    Index Cond: (ff = '42'::bigint)
@@ -113,7 +113,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec0 where ff = f1 and f1 = '42'::int8alias1;
-              QUERY PLAN               
+              QUERY PLAN
 ---------------------------------------
  Index Scan using ec0_pkey on ec0
    Index Cond: (ff = '42'::int8alias1)
@@ -122,7 +122,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec1 where ff = f1 and f1 = '42'::int8alias1;
-              QUERY PLAN               
+              QUERY PLAN
 ---------------------------------------
  Index Scan using ec1_pkey on ec1
    Index Cond: (ff = '42'::int8alias1)
@@ -131,7 +131,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec1 where ff = f1 and f1 = '42'::int8alias2;
-                    QUERY PLAN                     
+                    QUERY PLAN
 ---------------------------------------------------
  Seq Scan on ec1
    Filter: ((ff = f1) AND (f1 = '42'::int8alias2))
@@ -139,7 +139,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec1, ec2 where ff = x1 and ff = '42'::int8;
-                            QUERY PLAN                             
+                            QUERY PLAN
 -------------------------------------------------------------------
  Nested Loop
    Join Filter: (ec1.ff = ec2.x1)
@@ -150,7 +150,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec1, ec2 where ff = x1 and ff = '42'::int8alias1;
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Nested Loop
    ->  Index Scan using ec1_pkey on ec1
@@ -161,7 +161,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec1, ec2 where ff = x1 and '42'::int8 = x1;
-               QUERY PLAN                
+               QUERY PLAN
 -----------------------------------------
  Nested Loop
    Join Filter: (ec1.ff = ec2.x1)
@@ -173,7 +173,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec1, ec2 where ff = x1 and x1 = '42'::int8alias1;
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Nested Loop
    ->  Index Scan using ec1_pkey on ec1
@@ -184,7 +184,7 @@ explain (costs off)
 
 explain (costs off)
   select * from ec1, ec2 where ff = x1 and x1 = '42'::int8alias2;
-               QUERY PLAN                
+               QUERY PLAN
 -----------------------------------------
  Nested Loop
    ->  Seq Scan on ec2
@@ -206,7 +206,7 @@ explain (costs off)
      union all
      select ff + 4 as x from ec1) as ss1
   where ss1.x = ec1.f1 and ec1.ff = 42::int8;
-                     QUERY PLAN                      
+                     QUERY PLAN
 -----------------------------------------------------
  Nested Loop
    ->  Index Scan using ec1_pkey on ec1
@@ -229,7 +229,7 @@ explain (costs off)
      union all
      select ff + 4 as x from ec1) as ss1
   where ss1.x = ec1.f1 and ec1.ff = 42::int8 and ec1.ff = ec1.f1;
-                            QUERY PLAN                             
+                            QUERY PLAN
 -------------------------------------------------------------------
  Nested Loop
    Join Filter: ((((ec1_1.ff + 2) + 1)) = ec1.f1)
@@ -260,7 +260,7 @@ explain (costs off)
      union all
      select ff + 4 as x from ec1) as ss2
   where ss1.x = ec1.f1 and ss1.x = ss2.x and ec1.ff = 42::int8;
-                             QUERY PLAN                              
+                             QUERY PLAN
 ---------------------------------------------------------------------
  Nested Loop
    ->  Nested Loop
@@ -300,7 +300,7 @@ explain (costs off)
      union all
      select ff + 4 as x from ec1) as ss2
   where ss1.x = ec1.f1 and ss1.x = ss2.x and ec1.ff = 42::int8;
-                           QUERY PLAN                            
+                           QUERY PLAN
 -----------------------------------------------------------------
  Merge Join
    Merge Cond: ((((ec1_4.ff + 2) + 1)) = (((ec1_1.ff + 2) + 1)))
@@ -336,7 +336,7 @@ explain (costs off)
      union all
      select ff + 4 as x from ec1) as ss1
   where ss1.x = ec1.f1 and ec1.ff = 42::int8;
-                     QUERY PLAN                      
+                     QUERY PLAN
 -----------------------------------------------------
  Nested Loop
    ->  Index Scan using ec1_pkey on ec1
@@ -362,7 +362,7 @@ explain (costs off)
      union all
      select ff + 4 as x from ec1) as ss1
   where ss1.x = ec1.f1 and ec1.ff = 42::int8;
-                     QUERY PLAN                      
+                     QUERY PLAN
 -----------------------------------------------------
  Merge Join
    Merge Cond: ((((ec1_1.ff + 2) + 1)) = ec1.f1)
@@ -391,7 +391,7 @@ grant select on ec1 to regress_user_ectest;
 explain (costs off)
   select * from ec0 a, ec1 b
   where a.ff = b.ff and a.ff = 43::bigint::int8alias1;
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Nested Loop
    ->  Index Scan using ec0_pkey on ec0 a
@@ -407,7 +407,7 @@ set session authorization regress_user_ectest;
 explain (costs off)
   select * from ec0 a, ec1 b
   where a.ff = b.ff and a.ff = 43::bigint::int8alias1;
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Nested Loop
    ->  Index Scan using ec0_pkey on ec0 a
@@ -424,7 +424,7 @@ drop user regress_user_ectest;
 -- check that X=X is converted to X IS NOT NULL when appropriate
 explain (costs off)
   select * from tenk1 where unique1 = unique1 and unique2 = unique2;
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Seq Scan on tenk1
    Filter: ((unique1 IS NOT NULL) AND (unique2 IS NOT NULL))
@@ -433,7 +433,7 @@ explain (costs off)
 -- this could be converted, but isn't at present
 explain (costs off)
   select * from tenk1 where unique1 = unique1 or unique2 = unique2;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Seq Scan on tenk1
    Filter: ((unique1 = unique1) OR (unique2 = unique2))
@@ -445,9 +445,8 @@ create temp view overview as
   select f1::information_schema.sql_identifier as sqli, f2 from undername;
 explain (costs off)  -- this should not require a sort
   select * from overview where sqli = 'foo' order by sqli;
-          QUERY PLAN          
+          QUERY PLAN
 ------------------------------
  Seq Scan on undername
    Filter: (f1 = 'foo'::name)
 (2 rows)
-

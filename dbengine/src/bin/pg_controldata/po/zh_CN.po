@@ -502,4 +502,3 @@ msgstr "数据页校验和版本:  %u\n"
 #, c-format
 msgid "Mock authentication nonce:            %s\n"
 msgstr "当前身份验证:            %s\n"
-

@@ -28,7 +28,7 @@ ANALYZE prt2;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.b = 0 ORDER BY t1.a, t2.b;
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -54,7 +54,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.b =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
    0 | 0000 |   0 | 0000
  150 | 0150 | 150 | 0150
@@ -67,7 +67,7 @@ EXPLAIN (COSTS OFF)
 SELECT COUNT(*) FROM prt1 t1
   LEFT JOIN prt1 t2 ON t1.a = t2.a
   LEFT JOIN prt1 t3 ON t2.a = t3.a;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Aggregate
    ->  Append
@@ -103,7 +103,7 @@ SELECT COUNT(*) FROM prt1 t1
 SELECT COUNT(*) FROM prt1 t1
   LEFT JOIN prt1 t2 ON t1.a = t2.a
   LEFT JOIN prt1 t3 ON t2.a = t3.a;
- count 
+ count
 -------
    300
 (1 row)
@@ -111,7 +111,7 @@ SELECT COUNT(*) FROM prt1 t1
 -- left outer join, with whole-row reference; partitionwise join does not apply
 EXPLAIN (COSTS OFF)
 SELECT t1, t2 FROM prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -132,26 +132,26 @@ SELECT t1, t2 FROM prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b WHERE t1.b = 0 ORDER
 (16 rows)
 
 SELECT t1, t2 FROM prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-      t1      |      t2      
+      t1      |      t2
 --------------+--------------
  (0,0,0000)   | (0,0,0000)
- (50,0,0050)  | 
- (100,0,0100) | 
+ (50,0,0050)  |
+ (100,0,0100) |
  (150,0,0150) | (0,150,0150)
- (200,0,0200) | 
- (250,0,0250) | 
+ (200,0,0200) |
+ (250,0,0250) |
  (300,0,0300) | (0,300,0300)
- (350,0,0350) | 
- (400,0,0400) | 
+ (350,0,0350) |
+ (400,0,0400) |
  (450,0,0450) | (0,450,0450)
- (500,0,0500) | 
- (550,0,0550) | 
+ (500,0,0500) |
+ (550,0,0550) |
 (12 rows)
 
 -- right outer join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1 RIGHT JOIN prt2 t2 ON t1.a = t2.b WHERE t2.a = 0 ORDER BY t1.a, t2.b;
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -176,7 +176,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1 RIGHT JOIN prt2 t2 ON t1.a = t2.b WHE
 (20 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1 RIGHT JOIN prt2 t2 ON t1.a = t2.b WHERE t2.a = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
    0 | 0000 |   0 | 0000
  150 | 0150 | 150 | 0150
@@ -191,7 +191,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1 RIGHT JOIN prt2 t2 ON t1.a = t2.b WHE
 -- full outer join, with placeholder vars
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 50 phv, * FROM prt1 WHERE prt1.b = 0) t1 FULL JOIN (SELECT 75 phv, * FROM prt2 WHERE prt2.a = 0) t2 ON (t1.a = t2.b) WHERE t1.phv = t1.a OR t2.phv = t2.b ORDER BY t1.a, t2.b;
-                           QUERY PLAN                           
+                           QUERY PLAN
 ----------------------------------------------------------------
  Sort
    Sort Key: prt1.a, prt2.b
@@ -223,16 +223,16 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 50 phv, * FROM prt1 WHERE prt1.b = 0)
 (27 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 50 phv, * FROM prt1 WHERE prt1.b = 0) t1 FULL JOIN (SELECT 75 phv, * FROM prt2 WHERE prt2.a = 0) t2 ON (t1.a = t2.b) WHERE t1.phv = t1.a OR t2.phv = t2.b ORDER BY t1.a, t2.b;
- a  |  c   | b  |  c   
+ a  |  c   | b  |  c
 ----+------+----+------
- 50 | 0050 |    | 
+ 50 | 0050 |    |
     |      | 75 | 0075
 (2 rows)
 
 -- Join with pruned partitions from joining relations
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.a < 450 AND t2.b > 250 AND t1.b = 0 ORDER BY t1.a, t2.b;
-                     QUERY PLAN                      
+                     QUERY PLAN
 -----------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -246,7 +246,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.a <
 (9 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.a < 450 AND t2.b > 250 AND t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  300 | 0300 | 300 | 0300
 (1 row)
@@ -254,7 +254,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.a <
 -- Currently we can't do partitioned join if nullable-side partitions are pruned
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a < 450) t1 LEFT JOIN (SELECT * FROM prt2 WHERE b > 250) t2 ON t1.a = t2.b WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                        QUERY PLAN                         
+                        QUERY PLAN
 -----------------------------------------------------------
  Sort
    Sort Key: prt1.a, prt2.b
@@ -274,23 +274,23 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a < 450) t1 LEFT JO
 (15 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a < 450) t1 LEFT JOIN (SELECT * FROM prt2 WHERE b > 250) t2 ON t1.a = t2.b WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
-   0 | 0000 |     | 
-  50 | 0050 |     | 
- 100 | 0100 |     | 
- 150 | 0150 |     | 
- 200 | 0200 |     | 
- 250 | 0250 |     | 
+   0 | 0000 |     |
+  50 | 0050 |     |
+ 100 | 0100 |     |
+ 150 | 0150 |     |
+ 200 | 0200 |     |
+ 250 | 0250 |     |
  300 | 0300 | 300 | 0300
- 350 | 0350 |     | 
- 400 | 0400 |     | 
+ 350 | 0350 |     |
+ 400 | 0400 |     |
 (9 rows)
 
 -- Currently we can't do partitioned join if nullable-side partitions are pruned
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a < 450) t1 FULL JOIN (SELECT * FROM prt2 WHERE b > 250) t2 ON t1.a = t2.b WHERE t1.b = 0 OR t2.a = 0 ORDER BY t1.a, t2.b;
-                     QUERY PLAN                     
+                     QUERY PLAN
 ----------------------------------------------------
  Sort
    Sort Key: prt1.a, prt2.b
@@ -311,17 +311,17 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a < 450) t1 FULL JO
 (16 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a < 450) t1 FULL JOIN (SELECT * FROM prt2 WHERE b > 250) t2 ON t1.a = t2.b WHERE t1.b = 0 OR t2.a = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
-   0 | 0000 |     | 
-  50 | 0050 |     | 
- 100 | 0100 |     | 
- 150 | 0150 |     | 
- 200 | 0200 |     | 
- 250 | 0250 |     | 
+   0 | 0000 |     |
+  50 | 0050 |     |
+ 100 | 0100 |     |
+ 150 | 0150 |     |
+ 200 | 0200 |     |
+ 250 | 0250 |     |
  300 | 0300 | 300 | 0300
- 350 | 0350 |     | 
- 400 | 0400 |     | 
+ 350 | 0350 |     |
+ 400 | 0400 |     |
      |      | 375 | 0375
      |      | 450 | 0450
      |      | 525 | 0525
@@ -330,7 +330,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a < 450) t1 FULL JO
 -- Semi-join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t2.b FROM prt2 t2 WHERE t2.a = 0) AND t1.b = 0 ORDER BY t1.a;
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -359,7 +359,7 @@ SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t2.b FROM prt2 t2 WHERE t2.a = 0)
 (24 rows)
 
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t2.b FROM prt2 t2 WHERE t2.a = 0) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
    0 | 0 | 0000
  150 | 0 | 0150
@@ -370,7 +370,7 @@ SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t2.b FROM prt2 t2 WHERE t2.a = 0)
 -- Anti-join with aggregates
 EXPLAIN (COSTS OFF)
 SELECT sum(t1.a), avg(t1.a), sum(t1.b), avg(t1.b) FROM prt1 t1 WHERE NOT EXISTS (SELECT 1 FROM prt2 t2 WHERE t1.a = t2.b);
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Aggregate
    ->  Append
@@ -392,7 +392,7 @@ SELECT sum(t1.a), avg(t1.a), sum(t1.b), avg(t1.b) FROM prt1 t1 WHERE NOT EXISTS 
 (17 rows)
 
 SELECT sum(t1.a), avg(t1.a), sum(t1.b), avg(t1.b) FROM prt1 t1 WHERE NOT EXISTS (SELECT 1 FROM prt2 t2 WHERE t1.a = t2.b);
-  sum  |         avg          | sum  |         avg         
+  sum  |         avg          | sum  |         avg
 -------+----------------------+------+---------------------
  60000 | 300.0000000000000000 | 2400 | 12.0000000000000000
 (1 row)
@@ -402,7 +402,7 @@ EXPLAIN (COSTS OFF)
 SELECT * FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t2.a AS t2a, t3.a AS t3a, least(t1.a,t2.a,t3.b) FROM prt1 t2 JOIN prt2 t3 ON (t2.a = t3.b)) ss
 			  ON t1.a = ss.t2a WHERE t1.b = 0 ORDER BY t1.a;
-                                QUERY PLAN                                
+                                QUERY PLAN
 --------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -436,27 +436,27 @@ SELECT * FROM prt1 t1 LEFT JOIN LATERAL
 SELECT * FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t2.a AS t2a, t3.a AS t3a, least(t1.a,t2.a,t3.b) FROM prt1 t2 JOIN prt2 t3 ON (t2.a = t3.b)) ss
 			  ON t1.a = ss.t2a WHERE t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   | t2a | t3a | least 
+  a  | b |  c   | t2a | t3a | least
 -----+---+------+-----+-----+-------
    0 | 0 | 0000 |   0 |   0 |     0
-  50 | 0 | 0050 |     |     |      
- 100 | 0 | 0100 |     |     |      
+  50 | 0 | 0050 |     |     |
+ 100 | 0 | 0100 |     |     |
  150 | 0 | 0150 | 150 |   0 |   150
- 200 | 0 | 0200 |     |     |      
- 250 | 0 | 0250 |     |     |      
+ 200 | 0 | 0200 |     |     |
+ 250 | 0 | 0250 |     |     |
  300 | 0 | 0300 | 300 |   0 |   300
- 350 | 0 | 0350 |     |     |      
- 400 | 0 | 0400 |     |     |      
+ 350 | 0 | 0350 |     |     |
+ 400 | 0 | 0400 |     |     |
  450 | 0 | 0450 | 450 |   0 |   450
- 500 | 0 | 0500 |     |     |      
- 550 | 0 | 0550 |     |     |      
+ 500 | 0 | 0500 |     |     |
+ 550 | 0 | 0550 |     |     |
 (12 rows)
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, ss.t2a, ss.t2c FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t2.a AS t2a, t3.a AS t3a, t2.b t2b, t2.c t2c, least(t1.a,t2.a,t3.b) FROM prt1 t2 JOIN prt2 t3 ON (t2.a = t3.b)) ss
 			  ON t1.c = ss.t2c WHERE (t1.b + coalesce(ss.t2b, 0)) = 0 ORDER BY t1.a;
-                          QUERY PLAN                          
+                          QUERY PLAN
 --------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -489,20 +489,20 @@ SELECT t1.a, ss.t2a, ss.t2c FROM prt1 t1 LEFT JOIN LATERAL
 SELECT t1.a, ss.t2a, ss.t2c FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t2.a AS t2a, t3.a AS t3a, t2.b t2b, t2.c t2c, least(t1.a,t2.a,t3.a) FROM prt1 t2 JOIN prt2 t3 ON (t2.a = t3.b)) ss
 			  ON t1.c = ss.t2c WHERE (t1.b + coalesce(ss.t2b, 0)) = 0 ORDER BY t1.a;
-  a  | t2a | t2c  
+  a  | t2a | t2c
 -----+-----+------
    0 |   0 | 0000
-  50 |     | 
- 100 |     | 
+  50 |     |
+ 100 |     |
  150 | 150 | 0150
- 200 |     | 
- 250 |     | 
+ 200 |     |
+ 250 |     |
  300 | 300 | 0300
- 350 |     | 
- 400 |     | 
+ 350 |     |
+ 400 |     |
  450 | 450 | 0450
- 500 |     | 
- 550 |     | 
+ 500 |     |
+ 550 |     |
 (12 rows)
 
 SET max_parallel_workers_per_gather = 0;
@@ -512,7 +512,7 @@ EXPLAIN (COSTS OFF)
 SELECT * FROM prt1 t1 JOIN LATERAL
 			  (SELECT * FROM prt1 t2 TABLESAMPLE SYSTEM (t1.a) REPEATABLE(t1.b)) s
 			  ON t1.a = s.a;
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Nested Loop
    ->  Append
@@ -537,7 +537,7 @@ EXPLAIN (COSTS OFF)
 SELECT count(*) FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t1.b AS t1b, t2.* FROM prt2 t2) s
 			  ON t1.a = s.b WHERE s.t1b = s.a;
-                          QUERY PLAN                           
+                          QUERY PLAN
 ---------------------------------------------------------------
  Aggregate
    ->  Nested Loop
@@ -560,7 +560,7 @@ SELECT count(*) FROM prt1 t1 LEFT JOIN LATERAL
 SELECT count(*) FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t1.b AS t1b, t2.* FROM prt2 t2) s
 			  ON t1.a = s.b WHERE s.t1b = s.a;
- count 
+ count
 -------
    100
 (1 row)
@@ -569,7 +569,7 @@ EXPLAIN (COSTS OFF)
 SELECT count(*) FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t1.b AS t1b, t2.* FROM prt2 t2) s
 			  ON t1.a = s.b WHERE s.t1b = s.b;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Aggregate
    ->  Nested Loop
@@ -592,7 +592,7 @@ SELECT count(*) FROM prt1 t1 LEFT JOIN LATERAL
 SELECT count(*) FROM prt1 t1 LEFT JOIN LATERAL
 			  (SELECT t1.b AS t1b, t2.* FROM prt2 t2) s
 			  ON t1.a = s.b WHERE s.t1b = s.b;
- count 
+ count
 -------
      5
 (1 row)
@@ -605,7 +605,7 @@ EXPLAIN (COSTS OFF)
 SELECT a, b FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b)
   WHERE a BETWEEN 490 AND 510
   GROUP BY 1, 2 ORDER BY 1, 2;
-                                                   QUERY PLAN                                                    
+                                                   QUERY PLAN
 -----------------------------------------------------------------------------------------------------------------
  Group
    Group Key: (COALESCE(prt1.a, p2.a)), (COALESCE(prt1.b, p2.b))
@@ -655,7 +655,7 @@ SELECT a, b FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b)
 SELECT a, b FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b)
   WHERE a BETWEEN 490 AND 510
   GROUP BY 1, 2 ORDER BY 1, 2;
-  a  | b  
+  a  | b
 -----+----
  490 | 15
  492 | 17
@@ -695,7 +695,7 @@ INSERT INTO prt2_e SELECT i, i, i % 25 FROM generate_series(0, 599, 3) i;
 ANALYZE prt2_e;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_e t1, prt2_e t2 WHERE (t1.a + t1.b)/2 = (t2.b + t2.a)/2 AND t1.c = 0 ORDER BY t1.a, t2.b;
-                                  QUERY PLAN                                  
+                                  QUERY PLAN
 ------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -721,7 +721,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_e t1, prt2_e t2 WHERE (t1.a + t1.b)/2 = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_e t1, prt2_e t2 WHERE (t1.a + t1.b)/2 = (t2.b + t2.a)/2 AND t1.c = 0 ORDER BY t1.a, t2.b;
-  a  | c |  b  | c 
+  a  | c |  b  | c
 -----+---+-----+---
    0 | 0 |   0 | 0
  150 | 0 | 150 | 0
@@ -734,7 +734,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_e t1, prt2_e t2 WHERE (t1.a + t1.b)/2 = 
 --
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM prt1 t1, prt2 t2, prt1_e t3 WHERE t1.a = t2.b AND t1.a = (t3.a + t3.b)/2 AND t1.b = 0 ORDER BY t1.a, t2.b;
-                             QUERY PLAN                              
+                             QUERY PLAN
 ---------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -772,7 +772,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM prt1 t1, prt2 t2, prt1_e t
 (33 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM prt1 t1, prt2 t2, prt1_e t3 WHERE t1.a = t2.b AND t1.a = (t3.a + t3.b)/2 AND t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   | ?column? | c 
+  a  |  c   |  b  |  c   | ?column? | c
 -----+------+-----+------+----------+---
    0 | 0000 |   0 | 0000 |        0 | 0
  150 | 0150 | 150 | 0150 |      300 | 0
@@ -782,7 +782,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM prt1 t1, prt2 t2, prt1_e t
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b) LEFT JOIN prt1_e t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t1.b = 0 ORDER BY t1.a, t2.b, t3.a + t3.b;
-                          QUERY PLAN                          
+                          QUERY PLAN
 --------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b, ((t3.a + t3.b))
@@ -820,7 +820,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2
 (33 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b) LEFT JOIN prt1_e t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t1.b = 0 ORDER BY t1.a, t2.b, t3.a + t3.b;
-  a  |  c   |  b  |  c   | ?column? | c 
+  a  |  c   |  b  |  c   | ?column? | c
 -----+------+-----+------+----------+---
    0 | 0000 |   0 | 0000 |        0 | 0
   50 | 0050 |     |      |      100 | 0
@@ -838,7 +838,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b) RIGHT JOIN prt1_e t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t3.c = 0 ORDER BY t1.a, t2.b, t3.a + t3.b;
-                            QUERY PLAN                             
+                            QUERY PLAN
 -------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b, ((t3.a + t3.b))
@@ -873,7 +873,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2
 (30 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b) RIGHT JOIN prt1_e t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t3.c = 0 ORDER BY t1.a, t2.b, t3.a + t3.b;
-  a  |  c   |  b  |  c   | ?column? | c 
+  a  |  c   |  b  |  c   | ?column? | c
 -----+------+-----+------+----------+---
    0 | 0000 |   0 | 0000 |        0 | 0
   50 | 0050 |     |      |      100 | 0
@@ -895,7 +895,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2
 EXPLAIN (COSTS OFF)
 SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(b,a,c) USING (a, b)
   WHERE a BETWEEN 490 AND 510;
-                                                               QUERY PLAN                                                                
+                                                               QUERY PLAN
 -----------------------------------------------------------------------------------------------------------------------------------------
  Aggregate
    ->  Append
@@ -933,7 +933,7 @@ SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(
 
 SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(b,a,c) USING (a, b)
   WHERE a BETWEEN 490 AND 510;
- count 
+ count
 -------
     14
 (1 row)
@@ -944,7 +944,7 @@ SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(
 EXPLAIN (COSTS OFF)
 SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(b,a,c) USING (a, b) FULL JOIN prt1 p4 (a,b,c) USING (a, b)
   WHERE a BETWEEN 490 AND 510;
-                                                                                 QUERY PLAN                                                                                  
+                                                                                 QUERY PLAN
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Aggregate
    ->  Append
@@ -994,7 +994,7 @@ SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(
 
 SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(b,a,c) USING (a, b) FULL JOIN prt1 p4 (a,b,c) USING (a, b)
   WHERE a BETWEEN 490 AND 510;
- count 
+ count
 -------
     14
 (1 row)
@@ -1003,7 +1003,7 @@ SELECT COUNT(*) FROM prt1 FULL JOIN prt2 p2(b,a,c) USING(a,b) FULL JOIN prt2 p3(
 -- make sure these go to null as expected
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.phv, t2.b, t2.phv, t3.a + t3.b, t3.phv FROM ((SELECT 50 phv, * FROM prt1 WHERE prt1.b = 0) t1 FULL JOIN (SELECT 75 phv, * FROM prt2 WHERE prt2.a = 0) t2 ON (t1.a = t2.b)) FULL JOIN (SELECT 50 phv, * FROM prt1_e WHERE prt1_e.c = 0) t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t1.a = t1.phv OR t2.b = t2.phv OR (t3.a + t3.b)/2 = t3.phv ORDER BY t1.a, t2.b, t3.a + t3.b;
-                                                 QUERY PLAN                                                 
+                                                 QUERY PLAN
 ------------------------------------------------------------------------------------------------------------
  Sort
    Sort Key: prt1.a, prt2.b, ((prt1_e.a + prt1_e.b))
@@ -1050,16 +1050,16 @@ SELECT t1.a, t1.phv, t2.b, t2.phv, t3.a + t3.b, t3.phv FROM ((SELECT 50 phv, * F
 (42 rows)
 
 SELECT t1.a, t1.phv, t2.b, t2.phv, t3.a + t3.b, t3.phv FROM ((SELECT 50 phv, * FROM prt1 WHERE prt1.b = 0) t1 FULL JOIN (SELECT 75 phv, * FROM prt2 WHERE prt2.a = 0) t2 ON (t1.a = t2.b)) FULL JOIN (SELECT 50 phv, * FROM prt1_e WHERE prt1_e.c = 0) t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t1.a = t1.phv OR t2.b = t2.phv OR (t3.a + t3.b)/2 = t3.phv ORDER BY t1.a, t2.b, t3.a + t3.b;
- a  | phv | b  | phv | ?column? | phv 
+ a  | phv | b  | phv | ?column? | phv
 ----+-----+----+-----+----------+-----
  50 |  50 |    |     |      100 |  50
-    |     | 75 |  75 |          |    
+    |     | 75 |  75 |          |
 (2 rows)
 
 -- Semi-join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1, prt1_e t2 WHERE t1.a = 0 AND t1.b = (t2.a + t2.b)/2) AND t1.b = 0 ORDER BY t1.a;
-                                   QUERY PLAN                                    
+                                   QUERY PLAN
 ---------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -1105,7 +1105,7 @@ SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1, prt1_e t2 WHER
 (41 rows)
 
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1, prt1_e t2 WHERE t1.a = 0 AND t1.b = (t2.a + t2.b)/2) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
    0 | 0 | 0000
  150 | 0 | 0150
@@ -1115,7 +1115,7 @@ SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1, prt1_e t2 WHER
 
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1 WHERE t1.b IN (SELECT (t1.a + t1.b)/2 FROM prt1_e t1 WHERE t1.c = 0)) AND t1.b = 0 ORDER BY t1.a;
-                                QUERY PLAN                                 
+                                QUERY PLAN
 ---------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -1159,7 +1159,7 @@ SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1 WHERE t1.b IN (
 (39 rows)
 
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1 WHERE t1.b IN (SELECT (t1.a + t1.b)/2 FROM prt1_e t1 WHERE t1.c = 0)) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
    0 | 0 | 0000
  150 | 0 | 0150
@@ -1172,7 +1172,7 @@ SET enable_hashjoin TO off;
 SET enable_nestloop TO off;
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1 WHERE t1.b IN (SELECT (t1.a + t1.b)/2 FROM prt1_e t1 WHERE t1.c = 0)) AND t1.b = 0 ORDER BY t1.a;
-                            QUERY PLAN                            
+                            QUERY PLAN
 ------------------------------------------------------------------
  Merge Append
    Sort Key: t1.a
@@ -1224,7 +1224,7 @@ SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1 WHERE t1.b IN (
 (47 rows)
 
 SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1 WHERE t1.b IN (SELECT (t1.a + t1.b)/2 FROM prt1_e t1 WHERE t1.c = 0)) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
    0 | 0 | 0000
  150 | 0 | 0150
@@ -1234,7 +1234,7 @@ SELECT t1.* FROM prt1 t1 WHERE t1.a IN (SELECT t1.b FROM prt2 t1 WHERE t1.b IN (
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b) RIGHT JOIN prt1_e t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t3.c = 0 ORDER BY t1.a, t2.b, t3.a + t3.b;
-                                 QUERY PLAN                                 
+                                 QUERY PLAN
 ----------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b, ((t3.a + t3.b))
@@ -1290,7 +1290,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2
 (51 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2 ON t1.a = t2.b) RIGHT JOIN prt1_e t3 ON (t1.a = (t3.a + t3.b)/2) WHERE t3.c = 0 ORDER BY t1.a, t2.b, t3.a + t3.b;
-  a  |  c   |  b  |  c   | ?column? | c 
+  a  |  c   |  b  |  c   | ?column? | c
 -----+------+-----+------+----------+---
    0 | 0000 |   0 | 0000 |        0 | 0
   50 | 0050 |     |      |      100 | 0
@@ -1310,7 +1310,7 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a + t3.b, t3.c FROM (prt1 t1 LEFT JOIN prt2 t2
 -- This should generate a partitionwise join, but currently fails to
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t2.b FROM (SELECT * FROM prt1 WHERE a < 450) t1 LEFT JOIN (SELECT * FROM prt2 WHERE b > 250) t2 ON t1.a = t2.b WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                        QUERY PLAN                         
+                        QUERY PLAN
 -----------------------------------------------------------
  Incremental Sort
    Sort Key: prt1.a, prt2.b
@@ -1334,24 +1334,24 @@ SELECT t1.a, t2.b FROM (SELECT * FROM prt1 WHERE a < 450) t1 LEFT JOIN (SELECT *
 (19 rows)
 
 SELECT t1.a, t2.b FROM (SELECT * FROM prt1 WHERE a < 450) t1 LEFT JOIN (SELECT * FROM prt2 WHERE b > 250) t2 ON t1.a = t2.b WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  b  
+  a  |  b
 -----+-----
-   0 |    
-  50 |    
- 100 |    
- 150 |    
- 200 |    
- 250 |    
+   0 |
+  50 |
+ 100 |
+ 150 |
+ 200 |
+ 250 |
  300 | 300
- 350 |    
- 400 |    
+ 350 |
+ 400 |
 (9 rows)
 
 -- merge join when expression with whole-row reference needs to be sorted;
 -- partitionwise join does not apply
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t2.b FROM prt1 t1, prt2 t2 WHERE t1::text = t2::text AND t1.a = t2.b ORDER BY t1.a;
-                                       QUERY PLAN                                        
+                                       QUERY PLAN
 -----------------------------------------------------------------------------------------
  Merge Join
    Merge Cond: ((t1.a = t2.b) AND (((((t1.*)::prt1))::text) = ((((t2.*)::prt2))::text)))
@@ -1372,7 +1372,7 @@ SELECT t1.a, t2.b FROM prt1 t1, prt2 t2 WHERE t1::text = t2::text AND t1.a = t2.
 (16 rows)
 
 SELECT t1.a, t2.b FROM prt1 t1, prt2 t2 WHERE t1::text = t2::text AND t1.a = t2.b ORDER BY t1.a;
- a  | b  
+ a  | b
 ----+----
   0 |  0
   6 |  6
@@ -1400,7 +1400,7 @@ INSERT INTO prt2_m SELECT i, i, i % 25 FROM generate_series(0, 599, 3) i;
 ANALYZE prt2_m;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1_m WHERE prt1_m.c = 0) t1 FULL JOIN (SELECT * FROM prt2_m WHERE prt2_m.c = 0) t2 ON (t1.a = (t2.b + t2.a)/2 AND t2.b = (t1.a + t1.b)/2) ORDER BY t1.a, t2.b;
-                                                          QUERY PLAN                                                          
+                                                          QUERY PLAN
 ------------------------------------------------------------------------------------------------------------------------------
  Sort
    Sort Key: prt1_m.a, prt2_m.b
@@ -1429,20 +1429,20 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1_m WHERE prt1_m.c = 0) t1 
 (24 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1_m WHERE prt1_m.c = 0) t1 FULL JOIN (SELECT * FROM prt2_m WHERE prt2_m.c = 0) t2 ON (t1.a = (t2.b + t2.a)/2 AND t2.b = (t1.a + t1.b)/2) ORDER BY t1.a, t2.b;
-  a  | c |  b  | c 
+  a  | c |  b  | c
 -----+---+-----+---
    0 | 0 |   0 | 0
-  50 | 0 |     |  
- 100 | 0 |     |  
+  50 | 0 |     |
+ 100 | 0 |     |
  150 | 0 | 150 | 0
- 200 | 0 |     |  
- 250 | 0 |     |  
+ 200 | 0 |     |
+ 250 | 0 |     |
  300 | 0 | 300 | 0
- 350 | 0 |     |  
- 400 | 0 |     |  
+ 350 | 0 |     |
+ 400 | 0 |     |
  450 | 0 | 450 | 0
- 500 | 0 |     |  
- 550 | 0 |     |  
+ 500 | 0 |     |
+ 550 | 0 |     |
      |   |  75 | 0
      |   | 225 | 0
      |   | 375 | 0
@@ -1476,7 +1476,7 @@ ANALYZE plt1_e;
 -- test partition matching with N-way join
 EXPLAIN (COSTS OFF)
 SELECT avg(t1.a), avg(t2.b), avg(t3.a + t3.b), t1.c, t2.c, t3.c FROM plt1 t1, plt2 t2, plt1_e t3 WHERE t1.b = t2.b AND t1.c = t2.c AND ltrim(t3.c, 'A') = t1.c GROUP BY t1.c, t2.c, t3.c ORDER BY t1.c, t2.c, t3.c;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  GroupAggregate
    Group Key: t1.c, t3.c
@@ -1513,7 +1513,7 @@ SELECT avg(t1.a), avg(t2.b), avg(t3.a + t3.b), t1.c, t2.c, t3.c FROM plt1 t1, pl
 (32 rows)
 
 SELECT avg(t1.a), avg(t2.b), avg(t3.a + t3.b), t1.c, t2.c, t3.c FROM plt1 t1, plt2 t2, plt1_e t3 WHERE t1.b = t2.b AND t1.c = t2.c AND ltrim(t3.c, 'A') = t1.c GROUP BY t1.c, t2.c, t3.c ORDER BY t1.c, t2.c, t3.c;
-         avg          |         avg          |          avg          |  c   |  c   |   c   
+         avg          |         avg          |          avg          |  c   |  c   |   c
 ----------------------+----------------------+-----------------------+------+------+-------
   24.0000000000000000 |  24.0000000000000000 |   48.0000000000000000 | 0000 | 0000 | A0000
   75.0000000000000000 |  75.0000000000000000 |  148.0000000000000000 | 0001 | 0001 | A0001
@@ -1532,7 +1532,7 @@ SELECT avg(t1.a), avg(t2.b), avg(t3.a + t3.b), t1.c, t2.c, t3.c FROM plt1 t1, pl
 -- joins where one of the relations is proven empty
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.a = 1 AND t1.a = 2;
-        QUERY PLAN        
+        QUERY PLAN
 --------------------------
  Result
    One-Time Filter: false
@@ -1540,7 +1540,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.a =
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a = 1 AND a = 2) t1 LEFT JOIN prt2 t2 ON t1.a = t2.b;
-        QUERY PLAN        
+        QUERY PLAN
 --------------------------
  Result
    One-Time Filter: false
@@ -1548,7 +1548,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a = 1 AND a = 2) t1
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a = 1 AND a = 2) t1 RIGHT JOIN prt2 t2 ON t1.a = t2.b, prt1 t3 WHERE t2.b = t3.a;
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Hash Left Join
    Hash Cond: (t2.b = a)
@@ -1575,7 +1575,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a = 1 AND a = 2) t1
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1 WHERE a = 1 AND a = 2) t1 FULL JOIN prt2 t2 ON t1.a = t2.b WHERE t2.a = 0 ORDER BY t1.a, t2.b;
-                 QUERY PLAN                 
+                 QUERY PLAN
 --------------------------------------------
  Sort
    Sort Key: a, t2.b
@@ -1620,7 +1620,7 @@ ANALYZE pht1_e;
 -- test partition matching with N-way join
 EXPLAIN (COSTS OFF)
 SELECT avg(t1.a), avg(t2.b), avg(t3.a + t3.b), t1.c, t2.c, t3.c FROM pht1 t1, pht2 t2, pht1_e t3 WHERE t1.b = t2.b AND t1.c = t2.c AND ltrim(t3.c, 'A') = t1.c GROUP BY t1.c, t2.c, t3.c ORDER BY t1.c, t2.c, t3.c;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  GroupAggregate
    Group Key: t1.c, t3.c
@@ -1657,7 +1657,7 @@ SELECT avg(t1.a), avg(t2.b), avg(t3.a + t3.b), t1.c, t2.c, t3.c FROM pht1 t1, ph
 (32 rows)
 
 SELECT avg(t1.a), avg(t2.b), avg(t3.a + t3.b), t1.c, t2.c, t3.c FROM pht1 t1, pht2 t2, pht1_e t3 WHERE t1.b = t2.b AND t1.c = t2.c AND ltrim(t3.c, 'A') = t1.c GROUP BY t1.c, t2.c, t3.c ORDER BY t1.c, t2.c, t3.c;
-         avg          |         avg          |         avg          |  c   |  c   |   c   
+         avg          |         avg          |         avg          |  c   |  c   |   c
 ----------------------+----------------------+----------------------+------+------+-------
   24.0000000000000000 |  24.0000000000000000 |  48.0000000000000000 | 0000 | 0000 | A0000
   75.0000000000000000 |  75.0000000000000000 | 148.0000000000000000 | 0001 | 0001 | A0001
@@ -1676,7 +1676,7 @@ ALTER TABLE prt2 ATTACH PARTITION prt2_p3 DEFAULT;
 ANALYZE prt2;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt2 t2 WHERE t1.a = t2.b AND t1.b = 0 ORDER BY t1.a, t2.b;
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -1710,7 +1710,7 @@ ALTER TABLE plt2 ATTACH PARTITION plt2_p3 DEFAULT;
 ANALYZE plt2;
 EXPLAIN (COSTS OFF)
 SELECT avg(t1.a), avg(t2.b), t1.c, t2.c FROM plt1 t1 RIGHT JOIN plt2 t2 ON t1.c = t2.c WHERE t1.a % 25 = 0 GROUP BY t1.c, t2.c ORDER BY t1.c, t2.c;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Sort
    Sort Key: t1.c
@@ -1763,7 +1763,7 @@ ANALYZE prt2_l;
 -- inner join, qual covering only top-level partitions
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1, prt2_l t2 WHERE t1.a = t2.b AND t1.b = 0 ORDER BY t1.a, t2.b;
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -1796,7 +1796,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1, prt2_l t2 WHERE t1.a = t2.b AND t1
 (28 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1, prt2_l t2 WHERE t1.a = t2.b AND t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
    0 | 0000 |   0 | 0000
  150 | 0002 | 150 | 0002
@@ -1807,7 +1807,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1, prt2_l t2 WHERE t1.a = t2.b AND t1
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1 LEFT JOIN prt2_l t2 ON t1.a = t2.b AND t1.c = t2.c WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -1841,26 +1841,26 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1 LEFT JOIN prt2_l t2 ON t1.a = t2.b 
 (29 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1 LEFT JOIN prt2_l t2 ON t1.a = t2.b AND t1.c = t2.c WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
    0 | 0000 |   0 | 0000
-  50 | 0002 |     | 
- 100 | 0000 |     | 
+  50 | 0002 |     |
+ 100 | 0000 |     |
  150 | 0002 | 150 | 0002
- 200 | 0000 |     | 
- 250 | 0002 |     | 
+ 200 | 0000 |     |
+ 250 | 0002 |     |
  300 | 0000 | 300 | 0000
- 350 | 0002 |     | 
- 400 | 0000 |     | 
+ 350 | 0002 |     |
+ 400 | 0000 |     |
  450 | 0002 | 450 | 0002
- 500 | 0000 |     | 
- 550 | 0002 |     | 
+ 500 | 0000 |     |
+ 550 | 0002 |     |
 (12 rows)
 
 -- right join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1 RIGHT JOIN prt2_l t2 ON t1.a = t2.b AND t1.c = t2.c WHERE t2.a = 0 ORDER BY t1.a, t2.b;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -1894,7 +1894,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1 RIGHT JOIN prt2_l t2 ON t1.a = t2.b
 (29 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1 RIGHT JOIN prt2_l t2 ON t1.a = t2.b AND t1.c = t2.c WHERE t2.a = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
    0 | 0000 |   0 | 0000
  150 | 0002 | 150 | 0002
@@ -1909,7 +1909,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_l t1 RIGHT JOIN prt2_l t2 ON t1.a = t2.b
 -- full join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1_l WHERE prt1_l.b = 0) t1 FULL JOIN (SELECT * FROM prt2_l WHERE prt2_l.a = 0) t2 ON (t1.a = t2.b AND t1.c = t2.c) ORDER BY t1.a, t2.b;
-                                             QUERY PLAN                                             
+                                             QUERY PLAN
 ----------------------------------------------------------------------------------------------------
  Sort
    Sort Key: prt1_l.a, prt2_l.b
@@ -1945,20 +1945,20 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1_l WHERE prt1_l.b = 0) t1 
 (31 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1_l WHERE prt1_l.b = 0) t1 FULL JOIN (SELECT * FROM prt2_l WHERE prt2_l.a = 0) t2 ON (t1.a = t2.b AND t1.c = t2.c) ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
    0 | 0000 |   0 | 0000
-  50 | 0002 |     | 
- 100 | 0000 |     | 
+  50 | 0002 |     |
+ 100 | 0000 |     |
  150 | 0002 | 150 | 0002
- 200 | 0000 |     | 
- 250 | 0002 |     | 
+ 200 | 0000 |     |
+ 250 | 0002 |     |
  300 | 0000 | 300 | 0000
- 350 | 0002 |     | 
- 400 | 0000 |     | 
+ 350 | 0002 |     |
+ 400 | 0000 |     |
  450 | 0002 | 450 | 0002
- 500 | 0000 |     | 
- 550 | 0002 |     | 
+ 500 | 0000 |     |
+ 550 | 0002 |     |
      |      |  75 | 0003
      |      | 225 | 0001
      |      | 375 | 0003
@@ -1970,7 +1970,7 @@ EXPLAIN (COSTS OFF)
 SELECT * FROM prt1_l t1 LEFT JOIN LATERAL
 			  (SELECT t2.a AS t2a, t2.c AS t2c, t2.b AS t2b, t3.b AS t3b, least(t1.a,t2.a,t3.b) FROM prt1_l t2 JOIN prt2_l t3 ON (t2.a = t3.b AND t2.c = t3.c)) ss
 			  ON t1.a = ss.t2a AND t1.c = ss.t2c WHERE t1.b = 0 ORDER BY t1.a;
-                                          QUERY PLAN                                           
+                                          QUERY PLAN
 -----------------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -2021,20 +2021,20 @@ SELECT * FROM prt1_l t1 LEFT JOIN LATERAL
 SELECT * FROM prt1_l t1 LEFT JOIN LATERAL
 			  (SELECT t2.a AS t2a, t2.c AS t2c, t2.b AS t2b, t3.b AS t3b, least(t1.a,t2.a,t3.b) FROM prt1_l t2 JOIN prt2_l t3 ON (t2.a = t3.b AND t2.c = t3.c)) ss
 			  ON t1.a = ss.t2a AND t1.c = ss.t2c WHERE t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   | t2a | t2c  | t2b | t3b | least 
+  a  | b |  c   | t2a | t2c  | t2b | t3b | least
 -----+---+------+-----+------+-----+-----+-------
    0 | 0 | 0000 |   0 | 0000 |   0 |   0 |     0
-  50 | 0 | 0002 |     |      |     |     |      
- 100 | 0 | 0000 |     |      |     |     |      
+  50 | 0 | 0002 |     |      |     |     |
+ 100 | 0 | 0000 |     |      |     |     |
  150 | 0 | 0002 | 150 | 0002 |   0 | 150 |   150
- 200 | 0 | 0000 |     |      |     |     |      
- 250 | 0 | 0002 |     |      |     |     |      
+ 200 | 0 | 0000 |     |      |     |     |
+ 250 | 0 | 0002 |     |      |     |     |
  300 | 0 | 0000 | 300 | 0000 |   0 | 300 |   300
- 350 | 0 | 0002 |     |      |     |     |      
- 400 | 0 | 0000 |     |      |     |     |      
+ 350 | 0 | 0002 |     |      |     |     |
+ 400 | 0 | 0000 |     |      |     |     |
  450 | 0 | 0002 | 450 | 0002 |   0 | 450 |   450
- 500 | 0 | 0000 |     |      |     |     |      
- 550 | 0 | 0002 |     |      |     |     |      
+ 500 | 0 | 0000 |     |      |     |     |
+ 550 | 0 | 0002 |     |      |     |     |
 (12 rows)
 
 SET max_parallel_workers_per_gather = 0;
@@ -2044,7 +2044,7 @@ EXPLAIN (COSTS OFF)
 SELECT * FROM prt1_l t1 JOIN LATERAL
 			  (SELECT * FROM prt1_l t2 TABLESAMPLE SYSTEM (t1.a) REPEATABLE(t1.b)) s
 			  ON t1.a = s.a AND t1.b = s.b AND t1.c = s.c;
-                                    QUERY PLAN                                    
+                                    QUERY PLAN
 ----------------------------------------------------------------------------------
  Nested Loop
    ->  Append
@@ -2078,7 +2078,7 @@ SELECT COUNT(*) FROM prt1_l t1 LEFT JOIN LATERAL
 			  (SELECT t1.b AS t1b, t2.* FROM prt2_l t2) s
 			  ON t1.a = s.b AND t1.b = s.a AND t1.c = s.c
 			  WHERE s.t1b = s.a;
-                                              QUERY PLAN                                               
+                                              QUERY PLAN
 -------------------------------------------------------------------------------------------------------
  Aggregate
    ->  Nested Loop
@@ -2105,7 +2105,7 @@ SELECT COUNT(*) FROM prt1_l t1 LEFT JOIN LATERAL
 			  (SELECT t1.b AS t1b, t2.* FROM prt2_l t2) s
 			  ON t1.a = s.b AND t1.b = s.a AND t1.c = s.c
 			  WHERE s.t1b = s.a;
- count 
+ count
 -------
    100
 (1 row)
@@ -2114,7 +2114,7 @@ RESET max_parallel_workers_per_gather;
 -- join with one side empty
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT * FROM prt1_l WHERE a = 1 AND a = 2) t1 RIGHT JOIN prt2_l t2 ON t1.a = t2.b AND t1.b = t2.a AND t1.c = t2.c;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Hash Left Join
    Hash Cond: ((t2.b = a) AND (t2.a = b) AND ((t2.c)::text = (c)::text))
@@ -2140,7 +2140,7 @@ WHERE EXISTS (
     FROM int4_tbl,
          LATERAL (SELECT int4_tbl.f1 FROM int8_tbl LIMIT 2) ss
     WHERE prt1_l.c IS NULL);
-                        QUERY PLAN                        
+                        QUERY PLAN
 ----------------------------------------------------------
  Delete on prt1_l
    Delete on prt1_l_p1 prt1_l_1
@@ -2190,7 +2190,7 @@ ANALYZE prt4_n;
 -- partitionwise join can not be applied if the partition ranges differ
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt4_n t2 WHERE t1.a = t2.a;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Hash Join
    Hash Cond: (t1.a = t2.a)
@@ -2207,7 +2207,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt4_n t2 WHERE t1.a = t2.a;
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt4_n t2, prt2 t3 WHERE t1.a = t2.a and t1.a = t3.b;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Hash Join
    Hash Cond: (t2.a = t1.a)
@@ -2238,7 +2238,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1, prt4_n t2, prt2 t3 WHERE t1.a = t2.a
 -- between partition keys
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1 LEFT JOIN prt2 t2 ON (t1.a < t2.b);
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Nested Loop Left Join
    ->  Append
@@ -2258,7 +2258,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1 t1 LEFT JOIN prt2 t2 ON (t1.a < t2.b);
 -- partitionwise join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_m t1, prt2_m t2 WHERE t1.a = (t2.b + t2.a)/2;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Hash Join
    Hash Cond: (((t2.b + t2.a) / 2) = t1.a)
@@ -2277,7 +2277,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_m t1, prt2_m t2 WHERE t1.a = (t2.b + t2.
 -- partitionwise join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_m t1 LEFT JOIN prt2_m t2 ON t1.a = t2.b;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Hash Left Join
    Hash Cond: (t1.a = t2.b)
@@ -2295,7 +2295,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_m t1 LEFT JOIN prt2_m t2 ON t1.a = t2.b;
 -- equi-join between non-key columns does not qualify for partitionwise join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_m t1 LEFT JOIN prt2_m t2 ON t1.c = t2.c;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Hash Left Join
    Hash Cond: (t1.c = t2.c)
@@ -2314,7 +2314,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_m t1 LEFT JOIN prt2_m t2 ON t1.c = t2.c;
 -- partitioned tables
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_n t1 LEFT JOIN prt2_n t2 ON (t1.c = t2.c);
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Hash Right Join
    Hash Cond: (t2.c = (t1.c)::text)
@@ -2331,7 +2331,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_n t1 LEFT JOIN prt2_n t2 ON (t1.c = t2.c
 -- partition lists
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_n t1 JOIN prt2_n t2 ON (t1.c = t2.c) JOIN plt1 t3 ON (t1.c = t3.c);
-                        QUERY PLAN                        
+                        QUERY PLAN
 ----------------------------------------------------------
  Hash Join
    Hash Cond: (t2.c = (t1.c)::text)
@@ -2355,7 +2355,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_n t1 JOIN prt2_n t2 ON (t1.c = t2.c) JOI
 -- non-key column
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_n t1 FULL JOIN prt1 t2 ON (t1.c = t2.c);
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Hash Full Join
    Hash Cond: ((t2.c)::text = (t1.c)::text)
@@ -2396,7 +2396,7 @@ select * from prtx1
 where not exists (select 1 from prtx2
                   where prtx2.a=prtx1.a and prtx2.b=prtx1.b and prtx2.c=123)
   and a<20 and c=120;
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Append
    ->  Nested Loop Anti Join
@@ -2427,7 +2427,7 @@ select * from prtx1
 where not exists (select 1 from prtx2
                   where prtx2.a=prtx1.a and prtx2.b=prtx1.b and prtx2.c=123)
   and a<20 and c=120;
- a |  b  |  c  
+ a |  b  |  c
 ---+-----+-----
  1 | 120 | 120
 (1 row)
@@ -2437,7 +2437,7 @@ select * from prtx1
 where not exists (select 1 from prtx2
                   where prtx2.a=prtx1.a and (prtx2.b=prtx1.b+1 or prtx2.c=99))
   and a<20 and c=91;
-                           QUERY PLAN                            
+                           QUERY PLAN
 -----------------------------------------------------------------
  Append
    ->  Nested Loop Anti Join
@@ -2468,7 +2468,7 @@ select * from prtx1
 where not exists (select 1 from prtx2
                   where prtx2.a=prtx1.a and (prtx2.b=prtx1.b+1 or prtx2.c=99))
   and a<20 and c=91;
- a | b  | c  
+ a | b  | c
 ---+----+----
  2 | 91 | 91
 (1 row)
@@ -2496,7 +2496,7 @@ ANALYZE prt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -2522,7 +2522,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125
@@ -2537,7 +2537,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 -- semi join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -2563,7 +2563,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a 
 (21 rows)
 
 SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
  100 | 0 | 0100
  125 | 0 | 0125
@@ -2578,7 +2578,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a 
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -2604,18 +2604,18 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125
- 150 | 0150 |     | 
- 175 | 0175 |     | 
+ 150 | 0150 |     |
+ 175 | 0175 |     |
  200 | 0200 | 200 | 0200
  225 | 0225 | 225 | 0225
  250 | 0250 | 250 | 0250
  275 | 0275 | 275 | 0275
- 300 | 0300 |     | 
- 325 | 0325 |     | 
+ 300 | 0300 |     |
+ 325 | 0325 |     |
  350 | 0350 | 350 | 0350
  375 | 0375 | 375 | 0375
 (12 rows)
@@ -2623,7 +2623,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = 
 -- anti join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -2649,7 +2649,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t
 (21 rows)
 
 SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
  150 | 0 | 0150
  175 | 0 | 0175
@@ -2660,7 +2660,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t
 -- full join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 175 phv, * FROM prt1_adv WHERE prt1_adv.b = 0) t1 FULL JOIN (SELECT 425 phv, * FROM prt2_adv WHERE prt2_adv.a = 0) t2 ON (t1.a = t2.b) WHERE t1.phv = t1.a OR t2.phv = t2.b ORDER BY t1.a, t2.b;
-                                QUERY PLAN                                
+                                QUERY PLAN
 --------------------------------------------------------------------------
  Sort
    Sort Key: prt1_adv.a, prt2_adv.b
@@ -2692,9 +2692,9 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 175 phv, * FROM prt1_adv WHERE prt1_a
 (27 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 175 phv, * FROM prt1_adv WHERE prt1_adv.b = 0) t1 FULL JOIN (SELECT 425 phv, * FROM prt2_adv WHERE prt2_adv.a = 0) t2 ON (t1.a = t2.b) WHERE t1.phv = t1.a OR t2.phv = t2.b ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
- 175 | 0175 |     | 
+ 175 | 0175 |     |
      |      | 425 | 0425
 (2 rows)
 
@@ -2705,7 +2705,7 @@ ANALYZE prt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -2731,7 +2731,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125
@@ -2746,7 +2746,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 -- semi join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -2772,7 +2772,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a 
 (21 rows)
 
 SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
  100 | 0 | 0100
  125 | 0 | 0125
@@ -2787,7 +2787,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a 
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -2813,18 +2813,18 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125
- 150 | 0150 |     | 
- 175 | 0175 |     | 
+ 150 | 0150 |     |
+ 175 | 0175 |     |
  200 | 0200 | 200 | 0200
  225 | 0225 | 225 | 0225
  250 | 0250 | 250 | 0250
  275 | 0275 | 275 | 0275
- 300 | 0300 |     | 
- 325 | 0325 |     | 
+ 300 | 0300 |     |
+ 325 | 0325 |     |
  350 | 0350 | 350 | 0350
  375 | 0375 | 375 | 0375
 (12 rows)
@@ -2833,7 +2833,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = 
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.b, t1.c, t2.a, t2.c FROM prt2_adv t1 LEFT JOIN prt1_adv t2 ON (t1.b = t2.a) WHERE t1.a = 0 ORDER BY t1.b, t2.a;
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Sort
    Sort Key: t1.b, t2.a
@@ -2858,7 +2858,7 @@ SELECT t1.b, t1.c, t2.a, t2.c FROM prt2_adv t1 LEFT JOIN prt1_adv t2 ON (t1.b = 
 -- anti join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -2884,7 +2884,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t
 (21 rows)
 
 SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-  a  | b |  c   
+  a  | b |  c
 -----+---+------
  150 | 0 | 0150
  175 | 0 | 0175
@@ -2896,7 +2896,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt2_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt1_adv t2 WHERE t1.b = t2.a) AND t1.a = 0 ORDER BY t1.b;
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Sort
    Sort Key: t1.b
@@ -2922,7 +2922,7 @@ SELECT t1.* FROM prt2_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt1_adv t2 WHERE t
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 175 phv, * FROM prt1_adv WHERE prt1_adv.b = 0) t1 FULL JOIN (SELECT 425 phv, * FROM prt2_adv WHERE prt2_adv.a = 0) t2 ON (t1.a = t2.b) WHERE t1.phv = t1.a OR t2.phv = t2.b ORDER BY t1.a, t2.b;
-                           QUERY PLAN                           
+                           QUERY PLAN
 ----------------------------------------------------------------
  Sort
    Sort Key: prt1_adv.a, prt2_adv.b
@@ -2951,7 +2951,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 175 phv, * FROM prt1_adv WHERE prt1_a
 -- 3-way join where not every pair of relations can do partitioned join
 EXPLAIN (COSTS OFF)
 SELECT t1.b, t1.c, t2.a, t2.c, t3.a, t3.c FROM prt2_adv t1 LEFT JOIN prt1_adv t2 ON (t1.b = t2.a) INNER JOIN prt1_adv t3 ON (t1.b = t3.a) WHERE t1.a = 0 ORDER BY t1.b, t2.a, t3.a;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Sort
    Sort Key: t1.b, t2.a
@@ -2987,7 +2987,7 @@ SELECT t1.b, t1.c, t2.a, t2.c, t3.a, t3.c FROM prt2_adv t1 LEFT JOIN prt1_adv t2
 (31 rows)
 
 SELECT t1.b, t1.c, t2.a, t2.c, t3.a, t3.c FROM prt2_adv t1 LEFT JOIN prt1_adv t2 ON (t1.b = t2.a) INNER JOIN prt1_adv t3 ON (t1.b = t3.a) WHERE t1.a = 0 ORDER BY t1.b, t2.a, t3.a;
-  b  |  c   |  a  |  c   |  a  |  c   
+  b  |  c   |  a  |  c   |  a  |  c
 -----+------+-----+------+-----+------
  100 | 0100 | 100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125 | 125 | 0125
@@ -3011,7 +3011,7 @@ ANALYZE prt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3035,7 +3035,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 -- semi join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3059,7 +3059,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a 
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b
@@ -3083,7 +3083,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = 
 -- anti join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t1.a = t2.b) AND t1.b = 0 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3107,7 +3107,7 @@ SELECT t1.* FROM prt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM prt2_adv t2 WHERE t
 -- full join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM (SELECT 175 phv, * FROM prt1_adv WHERE prt1_adv.b = 0) t1 FULL JOIN (SELECT 425 phv, * FROM prt2_adv WHERE prt2_adv.a = 0) t2 ON (t1.a = t2.b) WHERE t1.phv = t1.a OR t2.phv = t2.b ORDER BY t1.a, t2.b;
-                           QUERY PLAN                           
+                           QUERY PLAN
 ----------------------------------------------------------------
  Sort
    Sort Key: prt1_adv.a, prt2_adv.b
@@ -3146,7 +3146,7 @@ ANALYZE prt1_adv;
 -- partition
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3166,7 +3166,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 (15 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125
@@ -3186,7 +3186,7 @@ ANALYZE prt2_adv;
 -- matches prt2_adv_p1 and prt2_adv_p3
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3214,7 +3214,7 @@ ANALYZE prt2_adv;
 -- matches prt2_adv_p1 and prt2_adv_p3
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.b = 0 ORDER BY t1.a, t2.b;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3247,7 +3247,7 @@ ANALYZE prt3_adv;
 -- 3-way join to test the default partition of a join relation
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a, t3.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = t2.b) LEFT JOIN prt3_adv t3 ON (t1.a = t3.a) WHERE t1.b = 0 ORDER BY t1.a, t2.b, t3.a;
-                            QUERY PLAN                            
+                            QUERY PLAN
 ------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.b, t3.a
@@ -3275,12 +3275,12 @@ SELECT t1.a, t1.c, t2.b, t2.c, t3.a, t3.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2
 (23 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c, t3.a, t3.c FROM prt1_adv t1 LEFT JOIN prt2_adv t2 ON (t1.a = t2.b) LEFT JOIN prt3_adv t3 ON (t1.a = t3.a) WHERE t1.b = 0 ORDER BY t1.a, t2.b, t3.a;
-  a  |  c   |  b  |  c   |  a  |  c   
+  a  |  c   |  b  |  c   |  a  |  c
 -----+------+-----+------+-----+------
- 100 | 0100 | 100 | 0100 |     | 
- 125 | 0125 | 125 | 0125 |     | 
- 150 | 0150 |     |      |     | 
- 175 | 0175 |     |      |     | 
+ 100 | 0100 | 100 | 0100 |     |
+ 125 | 0125 | 125 | 0125 |     |
+ 150 | 0150 |     |      |     |
+ 175 | 0175 |     |      |     |
  200 | 0200 | 200 | 0200 | 200 | 0200
  225 | 0225 | 225 | 0225 | 225 | 0225
  250 | 0250 | 250 | 0250 | 250 | 0250
@@ -3306,7 +3306,7 @@ INSERT INTO prt2_adv SELECT i % 25, i, to_char(i, 'FM0000') FROM generate_series
 ANALYZE prt2_adv;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.a < 300 AND t1.b = 0 ORDER BY t1.a, t2.b;
-                        QUERY PLAN                         
+                        QUERY PLAN
 -----------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3326,7 +3326,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 (15 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.a < 300 AND t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125
@@ -3345,7 +3345,7 @@ CREATE TABLE prt2_adv_default PARTITION OF prt2_adv DEFAULT;
 ANALYZE prt2_adv;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.a >= 100 AND t1.a < 300 AND t1.b = 0 ORDER BY t1.a, t2.b;
-                                QUERY PLAN                                
+                                QUERY PLAN
 --------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3365,7 +3365,7 @@ SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a =
 (15 rows)
 
 SELECT t1.a, t1.c, t2.b, t2.c FROM prt1_adv t1 INNER JOIN prt2_adv t2 ON (t1.a = t2.b) WHERE t1.a >= 100 AND t1.a < 300 AND t1.b = 0 ORDER BY t1.a, t2.b;
-  a  |  c   |  b  |  c   
+  a  |  c   |  b  |  c
 -----+------+-----+------
  100 | 0100 | 100 | 0100
  125 | 0125 | 125 | 0125
@@ -3395,7 +3395,7 @@ ANALYZE plt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3421,7 +3421,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -3432,7 +3432,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 -- semi join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                              QUERY PLAN                              
+                              QUERY PLAN
 ----------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3455,7 +3455,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a 
 (18 rows)
 
 SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
- a | b |  c   
+ a | b |  c
 ---+---+------
  3 | 3 | 0003
  4 | 4 | 0004
@@ -3466,7 +3466,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a 
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3492,20 +3492,20 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
- 1 | 0001 |   | 
+ 1 | 0001 |   |
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
  6 | 0006 | 6 | 0006
- 8 | 0008 |   | 
+ 8 | 0008 |   |
  9 | 0009 | 9 | 0009
 (6 rows)
 
 -- anti join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3531,7 +3531,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t
 (21 rows)
 
 SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
- a | b |  c   
+ a | b |  c
 ---+---+------
  1 | 1 | 0001
  8 | 8 | 0008
@@ -3540,7 +3540,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t
 -- full join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
-                                    QUERY PLAN                                     
+                                    QUERY PLAN
 -----------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.a
@@ -3566,13 +3566,13 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
- 1 | 0001 |   | 
+ 1 | 0001 |   |
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
  6 | 0006 | 6 | 0006
- 8 | 0008 |   | 
+ 8 | 0008 |   |
  9 | 0009 | 9 | 0009
    |      | 2 | 0002
    |      | 7 | 0007
@@ -3585,7 +3585,7 @@ ANALYZE plt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3611,7 +3611,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -3622,7 +3622,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 -- semi join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                              QUERY PLAN                              
+                              QUERY PLAN
 ----------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3645,7 +3645,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a 
 (18 rows)
 
 SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
- a | b |  c   
+ a | b |  c
 ---+---+------
  3 | 3 | 0003
  4 | 4 | 0004
@@ -3656,7 +3656,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a 
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3682,13 +3682,13 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
- 1 | 0001 |   | 
+ 1 | 0001 |   |
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
  6 | 0006 | 6 | 0006
- 8 | 0008 |   | 
+ 8 | 0008 |   |
  9 | 0009 | 9 | 0009
 (6 rows)
 
@@ -3696,7 +3696,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt2_adv t1 LEFT JOIN plt1_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3721,7 +3721,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt2_adv t1 LEFT JOIN plt1_adv t2 ON (t1.a = 
 -- anti join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3747,7 +3747,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t
 (21 rows)
 
 SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
- a | b |  c   
+ a | b |  c
 ---+---+------
  1 | 1 | 0001
  8 | 8 | 0008
@@ -3757,7 +3757,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt2_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt1_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3783,7 +3783,7 @@ SELECT t1.* FROM plt2_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt1_adv t2 WHERE t
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.a
@@ -3814,7 +3814,7 @@ ANALYZE plt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3838,7 +3838,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 -- semi join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3862,7 +3862,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a 
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3886,7 +3886,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 -- anti join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3910,7 +3910,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t
 -- full join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.a
@@ -3949,7 +3949,7 @@ ANALYZE plt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -3975,7 +3975,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -3986,7 +3986,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 -- semi join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                              QUERY PLAN                              
+                              QUERY PLAN
 ----------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4010,7 +4010,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a 
 (19 rows)
 
 SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
- a | b |  c   
+ a | b |  c
 ---+---+------
  3 | 3 | 0003
  4 | 4 | 0004
@@ -4021,7 +4021,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a 
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4047,21 +4047,21 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a  |  c   | a |  c   
+ a  |  c   | a |  c
 ----+------+---+------
- -1 |      |   | 
-  1 | 0001 |   | 
+ -1 |      |   |
+  1 | 0001 |   |
   3 | 0003 | 3 | 0003
   4 | 0004 | 4 | 0004
   6 | 0006 | 6 | 0006
-  8 | 0008 |   | 
+  8 | 0008 |   |
   9 | 0009 | 9 | 0009
 (7 rows)
 
 -- anti join
 EXPLAIN (COSTS OFF)
 SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4087,9 +4087,9 @@ SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t
 (21 rows)
 
 SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t1.a = t2.a AND t1.c = t2.c) AND t1.b < 10 ORDER BY t1.a;
- a  | b  |  c   
+ a  | b  |  c
 ----+----+------
- -1 | -1 | 
+ -1 | -1 |
   1 |  1 | 0001
   8 |  8 | 0008
 (3 rows)
@@ -4097,7 +4097,7 @@ SELECT t1.* FROM plt1_adv t1 WHERE NOT EXISTS (SELECT 1 FROM plt2_adv t2 WHERE t
 -- full join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
-                                    QUERY PLAN                                     
+                                    QUERY PLAN
 -----------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.a
@@ -4123,16 +4123,16 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = 
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
- a  |  c   | a  |  c   
+ a  |  c   | a  |  c
 ----+------+----+------
- -1 |      |    | 
-  1 | 0001 |    | 
+ -1 |      |    |
+  1 | 0001 |    |
   3 | 0003 |  3 | 0003
   4 | 0004 |  4 | 0004
   6 | 0006 |  6 | 0006
-  8 | 0008 |    | 
+  8 | 0008 |    |
   9 | 0009 |  9 | 0009
-    |      | -1 | 
+    |      | -1 |
     |      |  2 | 0002
     |      |  7 | 0007
 (10 rows)
@@ -4152,7 +4152,7 @@ ANALYZE plt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4178,7 +4178,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -4190,7 +4190,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4216,7 +4216,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 -- partitions on the nullable side
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.a
@@ -4243,7 +4243,7 @@ ANALYZE plt2_adv;
 -- inner join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4269,7 +4269,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (21 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -4280,7 +4280,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 -- left join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                              QUERY PLAN                              
+                              QUERY PLAN
 ----------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4311,21 +4311,21 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 (26 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a  |  c   | a |  c   
+ a  |  c   | a |  c
 ----+------+---+------
- -1 |      |   | 
-  1 | 0001 |   | 
+ -1 |      |   |
+  1 | 0001 |   |
   3 | 0003 | 3 | 0003
   4 | 0004 | 4 | 0004
   6 | 0006 | 6 | 0006
-  8 | 0008 |   | 
+  8 | 0008 |   |
   9 | 0009 | 9 | 0009
 (7 rows)
 
 -- full join
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
-                                    QUERY PLAN                                     
+                                    QUERY PLAN
 -----------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t2.a
@@ -4357,16 +4357,16 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = 
 (27 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE coalesce(t1.b, 0) < 10 AND coalesce(t2.b, 0) < 10 ORDER BY t1.a, t2.a;
- a  |  c   | a  |  c   
+ a  |  c   | a  |  c
 ----+------+----+------
- -1 |      |    | 
-  1 | 0001 |    | 
+ -1 |      |    |
+  1 | 0001 |    |
   3 | 0003 |  3 | 0003
   4 | 0004 |  4 | 0004
   6 | 0006 |  6 | 0006
-  8 | 0008 |    | 
+  8 | 0008 |    |
   9 | 0009 |  9 | 0009
-    |      | -1 | 
+    |      | -1 |
     |      |  2 | 0002
     |      |  7 | 0007
 (10 rows)
@@ -4374,7 +4374,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 FULL JOIN plt2_adv t2 ON (t1.a = 
 -- 3-way join to test the NULL partition of a join relation
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) LEFT JOIN plt1_adv t3 ON (t1.a = t3.a AND t1.c = t3.c) WHERE t1.b < 10 ORDER BY t1.a;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4420,9 +4420,9 @@ SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2
 (41 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) LEFT JOIN plt1_adv t3 ON (t1.a = t3.a AND t1.c = t3.c) WHERE t1.b < 10 ORDER BY t1.a;
- a  |  c   | a |  c   | a |  c   
+ a  |  c   | a |  c   | a |  c
 ----+------+---+------+---+------
- -1 |      |   |      |   | 
+ -1 |      |   |      |   |
   1 | 0001 |   |      | 1 | 0001
   3 | 0003 | 3 | 0003 | 3 | 0003
   4 | 0004 | 4 | 0004 | 4 | 0004
@@ -4445,7 +4445,7 @@ ANALYZE plt2_adv;
 -- partition
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4465,7 +4465,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (15 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -4482,7 +4482,7 @@ ANALYZE plt2_adv;
 -- matches plt2_adv_p1 and plt2_adv_p2_ext
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4507,7 +4507,7 @@ ANALYZE plt2_adv;
 -- matches plt2_adv_p1 and plt2_adv_p2_ext
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4536,7 +4536,7 @@ ANALYZE plt3_adv;
 -- 3-way join to test the default partition of a join relation
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) LEFT JOIN plt3_adv t3 ON (t1.a = t3.a AND t1.c = t3.c) WHERE t1.b < 10 ORDER BY t1.a;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4564,10 +4564,10 @@ SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2
 (23 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) LEFT JOIN plt3_adv t3 ON (t1.a = t3.a AND t1.c = t3.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   | a |  c   
+ a |  c   | a |  c   | a |  c
 ---+------+---+------+---+------
- 1 | 0001 |   |      |   | 
- 3 | 0003 | 3 | 0003 |   | 
+ 1 | 0001 |   |      |   |
+ 3 | 0003 | 3 | 0003 |   |
  4 | 0004 | 4 | 0004 | 4 | 0004
  6 | 0006 | 6 | 0006 | 6 | 0006
 (4 rows)
@@ -4582,7 +4582,7 @@ INSERT INTO plt2_adv VALUES (-1, -1, NULL);
 ANALYZE plt2_adv;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4602,7 +4602,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (15 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  1 | 0001 | 1 | 0001
  3 | 0003 | 3 | 0003
@@ -4617,7 +4617,7 @@ INSERT INTO plt2_adv VALUES (-1, -1, NULL);
 ANALYZE plt2_adv;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4630,7 +4630,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (8 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  4 | 0004 | 4 | 0004
  6 | 0006 | 6 | 0006
@@ -4658,7 +4658,7 @@ INSERT INTO plt2_adv VALUES (-1, -1, NULL);
 ANALYZE plt2_adv;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IN ('0003', '0004', '0005') AND t1.b < 10 ORDER BY t1.a;
-                                       QUERY PLAN                                        
+                                       QUERY PLAN
 -----------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4678,7 +4678,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (15 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IN ('0003', '0004', '0005') AND t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -4687,7 +4687,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IS NULL AND t1.b < 10 ORDER BY t1.a;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4700,9 +4700,9 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 (8 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IS NULL AND t1.b < 10 ORDER BY t1.a;
- a  | c | a | c 
+ a  | c | a | c
 ----+---+---+---
- -1 |   |   | 
+ -1 |   |   |
 (1 row)
 
 CREATE TABLE plt1_adv_default PARTITION OF plt1_adv DEFAULT;
@@ -4711,7 +4711,7 @@ CREATE TABLE plt2_adv_default PARTITION OF plt2_adv DEFAULT;
 ANALYZE plt2_adv;
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IN ('0003', '0004', '0005') AND t1.b < 10 ORDER BY t1.a;
-                                       QUERY PLAN                                        
+                                       QUERY PLAN
 -----------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4731,7 +4731,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 (15 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IN ('0003', '0004', '0005') AND t1.b < 10 ORDER BY t1.a;
- a |  c   | a |  c   
+ a |  c   | a |  c
 ---+------+---+------
  3 | 0003 | 3 | 0003
  4 | 0004 | 4 | 0004
@@ -4740,7 +4740,7 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 INNER JOIN plt2_adv t2 ON (t1.a =
 
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IS NULL AND t1.b < 10 ORDER BY t1.a;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Sort
    Sort Key: t1.a
@@ -4753,9 +4753,9 @@ SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = 
 (8 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c FROM plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE t1.c IS NULL AND t1.b < 10 ORDER BY t1.a;
- a  | c | a | c 
+ a  | c | a | c
 ----+---+---+---
- -1 |   |   | 
+ -1 |   |   |
 (1 row)
 
 DROP TABLE plt1_adv;
@@ -4782,7 +4782,7 @@ ANALYZE plt3_adv;
 -- '0001' of that partition
 EXPLAIN (COSTS OFF)
 SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM (plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.c = t2.c)) FULL JOIN plt3_adv t3 ON (t1.c = t3.c) WHERE coalesce(t1.a, 0) % 5 != 3 AND coalesce(t1.a, 0) % 5 != 4 ORDER BY t1.c, t1.a, t2.a, t3.a;
-                                          QUERY PLAN                                           
+                                          QUERY PLAN
 -----------------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.c, t1.a, t2.a, t3.a
@@ -4810,13 +4810,13 @@ SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM (plt1_adv t1 LEFT JOIN plt2_adv t
 (23 rows)
 
 SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM (plt1_adv t1 LEFT JOIN plt2_adv t2 ON (t1.c = t2.c)) FULL JOIN plt3_adv t3 ON (t1.c = t3.c) WHERE coalesce(t1.a, 0) % 5 != 3 AND coalesce(t1.a, 0) % 5 != 4 ORDER BY t1.c, t1.a, t2.a, t3.a;
- a  |  c   | a  |  c   | a  |  c   
+ a  |  c   | a  |  c   | a  |  c
 ----+------+----+------+----+------
-  0 | 0000 |    |      |    | 
-  5 | 0000 |    |      |    | 
- 10 | 0000 |    |      |    | 
- 15 | 0000 |    |      |    | 
- 20 | 0000 |    |      |    | 
+  0 | 0000 |    |      |    |
+  5 | 0000 |    |      |    |
+ 10 | 0000 |    |      |    |
+ 15 | 0000 |    |      |    |
+ 20 | 0000 |    |      |    |
   1 | 0001 |    |      |  1 | 0001
   1 | 0001 |    |      |  6 | 0001
   1 | 0001 |    |      | 11 | 0001
@@ -4842,31 +4842,31 @@ SELECT t1.a, t1.c, t2.a, t2.c, t3.a, t3.c FROM (plt1_adv t1 LEFT JOIN plt2_adv t
  21 | 0001 |    |      | 11 | 0001
  21 | 0001 |    |      | 16 | 0001
  21 | 0001 |    |      | 21 | 0001
-  2 | 0002 |  2 | 0002 |    | 
-  2 | 0002 |  7 | 0002 |    | 
-  2 | 0002 | 12 | 0002 |    | 
-  2 | 0002 | 17 | 0002 |    | 
-  2 | 0002 | 22 | 0002 |    | 
-  7 | 0002 |  2 | 0002 |    | 
-  7 | 0002 |  7 | 0002 |    | 
-  7 | 0002 | 12 | 0002 |    | 
-  7 | 0002 | 17 | 0002 |    | 
-  7 | 0002 | 22 | 0002 |    | 
- 12 | 0002 |  2 | 0002 |    | 
- 12 | 0002 |  7 | 0002 |    | 
- 12 | 0002 | 12 | 0002 |    | 
- 12 | 0002 | 17 | 0002 |    | 
- 12 | 0002 | 22 | 0002 |    | 
- 17 | 0002 |  2 | 0002 |    | 
- 17 | 0002 |  7 | 0002 |    | 
- 17 | 0002 | 12 | 0002 |    | 
- 17 | 0002 | 17 | 0002 |    | 
- 17 | 0002 | 22 | 0002 |    | 
- 22 | 0002 |  2 | 0002 |    | 
- 22 | 0002 |  7 | 0002 |    | 
- 22 | 0002 | 12 | 0002 |    | 
- 22 | 0002 | 17 | 0002 |    | 
- 22 | 0002 | 22 | 0002 |    | 
+  2 | 0002 |  2 | 0002 |    |
+  2 | 0002 |  7 | 0002 |    |
+  2 | 0002 | 12 | 0002 |    |
+  2 | 0002 | 17 | 0002 |    |
+  2 | 0002 | 22 | 0002 |    |
+  7 | 0002 |  2 | 0002 |    |
+  7 | 0002 |  7 | 0002 |    |
+  7 | 0002 | 12 | 0002 |    |
+  7 | 0002 | 17 | 0002 |    |
+  7 | 0002 | 22 | 0002 |    |
+ 12 | 0002 |  2 | 0002 |    |
+ 12 | 0002 |  7 | 0002 |    |
+ 12 | 0002 | 12 | 0002 |    |
+ 12 | 0002 | 17 | 0002 |    |
+ 12 | 0002 | 22 | 0002 |    |
+ 17 | 0002 |  2 | 0002 |    |
+ 17 | 0002 |  7 | 0002 |    |
+ 17 | 0002 | 12 | 0002 |    |
+ 17 | 0002 | 17 | 0002 |    |
+ 17 | 0002 | 22 | 0002 |    |
+ 22 | 0002 |  2 | 0002 |    |
+ 22 | 0002 |  7 | 0002 |    |
+ 22 | 0002 | 12 | 0002 |    |
+ 22 | 0002 | 17 | 0002 |    |
+ 22 | 0002 | 22 | 0002 |    |
 (55 rows)
 
 DROP TABLE plt1_adv;
@@ -4903,7 +4903,7 @@ INSERT INTO beta_pos SELECT  1.0, i, to_char(i % 10, 'FM0000') FROM generate_ser
 ANALYZE beta;
 EXPLAIN (COSTS OFF)
 SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.b = t2.b) WHERE t1.b >= 125 AND t1.b < 225 ORDER BY t1.a, t1.b;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t1.b
@@ -4937,7 +4937,7 @@ SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.b = t2
 (29 rows)
 
 SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.b = t2.b) WHERE t1.b >= 125 AND t1.b < 225 ORDER BY t1.a, t1.b;
- a  |  b  |  c   | a  |  b  |  c   
+ a  |  b  |  c   | a  |  b  |  c
 ----+-----+------+----+-----+------
  -1 | 126 | 0006 | -1 | 126 | 0006
  -1 | 129 | 0009 | -1 | 129 | 0009
@@ -4983,7 +4983,7 @@ SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.b = t2
 
 EXPLAIN (COSTS OFF)
 SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE ((t1.b >= 100 AND t1.b < 110) OR (t1.b >= 200 AND t1.b < 210)) AND ((t2.b >= 100 AND t2.b < 110) OR (t2.b >= 200 AND t2.b < 210)) AND t1.c IN ('0004', '0009') ORDER BY t1.a, t1.b, t2.b;
-                                                              QUERY PLAN                                                              
+                                                              QUERY PLAN
 --------------------------------------------------------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t1.b, t2.b
@@ -5016,7 +5016,7 @@ SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.c = t2
 (28 rows)
 
 SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.c = t2.c) WHERE ((t1.b >= 100 AND t1.b < 110) OR (t1.b >= 200 AND t1.b < 210)) AND ((t2.b >= 100 AND t2.b < 110) OR (t2.b >= 200 AND t2.b < 210)) AND t1.c IN ('0004', '0009') ORDER BY t1.a, t1.b, t2.b;
- a  |  b  |  c   | a  |  b  |  c   
+ a  |  b  |  c   | a  |  b  |  c
 ----+-----+------+----+-----+------
  -1 | 104 | 0004 | -1 | 104 | 0004
  -1 | 104 | 0004 | -1 | 204 | 0004
@@ -5038,7 +5038,7 @@ SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.c = t2
 
 EXPLAIN (COSTS OFF)
 SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.b = t2.b AND t1.c = t2.c) WHERE ((t1.b >= 100 AND t1.b < 110) OR (t1.b >= 200 AND t1.b < 210)) AND ((t2.b >= 100 AND t2.b < 110) OR (t2.b >= 200 AND t2.b < 210)) AND t1.c IN ('0004', '0009') ORDER BY t1.a, t1.b;
-                                                           QUERY PLAN                                                           
+                                                           QUERY PLAN
 --------------------------------------------------------------------------------------------------------------------------------
  Sort
    Sort Key: t1.a, t1.b
@@ -5072,7 +5072,7 @@ SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.b = t2
 (29 rows)
 
 SELECT t1.*, t2.* FROM alpha t1 INNER JOIN beta t2 ON (t1.a = t2.a AND t1.b = t2.b AND t1.c = t2.c) WHERE ((t1.b >= 100 AND t1.b < 110) OR (t1.b >= 200 AND t1.b < 210)) AND ((t2.b >= 100 AND t2.b < 110) OR (t2.b >= 200 AND t2.b < 210)) AND t1.c IN ('0004', '0009') ORDER BY t1.a, t1.b;
- a  |  b  |  c   | a  |  b  |  c   
+ a  |  b  |  c   | a  |  b  |  c
 ----+-----+------+----+-----+------
  -1 | 104 | 0004 | -1 | 104 | 0004
  -1 | 109 | 0009 | -1 | 109 | 0009
@@ -5096,7 +5096,7 @@ SET max_parallel_workers_per_gather = 0;
 SET enable_partitionwise_join = on;
 EXPLAIN (COSTS OFF)
 SELECT x.id, y.id FROM fract_t x LEFT JOIN fract_t y USING (id) ORDER BY x.id ASC LIMIT 10;
-                              QUERY PLAN                               
+                              QUERY PLAN
 -----------------------------------------------------------------------
  Limit
    ->  Merge Append
@@ -5113,7 +5113,7 @@ SELECT x.id, y.id FROM fract_t x LEFT JOIN fract_t y USING (id) ORDER BY x.id AS
 
 EXPLAIN (COSTS OFF)
 SELECT x.id, y.id FROM fract_t x LEFT JOIN fract_t y USING (id) ORDER BY x.id DESC LIMIT 10;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Limit
    ->  Merge Append

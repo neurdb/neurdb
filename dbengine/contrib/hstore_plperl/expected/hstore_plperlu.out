@@ -7,7 +7,7 @@ SELECT transforms.udt_schema, transforms.udt_name,
 FROM information_schema.transforms JOIN information_schema.routines
      USING (specific_catalog, specific_schema, specific_name)
 ORDER BY 1, 2, 5, 6;
- udt_schema | udt_name | routine_schema |   routine_name    | group_name | transform_type 
+ udt_schema | udt_name | routine_schema |   routine_name    | group_name | transform_type
 ------------+----------+----------------+-------------------+------------+----------------
  public     | hstore   | public         | hstore_to_plperlu | plperlu    | FROM SQL
  public     | hstore   | public         | plperlu_to_hstore | plperlu    | TO SQL
@@ -26,7 +26,7 @@ return scalar(keys %{$_[0]});
 $$;
 SELECT test1('aa=>bb, cc=>NULL'::hstore);
 INFO:  $VAR1 = {'aa' => 'bb','cc' => undef};
- test1 
+ test1
 -------
      2
 (1 row)
@@ -42,7 +42,7 @@ return scalar(keys %{$_[0]});
 $$;
 SELECT test1none('aa=>bb, cc=>NULL'::hstore);
 INFO:  $VAR1 = '"aa"=>"bb", "cc"=>NULL';
- test1none 
+ test1none
 -----------
          0
 (1 row)
@@ -59,7 +59,7 @@ return scalar(keys %{$_[0]});
 $$;
 SELECT test1list('aa=>bb, cc=>NULL'::hstore);
 INFO:  $VAR1 = {'aa' => 'bb','cc' => undef};
- test1list 
+ test1list
 -----------
          2
 (1 row)
@@ -77,7 +77,7 @@ return scalar(keys %{$_[0]});
 $$;
 SELECT test1arr(array['aa=>bb, cc=>NULL'::hstore, 'dd=>ee']);
 INFO:  $VAR1 = {'aa' => 'bb','cc' => undef};$VAR2 = {'dd' => 'ee'};
- test1arr 
+ test1arr
 ----------
         2
 (1 row)
@@ -102,16 +102,16 @@ $$;
 SELECT test3();
 INFO:  $VAR1 = {'aa' => 'bb','cc' => undef};
 INFO:  $VAR1 = '"a"=>"1", "b"=>"boo", "c"=>NULL';
- test3 
+ test3
 -------
- 
+
 (1 row)
 
 -- test trigger
 CREATE TABLE test1 (a int, b hstore);
 INSERT INTO test1 VALUES (1, 'aa=>bb, cc=>NULL');
 SELECT * FROM test1;
- a |           b            
+ a |           b
 ---+------------------------
  1 | "aa"=>"bb", "cc"=>NULL
 (1 row)
@@ -134,7 +134,7 @@ CREATE TRIGGER test4 BEFORE UPDATE ON test1 FOR EACH ROW EXECUTE PROCEDURE test4
 UPDATE test1 SET a = a;
 INFO:  $VAR1 = {'a' => '1','b' => {'aa' => 'bb','cc' => undef}};
 SELECT * FROM test1;
- a |                b                
+ a |                b
 ---+---------------------------------
  1 | "a"=>"1", "b"=>"boo", "c"=>NULL
 (1 row)

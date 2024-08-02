@@ -20,31 +20,31 @@ AS $$
 return undef;
 $$;
 SELECT perl2int(1);
- perl2int 
+ perl2int
 ----------
  t
 (1 row)
 
 SELECT perl2int(0);
- perl2int 
+ perl2int
 ----------
  f
 (1 row)
 
 SELECT perl2text('foo');
- perl2text 
+ perl2text
 -----------
  t
 (1 row)
 
 SELECT perl2text('');
- perl2text 
+ perl2text
 -----------
  f
 (1 row)
 
 SELECT perl2undef() IS NULL AS p;
- p 
+ p
 ---
  t
 (1 row)
@@ -63,9 +63,9 @@ die("TRUE mistransformed") if (!$x);
 die("FALSE mistransformed") if ($y);
 $$;
 SELECT bool2perl (true, false, NULL);
- bool2perl 
+ bool2perl
 -----------
- 
+
 (1 row)
 
 --- test ruleutils
@@ -97,9 +97,9 @@ die("TRUE mistransformed in SPI") if (!$rv->{t});
 die("FALSE mistransformed in SPI") if ($rv->{f});
 $$;
 SELECT spi_test();
- spi_test 
+ spi_test
 ----------
- 
+
 (1 row)
 
 DROP EXTENSION plperl CASCADE;

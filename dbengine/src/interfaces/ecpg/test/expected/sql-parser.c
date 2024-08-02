@@ -25,8 +25,8 @@
 
 int main() {
   /* exec sql begin declare section */
-	   
-  
+
+
 #line 10 "parser.pgc"
  int item [ 3 ] , ind [ 3 ] , i ;
 /* exec sql end declare section */
@@ -68,8 +68,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 24 "parser.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select Item2 from T order by Item2 nulls last", ECPGt_EOIT, 
-	ECPGt_int,(item),(long)1,(long)3,sizeof(int), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select Item2 from T order by Item2 nulls last", ECPGt_EOIT,
+	ECPGt_int,(item),(long)1,(long)3,sizeof(int),
 	ECPGt_int,(ind),(long)1,(long)3,sizeof(int), ECPGt_EORT);
 #line 26 "parser.pgc"
 

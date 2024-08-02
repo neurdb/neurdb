@@ -12,15 +12,18 @@ from python.dataloader import table_dataloader
 from shared_config.config import parse_config_arguments
 import time
 
+
 def seed_everything(seed: int):
     import random, os
     import numpy as np
     import torch
 
     random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
+
 #    torch.cuda.manual_seed(seed)
 #    torch.backends.cudnn.deterministic = True
 
@@ -35,14 +38,28 @@ if __name__ == "__main__":
         "--model_path", type=str, default="./model.h5", help="Path to save the model"
     )
     parser.add_argument(
-        "--load_model_path", type=str, default="./model.h5", help="Path to load the model"
+        "--load_model_path",
+        type=str,
+        default="./model.h5",
+        help="Path to load the model",
     )
-    parser.add_argument("--train_batch_num", type=int, help="Number of batches for training")
-    parser.add_argument("--eva_batch_num", type=int, help="NUmber of batches for evaluation")
-    parser.add_argument("--test_batch_num", type=int, help="Number of batches for testing")
+    parser.add_argument(
+        "--train_batch_num", type=int, help="Number of batches for training"
+    )
+    parser.add_argument(
+        "--eva_batch_num", type=int, help="NUmber of batches for evaluation"
+    )
+    parser.add_argument(
+        "--test_batch_num", type=int, help="Number of batches for testing"
+    )
     parser.add_argument("--force_train", action="store_true", help="Force train model")
     parser.add_argument("--inference", action="store_true", help="Run inference")
-    parser.add_argument("--inference_batch_num", type=int, default=10, help="Number of batches for inference")
+    parser.add_argument(
+        "--inference_batch_num",
+        type=int,
+        default=10,
+        help="Number of batches for inference",
+    )
     args = parser.parse_args()
 
     table_name = args.table
@@ -63,7 +80,9 @@ if __name__ == "__main__":
     )
     logger.debug(f"Data loaded from table {table_name}", nfields=nfields, nfeat=nfeat)
 
-    config_args = parse_config_arguments(os.path.join(os.environ["NEURDBPATH"], "contrib/nr/pysrc/config.ini"))
+    config_args = parse_config_arguments(
+        os.path.join(os.environ["NEURDBPATH"], "contrib/nr/pysrc/config.ini")
+    )
     config_args.epoch = args.num_epochs
     config_args.nfield = nfields
     config_args.nfeat = nfeat
@@ -71,7 +90,9 @@ if __name__ == "__main__":
     builder = build_model("armnet", config_args)
 
     if os.path.exists(load_model_path) and not args.force_train:
-        logger.info("Model file exists. Use external model params", path=load_model_path)
+        logger.info(
+            "Model file exists. Use external model params", path=load_model_path
+        )
     else:
         if args.force_train:
             logger.warn("Force train model", path=model_path)
@@ -79,7 +100,15 @@ if __name__ == "__main__":
         else:
             logger.info("Model file does not exist. Training ...", path=model_path)
 
-        builder.train(train_loader, val_loader, test_loader, num_epochs, train_batch_num, eva_batch_num, test_batch_num)
+        builder.train(
+            train_loader,
+            val_loader,
+            test_loader,
+            num_epochs,
+            train_batch_num,
+            eva_batch_num,
+            test_batch_num,
+        )
         logger.info("Model trained", path=model_path)
         torch.cuda.synchronize()  # Wait for all GPU operations to complete
         logger.info("Saving model ...", path=model_path)
@@ -87,7 +116,10 @@ if __name__ == "__main__":
         logger.info("Model saved", path=model_path)
 
         end_time = time.time()
-        logger.info(f"Model trained + saved, time_usage = {end_time - begin_time}", path=model_path)
+        logger.info(
+            f"Model trained + saved, time_usage = {end_time - begin_time}",
+            path=model_path,
+        )
 
     if inference:
         logger.info("Running inference ...")
@@ -96,7 +128,9 @@ if __name__ == "__main__":
         y_pred = builder.inference(test_loader, inference_batch_num)
         torch.cuda.synchronize()  # Wait for all GPU operations to complete
         end_time = time.time()
-        logger.info(f"Inference done for {len(y_pred) * len(y_pred[0])} samples, time_usage = {end_time - begin_time}")
+        logger.info(
+            f"Inference done for {len(y_pred) * len(y_pred[0])} samples, time_usage = {end_time - begin_time}"
+        )
 
         # logger.info(f"Inference done, time_usage = {end_time - begin_time}",
         #             y_pred_head=y_pred[:10] if len(y_pred) >= 10 else y_pred)

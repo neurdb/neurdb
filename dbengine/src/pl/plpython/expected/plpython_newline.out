@@ -11,20 +11,19 @@ CREATE OR REPLACE FUNCTION newline_crlf() RETURNS integer AS
 E'x = 100\r\ny = 23\r\nreturn x + y\r\n'
 LANGUAGE plpython3u;
 SELECT newline_lf();
- newline_lf 
+ newline_lf
 ------------
         123
 (1 row)
 
 SELECT newline_cr();
- newline_cr 
+ newline_cr
 ------------
         123
 (1 row)
 
 SELECT newline_crlf();
- newline_crlf 
+ newline_crlf
 --------------
           123
 (1 row)
-

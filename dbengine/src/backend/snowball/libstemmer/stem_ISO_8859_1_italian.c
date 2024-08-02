@@ -590,7 +590,7 @@ static int r_mark_regions(struct SN_env * z) {
             if (in_grouping(z, g_v, 97, 249, 0)) goto lab2;
             {   int c3 = z->c;
                 if (out_grouping(z, g_v, 97, 249, 0)) goto lab4;
-                {   
+                {
                     int ret = out_grouping(z, g_v, 97, 249, 1);
                     if (ret < 0) goto lab4;
                     z->c += ret;
@@ -599,7 +599,7 @@ static int r_mark_regions(struct SN_env * z) {
             lab4:
                 z->c = c3;
                 if (in_grouping(z, g_v, 97, 249, 0)) goto lab2;
-                {   
+                {
                     int ret = in_grouping(z, g_v, 97, 249, 1);
                     if (ret < 0) goto lab2;
                     z->c += ret;
@@ -612,7 +612,7 @@ static int r_mark_regions(struct SN_env * z) {
             if (out_grouping(z, g_v, 97, 249, 0)) goto lab0;
             {   int c4 = z->c;
                 if (out_grouping(z, g_v, 97, 249, 0)) goto lab6;
-                {   
+                {
                     int ret = out_grouping(z, g_v, 97, 249, 1);
                     if (ret < 0) goto lab6;
                     z->c += ret;
@@ -633,23 +633,23 @@ static int r_mark_regions(struct SN_env * z) {
         z->c = c1;
     }
     {   int c5 = z->c;
-        {   
+        {
             int ret = out_grouping(z, g_v, 97, 249, 1);
             if (ret < 0) goto lab7;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping(z, g_v, 97, 249, 1);
             if (ret < 0) goto lab7;
             z->c += ret;
         }
         z->I[1] = z->c;
-        {   
+        {
             int ret = out_grouping(z, g_v, 97, 249, 1);
             if (ret < 0) goto lab7;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping(z, g_v, 97, 249, 1);
             if (ret < 0) goto lab7;
             z->c += ret;
@@ -970,7 +970,7 @@ extern int italian_ISO_8859_1_stem(struct SN_env * z) {
         }
         z->c = c1;
     }
-    
+
     {   int ret = r_mark_regions(z);
         if (ret < 0) return ret;
     }
@@ -1019,4 +1019,3 @@ extern int italian_ISO_8859_1_stem(struct SN_env * z) {
 extern struct SN_env * italian_ISO_8859_1_create_env(void) { return SN_create_env(0, 3); }
 
 extern void italian_ISO_8859_1_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

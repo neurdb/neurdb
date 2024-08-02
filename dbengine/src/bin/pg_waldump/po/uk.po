@@ -539,4 +539,3 @@ msgstr "не вдалося відновити зображення %X/%X сти
 #, c-format
 msgid "could not decompress image at %X/%X, block %d"
 msgstr "не вдалося розпакувати зображення на %X/%X, блок %d"
-

@@ -16,7 +16,7 @@ SELECT quote(t, 'literal') FROM (VALUES
        (''),
        (''''),
        ('xyzv')) AS v(t);
-   quote   
+   quote
 -----------
  'abc'
  'a''bc'
@@ -33,7 +33,7 @@ SELECT quote(t, 'nullable') FROM (VALUES
        (''),
        (''''),
        (NULL)) AS v(t);
-   quote   
+   quote
 -----------
  'abc'
  'a''bc'
@@ -47,10 +47,9 @@ SELECT quote(t, 'ident') FROM (VALUES
        ('abc'),
        ('a b c'),
        ('a " ''abc''')) AS v(t);
-    quote     
+    quote
 --------------
  abc
  "a b c"
  "a "" 'abc'"
 (3 rows)
-

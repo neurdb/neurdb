@@ -85,7 +85,7 @@ em9va2E=
 -- header with empty value
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-foo: 
+foo:
 
 em9va2E=
 =ZZZZ
@@ -106,7 +106,7 @@ em9va2E=
 -- insane keys, part 1
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-insane:key : 
+insane:key :
 
 em9va2E=
 =ZZZZ
@@ -136,7 +136,7 @@ em9va2E=
 -- long value, split up
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-long: this value is more than 76 characters long, but it should still 
+long: this value is more than 76 characters long, but it should still
 long: parse correctly as that''s permitted by RFC 4880
 
 em9va2E=
@@ -147,8 +147,8 @@ em9va2E=
 -- long value, split up, part 2
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-long: this value is more than 
-long: 76 characters long, but it should still 
+long: this value is more than
+long: 76 characters long, but it should still
 long: parse correctly as that''s permitted by RFC 4880
 
 em9va2E=
@@ -159,13 +159,13 @@ em9va2E=
 -- long value, split up, part 3
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-emptykey: 
-long: this value is more than 
-emptykey: 
-long: 76 characters long, but it should still 
-emptykey: 
+emptykey:
+long: this value is more than
+emptykey:
+long: 76 characters long, but it should still
+emptykey:
 long: parse correctly as that''s permitted by RFC 4880
-emptykey: 
+emptykey:
 
 em9va2E=
 =ZZZZ

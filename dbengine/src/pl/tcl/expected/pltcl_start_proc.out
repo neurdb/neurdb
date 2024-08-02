@@ -18,14 +18,13 @@ create or replace function tcl_initialize() returns void as
 $$ elog NOTICE "in tcl_initialize" $$ language pltcl;
 select tcl_int4add(1, 2);
 NOTICE:  in tcl_initialize
- tcl_int4add 
+ tcl_int4add
 -------------
            3
 (1 row)
 
 select tcl_int4add(1, 2);
- tcl_int4add 
+ tcl_int4add
 -------------
            3
 (1 row)
-

@@ -5,7 +5,7 @@ CREATE TABLE test_float4 (
 INSERT INTO test_float4 VALUES (-2),(-1),(0),(1),(2),(3);
 CREATE INDEX idx_float4 ON test_float4 USING gin (i);
 SELECT * FROM test_float4 WHERE i<1::float4 ORDER BY i;
- i  
+ i
 ----
  -2
  -1
@@ -13,7 +13,7 @@ SELECT * FROM test_float4 WHERE i<1::float4 ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_float4 WHERE i<=1::float4 ORDER BY i;
- i  
+ i
 ----
  -2
  -1
@@ -22,13 +22,13 @@ SELECT * FROM test_float4 WHERE i<=1::float4 ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_float4 WHERE i=1::float4 ORDER BY i;
- i 
+ i
 ---
  1
 (1 row)
 
 SELECT * FROM test_float4 WHERE i>=1::float4 ORDER BY i;
- i 
+ i
 ---
  1
  2
@@ -36,9 +36,8 @@ SELECT * FROM test_float4 WHERE i>=1::float4 ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_float4 WHERE i>1::float4 ORDER BY i;
- i 
+ i
 ---
  2
  3
 (2 rows)
-

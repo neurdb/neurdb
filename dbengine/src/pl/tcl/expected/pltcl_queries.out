@@ -2,15 +2,15 @@
 \set VERBOSITY terse
 -- Test composite-type arguments
 select tcl_composite_arg_ref1(row('tkey', 42, 'ref2'));
- tcl_composite_arg_ref1 
+ tcl_composite_arg_ref1
 ------------------------
                      42
 (1 row)
 
 select tcl_composite_arg_ref2(row('tkey', 42, 'ref2'));
- tcl_composite_arg_ref2 
+ tcl_composite_arg_ref2
 ------------------------
- ref2                
+ ref2
 (1 row)
 
 -- More tests for composite argument/result types
@@ -19,19 +19,19 @@ create function tcl_record_arg(record, fldname text) returns int as '
     return $1($2)
 ' language pltcl;
 select tcl_record_arg(row('tkey', 42, 'ref2')::T_comp1, 'ref1');
- tcl_record_arg 
+ tcl_record_arg
 ----------------
              42
 (1 row)
 
 select tcl_record_arg(row('tkey', 42, 'ref2')::d_comp1, 'ref1');
- tcl_record_arg 
+ tcl_record_arg
 ----------------
              42
 (1 row)
 
 select tcl_record_arg(row(2,4), 'f2');
- tcl_record_arg 
+ tcl_record_arg
 ----------------
               4
 (1 row)
@@ -40,13 +40,13 @@ create function tcl_cdomain_arg(d_comp1) returns int as '
     return $1(ref1)
 ' language pltcl;
 select tcl_cdomain_arg(row('tkey', 42, 'ref2'));
- tcl_cdomain_arg 
+ tcl_cdomain_arg
 -----------------
               42
 (1 row)
 
 select tcl_cdomain_arg(row('tkey', 42, 'ref2')::T_comp1);
- tcl_cdomain_arg 
+ tcl_cdomain_arg
 -----------------
               42
 (1 row)
@@ -55,19 +55,19 @@ select tcl_cdomain_arg(row('tkey', -1, 'ref2'));  -- fail
 ERROR:  value for domain d_comp1 violates check constraint "d_comp1_check"
 -- Test argisnull primitive
 select tcl_argisnull('foo');
- tcl_argisnull 
+ tcl_argisnull
 ---------------
  f
 (1 row)
 
 select tcl_argisnull('');
- tcl_argisnull 
+ tcl_argisnull
 ---------------
  f
 (1 row)
 
 select tcl_argisnull(null);
- tcl_argisnull 
+ tcl_argisnull
 ---------------
  t
 (1 row)
@@ -84,14 +84,14 @@ select bad_field();
 ERROR:  column name/value list contains nonexistent column name "cow"
 -- test compound return
 select * from tcl_test_cube_squared(5);
- squared | cubed 
+ squared | cubed
 ---------+-------
       25 |   125
 (1 row)
 
 -- test SRF
 select * from tcl_test_squared_rows(0,5);
- x | y  
+ x | y
 ---+----
  0 |  0
  1 |  1
@@ -101,7 +101,7 @@ select * from tcl_test_squared_rows(0,5);
 (5 rows)
 
 select * from tcl_test_sequence(0,5) as a;
- a 
+ a
 ---
  0
  1
@@ -111,7 +111,7 @@ select * from tcl_test_sequence(0,5) as a;
 (5 rows)
 
 select 1, tcl_test_sequence(0,5);
- ?column? | tcl_test_sequence 
+ ?column? | tcl_test_sequence
 ----------+-------------------
         1 |                 0
         1 |                 1
@@ -138,30 +138,30 @@ create function tcl_composite_result(int) returns T_comp1 as $$
 return [list tkey tkey1 ref1 $1 ref2 ref22]
 $$ language pltcl;
 select tcl_composite_result(1001);
-            tcl_composite_result            
+            tcl_composite_result
 --------------------------------------------
  ("tkey1     ",1001,"ref22               ")
 (1 row)
 
 select * from tcl_composite_result(1002);
-    tkey    | ref1 |         ref2         
+    tkey    | ref1 |         ref2
 ------------+------+----------------------
- tkey1      | 1002 | ref22               
+ tkey1      | 1002 | ref22
 (1 row)
 
 create function tcl_dcomposite_result(int) returns d_comp1 as $$
 return [list tkey tkey2 ref1 $1 ref2 ref42]
 $$ language pltcl;
 select tcl_dcomposite_result(1001);
-           tcl_dcomposite_result            
+           tcl_dcomposite_result
 --------------------------------------------
  ("tkey2     ",1001,"ref42               ")
 (1 row)
 
 select * from tcl_dcomposite_result(1002);
-    tkey    | ref1 |         ref2         
+    tkey    | ref1 |         ref2
 ------------+------+----------------------
- tkey2      | 1002 | ref42               
+ tkey2      | 1002 | ref42
 (1 row)
 
 select * from tcl_dcomposite_result(-1);  -- fail
@@ -174,15 +174,15 @@ ERROR:  function returning record called in context that cannot accept type reco
 select * from tcl_record_result(42);  -- fail
 ERROR:  a column definition list is required for functions returning "record" at character 15
 select * from tcl_record_result(42) as (q1 text, q2 int, q3 text);
-    q1    | q2 |    q3    
+    q1    | q2 |    q3
 ----------+----+----------
  sometext | 42 | moretext
 (1 row)
 
 select * from tcl_record_result(42) as (q1 text, q2 int, q3 text, q4 int);
-    q1    | q2 |    q3    | q4 
+    q1    | q2 |    q3    | q4
 ----------+----+----------+----
- sometext | 42 | moretext |   
+ sometext | 42 | moretext |
 (1 row)
 
 select * from tcl_record_result(42) as (q1 text, q2 int, q4 int);  -- fail
@@ -191,13 +191,13 @@ ERROR:  column name/value list contains nonexistent column name "q3"
 select tcl_eval('quote foo bar');
 ERROR:  wrong # args: should be "quote string"
 select tcl_eval('quote [format %c 39]');
- tcl_eval 
+ tcl_eval
 ----------
  ''
 (1 row)
 
 select tcl_eval('quote [format %c 92]');
- tcl_eval 
+ tcl_eval
 ----------
  \\
 (1 row)
@@ -246,7 +246,7 @@ ERROR:  type "b" does not exist
 select tcl_eval('spi_prepare a "b {"');
 ERROR:  unmatched open brace in list
 select tcl_error_handling_test($tcl$spi_prepare "select moo" []$tcl$);
-       tcl_error_handling_test        
+       tcl_error_handling_test
 --------------------------------------
  SQLSTATE: 42703                     +
  condition: undefined_column         +
@@ -270,7 +270,7 @@ RAISE 'my message'
 ;
 END$$;"
 $tcl$);
-                   tcl_error_handling_test                    
+                   tcl_error_handling_test
 --------------------------------------------------------------
  SQLSTATE: P0001                                             +
  column: my column                                           +
@@ -299,7 +299,7 @@ $tcl$);
 
 -- verify tcl_error_handling_test() properly reports non-postgres errors
 select tcl_error_handling_test('moo');
-  tcl_error_handling_test   
+  tcl_error_handling_test
 ----------------------------
  invalid command name "moo"
 (1 row)
@@ -318,9 +318,9 @@ NOTICE:  col1 1, col2 foo
 NOTICE:  col1 2, col2 bar
 NOTICE:  action: break
 NOTICE:  end of function
- tcl_spi_exec 
+ tcl_spi_exec
 --------------
- 
+
 (1 row)
 
 select tcl_spi_exec(true, 'continue');
@@ -329,9 +329,9 @@ NOTICE:  col1 2, col2 bar
 NOTICE:  action: continue
 NOTICE:  col1 3, col2 baz
 NOTICE:  end of function
- tcl_spi_exec 
+ tcl_spi_exec
 --------------
- 
+
 (1 row)
 
 select tcl_spi_exec(true, 'error');
@@ -343,9 +343,9 @@ select tcl_spi_exec(true, 'return');
 NOTICE:  col1 1, col2 foo
 NOTICE:  col1 2, col2 bar
 NOTICE:  action: return
- tcl_spi_exec 
+ tcl_spi_exec
 --------------
- 
+
 (1 row)
 
 select tcl_spi_exec(false, 'break');
@@ -353,9 +353,9 @@ NOTICE:  col1 1, col2 foo
 NOTICE:  col1 2, col2 bar
 NOTICE:  action: break
 NOTICE:  end of function
- tcl_spi_exec 
+ tcl_spi_exec
 --------------
- 
+
 (1 row)
 
 select tcl_spi_exec(false, 'continue');
@@ -364,9 +364,9 @@ NOTICE:  col1 2, col2 bar
 NOTICE:  action: continue
 NOTICE:  col1 3, col2 baz
 NOTICE:  end of function
- tcl_spi_exec 
+ tcl_spi_exec
 --------------
- 
+
 (1 row)
 
 select tcl_spi_exec(false, 'error');
@@ -378,9 +378,9 @@ select tcl_spi_exec(false, 'return');
 NOTICE:  col1 1, col2 foo
 NOTICE:  col1 2, col2 bar
 NOTICE:  action: return
- tcl_spi_exec 
+ tcl_spi_exec
 --------------
- 
+
 (1 row)
 
 -- forcibly run the Tcl event loop for awhile, to check that we have not
@@ -390,8 +390,7 @@ select tcl_eval($$
   after 100 {set ::tcl_vwait 1}
   vwait ::tcl_vwait
   unset -nocomplain ::tcl_vwait$$);
- tcl_eval 
+ tcl_eval
 ----------
- 
-(1 row)
 
+(1 row)

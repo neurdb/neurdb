@@ -109,14 +109,14 @@ NOTICE:  in process utility: superuser finished GRANT
 SELECT * FROM regress_test_table;
 NOTICE:  in executor check perms: superuser attempting execute
 NOTICE:  in executor check perms: superuser finished execute
- t 
+ t
 ---
 (0 rows)
 
 SELECT regress_test_func('arg');
 NOTICE:  in executor check perms: superuser attempting execute
 NOTICE:  in executor check perms: superuser finished execute
- regress_test_func 
+ regress_test_func
 -------------------
  arg
 (1 row)
@@ -156,14 +156,14 @@ LINE 1: SELECT * FROM regress_test_table;
                       ^
 NOTICE:  in executor check perms: non-superuser attempting execute
 NOTICE:  in executor check perms: non-superuser finished execute
- t 
+ t
 ---
 (0 rows)
 
 SELECT regress_test_func('arg');
 NOTICE:  in executor check perms: non-superuser attempting execute
 NOTICE:  in executor check perms: non-superuser finished execute
- regress_test_func 
+ regress_test_func
 -------------------
  arg
 (1 row)
@@ -257,14 +257,14 @@ LINE 1: SELECT * FROM regress_test_table;
                       ^
 NOTICE:  in executor check perms: superuser attempting execute
 NOTICE:  in executor check perms: superuser finished execute
- t 
+ t
 ---
 (0 rows)
 
 SELECT regress_test_func('arg');
 NOTICE:  in executor check perms: superuser attempting execute
 NOTICE:  in executor check perms: superuser finished execute
- regress_test_func 
+ regress_test_func
 -------------------
  arg
 (1 row)

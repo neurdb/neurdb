@@ -48202,4 +48202,3 @@ step check: SELECT * FROM test1,test2,test3;
 a|b|c
 -+-+-
 (0 rows)
-

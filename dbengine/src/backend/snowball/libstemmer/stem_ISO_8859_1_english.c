@@ -422,12 +422,12 @@ static int r_mark_regions(struct SN_env * z) {
             goto lab1;
         lab2:
             z->c = c2;
-            {   
+            {
                 int ret = out_grouping(z, g_v, 97, 121, 1);
                 if (ret < 0) goto lab0;
                 z->c += ret;
             }
-            {   
+            {
                 int ret = in_grouping(z, g_v, 97, 121, 1);
                 if (ret < 0) goto lab0;
                 z->c += ret;
@@ -435,12 +435,12 @@ static int r_mark_regions(struct SN_env * z) {
         }
     lab1:
         z->I[1] = z->c;
-        {   
+        {
             int ret = out_grouping(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
@@ -521,7 +521,7 @@ z->c = z->c - 2;
         case 3:
             if (z->c <= z->lb) return 0;
             z->c--;
-            {   
+            {
                 int ret = out_grouping_b(z, g_v, 97, 121, 1);
                 if (ret < 0) return 0;
                 z->c -= ret;
@@ -552,7 +552,7 @@ static int r_Step_1b(struct SN_env * z) {
             break;
         case 2:
             {   int m_test1 = z->l - z->c;
-                {   
+                {
                     int ret = out_grouping_b(z, g_v, 97, 121, 1);
                     if (ret < 0) return 0;
                     z->c -= ret;
@@ -623,7 +623,7 @@ static int r_Step_1c(struct SN_env * z) {
 lab0:
     z->bra = z->c;
     if (out_grouping_b(z, g_v, 97, 121, 0)) return 0;
-    
+
     if (z->c > z->lb) goto lab2;
     return 0;
 lab2:
@@ -982,11 +982,11 @@ z->c = z->c + 3;
         goto lab0;
     lab2:
         z->c = c1;
-        
+
         {   int ret = r_prelude(z);
             if (ret < 0) return ret;
         }
-        
+
         {   int ret = r_mark_regions(z);
             if (ret < 0) return ret;
         }
@@ -1059,4 +1059,3 @@ lab0:
 extern struct SN_env * english_ISO_8859_1_create_env(void) { return SN_create_env(0, 3); }
 
 extern void english_ISO_8859_1_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

@@ -224,4 +224,3 @@ msgstr "компіляція функції PL/Perl \"%s\""
 #, c-format
 msgid "PL/Perl anonymous code block"
 msgstr "анонімний блок коду PL/Perl"
-

@@ -1144,4 +1144,3 @@ msgid ""
 msgstr ""
 "\n"
 "阅读 SQL 命令 VACUUM 的描述信息, 以便获得更详细的信息.\n"
-

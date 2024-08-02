@@ -252,4 +252,3 @@ msgstr "%s: 无法找到执行文件\n"
 #, c-format
 msgid "%s: invalid argument: %s\n"
 msgstr "%s: 无效参数: %s\n"
-

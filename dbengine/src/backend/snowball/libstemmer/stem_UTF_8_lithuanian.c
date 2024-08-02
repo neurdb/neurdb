@@ -775,12 +775,12 @@ extern int lithuanian_UTF_8_stem(struct SN_env * z) {
         lab1:
             ;
         }
-        {   
+        {
             int ret = out_grouping_U(z, g_v, 97, 371, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping_U(z, g_v, 97, 371, 1);
             if (ret < 0) goto lab0;
             z->c += ret;
@@ -834,4 +834,3 @@ extern int lithuanian_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * lithuanian_UTF_8_create_env(void) { return SN_create_env(0, 1); }
 
 extern void lithuanian_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

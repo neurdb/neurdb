@@ -11,51 +11,50 @@ set client_encoding = utf8;
 -- CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
 -- Accents
 SELECT daitch_mokotoff('Müller');
- daitch_mokotoff 
+ daitch_mokotoff
 -----------------
  {689000}
 (1 row)
 
 SELECT daitch_mokotoff('Schäfer');
- daitch_mokotoff 
+ daitch_mokotoff
 -----------------
  {479000}
 (1 row)
 
 SELECT daitch_mokotoff('Straßburg');
- daitch_mokotoff 
+ daitch_mokotoff
 -----------------
  {294795}
 (1 row)
 
 SELECT daitch_mokotoff('Éregon');
- daitch_mokotoff 
+ daitch_mokotoff
 -----------------
  {095600}
 (1 row)
 
 -- Special characters added at https://www.jewishgen.org/InfoFiles/Soundex.html
 SELECT daitch_mokotoff('gąszczu');
- daitch_mokotoff 
+ daitch_mokotoff
 -----------------
  {564000,540000}
 (1 row)
 
 SELECT daitch_mokotoff('brzęczy');
-        daitch_mokotoff        
+        daitch_mokotoff
 -------------------------------
  {794640,794400,746400,744000}
 (1 row)
 
 SELECT daitch_mokotoff('ţamas');
- daitch_mokotoff 
+ daitch_mokotoff
 -----------------
  {364000,464000}
 (1 row)
 
 SELECT daitch_mokotoff('țamas');
- daitch_mokotoff 
+ daitch_mokotoff
 -----------------
  {364000,464000}
 (1 row)
-

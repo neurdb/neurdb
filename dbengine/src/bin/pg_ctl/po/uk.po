@@ -795,4 +795,3 @@ msgstr "%s: команда не вказана\n"
 #, c-format
 msgid "%s: no database directory specified and environment variable PGDATA unset\n"
 msgstr "%s: не вказано каталог даних і змінна середовища PGDATA не встановлена\n"
-

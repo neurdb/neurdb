@@ -22,16 +22,16 @@ int
 main(void)
 {
 /* exec sql begin declare section */
-	 
-	 
-	 
+
+
+
 
 #line 16 "test5.pgc"
  char db [ 200 ] ;
- 
+
 #line 17 "test5.pgc"
  char id [ 200 ] ;
- 
+
 #line 18 "test5.pgc"
  char * user = "regress_ecpg_user1" ;
 /* exec sql end declare section */

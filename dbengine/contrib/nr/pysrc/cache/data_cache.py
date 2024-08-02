@@ -79,7 +79,9 @@ class DataCache:
             self.current_batch_num += 1
             return True
         except Full:
-            logger.debug("Queue is full, and item could not be added within the timeout period.")
+            logger.debug(
+                "Queue is full, and item could not be added within the timeout period."
+            )
             return False
 
     def get(self) -> Optional[dict]:
@@ -91,7 +93,9 @@ class DataCache:
             value = self.queue.get(timeout=600)  # Block up to 5 seconds
             return value
         except Empty:
-            logger.debug("Queue was empty and no item was available within the timeout period.")
+            logger.debug(
+                "Queue was empty and no item was available within the timeout period."
+            )
             return None
 
     def is_full(self) -> bool:

@@ -10,7 +10,7 @@ c
 step s1sleep: SELECT setting, pg_sleep(6) FROM pg_settings WHERE name = 'old_snapshot_threshold';
 setting|pg_sleep
 -------+--------
-      0|        
+      0|
 (1 row)
 
 step s2u: UPDATE sto1 SET c = 1001 WHERE c = 1;

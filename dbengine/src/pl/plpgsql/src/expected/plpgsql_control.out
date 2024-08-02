@@ -232,9 +232,9 @@ NOTICE:  outer 1
 NOTICE:  inner 1
 NOTICE:  outer 2
 NOTICE:  inner 1
- continue_test1 
+ continue_test1
 ----------------
- 
+
 (1 row)
 
 -- should fail: CONTINUE is only legal inside a loop
@@ -312,9 +312,9 @@ begin
 end;
 $$ language plpgsql;
 select exit_block1();
- exit_block1 
+ exit_block1
 -------------
- 
+
 (1 row)
 
 -- verbose end block and end loop
@@ -336,9 +336,9 @@ $$ language plpgsql;
 select end_label1();
 NOTICE:  i = 1
 NOTICE:  j = 1
- end_label1 
+ end_label1
 ------------
- 
+
 (1 row)
 
 -- should fail: undefined end label
@@ -497,7 +497,7 @@ begin
   return null;
 end$$;
 select return_from_while();
- return_from_while 
+ return_from_while
 -------------------
                  3
 (1 row)
@@ -548,9 +548,9 @@ NOTICE:  1 bb cc
 NOTICE:  2 bb cc
 NOTICE:  3 bb cc
 NOTICE:  4 bb cc
- for_vect 
+ for_vect
 ----------
- 
+
 (1 row)
 
 -- CASE statement
@@ -573,25 +573,25 @@ begin
 end;
 $$ language plpgsql immutable;
 select case_test(1);
- case_test 
+ case_test
 -----------
  one
 (1 row)
 
 select case_test(2);
- case_test 
+ case_test
 -----------
  two
 (1 row)
 
 select case_test(3);
-      case_test       
+      case_test
 ----------------------
  three, four or eight
 (1 row)
 
 select case_test(4);
-      case_test       
+      case_test
 ----------------------
  three, four or eight
 (1 row)
@@ -601,25 +601,25 @@ ERROR:  case not found
 HINT:  CASE statement is missing ELSE part.
 CONTEXT:  PL/pgSQL function case_test(bigint) line 5 at CASE
 select case_test(8);
-      case_test       
+      case_test
 ----------------------
  three, four or eight
 (1 row)
 
 select case_test(10);
- case_test 
+ case_test
 -----------
  ten
 (1 row)
 
 select case_test(11);
-   case_test    
+   case_test
 ----------------
  eleven, twelve
 (1 row)
 
 select case_test(12);
-   case_test    
+   case_test
 ----------------
  eleven, twelve
 (1 row)
@@ -638,9 +638,9 @@ end
 $$ language plpgsql;
 select catch();
 NOTICE:  caught case_not_found 20000 case not found
- catch 
+ catch
 -------
- 
+
 (1 row)
 
 -- test the searched variant too, as well as ELSE
@@ -658,25 +658,25 @@ begin
 end;
 $$ language plpgsql immutable;
 select case_test(1);
- case_test 
+ case_test
 -----------
  one
 (1 row)
 
 select case_test(2);
- case_test 
+ case_test
 -----------
  other
 (1 row)
 
 select case_test(12);
- case_test 
+ case_test
 -----------
  twelve
 (1 row)
 
 select case_test(13);
- case_test 
+ case_test
 -----------
  other
 (1 row)
@@ -693,8 +693,7 @@ begin
 end;
 $$ language plpgsql immutable;
 select case_comment(1);
- case_comment 
+ case_comment
 --------------
  one
 (1 row)
-

@@ -29,20 +29,20 @@ int
 main(void)
 {
 	/* exec sql begin declare section */
-		 
-		
-		
-		
-	
+
+
+
+
+
 #line 14 "nan_test.pgc"
  int id , loopcount ;
- 
+
 #line 15 "nan_test.pgc"
  double d ;
- 
+
 #line 16 "nan_test.pgc"
  numeric * num ;
- 
+
 #line 17 "nan_test.pgc"
  char val [ 16 ] ;
 /* exec sql end declare section */
@@ -54,7 +54,7 @@ main(void)
 #line 21 "nan_test.pgc"
 
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 23 "nan_test.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
@@ -85,12 +85,12 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
 	for (loopcount = 0; loopcount < 100; loopcount++)
 	{
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch from cur", ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_double,&(d),(long)1,(long)1,sizeof(double), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch from cur", ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_double,&(d),(long)1,(long)1,sizeof(double),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 32 "nan_test.pgc"
 
@@ -104,20 +104,20 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 		else if (isinf(d))
 			printf("%d %sInf '%s'\n", id, (d < 0 ? "-" : "+"), val);
 
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest1 ( id , d ) values ( $1  + 3 , $2  )", 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_double,&(d),(long)1,(long)1,sizeof(double), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest1 ( id , d ) values ( $1  + 3 , $2  )",
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_double,&(d),(long)1,(long)1,sizeof(double),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 40 "nan_test.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 40 "nan_test.pgc"
 
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest1 ( id , d ) values ( $1  + 6 , $2  )", 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest1 ( id , d ) values ( $1  + 6 , $2  )",
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 41 "nan_test.pgc"
 
@@ -140,12 +140,12 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
 	for (loopcount = 0; loopcount < 100; loopcount++)
 	{
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch from cur", ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_double,&(d),(long)1,(long)1,sizeof(double), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch from cur", ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_double,&(d),(long)1,(long)1,sizeof(double),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 48 "nan_test.pgc"
 
@@ -181,12 +181,12 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 61 "nan_test.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select id , d , d from nantest2 where id = 4", ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_numeric,&(num),(long)1,(long)0,sizeof(numeric), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select id , d , d from nantest2 where id = 4", ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_numeric,&(num),(long)1,(long)0,sizeof(numeric),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 63 "nan_test.pgc"
 
@@ -196,16 +196,16 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
 	printf("%d %s '%s'\n", id, (num->sign == NUMERIC_NAN ? "NaN" : "not NaN"), val);
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest2 ( id , d ) values ( 5 , $1  )", 
-	ECPGt_numeric,&(num),(long)1,(long)0,sizeof(numeric), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest2 ( id , d ) values ( 5 , $1  )",
+	ECPGt_numeric,&(num),(long)1,(long)0,sizeof(numeric),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 67 "nan_test.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 67 "nan_test.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest2 ( id , d ) values ( 6 , $1  )", 
-	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into nantest2 ( id , d ) values ( 6 , $1  )",
+	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 68 "nan_test.pgc"
 
@@ -224,12 +224,12 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
 	for (loopcount = 0; loopcount < 100; loopcount++)
 	{
-		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch from cur1", ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_numeric,&(num),(long)1,(long)0,sizeof(numeric), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char), 
+		{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch from cur1", ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_numeric,&(num),(long)1,(long)0,sizeof(numeric),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(val),(long)16,(long)1,(16)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 74 "nan_test.pgc"
 

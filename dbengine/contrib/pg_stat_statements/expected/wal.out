@@ -13,7 +13,7 @@ wal_bytes > 0 as wal_bytes_generated,
 wal_records > 0 as wal_records_generated,
 wal_records >= rows as wal_records_ge_rows
 FROM pg_stat_statements ORDER BY query COLLATE "C";
-                            query                             | calls | rows | wal_bytes_generated | wal_records_generated | wal_records_ge_rows 
+                            query                             | calls | rows | wal_bytes_generated | wal_records_generated | wal_records_ge_rows
 --------------------------------------------------------------+-------+------+---------------------+-----------------------+---------------------
  DELETE FROM pgss_wal_tab WHERE a > $1                        |     1 |    1 | t                   | t                     | t
  INSERT INTO pgss_wal_tab VALUES(generate_series($1, $2), $3) |     1 |   10 | t                   | t                     | t
@@ -23,8 +23,7 @@ FROM pg_stat_statements ORDER BY query COLLATE "C";
 (5 rows)
 
 SELECT pg_stat_statements_reset();
- pg_stat_statements_reset 
+ pg_stat_statements_reset
 --------------------------
- 
-(1 row)
 
+(1 row)

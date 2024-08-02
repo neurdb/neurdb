@@ -1,4 +1,4 @@
- abbrev |       name_en        |      name_gr       
+ abbrev |       name_en        |      name_gr
 --------+----------------------+--------------------
  UT     | Utah                 | Γιούτα
  WY     | Wyoming              | Γουαϊόμινγκ
@@ -7,4 +7,3 @@
  WA     | Washington           | Γουόσινγκτον
  DC     | Washington DC        | Γουόσινγτον Ντί Σι
 (6 rows)
-

@@ -24,7 +24,7 @@ plpy.execute("INSERT INTO test1 VALUES (%s)" % x)
 $$;
 CALL test_proc3(55);
 SELECT * FROM test1;
- a  
+ a
 ----
  55
 (1 row)
@@ -36,7 +36,7 @@ AS $$
 return [a + '+' + a]
 $$;
 CALL test_proc5('abc');
-    a    
+    a
 ---------
  abc+abc
 (1 row)
@@ -47,7 +47,7 @@ AS $$
 return (b * a, c * a)
 $$;
 CALL test_proc6(2, 3, 4);
- b | c 
+ b | c
 ---+---
  6 | 8
 (1 row)

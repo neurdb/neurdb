@@ -3,7 +3,7 @@ CREATE TABLE truncate_a (col1 integer primary key);
 INSERT INTO truncate_a VALUES (1);
 INSERT INTO truncate_a VALUES (2);
 SELECT * FROM truncate_a;
- col1 
+ col1
 ------
     1
     2
@@ -14,7 +14,7 @@ BEGIN;
 TRUNCATE truncate_a;
 ROLLBACK;
 SELECT * FROM truncate_a;
- col1 
+ col1
 ------
     1
     2
@@ -25,7 +25,7 @@ BEGIN;
 TRUNCATE truncate_a;
 COMMIT;
 SELECT * FROM truncate_a;
- col1 
+ col1
 ------
 (0 rows)
 
@@ -101,12 +101,12 @@ SELECT * FROM truncate_a
  SELECT * FROM trunc_b
    UNION ALL
  SELECT * FROM trunc_d;
- col1 
+ col1
 ------
 (0 rows)
 
 SELECT * FROM trunc_e;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -128,12 +128,12 @@ SELECT * FROM truncate_a
  SELECT * FROM trunc_b
    UNION ALL
  SELECT * FROM trunc_d;
- col1 
+ col1
 ------
 (0 rows)
 
 SELECT * FROM trunc_e;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -150,7 +150,7 @@ CREATE TABLE trunc_faa (col3 text) INHERITS (trunc_fa);
 INSERT INTO trunc_faa VALUES (5, 'five', 'FIVE');
 BEGIN;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
     1
     2
@@ -161,14 +161,14 @@ SELECT * FROM trunc_f;
 
 TRUNCATE trunc_f;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
 (0 rows)
 
 ROLLBACK;
 BEGIN;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
     1
     2
@@ -179,7 +179,7 @@ SELECT * FROM trunc_f;
 
 TRUNCATE ONLY trunc_f;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
     3
     4
@@ -189,7 +189,7 @@ SELECT * FROM trunc_f;
 ROLLBACK;
 BEGIN;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
     1
     2
@@ -199,21 +199,21 @@ SELECT * FROM trunc_f;
 (5 rows)
 
 SELECT * FROM trunc_fa;
- col1 | col2a 
+ col1 | col2a
 ------+-------
     3 | three
     5 | five
 (2 rows)
 
 SELECT * FROM trunc_faa;
- col1 | col2a | col3 
+ col1 | col2a | col3
 ------+-------+------
     5 | five  | FIVE
 (1 row)
 
 TRUNCATE ONLY trunc_fb, ONLY trunc_fa;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
     1
     2
@@ -221,13 +221,13 @@ SELECT * FROM trunc_f;
 (3 rows)
 
 SELECT * FROM trunc_fa;
- col1 | col2a 
+ col1 | col2a
 ------+-------
     5 | five
 (1 row)
 
 SELECT * FROM trunc_faa;
- col1 | col2a | col3 
+ col1 | col2a | col3
 ------+-------+------
     5 | five  | FIVE
 (1 row)
@@ -235,7 +235,7 @@ SELECT * FROM trunc_faa;
 ROLLBACK;
 BEGIN;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
     1
     2
@@ -245,33 +245,33 @@ SELECT * FROM trunc_f;
 (5 rows)
 
 SELECT * FROM trunc_fa;
- col1 | col2a 
+ col1 | col2a
 ------+-------
     3 | three
     5 | five
 (2 rows)
 
 SELECT * FROM trunc_faa;
- col1 | col2a | col3 
+ col1 | col2a | col3
 ------+-------+------
     5 | five  | FIVE
 (1 row)
 
 TRUNCATE ONLY trunc_fb, trunc_fa;
 SELECT * FROM trunc_f;
- col1 
+ col1
 ------
     1
     2
 (2 rows)
 
 SELECT * FROM trunc_fa;
- col1 | col2a 
+ col1 | col2a
 ------+-------
 (0 rows)
 
 SELECT * FROM trunc_faa;
- col1 | col2a | col3 
+ col1 | col2a | col3
 ------+-------+------
 (0 rows)
 
@@ -301,25 +301,25 @@ BEFORE TRUNCATE ON trunc_trigger_test
 FOR EACH STATEMENT
 EXECUTE PROCEDURE trunctrigger('before trigger truncate');
 SELECT count(*) as "Row count in test table" FROM trunc_trigger_test;
- Row count in test table 
+ Row count in test table
 -------------------------
                        2
 (1 row)
 
 SELECT * FROM trunc_trigger_log;
- tgop | tglevel | tgwhen | tgargv | tgtable | rowcount 
+ tgop | tglevel | tgwhen | tgargv | tgtable | rowcount
 ------+---------+--------+--------+---------+----------
 (0 rows)
 
 TRUNCATE trunc_trigger_test;
 SELECT count(*) as "Row count in test table" FROM trunc_trigger_test;
- Row count in test table 
+ Row count in test table
 -------------------------
                        0
 (1 row)
 
 SELECT * FROM trunc_trigger_log;
-   tgop   |  tglevel  | tgwhen |         tgargv          |      tgtable       | rowcount 
+   tgop   |  tglevel  | tgwhen |         tgargv          |      tgtable       | rowcount
 ----------+-----------+--------+-------------------------+--------------------+----------
  TRUNCATE | STATEMENT | BEFORE | before trigger truncate | trunc_trigger_test |        2
 (1 row)
@@ -333,25 +333,25 @@ AFTER TRUNCATE ON trunc_trigger_test
 FOR EACH STATEMENT
 EXECUTE PROCEDURE trunctrigger('after trigger truncate');
 SELECT count(*) as "Row count in test table" FROM trunc_trigger_test;
- Row count in test table 
+ Row count in test table
 -------------------------
                        2
 (1 row)
 
 SELECT * FROM trunc_trigger_log;
- tgop | tglevel | tgwhen | tgargv | tgtable | rowcount 
+ tgop | tglevel | tgwhen | tgargv | tgtable | rowcount
 ------+---------+--------+--------+---------+----------
 (0 rows)
 
 TRUNCATE trunc_trigger_test;
 SELECT count(*) as "Row count in test table" FROM trunc_trigger_test;
- Row count in test table 
+ Row count in test table
 -------------------------
                        0
 (1 row)
 
 SELECT * FROM trunc_trigger_log;
-   tgop   |  tglevel  | tgwhen |         tgargv         |      tgtable       | rowcount 
+   tgop   |  tglevel  | tgwhen |         tgargv         |      tgtable       | rowcount
 ----------+-----------+--------+------------------------+--------------------+----------
  TRUNCATE | STATEMENT | AFTER  | after trigger truncate | trunc_trigger_test |        0
 (1 row)
@@ -367,7 +367,7 @@ ALTER SEQUENCE truncate_a_id1 OWNED BY truncate_a.id1;
 INSERT INTO truncate_a DEFAULT VALUES;
 INSERT INTO truncate_a DEFAULT VALUES;
 SELECT * FROM truncate_a;
- id | id1 
+ id | id1
 ----+-----
   1 |  33
   2 |  34
@@ -377,7 +377,7 @@ TRUNCATE truncate_a;
 INSERT INTO truncate_a DEFAULT VALUES;
 INSERT INTO truncate_a DEFAULT VALUES;
 SELECT * FROM truncate_a;
- id | id1 
+ id | id1
 ----+-----
   3 |  35
   4 |  36
@@ -387,7 +387,7 @@ TRUNCATE truncate_a RESTART IDENTITY;
 INSERT INTO truncate_a DEFAULT VALUES;
 INSERT INTO truncate_a DEFAULT VALUES;
 SELECT * FROM truncate_a;
- id | id1 
+ id | id1
 ----+-----
   1 |  33
   2 |  34
@@ -397,7 +397,7 @@ CREATE TABLE truncate_b (id int GENERATED ALWAYS AS IDENTITY (START WITH 44));
 INSERT INTO truncate_b DEFAULT VALUES;
 INSERT INTO truncate_b DEFAULT VALUES;
 SELECT * FROM truncate_b;
- id 
+ id
 ----
  44
  45
@@ -407,7 +407,7 @@ TRUNCATE truncate_b;
 INSERT INTO truncate_b DEFAULT VALUES;
 INSERT INTO truncate_b DEFAULT VALUES;
 SELECT * FROM truncate_b;
- id 
+ id
 ----
  46
  47
@@ -417,7 +417,7 @@ TRUNCATE truncate_b RESTART IDENTITY;
 INSERT INTO truncate_b DEFAULT VALUES;
 INSERT INTO truncate_b DEFAULT VALUES;
 SELECT * FROM truncate_b;
- id 
+ id
 ----
  44
  45
@@ -428,7 +428,7 @@ BEGIN;
 TRUNCATE truncate_a RESTART IDENTITY;
 INSERT INTO truncate_a DEFAULT VALUES;
 SELECT * FROM truncate_a;
- id | id1 
+ id | id1
 ----+-----
   1 |  33
 (1 row)
@@ -437,7 +437,7 @@ ROLLBACK;
 INSERT INTO truncate_a DEFAULT VALUES;
 INSERT INTO truncate_a DEFAULT VALUES;
 SELECT * FROM truncate_a;
- id | id1 
+ id | id1
 ----+-----
   1 |  33
   2 |  34
@@ -494,22 +494,22 @@ ERROR:  cannot truncate a table referenced in a foreign key constraint
 DETAIL:  Table "truncpart" references "truncprim".
 HINT:  Truncate table "truncpart" at the same time, or use TRUNCATE ... CASCADE.
 select tp_ins_data();
- tp_ins_data 
+ tp_ins_data
 -------------
- 
+
 (1 row)
 
 -- should truncate everything
 TRUNCATE TABLE truncprim, truncpart;
 select * from tp_chk_data();
- pktb | pkval | fktb | fkval 
+ pktb | pkval | fktb | fkval
 ------+-------+------+-------
 (0 rows)
 
 select tp_ins_data();
- tp_ins_data 
+ tp_ins_data
 -------------
- 
+
 (1 row)
 
 -- should truncate everything
@@ -520,24 +520,24 @@ NOTICE:  truncate cascades to table "truncpart_2"
 NOTICE:  truncate cascades to table "truncpart_2_1"
 NOTICE:  truncate cascades to table "truncpart_2_d"
 SELECT * FROM tp_chk_data();
- pktb | pkval | fktb | fkval 
+ pktb | pkval | fktb | fkval
 ------+-------+------+-------
 (0 rows)
 
 SELECT tp_ins_data();
- tp_ins_data 
+ tp_ins_data
 -------------
- 
+
 (1 row)
 
 -- should truncate all partitions
 TRUNCATE TABLE truncpart;
 SELECT * FROM tp_chk_data();
-   pktb    | pkval | fktb | fkval 
+   pktb    | pkval | fktb | fkval
 -----------+-------+------+-------
- truncprim |     1 |      |      
- truncprim |   100 |      |      
- truncprim |   150 |      |      
+ truncprim |     1 |      |
+ truncprim |   100 |      |
+ truncprim |   150 |      |
 (3 rows)
 
 DROP TABLE truncprim, truncpart;
@@ -561,7 +561,7 @@ INSERT INTO ref_b VALUES (10, 0), (50, 5), (100, 10), (150, 15);
 TRUNCATE TABLE trunc_a1 CASCADE;
 NOTICE:  truncate cascades to table "ref_b"
 SELECT a FROM ref_b;
- a 
+ a
 ---
 (0 rows)
 
@@ -579,12 +579,12 @@ NOTICE:  truncate cascades to table "ref_c"
 NOTICE:  truncate cascades to table "ref_c1"
 NOTICE:  truncate cascades to table "ref_c2"
 SELECT a as "from table ref_c" FROM ref_c;
- from table ref_c 
+ from table ref_c
 ------------------
 (0 rows)
 
 SELECT a as "from table trunc_a" FROM trunc_a ORDER BY a;
- from table trunc_a 
+ from table trunc_a
 --------------------
                  15
                  20

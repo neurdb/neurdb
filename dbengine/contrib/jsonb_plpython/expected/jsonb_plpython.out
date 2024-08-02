@@ -10,7 +10,7 @@ assert(val == {'a': 1, 'c': 'NULL'})
 return len(val)
 $$;
 SELECT test1('{"a": 1, "c": "NULL"}'::jsonb);
- test1 
+ test1
 -------
      2
 (1 row)
@@ -26,7 +26,7 @@ assert(val == {"d": {"d": 1}})
 return len(val)
 $$;
 SELECT test1complex('{"d": {"d": 1}}'::jsonb);
- test1complex 
+ test1complex
 --------------
             1
 (1 row)
@@ -42,7 +42,7 @@ assert(val == {"d": [12, 1]})
 return len(val)
 $$;
 SELECT test1arr('{"d":[12, 1]}'::jsonb);
- test1arr 
+ test1arr
 ----------
         1
 (1 row)
@@ -58,7 +58,7 @@ assert(val == [12, 1])
 return len(val)
 $$;
 SELECT test2arr('[12, 1]'::jsonb);
- test2arr 
+ test2arr
 ----------
         2
 (1 row)
@@ -74,7 +74,7 @@ assert(val == [{"a": 1,"b": 2}, {"c": 3,"d": 4}])
 return len(val)
 $$;
 SELECT test3arr('[{"a": 1, "b": 2}, {"c": 3,"d": 4}]'::jsonb);
- test3arr 
+ test3arr
 ----------
         2
 (1 row)
@@ -88,7 +88,7 @@ assert(val == 1)
 return val
 $$;
 SELECT test1int('1'::jsonb);
- test1int 
+ test1int
 ----------
         1
 (1 row)
@@ -102,7 +102,7 @@ assert(val == "a")
 return val
 $$;
 SELECT test1string('"a"'::jsonb);
- test1string 
+ test1string
 -------------
  a
 (1 row)
@@ -116,7 +116,7 @@ assert(val == None)
 return 1
 $$;
 SELECT test1null('null'::jsonb);
- test1null 
+ test1null
 -----------
          1
 (1 row)
@@ -129,109 +129,109 @@ as $$
 return val
 $$;
 SELECT roundtrip('null'::jsonb);
- roundtrip 
+ roundtrip
 -----------
- 
+
 (1 row)
 
 SELECT roundtrip('1'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  1
 (1 row)
 
 SELECT roundtrip('1234567890.0987654321'::jsonb);
-       roundtrip       
+       roundtrip
 -----------------------
  1234567890.0987654321
 (1 row)
 
 SELECT roundtrip('-1234567890.0987654321'::jsonb);
-       roundtrip        
+       roundtrip
 ------------------------
  -1234567890.0987654321
 (1 row)
 
 SELECT roundtrip('true'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  true
 (1 row)
 
 SELECT roundtrip('"string"'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  "string"
 (1 row)
 
 SELECT roundtrip('{"1": null}'::jsonb);
-  roundtrip  
+  roundtrip
 -------------
  {"1": null}
 (1 row)
 
 SELECT roundtrip('{"1": 1}'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  {"1": 1}
 (1 row)
 
 SELECT roundtrip('{"1": true}'::jsonb);
-  roundtrip  
+  roundtrip
 -------------
  {"1": true}
 (1 row)
 
 SELECT roundtrip('{"1": "string"}'::jsonb);
-    roundtrip    
+    roundtrip
 -----------------
  {"1": "string"}
 (1 row)
 
 SELECT roundtrip('[null]'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  [null]
 (1 row)
 
 SELECT roundtrip('[1]'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  [1]
 (1 row)
 
 SELECT roundtrip('[true]'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  [true]
 (1 row)
 
 SELECT roundtrip('["string"]'::jsonb);
- roundtrip  
+ roundtrip
 ------------
  ["string"]
 (1 row)
 
 SELECT roundtrip('[null, 1]'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  [null, 1]
 (1 row)
 
 SELECT roundtrip('[1, true]'::jsonb);
- roundtrip 
+ roundtrip
 -----------
  [1, true]
 (1 row)
 
 SELECT roundtrip('[true, "string"]'::jsonb);
-    roundtrip     
+    roundtrip
 ------------------
  [true, "string"]
 (1 row)
 
 SELECT roundtrip('["string", "string2"]'::jsonb);
-       roundtrip       
+       roundtrip
 -----------------------
  ["string", "string2"]
 (1 row)
@@ -257,7 +257,7 @@ x = range(3)
 return x
 $$;
 SELECT testRange();
- testrange 
+ testrange
 -----------
  [0, 1, 2]
 (1 row)
@@ -271,7 +271,7 @@ x = 0xff
 return x
 $$;
 SELECT testDecimal();
- testdecimal 
+ testdecimal
 -------------
  255
 (1 row)
@@ -285,7 +285,7 @@ x = (1, 'String', None)
 return x
 $$;
 SELECT testTuple();
-      testtuple      
+      testtuple
 ---------------------
  [1, "String", null]
 (1 row)
@@ -299,8 +299,7 @@ x = {"a": 1, None: 2, 33: 3}
 return x
 $$;
 SELECT test_dict1();
-        test_dict1        
+        test_dict1
 --------------------------
  {"": 2, "a": 1, "33": 3}
 (1 row)
-

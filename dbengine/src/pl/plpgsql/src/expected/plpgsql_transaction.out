@@ -15,7 +15,7 @@ END
 $$;
 CALL transaction_test1(9, 'foo');
 SELECT * FROM test1;
- a |  b  
+ a |  b
 ---+-----
  0 | foo
  2 | foo
@@ -40,13 +40,13 @@ BEGIN
 END
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
- 6 | 
- 8 | 
+ 0 |
+ 2 |
+ 4 |
+ 6 |
+ 8 |
 (5 rows)
 
 -- transaction commands not allowed when called in transaction block
@@ -81,7 +81,7 @@ SELECT transaction_test2();
 ERROR:  invalid transaction termination
 CONTEXT:  PL/pgSQL function transaction_test2() line 6 at COMMIT
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -100,7 +100,7 @@ CONTEXT:  PL/pgSQL function transaction_test1(integer,text) line 6 at COMMIT
 SQL statement "CALL transaction_test1(9, 'error')"
 PL/pgSQL function transaction_test3() line 3 at CALL
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -153,7 +153,7 @@ END;
 $$;
 CALL transaction_test6('bar');
 SELECT * FROM test1;
- a |  b  
+ a |  b
 ---+-----
  0 | bar
  2 | bar
@@ -172,7 +172,7 @@ END;
 $$;
 CALL transaction_test7();
 SELECT * FROM test1;
- a |  b  
+ a |  b
 ---+-----
  0 | baz
  2 | baz
@@ -208,18 +208,18 @@ BEGIN
 END;
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 1 | 
- 2 | 
- 3 | 
- 4 | 
+ 0 |
+ 1 |
+ 2 |
+ 3 |
+ 4 |
 (5 rows)
 
 -- check that this doesn't leak a holdable portal
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -239,14 +239,14 @@ ERROR:  division by zero
 CONTEXT:  SQL statement "INSERT INTO test1 (a) VALUES (12/(r.x-2))"
 PL/pgSQL function inline_code_block line 6 at SQL statement
 SELECT * FROM test1;
-  a  | b 
+  a  | b
 -----+---
-  -6 | 
- -12 | 
+  -6 |
+ -12 |
 (2 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -263,12 +263,12 @@ BEGIN
 END;
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -289,15 +289,15 @@ BEGIN
 END;
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
+ 0 |
+ 2 |
+ 4 |
 (3 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -316,12 +316,12 @@ $$;
 ERROR:  cannot perform transaction commands inside a cursor loop that is not read-only
 CONTEXT:  PL/pgSQL function inline_code_block line 7 at ROLLBACK
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 SELECT * FROM test2;
- x 
+ x
 ---
  0
  1
@@ -331,7 +331,7 @@ SELECT * FROM test2;
 (5 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -349,7 +349,7 @@ BEGIN
 END;
 $$;
 SELECT * FROM test1;
- a |      b      
+ a |      b
 ---+-------------
  1 | one one
  2 | two two
@@ -357,7 +357,7 @@ SELECT * FROM test1;
 (3 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -374,7 +374,7 @@ BEGIN
 END;
 $$;
 SELECT * FROM test1;
- a |      b      
+ a |      b
 ---+-------------
  1 | one one
  2 | two two
@@ -382,7 +382,7 @@ SELECT * FROM test1;
 (3 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -404,7 +404,7 @@ $$;
 ERROR:  cannot commit while a subtransaction is active
 CONTEXT:  PL/pgSQL function inline_code_block line 5 at COMMIT
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -426,7 +426,7 @@ $$;
 ERROR:  cannot roll back while a subtransaction is active
 CONTEXT:  PL/pgSQL function inline_code_block line 5 at ROLLBACK
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -447,7 +447,7 @@ BEGIN
 END;
 $$;
 SELECT * FROM test1;
- a  |     b     
+ a  |     b
 ----+-----------
   1 | exception
   2 | exception
@@ -517,7 +517,7 @@ ERROR:  duplicate key value violates unique constraint "test3_y_key"
 DETAIL:  Key (y)=(1) already exists.
 CONTEXT:  PL/pgSQL function inline_code_block line 9 at COMMIT
 SELECT * FROM test3;
- y 
+ y
 ---
  1
 (1 row)
@@ -540,7 +540,7 @@ ERROR:  division by zero
 CONTEXT:  PL/pgSQL function cursor_fail_during_commit() line 6 at COMMIT
 -- note that error occurs during first COMMIT, hence nothing is in test1
 SELECT count(*) FROM test1;
- count 
+ count
 -------
      0
 (1 row)
@@ -561,7 +561,7 @@ CALL cursor_fail_during_rollback();
 ERROR:  division by zero
 CONTEXT:  PL/pgSQL function cursor_fail_during_rollback() line 6 at ROLLBACK
 SELECT count(*) FROM test1;
- count 
+ count
 -------
      0
 (1 row)
@@ -622,7 +622,7 @@ BEGIN
 END
 $$;
 SELECT * FROM test2;
- x  
+ x
 ----
  42
 (1 row)
@@ -659,7 +659,7 @@ BEGIN
 END;
 $$;
 CALL transaction_test10a(10);
- x  
+ x
 ----
  11
 (1 row)
@@ -673,7 +673,7 @@ BEGIN
 END;
 $$;
 CALL transaction_test10b(10);
- x 
+ x
 ---
  9
 (1 row)
@@ -730,10 +730,10 @@ INFO:  transaction_isolation = repeatable read
 INFO:  transaction_isolation = repeatable read
 INFO:  transaction_isolation = repeatable read
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
+ 0 |
+ 2 |
 (2 rows)
 
 DROP TABLE test1;

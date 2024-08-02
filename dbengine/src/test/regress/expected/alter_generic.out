@@ -96,7 +96,7 @@ SELECT n.nspname, proname, prorettype::regtype, prokind, a.rolname
   WHERE p.pronamespace = n.oid AND p.proowner = a.oid
     AND n.nspname IN ('alt_nsp1', 'alt_nsp2')
   ORDER BY nspname, proname;
- nspname  |  proname  | prorettype | prokind |           rolname           
+ nspname  |  proname  | prorettype | prokind |           rolname
 ----------+-----------+------------+---------+-----------------------------
  alt_nsp1 | alt_agg2  | integer    | a       | regress_alter_generic_user2
  alt_nsp1 | alt_agg3  | integer    | a       | regress_alter_generic_user1
@@ -145,7 +145,7 @@ SELECT n.nspname, c.conname, a.rolname
   WHERE c.connamespace = n.oid AND c.conowner = a.oid
     AND n.nspname IN ('alt_nsp1', 'alt_nsp2')
   ORDER BY nspname, conname;
- nspname  |  conname  |           rolname           
+ nspname  |  conname  |           rolname
 ----------+-----------+-----------------------------
  alt_nsp1 | alt_conv2 | regress_alter_generic_user2
  alt_nsp1 | alt_conv3 | regress_alter_generic_user1
@@ -167,14 +167,14 @@ ALTER SERVER alt_fserv1 RENAME TO alt_fserv2;   -- failed (name conflict)
 ERROR:  server "alt_fserv2" already exists
 ALTER SERVER alt_fserv1 RENAME TO alt_fserv3;   -- OK
 SELECT fdwname FROM pg_foreign_data_wrapper WHERE fdwname like 'alt_fdw%';
- fdwname  
+ fdwname
 ----------
  alt_fdw2
  alt_fdw3
 (2 rows)
 
 SELECT srvname FROM pg_foreign_server WHERE srvname like 'alt_fserv%';
-  srvname   
+  srvname
 ------------
  alt_fserv2
  alt_fserv3
@@ -203,7 +203,7 @@ SELECT lanname, a.rolname
   FROM pg_language l, pg_authid a
   WHERE l.lanowner = a.oid AND l.lanname like 'alt_lang%'
   ORDER BY lanname;
-  lanname  |           rolname           
+  lanname  |           rolname
 -----------+-----------------------------
  alt_lang2 | regress_alter_generic_user2
  alt_lang3 | regress_alter_generic_user3
@@ -236,7 +236,7 @@ SELECT n.nspname, oprname, a.rolname,
   WHERE o.oprnamespace = n.oid AND o.oprowner = a.oid
     AND n.nspname IN ('alt_nsp1', 'alt_nsp2')
   ORDER BY nspname, oprname;
- nspname  | oprname |           rolname           | oprleft | oprright | oprcode 
+ nspname  | oprname |           rolname           | oprleft | oprright | oprcode
 ----------+---------+-----------------------------+---------+----------+---------
  alt_nsp1 | @+@     | regress_alter_generic_user3 | integer | integer  | int4pl
  alt_nsp1 | @-@     | regress_alter_generic_user2 | integer | integer  | int4mi
@@ -308,7 +308,7 @@ SELECT nspname, opfname, amname, rolname
     AND n.nspname IN ('alt_nsp1', 'alt_nsp2')
 	AND NOT opfname LIKE 'alt_opc%'
   ORDER BY nspname, opfname;
- nspname  | opfname  | amname |           rolname           
+ nspname  | opfname  | amname |           rolname
 ----------+----------+--------+-----------------------------
  alt_nsp1 | alt_opf2 | hash   | regress_alter_generic_user2
  alt_nsp1 | alt_opf3 | hash   | regress_alter_generic_user1
@@ -321,7 +321,7 @@ SELECT nspname, opcname, amname, rolname
   WHERE o.opcmethod = m.oid AND o.opcnamespace = n.oid AND o.opcowner = a.oid
     AND n.nspname IN ('alt_nsp1', 'alt_nsp2')
   ORDER BY nspname, opcname;
- nspname  | opcname  | amname |           rolname           
+ nspname  | opcname  | amname |           rolname
 ----------+----------+--------+-----------------------------
  alt_nsp1 | alt_opc2 | hash   | regress_alter_generic_user2
  alt_nsp1 | alt_opc3 | hash   | regress_alter_generic_user1
@@ -555,7 +555,7 @@ SELECT nspname, stxname, rolname
  WHERE s.stxnamespace = n.oid AND s.stxowner = a.oid
    AND n.nspname in ('alt_nsp1', 'alt_nsp2')
  ORDER BY nspname, stxname;
- nspname  |  stxname  |           rolname           
+ nspname  |  stxname  |           rolname
 ----------+-----------+-----------------------------
  alt_nsp1 | alt_stat2 | regress_alter_generic_user2
  alt_nsp1 | alt_stat3 | regress_alter_generic_user1
@@ -596,7 +596,7 @@ SELECT nspname, dictname, rolname
   WHERE t.dictnamespace = n.oid AND t.dictowner = a.oid
     AND n.nspname in ('alt_nsp1', 'alt_nsp2')
   ORDER BY nspname, dictname;
- nspname  |   dictname   |           rolname           
+ nspname  |   dictname   |           rolname
 ----------+--------------+-----------------------------
  alt_nsp1 | alt_ts_dict2 | regress_alter_generic_user2
  alt_nsp1 | alt_ts_dict3 | regress_alter_generic_user1
@@ -637,7 +637,7 @@ SELECT nspname, cfgname, rolname
   WHERE t.cfgnamespace = n.oid AND t.cfgowner = a.oid
     AND n.nspname in ('alt_nsp1', 'alt_nsp2')
   ORDER BY nspname, cfgname;
- nspname  |   cfgname    |           rolname           
+ nspname  |   cfgname    |           rolname
 ----------+--------------+-----------------------------
  alt_nsp1 | alt_ts_conf2 | regress_alter_generic_user2
  alt_nsp1 | alt_ts_conf3 | regress_alter_generic_user1
@@ -664,7 +664,7 @@ SELECT nspname, tmplname
   FROM pg_ts_template t, pg_namespace n
   WHERE t.tmplnamespace = n.oid AND nspname like 'alt_nsp%'
   ORDER BY nspname, tmplname;
- nspname  |   tmplname   
+ nspname  |   tmplname
 ----------+--------------
  alt_nsp1 | alt_ts_temp2
  alt_nsp1 | alt_ts_temp3
@@ -693,7 +693,7 @@ SELECT nspname, prsname
   FROM pg_ts_parser t, pg_namespace n
   WHERE t.prsnamespace = n.oid AND nspname like 'alt_nsp%'
   ORDER BY nspname, prsname;
- nspname  |   prsname   
+ nspname  |   prsname
 ----------+-------------
  alt_nsp1 | alt_ts_prs2
  alt_nsp1 | alt_ts_prs3

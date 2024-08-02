@@ -280,14 +280,14 @@ static int r_mark_regions(struct SN_env * z) {
     z->I[1] = z->l;
     z->I[0] = z->l;
     if (out_grouping_U(z, g_V1, 97, 246, 1) < 0) return 0;
-    {   
+    {
         int ret = in_grouping_U(z, g_V1, 97, 246, 1);
         if (ret < 0) return 0;
         z->c += ret;
     }
     z->I[1] = z->c;
     if (out_grouping_U(z, g_V1, 97, 246, 1) < 0) return 0;
-    {   
+    {
         int ret = in_grouping_U(z, g_V1, 97, 246, 1);
         if (ret < 0) return 0;
         z->c += ret;
@@ -689,7 +689,7 @@ extern int finnish_UTF_8_stem(struct SN_env * z) {
         }
         z->c = z->l - m5;
     }
-    
+
     if (!(z->I[2])) goto lab1;
     {   int m6 = z->l - z->c; (void)m6;
         {   int ret = r_i_plural(z);
@@ -719,4 +719,3 @@ lab0:
 extern struct SN_env * finnish_UTF_8_create_env(void) { return SN_create_env(1, 3); }
 
 extern void finnish_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 1); }
-

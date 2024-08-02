@@ -143,7 +143,7 @@ insert into rtest_t3 values (5, 35);
 insert into rtest_v1 values (1, 11);
 insert into rtest_v1 values (2, 12);
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 11
  2 | 12
@@ -152,7 +152,7 @@ select * from rtest_v1;
 -- delete with constant expression
 delete from rtest_v1 where a = 1;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  2 | 12
 (1 row)
@@ -160,7 +160,7 @@ select * from rtest_v1;
 insert into rtest_v1 values (1, 11);
 delete from rtest_v1 where b = 12;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 11
 (1 row)
@@ -168,7 +168,7 @@ select * from rtest_v1;
 insert into rtest_v1 values (2, 12);
 insert into rtest_v1 values (2, 13);
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 11
  2 | 12
@@ -185,7 +185,7 @@ select * from rtest_v1;
 \r
 delete from rtest_v1 where b = 12;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 11
 (1 row)
@@ -194,7 +194,7 @@ delete from rtest_v1;
 -- insert select
 insert into rtest_v1 select * from rtest_t2;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  2 | 22
@@ -205,7 +205,7 @@ delete from rtest_v1;
 -- same with swapped targetlist
 insert into rtest_v1 (b, a) select b, a from rtest_t2;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  2 | 22
@@ -215,33 +215,33 @@ select * from rtest_v1;
 -- now with only one target attribute
 insert into rtest_v1 (a) select a from rtest_t3;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  2 | 22
  3 | 23
- 1 |   
- 2 |   
- 3 |   
- 4 |   
- 5 |   
+ 1 |
+ 2 |
+ 3 |
+ 4 |
+ 5 |
 (8 rows)
 
 select * from rtest_v1 where b isnull;
- a | b 
+ a | b
 ---+---
- 1 |  
- 2 |  
- 3 |  
- 4 |  
- 5 |  
+ 1 |
+ 2 |
+ 3 |
+ 4 |
+ 5 |
 (5 rows)
 
 -- let attribute a differ (must be done on rtest_t1 - see above)
 update rtest_t1 set a = a + 10 where b isnull;
 delete from rtest_v1 where b isnull;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  2 | 22
@@ -251,7 +251,7 @@ select * from rtest_v1;
 -- now updates with constant expression
 update rtest_v1 set b = 42 where a = 2;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  3 | 23
@@ -260,7 +260,7 @@ select * from rtest_v1;
 
 update rtest_v1 set b = 99 where b = 42;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  3 | 23
@@ -269,7 +269,7 @@ select * from rtest_v1;
 
 update rtest_v1 set b = 88 where b < 50;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  2 | 99
  1 | 88
@@ -281,7 +281,7 @@ insert into rtest_v1 select rtest_t2.a, rtest_t3.b
     from rtest_t2, rtest_t3
     where rtest_t2.a = rtest_t3.a;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 31
  2 | 32
@@ -291,7 +291,7 @@ select * from rtest_v1;
 -- updates in a mergejoin
 update rtest_v1 set b = rtest_t2.b from rtest_t2 where rtest_v1.a = rtest_t2.a;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  2 | 22
@@ -300,7 +300,7 @@ select * from rtest_v1;
 
 insert into rtest_v1 select * from rtest_t3;
 select * from rtest_v1;
- a | b  
+ a | b
 ---+----
  1 | 21
  2 | 22
@@ -314,7 +314,7 @@ select * from rtest_v1;
 
 update rtest_t1 set a = a + 10 where b > 30;
 select * from rtest_v1;
- a  | b  
+ a  | b
 ----+----
   1 | 21
   2 | 22
@@ -328,7 +328,7 @@ select * from rtest_v1;
 
 update rtest_v1 set a = rtest_t3.a + 20 from rtest_t3 where rtest_v1.b = rtest_t3.b;
 select * from rtest_v1;
- a  | b  
+ a  | b
 ----+----
   1 | 21
   2 | 22
@@ -357,7 +357,7 @@ insert into rtest_admin values ('jw', 'notjw');
 insert into rtest_admin values ('bm', 'neptun');
 update rtest_system set sysname = 'pluto' where sysname = 'neptun';
 select * from rtest_interface;
- sysname | ifname 
+ sysname | ifname
 ---------+--------
  orion   | eth0
  orion   | eth1
@@ -366,7 +366,7 @@ select * from rtest_interface;
 (4 rows)
 
 select * from rtest_admin;
- pname | sysname 
+ pname | sysname
 -------+---------
  jw    | orion
  jw    | notjw
@@ -378,7 +378,7 @@ update rtest_person set pname = 'jwieck' where pdesc = 'Jan Wieck';
 -- The above UPDATE affects two rows with equal keys, so they could be
 -- updated in either order depending on the whim of the local qsort().
 select * from rtest_admin order by pname, sysname;
- pname  | sysname 
+ pname  | sysname
 --------+---------
  bm     | pluto
  jwieck | notjw
@@ -387,14 +387,14 @@ select * from rtest_admin order by pname, sysname;
 
 delete from rtest_system where sysname = 'orion';
 select * from rtest_interface;
- sysname | ifname 
+ sysname | ifname
 ---------+--------
  notjw   | eth0
  pluto   | eth0
 (2 rows)
 
 select * from rtest_admin;
- pname  | sysname 
+ pname  | sysname
 --------+---------
  bm     | pluto
  jwieck | notjw
@@ -410,7 +410,7 @@ update rtest_emp set ename = 'wieck', salary = '6000.00' where ename = 'wiecx';
 update rtest_emp set salary = '7000.00' where ename = 'wieck';
 delete from rtest_emp where ename = 'gates';
 select ename, who = current_user as "matches user", action, newsal, oldsal from rtest_emplog order by ename, action, newsal;
-        ename         | matches user |   action   |   newsal   |   oldsal   
+        ename         | matches user |   action   |   newsal   |   oldsal
 ----------------------+--------------+------------+------------+------------
  gates                | t            | fired      |      $0.00 | $80,000.00
  gates                | t            | hired      | $80,000.00 |      $0.00
@@ -424,7 +424,7 @@ insert into rtest_empmass values ('maier', '5000.00');
 insert into rtest_empmass values ('mayr', '6000.00');
 insert into rtest_emp select * from rtest_empmass;
 select ename, who = current_user as "matches user", action, newsal, oldsal from rtest_emplog order by ename, action, newsal;
-        ename         | matches user |   action   |   newsal   |   oldsal   
+        ename         | matches user |   action   |   newsal   |   oldsal
 ----------------------+--------------+------------+------------+------------
  gates                | t            | fired      |      $0.00 | $80,000.00
  gates                | t            | hired      | $80,000.00 |      $0.00
@@ -439,7 +439,7 @@ select ename, who = current_user as "matches user", action, newsal, oldsal from 
 update rtest_empmass set salary = salary + '1000.00';
 update rtest_emp set salary = rtest_empmass.salary from rtest_empmass where rtest_emp.ename = rtest_empmass.ename;
 select ename, who = current_user as "matches user", action, newsal, oldsal from rtest_emplog order by ename, action, newsal;
-        ename         | matches user |   action   |   newsal   |   oldsal   
+        ename         | matches user |   action   |   newsal   |   oldsal
 ----------------------+--------------+------------+------------+------------
  gates                | t            | fired      |      $0.00 | $80,000.00
  gates                | t            | hired      | $80,000.00 |      $0.00
@@ -456,7 +456,7 @@ select ename, who = current_user as "matches user", action, newsal, oldsal from 
 
 delete from rtest_emp using rtest_empmass where rtest_emp.ename = rtest_empmass.ename;
 select ename, who = current_user as "matches user", action, newsal, oldsal from rtest_emplog order by ename, action, newsal;
-        ename         | matches user |   action   |   newsal   |   oldsal   
+        ename         | matches user |   action   |   newsal   |   oldsal
 ----------------------+--------------+------------+------------+------------
  gates                | t            | fired      |      $0.00 | $80,000.00
  gates                | t            | hired      | $80,000.00 |      $0.00
@@ -488,7 +488,7 @@ insert into rtest_t4 values (28, 'Record should go to rtest_t4 and t8');
 insert into rtest_t4 values (30, 'Record should go to rtest_t4');
 insert into rtest_t4 values (40, 'Record should go to rtest_t4');
 select * from rtest_t4;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
   1 | Record should go to rtest_t4
   2 | Record should go to rtest_t4
@@ -500,7 +500,7 @@ select * from rtest_t4;
 (7 rows)
 
 select * from rtest_t5;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  10 | Record should go to rtest_t5
  15 | Record should go to rtest_t5
@@ -508,19 +508,19 @@ select * from rtest_t5;
 (3 rows)
 
 select * from rtest_t6;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  20 | Record should go to rtest_t4 and t6
 (1 row)
 
 select * from rtest_t7;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  19 | Record should go to rtest_t5 and t7
 (1 row)
 
 select * from rtest_t8;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  26 | Record should go to rtest_t4 and t8
  28 | Record should go to rtest_t4 and t8
@@ -543,14 +543,14 @@ insert into rtest_t9 values (30, 'Record should go to rtest_t4');
 insert into rtest_t9 values (40, 'Record should go to rtest_t4');
 insert into rtest_t4 select * from rtest_t9 where a < 20;
 select * from rtest_t4;
- a |              b               
+ a |              b
 ---+------------------------------
  1 | Record should go to rtest_t4
  2 | Record should go to rtest_t4
 (2 rows)
 
 select * from rtest_t5;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  10 | Record should go to rtest_t5
  15 | Record should go to rtest_t5
@@ -558,24 +558,24 @@ select * from rtest_t5;
 (3 rows)
 
 select * from rtest_t6;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 select * from rtest_t7;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  19 | Record should go to rtest_t5 and t7
 (1 row)
 
 select * from rtest_t8;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 insert into rtest_t4 select * from rtest_t9 where b ~ 'and t8';
 select * from rtest_t4;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
   1 | Record should go to rtest_t4
   2 | Record should go to rtest_t4
@@ -584,7 +584,7 @@ select * from rtest_t4;
 (4 rows)
 
 select * from rtest_t5;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  10 | Record should go to rtest_t5
  15 | Record should go to rtest_t5
@@ -592,18 +592,18 @@ select * from rtest_t5;
 (3 rows)
 
 select * from rtest_t6;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 select * from rtest_t7;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  19 | Record should go to rtest_t5 and t7
 (1 row)
 
 select * from rtest_t8;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  26 | Record should go to rtest_t4 and t8
  28 | Record should go to rtest_t4 and t8
@@ -611,7 +611,7 @@ select * from rtest_t8;
 
 insert into rtest_t4 select a + 1, b from rtest_t9 where a in (20, 30, 40);
 select * from rtest_t4;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
   1 | Record should go to rtest_t4
   2 | Record should go to rtest_t4
@@ -623,7 +623,7 @@ select * from rtest_t4;
 (7 rows)
 
 select * from rtest_t5;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  10 | Record should go to rtest_t5
  15 | Record should go to rtest_t5
@@ -631,19 +631,19 @@ select * from rtest_t5;
 (3 rows)
 
 select * from rtest_t6;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  21 | Record should go to rtest_t4 and t6
 (1 row)
 
 select * from rtest_t7;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  19 | Record should go to rtest_t5 and t7
 (1 row)
 
 select * from rtest_t8;
- a  |                  b                  
+ a  |                  b
 ----+-------------------------------------
  26 | Record should go to rtest_t4 and t8
  28 | Record should go to rtest_t4 and t8
@@ -654,7 +654,7 @@ select * from rtest_t8;
 --
 insert into rtest_order1 values (1);
 select * from rtest_order2;
- a | b |              c               
+ a | b |              c
 ---+---+------------------------------
  1 | 1 | rule 1 - this should run 1st
  1 | 2 | rule 2 - this should run 2nd
@@ -677,7 +677,7 @@ insert into rtest_nothn1 values (40, 'want this');
 insert into rtest_nothn1 values (50, 'want this');
 insert into rtest_nothn1 values (60, 'want this');
 select * from rtest_nothn1;
- a  |     b     
+ a  |     b
 ----+-----------
   1 | want this
   2 | want this
@@ -693,12 +693,12 @@ insert into rtest_nothn2 values (50, 'too small');
 insert into rtest_nothn2 values (100, 'OK');
 insert into rtest_nothn2 values (200, 'OK');
 select * from rtest_nothn2;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 select * from rtest_nothn3;
-  a  | b  
+  a  | b
 -----+----
  100 | OK
  200 | OK
@@ -720,7 +720,7 @@ insert into rtest_nothn4 values (50, 'want this');
 insert into rtest_nothn4 values (60, 'want this');
 insert into rtest_nothn1 select * from rtest_nothn4;
 select * from rtest_nothn1;
- a  |     b     
+ a  |     b
 ----+-----------
   1 | want this
   2 | want this
@@ -738,12 +738,12 @@ insert into rtest_nothn4 values (100, 'OK');
 insert into rtest_nothn4 values (200, 'OK');
 insert into rtest_nothn2 select * from rtest_nothn4;
 select * from rtest_nothn2;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 select * from rtest_nothn3;
-  a  | b  
+  a  | b
 -----+----
  100 | OK
  200 | OK
@@ -784,7 +784,7 @@ insert into rtest_view2 values (7);
 insert into rtest_view2 values (7);
 insert into rtest_view2 values (7);
 select * from rtest_vview1;
- a |   b    
+ a |   b
 ---+--------
  2 | item 2
  4 | item 4
@@ -793,7 +793,7 @@ select * from rtest_vview1;
 (4 rows)
 
 select * from rtest_vview2;
- a |   b    
+ a |   b
 ---+--------
  1 | item 1
  2 | item 2
@@ -804,7 +804,7 @@ select * from rtest_vview2;
 (6 rows)
 
 select * from rtest_vview3;
- a |   b    
+ a |   b
 ---+--------
  2 | item 2
  5 | item 5
@@ -812,7 +812,7 @@ select * from rtest_vview3;
 (3 rows)
 
 select * from rtest_vview4 order by a, b;
- a |   b    | refcount 
+ a |   b    | refcount
 ---+--------+----------
  2 | item 2 |        2
  4 | item 4 |        1
@@ -821,7 +821,7 @@ select * from rtest_vview4 order by a, b;
 (4 rows)
 
 select * from rtest_vview5;
- a |   b    | refcount 
+ a |   b    | refcount
 ---+--------+----------
  1 | item 1 |        0
  2 | item 2 |        2
@@ -835,7 +835,7 @@ select * from rtest_vview5;
 
 insert into rtest_view3 select * from rtest_vview1 where a < 7;
 select * from rtest_view3;
- a |   b    
+ a |   b
 ---+--------
  2 | item 2
  4 | item 4
@@ -845,7 +845,7 @@ select * from rtest_view3;
 delete from rtest_view3;
 insert into rtest_view3 select * from rtest_vview2 where a != 5 and b !~ '2';
 select * from rtest_view3;
- a |   b    
+ a |   b
 ---+--------
  1 | item 1
  3 | item 3
@@ -856,7 +856,7 @@ select * from rtest_view3;
 delete from rtest_view3;
 insert into rtest_view3 select * from rtest_vview3;
 select * from rtest_view3;
- a |   b    
+ a |   b
 ---+--------
  2 | item 2
  5 | item 5
@@ -866,7 +866,7 @@ select * from rtest_view3;
 delete from rtest_view3;
 insert into rtest_view4 select * from rtest_vview4 where 3 > refcount;
 select * from rtest_view4 order by a, b;
- a |   b    | c 
+ a |   b    | c
 ---+--------+---
  2 | item 2 | 2
  4 | item 4 | 1
@@ -876,7 +876,7 @@ select * from rtest_view4 order by a, b;
 delete from rtest_view4;
 insert into rtest_view4 select * from rtest_vview5 where a > 2 and refcount = 0;
 select * from rtest_view4;
- a |   b    | c 
+ a |   b    | c
 ---+--------+---
  3 | item 3 | 0
  6 | item 6 | 0
@@ -910,7 +910,7 @@ insert into rtest_comp values ('p4', 'cm', 15.0);
 insert into rtest_comp values ('p5', 'inch', 7.0);
 insert into rtest_comp values ('p6', 'inch', 4.4);
 select * from rtest_vcomp order by part;
- part |     size_in_cm     
+ part |     size_in_cm
 ------+--------------------
  p1   |                500
  p2   |                300
@@ -921,7 +921,7 @@ select * from rtest_vcomp order by part;
 (6 rows)
 
 select * from rtest_vcomp where size_in_cm > 10.0 order by size_in_cm using >;
- part |     size_in_cm     
+ part |     size_in_cm
 ------+--------------------
  p1   |                500
  p2   |                300
@@ -1000,7 +1000,7 @@ INSERT INTO shoelace_data VALUES ('sl7', 7, 'brown', 60 , 'cm');
 INSERT INTO shoelace_data VALUES ('sl8', 1, 'brown', 40 , 'inch');
 -- SELECTs in doc
 SELECT * FROM shoelace ORDER BY sl_name;
-  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm 
+  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm
 ------------+----------+------------+--------+----------+-----------
  sl1        |        5 | black      |     80 | cm       |        80
  sl2        |        6 | black      |    100 | cm       |       100
@@ -1013,7 +1013,7 @@ SELECT * FROM shoelace ORDER BY sl_name;
 (8 rows)
 
 SELECT * FROM shoe_ready WHERE total_avail >= 2 ORDER BY 1;
-  shoename  | sh_avail |  sl_name   | sl_avail | total_avail 
+  shoename  | sh_avail |  sl_name   | sl_avail | total_avail
 ------------+----------+------------+----------+-------------
  sh1        |        2 | sl1        |        5 |           2
  sh3        |        4 | sl7        |        7 |           4
@@ -1038,7 +1038,7 @@ SELECT * FROM shoe_ready WHERE total_avail >= 2 ORDER BY 1;
                                     );
 UPDATE shoelace_data SET sl_avail = 6 WHERE  sl_name = 'sl7';
 SELECT * FROM shoelace_log;
-  sl_name   | sl_avail | log_who  |         log_when         
+  sl_name   | sl_avail | log_who  |         log_when
 ------------+----------+----------+--------------------------
  sl7        |        6 | Al Bundy | Thu Jan 01 00:00:00 1970
 (1 row)
@@ -1081,7 +1081,7 @@ INSERT INTO shoelace_arrive VALUES ('sl3', 10);
 INSERT INTO shoelace_arrive VALUES ('sl6', 20);
 INSERT INTO shoelace_arrive VALUES ('sl8', 20);
 SELECT * FROM shoelace ORDER BY sl_name;
-  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm 
+  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm
 ------------+----------+------------+--------+----------+-----------
  sl1        |        5 | black      |     80 | cm       |        80
  sl2        |        6 | black      |    100 | cm       |       100
@@ -1095,7 +1095,7 @@ SELECT * FROM shoelace ORDER BY sl_name;
 
 insert into shoelace_ok select * from shoelace_arrive;
 SELECT * FROM shoelace ORDER BY sl_name;
-  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm 
+  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm
 ------------+----------+------------+--------+----------+-----------
  sl1        |        5 | black      |     80 | cm       |        80
  sl2        |        6 | black      |    100 | cm       |       100
@@ -1108,7 +1108,7 @@ SELECT * FROM shoelace ORDER BY sl_name;
 (8 rows)
 
 SELECT * FROM shoelace_log ORDER BY sl_name;
-  sl_name   | sl_avail | log_who  |         log_when         
+  sl_name   | sl_avail | log_who  |         log_when
 ------------+----------+----------+--------------------------
  sl3        |       10 | Al Bundy | Thu Jan 01 00:00:00 1970
  sl6        |       20 | Al Bundy | Thu Jan 01 00:00:00 1970
@@ -1128,14 +1128,14 @@ insert into shoelace values ('sl10', 1000, 'magenta', 40.0, 'inch', 0.0)
   on conflict do nothing;
 ERROR:  INSERT with ON CONFLICT clause cannot be used with table that has INSERT or UPDATE rules
 SELECT * FROM shoelace_obsolete ORDER BY sl_len_cm;
-  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm 
+  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm
 ------------+----------+------------+--------+----------+-----------
  sl9        |        0 | pink       |     35 | inch     |      88.9
  sl10       |     1000 | magenta    |     40 | inch     |     101.6
 (2 rows)
 
 SELECT * FROM shoelace_candelete;
-  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm 
+  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm
 ------------+----------+------------+--------+----------+-----------
  sl9        |        0 | pink       |     35 | inch     |      88.9
 (1 row)
@@ -1144,7 +1144,7 @@ DELETE FROM shoelace WHERE EXISTS
     (SELECT * FROM shoelace_candelete
              WHERE sl_name = shoelace.sl_name);
 SELECT * FROM shoelace ORDER BY sl_name;
-  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm 
+  sl_name   | sl_avail |  sl_color  | sl_len | sl_unit  | sl_len_cm
 ------------+----------+------------+--------+----------+-----------
  sl1        |        5 | black      |     80 | cm       |        80
  sl10       |     1000 | magenta    |     40 | inch     |     101.6
@@ -1158,16 +1158,16 @@ SELECT * FROM shoelace ORDER BY sl_name;
 (9 rows)
 
 SELECT * FROM shoe ORDER BY shoename;
-  shoename  | sh_avail |  slcolor   | slminlen | slminlen_cm | slmaxlen | slmaxlen_cm |  slunit  
+  shoename  | sh_avail |  slcolor   | slminlen | slminlen_cm | slmaxlen | slmaxlen_cm |  slunit
 ------------+----------+------------+----------+-------------+----------+-------------+----------
- sh1        |        2 | black      |       70 |          70 |       90 |          90 | cm      
- sh2        |        0 | black      |       30 |        76.2 |       40 |       101.6 | inch    
- sh3        |        4 | brown      |       50 |          50 |       65 |          65 | cm      
- sh4        |        3 | brown      |       40 |       101.6 |       50 |         127 | inch    
+ sh1        |        2 | black      |       70 |          70 |       90 |          90 | cm
+ sh2        |        0 | black      |       30 |        76.2 |       40 |       101.6 | inch
+ sh3        |        4 | brown      |       50 |          50 |       65 |          65 | cm
+ sh4        |        3 | brown      |       40 |       101.6 |       50 |         127 | inch
 (4 rows)
 
 SELECT count(*) FROM shoe;
- count 
+ count
 -------
      4
 (1 row)
@@ -1182,7 +1182,7 @@ do instead nothing;
 insert into rules_foo values(1);
 insert into rules_foo values(1001);
 select * from rules_foo;
-  f1  
+  f1
 ------
  1001
 (1 row)
@@ -1202,14 +1202,14 @@ do instead insert into rules_foo2 values (new.f1);
 insert into rules_foo values(2);
 insert into rules_foo values(100);
 select * from rules_foo;
-  f1  
+  f1
 ------
  1001
   100
 (2 rows)
 
 select * from rules_foo2;
- f1 
+ f1
 ----
   2
 (1 row)
@@ -1237,23 +1237,23 @@ create rule rrule as
   update cchild set descrip = new.descrip where cchild.pid = old.pid;
 );
 select * from vview;
- pid |   txt   | descrip  
+ pid |   txt   | descrip
 -----+---------+----------
    1 | parent1 | descrip1
-   2 | parent2 | 
+   2 | parent2 |
 (2 rows)
 
 update vview set descrip='test1' where pid=1;
 select * from vview;
- pid |   txt   | descrip 
+ pid |   txt   | descrip
 -----+---------+---------
    1 | parent1 | test1
-   2 | parent2 | 
+   2 | parent2 |
 (2 rows)
 
 update vview set descrip='test2' where pid=2;
 select * from vview;
- pid |   txt   | descrip 
+ pid |   txt   | descrip
 -----+---------+---------
    1 | parent1 | test1
    2 | parent2 | test2
@@ -1261,14 +1261,14 @@ select * from vview;
 
 update vview set descrip='test3' where pid=3;
 select * from vview;
- pid |   txt   | descrip 
+ pid |   txt   | descrip
 -----+---------+---------
    1 | parent1 | test1
    2 | parent2 | test2
 (2 rows)
 
 select * from cchild;
- pid | descrip 
+ pid | descrip
 -----+---------
    1 | test1
    2 | test2
@@ -2649,7 +2649,7 @@ CREATE OR REPLACE RULE myrule AS ON INSERT TO ruletest_tbl
 	DO INSTEAD INSERT INTO ruletest_tbl2 VALUES (1000, 1000);
 INSERT INTO ruletest_tbl VALUES (99, 99);
 SELECT * FROM ruletest_tbl2;
-  a   |  b   
+  a   |  b
 ------+------
    10 |   10
  1000 | 1000
@@ -2776,7 +2776,7 @@ create view id_ordered as select * from id order by id;
 create rule update_id_ordered as on update to id_ordered
 	do instead update id set name = new.name where id = old.id;
 select * from id_ordered;
- id |  name  
+ id |  name
 ----+--------
   1 | Test 1
   2 | Test 2
@@ -2790,7 +2790,7 @@ update id_ordered set name = 'update 2' where id = 2;
 update id_ordered set name = 'update 4' where id = 4;
 update id_ordered set name = 'update 5' where id = 5;
 select * from id_ordered;
- id |   name   
+ id |   name
 ----+----------
   1 | Test 1
   2 | update 2
@@ -2833,12 +2833,12 @@ set constraint_exclusion = on;
 insert into t1 select * from generate_series(5,19,1) g;
 update t1 set a = 4 where a = 5;
 select * from only t1;
- a 
+ a
 ---
 (0 rows)
 
 select * from only t1_1;
- a 
+ a
 ---
  6
  7
@@ -2848,7 +2848,7 @@ select * from only t1_1;
 (5 rows)
 
 select * from only t1_2;
- a  
+ a
 ----
  10
  11
@@ -2869,7 +2869,7 @@ insert into rules_base values(1,2), (11,12);
 create rule r1 as on update to rules_base do instead
   select * from rules_base where f1 = 1 for update;
 update rules_base set f2 = f2 + 1;
- f1 | f2 
+ f1 | f2
 ----+----
   1 |  2
 (1 row)
@@ -2877,7 +2877,7 @@ update rules_base set f2 = f2 + 1;
 create or replace rule r1 as on update to rules_base do instead
   select * from rules_base where f1 = 11 for update of rules_base;
 update rules_base set f2 = f2 + 1;
- f1 | f2 
+ f1 | f2
 ----+----
  11 | 12
 (1 row)
@@ -2890,7 +2890,7 @@ LINE 2:   select * from rules_base where f1 = 11 for update of old;
 drop table rules_base;
 -- test various flavors of pg_get_viewdef()
 select pg_get_viewdef('shoe'::regclass) as unpretty;
-                    unpretty                    
+                    unpretty
 ------------------------------------------------
   SELECT sh.shoename,                          +
      sh.sh_avail,                              +
@@ -2906,7 +2906,7 @@ select pg_get_viewdef('shoe'::regclass) as unpretty;
 (1 row)
 
 select pg_get_viewdef('shoe'::regclass,true) as pretty;
-                    pretty                    
+                    pretty
 ----------------------------------------------
   SELECT sh.shoename,                        +
      sh.sh_avail,                            +
@@ -2922,7 +2922,7 @@ select pg_get_viewdef('shoe'::regclass,true) as pretty;
 (1 row)
 
 select pg_get_viewdef('shoe'::regclass,0) as prettier;
-                   prettier                   
+                   prettier
 ----------------------------------------------
   SELECT sh.shoename,                        +
      sh.sh_avail,                            +
@@ -2948,14 +2948,14 @@ create rule r1 as on update to rules_src do also
 update rules_src set f2 = f2 + 1;
 update rules_src set f2 = f2 * 10;
 select * from rules_src;
- f1 | f2  
+ f1 | f2
 ----+-----
   1 |  30
  11 | 130
 (2 rows)
 
 select * from rules_log;
- f1 | f2  | tag | id 
+ f1 | f2  | tag | id
 ----+-----+-----+----
   1 |   2 | old |  1
   1 |   3 | new |  2
@@ -2970,7 +2970,7 @@ select * from rules_log;
 create rule r2 as on update to rules_src do also
   values(old.*, 'old'), (new.*, 'new');
 update rules_src set f2 = f2 / 10;
- column1 | column2 | column3 
+ column1 | column2 | column3
 ---------+---------+---------
        1 |      30 | old
        1 |       3 | new
@@ -2982,7 +2982,7 @@ create rule r3 as on insert to rules_src do also
   insert into rules_log values(null, null, '-', default), (new.*, 'new', default);
 insert into rules_src values(22,23), (33,default);
 select * from rules_src;
- f1 | f2 
+ f1 | f2
 ----+----
   1 |  3
  11 | 13
@@ -2991,7 +2991,7 @@ select * from rules_src;
 (4 rows)
 
 select * from rules_log;
- f1 | f2  | tag | id 
+ f1 | f2  | tag | id
 ----+-----+-----+----
   1 |   2 | old |  1
   1 |   3 | new |  2
@@ -3029,10 +3029,10 @@ create rule r7 as on delete to rules_src do instead
 -- check display of all rules added above
 \d+ rules_src
                                  Table "public.rules_src"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- f1     | integer |           |          |         | plain   |              | 
- f2     | integer |           |          | 0       | plain   |              | 
+ f1     | integer |           |          |         | plain   |              |
+ f2     | integer |           |          | 0       | plain   |              |
 Rules:
     r1 AS
     ON UPDATE TO rules_src DO  INSERT INTO rules_log (f1, f2, tag, id) VALUES (old.f1,old.f2,'old'::text,DEFAULT), (new.f1,new.f2,'new'::text,DEFAULT)
@@ -3082,10 +3082,10 @@ create rule rr as on update to rule_t1 do instead UPDATE rule_dest trgt
   WHERE trgt.f1 = new.f1 RETURNING new.*;
 \d+ rule_t1
                                   Table "public.rule_t1"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- f1     | integer |           |          |         | plain   |              | 
- f2     | integer |           |          |         | plain   |              | 
+ f1     | integer |           |          |         | plain   |              |
+ f2     | integer |           |          |         | plain   |              |
 Rules:
     rr AS
     ON UPDATE TO rule_t1 DO INSTEAD  UPDATE rule_dest trgt SET (f2[1], f1, tag) = ( SELECT new.f2,
@@ -3111,7 +3111,7 @@ CREATE RULE v1_upd AS ON UPDATE TO rule_v1
 INSERT INTO rule_v1 VALUES (1, 'a'), (2, 'b');
 UPDATE rule_v1 SET b = upper(b);
 SELECT * FROM rule_t1;
- a  |  b  |  c  
+ a  |  b  |  c
 ----+-----+-----
   1 | A   |  10
   2 | B   |  20
@@ -3133,16 +3133,16 @@ CREATE RULE InsertRule AS
 ALTER RULE InsertRule ON rule_v1 RENAME to NewInsertRule;
 INSERT INTO rule_v1 VALUES(1);
 SELECT * FROM rule_v1;
- a 
+ a
 ---
  1
 (1 row)
 
 \d+ rule_v1
                            View "public.rule_v1"
- Column |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Description
 --------+---------+-----------+----------+---------+---------+-------------
- a      | integer |           |          |         | plain   | 
+ a      | integer |           |          |         | plain   |
 View definition:
  SELECT a
    FROM rule_t1;
@@ -3168,20 +3168,20 @@ DROP TABLE rule_t1;
 create view rule_v1 as values(1,2);
 \d+ rule_v1
                            View "public.rule_v1"
- Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ---------+---------+-----------+----------+---------+---------+-------------
- column1 | integer |           |          |         | plain   | 
- column2 | integer |           |          |         | plain   | 
+ column1 | integer |           |          |         | plain   |
+ column2 | integer |           |          |         | plain   |
 View definition:
  VALUES (1,2);
 
 alter table rule_v1 rename column column2 to q2;
 \d+ rule_v1
                            View "public.rule_v1"
- Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ---------+---------+-----------+----------+---------+---------+-------------
- column1 | integer |           |          |         | plain   | 
- q2      | integer |           |          |         | plain   | 
+ column1 | integer |           |          |         | plain   |
+ q2      | integer |           |          |         | plain   |
 View definition:
  SELECT column1,
     column2 AS q2
@@ -3191,10 +3191,10 @@ drop view rule_v1;
 create view rule_v1(x) as values(1,2);
 \d+ rule_v1
                            View "public.rule_v1"
- Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ---------+---------+-----------+----------+---------+---------+-------------
- x       | integer |           |          |         | plain   | 
- column2 | integer |           |          |         | plain   | 
+ x       | integer |           |          |         | plain   |
+ column2 | integer |           |          |         | plain   |
 View definition:
  SELECT column1 AS x,
     column2
@@ -3204,10 +3204,10 @@ drop view rule_v1;
 create view rule_v1(x) as select * from (values(1,2)) v;
 \d+ rule_v1
                            View "public.rule_v1"
- Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ---------+---------+-----------+----------+---------+---------+-------------
- x       | integer |           |          |         | plain   | 
- column2 | integer |           |          |         | plain   | 
+ x       | integer |           |          |         | plain   |
+ column2 | integer |           |          |         | plain   |
 View definition:
  SELECT column1 AS x,
     column2
@@ -3217,10 +3217,10 @@ drop view rule_v1;
 create view rule_v1(x) as select * from (values(1,2)) v(q,w);
 \d+ rule_v1
                            View "public.rule_v1"
- Column |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Description
 --------+---------+-----------+----------+---------+---------+-------------
- x      | integer |           |          |         | plain   | 
- w      | integer |           |          |         | plain   | 
+ x      | integer |           |          |         | plain   |
+ w      | integer |           |          |         | plain   |
 View definition:
  SELECT q AS x,
     w
@@ -3250,7 +3250,7 @@ CREATE RULE hat_nosert AS ON INSERT TO hats
         DO NOTHING
         RETURNING *;
 SELECT definition FROM pg_rules WHERE tablename = 'hats' ORDER BY rulename;
-                                         definition                                          
+                                         definition
 ---------------------------------------------------------------------------------------------
  CREATE RULE hat_nosert AS                                                                  +
      ON INSERT TO public.hats DO INSTEAD  INSERT INTO hat_data (hat_name, hat_color)        +
@@ -3262,20 +3262,20 @@ SELECT definition FROM pg_rules WHERE tablename = 'hats' ORDER BY rulename;
 
 -- Works (projects row)
 INSERT INTO hats VALUES ('h7', 'black') RETURNING *;
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h7         | black     
+ h7         | black
 (1 row)
 
 -- Works (does nothing)
 INSERT INTO hats VALUES ('h7', 'black') RETURNING *;
- hat_name | hat_color 
+ hat_name | hat_color
 ----------+-----------
 (0 rows)
 
 SELECT tablename, rulename, definition FROM pg_rules
 	WHERE tablename = 'hats';
- tablename |  rulename  |                                         definition                                          
+ tablename |  rulename  |                                         definition
 -----------+------------+---------------------------------------------------------------------------------------------
  hats      | hat_nosert | CREATE RULE hat_nosert AS                                                                  +
            |            |     ON INSERT TO public.hats DO INSTEAD  INSERT INTO hat_data (hat_name, hat_color)        +
@@ -3296,7 +3296,7 @@ CREATE RULE hat_nosert_all AS ON INSERT TO hats
         DO NOTHING
         RETURNING *;
 SELECT definition FROM pg_rules WHERE tablename = 'hats' ORDER BY rulename;
-                                     definition                                      
+                                     definition
 -------------------------------------------------------------------------------------
  CREATE RULE hat_nosert_all AS                                                      +
      ON INSERT TO public.hats DO INSTEAD  INSERT INTO hat_data (hat_name, hat_color)+
@@ -3308,9 +3308,9 @@ SELECT definition FROM pg_rules WHERE tablename = 'hats' ORDER BY rulename;
 DROP RULE hat_nosert_all ON hats;
 -- Works (does nothing)
 INSERT INTO hats VALUES ('h7', 'black') RETURNING *;
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h7         | black     
+ h7         | black
 (1 row)
 
 -- DO UPDATE with a WHERE clause
@@ -3325,7 +3325,7 @@ CREATE RULE hat_upsert AS ON INSERT TO hats
            WHERE excluded.hat_color <>  'forbidden' AND hat_data.* != excluded.*
         RETURNING *;
 SELECT definition FROM pg_rules WHERE tablename = 'hats' ORDER BY rulename;
-                                                               definition                                                                
+                                                               definition
 -----------------------------------------------------------------------------------------------------------------------------------------
  CREATE RULE hat_upsert AS                                                                                                              +
      ON INSERT TO public.hats DO INSTEAD  INSERT INTO hat_data (hat_name, hat_color)                                                    +
@@ -3337,43 +3337,43 @@ SELECT definition FROM pg_rules WHERE tablename = 'hats' ORDER BY rulename;
 
 -- Works (does upsert)
 INSERT INTO hats VALUES ('h8', 'black') RETURNING *;
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h8         | black     
+ h8         | black
 (1 row)
 
 SELECT * FROM hat_data WHERE hat_name = 'h8';
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h8         | black     
+ h8         | black
 (1 row)
 
 INSERT INTO hats VALUES ('h8', 'white') RETURNING *;
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h8         | white     
+ h8         | white
 (1 row)
 
 SELECT * FROM hat_data WHERE hat_name = 'h8';
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h8         | white     
+ h8         | white
 (1 row)
 
 INSERT INTO hats VALUES ('h8', 'forbidden') RETURNING *;
- hat_name | hat_color 
+ hat_name | hat_color
 ----------+-----------
 (0 rows)
 
 SELECT * FROM hat_data WHERE hat_name = 'h8';
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h8         | white     
+ h8         | white
 (1 row)
 
 SELECT tablename, rulename, definition FROM pg_rules
 	WHERE tablename = 'hats';
- tablename |  rulename  |                                                               definition                                                                
+ tablename |  rulename  |                                                               definition
 -----------+------------+-----------------------------------------------------------------------------------------------------------------------------------------
  hats      | hat_upsert | CREATE RULE hat_upsert AS                                                                                                              +
            |            |     ON INSERT TO public.hats DO INSTEAD  INSERT INTO hat_data (hat_name, hat_color)                                                    +
@@ -3385,7 +3385,7 @@ SELECT tablename, rulename, definition FROM pg_rules
 
 -- ensure explain works for on insert conflict rules
 explain (costs off) INSERT INTO hats VALUES ('h8', 'forbidden') RETURNING *;
-                                           QUERY PLAN                                            
+                                           QUERY PLAN
 -------------------------------------------------------------------------------------------------
  Insert on hat_data
    Conflict Resolution: UPDATE
@@ -3403,10 +3403,10 @@ WITH data(hat_name, hat_color) AS MATERIALIZED (
 INSERT INTO hats
     SELECT * FROM data
 RETURNING *;
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h8         | green     
- h9         | blue      
+ h8         | green
+ h9         | blue
 (2 rows)
 
 EXPLAIN (costs off)
@@ -3418,7 +3418,7 @@ WITH data(hat_name, hat_color) AS MATERIALIZED (
 INSERT INTO hats
     SELECT * FROM data
 RETURNING *;
-                                           QUERY PLAN                                            
+                                           QUERY PLAN
 -------------------------------------------------------------------------------------------------
  Insert on hat_data
    Conflict Resolution: UPDATE
@@ -3430,11 +3430,11 @@ RETURNING *;
 (7 rows)
 
 SELECT * FROM hat_data WHERE hat_name IN ('h8', 'h9', 'h7') ORDER BY hat_name;
-  hat_name  | hat_color  
+  hat_name  | hat_color
 ------------+------------
- h7         | black     
- h8         | green     
- h9         | blue      
+ h7         | black
+ h8         | green
+ h9         | blue
 (3 rows)
 
 DROP RULE hat_upsert ON hats;
@@ -3452,7 +3452,7 @@ CREATE FUNCTION func_with_set_params() RETURNS integer
     SET local_preload_libraries TO "Mixed/Case", 'c:/''a"/path', '', '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789'
     IMMUTABLE STRICT;
 SELECT pg_get_functiondef('func_with_set_params()'::regprocedure);
-                                                                            pg_get_functiondef                                                                            
+                                                                            pg_get_functiondef
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  CREATE OR REPLACE FUNCTION public.func_with_set_params()                                                                                                                +
   RETURNS integer                                                                                                                                                        +
@@ -3464,86 +3464,86 @@ SELECT pg_get_functiondef('func_with_set_params()'::regprocedure);
   SET "DateStyle" TO 'iso, mdy'                                                                                                                                          +
   SET local_preload_libraries TO 'Mixed/Case', 'c:/''a"/path', '', '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789'+
  AS $function$select 1;$function$                                                                                                                                        +
- 
+
 (1 row)
 
 -- tests for pg_get_*def with invalid objects
 SELECT pg_get_constraintdef(0);
- pg_get_constraintdef 
+ pg_get_constraintdef
 ----------------------
- 
+
 (1 row)
 
 SELECT pg_get_functiondef(0);
- pg_get_functiondef 
+ pg_get_functiondef
 --------------------
- 
+
 (1 row)
 
 SELECT pg_get_indexdef(0);
- pg_get_indexdef 
+ pg_get_indexdef
 -----------------
- 
+
 (1 row)
 
 SELECT pg_get_ruledef(0);
- pg_get_ruledef 
+ pg_get_ruledef
 ----------------
- 
+
 (1 row)
 
 SELECT pg_get_statisticsobjdef(0);
- pg_get_statisticsobjdef 
+ pg_get_statisticsobjdef
 -------------------------
- 
+
 (1 row)
 
 SELECT pg_get_triggerdef(0);
- pg_get_triggerdef 
+ pg_get_triggerdef
 -------------------
- 
+
 (1 row)
 
 SELECT pg_get_viewdef(0);
- pg_get_viewdef 
+ pg_get_viewdef
 ----------------
- 
+
 (1 row)
 
 SELECT pg_get_function_arguments(0);
- pg_get_function_arguments 
+ pg_get_function_arguments
 ---------------------------
- 
+
 (1 row)
 
 SELECT pg_get_function_identity_arguments(0);
- pg_get_function_identity_arguments 
+ pg_get_function_identity_arguments
 ------------------------------------
- 
+
 (1 row)
 
 SELECT pg_get_function_result(0);
- pg_get_function_result 
+ pg_get_function_result
 ------------------------
- 
+
 (1 row)
 
 SELECT pg_get_function_arg_default(0, 0);
- pg_get_function_arg_default 
+ pg_get_function_arg_default
 -----------------------------
- 
+
 (1 row)
 
 SELECT pg_get_function_arg_default('pg_class'::regclass, 0);
- pg_get_function_arg_default 
+ pg_get_function_arg_default
 -----------------------------
- 
+
 (1 row)
 
 SELECT pg_get_partkeydef(0);
- pg_get_partkeydef 
+ pg_get_partkeydef
 -------------------
- 
+
 (1 row)
 
 -- test rename for a rule defined on a partitioned table
@@ -3688,7 +3688,7 @@ INSERT INTO ruletest1 VALUES (4);
 RESET session_replication_role;
 INSERT INTO ruletest1 VALUES (5);
 SELECT * FROM ruletest1;
- a 
+ a
 ---
  2
  3
@@ -3696,7 +3696,7 @@ SELECT * FROM ruletest1;
 (3 rows)
 
 SELECT * FROM ruletest2;
- b 
+ b
 ---
  1
  4
@@ -3732,12 +3732,12 @@ UPDATE ruletest_t1 t1 SET x = 0 FROM ruletest_t3 t3 WHERE t1.x = t3.x;
 ERROR:  permission denied for table ruletest_t3
 RESET SESSION AUTHORIZATION;
 SELECT * FROM ruletest_t1;
- x 
+ x
 ---
 (0 rows)
 
 SELECT * FROM ruletest_t2;
- x 
+ x
 ---
  1
 (1 row)

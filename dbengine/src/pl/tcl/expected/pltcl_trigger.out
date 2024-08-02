@@ -447,26 +447,26 @@ insert into T_pkey2 values (2, 'key2-1', 'test key');
 insert into T_pkey2 values (2, 'key2-2', 'test key');
 insert into T_pkey2 values (2, 'key2-3', 'test key');
 select * from T_pkey1;
- key1 |         key2         |                   txt                    
+ key1 |         key2         |                   txt
 ------+----------------------+------------------------------------------
-    1 | key1-1               | test key                                
-    1 | key1-2               | test key                                
-    1 | key1-3               | test key                                
-    2 | key2-1               | test key                                
-    2 | key2-2               | test key                                
-    2 | key2-3               | test key                                
+    1 | key1-1               | test key
+    1 | key1-2               | test key
+    1 | key1-3               | test key
+    2 | key2-1               | test key
+    2 | key2-2               | test key
+    2 | key2-3               | test key
 (6 rows)
 
 -- key2 in T_pkey2 should have upper case only
 select * from T_pkey2;
- key1 |         key2         |                   txt                    
+ key1 |         key2         |                   txt
 ------+----------------------+------------------------------------------
-    1 | KEY1-1               | test key                                
-    1 | KEY1-2               | test key                                
-    1 | KEY1-3               | test key                                
-    2 | KEY2-1               | test key                                
-    2 | KEY2-2               | test key                                
-    2 | KEY2-3               | test key                                
+    1 | KEY1-1               | test key
+    1 | KEY1-2               | test key
+    1 | KEY1-3               | test key
+    2 | KEY2-1               | test key
+    2 | KEY2-2               | test key
+    2 | KEY2-3               | test key
 (6 rows)
 
 insert into T_pkey1 values (1, 'KEY1-3', 'should work');
@@ -486,19 +486,19 @@ insert into T_dta2 values ('trec 3', 1, 'KEY1-3');
 insert into T_dta2 values ('trec 4', 1, 'KEY1-4');
 ERROR:  key for t_dta2 not in t_pkey2
 select * from T_dta1;
-    tkey    | ref1 |         ref2         
+    tkey    | ref1 |         ref2
 ------------+------+----------------------
- trec 1     |    1 | key1-1              
- trec 2     |    1 | key1-2              
- trec 3     |    1 | key1-3              
+ trec 1     |    1 | key1-1
+ trec 2     |    1 | key1-2
+ trec 3     |    1 | key1-3
 (3 rows)
 
 select * from T_dta2;
-    tkey    | ref1 |         ref2         
+    tkey    | ref1 |         ref2
 ------------+------+----------------------
- trec 1     |    1 | KEY1-1              
- trec 2     |    1 | KEY1-2              
- trec 3     |    1 | KEY1-3              
+ trec 1     |    1 | KEY1-1
+ trec 2     |    1 | KEY1-2
+ trec 3     |    1 | KEY1-3
 (3 rows)
 
 update T_pkey1 set key2 = 'key2-9' where key1 = 2 and key2 = 'key2-1';
@@ -514,107 +514,107 @@ delete from T_pkey2 where key1 = 2 and key2 = 'KEY2-2';
 delete from T_pkey2 where key1 = 1 and key2 = 'KEY1-2';
 NOTICE:  deleted 1 entries from T_dta2
 select * from T_pkey1;
- key1 |         key2         |                   txt                    
+ key1 |         key2         |                   txt
 ------+----------------------+------------------------------------------
-    1 | key1-1               | test key                                
-    1 | key1-2               | test key                                
-    1 | key1-3               | test key                                
-    2 | key2-3               | test key                                
-    1 | KEY1-3               | should work                             
-    2 | key2-9               | test key                                
+    1 | key1-1               | test key
+    1 | key1-2               | test key
+    1 | key1-3               | test key
+    2 | key2-3               | test key
+    1 | KEY1-3               | should work
+    2 | key2-9               | test key
 (6 rows)
 
 select * from T_pkey2;
- key1 |         key2         |                   txt                    
+ key1 |         key2         |                   txt
 ------+----------------------+------------------------------------------
-    1 | KEY1-3               | test key                                
-    2 | KEY2-3               | test key                                
-    2 | KEY2-9               | test key                                
-    1 | KEY1-9               | test key                                
+    1 | KEY1-3               | test key
+    2 | KEY2-3               | test key
+    2 | KEY2-9               | test key
+    1 | KEY1-9               | test key
 (4 rows)
 
 select * from T_dta1;
-    tkey    | ref1 |         ref2         
+    tkey    | ref1 |         ref2
 ------------+------+----------------------
- trec 1     |    1 | key1-1              
- trec 2     |    1 | key1-2              
- trec 3     |    1 | key1-3              
+ trec 1     |    1 | key1-1
+ trec 2     |    1 | key1-2
+ trec 3     |    1 | key1-3
 (3 rows)
 
 select * from T_dta2;
-    tkey    | ref1 |         ref2         
+    tkey    | ref1 |         ref2
 ------------+------+----------------------
- trec 3     |    1 | KEY1-3              
- trec 1     |    1 | KEY1-9              
+ trec 3     |    1 | KEY1-3
+ trec 1     |    1 | KEY1-9
 (2 rows)
 
 select tcl_avg(key1) from T_pkey1;
- tcl_avg 
+ tcl_avg
 ---------
        1
 (1 row)
 
 select tcl_sum(key1) from T_pkey1;
- tcl_sum 
+ tcl_sum
 ---------
        8
 (1 row)
 
 select tcl_avg(key1) from T_pkey2;
- tcl_avg 
+ tcl_avg
 ---------
        1
 (1 row)
 
 select tcl_sum(key1) from T_pkey2;
- tcl_sum 
+ tcl_sum
 ---------
        6
 (1 row)
 
 -- The following should return NULL instead of 0
 select tcl_avg(key1) from T_pkey1 where key1 = 99;
- tcl_avg 
+ tcl_avg
 ---------
-        
+
 (1 row)
 
 select tcl_sum(key1) from T_pkey1 where key1 = 99;
- tcl_sum 
+ tcl_sum
 ---------
        0
 (1 row)
 
 select 1 @< 2;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 select 100 @< 4;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 select * from T_pkey1 order by key1 using @<, key2 collate "C";
- key1 |         key2         |                   txt                    
+ key1 |         key2         |                   txt
 ------+----------------------+------------------------------------------
-    1 | KEY1-3               | should work                             
-    1 | key1-1               | test key                                
-    1 | key1-2               | test key                                
-    1 | key1-3               | test key                                
-    2 | key2-3               | test key                                
-    2 | key2-9               | test key                                
+    1 | KEY1-3               | should work
+    1 | key1-1               | test key
+    1 | key1-2               | test key
+    1 | key1-3               | test key
+    2 | key2-3               | test key
+    2 | key2-9               | test key
 (6 rows)
 
 select * from T_pkey2 order by key1 using @<, key2 collate "C";
- key1 |         key2         |                   txt                    
+ key1 |         key2         |                   txt
 ------+----------------------+------------------------------------------
-    1 | KEY1-3               | test key                                
-    1 | KEY1-9               | test key                                
-    2 | KEY2-3               | test key                                
-    2 | KEY2-9               | test key                                
+    1 | KEY1-3               | test key
+    1 | KEY1-9               | test key
+    2 | KEY2-3               | test key
+    2 | KEY2-9               | test key
 (4 rows)
 
 -- show dump of trigger data
@@ -882,7 +882,6 @@ TRUNCATE trigger_test_generated;
 INSERT INTO trigger_test_generated (i) VALUES (1);
 ERROR:  cannot set generated column "j"
 SELECT * FROM trigger_test_generated;
- i | j 
+ i | j
 ---+---
 (0 rows)
-

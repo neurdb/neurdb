@@ -10,19 +10,19 @@ SET enable_seqscan=on;
 SET enable_bitmapscan=off;
 SET enable_indexscan=off;
 SELECT count(*) FROM tst WHERE i = 7;
- count 
+ count
 -------
    200
 (1 row)
 
 SELECT count(*) FROM tst WHERE t = '5';
- count 
+ count
 -------
    112
 (1 row)
 
 SELECT count(*) FROM tst WHERE i = 7 AND t = '5';
- count 
+ count
 -------
     13
 (1 row)
@@ -31,7 +31,7 @@ SET enable_seqscan=off;
 SET enable_bitmapscan=on;
 SET enable_indexscan=on;
 EXPLAIN (COSTS OFF) SELECT count(*) FROM tst WHERE i = 7;
-                QUERY PLAN                 
+                QUERY PLAN
 -------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on tst
@@ -41,7 +41,7 @@ EXPLAIN (COSTS OFF) SELECT count(*) FROM tst WHERE i = 7;
 (5 rows)
 
 EXPLAIN (COSTS OFF) SELECT count(*) FROM tst WHERE t = '5';
-                QUERY PLAN                 
+                QUERY PLAN
 -------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on tst
@@ -51,7 +51,7 @@ EXPLAIN (COSTS OFF) SELECT count(*) FROM tst WHERE t = '5';
 (5 rows)
 
 EXPLAIN (COSTS OFF) SELECT count(*) FROM tst WHERE i = 7 AND t = '5';
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on tst
@@ -61,19 +61,19 @@ EXPLAIN (COSTS OFF) SELECT count(*) FROM tst WHERE i = 7 AND t = '5';
 (5 rows)
 
 SELECT count(*) FROM tst WHERE i = 7;
- count 
+ count
 -------
    200
 (1 row)
 
 SELECT count(*) FROM tst WHERE t = '5';
- count 
+ count
 -------
    112
 (1 row)
 
 SELECT count(*) FROM tst WHERE i = 7 AND t = '5';
- count 
+ count
 -------
     13
 (1 row)
@@ -82,19 +82,19 @@ DELETE FROM tst;
 INSERT INTO tst SELECT i%10, substr(md5(i::text), 1, 1) FROM generate_series(1,2000) i;
 VACUUM ANALYZE tst;
 SELECT count(*) FROM tst WHERE i = 7;
- count 
+ count
 -------
    200
 (1 row)
 
 SELECT count(*) FROM tst WHERE t = '5';
- count 
+ count
 -------
    112
 (1 row)
 
 SELECT count(*) FROM tst WHERE i = 7 AND t = '5';
- count 
+ count
 -------
     13
 (1 row)
@@ -103,38 +103,38 @@ DELETE FROM tst WHERE i > 1 OR t = '5';
 VACUUM tst;
 INSERT INTO tst SELECT i%10, substr(md5(i::text), 1, 1) FROM generate_series(1,2000) i;
 SELECT count(*) FROM tst WHERE i = 7;
- count 
+ count
 -------
    200
 (1 row)
 
 SELECT count(*) FROM tst WHERE t = '5';
- count 
+ count
 -------
    112
 (1 row)
 
 SELECT count(*) FROM tst WHERE i = 7 AND t = '5';
- count 
+ count
 -------
     13
 (1 row)
 
 VACUUM FULL tst;
 SELECT count(*) FROM tst WHERE i = 7;
- count 
+ count
 -------
    200
 (1 row)
 
 SELECT count(*) FROM tst WHERE t = '5';
- count 
+ count
 -------
    112
 (1 row)
 
 SELECT count(*) FROM tst WHERE i = 7 AND t = '5';
- count 
+ count
 -------
     13
 (1 row)
@@ -150,7 +150,7 @@ SET enable_seqscan=off;
 SET enable_bitmapscan=on;
 SET enable_indexscan=on;
 EXPLAIN (COSTS OFF) SELECT count(*) FROM tstu WHERE i = 7;
-                 QUERY PLAN                 
+                 QUERY PLAN
 --------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on tstu
@@ -160,7 +160,7 @@ EXPLAIN (COSTS OFF) SELECT count(*) FROM tstu WHERE i = 7;
 (5 rows)
 
 EXPLAIN (COSTS OFF) SELECT count(*) FROM tstu WHERE t = '5';
-                 QUERY PLAN                 
+                 QUERY PLAN
 --------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on tstu
@@ -170,7 +170,7 @@ EXPLAIN (COSTS OFF) SELECT count(*) FROM tstu WHERE t = '5';
 (5 rows)
 
 EXPLAIN (COSTS OFF) SELECT count(*) FROM tstu WHERE i = 7 AND t = '5';
-                       QUERY PLAN                        
+                       QUERY PLAN
 ---------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on tstu
@@ -180,19 +180,19 @@ EXPLAIN (COSTS OFF) SELECT count(*) FROM tstu WHERE i = 7 AND t = '5';
 (5 rows)
 
 SELECT count(*) FROM tstu WHERE i = 7;
- count 
+ count
 -------
    200
 (1 row)
 
 SELECT count(*) FROM tstu WHERE t = '5';
- count 
+ count
 -------
    112
 (1 row)
 
 SELECT count(*) FROM tstu WHERE i = 7 AND t = '5';
- count 
+ count
 -------
     13
 (1 row)
@@ -205,7 +205,7 @@ SELECT opcname, amvalidate(opc.oid)
 FROM pg_opclass opc JOIN pg_am am ON am.oid = opcmethod
 WHERE amname = 'bloom'
 ORDER BY 1;
- opcname  | amvalidate 
+ opcname  | amvalidate
 ----------+------------
  int4_ops | t
  text_ops | t
@@ -217,7 +217,7 @@ ORDER BY 1;
 DROP INDEX bloomidx;
 CREATE INDEX bloomidx ON tst USING bloom (i, t) WITH (length=7, col1=4);
 SELECT reloptions FROM pg_class WHERE oid = 'bloomidx'::regclass;
-    reloptions     
+    reloptions
 -------------------
  {length=7,col1=4}
 (1 row)

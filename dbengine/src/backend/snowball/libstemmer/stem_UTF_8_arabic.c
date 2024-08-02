@@ -1421,7 +1421,7 @@ extern int arabic_UTF_8_stem(struct SN_env * z) {
         }
         z->c = c1;
     }
-    
+
     {   int ret = r_Normalize_pre(z);
         if (ret < 0) return ret;
     }
@@ -1496,7 +1496,7 @@ extern int arabic_UTF_8_stem(struct SN_env * z) {
                     goto lab12;
                 lab13:
                     z->c = z->l - m8;
-                    
+
                     if (!(z->I[0])) goto lab15;
                     goto lab14;
                 lab15:
@@ -1563,7 +1563,7 @@ extern int arabic_UTF_8_stem(struct SN_env * z) {
                     goto lab12;
                 lab20:
                     z->c = z->l - m8;
-                    
+
                     if (!(z->I[0])) goto lab25;
                     goto lab24;
                 lab25:
@@ -1651,7 +1651,7 @@ extern int arabic_UTF_8_stem(struct SN_env * z) {
     lab26:
         z->c = c11;
     }
-    
+
     {   int ret = r_Normalize_post(z);
         if (ret < 0) return ret;
     }
@@ -1661,4 +1661,3 @@ extern int arabic_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * arabic_UTF_8_create_env(void) { return SN_create_env(0, 3); }
 
 extern void arabic_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

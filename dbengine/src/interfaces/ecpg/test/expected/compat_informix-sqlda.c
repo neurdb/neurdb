@@ -159,20 +159,20 @@ int
 main (void)
 {
 /* exec sql begin declare section */
-		  
-		  
-		
-		
+
+
+
+
 
 #line 57 "sqlda.pgc"
  char * stmt1 = "SELECT * FROM t1" ;
- 
+
 #line 58 "sqlda.pgc"
  char * stmt2 = "SELECT * FROM t1 WHERE id = ?" ;
- 
+
 #line 59 "sqlda.pgc"
  int rec ;
- 
+
 #line 60 "sqlda.pgc"
  int id ;
 /* exec sql end declare section */
@@ -184,7 +184,7 @@ main (void)
 	ECPGdebug(1, stderr);
 
 	strcpy(msg, "connect");
-	{ ECPGconnect(__LINE__, 1, "ecpg1_regression" , NULL, NULL , "regress1", 0); 
+	{ ECPGconnect(__LINE__, 1, "ecpg1_regression" , NULL, NULL , "regress1", 0);
 #line 68 "sqlda.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
@@ -241,8 +241,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "open");
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "declare mycur1 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "st_id1", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "declare mycur1 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "st_id1", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 101 "sqlda.pgc"
 
@@ -258,8 +258,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	while (1)
 	{
 		strcpy(msg, "fetch");
-		{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "fetch 1 from mycur1", ECPGt_EOIT, 
-	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L, 
+		{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "fetch 1 from mycur1", ECPGt_EOIT,
+	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 109 "sqlda.pgc"
 
@@ -316,8 +316,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "open");
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "declare mycur2 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "st_id2", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "declare mycur2 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "st_id2", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 138 "sqlda.pgc"
 
@@ -333,8 +333,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	while (1)
 	{
 		strcpy(msg, "fetch");
-		{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "fetch from mycur2", ECPGt_EOIT, 
-	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L, 
+		{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_normal, "fetch from mycur2", ECPGt_EOIT,
+	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 146 "sqlda.pgc"
 
@@ -398,10 +398,10 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "execute");
-	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_execute, "st_id3", 
-	ECPGt_sqlda, &inp_sqlda, 0L, 0L, 0L, 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L, 
+	{ ECPGdo(__LINE__, 1, 1, NULL, 0, ECPGst_execute, "st_id3",
+	ECPGt_sqlda, &inp_sqlda, 0L, 0L, 0L,
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 184 "sqlda.pgc"
 
@@ -427,7 +427,7 @@ if (sqlca.sqlcode < 0) exit (1);}
 	 * on a named connection
 	 */
 
-	{ ECPGconnect(__LINE__, 1, "ecpg1_regression" , NULL, NULL , "con2", 0); 
+	{ ECPGconnect(__LINE__, 1, "ecpg1_regression" , NULL, NULL , "con2", 0);
 #line 199 "sqlda.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
@@ -459,10 +459,10 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "execute");
-	{ ECPGdo(__LINE__, 1, 1, "con2", 0, ECPGst_execute, "st_id4", 
-	ECPGt_sqlda, &inp_sqlda, 0L, 0L, 0L, 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L, 
+	{ ECPGdo(__LINE__, 1, 1, "con2", 0, ECPGst_execute, "st_id4",
+	ECPGt_sqlda, &inp_sqlda, 0L, 0L, 0L,
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_sqlda, &outp_sqlda, 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 221 "sqlda.pgc"
 

@@ -1,6 +1,6 @@
 SET synchronous_commit = on;
 SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding');
- ?column? 
+ ?column?
 ----------
  init
 (1 row)
@@ -8,7 +8,7 @@ SELECT 'init' FROM pg_create_logical_replication_slot('regression_slot', 'test_d
 CREATE TABLE stream_test(data text);
 -- consume DDL
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
- data 
+ data
 ------
 (0 rows)
 
@@ -16,7 +16,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'inc
 BEGIN;
 savepoint s1;
 SELECT 'msg5' FROM pg_logical_emit_message(true, 'test', repeat('a', 50));
- ?column? 
+ ?column?
 ----------
  msg5
 (1 row)
@@ -27,7 +27,7 @@ rollback to s1;
 INSERT INTO stream_test SELECT repeat('a', 10) || g.i FROM generate_series(1, 20) g(i);
 COMMIT;
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL, 'include-xids', '0', 'skip-empty-xacts', '1', 'stream-changes', '1');
-                           data                           
+                           data
 ----------------------------------------------------------
  streaming message: transactional: 1 prefix: test, sz: 50
  opening a streamed block for transaction
@@ -59,13 +59,13 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL, 'incl
 ALTER TABLE stream_test ALTER COLUMN data set storage external;
 -- consume DDL
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL, 'include-xids', '0', 'skip-empty-xacts', '1');
- data 
+ data
 ------
 (0 rows)
 
 INSERT INTO stream_test SELECT repeat('a', 6000) || g.i FROM generate_series(1, 10) g(i);
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL, 'include-xids', '0', 'skip-empty-xacts', '1', 'stream-changes', '1');
-                   data                   
+                   data
 ------------------------------------------
  opening a streamed block for transaction
  streaming change for transaction
@@ -85,7 +85,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL, 'incl
 -- streaming test for toast with multi-insert
 \COPY stream_test FROM STDIN
 SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL, 'include-xids', '0', 'skip-empty-xacts', '1', 'stream-changes', '1');
-                   data                   
+                   data
 ------------------------------------------
  opening a streamed block for transaction
  streaming change for transaction
@@ -108,8 +108,7 @@ SELECT data FROM pg_logical_slot_get_changes('regression_slot', NULL,NULL, 'incl
 
 DROP TABLE stream_test;
 SELECT pg_drop_replication_slot('regression_slot');
- pg_drop_replication_slot 
+ pg_drop_replication_slot
 --------------------------
- 
-(1 row)
 
+(1 row)

@@ -14,7 +14,7 @@ DROP ROLE IF EXISTS regress_priv_user5;
 DROP ROLE IF EXISTS regress_priv_user6;
 DROP ROLE IF EXISTS regress_priv_user7;
 SELECT lo_unlink(oid) FROM pg_largeobject_metadata WHERE oid >= 1000 AND oid < 3000 ORDER BY oid;
- lo_unlink 
+ lo_unlink
 -----------
 (0 rows)
 
@@ -46,7 +46,7 @@ REVOKE regress_priv_user1 FROM regress_priv_user2; -- fail
 ERROR:  dependent privileges exist
 HINT:  Use CASCADE to revoke them too.
 SELECT member::regrole, admin_option FROM pg_auth_members WHERE roleid = 'regress_priv_user1'::regrole;
-       member       | admin_option 
+       member       | admin_option
 --------------------+--------------
  regress_priv_user2 | t
  regress_priv_user3 | t
@@ -55,7 +55,7 @@ SELECT member::regrole, admin_option FROM pg_auth_members WHERE roleid = 'regres
 BEGIN;
 REVOKE ADMIN OPTION FOR regress_priv_user1 FROM regress_priv_user2 CASCADE;
 SELECT member::regrole, admin_option FROM pg_auth_members WHERE roleid = 'regress_priv_user1'::regrole;
-       member       | admin_option 
+       member       | admin_option
 --------------------+--------------
  regress_priv_user2 | f
 (1 row)
@@ -63,7 +63,7 @@ SELECT member::regrole, admin_option FROM pg_auth_members WHERE roleid = 'regres
 ROLLBACK;
 REVOKE regress_priv_user1 FROM regress_priv_user2 CASCADE;
 SELECT member::regrole, admin_option FROM pg_auth_members WHERE roleid = 'regress_priv_user1'::regrole;
- member | admin_option 
+ member | admin_option
 --------+--------------
 (0 rows)
 
@@ -73,7 +73,7 @@ GRANT regress_priv_user2 TO regress_priv_user3;
 SET ROLE regress_priv_user3;
 GRANT regress_priv_user1 TO regress_priv_user4;
 SELECT grantor::regrole FROM pg_auth_members WHERE roleid = 'regress_priv_user1'::regrole and member = 'regress_priv_user4'::regrole;
-      grantor       
+      grantor
 --------------------
  regress_priv_user2
 (1 row)
@@ -181,14 +181,14 @@ REVOKE regress_priv_role FROM regress_priv_user1 GRANTED BY CURRENT_ROLE;
 DROP ROLE regress_priv_role;
 SET SESSION AUTHORIZATION regress_priv_user1;
 SELECT session_user, current_user;
-    session_user    |    current_user    
+    session_user    |    current_user
 --------------------+--------------------
  regress_priv_user1 | regress_priv_user1
 (1 row)
 
 CREATE TABLE atest1 ( a int, b text );
 SELECT * FROM atest1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -201,14 +201,14 @@ LOCK atest1 IN ACCESS EXCLUSIVE MODE;
 COMMIT;
 REVOKE ALL ON atest1 FROM PUBLIC;
 SELECT * FROM atest1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 GRANT ALL ON atest1 TO regress_priv_user2;
 GRANT SELECT ON atest1 TO regress_priv_user3, regress_priv_user4;
 SELECT * FROM atest1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -221,19 +221,19 @@ GRANT TRUNCATE ON atest2 TO regress_priv_user4 GRANTED BY regress_priv_user5;  -
 ERROR:  grantor must be current user
 SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT session_user, current_user;
-    session_user    |    current_user    
+    session_user    |    current_user
 --------------------+--------------------
  regress_priv_user2 | regress_priv_user2
 (1 row)
 
 -- try various combinations of queries on atest1 and atest2
 SELECT * FROM atest1; -- ok
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 SELECT * FROM atest2; -- ok
- col1 | col2 
+ col1 | col2
 ------+------
 (0 rows)
 
@@ -245,7 +245,7 @@ UPDATE atest1 SET a = 1 WHERE a = 2; -- ok
 UPDATE atest2 SET col2 = NOT col2; -- fail
 ERROR:  permission denied for table atest2
 SELECT * FROM atest1 FOR UPDATE; -- ok
- a |  b  
+ a |  b
 ---+-----
  1 | two
  1 | two
@@ -267,25 +267,25 @@ GRANT ALL ON atest1 TO PUBLIC; -- fail
 WARNING:  no privileges were granted for "atest1"
 -- checks in subquery, both ok
 SELECT * FROM atest1 WHERE ( b IN ( SELECT col1 FROM atest2 ) );
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 SELECT * FROM atest2 WHERE ( col1 IN ( SELECT b FROM atest1 ) );
- col1 | col2 
+ col1 | col2
 ------+------
 (0 rows)
 
 SET SESSION AUTHORIZATION regress_priv_user6;
 SELECT * FROM atest1; -- ok
- a |  b  
+ a |  b
 ---+-----
  1 | two
  1 | two
 (2 rows)
 
 SELECT * FROM atest2; -- ok
- col1 | col2 
+ col1 | col2
 ------+------
 (0 rows)
 
@@ -308,13 +308,13 @@ UPDATE pg_toast.pg_toast_1213 SET chunk_id = 1; -- fail
 ERROR:  permission denied for table pg_toast_1213
 SET SESSION AUTHORIZATION regress_priv_user3;
 SELECT session_user, current_user;
-    session_user    |    current_user    
+    session_user    |    current_user
 --------------------+--------------------
  regress_priv_user3 | regress_priv_user3
 (1 row)
 
 SELECT * FROM atest1; -- ok
- a |  b  
+ a |  b
 ---+-----
  1 | two
  1 | two
@@ -355,7 +355,7 @@ ERROR:  permission denied for table atest2
 SET SESSION AUTHORIZATION regress_priv_user4;
 COPY atest2 FROM stdin; -- ok
 SELECT * FROM atest1; -- ok
- a |  b  
+ a |  b
 ---+-----
  1 | two
  1 | two
@@ -384,7 +384,7 @@ GRANT SELECT ON atest12v TO PUBLIC;
 GRANT SELECT ON atest12sbv TO PUBLIC;
 -- This plan should use nestloop, knowing that few rows will be selected.
 EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y WHERE x.a = y.b;
-                   QUERY PLAN                    
+                   QUERY PLAN
 -------------------------------------------------
  Nested Loop
    ->  Seq Scan on atest12 atest12_1
@@ -397,7 +397,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y WHERE x.a = y.b;
 -- And this one.
 EXPLAIN (COSTS OFF) SELECT * FROM atest12 x, atest12 y
   WHERE x.a = y.b and abs(y.a) <<< 5;
-                    QUERY PLAN                     
+                    QUERY PLAN
 ---------------------------------------------------
  Nested Loop
    ->  Seq Scan on atest12 y
@@ -409,7 +409,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM atest12 x, atest12 y
 -- This should also be a nestloop, but the security barrier forces the inner
 -- scan to be materialized
 EXPLAIN (COSTS OFF) SELECT * FROM atest12sbv x, atest12sbv y WHERE x.a = y.b;
-                QUERY PLAN                 
+                QUERY PLAN
 -------------------------------------------
  Nested Loop
    Join Filter: (atest12.a = atest12_1.b)
@@ -433,7 +433,7 @@ ERROR:  permission denied for table atest12
 -- These plans should continue to use a nestloop, since they execute with the
 -- privileges of the view owner.
 EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y WHERE x.a = y.b;
-                   QUERY PLAN                    
+                   QUERY PLAN
 -------------------------------------------------
  Nested Loop
    ->  Seq Scan on atest12 atest12_1
@@ -444,7 +444,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y WHERE x.a = y.b;
 (6 rows)
 
 EXPLAIN (COSTS OFF) SELECT * FROM atest12sbv x, atest12sbv y WHERE x.a = y.b;
-                QUERY PLAN                 
+                QUERY PLAN
 -------------------------------------------
  Nested Loop
    Join Filter: (atest12.a = atest12_1.b)
@@ -458,7 +458,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM atest12sbv x, atest12sbv y WHERE x.a = y.b;
 -- A non-security barrier view does not guard against information leakage.
 EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y
   WHERE x.a = y.b and abs(y.a) <<< 5;
-                   QUERY PLAN                    
+                   QUERY PLAN
 -------------------------------------------------
  Nested Loop
    ->  Seq Scan on atest12 atest12_1
@@ -471,7 +471,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y
 -- But a security barrier view isolates the leaky operator.
 EXPLAIN (COSTS OFF) SELECT * FROM atest12sbv x, atest12sbv y
   WHERE x.a = y.b and abs(y.a) <<< 5;
-             QUERY PLAN              
+             QUERY PLAN
 -------------------------------------
  Nested Loop
    Join Filter: (atest12_1.a = y.b)
@@ -489,7 +489,7 @@ GRANT SELECT (a, b) ON atest12 TO PUBLIC;
 SET SESSION AUTHORIZATION regress_priv_user2;
 -- regress_priv_user2 should continue to get a good row estimate.
 EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y WHERE x.a = y.b;
-                   QUERY PLAN                    
+                   QUERY PLAN
 -------------------------------------------------
  Nested Loop
    ->  Seq Scan on atest12 atest12_1
@@ -503,7 +503,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM atest12v x, atest12v y WHERE x.a = y.b;
 -- to make use of the expression index's statistics.
 EXPLAIN (COSTS OFF) SELECT * FROM atest12 x, atest12 y
   WHERE x.a = y.b and abs(y.a) <<< 5;
-              QUERY PLAN              
+              QUERY PLAN
 --------------------------------------
  Hash Join
    Hash Cond: (x.a = y.b)
@@ -552,7 +552,7 @@ CREATE VIEW atestv3 AS SELECT * FROM atest3; -- ok
 /* Empty view is a corner case that failed in 9.2. */
 CREATE VIEW atestv0 AS SELECT 0 as x WHERE false; -- ok
 SELECT * FROM atestv1; -- ok
- a |  b  
+ a |  b
 ---+-----
  1 | two
  1 | two
@@ -564,7 +564,7 @@ GRANT SELECT ON atestv1, atestv3 TO regress_priv_user4;
 GRANT SELECT ON atestv2 TO regress_priv_user2;
 SET SESSION AUTHORIZATION regress_priv_user4;
 SELECT * FROM atestv1; -- ok
- a |  b  
+ a |  b
 ---+-----
  1 | two
  1 | two
@@ -573,7 +573,7 @@ SELECT * FROM atestv1; -- ok
 SELECT * FROM atestv2; -- fail
 ERROR:  permission denied for view atestv2
 SELECT * FROM atestv3; -- ok
- one | two | three 
+ one | two | three
 -----+-----+-------
 (0 rows)
 
@@ -596,7 +596,7 @@ ERROR:  permission denied for table int8_tbl
 reset constraint_exclusion;
 CREATE VIEW atestv4 AS SELECT * FROM atestv3; -- nested view
 SELECT * FROM atestv4; -- ok
- one | two | three 
+ one | two | three
 -----+-----+-------
 (0 rows)
 
@@ -606,12 +606,12 @@ SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT * FROM atestv3; -- fail
 ERROR:  permission denied for view atestv3
 SELECT * FROM atestv4; -- ok (even though regress_priv_user2 cannot access underlying atestv3)
- one | two | three 
+ one | two | three
 -----+-----+-------
 (0 rows)
 
 SELECT * FROM atest2; -- ok
- col1 | col2 
+ col1 | col2
 ------+------
  bar  | t
 (1 row)
@@ -629,7 +629,7 @@ SET SESSION AUTHORIZATION regress_priv_user4;
 SELECT * FROM atest5; -- fail
 ERROR:  permission denied for table atest5
 SELECT one FROM atest5; -- ok
- one 
+ one
 -----
    1
 (1 row)
@@ -645,13 +645,13 @@ ERROR:  permission denied for table atest5
 COPY atest5 (one,two) TO stdout; -- fail
 ERROR:  permission denied for table atest5
 SELECT 1 FROM atest5; -- ok
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
 
 SELECT 1 FROM atest5 a JOIN atest5 b USING (one); -- ok
- ?column? 
+ ?column?
 ----------
         1
 (1 row)
@@ -667,13 +667,13 @@ ERROR:  permission denied for table atest5
 SELECT (j.*) IS NULL FROM (atest5 a JOIN atest5 b USING (one)) j; -- fail
 ERROR:  permission denied for table atest5
 SELECT one FROM (atest5 a JOIN atest5 b(one,x,y,z) USING (one)) j; -- ok
- one 
+ one
 -----
    1
 (1 row)
 
 SELECT j.one FROM (atest5 a JOIN atest5 b(one,x,y,z) USING (one)) j; -- ok
- one 
+ one
 -----
    1
 (1 row)
@@ -713,14 +713,14 @@ ERROR:  permission denied for table atest5
 SELECT * FROM atest1, atest5; -- fail
 ERROR:  permission denied for table atest5
 SELECT atest1.* FROM atest1, atest5; -- ok
- a |  b  
+ a |  b
 ---+-----
  1 | two
  1 | two
 (2 rows)
 
 SELECT atest1.*,atest5.one FROM atest1, atest5; -- ok
- a |  b  | one 
+ a |  b  | one
 ---+-----+-----
  1 | two |   1
  1 | two |   1
@@ -729,7 +729,7 @@ SELECT atest1.*,atest5.one FROM atest1, atest5; -- ok
 SELECT atest1.*,atest5.one FROM atest1 JOIN atest5 ON (atest1.a = atest5.two); -- fail
 ERROR:  permission denied for table atest5
 SELECT atest1.*,atest5.one FROM atest1 JOIN atest5 ON (atest1.a = atest5.one); -- ok
- a |  b  | one 
+ a |  b  | one
 ---+-----+-----
  1 | two |   1
  1 | two |   1
@@ -746,7 +746,7 @@ SET SESSION AUTHORIZATION regress_priv_user1;
 GRANT SELECT (two) ON atest5 TO regress_priv_user4;
 SET SESSION AUTHORIZATION regress_priv_user4;
 SELECT one, two FROM atest5 NATURAL JOIN atest6; -- ok now
- one | two 
+ one | two
 -----+-----
 (0 rows)
 
@@ -772,9 +772,9 @@ INSERT INTO atest5(two) VALUES (6) ON CONFLICT (two) DO UPDATE set three = 10 RE
 ERROR:  permission denied for table atest5
 -- Ok.  May SELECT on column "one":
 INSERT INTO atest5(two) VALUES (6) ON CONFLICT (two) DO UPDATE set three = 10 RETURNING atest5.one;
- one 
+ one
 -----
-    
+
 (1 row)
 
 -- Check that column level privileges are enforced for EXCLUDED
@@ -812,7 +812,7 @@ ERROR:  permission denied for table atest5
 UPDATE atest5 SET one = 1; -- fail
 ERROR:  permission denied for table atest5
 SELECT atest6 FROM atest6; -- ok
- atest6 
+ atest6
 --------
 (0 rows)
 
@@ -1001,12 +1001,12 @@ SET SESSION AUTHORIZATION regress_priv_user1;
 ALTER TABLE atest6 DROP COLUMN three;
 SET SESSION AUTHORIZATION regress_priv_user4;
 SELECT atest6 FROM atest6; -- ok
- atest6 
+ atest6
 --------
 (0 rows)
 
 SELECT one FROM atest5 NATURAL JOIN atest6; -- ok
- one 
+ one
 -----
 (0 rows)
 
@@ -1031,22 +1031,22 @@ GRANT SELECT(fx,fy,tableoid) ON atestp2 TO regress_priv_user2;
 GRANT SELECT(fx) ON atestc TO regress_priv_user2;
 SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT fx FROM atestp2; -- ok
- fx 
+ fx
 ----
 (0 rows)
 
 SELECT fy FROM atestp2; -- ok
- fy 
+ fy
 ----
 (0 rows)
 
 SELECT atestp2 FROM atestp2; -- ok
- atestp2 
+ atestp2
 ---------
 (0 rows)
 
 SELECT tableoid FROM atestp2; -- ok
- tableoid 
+ tableoid
 ----------
 (0 rows)
 
@@ -1056,22 +1056,22 @@ SET SESSION AUTHORIZATION regress_priv_user1;
 GRANT SELECT(fy,tableoid) ON atestc TO regress_priv_user2;
 SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT fx FROM atestp2; -- still ok
- fx 
+ fx
 ----
 (0 rows)
 
 SELECT fy FROM atestp2; -- ok
- fy 
+ fy
 ----
 (0 rows)
 
 SELECT atestp2 FROM atestp2; -- ok
- atestp2 
+ atestp2
 ---------
 (0 rows)
 
 SELECT tableoid FROM atestp2; -- ok
- tableoid 
+ tableoid
 ----------
 (0 rows)
 
@@ -1081,7 +1081,7 @@ REVOKE ALL ON atestc FROM regress_priv_user2;
 GRANT ALL ON atestp1 TO regress_priv_user2;
 SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT f2 FROM atestp1; -- ok
- f2 
+ f2
 ----
 (0 rows)
 
@@ -1141,7 +1141,7 @@ CREATE FUNCTION priv_testfunc4(boolean) RETURNS text
 GRANT EXECUTE ON FUNCTION priv_testfunc4(boolean) TO regress_priv_user3;
 SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT priv_testfunc1(5), priv_testfunc2(5); -- ok
- priv_testfunc1 | priv_testfunc2 
+ priv_testfunc1 | priv_testfunc2
 ----------------+----------------
              10 |             15
 (1 row)
@@ -1149,7 +1149,7 @@ SELECT priv_testfunc1(5), priv_testfunc2(5); -- ok
 CREATE FUNCTION priv_testfunc3(int) RETURNS int AS 'select 2 * $1;' LANGUAGE sql; -- fail
 ERROR:  permission denied for language sql
 SELECT priv_testagg1(x) FROM (VALUES (1), (2), (3)) _(x); -- ok
- priv_testagg1 
+ priv_testagg1
 ---------------
              6
 (1 row)
@@ -1165,20 +1165,20 @@ ERROR:  permission denied for procedure priv_testproc1
 SELECT col1 FROM atest2 WHERE col2 = true; -- fail
 ERROR:  permission denied for table atest2
 SELECT priv_testfunc4(true); -- ok
- priv_testfunc4 
+ priv_testfunc4
 ----------------
  bar
 (1 row)
 
 SET SESSION AUTHORIZATION regress_priv_user4;
 SELECT priv_testfunc1(5); -- ok
- priv_testfunc1 
+ priv_testfunc1
 ----------------
              10
 (1 row)
 
 SELECT priv_testagg1(x) FROM (VALUES (1), (2), (3)) _(x); -- ok
- priv_testagg1 
+ priv_testagg1
 ---------------
              6
 (1 row)
@@ -1197,14 +1197,14 @@ GRANT ALL PRIVILEGES ON LANGUAGE sql TO PUBLIC;
 -- verify privilege checks on array-element coercions
 BEGIN;
 SELECT '{1}'::int4[]::int8[];
- int8 
+ int8
 ------
  {1}
 (1 row)
 
 REVOKE ALL ON FUNCTION int8(integer) FROM PUBLIC;
 SELECT '{1}'::int4[]::int8[]; --superuser, succeed
- int8 
+ int8
 ------
  {1}
 (1 row)
@@ -1318,9 +1318,9 @@ ERROR:  permission denied for table atest3
 -- has_table_privilege function
 -- bad-input checks
 select has_table_privilege(NULL,'pg_authid','select');
- has_table_privilege 
+ has_table_privilege
 ---------------------
- 
+
 (1 row)
 
 select has_table_privilege('pg_shad','select');
@@ -1330,41 +1330,41 @@ ERROR:  role "nosuchuser" does not exist
 select has_table_privilege('pg_authid','sel');
 ERROR:  unrecognized privilege type: "sel"
 select has_table_privilege(-999999,'pg_authid','update');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(1,'select');
- has_table_privilege 
+ has_table_privilege
 ---------------------
- 
+
 (1 row)
 
 -- superuser
 \c -
 select has_table_privilege(current_user,'pg_authid','select');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(current_user,'pg_authid','insert');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(t2.oid,'pg_authid','update')
 from (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(t2.oid,'pg_authid','delete')
 from (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1373,14 +1373,14 @@ from (select oid from pg_roles where rolname = current_user) as t2;
 -- has_table_privilege still recognizes the keyword and says FALSE
 select has_table_privilege(current_user,t1.oid,'rule')
 from (select oid from pg_class where relname = 'pg_authid') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(current_user,t1.oid,'references')
 from (select oid from pg_class where relname = 'pg_authid') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1388,7 +1388,7 @@ from (select oid from pg_class where relname = 'pg_authid') as t1;
 select has_table_privilege(t2.oid,t1.oid,'select')
 from (select oid from pg_class where relname = 'pg_authid') as t1,
   (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1396,39 +1396,39 @@ from (select oid from pg_class where relname = 'pg_authid') as t1,
 select has_table_privilege(t2.oid,t1.oid,'insert')
 from (select oid from pg_class where relname = 'pg_authid') as t1,
   (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege('pg_authid','update');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege('pg_authid','delete');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege('pg_authid','truncate');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(t1.oid,'select')
 from (select oid from pg_class where relname = 'pg_authid') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(t1.oid,'trigger')
 from (select oid from pg_class where relname = 'pg_authid') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1436,34 +1436,34 @@ from (select oid from pg_class where relname = 'pg_authid') as t1;
 -- non-superuser
 SET SESSION AUTHORIZATION regress_priv_user3;
 select has_table_privilege(current_user,'pg_class','select');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(current_user,'pg_class','insert');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(t2.oid,'pg_class','update')
 from (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(t2.oid,'pg_class','delete')
 from (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(current_user,t1.oid,'references')
 from (select oid from pg_class where relname = 'pg_class') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -1471,7 +1471,7 @@ from (select oid from pg_class where relname = 'pg_class') as t1;
 select has_table_privilege(t2.oid,t1.oid,'select')
 from (select oid from pg_class where relname = 'pg_class') as t1,
   (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1479,72 +1479,72 @@ from (select oid from pg_class where relname = 'pg_class') as t1,
 select has_table_privilege(t2.oid,t1.oid,'insert')
 from (select oid from pg_class where relname = 'pg_class') as t1,
   (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege('pg_class','update');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege('pg_class','delete');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege('pg_class','truncate');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(t1.oid,'select')
 from (select oid from pg_class where relname = 'pg_class') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(t1.oid,'trigger')
 from (select oid from pg_class where relname = 'pg_class') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(current_user,'atest1','select');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(current_user,'atest1','insert');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(t2.oid,'atest1','update')
 from (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(t2.oid,'atest1','delete')
 from (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(current_user,t1.oid,'references')
 from (select oid from pg_class where relname = 'atest1') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -1552,7 +1552,7 @@ from (select oid from pg_class where relname = 'atest1') as t1;
 select has_table_privilege(t2.oid,t1.oid,'select')
 from (select oid from pg_class where relname = 'atest1') as t1,
   (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1560,39 +1560,39 @@ from (select oid from pg_class where relname = 'atest1') as t1,
 select has_table_privilege(t2.oid,t1.oid,'insert')
 from (select oid from pg_class where relname = 'atest1') as t1,
   (select oid from pg_roles where rolname = current_user) as t2;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege('atest1','update');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege('atest1','delete');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege('atest1','truncate');
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 select has_table_privilege(t1.oid,'select')
 from (select oid from pg_class where relname = 'atest1') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 select has_table_privilege(t1.oid,'trigger')
 from (select oid from pg_class where relname = 'atest1') as t1;
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -1600,35 +1600,35 @@ from (select oid from pg_class where relname = 'atest1') as t1;
 -- has_column_privilege function
 -- bad-input checks (as non-super-user)
 select has_column_privilege('pg_authid',NULL,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 select has_column_privilege('pg_authid','nosuchcol','select');
 ERROR:  column "nosuchcol" of relation "pg_authid" does not exist
 select has_column_privilege(9999,'nosuchcol','select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 select has_column_privilege(9999,99::int2,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 select has_column_privilege('pg_authid',99::int2,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 select has_column_privilege(9999,99::int2,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 create temp table mytable(f1 int, f2 int, f3 int);
@@ -1636,34 +1636,34 @@ alter table mytable drop column f2;
 select has_column_privilege('mytable','f2','select');
 ERROR:  column "f2" of relation "mytable" does not exist
 select has_column_privilege('mytable','........pg.dropped.2........','select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 select has_column_privilege('mytable',2::int2,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 select has_column_privilege('mytable',99::int2,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 revoke select on table mytable from regress_priv_user3;
 select has_column_privilege('mytable',2::int2,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 select has_column_privilege('mytable',99::int2,'select');
- has_column_privilege 
+ has_column_privilege
 ----------------------
- 
+
 (1 row)
 
 drop table mytable;
@@ -1680,7 +1680,7 @@ WARNING:  no privileges were granted for "atest4"
 SET SESSION AUTHORIZATION regress_priv_user1;
 REVOKE SELECT ON atest4 FROM regress_priv_user3; -- does nothing
 SELECT has_table_privilege('regress_priv_user3', 'atest4', 'SELECT'); -- true
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1690,19 +1690,19 @@ ERROR:  dependent privileges exist
 HINT:  Use CASCADE to revoke them too.
 REVOKE GRANT OPTION FOR SELECT ON atest4 FROM regress_priv_user2 CASCADE; -- ok
 SELECT has_table_privilege('regress_priv_user2', 'atest4', 'SELECT'); -- true
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user3', 'atest4', 'SELECT'); -- false
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'atest4', 'SELECT WITH GRANT OPTION'); -- true
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -1743,13 +1743,13 @@ DROP INDEX sro_cluster_idx;
 -- BRIN index
 CREATE INDEX sro_brin ON sro_tab USING brin ((sro_ifun(a) + sro_ifun(0)));
 SELECT brin_desummarize_range('sro_brin', 0);
- brin_desummarize_range 
+ brin_desummarize_range
 ------------------------
- 
+
 (1 row)
 
 SELECT brin_summarize_range('sro_brin', 0);
- brin_summarize_range 
+ brin_summarize_range
 ----------------------
                     1
 (1 row)
@@ -1836,9 +1836,9 @@ ERROR:  permission denied to grant role "regress_priv_group2"
 DETAIL:  Only roles with the ADMIN option on role "regress_priv_group2" may grant this role.
 SELECT dogrant_ok();			-- ok: SECURITY DEFINER conveys ADMIN
 NOTICE:  role "regress_priv_user5" has already been granted membership in role "regress_priv_group2" by role "regress_priv_user4"
- dogrant_ok 
+ dogrant_ok
 ------------
- 
+
 (1 row)
 
 SET ROLE regress_priv_group2;
@@ -1861,14 +1861,14 @@ ERROR:  "atest1" is not a sequence
 SELECT has_sequence_privilege('regress_priv_user1', 'x_seq', 'INSERT');
 ERROR:  unrecognized privilege type: "INSERT"
 SELECT has_sequence_privilege('regress_priv_user1', 'x_seq', 'SELECT');
- has_sequence_privilege 
+ has_sequence_privilege
 ------------------------
  f
 (1 row)
 
 SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT has_sequence_privilege('x_seq', 'USAGE');
- has_sequence_privilege 
+ has_sequence_privilege
 ------------------------
  t
 (1 row)
@@ -1877,31 +1877,31 @@ SELECT has_sequence_privilege('x_seq', 'USAGE');
 \c -
 SET SESSION AUTHORIZATION regress_priv_user1;
 SELECT lo_create(1001);
- lo_create 
+ lo_create
 -----------
       1001
 (1 row)
 
 SELECT lo_create(1002);
- lo_create 
+ lo_create
 -----------
       1002
 (1 row)
 
 SELECT lo_create(1003);
- lo_create 
+ lo_create
 -----------
       1003
 (1 row)
 
 SELECT lo_create(1004);
- lo_create 
+ lo_create
 -----------
       1004
 (1 row)
 
 SELECT lo_create(1005);
- lo_create 
+ lo_create
 -----------
       1005
 (1 row)
@@ -1920,19 +1920,19 @@ ERROR:  large object 999 does not exist
 \c -
 SET SESSION AUTHORIZATION regress_priv_user2;
 SELECT lo_create(2001);
- lo_create 
+ lo_create
 -----------
       2001
 (1 row)
 
 SELECT lo_create(2002);
- lo_create 
+ lo_create
 -----------
       2002
 (1 row)
 
 SELECT loread(lo_open(1001, x'20000'::int), 32);	-- allowed, for now
- loread 
+ loread
 --------
  \x
 (1 row)
@@ -1940,7 +1940,7 @@ SELECT loread(lo_open(1001, x'20000'::int), 32);	-- allowed, for now
 SELECT lowrite(lo_open(1001, x'40000'::int), 'abcd');	-- fail, wrong mode
 ERROR:  large object descriptor 0 was not opened for writing
 SELECT loread(lo_open(1001, x'40000'::int), 32);
- loread 
+ loread
 --------
  \x
 (1 row)
@@ -1948,19 +1948,19 @@ SELECT loread(lo_open(1001, x'40000'::int), 32);
 SELECT loread(lo_open(1002, x'40000'::int), 32);	-- to be denied
 ERROR:  permission denied for large object 1002
 SELECT loread(lo_open(1003, x'40000'::int), 32);
- loread 
+ loread
 --------
  \x
 (1 row)
 
 SELECT loread(lo_open(1004, x'40000'::int), 32);
- loread 
+ loread
 --------
  \x
 (1 row)
 
 SELECT lowrite(lo_open(1001, x'20000'::int), 'abcd');
- lowrite 
+ lowrite
 ---------
        4
 (1 row)
@@ -1970,7 +1970,7 @@ ERROR:  permission denied for large object 1002
 SELECT lowrite(lo_open(1003, x'20000'::int), 'abcd');	-- to be denied
 ERROR:  permission denied for large object 1003
 SELECT lowrite(lo_open(1004, x'20000'::int), 'abcd');
- lowrite 
+ lowrite
 ---------
        4
 (1 row)
@@ -1983,7 +1983,7 @@ GRANT ALL ON LARGE OBJECT 2001 TO regress_priv_user3;
 SELECT lo_unlink(1001);		-- to be denied
 ERROR:  must be owner of large object 1001
 SELECT lo_unlink(2002);
- lo_unlink 
+ lo_unlink
 -----------
          1
 (1 row)
@@ -1991,10 +1991,10 @@ SELECT lo_unlink(2002);
 \c -
 -- confirm ACL setting
 SELECT oid, pg_get_userbyid(lomowner) ownername, lomacl FROM pg_largeobject_metadata WHERE oid >= 1000 AND oid < 3000 ORDER BY oid;
- oid  |     ownername      |                                                            lomacl                                                            
+ oid  |     ownername      |                                                            lomacl
 ------+--------------------+------------------------------------------------------------------------------------------------------------------------------
  1001 | regress_priv_user1 | {regress_priv_user1=rw/regress_priv_user1,=rw/regress_priv_user1}
- 1002 | regress_priv_user1 | 
+ 1002 | regress_priv_user1 |
  1003 | regress_priv_user1 | {regress_priv_user1=rw/regress_priv_user1,regress_priv_user2=r/regress_priv_user1}
  1004 | regress_priv_user1 | {regress_priv_user1=rw/regress_priv_user1,regress_priv_user2=rw/regress_priv_user1}
  1005 | regress_priv_user1 | {regress_priv_user1=rw/regress_priv_user1,regress_priv_user2=r*w/regress_priv_user1,regress_priv_user3=r/regress_priv_user2}
@@ -2003,7 +2003,7 @@ SELECT oid, pg_get_userbyid(lomowner) ownername, lomacl FROM pg_largeobject_meta
 
 SET SESSION AUTHORIZATION regress_priv_user3;
 SELECT loread(lo_open(1001, x'40000'::int), 32);
-   loread   
+   loread
 ------------
  \x61626364
 (1 row)
@@ -2011,7 +2011,7 @@ SELECT loread(lo_open(1001, x'40000'::int), 32);
 SELECT loread(lo_open(1003, x'40000'::int), 32);	-- to be denied
 ERROR:  permission denied for large object 1003
 SELECT loread(lo_open(1005, x'40000'::int), 32);
- loread 
+ loread
 --------
  \x
 (1 row)
@@ -2019,7 +2019,7 @@ SELECT loread(lo_open(1005, x'40000'::int), 32);
 SELECT lo_truncate(lo_open(1005, x'20000'::int), 10);	-- to be denied
 ERROR:  permission denied for large object 1005
 SELECT lo_truncate(lo_open(2001, x'20000'::int), 10);
- lo_truncate 
+ lo_truncate
 -------------
            0
 (1 row)
@@ -2048,25 +2048,25 @@ ERROR:  permission denied for function lo_import
 SET lo_compat_privileges = true;	-- compatibility mode
 SET SESSION AUTHORIZATION regress_priv_user4;
 SELECT loread(lo_open(1002, x'40000'::int), 32);
- loread 
+ loread
 --------
  \x
 (1 row)
 
 SELECT lowrite(lo_open(1002, x'20000'::int), 'abcd');
- lowrite 
+ lowrite
 ---------
        4
 (1 row)
 
 SELECT lo_truncate(lo_open(1002, x'20000'::int), 10);
- lo_truncate 
+ lo_truncate
 -------------
            0
 (1 row)
 
 SELECT lo_unlink(1002);
- lo_unlink 
+ lo_unlink
 -----------
          1
 (1 row)
@@ -2076,7 +2076,7 @@ ERROR:  permission denied for function lo_export
 -- don't allow unpriv users to access pg_largeobject contents
 \c -
 SELECT * FROM pg_largeobject LIMIT 0;
- loid | pageno | data 
+ loid | pageno | data
 ------+--------+------
 (0 rows)
 
@@ -2096,7 +2096,7 @@ END$$;
 ALTER FUNCTION terminate_nothrow OWNER TO pg_signal_backend;
 SELECT backend_type FROM pg_stat_activity
 WHERE CASE WHEN COALESCE(usesysid, 10) = 10 THEN terminate_nothrow(pid) END;
- backend_type 
+ backend_type
 --------------
 (0 rows)
 
@@ -2115,7 +2115,7 @@ SELECT
 	pg_has_role('regress_priv_user1', 'pg_database_owner', 'MEMBER') as mem,
 	pg_has_role('regress_priv_user1', 'pg_database_owner',
 				'MEMBER WITH ADMIN OPTION') as admin;
- priv | mem | admin 
+ priv | mem | admin
 ------+-----+-------
  f    | f   | f
 (1 row)
@@ -2128,14 +2128,14 @@ SELECT
 	pg_has_role('regress_priv_user1', 'pg_database_owner', 'MEMBER') as mem,
 	pg_has_role('regress_priv_user1', 'pg_database_owner',
 				'MEMBER WITH ADMIN OPTION') as admin;
- priv | mem | admin 
+ priv | mem | admin
 ------+-----+-------
  t    | t   | f
 (1 row)
 
 SET SESSION AUTHORIZATION regress_priv_user1;
 TABLE information_schema.enabled_roles ORDER BY role_name COLLATE "C";
-      role_name      
+      role_name
 ---------------------
  pg_database_owner
  regress_priv_group2
@@ -2143,7 +2143,7 @@ TABLE information_schema.enabled_roles ORDER BY role_name COLLATE "C";
 (3 rows)
 
 TABLE information_schema.applicable_roles ORDER BY role_name COLLATE "C";
-       grantee       |      role_name      | is_grantable 
+       grantee       |      role_name      | is_grantable
 ---------------------+---------------------+--------------
  regress_priv_group2 | pg_database_owner   | NO
  regress_priv_user1  | regress_priv_group2 | NO
@@ -2154,7 +2154,7 @@ SAVEPOINT q; DELETE FROM datdba_only; ROLLBACK TO q;
 ERROR:  permission denied for table datdba_only
 SET SESSION AUTHORIZATION regress_priv_user2;
 TABLE information_schema.enabled_roles;
-     role_name      
+     role_name
 --------------------
  regress_priv_user2
 (1 row)
@@ -2168,13 +2168,13 @@ CREATE SCHEMA testns;
 GRANT ALL ON SCHEMA testns TO regress_priv_user1;
 CREATE TABLE testns.acltest1 (x int);
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'SELECT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'INSERT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -2182,13 +2182,13 @@ SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'INSERT'); -
 -- placeholder for test with duplicated schema and role names
 ALTER DEFAULT PRIVILEGES IN SCHEMA testns,testns GRANT SELECT ON TABLES TO public,public;
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'SELECT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'INSERT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -2196,13 +2196,13 @@ SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'INSERT'); -
 DROP TABLE testns.acltest1;
 CREATE TABLE testns.acltest1 (x int);
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'SELECT'); -- yes
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'INSERT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -2211,13 +2211,13 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA testns GRANT INSERT ON TABLES TO regress_priv
 DROP TABLE testns.acltest1;
 CREATE TABLE testns.acltest1 (x int);
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'SELECT'); -- yes
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'INSERT'); -- yes
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -2226,13 +2226,13 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA testns REVOKE INSERT ON TABLES FROM regress_p
 DROP TABLE testns.acltest1;
 CREATE TABLE testns.acltest1 (x int);
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'SELECT'); -- yes
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'testns.acltest1', 'INSERT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -2243,14 +2243,14 @@ ERROR:  cannot use IN SCHEMA clause when using GRANT/REVOKE ON SCHEMAS
 -- Test makeaclitem()
 SELECT makeaclitem('regress_priv_user1'::regrole, 'regress_priv_user2'::regrole,
 	'SELECT', TRUE);  -- single privilege
-               makeaclitem                
+               makeaclitem
 ------------------------------------------
  regress_priv_user1=r*/regress_priv_user2
 (1 row)
 
 SELECT makeaclitem('regress_priv_user1'::regrole, 'regress_priv_user2'::regrole,
 	'SELECT, INSERT,  UPDATE , DELETE  ', FALSE);  -- multiple privileges
-                makeaclitem                 
+                makeaclitem
 --------------------------------------------
  regress_priv_user1=arwd/regress_priv_user2
 (1 row)
@@ -2260,43 +2260,43 @@ SELECT makeaclitem('regress_priv_user1'::regrole, 'regress_priv_user2'::regrole,
 ERROR:  unrecognized privilege type: "fake_privilege"
 -- Test non-throwing aclitem I/O
 SELECT pg_input_is_valid('regress_priv_user1=r/regress_priv_user2', 'aclitem');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('regress_priv_user1=r/', 'aclitem');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('regress_priv_user1=r/', 'aclitem');
-             message             | detail | hint | sql_error_code 
+             message             | detail | hint | sql_error_code
 ---------------------------------+--------+------+----------------
  a name must follow the "/" sign |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('regress_priv_user1=r/regress_no_such_user', 'aclitem');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('regress_priv_user1=r/regress_no_such_user', 'aclitem');
-                  message                   | detail | hint | sql_error_code 
+                  message                   | detail | hint | sql_error_code
 --------------------------------------------+--------+------+----------------
  role "regress_no_such_user" does not exist |        |      | 42704
 (1 row)
 
 SELECT pg_input_is_valid('regress_priv_user1=rY', 'aclitem');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('regress_priv_user1=rY', 'aclitem');
-                         message                         | detail | hint | sql_error_code 
+                         message                         | detail | hint | sql_error_code
 ---------------------------------------------------------+--------+------+----------------
  invalid mode character: must be one of "arwdDxtXUCTcsA" |        |      | 22P02
 (1 row)
@@ -2310,19 +2310,19 @@ BEGIN;
 ALTER DEFAULT PRIVILEGES GRANT USAGE ON SCHEMAS TO regress_priv_user2;
 CREATE SCHEMA testns2;
 SELECT has_schema_privilege('regress_priv_user2', 'testns2', 'USAGE'); -- yes
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  t
 (1 row)
 
 SELECT has_schema_privilege('regress_priv_user6', 'testns2', 'USAGE'); -- yes
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  t
 (1 row)
 
 SELECT has_schema_privilege('regress_priv_user2', 'testns2', 'CREATE'); -- no
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  f
 (1 row)
@@ -2330,13 +2330,13 @@ SELECT has_schema_privilege('regress_priv_user2', 'testns2', 'CREATE'); -- no
 ALTER DEFAULT PRIVILEGES REVOKE USAGE ON SCHEMAS FROM regress_priv_user2;
 CREATE SCHEMA testns3;
 SELECT has_schema_privilege('regress_priv_user2', 'testns3', 'USAGE'); -- no
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  f
 (1 row)
 
 SELECT has_schema_privilege('regress_priv_user2', 'testns3', 'CREATE'); -- no
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  f
 (1 row)
@@ -2344,13 +2344,13 @@ SELECT has_schema_privilege('regress_priv_user2', 'testns3', 'CREATE'); -- no
 ALTER DEFAULT PRIVILEGES GRANT ALL ON SCHEMAS TO regress_priv_user2;
 CREATE SCHEMA testns4;
 SELECT has_schema_privilege('regress_priv_user2', 'testns4', 'USAGE'); -- yes
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  t
 (1 row)
 
 SELECT has_schema_privilege('regress_priv_user2', 'testns4', 'CREATE'); -- yes
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  t
 (1 row)
@@ -2370,7 +2370,7 @@ SELECT count(*) FROM pg_shdepend
   WHERE deptype = 'a' AND
         refobjid = 'regress_priv_user2'::regrole AND
 	classid = 'pg_default_acl'::regclass;
- count 
+ count
 -------
      5
 (1 row)
@@ -2380,7 +2380,7 @@ SELECT count(*) FROM pg_shdepend
   WHERE deptype = 'a' AND
         refobjid = 'regress_priv_user2'::regrole AND
 	classid = 'pg_default_acl'::regclass;
- count 
+ count
 -------
      0
 (1 row)
@@ -2388,13 +2388,13 @@ SELECT count(*) FROM pg_shdepend
 ROLLBACK;
 CREATE SCHEMA testns5;
 SELECT has_schema_privilege('regress_priv_user2', 'testns5', 'USAGE'); -- no
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  f
 (1 row)
 
 SELECT has_schema_privilege('regress_priv_user2', 'testns5', 'CREATE'); -- no
- has_schema_privilege 
+ has_schema_privilege
 ----------------------
  f
 (1 row)
@@ -2404,19 +2404,19 @@ CREATE FUNCTION testns.foo() RETURNS int AS 'select 1' LANGUAGE sql;
 CREATE AGGREGATE testns.agg1(int) (sfunc = int4pl, stype = int4);
 CREATE PROCEDURE testns.bar() AS 'select 1' LANGUAGE sql;
 SELECT has_function_privilege('regress_priv_user2', 'testns.foo()', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user2', 'testns.agg1(int)', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user2', 'testns.bar()', 'EXECUTE'); -- no
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
@@ -2429,19 +2429,19 @@ CREATE AGGREGATE testns.agg1(int) (sfunc = int4pl, stype = int4);
 DROP PROCEDURE testns.bar();
 CREATE PROCEDURE testns.bar() AS 'select 1' LANGUAGE sql;
 SELECT has_function_privilege('regress_priv_user2', 'testns.foo()', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user2', 'testns.agg1(int)', 'EXECUTE'); -- yes
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user2', 'testns.bar()', 'EXECUTE'); -- yes (counts as function here)
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
@@ -2452,7 +2452,7 @@ DROP PROCEDURE testns.bar();
 ALTER DEFAULT PRIVILEGES FOR ROLE regress_priv_user1 REVOKE USAGE ON TYPES FROM public;
 CREATE DOMAIN testns.priv_testdomain1 AS int;
 SELECT has_type_privilege('regress_priv_user2', 'testns.priv_testdomain1', 'USAGE'); -- no
- has_type_privilege 
+ has_type_privilege
 --------------------
  f
 (1 row)
@@ -2461,7 +2461,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA testns GRANT USAGE ON TYPES to public;
 DROP DOMAIN testns.priv_testdomain1;
 CREATE DOMAIN testns.priv_testdomain1 AS int;
 SELECT has_type_privilege('regress_priv_user2', 'testns.priv_testdomain1', 'USAGE'); -- yes
- has_type_privilege 
+ has_type_privilege
 --------------------
  t
 (1 row)
@@ -2471,7 +2471,7 @@ RESET ROLE;
 SELECT count(*)
   FROM pg_default_acl d LEFT JOIN pg_namespace n ON defaclnamespace = n.oid
   WHERE nspname = 'testns';
- count 
+ count
 -------
      3
 (1 row)
@@ -2485,7 +2485,7 @@ DROP SCHEMA testns5 CASCADE;
 SELECT d.*     -- check that entries went away
   FROM pg_default_acl d LEFT JOIN pg_namespace n ON defaclnamespace = n.oid
   WHERE nspname IS NULL AND defaclnamespace != 0;
- oid | defaclrole | defaclnamespace | defaclobjtype | defaclacl 
+ oid | defaclrole | defaclnamespace | defaclobjtype | defaclacl
 -----+------------+-----------------+---------------+-----------
 (0 rows)
 
@@ -2495,33 +2495,33 @@ CREATE SCHEMA testns;
 CREATE TABLE testns.t1 (f1 int);
 CREATE TABLE testns.t2 (f1 int);
 SELECT has_table_privilege('regress_priv_user1', 'testns.t1', 'SELECT'); -- false
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 GRANT ALL ON ALL TABLES IN SCHEMA testns TO regress_priv_user1;
 SELECT has_table_privilege('regress_priv_user1', 'testns.t1', 'SELECT'); -- true
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'testns.t2', 'SELECT'); -- true
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 REVOKE ALL ON ALL TABLES IN SCHEMA testns FROM regress_priv_user1;
 SELECT has_table_privilege('regress_priv_user1', 'testns.t1', 'SELECT'); -- false
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 SELECT has_table_privilege('regress_priv_user1', 'testns.t2', 'SELECT'); -- false
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
@@ -2530,64 +2530,64 @@ CREATE FUNCTION testns.priv_testfunc(int) RETURNS int AS 'select 3 * $1;' LANGUA
 CREATE AGGREGATE testns.priv_testagg(int) (sfunc = int4pl, stype = int4);
 CREATE PROCEDURE testns.priv_testproc(int) AS 'select 3' LANGUAGE sql;
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testfunc(int)', 'EXECUTE'); -- true by default
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testagg(int)', 'EXECUTE'); -- true by default
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testproc(int)', 'EXECUTE'); -- true by default
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA testns FROM PUBLIC;
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testfunc(int)', 'EXECUTE'); -- false
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testagg(int)', 'EXECUTE'); -- false
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testproc(int)', 'EXECUTE'); -- still true, not a function
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 REVOKE ALL ON ALL PROCEDURES IN SCHEMA testns FROM PUBLIC;
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testproc(int)', 'EXECUTE'); -- now false
- has_function_privilege 
+ has_function_privilege
 ------------------------
  f
 (1 row)
 
 GRANT ALL ON ALL ROUTINES IN SCHEMA testns TO PUBLIC;
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testfunc(int)', 'EXECUTE'); -- true
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testagg(int)', 'EXECUTE'); -- true
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
 
 SELECT has_function_privilege('regress_priv_user1', 'testns.priv_testproc(int)', 'EXECUTE'); -- true
- has_function_privilege 
+ has_function_privilege
 ------------------------
  t
 (1 row)
@@ -2606,7 +2606,7 @@ CREATE ROLE regress_schemauser2 superuser login;
 SET SESSION ROLE regress_schemauser1;
 CREATE SCHEMA testns;
 SELECT nspname, rolname FROM pg_namespace, pg_roles WHERE pg_namespace.nspname = 'testns' AND pg_namespace.nspowner = pg_roles.oid;
- nspname |       rolname       
+ nspname |       rolname
 ---------+---------------------
  testns  | regress_schemauser1
 (1 row)
@@ -2614,7 +2614,7 @@ SELECT nspname, rolname FROM pg_namespace, pg_roles WHERE pg_namespace.nspname =
 ALTER SCHEMA testns OWNER TO regress_schemauser2;
 ALTER ROLE regress_schemauser2 RENAME TO regress_schemauser_renamed;
 SELECT nspname, rolname FROM pg_namespace, pg_roles WHERE pg_namespace.nspname = 'testns' AND pg_namespace.nspowner = pg_roles.oid;
- nspname |          rolname           
+ nspname |          rolname
 ---------+----------------------------
  testns  | regress_schemauser_renamed
 (1 row)
@@ -2639,38 +2639,38 @@ set session role regress_priv_user4;
 grant select on dep_priv_test to regress_priv_user5;
 \dp dep_priv_test
                                                Access privileges
- Schema |     Name      | Type  |               Access privileges               | Column privileges | Policies 
+ Schema |     Name      | Type  |               Access privileges               | Column privileges | Policies
 --------+---------------+-------+-----------------------------------------------+-------------------+----------
- public | dep_priv_test | table | regress_priv_user1=arwdDxt/regress_priv_user1+|                   | 
-        |               |       | regress_priv_user2=r*/regress_priv_user1     +|                   | 
-        |               |       | regress_priv_user3=r*/regress_priv_user1     +|                   | 
-        |               |       | regress_priv_user4=r*/regress_priv_user2     +|                   | 
-        |               |       | regress_priv_user4=r*/regress_priv_user3     +|                   | 
-        |               |       | regress_priv_user5=r/regress_priv_user4       |                   | 
+ public | dep_priv_test | table | regress_priv_user1=arwdDxt/regress_priv_user1+|                   |
+        |               |       | regress_priv_user2=r*/regress_priv_user1     +|                   |
+        |               |       | regress_priv_user3=r*/regress_priv_user1     +|                   |
+        |               |       | regress_priv_user4=r*/regress_priv_user2     +|                   |
+        |               |       | regress_priv_user4=r*/regress_priv_user3     +|                   |
+        |               |       | regress_priv_user5=r/regress_priv_user4       |                   |
 (1 row)
 
 set session role regress_priv_user2;
 revoke select on dep_priv_test from regress_priv_user4 cascade;
 \dp dep_priv_test
                                                Access privileges
- Schema |     Name      | Type  |               Access privileges               | Column privileges | Policies 
+ Schema |     Name      | Type  |               Access privileges               | Column privileges | Policies
 --------+---------------+-------+-----------------------------------------------+-------------------+----------
- public | dep_priv_test | table | regress_priv_user1=arwdDxt/regress_priv_user1+|                   | 
-        |               |       | regress_priv_user2=r*/regress_priv_user1     +|                   | 
-        |               |       | regress_priv_user3=r*/regress_priv_user1     +|                   | 
-        |               |       | regress_priv_user4=r*/regress_priv_user3     +|                   | 
-        |               |       | regress_priv_user5=r/regress_priv_user4       |                   | 
+ public | dep_priv_test | table | regress_priv_user1=arwdDxt/regress_priv_user1+|                   |
+        |               |       | regress_priv_user2=r*/regress_priv_user1     +|                   |
+        |               |       | regress_priv_user3=r*/regress_priv_user1     +|                   |
+        |               |       | regress_priv_user4=r*/regress_priv_user3     +|                   |
+        |               |       | regress_priv_user5=r/regress_priv_user4       |                   |
 (1 row)
 
 set session role regress_priv_user3;
 revoke select on dep_priv_test from regress_priv_user4 cascade;
 \dp dep_priv_test
                                                Access privileges
- Schema |     Name      | Type  |               Access privileges               | Column privileges | Policies 
+ Schema |     Name      | Type  |               Access privileges               | Column privileges | Policies
 --------+---------------+-------+-----------------------------------------------+-------------------+----------
- public | dep_priv_test | table | regress_priv_user1=arwdDxt/regress_priv_user1+|                   | 
-        |               |       | regress_priv_user2=r*/regress_priv_user1     +|                   | 
-        |               |       | regress_priv_user3=r*/regress_priv_user1      |                   | 
+ public | dep_priv_test | table | regress_priv_user1=arwdDxt/regress_priv_user1+|                   |
+        |               |       | regress_priv_user2=r*/regress_priv_user1     +|                   |
+        |               |       | regress_priv_user3=r*/regress_priv_user1      |                   |
 (1 row)
 
 set session role regress_priv_user1;
@@ -2701,7 +2701,7 @@ DROP TABLE atestc;
 DROP TABLE atestp1;
 DROP TABLE atestp2;
 SELECT lo_unlink(oid) FROM pg_largeobject_metadata WHERE oid >= 1000 AND oid < 3000 ORDER BY oid;
- lo_unlink 
+ lo_unlink
 -----------
          1
          1
@@ -2809,26 +2809,26 @@ DROP USER regress_locktable_user;
 \c -
 CREATE ROLE regress_readallstats;
 SELECT has_table_privilege('regress_readallstats','pg_backend_memory_contexts','SELECT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 SELECT has_table_privilege('regress_readallstats','pg_shmem_allocations','SELECT'); -- no
- has_table_privilege 
+ has_table_privilege
 ---------------------
  f
 (1 row)
 
 GRANT pg_read_all_stats TO regress_readallstats;
 SELECT has_table_privilege('regress_readallstats','pg_backend_memory_contexts','SELECT'); -- yes
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
 
 SELECT has_table_privilege('regress_readallstats','pg_shmem_allocations','SELECT'); -- yes
- has_table_privilege 
+ has_table_privilege
 ---------------------
  t
 (1 row)
@@ -2836,13 +2836,13 @@ SELECT has_table_privilege('regress_readallstats','pg_shmem_allocations','SELECT
 -- run query to ensure that functions within views can be executed
 SET ROLE regress_readallstats;
 SELECT COUNT(*) >= 0 AS ok FROM pg_backend_memory_contexts;
- ok 
+ ok
 ----
  t
 (1 row)
 
 SELECT COUNT(*) >= 0 AS ok FROM pg_shmem_allocations;
- ok 
+ ok
 ----
  t
 (1 row)
@@ -2860,7 +2860,7 @@ GRANT regress_group_direct_manager TO regress_group_indirect_manager;
 SET SESSION AUTHORIZATION regress_group_direct_manager;
 GRANT regress_group TO regress_group_member;
 SELECT member::regrole::text, CASE WHEN grantor = 10 THEN 'BOOTSTRAP SUPERUSER' ELSE grantor::regrole::text END FROM pg_auth_members WHERE roleid = 'regress_group'::regrole ORDER BY 1, 2;
-            member            |           grantor            
+            member            |           grantor
 ------------------------------+------------------------------
  regress_group_direct_manager | BOOTSTRAP SUPERUSER
  regress_group_member         | regress_group_direct_manager
@@ -2870,7 +2870,7 @@ REVOKE regress_group FROM regress_group_member;
 SET SESSION AUTHORIZATION regress_group_indirect_manager;
 GRANT regress_group TO regress_group_member;
 SELECT member::regrole::text, CASE WHEN grantor = 10 THEN 'BOOTSTRAP SUPERUSER' ELSE grantor::regrole::text END FROM pg_auth_members WHERE roleid = 'regress_group'::regrole ORDER BY 1, 2;
-            member            |           grantor            
+            member            |           grantor
 ------------------------------+------------------------------
  regress_group_direct_manager | BOOTSTRAP SUPERUSER
  regress_group_member         | regress_group_direct_manager

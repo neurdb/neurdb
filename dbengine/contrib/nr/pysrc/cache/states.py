@@ -40,7 +40,9 @@ class ContextStates(Generic[T]):
             else:
                 print(f"Error: Outer key ({outer_key}) not found")
 
-    def get(self, outer_key: str, inner_key: Optional[str] = None) -> Union[Optional[T], Dict[str, T]]:
+    def get(
+        self, outer_key: str, inner_key: Optional[str] = None
+    ) -> Union[Optional[T], Dict[str, T]]:
         """
         Get the inner dictionary or value for a given outer key
         :param outer_key:

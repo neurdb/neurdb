@@ -6,7 +6,7 @@ CREATE TABLE test_enum (
 INSERT INTO test_enum VALUES ('v'),('y'),('r'),('g'),('o'),('i'),('b');
 CREATE INDEX idx_enum ON test_enum USING gin (i);
 SELECT * FROM test_enum WHERE i<'g'::rainbow ORDER BY i;
- i 
+ i
 ---
  r
  o
@@ -14,7 +14,7 @@ SELECT * FROM test_enum WHERE i<'g'::rainbow ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_enum WHERE i<='g'::rainbow ORDER BY i;
- i 
+ i
 ---
  r
  o
@@ -23,13 +23,13 @@ SELECT * FROM test_enum WHERE i<='g'::rainbow ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_enum WHERE i='g'::rainbow ORDER BY i;
- i 
+ i
 ---
  g
 (1 row)
 
 SELECT * FROM test_enum WHERE i>='g'::rainbow ORDER BY i;
- i 
+ i
 ---
  g
  b
@@ -38,7 +38,7 @@ SELECT * FROM test_enum WHERE i>='g'::rainbow ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_enum WHERE i>'g'::rainbow ORDER BY i;
- i 
+ i
 ---
  b
  i
@@ -46,7 +46,7 @@ SELECT * FROM test_enum WHERE i>'g'::rainbow ORDER BY i;
 (3 rows)
 
 explain (costs off) SELECT * FROM test_enum WHERE i>='g'::rainbow ORDER BY i;
-                  QUERY PLAN                   
+                  QUERY PLAN
 -----------------------------------------------
  Sort
    Sort Key: i

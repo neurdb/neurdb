@@ -5,36 +5,36 @@ CREATE EXTENSION ltree;
 SELECT amname, opcname
 FROM pg_opclass opc LEFT JOIN pg_am am ON am.oid = opcmethod
 WHERE opc.oid >= 16384 AND NOT amvalidate(opc.oid);
- amname | opcname 
+ amname | opcname
 --------+---------
 (0 rows)
 
 SELECT ''::ltree;
- ltree 
+ ltree
 -------
- 
+
 (1 row)
 
 SELECT '1'::ltree;
- ltree 
+ ltree
 -------
  1
 (1 row)
 
 SELECT '1.2'::ltree;
- ltree 
+ ltree
 -------
  1.2
 (1 row)
 
 SELECT '1.2.-3'::ltree;
- ltree  
+ ltree
 --------
  1.2.-3
 (1 row)
 
 SELECT '1.2._3'::ltree;
- ltree  
+ ltree
 --------
  1.2._3
 (1 row)
@@ -54,7 +54,7 @@ LINE 1: SELECT '1.2.'::ltree;
                ^
 DETAIL:  Unexpected end of input.
 SELECT repeat('x', :maxlbl)::ltree;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  repeat                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  repeat
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 (1 row)
@@ -63,433 +63,433 @@ SELECT repeat('x', :maxlbl + 1)::ltree;
 ERROR:  label string is too long
 DETAIL:  Label length is 1001, must be at most 1000, at character 1002.
 SELECT ltree2text('1.2.3.34.sdf');
-  ltree2text  
+  ltree2text
 --------------
  1.2.3.34.sdf
 (1 row)
 
 SELECT text2ltree('1.2.3.34.sdf');
-  text2ltree  
+  text2ltree
 --------------
  1.2.3.34.sdf
 (1 row)
 
 SELECT subltree('Top.Child1.Child2',1,2);
- subltree 
+ subltree
 ----------
  Child1
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',1,2);
-    subpath    
+    subpath
 ---------------
  Child1.Child2
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',-1,1);
- subpath 
+ subpath
 ---------
  Child2
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',0,-2);
- subpath 
+ subpath
 ---------
  Top
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',0,-1);
-  subpath   
+  subpath
 ------------
  Top.Child1
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',0,0);
- subpath 
+ subpath
 ---------
- 
+
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',1,0);
- subpath 
+ subpath
 ---------
- 
+
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',0);
-      subpath      
+      subpath
 -------------------
  Top.Child1.Child2
 (1 row)
 
 SELECT subpath('Top.Child1.Child2',1);
-    subpath    
+    subpath
 ---------------
  Child1.Child2
 (1 row)
 
 SELECT index('1.2.3.4.5.6','1.2');
- index 
+ index
 -------
      0
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','1.2');
- index 
+ index
 -------
      1
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','1.2.3');
- index 
+ index
 -------
      1
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','1.2.3.j');
- index 
+ index
 -------
     -1
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','1.2.3.j.4.5.5.5.5.5.5');
- index 
+ index
 -------
     -1
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','1.2.3');
- index 
+ index
 -------
      1
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','6');
- index 
+ index
 -------
      6
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','6.1');
- index 
+ index
 -------
     -1
 (1 row)
 
 SELECT index('a.1.2.3.4.5.6','5.6');
- index 
+ index
 -------
      5
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6','5.6');
- index 
+ index
 -------
      6
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',3);
- index 
+ index
 -------
      6
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',6);
- index 
+ index
 -------
      6
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',7);
- index 
+ index
 -------
      9
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',-7);
- index 
+ index
 -------
      6
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',-4);
- index 
+ index
 -------
      9
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',-3);
- index 
+ index
 -------
      9
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',-2);
- index 
+ index
 -------
     -1
 (1 row)
 
 SELECT index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',-20000);
- index 
+ index
 -------
      6
 (1 row)
 
 SELECT 'Top.Child1.Child2'::ltree || 'Child3'::text;
-         ?column?         
+         ?column?
 --------------------------
  Top.Child1.Child2.Child3
 (1 row)
 
 SELECT 'Top.Child1.Child2'::ltree || 'Child3'::ltree;
-         ?column?         
+         ?column?
 --------------------------
  Top.Child1.Child2.Child3
 (1 row)
 
 SELECT 'Top_0'::ltree || 'Top.Child1.Child2'::ltree;
-        ?column?         
+        ?column?
 -------------------------
  Top_0.Top.Child1.Child2
 (1 row)
 
 SELECT 'Top.Child1.Child2'::ltree || ''::ltree;
-     ?column?      
+     ?column?
 -------------------
  Top.Child1.Child2
 (1 row)
 
 SELECT ''::ltree || 'Top.Child1.Child2'::ltree;
-     ?column?      
+     ?column?
 -------------------
  Top.Child1.Child2
 (1 row)
 
 SELECT lca('{la.2.3,1.2.3.4.5.6,""}') IS NULL;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT lca('{la.2.3,1.2.3.4.5.6}') IS NULL;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT lca('{1.la.2.3,1.2.3.4.5.6}');
- lca 
+ lca
 -----
  1
 (1 row)
 
 SELECT lca('{1.2.3,1.2.3.4.5.6}');
- lca 
+ lca
 -----
  1.2
 (1 row)
 
 SELECT lca('{1.2.3}');
- lca 
+ lca
 -----
  1.2
 (1 row)
 
 SELECT lca('{1}'), lca('{1}') IS NULL;
- lca | ?column? 
+ lca | ?column?
 -----+----------
      | f
 (1 row)
 
 SELECT lca('{}') IS NULL;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT lca('1.la.2.3','1.2.3.4.5.6');
- lca 
+ lca
 -----
  1
 (1 row)
 
 SELECT lca('1.2.3','1.2.3.4.5.6');
- lca 
+ lca
 -----
  1.2
 (1 row)
 
 SELECT lca('1.2.2.3','1.2.3.4.5.6');
- lca 
+ lca
 -----
  1.2
 (1 row)
 
 SELECT lca('1.2.2.3','1.2.3.4.5.6','');
- lca 
+ lca
 -----
- 
+
 (1 row)
 
 SELECT lca('1.2.2.3','1.2.3.4.5.6','2');
- lca 
+ lca
 -----
- 
+
 (1 row)
 
 SELECT lca('1.2.2.3','1.2.3.4.5.6','1');
- lca 
+ lca
 -----
- 
+
 (1 row)
 
 SELECT '1'::lquery;
- lquery 
+ lquery
 --------
  1
 (1 row)
 
 SELECT '4|3|2'::lquery;
- lquery 
+ lquery
 --------
  4|3|2
 (1 row)
 
 SELECT '1.2'::lquery;
- lquery 
+ lquery
 --------
  1.2
 (1 row)
 
 SELECT '1.4|3|2'::lquery;
- lquery  
+ lquery
 ---------
  1.4|3|2
 (1 row)
 
 SELECT '1.0'::lquery;
- lquery 
+ lquery
 --------
  1.0
 (1 row)
 
 SELECT '4|3|2.0'::lquery;
- lquery  
+ lquery
 ---------
  4|3|2.0
 (1 row)
 
 SELECT '1.2.0'::lquery;
- lquery 
+ lquery
 --------
  1.2.0
 (1 row)
 
 SELECT '1.4|3|2.0'::lquery;
-  lquery   
+  lquery
 -----------
  1.4|3|2.0
 (1 row)
 
 SELECT '1.*'::lquery;
- lquery 
+ lquery
 --------
  1.*
 (1 row)
 
 SELECT '4|3|2.*'::lquery;
- lquery  
+ lquery
 ---------
  4|3|2.*
 (1 row)
 
 SELECT '1.2.*'::lquery;
- lquery 
+ lquery
 --------
  1.2.*
 (1 row)
 
 SELECT '1.4|3|2.*'::lquery;
-  lquery   
+  lquery
 -----------
  1.4|3|2.*
 (1 row)
 
 SELECT '*.1.*'::lquery;
- lquery 
+ lquery
 --------
  *.1.*
 (1 row)
 
 SELECT '*.4|3|2.*'::lquery;
-  lquery   
+  lquery
 -----------
  *.4|3|2.*
 (1 row)
 
 SELECT '*.1.2.*'::lquery;
- lquery  
+ lquery
 ---------
  *.1.2.*
 (1 row)
 
 SELECT '*.1.4|3|2.*'::lquery;
-   lquery    
+   lquery
 -------------
  *.1.4|3|2.*
 (1 row)
 
 SELECT '1.*.4|3|2'::lquery;
-  lquery   
+  lquery
 -----------
  1.*.4|3|2
 (1 row)
 
 SELECT '1.*.4|3|2.0'::lquery;
-   lquery    
+   lquery
 -------------
  1.*.4|3|2.0
 (1 row)
 
 SELECT '1.*.4|3|2.*{1,4}'::lquery;
-      lquery      
+      lquery
 ------------------
  1.*.4|3|2.*{1,4}
 (1 row)
 
 SELECT '1.*.4|3|2.*{,4}'::lquery;
-     lquery      
+     lquery
 -----------------
  1.*.4|3|2.*{,4}
 (1 row)
 
 SELECT '1.*.4|3|2.*{1,}'::lquery;
-     lquery      
+     lquery
 -----------------
  1.*.4|3|2.*{1,}
 (1 row)
 
 SELECT '1.*.4|3|2.*{1}'::lquery;
-     lquery     
+     lquery
 ----------------
  1.*.4|3|2.*{1}
 (1 row)
 
 SELECT 'foo.bar{,}.!a*|b{1,}.c{,44}.d{3,4}'::lquery;
-               lquery               
+               lquery
 ------------------------------------
  foo.bar{,}.!a*|b{1,}.c{,44}.d{3,4}
 (1 row)
 
 SELECT 'foo*@@*'::lquery;
- lquery 
+ lquery
 --------
  foo@*
 (1 row)
 
 SELECT 'qwerty%@*.tu'::lquery;
-    lquery    
+    lquery
 --------------
  qwerty%@*.tu
 (1 row)
@@ -540,7 +540,7 @@ ERROR:  lquery syntax error at character 7
 LINE 1: SELECT '1.2.3|@.4'::lquery;
                ^
 SELECT (repeat('x', :maxlbl) || '*@@*')::lquery;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   lquery                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   lquery
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@*
 (1 row)
@@ -549,7 +549,7 @@ SELECT (repeat('x', :maxlbl + 1) || '*@@*')::lquery;
 ERROR:  label string is too long
 DETAIL:  Label length is 1001, must be at most 1000, at character 1002.
 SELECT ('!' || repeat('x', :maxlbl))::lquery;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  lquery                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  lquery
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 (1 row)
@@ -558,13 +558,13 @@ SELECT ('!' || repeat('x', :maxlbl + 1))::lquery;
 ERROR:  label string is too long
 DETAIL:  Label length is 1001, must be at most 1000, at character 1003.
 SELECT nlevel('1.2.3.4');
- nlevel 
+ nlevel
 --------
       4
 (1 row)
 
 SELECT nlevel(('1' || repeat('.1', 65534))::ltree);
- nlevel 
+ nlevel
 --------
   65535
 (1 row)
@@ -574,7 +574,7 @@ ERROR:  number of ltree labels (65536) exceeds the maximum allowed (65535)
 SELECT nlevel(('1' || repeat('.1', 65534))::ltree || '1');
 ERROR:  number of ltree levels (65536) exceeds the maximum allowed (65535)
 SELECT ('1' || repeat('.1', 65534))::lquery IS NULL;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
@@ -582,7 +582,7 @@ SELECT ('1' || repeat('.1', 65534))::lquery IS NULL;
 SELECT ('1' || repeat('.1', 65535))::lquery IS NULL;
 ERROR:  number of lquery items (65536) exceeds the maximum allowed (65535)
 SELECT '*{65535}'::lquery;
-  lquery  
+  lquery
 ----------
  *{65535}
 (1 row)
@@ -593,13 +593,13 @@ LINE 1: SELECT '*{65536}'::lquery;
                ^
 DETAIL:  Low limit (65536) exceeds the maximum allowed (65535), at character 3.
 SELECT '*{,65534}'::lquery;
-  lquery   
+  lquery
 -----------
  *{,65534}
 (1 row)
 
 SELECT '*{,65535}'::lquery;
- lquery 
+ lquery
 --------
  *
 (1 row)
@@ -615,820 +615,820 @@ LINE 1: SELECT '*{4,3}'::lquery;
                ^
 DETAIL:  Low limit (4) is greater than high limit (3), at character 5.
 SELECT '1.2'::ltree  < '2.2'::ltree;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '1.2'::ltree  <= '2.2'::ltree;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '2.2'::ltree  = '2.2'::ltree;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '3.2'::ltree  >= '2.2'::ltree;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '3.2'::ltree  > '2.2'::ltree;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '1.2.3'::ltree @> '1.2.3.4'::ltree;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '1.2.3.4'::ltree @> '1.2.3.4'::ltree;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '1.2.3.4.5'::ltree @> '1.2.3.4'::ltree;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '1.3.3'::ltree @> '1.2.3.4'::ltree;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'A.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'A@.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'aa.b.c.d.e'::ltree ~ 'A@.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'aa.b.c.d.e'::ltree ~ 'A*.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'aa.b.c.d.e'::ltree ~ 'A*@.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'aa.b.c.d.e'::ltree ~ 'A*@|g.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'g.b.c.d.e'::ltree ~ 'A*@|g.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{3}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2}.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{4}.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{,4}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2,}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2,4}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2,3}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2,3}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2,4}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2,5}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{2,3}.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{2,4}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{2,5}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.e.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.a.*.d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!d';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!a.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!e.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*.!e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*.!d';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*.!d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*.!f.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.a.*.!f.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.a.*.!d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.a.!d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.a.!d';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.!d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.a.*.!d.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!b.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!b.c.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!b.*.c.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.*.c.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.b.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.*.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.!c.*.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.*.!c.*.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{2}.!b.*.!c.*.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{1}.!b.*.!c.*.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{1}.!b.*{1}.!c.*.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.!b.*{1}.!c.*.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.*{1}.!c.*.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!b.*{1}.!c.*.e';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!b.*.!c.*.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.!c.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.*.!c.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{2}.!b.*.!c.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{1}.!b.*.!c.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*{1}.!b.*{1}.!c.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.!b.*{1}.!c.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!b.*{1}.!c.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!b.*{1}.!c.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '*.!b.*.!c.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{2}.*{2}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{1}.*{2}.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{1}.*{4}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a.*{5}.*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '5.0.1.0'::ltree ~ '5.!0.!0.0';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b'::ltree ~ '!a.!a';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a{,}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a{1,}.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a{,}.!a{,}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.a'::ltree ~ 'a{,}.!a{,}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.a'::ltree ~ 'a{,2}.!a{1,}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ 'a{,2}.!a{1,}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!x{,}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!c{,}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!c{0,3}.!a{2,}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ~ '!c{0,3}.!d{2,}.*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'QWER_TY'::ltree ~ 'q%@*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'QWER_TY'::ltree ~ 'q%@*%@*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'QWER_TY'::ltree ~ 'Q_t%@*';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'QWER_GY'::ltree ~ 'q_t%@*';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 --ltxtquery
 SELECT '!tree & aWdf@*'::ltxtquery;
-   ltxtquery    
+   ltxtquery
 ----------------
  !tree & aWdf@*
 (1 row)
 
 SELECT 'tree & aw_qw%*'::ltxtquery;
-   ltxtquery    
+   ltxtquery
 ----------------
  tree & aw_qw%*
 (1 row)
 
 SELECT 'tree & aw-qw%*'::ltxtquery;
-   ltxtquery    
+   ltxtquery
 ----------------
  tree & aw-qw%*
 (1 row)
 
 SELECT 'ltree.awdfg'::ltree @ '!tree & aWdf@*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ '!tree & aWdf@*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ '!tree | aWdf@*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ 'tree | aWdf@*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ 'tree & aWdf@*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ 'tree & aWdf@'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ 'tree & aWdf*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ 'tree & aWdf'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ 'tree & awdf*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'tree.awdfg'::ltree @ 'tree & aWdfg@'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'tree.awdfg_qwerty'::ltree @ 'tree & aw_qw%*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'tree.awdfg_qwerty'::ltree @ 'tree & aw_rw%*'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 --arrays
 SELECT '{1.2.3}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{1.2.3.4}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{1.2.3.4.5}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '{1.3.3}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '{5.67.8, 1.2.3}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{5.67.8, 1.2.3.4}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{5.67.8, 1.2.3.4.5}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '{5.67.8, 1.3.3}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '{1.2.3, 7.12.asd}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{1.2.3.4, 7.12.asd}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{1.2.3.4.5, 7.12.asd}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '{1.3.3, 7.12.asd}'::ltree[] @> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '{ltree.asd, tree.awdfg}'::ltree[] @ 'tree & aWdfg@'::ltxtquery;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{j.k.l.m, g.b.c.d.e}'::ltree[] ~ 'A*@|g.b.c.d.e';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ? '{A.b.c.d.e}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ? '{a.b.c.d.e}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT 'a.b.c.d.e'::ltree ? '{A.b.c.d.e, a.*}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{a.b.c.d.e,B.df}'::ltree[] ? '{A.b.c.d.e}';
- ?column? 
+ ?column?
 ----------
  f
 (1 row)
 
 SELECT '{a.b.c.d.e,B.df}'::ltree[] ? '{A.b.c.d.e,*.df}';
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 --extractors
 SELECT ('{3456,1.2.3.34}'::ltree[] ?@> '1.2.3.4') is null;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{3456,1.2.3}'::ltree[] ?@> '1.2.3.4';
- ?column? 
+ ?column?
 ----------
  1.2.3
 (1 row)
 
 SELECT '{3456,1.2.3.4}'::ltree[] ?<@ '1.2.3';
- ?column? 
+ ?column?
 ----------
  1.2.3.4
 (1 row)
 
 SELECT ('{3456,1.2.3.4}'::ltree[] ?<@ '1.2.5') is null;
- ?column? 
+ ?column?
 ----------
  t
 (1 row)
 
 SELECT '{ltree.asd, tree.awdfg}'::ltree[] ?@ 'tree & aWdfg@'::ltxtquery;
-  ?column?  
+  ?column?
 ------------
  tree.awdfg
 (1 row)
 
 SELECT '{j.k.l.m, g.b.c.d.e}'::ltree[] ?~ 'A*@|g.b.c.d.e';
- ?column?  
+ ?column?
 -----------
  g.b.c.d.e
 (1 row)
@@ -1436,9 +1436,9 @@ SELECT '{j.k.l.m, g.b.c.d.e}'::ltree[] ?~ 'A*@|g.b.c.d.e';
 CREATE TABLE ltreetest (t ltree);
 \copy ltreetest FROM 'data/ltree.data'
 SELECT * FROM ltreetest WHERE t <  '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
- 
+
  1
  1.1
  1.1.1
@@ -1564,9 +1564,9 @@ SELECT * FROM ltreetest WHERE t <  '12.3' order by t asc;
 (123 rows)
 
 SELECT * FROM ltreetest WHERE t <= '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
- 
+
  1
  1.1
  1.1.1
@@ -1693,13 +1693,13 @@ SELECT * FROM ltreetest WHERE t <= '12.3' order by t asc;
 (124 rows)
 
 SELECT * FROM ltreetest WHERE t =  '12.3' order by t asc;
-  t   
+  t
 ------
  12.3
 (1 row)
 
 SELECT * FROM ltreetest WHERE t >= '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
  12.3
  12.4.10.17.4.10.23.3
@@ -2587,7 +2587,7 @@ SELECT * FROM ltreetest WHERE t >= '12.3' order by t asc;
 (883 rows)
 
 SELECT * FROM ltreetest WHERE t >  '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
  12.4.10.17.4.10.23.3
  12.4.12.13.25.30.30.8.9.12
@@ -3474,16 +3474,16 @@ SELECT * FROM ltreetest WHERE t >  '12.3' order by t asc;
 (882 rows)
 
 SELECT * FROM ltreetest WHERE t @> '1.1.1' order by t asc;
-   t   
+   t
 -------
- 
+
  1
  1.1
  1.1.1
 (4 rows)
 
 SELECT * FROM ltreetest WHERE t <@ '1.1.1' order by t asc;
-     t     
+     t
 -----------
  1.1.1
  1.1.1.1
@@ -3492,7 +3492,7 @@ SELECT * FROM ltreetest WHERE t <@ '1.1.1' order by t asc;
 (4 rows)
 
 SELECT * FROM ltreetest WHERE t @ '23 & 1' order by t asc;
-               t                
+               t
 --------------------------------
  1.10.23.25.5.11
  1.10.4.18.22.23.24
@@ -3536,7 +3536,7 @@ SELECT * FROM ltreetest WHERE t @ '23 & 1' order by t asc;
 (39 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '1.1.1.*' order by t asc;
-     t     
+     t
 -----------
  1.1.1
  1.1.1.1
@@ -3545,7 +3545,7 @@ SELECT * FROM ltreetest WHERE t ~ '1.1.1.*' order by t asc;
 (4 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '*.1' order by t asc;
-               t                
+               t
 --------------------------------
  1
  1.1
@@ -3584,13 +3584,13 @@ SELECT * FROM ltreetest WHERE t ~ '*.1' order by t asc;
 (34 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '23.*{1}.1' order by t asc;
-    t    
+    t
 ---------
  23.28.1
 (1 row)
 
 SELECT * FROM ltreetest WHERE t ~ '23.*.1' order by t asc;
-             t             
+             t
 ---------------------------
  23.17.22.1.23.4.29.32.4.1
  23.28.1
@@ -3598,13 +3598,13 @@ SELECT * FROM ltreetest WHERE t ~ '23.*.1' order by t asc;
 (3 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '23.*.2' order by t asc;
-        t         
+        t
 ------------------
  23.20.12.16.15.2
 (1 row)
 
 SELECT * FROM ltreetest WHERE t ? '{23.*.1,23.*.2}' order by t asc;
-             t             
+             t
 ---------------------------
  23.17.22.1.23.4.29.32.4.1
  23.20.12.16.15.2
@@ -3615,9 +3615,9 @@ SELECT * FROM ltreetest WHERE t ? '{23.*.1,23.*.2}' order by t asc;
 create unique index tstidx on ltreetest (t);
 set enable_seqscan=off;
 SELECT * FROM ltreetest WHERE t <  '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
- 
+
  1
  1.1
  1.1.1
@@ -3743,9 +3743,9 @@ SELECT * FROM ltreetest WHERE t <  '12.3' order by t asc;
 (123 rows)
 
 SELECT * FROM ltreetest WHERE t <= '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
- 
+
  1
  1.1
  1.1.1
@@ -3872,13 +3872,13 @@ SELECT * FROM ltreetest WHERE t <= '12.3' order by t asc;
 (124 rows)
 
 SELECT * FROM ltreetest WHERE t =  '12.3' order by t asc;
-  t   
+  t
 ------
  12.3
 (1 row)
 
 SELECT * FROM ltreetest WHERE t >= '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
  12.3
  12.4.10.17.4.10.23.3
@@ -4766,7 +4766,7 @@ SELECT * FROM ltreetest WHERE t >= '12.3' order by t asc;
 (883 rows)
 
 SELECT * FROM ltreetest WHERE t >  '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
  12.4.10.17.4.10.23.3
  12.4.12.13.25.30.30.8.9.12
@@ -5656,9 +5656,9 @@ drop index tstidx;
 create index tstidx on ltreetest using gist (t);
 set enable_seqscan=off;
 SELECT * FROM ltreetest WHERE t <  '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
- 
+
  1
  1.1
  1.1.1
@@ -5784,9 +5784,9 @@ SELECT * FROM ltreetest WHERE t <  '12.3' order by t asc;
 (123 rows)
 
 SELECT * FROM ltreetest WHERE t <= '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
- 
+
  1
  1.1
  1.1.1
@@ -5913,13 +5913,13 @@ SELECT * FROM ltreetest WHERE t <= '12.3' order by t asc;
 (124 rows)
 
 SELECT * FROM ltreetest WHERE t =  '12.3' order by t asc;
-  t   
+  t
 ------
  12.3
 (1 row)
 
 SELECT * FROM ltreetest WHERE t >= '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
  12.3
  12.4.10.17.4.10.23.3
@@ -6807,7 +6807,7 @@ SELECT * FROM ltreetest WHERE t >= '12.3' order by t asc;
 (883 rows)
 
 SELECT * FROM ltreetest WHERE t >  '12.3' order by t asc;
-                t                 
+                t
 ----------------------------------
  12.4.10.17.4.10.23.3
  12.4.12.13.25.30.30.8.9.12
@@ -7694,16 +7694,16 @@ SELECT * FROM ltreetest WHERE t >  '12.3' order by t asc;
 (882 rows)
 
 SELECT * FROM ltreetest WHERE t @> '1.1.1' order by t asc;
-   t   
+   t
 -------
- 
+
  1
  1.1
  1.1.1
 (4 rows)
 
 SELECT * FROM ltreetest WHERE t <@ '1.1.1' order by t asc;
-     t     
+     t
 -----------
  1.1.1
  1.1.1.1
@@ -7712,7 +7712,7 @@ SELECT * FROM ltreetest WHERE t <@ '1.1.1' order by t asc;
 (4 rows)
 
 SELECT * FROM ltreetest WHERE t @ '23 & 1' order by t asc;
-               t                
+               t
 --------------------------------
  1.10.23.25.5.11
  1.10.4.18.22.23.24
@@ -7756,7 +7756,7 @@ SELECT * FROM ltreetest WHERE t @ '23 & 1' order by t asc;
 (39 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '1.1.1.*' order by t asc;
-     t     
+     t
 -----------
  1.1.1
  1.1.1.1
@@ -7765,7 +7765,7 @@ SELECT * FROM ltreetest WHERE t ~ '1.1.1.*' order by t asc;
 (4 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '*.1' order by t asc;
-               t                
+               t
 --------------------------------
  1
  1.1
@@ -7804,13 +7804,13 @@ SELECT * FROM ltreetest WHERE t ~ '*.1' order by t asc;
 (34 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '23.*{1}.1' order by t asc;
-    t    
+    t
 ---------
  23.28.1
 (1 row)
 
 SELECT * FROM ltreetest WHERE t ~ '23.*.1' order by t asc;
-             t             
+             t
 ---------------------------
  23.17.22.1.23.4.29.32.4.1
  23.28.1
@@ -7818,13 +7818,13 @@ SELECT * FROM ltreetest WHERE t ~ '23.*.1' order by t asc;
 (3 rows)
 
 SELECT * FROM ltreetest WHERE t ~ '23.*.2' order by t asc;
-        t         
+        t
 ------------------
  23.20.12.16.15.2
 (1 row)
 
 SELECT * FROM ltreetest WHERE t ? '{23.*.1,23.*.2}' order by t asc;
-             t             
+             t
 ---------------------------
  23.17.22.1.23.4.29.32.4.1
  23.20.12.16.15.2
@@ -7846,85 +7846,85 @@ create index tstidx on ltreetest using gist (t gist_ltree_ops(siglen=2019));
 ERROR:  siglen value must be a multiple of 4
 create index tstidx on ltreetest using gist (t gist_ltree_ops(siglen=2024));
 SELECT count(*) FROM ltreetest WHERE t <  '12.3';
- count 
+ count
 -------
    123
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t <= '12.3';
- count 
+ count
 -------
    124
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t =  '12.3';
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t >= '12.3';
- count 
+ count
 -------
    883
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t >  '12.3';
- count 
+ count
 -------
    882
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t @> '1.1.1';
- count 
+ count
 -------
      4
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t <@ '1.1.1';
- count 
+ count
 -------
      4
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t @ '23 & 1';
- count 
+ count
 -------
     39
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t ~ '1.1.1.*';
- count 
+ count
 -------
      4
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t ~ '*.1';
- count 
+ count
 -------
     34
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t ~ '23.*{1}.1';
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t ~ '23.*.1';
- count 
+ count
 -------
      3
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t ~ '23.*.2';
- count 
+ count
 -------
      1
 (1 row)
 
 SELECT count(*) FROM ltreetest WHERE t ? '{23.*.1,23.*.2}';
- count 
+ count
 -------
      4
 (1 row)
@@ -7932,55 +7932,55 @@ SELECT count(*) FROM ltreetest WHERE t ? '{23.*.1,23.*.2}';
 create table _ltreetest (t ltree[]);
 \copy _ltreetest FROM 'data/_ltree.data'
 SELECT count(*) FROM _ltreetest WHERE t @> '1.1.1' ;
- count 
+ count
 -------
     15
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t <@ '1.1.1' ;
- count 
+ count
 -------
     19
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t @ '23 & 1' ;
- count 
+ count
 -------
    147
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '1.1.1.*' ;
- count 
+ count
 -------
     19
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '*.1' ;
- count 
+ count
 -------
    109
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*{1}.1' ;
- count 
+ count
 -------
      5
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*.1' ;
- count 
+ count
 -------
     11
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*.2' ;
- count 
+ count
 -------
      5
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ? '{23.*.1,23.*.2}' ;
- count 
+ count
 -------
     15
 (1 row)
@@ -7988,55 +7988,55 @@ SELECT count(*) FROM _ltreetest WHERE t ? '{23.*.1,23.*.2}' ;
 create index _tstidx on _ltreetest using gist (t);
 set enable_seqscan=off;
 SELECT count(*) FROM _ltreetest WHERE t @> '1.1.1' ;
- count 
+ count
 -------
     15
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t <@ '1.1.1' ;
- count 
+ count
 -------
     19
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t @ '23 & 1' ;
- count 
+ count
 -------
    147
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '1.1.1.*' ;
- count 
+ count
 -------
     19
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '*.1' ;
- count 
+ count
 -------
    109
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*{1}.1' ;
- count 
+ count
 -------
      5
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*.1' ;
- count 
+ count
 -------
     11
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*.2' ;
- count 
+ count
 -------
      5
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ? '{23.*.1,23.*.2}' ;
- count 
+ count
 -------
     15
 (1 row)
@@ -8050,55 +8050,55 @@ ERROR:  value 2025 out of bounds for option "siglen"
 DETAIL:  Valid values are between "1" and "2024".
 create index _tstidx on _ltreetest using gist (t gist__ltree_ops(siglen=2024));
 SELECT count(*) FROM _ltreetest WHERE t @> '1.1.1' ;
- count 
+ count
 -------
     15
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t <@ '1.1.1' ;
- count 
+ count
 -------
     19
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t @ '23 & 1' ;
- count 
+ count
 -------
    147
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '1.1.1.*' ;
- count 
+ count
 -------
     19
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '*.1' ;
- count 
+ count
 -------
    109
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*{1}.1' ;
- count 
+ count
 -------
      5
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*.1' ;
- count 
+ count
 -------
     11
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ~ '23.*.2' ;
- count 
+ count
 -------
      5
 (1 row)
 
 SELECT count(*) FROM _ltreetest WHERE t ? '{23.*.1,23.*.2}' ;
- count 
+ count
 -------
     15
 (1 row)
@@ -8120,15 +8120,14 @@ FROM (VALUES ('.2.3', 'ltree'),
              ('!tree & aWdf@*','ltxtquery'))
       AS a(str,typ),
      LATERAL pg_input_error_info(a.str, a.typ) as errinfo;
-     value      |   type    | ok | sql_error_code |              message               |          detail          | hint 
+     value      |   type    | ok | sql_error_code |              message               |          detail          | hint
 ----------------+-----------+----+----------------+------------------------------------+--------------------------+------
- .2.3           | ltree     | f  | 42601          | ltree syntax error at character 1  |                          | 
- 1.2.           | ltree     | f  | 42601          | ltree syntax error                 | Unexpected end of input. | 
- 1.2.3          | ltree     | t  |                |                                    |                          | 
- @.2.3          | lquery    | f  | 42601          | lquery syntax error at character 1 |                          | 
-  2.3           | lquery    | f  | 42601          | lquery syntax error at character 1 |                          | 
- 1.2.3          | lquery    | t  |                |                                    |                          | 
- $tree & aWdf@* | ltxtquery | f  | 42601          | operand syntax error               |                          | 
- !tree & aWdf@* | ltxtquery | t  |                |                                    |                          | 
+ .2.3           | ltree     | f  | 42601          | ltree syntax error at character 1  |                          |
+ 1.2.           | ltree     | f  | 42601          | ltree syntax error                 | Unexpected end of input. |
+ 1.2.3          | ltree     | t  |                |                                    |                          |
+ @.2.3          | lquery    | f  | 42601          | lquery syntax error at character 1 |                          |
+  2.3           | lquery    | f  | 42601          | lquery syntax error at character 1 |                          |
+ 1.2.3          | lquery    | t  |                |                                    |                          |
+ $tree & aWdf@* | ltxtquery | f  | 42601          | operand syntax error               |                          |
+ !tree & aWdf@* | ltxtquery | t  |                |                                    |                          |
 (8 rows)
-

@@ -12,11 +12,11 @@ Error = Optional[str]
 
 class Setup:
     def __init__(
-            self,
-            model_name: str,
-            libsvm_data: StreamingDataSet,
-            args: argparse.Namespace,
-            db: NeurDBModelHandler,
+        self,
+        model_name: str,
+        libsvm_data: StreamingDataSet,
+        args: argparse.Namespace,
+        db: NeurDBModelHandler,
     ) -> None:
         self._model_name = model_name
         self.libsvm_data = libsvm_data
@@ -28,7 +28,7 @@ class Setup:
     #         return f.read()
 
     def train(
-            self, epochs: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
+        self, epochs: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
     ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
@@ -58,13 +58,13 @@ class Setup:
             return -1, str(traceback.format_exc())
 
     def finetune(
-            self,
-            model_id: int,
-            start_layer_id: int,
-            epochs: int,
-            train_batch_num: int,
-            eva_batch_num: int,
-            test_batch_num: int,
+        self,
+        model_id: int,
+        start_layer_id: int,
+        epochs: int,
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int,
     ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
@@ -102,7 +102,7 @@ class Setup:
             return -1, str(traceback.format_exc())
 
     def inference(
-            self, model_id: int, inf_batch_num: int
+        self, model_id: int, inf_batch_num: int
     ) -> Tuple[List[np.ndarray], Error]:
         try:
             self.libsvm_data.setup_for_inference_task(inf_batch_num)

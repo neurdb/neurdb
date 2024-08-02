@@ -24,8 +24,8 @@
 
 int main() {
   /* exec sql begin declare section */
-       
-  
+
+
 #line 9 "show.pgc"
  char var [ 25 ] = "public" ;
 /* exec sql end declare section */
@@ -44,8 +44,8 @@ int main() {
 #line 16 "show.pgc"
 
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "set search_path to $0", 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "set search_path to $0",
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 18 "show.pgc"
 
@@ -55,8 +55,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 18 "show.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show search_path", ECPGt_EOIT, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show search_path", ECPGt_EOIT,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 19 "show.pgc"
 
@@ -77,8 +77,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 22 "show.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show search_path", ECPGt_EOIT, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show search_path", ECPGt_EOIT,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 23 "show.pgc"
 
@@ -99,8 +99,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 26 "show.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show standard_conforming_strings", ECPGt_EOIT, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show standard_conforming_strings", ECPGt_EOIT,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 27 "show.pgc"
 
@@ -121,8 +121,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 30 "show.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show time zone", ECPGt_EOIT, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show time zone", ECPGt_EOIT,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 31 "show.pgc"
 
@@ -143,8 +143,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 34 "show.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show transaction isolation level", ECPGt_EOIT, 
-	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "show transaction isolation level", ECPGt_EOIT,
+	ECPGt_char,(var),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 35 "show.pgc"
 

@@ -1,4 +1,4 @@
- abbrev |       name_en        |                    name_ru                     
+ abbrev |       name_en        |                    name_ru
 --------+----------------------+------------------------------------------------
  ID     | Idaho                | Айдахо
  IA     | Iowa                 | Айова
@@ -51,4 +51,3 @@
  SC     | South Carolina       | Южная Каролина
  UT     | Utah                 | Юта
 (50 rows)
-

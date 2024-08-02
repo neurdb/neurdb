@@ -23,7 +23,7 @@
 
 
 int main() {
-  
+
 #line 8 "func.pgc"
  char text [ 25 ] ;
 
@@ -106,8 +106,8 @@ if (sqlca.sqlwarn[0] == 'W') sqlprint();
 if (sqlca.sqlcode < 0) sqlprint();}
 #line 35 "func.pgc"
 
-  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select name from Log limit 1", ECPGt_EOIT, 
-	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char), 
+  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select name from Log limit 1", ECPGt_EOIT,
+	ECPGt_char,(text),(long)25,(long)1,(25)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 36 "func.pgc"
 

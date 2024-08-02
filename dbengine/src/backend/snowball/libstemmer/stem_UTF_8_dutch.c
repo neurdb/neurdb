@@ -250,27 +250,27 @@ static int r_prelude(struct SN_env * z) {
 static int r_mark_regions(struct SN_env * z) {
     z->I[1] = z->l;
     z->I[0] = z->l;
-    {   
+    {
         int ret = out_grouping_U(z, g_v, 97, 232, 1);
         if (ret < 0) return 0;
         z->c += ret;
     }
-    {   
+    {
         int ret = in_grouping_U(z, g_v, 97, 232, 1);
         if (ret < 0) return 0;
         z->c += ret;
     }
     z->I[1] = z->c;
-    
+
     if (!(z->I[1] < 3)) goto lab0;
     z->I[1] = 3;
 lab0:
-    {   
+    {
         int ret = out_grouping_U(z, g_v, 97, 232, 1);
         if (ret < 0) return 0;
         z->c += ret;
     }
-    {   
+    {
         int ret = in_grouping_U(z, g_v, 97, 232, 1);
         if (ret < 0) return 0;
         z->c += ret;
@@ -593,7 +593,7 @@ extern int dutch_UTF_8_stem(struct SN_env * z) {
     }
     z->lb = z->c; z->c = z->l;
 
-    
+
     {   int ret = r_standard_suffix(z);
         if (ret < 0) return ret;
     }
@@ -610,4 +610,3 @@ extern int dutch_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * dutch_UTF_8_create_env(void) { return SN_create_env(0, 3); }
 
 extern void dutch_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

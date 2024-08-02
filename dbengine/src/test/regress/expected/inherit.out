@@ -32,7 +32,7 @@ INSERT INTO d(aa) VALUES('dddddd');
 INSERT INTO d(aa) VALUES('ddddddd');
 INSERT INTO d(aa) VALUES('dddddddd');
 SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
- relname |    aa    
+ relname |    aa
 ---------+----------
  a       | aaa
  a       | aaaa
@@ -61,52 +61,52 @@ SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
 (24 rows)
 
 SELECT relname, b.* FROM b, pg_class where b.tableoid = pg_class.oid;
- relname |    aa    | bb 
+ relname |    aa    | bb
 ---------+----------+----
- b       | bbb      | 
- b       | bbbb     | 
- b       | bbbbb    | 
- b       | bbbbbb   | 
- b       | bbbbbbb  | 
- b       | bbbbbbbb | 
- d       | ddd      | 
- d       | dddd     | 
- d       | ddddd    | 
- d       | dddddd   | 
- d       | ddddddd  | 
- d       | dddddddd | 
+ b       | bbb      |
+ b       | bbbb     |
+ b       | bbbbb    |
+ b       | bbbbbb   |
+ b       | bbbbbbb  |
+ b       | bbbbbbbb |
+ d       | ddd      |
+ d       | dddd     |
+ d       | ddddd    |
+ d       | dddddd   |
+ d       | ddddddd  |
+ d       | dddddddd |
 (12 rows)
 
 SELECT relname, c.* FROM c, pg_class where c.tableoid = pg_class.oid;
- relname |    aa    | cc 
+ relname |    aa    | cc
 ---------+----------+----
- c       | ccc      | 
- c       | cccc     | 
- c       | ccccc    | 
- c       | cccccc   | 
- c       | ccccccc  | 
- c       | cccccccc | 
- d       | ddd      | 
- d       | dddd     | 
- d       | ddddd    | 
- d       | dddddd   | 
- d       | ddddddd  | 
- d       | dddddddd | 
+ c       | ccc      |
+ c       | cccc     |
+ c       | ccccc    |
+ c       | cccccc   |
+ c       | ccccccc  |
+ c       | cccccccc |
+ d       | ddd      |
+ d       | dddd     |
+ d       | ddddd    |
+ d       | dddddd   |
+ d       | ddddddd  |
+ d       | dddddddd |
 (12 rows)
 
 SELECT relname, d.* FROM d, pg_class where d.tableoid = pg_class.oid;
- relname |    aa    | bb | cc | dd 
+ relname |    aa    | bb | cc | dd
 ---------+----------+----+----+----
- d       | ddd      |    |    | 
- d       | dddd     |    |    | 
- d       | ddddd    |    |    | 
- d       | dddddd   |    |    | 
- d       | ddddddd  |    |    | 
- d       | dddddddd |    |    | 
+ d       | ddd      |    |    |
+ d       | dddd     |    |    |
+ d       | ddddd    |    |    |
+ d       | dddddd   |    |    |
+ d       | ddddddd  |    |    |
+ d       | dddddddd |    |    |
 (6 rows)
 
 SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
- relname |    aa    
+ relname |    aa
 ---------+----------
  a       | aaa
  a       | aaaa
@@ -117,36 +117,36 @@ SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
 (6 rows)
 
 SELECT relname, b.* FROM ONLY b, pg_class where b.tableoid = pg_class.oid;
- relname |    aa    | bb 
+ relname |    aa    | bb
 ---------+----------+----
- b       | bbb      | 
- b       | bbbb     | 
- b       | bbbbb    | 
- b       | bbbbbb   | 
- b       | bbbbbbb  | 
- b       | bbbbbbbb | 
+ b       | bbb      |
+ b       | bbbb     |
+ b       | bbbbb    |
+ b       | bbbbbb   |
+ b       | bbbbbbb  |
+ b       | bbbbbbbb |
 (6 rows)
 
 SELECT relname, c.* FROM ONLY c, pg_class where c.tableoid = pg_class.oid;
- relname |    aa    | cc 
+ relname |    aa    | cc
 ---------+----------+----
- c       | ccc      | 
- c       | cccc     | 
- c       | ccccc    | 
- c       | cccccc   | 
- c       | ccccccc  | 
- c       | cccccccc | 
+ c       | ccc      |
+ c       | cccc     |
+ c       | ccccc    |
+ c       | cccccc   |
+ c       | ccccccc  |
+ c       | cccccccc |
 (6 rows)
 
 SELECT relname, d.* FROM ONLY d, pg_class where d.tableoid = pg_class.oid;
- relname |    aa    | bb | cc | dd 
+ relname |    aa    | bb | cc | dd
 ---------+----------+----+----+----
- d       | ddd      |    |    | 
- d       | dddd     |    |    | 
- d       | ddddd    |    |    | 
- d       | dddddd   |    |    | 
- d       | ddddddd  |    |    | 
- d       | dddddddd |    |    | 
+ d       | ddd      |    |    |
+ d       | dddd     |    |    |
+ d       | ddddd    |    |    |
+ d       | dddddd   |    |    |
+ d       | ddddddd  |    |    |
+ d       | dddddddd |    |    |
 (6 rows)
 
 UPDATE a SET aa='zzzz' WHERE aa='aaaa';
@@ -155,7 +155,7 @@ UPDATE b SET aa='zzz' WHERE aa='aaa';
 UPDATE ONLY b SET aa='zzz' WHERE aa='aaa';
 UPDATE a SET aa='zzzzzz' WHERE aa LIKE 'aaa%';
 SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
- relname |    aa    
+ relname |    aa
 ---------+----------
  a       | zzzz
  a       | zzzzz
@@ -184,52 +184,52 @@ SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
 (24 rows)
 
 SELECT relname, b.* FROM b, pg_class where b.tableoid = pg_class.oid;
- relname |    aa    | bb 
+ relname |    aa    | bb
 ---------+----------+----
- b       | bbb      | 
- b       | bbbb     | 
- b       | bbbbb    | 
- b       | bbbbbb   | 
- b       | bbbbbbb  | 
- b       | bbbbbbbb | 
- d       | ddd      | 
- d       | dddd     | 
- d       | ddddd    | 
- d       | dddddd   | 
- d       | ddddddd  | 
- d       | dddddddd | 
+ b       | bbb      |
+ b       | bbbb     |
+ b       | bbbbb    |
+ b       | bbbbbb   |
+ b       | bbbbbbb  |
+ b       | bbbbbbbb |
+ d       | ddd      |
+ d       | dddd     |
+ d       | ddddd    |
+ d       | dddddd   |
+ d       | ddddddd  |
+ d       | dddddddd |
 (12 rows)
 
 SELECT relname, c.* FROM c, pg_class where c.tableoid = pg_class.oid;
- relname |    aa    | cc 
+ relname |    aa    | cc
 ---------+----------+----
- c       | ccc      | 
- c       | cccc     | 
- c       | ccccc    | 
- c       | cccccc   | 
- c       | ccccccc  | 
- c       | cccccccc | 
- d       | ddd      | 
- d       | dddd     | 
- d       | ddddd    | 
- d       | dddddd   | 
- d       | ddddddd  | 
- d       | dddddddd | 
+ c       | ccc      |
+ c       | cccc     |
+ c       | ccccc    |
+ c       | cccccc   |
+ c       | ccccccc  |
+ c       | cccccccc |
+ d       | ddd      |
+ d       | dddd     |
+ d       | ddddd    |
+ d       | dddddd   |
+ d       | ddddddd  |
+ d       | dddddddd |
 (12 rows)
 
 SELECT relname, d.* FROM d, pg_class where d.tableoid = pg_class.oid;
- relname |    aa    | bb | cc | dd 
+ relname |    aa    | bb | cc | dd
 ---------+----------+----+----+----
- d       | ddd      |    |    | 
- d       | dddd     |    |    | 
- d       | ddddd    |    |    | 
- d       | dddddd   |    |    | 
- d       | ddddddd  |    |    | 
- d       | dddddddd |    |    | 
+ d       | ddd      |    |    |
+ d       | dddd     |    |    |
+ d       | ddddd    |    |    |
+ d       | dddddd   |    |    |
+ d       | ddddddd  |    |    |
+ d       | dddddddd |    |    |
 (6 rows)
 
 SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
- relname |   aa   
+ relname |   aa
 ---------+--------
  a       | zzzz
  a       | zzzzz
@@ -240,41 +240,41 @@ SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
 (6 rows)
 
 SELECT relname, b.* FROM ONLY b, pg_class where b.tableoid = pg_class.oid;
- relname |    aa    | bb 
+ relname |    aa    | bb
 ---------+----------+----
- b       | bbb      | 
- b       | bbbb     | 
- b       | bbbbb    | 
- b       | bbbbbb   | 
- b       | bbbbbbb  | 
- b       | bbbbbbbb | 
+ b       | bbb      |
+ b       | bbbb     |
+ b       | bbbbb    |
+ b       | bbbbbb   |
+ b       | bbbbbbb  |
+ b       | bbbbbbbb |
 (6 rows)
 
 SELECT relname, c.* FROM ONLY c, pg_class where c.tableoid = pg_class.oid;
- relname |    aa    | cc 
+ relname |    aa    | cc
 ---------+----------+----
- c       | ccc      | 
- c       | cccc     | 
- c       | ccccc    | 
- c       | cccccc   | 
- c       | ccccccc  | 
- c       | cccccccc | 
+ c       | ccc      |
+ c       | cccc     |
+ c       | ccccc    |
+ c       | cccccc   |
+ c       | ccccccc  |
+ c       | cccccccc |
 (6 rows)
 
 SELECT relname, d.* FROM ONLY d, pg_class where d.tableoid = pg_class.oid;
- relname |    aa    | bb | cc | dd 
+ relname |    aa    | bb | cc | dd
 ---------+----------+----+----+----
- d       | ddd      |    |    | 
- d       | dddd     |    |    | 
- d       | ddddd    |    |    | 
- d       | dddddd   |    |    | 
- d       | ddddddd  |    |    | 
- d       | dddddddd |    |    | 
+ d       | ddd      |    |    |
+ d       | dddd     |    |    |
+ d       | ddddd    |    |    |
+ d       | dddddd   |    |    |
+ d       | ddddddd  |    |    |
+ d       | dddddddd |    |    |
 (6 rows)
 
 UPDATE b SET aa='new';
 SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
- relname |    aa    
+ relname |    aa
 ---------+----------
  a       | zzzz
  a       | zzzzz
@@ -303,52 +303,52 @@ SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
 (24 rows)
 
 SELECT relname, b.* FROM b, pg_class where b.tableoid = pg_class.oid;
- relname | aa  | bb 
+ relname | aa  | bb
 ---------+-----+----
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
 (12 rows)
 
 SELECT relname, c.* FROM c, pg_class where c.tableoid = pg_class.oid;
- relname |    aa    | cc 
+ relname |    aa    | cc
 ---------+----------+----
- c       | ccc      | 
- c       | cccc     | 
- c       | ccccc    | 
- c       | cccccc   | 
- c       | ccccccc  | 
- c       | cccccccc | 
- d       | new      | 
- d       | new      | 
- d       | new      | 
- d       | new      | 
- d       | new      | 
- d       | new      | 
+ c       | ccc      |
+ c       | cccc     |
+ c       | ccccc    |
+ c       | cccccc   |
+ c       | ccccccc  |
+ c       | cccccccc |
+ d       | new      |
+ d       | new      |
+ d       | new      |
+ d       | new      |
+ d       | new      |
+ d       | new      |
 (12 rows)
 
 SELECT relname, d.* FROM d, pg_class where d.tableoid = pg_class.oid;
- relname | aa  | bb | cc | dd 
+ relname | aa  | bb | cc | dd
 ---------+-----+----+----+----
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
 (6 rows)
 
 SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
- relname |   aa   
+ relname |   aa
 ---------+--------
  a       | zzzz
  a       | zzzzz
@@ -359,42 +359,42 @@ SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
 (6 rows)
 
 SELECT relname, b.* FROM ONLY b, pg_class where b.tableoid = pg_class.oid;
- relname | aa  | bb 
+ relname | aa  | bb
 ---------+-----+----
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
 (6 rows)
 
 SELECT relname, c.* FROM ONLY c, pg_class where c.tableoid = pg_class.oid;
- relname |    aa    | cc 
+ relname |    aa    | cc
 ---------+----------+----
- c       | ccc      | 
- c       | cccc     | 
- c       | ccccc    | 
- c       | cccccc   | 
- c       | ccccccc  | 
- c       | cccccccc | 
+ c       | ccc      |
+ c       | cccc     |
+ c       | ccccc    |
+ c       | cccccc   |
+ c       | ccccccc  |
+ c       | cccccccc |
 (6 rows)
 
 SELECT relname, d.* FROM ONLY d, pg_class where d.tableoid = pg_class.oid;
- relname | aa  | bb | cc | dd 
+ relname | aa  | bb | cc | dd
 ---------+-----+----+----+----
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
 (6 rows)
 
 UPDATE a SET aa='new';
 DELETE FROM ONLY c WHERE aa='new';
 SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
- relname | aa  
+ relname | aa
 ---------+-----
  a       | new
  a       | new
@@ -417,46 +417,46 @@ SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
 (18 rows)
 
 SELECT relname, b.* FROM b, pg_class where b.tableoid = pg_class.oid;
- relname | aa  | bb 
+ relname | aa  | bb
 ---------+-----+----
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
 (12 rows)
 
 SELECT relname, c.* FROM c, pg_class where c.tableoid = pg_class.oid;
- relname | aa  | cc 
+ relname | aa  | cc
 ---------+-----+----
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
- d       | new | 
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
+ d       | new |
 (6 rows)
 
 SELECT relname, d.* FROM d, pg_class where d.tableoid = pg_class.oid;
- relname | aa  | bb | cc | dd 
+ relname | aa  | bb | cc | dd
 ---------+-----+----+----+----
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
 (6 rows)
 
 SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
- relname | aa  
+ relname | aa
 ---------+-----
  a       | new
  a       | new
@@ -467,70 +467,70 @@ SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
 (6 rows)
 
 SELECT relname, b.* FROM ONLY b, pg_class where b.tableoid = pg_class.oid;
- relname | aa  | bb 
+ relname | aa  | bb
 ---------+-----+----
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
- b       | new | 
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
+ b       | new |
 (6 rows)
 
 SELECT relname, c.* FROM ONLY c, pg_class where c.tableoid = pg_class.oid;
- relname | aa | cc 
+ relname | aa | cc
 ---------+----+----
 (0 rows)
 
 SELECT relname, d.* FROM ONLY d, pg_class where d.tableoid = pg_class.oid;
- relname | aa  | bb | cc | dd 
+ relname | aa  | bb | cc | dd
 ---------+-----+----+----+----
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
- d       | new |    |    | 
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
+ d       | new |    |    |
 (6 rows)
 
 DELETE FROM a;
 SELECT relname, a.* FROM a, pg_class where a.tableoid = pg_class.oid;
- relname | aa 
+ relname | aa
 ---------+----
 (0 rows)
 
 SELECT relname, b.* FROM b, pg_class where b.tableoid = pg_class.oid;
- relname | aa | bb 
+ relname | aa | bb
 ---------+----+----
 (0 rows)
 
 SELECT relname, c.* FROM c, pg_class where c.tableoid = pg_class.oid;
- relname | aa | cc 
+ relname | aa | cc
 ---------+----+----
 (0 rows)
 
 SELECT relname, d.* FROM d, pg_class where d.tableoid = pg_class.oid;
- relname | aa | bb | cc | dd 
+ relname | aa | bb | cc | dd
 ---------+----+----+----+----
 (0 rows)
 
 SELECT relname, a.* FROM ONLY a, pg_class where a.tableoid = pg_class.oid;
- relname | aa 
+ relname | aa
 ---------+----
 (0 rows)
 
 SELECT relname, b.* FROM ONLY b, pg_class where b.tableoid = pg_class.oid;
- relname | aa | bb 
+ relname | aa | bb
 ---------+----+----
 (0 rows)
 
 SELECT relname, c.* FROM ONLY c, pg_class where c.tableoid = pg_class.oid;
- relname | aa | cc 
+ relname | aa | cc
 ---------+----+----
 (0 rows)
 
 SELECT relname, d.* FROM ONLY d, pg_class where d.tableoid = pg_class.oid;
- relname | aa | bb | cc | dd 
+ relname | aa | bb | cc | dd
 ---------+----+----+----+----
 (0 rows)
 
@@ -552,7 +552,7 @@ create trigger some_tab_stmt_trig
   before update on some_tab execute function some_tab_stmt_trig_func();
 explain (costs off)
 update some_tab set f3 = 11 where f1 = 12 and f2 = 13;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Update on some_tab
    Update on some_tab_child some_tab_1
@@ -572,7 +572,7 @@ create table some_tab_child () inherits (some_tab);
 insert into some_tab_child values(1,2);
 explain (verbose, costs off)
 update some_tab set a = a + 1 where false;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Update on public.some_tab
    ->  Result
@@ -583,7 +583,7 @@ update some_tab set a = a + 1 where false;
 update some_tab set a = a + 1 where false;
 explain (verbose, costs off)
 update some_tab set a = a + 1 where false returning b, a;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Update on public.some_tab
    Output: some_tab.b, some_tab.a
@@ -593,12 +593,12 @@ update some_tab set a = a + 1 where false returning b, a;
 (5 rows)
 
 update some_tab set a = a + 1 where false returning b, a;
- b | a 
+ b | a
 ---+---
 (0 rows)
 
 table some_tab;
- a | b 
+ a | b
 ---+---
  1 | 2
 (1 row)
@@ -624,7 +624,7 @@ insert into bar2 values(3,3,3);
 insert into bar2 values(4,4,4);
 update bar set f2 = f2 + 100 where f1 in (select f1 from foo);
 select tableoid::regclass::text as relname, bar.* from bar order by 1,2;
- relname | f1 | f2  
+ relname | f1 | f2
 ---------+----+-----
  bar     |  1 | 101
  bar     |  2 | 102
@@ -642,7 +642,7 @@ from
   ( select f1 from foo union all select f1+3 from foo ) ss
 where bar.f1 = ss.f1;
 select tableoid::regclass::text as relname, bar.* from bar order by 1,2;
- relname | f1 | f2  
+ relname | f1 | f2
 ---------+----+-----
  bar     |  1 | 201
  bar     |  2 | 202
@@ -669,7 +669,7 @@ from
   (select a from some_tab union all select a+1 from some_tab) ss (a)
 where parted_tab.a = ss.a;
 select tableoid::regclass::text as relname, parted_tab.* from parted_tab order by 1,2;
-     relname      | a | b 
+     relname      | a | b
 ------------------+---+---
  parted_tab_part1 | 1 | b
  parted_tab_part2 | 2 | b
@@ -683,7 +683,7 @@ from
   (select 0 from parted_tab union all select 1 from parted_tab) ss (a)
 where parted_tab.a = ss.a;
 select tableoid::regclass::text as relname, parted_tab.* from parted_tab order by 1,2;
-     relname      | a | b 
+     relname      | a | b
 ------------------+---+---
  parted_tab_part1 | 1 | b
  parted_tab_part2 | 2 | a
@@ -692,7 +692,7 @@ select tableoid::regclass::text as relname, parted_tab.* from parted_tab order b
 
 -- modifies partition key, but no rows will actually be updated
 explain update parted_tab set a = 2 where false;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Update on parted_tab  (cost=0.00..0.00 rows=0 width=0)
    ->  Result  (cost=0.00..0.00 rows=0 width=10)
@@ -713,10 +713,10 @@ from
   (select a from some_tab union all select a+1 from some_tab) ss (a)
 where (mlp.a = ss.a and mlp.b = 'b') or mlp.a = 3;
 select tableoid::regclass::text as relname, mlparted_tab.* from mlparted_tab order by 1,2;
-       relname       | a | b |  c  
+       relname       | a | b |  c
 ---------------------+---+---+-----
- mlparted_tab_part1  | 1 | a | 
- mlparted_tab_part2a | 2 | a | 
+ mlparted_tab_part1  | 1 | a |
+ mlparted_tab_part2a | 2 | a |
  mlparted_tab_part2b | 2 | b | xxx
  mlparted_tab_part3  | 3 | a | xxx
 (4 rows)
@@ -743,7 +743,7 @@ DROP TABLE firstparent, secondparent, jointchild, thirdparent, otherchild;
 insert into d values('test','one','two','three');
 alter table a alter column aa type integer using bit_length(aa);
 select * from d;
- aa | bb  | cc  |  dd   
+ aa | bb  | cc  |  dd
 ----+-----+-----+-------
  32 | one | two | three
 (1 row)
@@ -764,7 +764,7 @@ alter table p1 add constraint p1chk check (ff1 > 0) no inherit;
 alter table p1 add constraint p2chk check (ff1 > 10);
 -- connoinherit should be true for NO INHERIT constraint
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pgc.connoinherit from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname = 'p1' order by 1,2;
- relname | conname | contype | conislocal | coninhcount | connoinherit 
+ relname | conname | contype | conislocal | coninhcount | connoinherit
 ---------+---------+---------+------------+-------------+--------------
  p1      | p1chk   | c       | t          |           0 | t
  p1      | p2chk   | c       | t          |           0 | f
@@ -774,9 +774,9 @@ select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg
 create table c1 () inherits (p1);
 \d p1
                  Table "public.p1"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- ff1    | integer |           |          | 
+ ff1    | integer |           |          |
 Check constraints:
     "p1chk" CHECK (ff1 > 0) NO INHERIT
     "p2chk" CHECK (ff1 > 10)
@@ -784,9 +784,9 @@ Number of child tables: 1 (Use \d+ to list them.)
 
 \d c1
                  Table "public.c1"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- ff1    | integer |           |          | 
+ ff1    | integer |           |          |
 Check constraints:
     "p2chk" CHECK (ff1 > 10)
 Inherits: p1
@@ -804,27 +804,27 @@ create table more_derived (like derived, b int) inherits (derived);
 NOTICE:  merging column "i" with inherited definition
 insert into derived (i) values (0);
 select derived::base from derived;
- derived 
+ derived
 ---------
  (0)
 (1 row)
 
 select NULL::derived::base;
- base 
+ base
 ------
- 
+
 (1 row)
 
 -- remove redundant conversions.
 explain (verbose on, costs off) select row(i, b)::more_derived::derived::base from more_derived;
-                QUERY PLAN                 
+                QUERY PLAN
 -------------------------------------------
  Seq Scan on public.more_derived
    Output: (ROW(i, b)::more_derived)::base
 (2 rows)
 
 explain (verbose on, costs off) select (1, 2)::more_derived::derived::base;
-      QUERY PLAN       
+      QUERY PLAN
 -----------------------
  Result
    Output: '(1)'::base
@@ -839,7 +839,7 @@ create function p2text(p2) returns text as 'select $1.f1' language sql;
 create table c1(f3 int) inherits(p1,p2);
 insert into c1 values(123456789, 'hi', 42);
 select p2text(c1.*) from c1;
- p2text 
+ p2text
 --------
  hi
 (1 row)
@@ -852,7 +852,7 @@ CREATE TABLE ac (aa TEXT);
 alter table ac add constraint ac_check check (aa is not null);
 CREATE TABLE bc (bb TEXT) INHERITS (ac);
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname | conname  | contype | conislocal | coninhcount |      consrc      
+ relname | conname  | contype | conislocal | coninhcount |      consrc
 ---------+----------+---------+------------+-------------+------------------
  ac      | ac_check | c       | t          |           0 | (aa IS NOT NULL)
  bc      | ac_check | c       | f          |           1 | (aa IS NOT NULL)
@@ -868,14 +868,14 @@ alter table bc drop constraint ac_check;  -- fail, disallowed
 ERROR:  cannot drop inherited constraint "ac_check" of relation "bc"
 alter table ac drop constraint ac_check;
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname | conname | contype | conislocal | coninhcount | consrc 
+ relname | conname | contype | conislocal | coninhcount | consrc
 ---------+---------+---------+------------+-------------+--------
 (0 rows)
 
 -- try the unnamed-constraint case
 alter table ac add check (aa is not null);
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname |   conname   | contype | conislocal | coninhcount |      consrc      
+ relname |   conname   | contype | conislocal | coninhcount |      consrc
 ---------+-------------+---------+------------+-------------+------------------
  ac      | ac_aa_check | c       | t          |           0 | (aa IS NOT NULL)
  bc      | ac_aa_check | c       | f          |           1 | (aa IS NOT NULL)
@@ -891,14 +891,14 @@ alter table bc drop constraint ac_aa_check;  -- fail, disallowed
 ERROR:  cannot drop inherited constraint "ac_aa_check" of relation "bc"
 alter table ac drop constraint ac_aa_check;
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname | conname | contype | conislocal | coninhcount | consrc 
+ relname | conname | contype | conislocal | coninhcount | consrc
 ---------+---------+---------+------------+-------------+--------
 (0 rows)
 
 alter table ac add constraint ac_check check (aa is not null);
 alter table bc no inherit ac;
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname | conname  | contype | conislocal | coninhcount |      consrc      
+ relname | conname  | contype | conislocal | coninhcount |      consrc
 ---------+----------+---------+------------+-------------+------------------
  ac      | ac_check | c       | t          |           0 | (aa IS NOT NULL)
  bc      | ac_check | c       | t          |           0 | (aa IS NOT NULL)
@@ -906,14 +906,14 @@ select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg
 
 alter table bc drop constraint ac_check;
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname | conname  | contype | conislocal | coninhcount |      consrc      
+ relname | conname  | contype | conislocal | coninhcount |      consrc
 ---------+----------+---------+------------+-------------+------------------
  ac      | ac_check | c       | t          |           0 | (aa IS NOT NULL)
 (1 row)
 
 alter table ac drop constraint ac_check;
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname | conname | contype | conislocal | coninhcount | consrc 
+ relname | conname | contype | conislocal | coninhcount | consrc
 ---------+---------+---------+------------+-------------+--------
 (0 rows)
 
@@ -924,7 +924,7 @@ create table bc (a int constraint check_a check (a <> 0), b int constraint check
 NOTICE:  merging column "a" with inherited definition
 NOTICE:  merging constraint "check_a" with inherited definition
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc') order by 1,2;
- relname | conname | contype | conislocal | coninhcount |  consrc  
+ relname | conname | contype | conislocal | coninhcount |  consrc
 ---------+---------+---------+------------+-------------+----------
  ac      | check_a | c       | t          |           0 | (a <> 0)
  bc      | check_a | c       | t          |           1 | (a <> 0)
@@ -937,7 +937,7 @@ create table ac (a int constraint check_a check (a <> 0));
 create table bc (b int constraint check_b check (b <> 0));
 create table cc (c int constraint check_c check (c <> 0)) inherits (ac, bc);
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc', 'cc') order by 1,2;
- relname | conname | contype | conislocal | coninhcount |  consrc  
+ relname | conname | contype | conislocal | coninhcount |  consrc
 ---------+---------+---------+------------+-------------+----------
  ac      | check_a | c       | t          |           0 | (a <> 0)
  bc      | check_b | c       | t          |           0 | (b <> 0)
@@ -948,7 +948,7 @@ select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg
 
 alter table cc no inherit bc;
 select pc.relname, pgc.conname, pgc.contype, pgc.conislocal, pgc.coninhcount, pg_get_expr(pgc.conbin, pc.oid) as consrc from pg_class as pc inner join pg_constraint as pgc on (pgc.conrelid = pc.oid) where pc.relname in ('ac', 'bc', 'cc') order by 1,2;
- relname | conname | contype | conislocal | coninhcount |  consrc  
+ relname | conname | contype | conislocal | coninhcount |  consrc
 ---------+---------+---------+------------+-------------+----------
  ac      | check_a | c       | t          |           0 | (a <> 0)
  bc      | check_b | c       | t          |           0 | (b <> 0)
@@ -977,11 +977,11 @@ DETAIL:  Failing row contains (1, -1, 2).
 create table c2(f3 int) inherits(p1,p2);
 \d c2
                  Table "public.c2"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- f1     | integer |           |          | 
- f2     | integer |           |          | 
- f3     | integer |           |          | 
+ f1     | integer |           |          |
+ f2     | integer |           |          |
+ f3     | integer |           |          |
 Check constraints:
     "p2_f2_check" CHECK (f2 > 0)
 Inherits: p1,
@@ -993,12 +993,12 @@ NOTICE:  merging multiple inherited definitions of column "f2"
 NOTICE:  merging multiple inherited definitions of column "f3"
 \d c3
                  Table "public.c3"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- f1     | integer |           |          | 
- f2     | integer |           |          | 
- f3     | integer |           |          | 
- f4     | integer |           |          | 
+ f1     | integer |           |          |
+ f2     | integer |           |          |
+ f3     | integer |           |          |
+ f4     | integer |           |          |
 Check constraints:
     "p2_f2_check" CHECK (f2 > 0)
 Inherits: c1,
@@ -1015,12 +1015,12 @@ create table cc1 (f2 text, f3 int) inherits (pp1);
 alter table pp1 add column a1 int check (a1 > 0);
 \d cc1
                 Table "public.cc1"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- f1     | integer |           |          | 
- f2     | text    |           |          | 
- f3     | integer |           |          | 
- a1     | integer |           |          | 
+ f1     | integer |           |          |
+ f2     | text    |           |          |
+ f3     | integer |           |          |
+ a1     | integer |           |          |
 Check constraints:
     "pp1_a1_check" CHECK (a1 > 0)
 Inherits: pp1
@@ -1030,13 +1030,13 @@ NOTICE:  merging multiple inherited definitions of column "f1"
 NOTICE:  merging multiple inherited definitions of column "a1"
 \d cc2
                      Table "public.cc2"
- Column |       Type       | Collation | Nullable | Default 
+ Column |       Type       | Collation | Nullable | Default
 --------+------------------+-----------+----------+---------
- f1     | integer          |           |          | 
- a1     | integer          |           |          | 
- f2     | text             |           |          | 
- f3     | integer          |           |          | 
- f4     | double precision |           |          | 
+ f1     | integer          |           |          |
+ a1     | integer          |           |          |
+ f2     | text             |           |          |
+ f3     | integer          |           |          |
+ f4     | double precision |           |          |
 Check constraints:
     "pp1_a1_check" CHECK (a1 > 0)
 Inherits: pp1,
@@ -1047,14 +1047,14 @@ NOTICE:  merging definition of column "a2" for child "cc2"
 NOTICE:  merging constraint "pp1_a2_check" with inherited definition
 \d cc2
                      Table "public.cc2"
- Column |       Type       | Collation | Nullable | Default 
+ Column |       Type       | Collation | Nullable | Default
 --------+------------------+-----------+----------+---------
- f1     | integer          |           |          | 
- a1     | integer          |           |          | 
- f2     | text             |           |          | 
- f3     | integer          |           |          | 
- f4     | double precision |           |          | 
- a2     | integer          |           |          | 
+ f1     | integer          |           |          |
+ a1     | integer          |           |          |
+ f2     | text             |           |          |
+ f3     | integer          |           |          |
+ f4     | double precision |           |          |
+ a2     | integer          |           |          |
 Check constraints:
     "pp1_a1_check" CHECK (a1 > 0)
     "pp1_a2_check" CHECK (a2 > 0)
@@ -1078,12 +1078,12 @@ ERROR:  cannot rename inherited column "aa"
 ALTER TABLE inhts RENAME d TO dd;
 \d+ inhts
                                    Table "public.inhts"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- aa     | integer |           |          |         | plain   |              | 
- b      | integer |           |          |         | plain   |              | 
- c      | integer |           |          |         | plain   |              | 
- dd     | integer |           |          |         | plain   |              | 
+ aa     | integer |           |          |         | plain   |              |
+ b      | integer |           |          |         | plain   |              |
+ c      | integer |           |          |         | plain   |              |
+ dd     | integer |           |          |         | plain   |              |
 Inherits: inht1,
           inhs1
 
@@ -1098,9 +1098,9 @@ NOTICE:  merging definition of column "i" for child "inhtd"
 NOTICE:  merging definition of column "i" for child "inhtd"
 \d+ inhta
                                    Table "public.inhta"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- i      | integer |           |          |         | plain   |              | 
+ i      | integer |           |          |         | plain   |              |
 Child tables: inhtb,
               inhtd
 
@@ -1114,13 +1114,13 @@ NOTICE:  merging multiple inherited definitions of column "b"
 ALTER TABLE inht1 RENAME aa TO aaa;
 \d+ inht4
                                    Table "public.inht4"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- aaa    | integer |           |          |         | plain   |              | 
- b      | integer |           |          |         | plain   |              | 
- x      | integer |           |          |         | plain   |              | 
- y      | integer |           |          |         | plain   |              | 
- z      | integer |           |          |         | plain   |              | 
+ aaa    | integer |           |          |         | plain   |              |
+ b      | integer |           |          |         | plain   |              |
+ x      | integer |           |          |         | plain   |              |
+ y      | integer |           |          |         | plain   |              |
+ z      | integer |           |          |         | plain   |              |
 Inherits: inht2,
           inht3
 
@@ -1131,13 +1131,13 @@ ALTER TABLE inht1 RENAME b TO bb;                -- to be failed
 ERROR:  cannot rename inherited column "b"
 \d+ inhts
                                    Table "public.inhts"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- aaaa   | integer |           |          |         | plain   |              | 
- b      | integer |           |          |         | plain   |              | 
- x      | integer |           |          |         | plain   |              | 
- c      | integer |           |          |         | plain   |              | 
- d      | integer |           |          |         | plain   |              | 
+ aaaa   | integer |           |          |         | plain   |              |
+ b      | integer |           |          |         | plain   |              |
+ x      | integer |           |          |         | plain   |              |
+ c      | integer |           |          |         | plain   |              |
+ d      | integer |           |          |         | plain   |              |
 Inherits: inht2,
           inhs1
 
@@ -1151,7 +1151,7 @@ SELECT a.attrelid::regclass, a.attname, a.attinhcount, e.expected
         WHERE inhparent IN (SELECT inhrelid FROM r) GROUP BY inhrelid) e
   JOIN pg_attribute a ON e.inhrelid = a.attrelid WHERE NOT attislocal
   ORDER BY a.attrelid::regclass::name, a.attnum;
- attrelid | attname | attinhcount | expected 
+ attrelid | attname | attinhcount | expected
 ----------+---------+-------------+----------
  inht2    | aaaa    |           1 |        1
  inht2    | b       |           1 |        1
@@ -1178,11 +1178,11 @@ CREATE TABLE test_constraints (id int, val1 varchar, val2 int, UNIQUE(val1, val2
 CREATE TABLE test_constraints_inh () INHERITS (test_constraints);
 \d+ test_constraints
                                    Table "public.test_constraints"
- Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+-------------------+-----------+----------+---------+----------+--------------+-------------
- id     | integer           |           |          |         | plain    |              | 
- val1   | character varying |           |          |         | extended |              | 
- val2   | integer           |           |          |         | plain    |              | 
+ id     | integer           |           |          |         | plain    |              |
+ val1   | character varying |           |          |         | extended |              |
+ val2   | integer           |           |          |         | plain    |              |
 Indexes:
     "test_constraints_val1_val2_key" UNIQUE CONSTRAINT, btree (val1, val2)
 Child tables: test_constraints_inh
@@ -1190,20 +1190,20 @@ Child tables: test_constraints_inh
 ALTER TABLE ONLY test_constraints DROP CONSTRAINT test_constraints_val1_val2_key;
 \d+ test_constraints
                                    Table "public.test_constraints"
- Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+-------------------+-----------+----------+---------+----------+--------------+-------------
- id     | integer           |           |          |         | plain    |              | 
- val1   | character varying |           |          |         | extended |              | 
- val2   | integer           |           |          |         | plain    |              | 
+ id     | integer           |           |          |         | plain    |              |
+ val1   | character varying |           |          |         | extended |              |
+ val2   | integer           |           |          |         | plain    |              |
 Child tables: test_constraints_inh
 
 \d+ test_constraints_inh
                                  Table "public.test_constraints_inh"
- Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+-------------------+-----------+----------+---------+----------+--------------+-------------
- id     | integer           |           |          |         | plain    |              | 
- val1   | character varying |           |          |         | extended |              | 
- val2   | integer           |           |          |         | plain    |              | 
+ id     | integer           |           |          |         | plain    |              |
+ val1   | character varying |           |          |         | extended |              |
+ val2   | integer           |           |          |         | plain    |              |
 Inherits: test_constraints
 
 DROP TABLE test_constraints_inh;
@@ -1215,9 +1215,9 @@ CREATE TABLE test_ex_constraints (
 CREATE TABLE test_ex_constraints_inh () INHERITS (test_ex_constraints);
 \d+ test_ex_constraints
                            Table "public.test_ex_constraints"
- Column |  Type  | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type  | Collation | Nullable | Default | Storage | Stats target | Description
 --------+--------+-----------+----------+---------+---------+--------------+-------------
- c      | circle |           |          |         | plain   |              | 
+ c      | circle |           |          |         | plain   |              |
 Indexes:
     "test_ex_constraints_c_excl" EXCLUDE USING gist (c WITH &&)
 Child tables: test_ex_constraints_inh
@@ -1225,16 +1225,16 @@ Child tables: test_ex_constraints_inh
 ALTER TABLE test_ex_constraints DROP CONSTRAINT test_ex_constraints_c_excl;
 \d+ test_ex_constraints
                            Table "public.test_ex_constraints"
- Column |  Type  | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type  | Collation | Nullable | Default | Storage | Stats target | Description
 --------+--------+-----------+----------+---------+---------+--------------+-------------
- c      | circle |           |          |         | plain   |              | 
+ c      | circle |           |          |         | plain   |              |
 Child tables: test_ex_constraints_inh
 
 \d+ test_ex_constraints_inh
                          Table "public.test_ex_constraints_inh"
- Column |  Type  | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type  | Collation | Nullable | Default | Storage | Stats target | Description
 --------+--------+-----------+----------+---------+---------+--------------+-------------
- c      | circle |           |          |         | plain   |              | 
+ c      | circle |           |          |         | plain   |              |
 Inherits: test_ex_constraints
 
 DROP TABLE test_ex_constraints_inh;
@@ -1245,9 +1245,9 @@ CREATE TABLE test_foreign_constraints(id1 int REFERENCES test_primary_constraint
 CREATE TABLE test_foreign_constraints_inh () INHERITS (test_foreign_constraints);
 \d+ test_primary_constraints
                          Table "public.test_primary_constraints"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- id     | integer |           | not null |         | plain   |              | 
+ id     | integer |           | not null |         | plain   |              |
 Indexes:
     "test_primary_constraints_pkey" PRIMARY KEY, btree (id)
 Referenced by:
@@ -1255,9 +1255,9 @@ Referenced by:
 
 \d+ test_foreign_constraints
                          Table "public.test_foreign_constraints"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- id1    | integer |           |          |         | plain   |              | 
+ id1    | integer |           |          |         | plain   |              |
 Foreign-key constraints:
     "test_foreign_constraints_id1_fkey" FOREIGN KEY (id1) REFERENCES test_primary_constraints(id)
 Child tables: test_foreign_constraints_inh
@@ -1265,16 +1265,16 @@ Child tables: test_foreign_constraints_inh
 ALTER TABLE test_foreign_constraints DROP CONSTRAINT test_foreign_constraints_id1_fkey;
 \d+ test_foreign_constraints
                          Table "public.test_foreign_constraints"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- id1    | integer |           |          |         | plain   |              | 
+ id1    | integer |           |          |         | plain   |              |
 Child tables: test_foreign_constraints_inh
 
 \d+ test_foreign_constraints_inh
                        Table "public.test_foreign_constraints_inh"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- id1    | integer |           |          |         | plain   |              | 
+ id1    | integer |           |          |         | plain   |              |
 Inherits: test_foreign_constraints
 
 DROP TABLE test_foreign_constraints_inh;
@@ -1289,14 +1289,14 @@ create table inh_fk_2_child () inherits (inh_fk_2);
 insert into inh_fk_2_child values (111, 1), (222, 2);
 delete from inh_fk_1 where a = 1;
 select * from inh_fk_1 order by 1;
- a 
+ a
 ---
  2
  3
 (2 rows)
 
 select * from inh_fk_2 order by 1, 2;
-  x  | y 
+  x  | y
 -----+---
   22 | 2
   33 | 3
@@ -1317,7 +1317,7 @@ NOTICE:  merging constraint "inh_check_constraint2" with inherited definition
 select conrelid::regclass::text as relname, conname, conislocal, coninhcount
 from pg_constraint where conname like 'inh\_check\_constraint%'
 order by 1, 2;
- relname |        conname        | conislocal | coninhcount 
+ relname |        conname        | conislocal | coninhcount
 ---------+-----------------------+------------+-------------
  p1      | inh_check_constraint1 | t          |           0
  p1      | inh_check_constraint2 | t          |           0
@@ -1348,7 +1348,7 @@ select conrelid::regclass::text as relname, conname,
        convalidated, conislocal, coninhcount, connoinherit
 from pg_constraint where conname like 'inh\_check\_constraint%'
 order by 1, 2;
-         relname         |       conname        | convalidated | conislocal | coninhcount | connoinherit 
+         relname         |       conname        | convalidated | conislocal | coninhcount | connoinherit
 -------------------------+----------------------+--------------+------------+-------------+--------------
  invalid_check_con       | inh_check_constraint | f            | t          |           0 | f
  invalid_check_con_child | inh_check_constraint | t            | t          |           1 | f
@@ -1374,7 +1374,7 @@ analyze patest1;
 analyze patest2;
 explain (costs off)
 select * from patest0 join (select f1 from int4_tbl limit 1) ss on id = f1;
-                         QUERY PLAN                         
+                         QUERY PLAN
 ------------------------------------------------------------
  Nested Loop
    ->  Limit
@@ -1389,7 +1389,7 @@ select * from patest0 join (select f1 from int4_tbl limit 1) ss on id = f1;
 (10 rows)
 
 select * from patest0 join (select f1 from int4_tbl limit 1) ss on id = f1;
- id | x | f1 
+ id | x | f1
 ----+---+----
   0 | 0 |  0
   0 | 0 |  0
@@ -1399,7 +1399,7 @@ select * from patest0 join (select f1 from int4_tbl limit 1) ss on id = f1;
 drop index patest2i;
 explain (costs off)
 select * from patest0 join (select f1 from int4_tbl limit 1) ss on id = f1;
-                         QUERY PLAN                         
+                         QUERY PLAN
 ------------------------------------------------------------
  Nested Loop
    ->  Limit
@@ -1414,7 +1414,7 @@ select * from patest0 join (select f1 from int4_tbl limit 1) ss on id = f1;
 (10 rows)
 
 select * from patest0 join (select f1 from int4_tbl limit 1) ss on id = f1;
- id | x | f1 
+ id | x | f1
 ----+---+----
   0 | 0 |  0
   0 | 0 |  0
@@ -1447,7 +1447,7 @@ insert into matest3 (name) values ('Test 5');
 insert into matest3 (name) values ('Test 6');
 set enable_indexscan = off;  -- force use of seqscan/sort, so no merge
 explain (verbose, costs off) select * from matest0 order by 1-id;
-                         QUERY PLAN                         
+                         QUERY PLAN
 ------------------------------------------------------------
  Sort
    Output: matest0.id, matest0.name, ((1 - matest0.id))
@@ -1466,7 +1466,7 @@ explain (verbose, costs off) select * from matest0 order by 1-id;
 (14 rows)
 
 select * from matest0 order by 1-id;
- id |  name  
+ id |  name
 ----+--------
   6 | Test 6
   5 | Test 5
@@ -1477,7 +1477,7 @@ select * from matest0 order by 1-id;
 (6 rows)
 
 explain (verbose, costs off) select min(1-id) from matest0;
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Aggregate
    Output: min((1 - matest0.id))
@@ -1493,7 +1493,7 @@ explain (verbose, costs off) select min(1-id) from matest0;
 (11 rows)
 
 select min(1-id) from matest0;
- min 
+ min
 -----
   -5
 (1 row)
@@ -1502,7 +1502,7 @@ reset enable_indexscan;
 set enable_seqscan = off;  -- plan with fewest seqscans should be merge
 set enable_parallel_append = off; -- Don't let parallel-append interfere
 explain (verbose, costs off) select * from matest0 order by 1-id;
-                               QUERY PLAN                               
+                               QUERY PLAN
 ------------------------------------------------------------------------
  Merge Append
    Sort Key: ((1 - matest0.id))
@@ -1520,7 +1520,7 @@ explain (verbose, costs off) select * from matest0 order by 1-id;
 (13 rows)
 
 select * from matest0 order by 1-id;
- id |  name  
+ id |  name
 ----+--------
   6 | Test 6
   5 | Test 5
@@ -1531,7 +1531,7 @@ select * from matest0 order by 1-id;
 (6 rows)
 
 explain (verbose, costs off) select min(1-id) from matest0;
-                                   QUERY PLAN                                    
+                                   QUERY PLAN
 ---------------------------------------------------------------------------------
  Result
    Output: $0
@@ -1561,7 +1561,7 @@ explain (verbose, costs off) select min(1-id) from matest0;
 (25 rows)
 
 select min(1-id) from matest0;
- min 
+ min
 -----
   -5
 (1 row)
@@ -1586,7 +1586,7 @@ explain (costs off)
 select t1.* from matest0 t1, matest0 t2
 where t1.b = t2.b and t2.c = t2.d
 order by t1.b limit 10;
-                            QUERY PLAN                             
+                            QUERY PLAN
 -------------------------------------------------------------------
  Limit
    ->  Merge Join
@@ -1619,7 +1619,7 @@ SELECT thousand, tenthous FROM tenk1
 UNION ALL
 SELECT thousand, thousand FROM tenk1
 ORDER BY thousand, tenthous;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Merge Append
    Sort Key: tenk1.thousand, tenk1.tenthous
@@ -1634,7 +1634,7 @@ SELECT thousand, tenthous, thousand+tenthous AS x FROM tenk1
 UNION ALL
 SELECT 42, 42, hundred FROM tenk1
 ORDER BY thousand, tenthous;
-                            QUERY PLAN                            
+                            QUERY PLAN
 ------------------------------------------------------------------
  Merge Append
    Sort Key: tenk1.thousand, tenk1.tenthous
@@ -1649,7 +1649,7 @@ SELECT thousand, tenthous FROM tenk1
 UNION ALL
 SELECT thousand, random()::integer FROM tenk1
 ORDER BY thousand, tenthous;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Merge Append
    Sort Key: tenk1.thousand, tenk1.tenthous
@@ -1665,7 +1665,7 @@ SELECT min(x) FROM
   (SELECT unique1 AS x FROM tenk1 a
    UNION ALL
    SELECT unique2 AS x FROM tenk1 b) s;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Result
    InitPlan 1 (returns $0)
@@ -1683,7 +1683,7 @@ SELECT min(y) FROM
   (SELECT unique1 AS x, unique1 AS y FROM tenk1 a
    UNION ALL
    SELECT unique2 AS x, unique2 AS y FROM tenk1 b) s;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Result
    InitPlan 1 (returns $0)
@@ -1703,7 +1703,7 @@ SELECT x, y FROM
    UNION ALL
    SELECT unique2 AS x, unique2 AS y FROM tenk1 b) s
 ORDER BY x, y;
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Merge Append
    Sort Key: a.thousand, a.tenthous
@@ -1723,7 +1723,7 @@ SELECT
     ) f(i)
     ORDER BY f.i LIMIT 10)
 FROM generate_series(1, 3) g(i);
-                           QUERY PLAN                           
+                           QUERY PLAN
 ----------------------------------------------------------------
  Function Scan on generate_series g
    SubPlan 1
@@ -1746,7 +1746,7 @@ SELECT
     ) f(i)
     ORDER BY f.i LIMIT 10)
 FROM generate_series(1, 3) g(i);
-            array             
+            array
 ------------------------------
  {1,5,6,8,11,11,14,16,17,20}
  {2,6,7,9,12,12,15,17,18,21}
@@ -1766,7 +1766,7 @@ insert into inhpar select x, x::text from generate_series(1,5) x;
 insert into inhcld select x::text, x from generate_series(6,10) x;
 explain (verbose, costs off)
 update inhpar i set (f1, f2) = (select i.f1, i.f2 || '-' from int4_tbl limit 1);
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Update on public.inhpar i
    Update on public.inhpar i_1
@@ -1787,7 +1787,7 @@ update inhpar i set (f1, f2) = (select i.f1, i.f2 || '-' from int4_tbl limit 1);
 
 update inhpar i set (f1, f2) = (select i.f1, i.f2 || '-' from int4_tbl limit 1);
 select * from inhpar;
- f1 | f2  
+ f1 | f2
 ----+-----
   1 | 1-
   2 | 2-
@@ -1814,7 +1814,7 @@ alter table inhpar attach partition inhcld2 for values from (5) to (100);
 insert into inhpar select x, x::text from generate_series(1,10) x;
 explain (verbose, costs off)
 update inhpar i set (f1, f2) = (select i.f1, i.f2 || '-' from int4_tbl limit 1);
-                                    QUERY PLAN                                     
+                                    QUERY PLAN
 -----------------------------------------------------------------------------------
  Update on public.inhpar i
    Update on public.inhcld1 i_1
@@ -1833,7 +1833,7 @@ update inhpar i set (f1, f2) = (select i.f1, i.f2 || '-' from int4_tbl limit 1);
 
 update inhpar i set (f1, f2) = (select i.f1, i.f2 || '-' from int4_tbl limit 1);
 select * from inhpar;
- f1 | f2  
+ f1 | f2
 ----+-----
   1 | 1-
   2 | 2-
@@ -1851,7 +1851,7 @@ select * from inhpar;
 insert into inhpar as i values (3), (7) on conflict (f1)
   do update set (f1, f2) = (select i.f1, i.f2 || '+');
 select * from inhpar order by f1;  -- tuple order might be unstable here
- f1 | f2  
+ f1 | f2
 ----+-----
   1 | 1-
   2 | 2-
@@ -1875,15 +1875,15 @@ insert into cnullchild values(1);
 insert into cnullchild values(2);
 insert into cnullchild values(null);
 select * from cnullparent;
- f1 
+ f1
 ----
   1
   2
-   
+
 (3 rows)
 
 select * from cnullparent where f1 = 2;
- f1 
+ f1
 ----
   2
 (1 row)
@@ -1904,14 +1904,14 @@ insert into inh_temp_parent values (2);
 insert into inh_temp_child values (3);
 insert into inh_temp_child_2 values (4);
 select tableoid::regclass, a1 from inh_perm_parent;
-    tableoid     | a1 
+    tableoid     | a1
 -----------------+----
  inh_perm_parent |  1
  inh_temp_child  |  3
 (2 rows)
 
 select tableoid::regclass, a1 from inh_temp_parent;
-     tableoid     | a1 
+     tableoid     | a1
 ------------------+----
  inh_temp_parent  |  2
  inh_temp_child_2 |  4
@@ -1932,7 +1932,7 @@ create table part_ab_cd partition of list_parted for values in ('ab', 'cd');
 create table part_ef_gh partition of list_parted for values in ('ef', 'gh');
 create table part_null_xy partition of list_parted for values in (null, 'xy');
 explain (costs off) select * from list_parted;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Append
    ->  Seq Scan on part_ab_cd list_parted_1
@@ -1941,14 +1941,14 @@ explain (costs off) select * from list_parted;
 (4 rows)
 
 explain (costs off) select * from list_parted where a is null;
-              QUERY PLAN              
+              QUERY PLAN
 --------------------------------------
  Seq Scan on part_null_xy list_parted
    Filter: (a IS NULL)
 (2 rows)
 
 explain (costs off) select * from list_parted where a is not null;
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Append
    ->  Seq Scan on part_ab_cd list_parted_1
@@ -1960,7 +1960,7 @@ explain (costs off) select * from list_parted where a is not null;
 (7 rows)
 
 explain (costs off) select * from list_parted where a in ('ab', 'cd', 'ef');
-                        QUERY PLAN                        
+                        QUERY PLAN
 ----------------------------------------------------------
  Append
    ->  Seq Scan on part_ab_cd list_parted_1
@@ -1970,14 +1970,14 @@ explain (costs off) select * from list_parted where a in ('ab', 'cd', 'ef');
 (5 rows)
 
 explain (costs off) select * from list_parted where a = 'ab' or a in (null, 'cd');
-                                   QUERY PLAN                                    
+                                   QUERY PLAN
 ---------------------------------------------------------------------------------
  Seq Scan on part_ab_cd list_parted
    Filter: (((a)::text = 'ab'::text) OR ((a)::text = ANY ('{NULL,cd}'::text[])))
 (2 rows)
 
 explain (costs off) select * from list_parted where a = 'ab';
-             QUERY PLAN             
+             QUERY PLAN
 ------------------------------------
  Seq Scan on part_ab_cd list_parted
    Filter: ((a)::text = 'ab'::text)
@@ -2001,7 +2001,7 @@ create table part_40_inf_ab partition of part_40_inf for values in ('ab');
 create table part_40_inf_cd partition of part_40_inf for values in ('cd');
 create table part_40_inf_null partition of part_40_inf for values in (null);
 explain (costs off) select * from range_list_parted;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Append
    ->  Seq Scan on part_1_10_ab range_list_parted_1
@@ -2016,7 +2016,7 @@ explain (costs off) select * from range_list_parted;
 (10 rows)
 
 explain (costs off) select * from range_list_parted where a = 5;
-                     QUERY PLAN                     
+                     QUERY PLAN
 ----------------------------------------------------
  Append
    ->  Seq Scan on part_1_10_ab range_list_parted_1
@@ -2026,7 +2026,7 @@ explain (costs off) select * from range_list_parted where a = 5;
 (5 rows)
 
 explain (costs off) select * from range_list_parted where b = 'ab';
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Append
    ->  Seq Scan on part_1_10_ab range_list_parted_1
@@ -2040,7 +2040,7 @@ explain (costs off) select * from range_list_parted where b = 'ab';
 (9 rows)
 
 explain (costs off) select * from range_list_parted where a between 3 and 23 and b in ('ab');
-                           QUERY PLAN                            
+                           QUERY PLAN
 -----------------------------------------------------------------
  Append
    ->  Seq Scan on part_1_10_ab range_list_parted_1
@@ -2053,7 +2053,7 @@ explain (costs off) select * from range_list_parted where a between 3 and 23 and
 
 /* Should select no rows because range partition key cannot be null */
 explain (costs off) select * from range_list_parted where a is null;
-        QUERY PLAN        
+        QUERY PLAN
 --------------------------
  Result
    One-Time Filter: false
@@ -2061,14 +2061,14 @@ explain (costs off) select * from range_list_parted where a is null;
 
 /* Should only select rows from the null-accepting partition */
 explain (costs off) select * from range_list_parted where b is null;
-                   QUERY PLAN                   
+                   QUERY PLAN
 ------------------------------------------------
  Seq Scan on part_40_inf_null range_list_parted
    Filter: (b IS NULL)
 (2 rows)
 
 explain (costs off) select * from range_list_parted where a is not null and a < 67;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Append
    ->  Seq Scan on part_1_10_ab range_list_parted_1
@@ -2092,7 +2092,7 @@ explain (costs off) select * from range_list_parted where a is not null and a < 
 (19 rows)
 
 explain (costs off) select * from range_list_parted where a >= 30;
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Append
    ->  Seq Scan on part_40_inf_ab range_list_parted_1
@@ -2116,7 +2116,7 @@ create table mcrparted3 partition of mcrparted for values from (11, 1, 1) to (20
 create table mcrparted4 partition of mcrparted for values from (20, 10, 10) to (20, 20, 20);
 create table mcrparted5 partition of mcrparted for values from (20, 20, 20) to (maxvalue, maxvalue, maxvalue);
 explain (costs off) select * from mcrparted where a = 0;	-- scans mcrparted0, mcrparted_def
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Append
    ->  Seq Scan on mcrparted0 mcrparted_1
@@ -2126,7 +2126,7 @@ explain (costs off) select * from mcrparted where a = 0;	-- scans mcrparted0, mc
 (5 rows)
 
 explain (costs off) select * from mcrparted where a = 10 and abs(b) < 5;	-- scans mcrparted1, mcrparted_def
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Append
    ->  Seq Scan on mcrparted1 mcrparted_1
@@ -2136,7 +2136,7 @@ explain (costs off) select * from mcrparted where a = 10 and abs(b) < 5;	-- scan
 (5 rows)
 
 explain (costs off) select * from mcrparted where a = 10 and abs(b) = 5;	-- scans mcrparted1, mcrparted2, mcrparted_def
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Append
    ->  Seq Scan on mcrparted1 mcrparted_1
@@ -2148,7 +2148,7 @@ explain (costs off) select * from mcrparted where a = 10 and abs(b) = 5;	-- scan
 (7 rows)
 
 explain (costs off) select * from mcrparted where abs(b) = 5;	-- scans all partitions
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Append
    ->  Seq Scan on mcrparted0 mcrparted_1
@@ -2168,7 +2168,7 @@ explain (costs off) select * from mcrparted where abs(b) = 5;	-- scans all parti
 (15 rows)
 
 explain (costs off) select * from mcrparted where a > -1;	-- scans all partitions
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Append
    ->  Seq Scan on mcrparted0 mcrparted_1
@@ -2188,14 +2188,14 @@ explain (costs off) select * from mcrparted where a > -1;	-- scans all partition
 (15 rows)
 
 explain (costs off) select * from mcrparted where a = 20 and abs(b) = 10 and c > 10;	-- scans mcrparted4
-                     QUERY PLAN                      
+                     QUERY PLAN
 -----------------------------------------------------
  Seq Scan on mcrparted4 mcrparted
    Filter: ((c > 10) AND (a = 20) AND (abs(b) = 10))
 (2 rows)
 
 explain (costs off) select * from mcrparted where a = 20 and c > 20; -- scans mcrparted3, mcrparte4, mcrparte5, mcrparted_def
-                 QUERY PLAN                  
+                 QUERY PLAN
 ---------------------------------------------
  Append
    ->  Seq Scan on mcrparted3 mcrparted_1
@@ -2215,7 +2215,7 @@ create table parted_minmax1 partition of parted_minmax for values from (1) to (1
 create index parted_minmax1i on parted_minmax1 (a, b);
 insert into parted_minmax values (1,'12345');
 explain (costs off) select min(a), max(a) from parted_minmax where b = '12345';
-                                           QUERY PLAN                                           
+                                           QUERY PLAN
 ------------------------------------------------------------------------------------------------
  Result
    InitPlan 1 (returns $0)
@@ -2229,7 +2229,7 @@ explain (costs off) select min(a), max(a) from parted_minmax where b = '12345';
 (9 rows)
 
 select min(a), max(a) from parted_minmax where b = '12345';
- min | max 
+ min | max
 -----+-----
    1 |   1
 (1 row)
@@ -2240,7 +2240,7 @@ drop table parted_minmax;
 create index mcrparted_a_abs_c_idx on mcrparted (a, abs(b), c);
 -- MergeAppend must be used when a default partition exists
 explain (costs off) select * from mcrparted order by a, abs(b), c;
-                                  QUERY PLAN                                   
+                                  QUERY PLAN
 -------------------------------------------------------------------------------
  Merge Append
    Sort Key: mcrparted.a, (abs(mcrparted.b)), mcrparted.c
@@ -2257,7 +2257,7 @@ drop table mcrparted_def;
 -- Append is used for a RANGE partitioned table with no default
 -- and no subpartitions
 explain (costs off) select * from mcrparted order by a, abs(b), c;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Append
    ->  Index Scan using mcrparted0_a_abs_c_idx on mcrparted0 mcrparted_1
@@ -2270,7 +2270,7 @@ explain (costs off) select * from mcrparted order by a, abs(b), c;
 
 -- Append is used with subpaths in reverse order with backwards index scans
 explain (costs off) select * from mcrparted order by a desc, abs(b) desc, c desc;
-                                    QUERY PLAN                                    
+                                    QUERY PLAN
 ----------------------------------------------------------------------------------
  Append
    ->  Index Scan Backward using mcrparted5_a_abs_c_idx on mcrparted5 mcrparted_6
@@ -2288,7 +2288,7 @@ create table mcrparted5 partition of mcrparted for values from (20, 20, 20) to (
 create table mcrparted5a partition of mcrparted5 for values in(20);
 create table mcrparted5_def partition of mcrparted5 default;
 explain (costs off) select * from mcrparted order by a, abs(b), c;
-                                      QUERY PLAN                                       
+                                      QUERY PLAN
 ---------------------------------------------------------------------------------------
  Append
    ->  Index Scan using mcrparted0_a_abs_c_idx on mcrparted0 mcrparted_1
@@ -2307,7 +2307,7 @@ drop table mcrparted5_def;
 -- into the main Append when the sub-partition is unordered but contains
 -- just a single sub-partition.
 explain (costs off) select a, abs(b) from mcrparted order by a, abs(b), c;
-                                QUERY PLAN                                 
+                                QUERY PLAN
 ---------------------------------------------------------------------------
  Append
    ->  Index Scan using mcrparted0_a_abs_c_idx on mcrparted0 mcrparted_1
@@ -2321,7 +2321,7 @@ explain (costs off) select a, abs(b) from mcrparted order by a, abs(b), c;
 -- check that Append is used when the sub-partitioned tables are pruned
 -- during planning.
 explain (costs off) select * from mcrparted where a < 20 order by a, abs(b), c;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Append
    ->  Index Scan using mcrparted0_a_abs_c_idx on mcrparted0 mcrparted_1
@@ -2342,7 +2342,7 @@ create table mclparted2 partition of mclparted for values in(2);
 create index on mclparted (a);
 -- Ensure an Append is used for a list partition with an order by.
 explain (costs off) select * from mclparted order by a;
-                               QUERY PLAN                               
+                               QUERY PLAN
 ------------------------------------------------------------------------
  Append
    ->  Index Only Scan using mclparted1_a_idx on mclparted1 mclparted_1
@@ -2354,7 +2354,7 @@ explain (costs off) select * from mclparted order by a;
 create table mclparted3_5 partition of mclparted for values in(3,5);
 create table mclparted4 partition of mclparted for values in(4);
 explain (costs off) select * from mclparted order by a;
-                                 QUERY PLAN                                 
+                                 QUERY PLAN
 ----------------------------------------------------------------------------
  Merge Append
    Sort Key: mclparted.a
@@ -2365,7 +2365,7 @@ explain (costs off) select * from mclparted order by a;
 (6 rows)
 
 explain (costs off) select * from mclparted where a in(3,4,5) order by a;
-                                 QUERY PLAN                                 
+                                 QUERY PLAN
 ----------------------------------------------------------------------------
  Merge Append
    Sort Key: mclparted.a
@@ -2380,7 +2380,7 @@ create table mclparted_null partition of mclparted for values in(null);
 create table mclparted_def partition of mclparted default;
 -- Append can be used providing we don't scan the interleaved partition
 explain (costs off) select * from mclparted where a in(1,2,4) order by a;
-                               QUERY PLAN                               
+                               QUERY PLAN
 ------------------------------------------------------------------------
  Append
    ->  Index Only Scan using mclparted1_a_idx on mclparted1 mclparted_1
@@ -2392,7 +2392,7 @@ explain (costs off) select * from mclparted where a in(1,2,4) order by a;
 (7 rows)
 
 explain (costs off) select * from mclparted where a in(1,2,4) or a is null order by a;
-                                   QUERY PLAN                                   
+                                   QUERY PLAN
 --------------------------------------------------------------------------------
  Append
    ->  Index Only Scan using mclparted1_a_idx on mclparted1 mclparted_1
@@ -2410,7 +2410,7 @@ drop table mclparted_null;
 create table mclparted_0_null partition of mclparted for values in(0,null);
 -- Ensure MergeAppend is used since 0 and NULLs are in the same partition.
 explain (costs off) select * from mclparted where a in(1,2,4) or a is null order by a;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Merge Append
    Sort Key: mclparted.a
@@ -2425,7 +2425,7 @@ explain (costs off) select * from mclparted where a in(1,2,4) or a is null order
 (10 rows)
 
 explain (costs off) select * from mclparted where a in(0,1,2,4) order by a;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Merge Append
    Sort Key: mclparted.a
@@ -2441,7 +2441,7 @@ explain (costs off) select * from mclparted where a in(0,1,2,4) order by a;
 
 -- Ensure Append is used when the null partition is pruned
 explain (costs off) select * from mclparted where a in(1,2,4) order by a;
-                               QUERY PLAN                               
+                               QUERY PLAN
 ------------------------------------------------------------------------
  Append
    ->  Index Only Scan using mclparted1_a_idx on mclparted1 mclparted_1
@@ -2454,7 +2454,7 @@ explain (costs off) select * from mclparted where a in(1,2,4) order by a;
 
 -- Ensure MergeAppend is used when the default partition is not pruned
 explain (costs off) select * from mclparted where a in(1,2,4,100) order by a;
-                                  QUERY PLAN                                  
+                                  QUERY PLAN
 ------------------------------------------------------------------------------
  Merge Append
    Sort Key: mclparted.a
@@ -2479,7 +2479,7 @@ create index on mcrparted2 (a, abs(b), c);
 create index on mcrparted3 (a, abs(b), c);
 create index on mcrparted4 (a, abs(b), c);
 explain (costs off) select * from mcrparted where a < 20 order by a, abs(b), c limit 1;
-                                  QUERY PLAN                                   
+                                  QUERY PLAN
 -------------------------------------------------------------------------------
  Limit
    ->  Append
@@ -2499,7 +2499,7 @@ set enable_bitmapscan = 0;
 -- Ensure Append node can be used when the partition is ordered by some
 -- pathkeys which were deemed redundant.
 explain (costs off) select * from mcrparted where a = 10 order by a, abs(b), c;
-                               QUERY PLAN                                
+                               QUERY PLAN
 -------------------------------------------------------------------------
  Append
    ->  Index Scan using mcrparted1_a_abs_c_idx on mcrparted1 mcrparted_1
@@ -2516,7 +2516,7 @@ create table bool_lp_true partition of bool_lp for values in(true);
 create table bool_lp_false partition of bool_lp for values in(false);
 create index on bool_lp (b);
 explain (costs off) select * from bool_lp order by b;
-                                 QUERY PLAN                                 
+                                 QUERY PLAN
 ----------------------------------------------------------------------------
  Append
    ->  Index Only Scan using bool_lp_false_b_idx on bool_lp_false bool_lp_1
@@ -2532,7 +2532,7 @@ create table bool_rp_false_2k partition of bool_rp for values from (false,1000) 
 create table bool_rp_true_2k partition of bool_rp for values from (true,1000) to (true,2000);
 create index on bool_rp (b,a);
 explain (costs off) select * from bool_rp where b = true order by b,a;
-                                    QUERY PLAN                                    
+                                    QUERY PLAN
 ----------------------------------------------------------------------------------
  Append
    ->  Index Only Scan using bool_rp_true_1k_b_a_idx on bool_rp_true_1k bool_rp_1
@@ -2542,7 +2542,7 @@ explain (costs off) select * from bool_rp where b = true order by b,a;
 (5 rows)
 
 explain (costs off) select * from bool_rp where b = false order by b,a;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Append
    ->  Index Only Scan using bool_rp_false_1k_b_a_idx on bool_rp_false_1k bool_rp_1
@@ -2552,7 +2552,7 @@ explain (costs off) select * from bool_rp where b = false order by b,a;
 (5 rows)
 
 explain (costs off) select * from bool_rp where b = true order by a;
-                                    QUERY PLAN                                    
+                                    QUERY PLAN
 ----------------------------------------------------------------------------------
  Append
    ->  Index Only Scan using bool_rp_true_1k_b_a_idx on bool_rp_true_1k bool_rp_1
@@ -2562,7 +2562,7 @@ explain (costs off) select * from bool_rp where b = true order by a;
 (5 rows)
 
 explain (costs off) select * from bool_rp where b = false order by a;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Append
    ->  Index Only Scan using bool_rp_false_1k_b_a_idx on bool_rp_false_1k bool_rp_1
@@ -2579,7 +2579,7 @@ create table range_parted1 partition of range_parted for values from (0,0) to (1
 create table range_parted2 partition of range_parted for values from (10,10) to (20,20);
 create index on range_parted (a,b,c);
 explain (costs off) select * from range_parted order by a,b,c;
-                                     QUERY PLAN                                      
+                                     QUERY PLAN
 -------------------------------------------------------------------------------------
  Append
    ->  Index Only Scan using range_parted1_a_b_c_idx on range_parted1 range_parted_1
@@ -2587,7 +2587,7 @@ explain (costs off) select * from range_parted order by a,b,c;
 (3 rows)
 
 explain (costs off) select * from range_parted order by a desc,b desc,c desc;
-                                          QUERY PLAN                                          
+                                          QUERY PLAN
 ----------------------------------------------------------------------------------------------
  Append
    ->  Index Only Scan Backward using range_parted2_a_b_c_idx on range_parted2 range_parted_2
@@ -2614,7 +2614,7 @@ set session authorization regress_no_child_access;
 explain (costs off)
   select * from permtest_parent p1 inner join permtest_parent p2
   on p1.a = p2.a and p1.c ~ 'a1$';
-                QUERY PLAN                
+                QUERY PLAN
 ------------------------------------------
  Nested Loop
    Join Filter: (p1.a = p2.a)
@@ -2626,7 +2626,7 @@ explain (costs off)
 explain (costs off)
   select * from permtest_parent p1 inner join permtest_parent p2
   on p1.a = p2.a and left(p1.c, 3) ~ 'a1$';
-                  QUERY PLAN                  
+                  QUERY PLAN
 ----------------------------------------------
  Nested Loop
    Join Filter: (p1.a = p2.a)
@@ -2642,7 +2642,7 @@ set session authorization regress_no_child_access;
 explain (costs off)
   select p2.a, p1.c from permtest_parent p1 inner join permtest_parent p2
   on p1.a = p2.a and p1.c ~ 'a1$';
-                QUERY PLAN                
+                QUERY PLAN
 ------------------------------------------
  Nested Loop
    Join Filter: (p1.a = p2.a)
@@ -2655,7 +2655,7 @@ explain (costs off)
 explain (costs off)
   select p2.a, p1.c from permtest_parent p1 inner join permtest_parent p2
   on p1.a = p2.a and left(p1.c, 3) ~ 'a1$';
-                     QUERY PLAN                     
+                     QUERY PLAN
 ----------------------------------------------------
  Hash Join
    Hash Cond: (p2.a = p1.a)

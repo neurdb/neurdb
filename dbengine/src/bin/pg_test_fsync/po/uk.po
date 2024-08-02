@@ -208,4 +208,3 @@ msgid "\n"
 "Non-sync'ed %dkB writes:\n"
 msgstr "\n"
 "Несинхронізований запис %d КБ:\n"
-

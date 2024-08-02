@@ -2,7 +2,7 @@
 -- Commit Timestamp
 --
 SHOW track_commit_timestamp;
- track_commit_timestamp 
+ track_commit_timestamp
 ------------------------
  off
 (1 row)
@@ -23,15 +23,15 @@ DROP TABLE committs_test;
 SELECT pg_xact_commit_timestamp('0'::xid);
 ERROR:  cannot retrieve commit timestamp for transaction 0
 SELECT pg_xact_commit_timestamp('1'::xid);
- pg_xact_commit_timestamp 
+ pg_xact_commit_timestamp
 --------------------------
- 
+
 (1 row)
 
 SELECT pg_xact_commit_timestamp('2'::xid);
- pg_xact_commit_timestamp 
+ pg_xact_commit_timestamp
 --------------------------
- 
+
 (1 row)
 
 SELECT x.xid::text::bigint > 0 as xid_valid,
@@ -43,23 +43,23 @@ ERROR:  could not get commit timestamp data
 HINT:  Make sure the configuration parameter "track_commit_timestamp" is set.
 -- Test non-normal transaction ids.
 SELECT * FROM pg_xact_commit_timestamp_origin(NULL); -- ok, NULL
- timestamp | roident 
+ timestamp | roident
 -----------+---------
-           |        
+           |
 (1 row)
 
 SELECT * FROM pg_xact_commit_timestamp_origin('0'::xid); -- error
 ERROR:  cannot retrieve commit timestamp for transaction 0
 SELECT * FROM pg_xact_commit_timestamp_origin('1'::xid); -- ok, NULL
- timestamp | roident 
+ timestamp | roident
 -----------+---------
-           |        
+           |
 (1 row)
 
 SELECT * FROM pg_xact_commit_timestamp_origin('2'::xid); -- ok, NULL
- timestamp | roident 
+ timestamp | roident
 -----------+---------
-           |        
+           |
 (1 row)
 
 -- Test transaction without replication origin
@@ -79,15 +79,15 @@ HINT:  Make sure the configuration parameter "track_commit_timestamp" is set.
 -- Test transaction with replication origin
 SELECT pg_replication_origin_create('regress_commit_ts: get_origin') != 0
   AS valid_roident;
- valid_roident 
+ valid_roident
 ---------------
  t
 (1 row)
 
 SELECT pg_replication_origin_session_setup('regress_commit_ts: get_origin');
- pg_replication_origin_session_setup 
+ pg_replication_origin_session_setup
 -------------------------------------
- 
+
 (1 row)
 
 SELECT txid_current() as txid_with_origin \gset
@@ -106,14 +106,13 @@ SELECT x.timestamp > '-infinity'::timestamptz AS ts_low,
 ERROR:  could not get commit timestamp data
 HINT:  Make sure the configuration parameter "track_commit_timestamp" is set.
 SELECT pg_replication_origin_session_reset();
- pg_replication_origin_session_reset 
+ pg_replication_origin_session_reset
 -------------------------------------
- 
+
 (1 row)
 
 SELECT pg_replication_origin_drop('regress_commit_ts: get_origin');
- pg_replication_origin_drop 
+ pg_replication_origin_drop
 ----------------------------
- 
-(1 row)
 
+(1 row)

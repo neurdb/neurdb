@@ -6,7 +6,7 @@ CREATE EXTENSION seg;
 SELECT amname, opcname
 FROM pg_opclass opc LEFT JOIN pg_am am ON am.oid = opcmethod
 WHERE opc.oid >= 16384 AND NOT amvalidate(opc.oid);
- amname | opcname 
+ amname | opcname
 --------+---------
 (0 rows)
 
@@ -15,387 +15,387 @@ WHERE opc.oid >= 16384 AND NOT amvalidate(opc.oid);
 --
 -- Any number
 SELECT '1'::seg AS seg;
- seg 
+ seg
 -----
  1
 (1 row)
 
 SELECT '-1'::seg AS seg;
- seg 
+ seg
 -----
  -1
 (1 row)
 
 SELECT '1.0'::seg AS seg;
- seg 
+ seg
 -----
  1.0
 (1 row)
 
 SELECT '-1.0'::seg AS seg;
- seg  
+ seg
 ------
  -1.0
 (1 row)
 
 SELECT '1e7'::seg AS seg;
-  seg  
+  seg
 -------
  1e+07
 (1 row)
 
 SELECT '-1e7'::seg AS seg;
-  seg   
+  seg
 --------
  -1e+07
 (1 row)
 
 SELECT '1.0e7'::seg AS seg;
-   seg   
+   seg
 ---------
  1.0e+07
 (1 row)
 
 SELECT '-1.0e7'::seg AS seg;
-   seg    
+   seg
 ----------
  -1.0e+07
 (1 row)
 
 SELECT '1e+7'::seg AS seg;
-  seg  
+  seg
 -------
  1e+07
 (1 row)
 
 SELECT '-1e+7'::seg AS seg;
-  seg   
+  seg
 --------
  -1e+07
 (1 row)
 
 SELECT '1.0e+7'::seg AS seg;
-   seg   
+   seg
 ---------
  1.0e+07
 (1 row)
 
 SELECT '-1.0e+7'::seg AS seg;
-   seg    
+   seg
 ----------
  -1.0e+07
 (1 row)
 
 SELECT '1e-7'::seg AS seg;
-  seg  
+  seg
 -------
  1e-07
 (1 row)
 
 SELECT '-1e-7'::seg AS seg;
-  seg   
+  seg
 --------
  -1e-07
 (1 row)
 
 SELECT '1.0e-7'::seg AS seg;
-   seg   
+   seg
 ---------
  1.0e-07
 (1 row)
 
 SELECT '-1.0e-7'::seg AS seg;
-   seg    
+   seg
 ----------
  -1.0e-07
 (1 row)
 
 SELECT '2e-6'::seg AS seg;
-  seg  
+  seg
 -------
  2e-06
 (1 row)
 
 SELECT '2e-5'::seg AS seg;
-  seg  
+  seg
 -------
  2e-05
 (1 row)
 
 SELECT '2e-4'::seg AS seg;
-  seg   
+  seg
 --------
  0.0002
 (1 row)
 
 SELECT '2e-3'::seg AS seg;
-  seg  
+  seg
 -------
  0.002
 (1 row)
 
 SELECT '2e-2'::seg AS seg;
- seg  
+ seg
 ------
  0.02
 (1 row)
 
 SELECT '2e-1'::seg AS seg;
- seg 
+ seg
 -----
  0.2
 (1 row)
 
 SELECT '2e-0'::seg AS seg;
- seg 
+ seg
 -----
  2
 (1 row)
 
 SELECT '2e+0'::seg AS seg;
- seg 
+ seg
 -----
  2
 (1 row)
 
 SELECT '2e+1'::seg AS seg;
- seg 
+ seg
 -----
  2e1
 (1 row)
 
 SELECT '2e+2'::seg AS seg;
- seg 
+ seg
 -----
  2e2
 (1 row)
 
 SELECT '2e+3'::seg AS seg;
- seg 
+ seg
 -----
  2e3
 (1 row)
 
 SELECT '2e+4'::seg AS seg;
- seg 
+ seg
 -----
  2e4
 (1 row)
 
 SELECT '2e+5'::seg AS seg;
-  seg  
+  seg
 -------
  2e+05
 (1 row)
 
 SELECT '2e+6'::seg AS seg;
-  seg  
+  seg
 -------
  2e+06
 (1 row)
 
 -- Significant digits preserved
 SELECT '1'::seg AS seg;
- seg 
+ seg
 -----
  1
 (1 row)
 
 SELECT '1.0'::seg AS seg;
- seg 
+ seg
 -----
  1.0
 (1 row)
 
 SELECT '1.00'::seg AS seg;
- seg  
+ seg
 ------
  1.00
 (1 row)
 
 SELECT '1.000'::seg AS seg;
-  seg  
+  seg
 -------
  1.000
 (1 row)
 
 SELECT '1.0000'::seg AS seg;
-  seg   
+  seg
 --------
  1.0000
 (1 row)
 
 SELECT '1.00000'::seg AS seg;
-   seg   
+   seg
 ---------
  1.00000
 (1 row)
 
 SELECT '1.000000'::seg AS seg;
-   seg   
+   seg
 ---------
  1.00000
 (1 row)
 
 SELECT '0.000000120'::seg AS seg;
-   seg    
+   seg
 ----------
  1.20e-07
 (1 row)
 
 SELECT '3.400e5'::seg AS seg;
-    seg    
+    seg
 -----------
  3.400e+05
 (1 row)
 
 -- Digits truncated
 SELECT '12.34567890123456'::seg AS seg;
-   seg   
+   seg
 ---------
  12.3457
 (1 row)
 
 -- Same, with a very long input
 SELECT '12.3456789012345600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'::seg AS seg;
-   seg   
+   seg
 ---------
  12.3457
 (1 row)
 
 -- Numbers with certainty indicators
 SELECT '~6.5'::seg AS seg;
- seg  
+ seg
 ------
  ~6.5
 (1 row)
 
 SELECT '<6.5'::seg AS seg;
- seg  
+ seg
 ------
  <6.5
 (1 row)
 
 SELECT '>6.5'::seg AS seg;
- seg  
+ seg
 ------
  >6.5
 (1 row)
 
 SELECT '~ 6.5'::seg AS seg;
- seg  
+ seg
 ------
  ~6.5
 (1 row)
 
 SELECT '< 6.5'::seg AS seg;
- seg  
+ seg
 ------
  <6.5
 (1 row)
 
 SELECT '> 6.5'::seg AS seg;
- seg  
+ seg
 ------
  >6.5
 (1 row)
 
 -- Open intervals
 SELECT '0..'::seg AS seg;
- seg  
+ seg
 ------
  0 ..
 (1 row)
 
 SELECT '0...'::seg AS seg;
- seg  
+ seg
 ------
  0 ..
 (1 row)
 
 SELECT '0 ..'::seg AS seg;
- seg  
+ seg
 ------
  0 ..
 (1 row)
 
 SELECT '0 ...'::seg AS seg;
- seg  
+ seg
 ------
  0 ..
 (1 row)
 
 SELECT '..0'::seg AS seg;
- seg  
+ seg
 ------
  .. 0
 (1 row)
 
 SELECT '...0'::seg AS seg;
- seg  
+ seg
 ------
  .. 0
 (1 row)
 
 SELECT '.. 0'::seg AS seg;
- seg  
+ seg
 ------
  .. 0
 (1 row)
 
 SELECT '... 0'::seg AS seg;
- seg  
+ seg
 ------
  .. 0
 (1 row)
 
 -- Finite intervals
 SELECT '0 .. 1'::seg AS seg;
-  seg   
+  seg
 --------
  0 .. 1
 (1 row)
 
 SELECT '-1 .. 0'::seg AS seg;
-   seg   
+   seg
 ---------
  -1 .. 0
 (1 row)
 
 SELECT '-1 .. 1'::seg AS seg;
-   seg   
+   seg
 ---------
  -1 .. 1
 (1 row)
 
 -- (+/-) intervals
 SELECT '0(+-)1'::seg AS seg;
-   seg   
+   seg
 ---------
  -1 .. 1
 (1 row)
 
 SELECT '0(+-)1.0'::seg AS seg;
-     seg     
+     seg
 -------------
  -1.0 .. 1.0
 (1 row)
 
 SELECT '1.0(+-)0.005'::seg AS seg;
-      seg       
+      seg
 ----------------
  0.995 .. 1.005
 (1 row)
 
 SELECT '101(+-)1'::seg AS seg;
-       seg        
+       seg
 ------------------
  1.00e2 .. 1.02e2
 (1 row)
 
 -- incorrect number of significant digits in 99.0:
 SELECT '100(+-)1'::seg AS seg;
-      seg       
+      seg
 ----------------
  99.0 .. 1.01e2
 (1 row)
@@ -451,25 +451,25 @@ LINE 1: SELECT '1e700'::seg AS seg;
 -- equality/inequality:
 --
 SELECT '24 .. 33.20'::seg = '24 .. 33.20'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '24 .. 33.20'::seg = '24 .. 33.21'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '24 .. 33.20'::seg != '24 .. 33.20'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '24 .. 33.20'::seg != '24 .. 33.21'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -477,91 +477,91 @@ SELECT '24 .. 33.20'::seg != '24 .. 33.21'::seg AS bool;
 -- overlap
 --
 SELECT '1'::seg && '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::seg && '2'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 ..'::seg && '0 ..'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg && '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '..0'::seg && '0..'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '-1 .. 0.1'::seg && '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '-1 .. 0'::seg && '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '-1 .. -0.0001'::seg && '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 ..'::seg && '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg && '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg && '2'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 2'::seg && '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::seg && '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '2'::seg && '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::seg && '0 .. 2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -569,67 +569,67 @@ SELECT '1'::seg && '0 .. 2'::seg AS bool;
 -- overlap on the left
 --
 SELECT '1'::seg &< '0'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::seg &< '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::seg &< '2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg &< '0'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg &< '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg &< '2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg &< '0 .. 0.5'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg &< '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg &< '0 .. 2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg &< '1 .. 2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg &< '2 .. 3'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -637,67 +637,67 @@ SELECT '0 .. 1'::seg &< '2 .. 3'::seg AS bool;
 -- overlap on the right
 --
 SELECT '0'::seg &> '1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::seg &> '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '2'::seg &> '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0'::seg &> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::seg &> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '2'::seg &> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 0.5'::seg &> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg &> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 2'::seg &> '0 .. 2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1 .. 2'::seg &> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '2 .. 3'::seg &> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -705,67 +705,67 @@ SELECT '2 .. 3'::seg &> '0 .. 1'::seg AS bool;
 -- left
 --
 SELECT '1'::seg << '0'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::seg << '1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::seg << '2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg << '0'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg << '1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg << '2'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 1'::seg << '0 .. 0.5'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg << '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg << '0 .. 2'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg << '1 .. 2'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg << '2 .. 3'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -773,67 +773,67 @@ SELECT '0 .. 1'::seg << '2 .. 3'::seg AS bool;
 -- right
 --
 SELECT '0'::seg >> '1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::seg >> '1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '2'::seg >> '1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0'::seg >> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1'::seg >> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '2'::seg >> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. 0.5'::seg >> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 1'::seg >> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0 .. 2'::seg >> '0 .. 2'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '1 .. 2'::seg >> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '2 .. 3'::seg >> '0 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -841,49 +841,49 @@ SELECT '2 .. 3'::seg >> '0 .. 1'::seg AS bool;
 -- "contained in" (the left value belongs within the interval specified in the right value):
 --
 SELECT '0'::seg        <@ '0'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0'::seg        <@ '0 ..'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0'::seg        <@ '.. 0'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0'::seg        <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0'::seg        <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '-1'::seg       <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::seg        <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '-1 .. 1'::seg  <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -891,43 +891,43 @@ SELECT '-1 .. 1'::seg  <@ '-1 .. 1'::seg AS bool;
 -- "contains" (the left value contains the interval specified in the right value):
 --
 SELECT '0'::seg @> '0'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '0 .. '::seg <@ '0'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '.. 0'::seg <@ '0'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '-1 .. 1'::seg <@ '0'::seg AS bool;
- bool 
+ bool
 ------
  f
 (1 row)
 
 SELECT '0'::seg <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '-1'::seg <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
 
 SELECT '1'::seg <@ '-1 .. 1'::seg AS bool;
- bool 
+ bool
 ------
  t
 (1 row)
@@ -940,7 +940,7 @@ CREATE INDEX test_seg_ix ON test_seg USING gist (s);
 SET enable_indexscan = false;
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM test_seg WHERE s @> '11..11.3';
-                      QUERY PLAN                       
+                      QUERY PLAN
 -------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on test_seg
@@ -950,7 +950,7 @@ SELECT count(*) FROM test_seg WHERE s @> '11..11.3';
 (5 rows)
 
 SELECT count(*) FROM test_seg WHERE s @> '11..11.3';
- count 
+ count
 -------
    143
 (1 row)
@@ -959,7 +959,7 @@ RESET enable_indexscan;
 SET enable_bitmapscan = false;
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM test_seg WHERE s @> '11..11.3';
-                     QUERY PLAN                      
+                     QUERY PLAN
 -----------------------------------------------------
  Aggregate
    ->  Index Only Scan using test_seg_ix on test_seg
@@ -967,7 +967,7 @@ SELECT count(*) FROM test_seg WHERE s @> '11..11.3';
 (3 rows)
 
 SELECT count(*) FROM test_seg WHERE s @> '11..11.3';
- count 
+ count
 -------
    143
 (1 row)
@@ -975,7 +975,7 @@ SELECT count(*) FROM test_seg WHERE s @> '11..11.3';
 RESET enable_bitmapscan;
 -- Test sorting
 SELECT * FROM test_seg WHERE s @> '11..11.3' GROUP BY s;
-        s        
+        s
 -----------------
  .. 4.0e1
  .. >8.2e1
@@ -1125,7 +1125,7 @@ SELECT * FROM test_seg WHERE s @> '11..11.3' GROUP BY s;
 -- Test functions
 SELECT seg_lower(s), seg_center(s), seg_upper(s)
 FROM test_seg WHERE s @> '11.2..11.3' OR s IS NULL ORDER BY s;
- seg_lower | seg_center | seg_upper 
+ seg_lower | seg_center | seg_upper
 -----------+------------+-----------
  -Infinity |  -Infinity |        40
  -Infinity |  -Infinity |        82
@@ -1270,7 +1270,7 @@ FROM test_seg WHERE s @> '11.2..11.3' OR s IS NULL ORDER BY s;
       10.5 |         11 |      11.5
       10.5 |         12 |      13.5
       10.7 |       11.5 |      12.3
-           |            |          
+           |            |
 (144 rows)
 
 -- test non error throwing API
@@ -1287,13 +1287,12 @@ FROM unnest(ARRAY['-1 .. 1'::text,
                   '1 e7',
                   '1e700']) str,
      LATERAL pg_input_error_info(str, 'seg') as errinfo;
-   seg    | ok | sql_error_code |                message                |            detail            | hint 
+   seg    | ok | sql_error_code |                message                |            detail            | hint
 ----------+----+----------------+---------------------------------------+------------------------------+------
- -1 .. 1  | t  |                |                                       |                              | 
- 100(+-)1 | t  |                |                                       |                              | 
-          | f  | 42601          | bad seg representation                | syntax error at end of input | 
- ABC      | f  | 42601          | bad seg representation                | syntax error at or near "A"  | 
- 1 e7     | f  | 42601          | bad seg representation                | syntax error at or near "e"  | 
- 1e700    | f  | 22003          | "1e700" is out of range for type real |                              | 
+ -1 .. 1  | t  |                |                                       |                              |
+ 100(+-)1 | t  |                |                                       |                              |
+          | f  | 42601          | bad seg representation                | syntax error at end of input |
+ ABC      | f  | 42601          | bad seg representation                | syntax error at or near "A"  |
+ 1 e7     | f  | 42601          | bad seg representation                | syntax error at or near "e"  |
+ 1e700    | f  | 22003          | "1e700" is out of range for type real |                              |
 (6 rows)
-

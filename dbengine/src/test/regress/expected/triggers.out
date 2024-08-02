@@ -128,18 +128,18 @@ SELECT trigger_name, event_manipulation, event_object_schema, event_object_table
   FROM information_schema.triggers
   WHERE event_object_table in ('pkeys', 'fkeys', 'fkeys2')
   ORDER BY trigger_name COLLATE "C", 2;
-        trigger_name        | event_manipulation | event_object_schema | event_object_table | action_order | action_condition | action_orientation | action_timing | action_reference_old_table | action_reference_new_table 
+        trigger_name        | event_manipulation | event_object_schema | event_object_table | action_order | action_condition | action_orientation | action_timing | action_reference_old_table | action_reference_new_table
 ----------------------------+--------------------+---------------------+--------------------+--------------+------------------+--------------------+---------------+----------------------------+----------------------------
- check_fkeys2_fkey_restrict | DELETE             | public              | fkeys2             |            1 |                  | ROW                | BEFORE        |                            | 
- check_fkeys2_fkey_restrict | UPDATE             | public              | fkeys2             |            1 |                  | ROW                | BEFORE        |                            | 
- check_fkeys2_pkey_exist    | INSERT             | public              | fkeys2             |            1 |                  | ROW                | BEFORE        |                            | 
- check_fkeys2_pkey_exist    | UPDATE             | public              | fkeys2             |            2 |                  | ROW                | BEFORE        |                            | 
- check_fkeys_pkey2_exist    | INSERT             | public              | fkeys              |            1 |                  | ROW                | BEFORE        |                            | 
- check_fkeys_pkey2_exist    | UPDATE             | public              | fkeys              |            1 |                  | ROW                | BEFORE        |                            | 
- check_fkeys_pkey_exist     | INSERT             | public              | fkeys              |            2 |                  | ROW                | BEFORE        |                            | 
- check_fkeys_pkey_exist     | UPDATE             | public              | fkeys              |            2 |                  | ROW                | BEFORE        |                            | 
- check_pkeys_fkey_cascade   | DELETE             | public              | pkeys              |            1 |                  | ROW                | BEFORE        |                            | 
- check_pkeys_fkey_cascade   | UPDATE             | public              | pkeys              |            1 |                  | ROW                | BEFORE        |                            | 
+ check_fkeys2_fkey_restrict | DELETE             | public              | fkeys2             |            1 |                  | ROW                | BEFORE        |                            |
+ check_fkeys2_fkey_restrict | UPDATE             | public              | fkeys2             |            1 |                  | ROW                | BEFORE        |                            |
+ check_fkeys2_pkey_exist    | INSERT             | public              | fkeys2             |            1 |                  | ROW                | BEFORE        |                            |
+ check_fkeys2_pkey_exist    | UPDATE             | public              | fkeys2             |            2 |                  | ROW                | BEFORE        |                            |
+ check_fkeys_pkey2_exist    | INSERT             | public              | fkeys              |            1 |                  | ROW                | BEFORE        |                            |
+ check_fkeys_pkey2_exist    | UPDATE             | public              | fkeys              |            1 |                  | ROW                | BEFORE        |                            |
+ check_fkeys_pkey_exist     | INSERT             | public              | fkeys              |            2 |                  | ROW                | BEFORE        |                            |
+ check_fkeys_pkey_exist     | UPDATE             | public              | fkeys              |            2 |                  | ROW                | BEFORE        |                            |
+ check_pkeys_fkey_cascade   | DELETE             | public              | pkeys              |            1 |                  | ROW                | BEFORE        |                            |
+ check_pkeys_fkey_cascade   | UPDATE             | public              | pkeys              |            1 |                  | ROW                | BEFORE        |                            |
 (10 rows)
 
 DROP TABLE pkeys;
@@ -152,21 +152,21 @@ create trigger trigger_return_old
 	for each row execute procedure trigger_return_old();
 insert into trigtest values(1, 'foo');
 select * from trigtest;
- f1 | f2  
+ f1 | f2
 ----+-----
   1 | foo
 (1 row)
 
 update trigtest set f2 = f2 || 'bar';
 select * from trigtest;
- f1 | f2  
+ f1 | f2
 ----+-----
   1 | foo
 (1 row)
 
 delete from trigtest;
 select * from trigtest;
- f1 | f2 
+ f1 | f2
 ----+----
 (0 rows)
 
@@ -178,21 +178,21 @@ create trigger trigger_alpha
 	for each row execute procedure f1_times_10();
 insert into trigtest values(1, 'foo');
 select * from trigtest;
- f1 | f2  
+ f1 | f2
 ----+-----
  10 | foo
 (1 row)
 
 update trigtest set f2 = f2 || 'bar';
 select * from trigtest;
- f1 | f2  
+ f1 | f2
 ----+-----
  10 | foo
 (1 row)
 
 delete from trigtest;
 select * from trigtest;
- f1 | f2 
+ f1 | f2
 ----+----
 (0 rows)
 
@@ -201,42 +201,42 @@ create trigger trigger_zed
 	for each row execute procedure f1_times_10();
 insert into trigtest values(1, 'foo');
 select * from trigtest;
- f1  | f2  
+ f1  | f2
 -----+-----
  100 | foo
 (1 row)
 
 update trigtest set f2 = f2 || 'bar';
 select * from trigtest;
-  f1  | f2  
+  f1  | f2
 ------+-----
  1000 | foo
 (1 row)
 
 delete from trigtest;
 select * from trigtest;
- f1 | f2 
+ f1 | f2
 ----+----
 (0 rows)
 
 drop trigger trigger_alpha on trigtest;
 insert into trigtest values(1, 'foo');
 select * from trigtest;
- f1 | f2  
+ f1 | f2
 ----+-----
  10 | foo
 (1 row)
 
 update trigtest set f2 = f2 || 'bar';
 select * from trigtest;
- f1  | f2  
+ f1  | f2
 -----+-----
  100 | foo
 (1 row)
 
 delete from trigtest;
 select * from trigtest;
- f1 | f2 
+ f1 | f2
 ----+----
 (0 rows)
 
@@ -251,45 +251,45 @@ create trigger trigger_return_old
 	for each row execute procedure trigger_return_old();
 insert into trigtest values(1);
 select * from trigtest;
- a | b |   c   
+ a | b |   c
 ---+---+-------
  1 | t | xyzzy
 (1 row)
 
 alter table trigtest add column d integer default 42 not null;
 select * from trigtest;
- a | b |   c   | d  
+ a | b |   c   | d
 ---+---+-------+----
  1 | t | xyzzy | 42
 (1 row)
 
 update trigtest set a = 2 where a = 1 returning *;
- a | b |   c   | d  
+ a | b |   c   | d
 ---+---+-------+----
  1 | t | xyzzy | 42
 (1 row)
 
 select * from trigtest;
- a | b |   c   | d  
+ a | b |   c   | d
 ---+---+-------+----
  1 | t | xyzzy | 42
 (1 row)
 
 alter table trigtest drop column b;
 select * from trigtest;
- a |   c   | d  
+ a |   c   | d
 ---+-------+----
  1 | xyzzy | 42
 (1 row)
 
 update trigtest set a = 2 where a = 1 returning *;
- a |   c   | d  
+ a |   c   | d
 ---+-------+----
  1 | xyzzy | 42
 (1 row)
 
 select * from trigtest;
- a |   c   | d  
+ a |   c   | d
 ---+-------+----
  1 | xyzzy | 42
 (1 row)
@@ -316,7 +316,7 @@ insert into tttest values (1, 1, null);
 insert into tttest values (2, 2, null);
 insert into tttest values (3, 3, 0);
 select * from tttest;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         1 |         1 |       10 |    999999
         2 |         2 |       20 |    999999
@@ -325,7 +325,7 @@ select * from tttest;
 
 delete from tttest where price_id = 2;
 select * from tttest;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         1 |         1 |       10 |    999999
         3 |         3 |       30 |    999999
@@ -335,7 +335,7 @@ select * from tttest;
 -- what do we see ?
 -- get current prices
 select * from tttest where price_off = 999999;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         1 |         1 |       10 |    999999
         3 |         3 |       30 |    999999
@@ -344,7 +344,7 @@ select * from tttest where price_off = 999999;
 -- change price for price_id == 3
 update tttest set price_val = 30 where price_id = 3;
 select * from tttest;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         1 |         1 |       10 |    999999
         2 |         2 |       20 |        40
@@ -356,7 +356,7 @@ select * from tttest;
 -- this gets us not what we need
 update tttest set price_id = 5 where price_id = 3;
 select * from tttest;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         1 |         1 |       10 |    999999
         2 |         2 |       20 |        40
@@ -367,7 +367,7 @@ select * from tttest;
 
 -- restore data as before last update:
 select set_ttdummy(0);
- set_ttdummy 
+ set_ttdummy
 -------------
            1
 (1 row)
@@ -375,7 +375,7 @@ select set_ttdummy(0);
 delete from tttest where price_id = 5;
 update tttest set price_off = 999999 where price_val = 30;
 select * from tttest;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         1 |         1 |       10 |    999999
         2 |         2 |       20 |        40
@@ -386,7 +386,7 @@ select * from tttest;
 -- and try change price_id now!
 update tttest set price_id = 5 where price_id = 3;
 select * from tttest;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         1 |         1 |       10 |    999999
         2 |         2 |       20 |        40
@@ -396,7 +396,7 @@ select * from tttest;
 
 -- isn't it what we need ?
 select set_ttdummy(1);
- set_ttdummy 
+ set_ttdummy
 -------------
            0
 (1 row)
@@ -407,14 +407,14 @@ ERROR:  ttdummy (tttest): you cannot change price_on and/or price_off columns (u
 -- but this doesn't work
 -- try in this way
 select set_ttdummy(0);
- set_ttdummy 
+ set_ttdummy
 -------------
            1
 (1 row)
 
 update tttest set price_on = -1 where price_id = 1;
 select * from tttest;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         2 |         2 |       20 |        40
         5 |         3 |       30 |        50
@@ -425,7 +425,7 @@ select * from tttest;
 -- isn't it what we need ?
 -- get price for price_id == 5 as it was @ "date" 35
 select * from tttest where price_on <= 35 and price_off > 35 and price_id = 5;
- price_id | price_val | price_on | price_off 
+ price_id | price_val | price_on | price_off
 ----------+-----------+----------+-----------
         5 |         3 |       30 |        50
 (1 row)
@@ -482,7 +482,7 @@ COPY main_table (a, b) FROM stdin;
 NOTICE:  trigger_func(before_ins_stmt) called: action = INSERT, when = BEFORE, level = STATEMENT
 NOTICE:  trigger_func(after_ins_stmt) called: action = INSERT, when = AFTER, level = STATEMENT
 SELECT * FROM main_table ORDER BY a, b;
- a  | b  
+ a  | b
 ----+----
   6 | 10
  21 | 20
@@ -491,7 +491,7 @@ SELECT * FROM main_table ORDER BY a, b;
  50 | 35
  50 | 60
  81 | 15
-    |   
+    |
 (8 rows)
 
 --
@@ -515,18 +515,18 @@ SELECT trigger_name, event_manipulation, event_object_schema, event_object_table
   FROM information_schema.triggers
   WHERE event_object_table IN ('main_table')
   ORDER BY trigger_name COLLATE "C", 2;
-     trigger_name     | event_manipulation | event_object_schema | event_object_table | action_order |        action_condition        | action_orientation | action_timing | action_reference_old_table | action_reference_new_table 
+     trigger_name     | event_manipulation | event_object_schema | event_object_table | action_order |        action_condition        | action_orientation | action_timing | action_reference_old_table | action_reference_new_table
 ----------------------+--------------------+---------------------+--------------------+--------------+--------------------------------+--------------------+---------------+----------------------------+----------------------------
- after_ins_stmt_trig  | INSERT             | public              | main_table         |            1 |                                | STATEMENT          | AFTER         |                            | 
- after_upd_row_trig   | UPDATE             | public              | main_table         |            1 |                                | ROW                | AFTER         |                            | 
- after_upd_stmt_trig  | UPDATE             | public              | main_table         |            1 |                                | STATEMENT          | AFTER         |                            | 
- before_ins_stmt_trig | INSERT             | public              | main_table         |            1 |                                | STATEMENT          | BEFORE        |                            | 
- delete_a             | DELETE             | public              | main_table         |            1 | (old.a = 123)                  | ROW                | AFTER         |                            | 
- delete_when          | DELETE             | public              | main_table         |            1 | true                           | STATEMENT          | AFTER         |                            | 
- insert_a             | INSERT             | public              | main_table         |            1 | (new.a = 123)                  | ROW                | AFTER         |                            | 
- insert_when          | INSERT             | public              | main_table         |            2 | true                           | STATEMENT          | BEFORE        |                            | 
- modified_a           | UPDATE             | public              | main_table         |            1 | (old.a <> new.a)               | ROW                | BEFORE        |                            | 
- modified_any         | UPDATE             | public              | main_table         |            2 | (old.* IS DISTINCT FROM new.*) | ROW                | BEFORE        |                            | 
+ after_ins_stmt_trig  | INSERT             | public              | main_table         |            1 |                                | STATEMENT          | AFTER         |                            |
+ after_upd_row_trig   | UPDATE             | public              | main_table         |            1 |                                | ROW                | AFTER         |                            |
+ after_upd_stmt_trig  | UPDATE             | public              | main_table         |            1 |                                | STATEMENT          | AFTER         |                            |
+ before_ins_stmt_trig | INSERT             | public              | main_table         |            1 |                                | STATEMENT          | BEFORE        |                            |
+ delete_a             | DELETE             | public              | main_table         |            1 | (old.a = 123)                  | ROW                | AFTER         |                            |
+ delete_when          | DELETE             | public              | main_table         |            1 | true                           | STATEMENT          | AFTER         |                            |
+ insert_a             | INSERT             | public              | main_table         |            1 | (new.a = 123)                  | ROW                | AFTER         |                            |
+ insert_when          | INSERT             | public              | main_table         |            2 | true                           | STATEMENT          | BEFORE        |                            |
+ modified_a           | UPDATE             | public              | main_table         |            1 | (old.a <> new.a)               | ROW                | BEFORE        |                            |
+ modified_any         | UPDATE             | public              | main_table         |            2 | (old.* IS DISTINCT FROM new.*) | ROW                | BEFORE        |                            |
 (10 rows)
 
 INSERT INTO main_table (a) VALUES (123), (456);
@@ -554,7 +554,7 @@ NOTICE:  trigger_func(modified_a) called: action = UPDATE, when = BEFORE, level 
 NOTICE:  trigger_func(after_upd_row) called: action = UPDATE, when = AFTER, level = ROW
 NOTICE:  trigger_func(after_upd_stmt) called: action = UPDATE, when = AFTER, level = STATEMENT
 SELECT * FROM main_table ORDER BY a, b;
- a  | b  
+ a  | b
 ----+----
   6 | 10
  21 | 20
@@ -563,23 +563,23 @@ SELECT * FROM main_table ORDER BY a, b;
  50 | 35
  50 | 60
  81 | 15
-    |   
+    |
 (8 rows)
 
 SELECT pg_get_triggerdef(oid, true) FROM pg_trigger WHERE tgrelid = 'main_table'::regclass AND tgname = 'modified_a';
-                                                             pg_get_triggerdef                                                             
+                                                             pg_get_triggerdef
 -------------------------------------------------------------------------------------------------------------------------------------------
  CREATE TRIGGER modified_a BEFORE UPDATE OF a ON main_table FOR EACH ROW WHEN (old.a <> new.a) EXECUTE FUNCTION trigger_func('modified_a')
 (1 row)
 
 SELECT pg_get_triggerdef(oid, false) FROM pg_trigger WHERE tgrelid = 'main_table'::regclass AND tgname = 'modified_a';
-                                                                 pg_get_triggerdef                                                                  
+                                                                 pg_get_triggerdef
 ----------------------------------------------------------------------------------------------------------------------------------------------------
  CREATE TRIGGER modified_a BEFORE UPDATE OF a ON public.main_table FOR EACH ROW WHEN ((old.a <> new.a)) EXECUTE FUNCTION trigger_func('modified_a')
 (1 row)
 
 SELECT pg_get_triggerdef(oid, true) FROM pg_trigger WHERE tgrelid = 'main_table'::regclass AND tgname = 'modified_any';
-                                                                      pg_get_triggerdef                                                                      
+                                                                      pg_get_triggerdef
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
  CREATE TRIGGER modified_any BEFORE UPDATE OF a ON main_table FOR EACH ROW WHEN (old.* IS DISTINCT FROM new.*) EXECUTE FUNCTION trigger_func('modified_any')
 (1 row)
@@ -587,13 +587,13 @@ SELECT pg_get_triggerdef(oid, true) FROM pg_trigger WHERE tgrelid = 'main_table'
 -- Test RENAME TRIGGER
 ALTER TRIGGER modified_a ON main_table RENAME TO modified_modified_a;
 SELECT count(*) FROM pg_trigger WHERE tgrelid = 'main_table'::regclass AND tgname = 'modified_a';
- count 
+ count
 -------
      0
 (1 row)
 
 SELECT count(*) FROM pg_trigger WHERE tgrelid = 'main_table'::regclass AND tgname = 'modified_modified_a';
- count 
+ count
 -------
      1
 (1 row)
@@ -627,7 +627,7 @@ FOR EACH STATEMENT EXECUTE PROCEDURE trigger_func('before_upd_a_stmt');
 CREATE TRIGGER after_upd_b_stmt_trig AFTER UPDATE OF b ON main_table
 FOR EACH STATEMENT EXECUTE PROCEDURE trigger_func('after_upd_b_stmt');
 SELECT pg_get_triggerdef(oid) FROM pg_trigger WHERE tgrelid = 'main_table'::regclass AND tgname = 'after_upd_a_b_row_trig';
-                                                                pg_get_triggerdef                                                                
+                                                                pg_get_triggerdef
 -------------------------------------------------------------------------------------------------------------------------------------------------
  CREATE TRIGGER after_upd_a_b_row_trig AFTER UPDATE OF a, b ON public.main_table FOR EACH ROW EXECUTE FUNCTION trigger_func('after_upd_a_b_row')
 (1 row)
@@ -786,7 +786,7 @@ insert into trigtest2 values(2);
 delete from trigtest where i=2;
 NOTICE:  trigtest DELETE AFTER STATEMENT
 select * from trigtest2;
- i 
+ i
 ---
  1
 (1 row)
@@ -794,7 +794,7 @@ select * from trigtest2;
 alter table trigtest disable trigger all;
 delete from trigtest where i=1;
 select * from trigtest2;
- i 
+ i
 ---
  1
 (1 row)
@@ -802,7 +802,7 @@ select * from trigtest2;
 -- ensure we still insert, even when all triggers are disabled
 insert into trigtest default values;
 select *  from trigtest;
- i 
+ i
 ---
  3
  4
@@ -987,7 +987,7 @@ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 UPDATE serializable_update_tab SET description = 'no no', id = 1 WHERE id = 1;
 COMMIT;
 SELECT description FROM serializable_update_tab WHERE id = 1;
-    description     
+    description
 --------------------
  updated in trigger
 (1 row)
@@ -1011,7 +1011,7 @@ UPDATE min_updates_test SET f3 = 2 WHERE f3 is null;
 UPDATE 1
 \set QUIET true
 SELECT * FROM min_updates_test;
- f1 | f2 | f3 
+ f1 | f2 | f3
 ----+----+----
  a  |  2 |  2
  b  |  3 |  2
@@ -1160,7 +1160,7 @@ NOTICE:  NEW: (21,31)
 NOTICE:  trigger_func(before_ins_stmt) called: action = INSERT, when = BEFORE, level = STATEMENT
 NOTICE:  trigger_func(after_ins_stmt) called: action = INSERT, when = AFTER, level = STATEMENT
 NOTICE:  main_view AFTER INSERT STATEMENT (after_view_ins_stmt)
- a  | b  
+ a  | b
 ----+----
  21 | 31
 (1 row)
@@ -1186,7 +1186,7 @@ NOTICE:  trigger_func(before_upd_a_row) called: action = UPDATE, when = BEFORE, 
 NOTICE:  trigger_func(after_upd_b_stmt) called: action = UPDATE, when = AFTER, level = STATEMENT
 NOTICE:  trigger_func(after_upd_stmt) called: action = UPDATE, when = AFTER, level = STATEMENT
 NOTICE:  main_view AFTER UPDATE STATEMENT (after_view_upd_stmt)
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -1215,7 +1215,7 @@ NOTICE:  trigger_func(after_upd_b_row) called: action = UPDATE, when = AFTER, le
 NOTICE:  trigger_func(after_upd_b_stmt) called: action = UPDATE, when = AFTER, level = STATEMENT
 NOTICE:  trigger_func(after_upd_stmt) called: action = UPDATE, when = AFTER, level = STATEMENT
 NOTICE:  main_view AFTER UPDATE STATEMENT (after_view_upd_stmt)
- a  | b  
+ a  | b
 ----+----
  21 | 32
 (1 row)
@@ -1242,7 +1242,7 @@ NOTICE:  main_view BEFORE DELETE STATEMENT (before_view_del_stmt)
 NOTICE:  main_view INSTEAD OF DELETE ROW (instead_of_del)
 NOTICE:  OLD: (31,10)
 NOTICE:  main_view AFTER DELETE STATEMENT (after_view_del_stmt)
- a  | b  
+ a  | b
 ----+----
  31 | 10
 (1 row)
@@ -1252,10 +1252,10 @@ DELETE 1
 -- Describe view should list triggers
 \d main_view
               View "public.main_view"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
- b      | integer |           |          | 
+ a      | integer |           |          |
+ b      | integer |           |          |
 Triggers:
     after_del_stmt_trig AFTER DELETE ON main_view FOR EACH STATEMENT EXECUTE FUNCTION view_trigger('after_view_del_stmt')
     after_ins_stmt_trig AFTER INSERT ON main_view FOR EACH STATEMENT EXECUTE FUNCTION view_trigger('after_view_ins_stmt')
@@ -1272,10 +1272,10 @@ DROP TRIGGER instead_of_insert_trig ON main_view;
 DROP TRIGGER instead_of_delete_trig ON main_view;
 \d+ main_view
                           View "public.main_view"
- Column |  Type   | Collation | Nullable | Default | Storage | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Description
 --------+---------+-----------+----------+---------+---------+-------------
- a      | integer |           |          |         | plain   | 
- b      | integer |           |          |         | plain   | 
+ a      | integer |           |          |         | plain   |
+ b      | integer |           |          |         | plain   |
 View definition:
  SELECT a,
     b
@@ -1303,7 +1303,7 @@ INSERT INTO country_table (country_name, continent)
            ('UK', 'Europe'),
            ('USA', 'North America')
     RETURNING *;
- country_id | country_name |   continent   
+ country_id | country_name |   continent
 ------------+--------------+---------------
           1 | Japan        | Asia
           2 | UK           | Europe
@@ -1388,35 +1388,35 @@ FOR EACH ROW EXECUTE PROCEDURE city_update();
 \set QUIET false
 -- INSERT .. RETURNING
 INSERT INTO city_view(city_name) VALUES('Tokyo') RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
-       1 | Tokyo     |            |              | 
+       1 | Tokyo     |            |              |
 (1 row)
 
 INSERT 0 1
 INSERT INTO city_view(city_name, population) VALUES('London', 7556900) RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
-       2 | London    |    7556900 |              | 
+       2 | London    |    7556900 |              |
 (1 row)
 
 INSERT 0 1
 INSERT INTO city_view(city_name, country_name) VALUES('Washington DC', 'USA') RETURNING *;
- city_id |   city_name   | population | country_name |   continent   
+ city_id |   city_name   | population | country_name |   continent
 ---------+---------------+------------+--------------+---------------
        3 | Washington DC |            | USA          | North America
 (1 row)
 
 INSERT 0 1
 INSERT INTO city_view(city_id, city_name) VALUES(123456, 'New York') RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
-  123456 | New York  |            |              | 
+  123456 | New York  |            |              |
 (1 row)
 
 INSERT 0 1
 INSERT INTO city_view VALUES(234567, 'Birmingham', 1016800, 'UK', 'EU') RETURNING *;
- city_id | city_name  | population | country_name | continent 
+ city_id | city_name  | population | country_name | continent
 ---------+------------+------------+--------------+-----------
   234567 | Birmingham |    1016800 | UK           | Europe
 (1 row)
@@ -1429,35 +1429,35 @@ CONTEXT:  PL/pgSQL function city_update() line 9 at RAISE
 UPDATE city_view SET country_name = 'Japan' WHERE city_name = 'Takyo'; -- no match
 UPDATE 0
 UPDATE city_view SET country_name = 'Japan' WHERE city_name = 'Tokyo' RETURNING *; -- OK
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
        1 | Tokyo     |            | Japan        | Asia
 (1 row)
 
 UPDATE 1
 UPDATE city_view SET population = 13010279 WHERE city_name = 'Tokyo' RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
        1 | Tokyo     |   13010279 | Japan        | Asia
 (1 row)
 
 UPDATE 1
 UPDATE city_view SET country_name = 'UK' WHERE city_name = 'New York' RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
   123456 | New York  |            | UK           | Europe
 (1 row)
 
 UPDATE 1
 UPDATE city_view SET country_name = 'USA', population = 8391881 WHERE city_name = 'New York' RETURNING *;
- city_id | city_name | population | country_name |   continent   
+ city_id | city_name | population | country_name |   continent
 ---------+-----------+------------+--------------+---------------
   123456 | New York  |    8391881 | USA          | North America
 (1 row)
 
 UPDATE 1
 UPDATE city_view SET continent = 'EU' WHERE continent = 'Europe' RETURNING *;
- city_id | city_name  | population | country_name | continent 
+ city_id | city_name  | population | country_name | continent
 ---------+------------+------------+--------------+-----------
   234567 | Birmingham |    1016800 | UK           | Europe
 (1 row)
@@ -1465,7 +1465,7 @@ UPDATE city_view SET continent = 'EU' WHERE continent = 'Europe' RETURNING *;
 UPDATE 1
 UPDATE city_view v1 SET country_name = v2.country_name FROM city_view v2
     WHERE v2.city_name = 'Birmingham' AND v1.city_name = 'London' RETURNING *;
- city_id | city_name | population | country_name | continent | city_id | city_name  | population | country_name | continent 
+ city_id | city_name | population | country_name | continent | city_id | city_name  | population | country_name | continent
 ---------+-----------+------------+--------------+-----------+---------+------------+------------+--------------+-----------
        2 | London    |    7556900 | UK           | Europe    |  234567 | Birmingham |    1016800 | UK           | Europe
 (1 row)
@@ -1473,7 +1473,7 @@ UPDATE city_view v1 SET country_name = v2.country_name FROM city_view v2
 UPDATE 1
 -- DELETE .. RETURNING
 DELETE FROM city_view WHERE city_name = 'Birmingham' RETURNING *;
- city_id | city_name  | population | country_name | continent 
+ city_id | city_name  | population | country_name | continent
 ---------+------------+------------+--------------+-----------
   234567 | Birmingham |    1016800 | UK           | Europe
 (1 row)
@@ -1484,7 +1484,7 @@ DELETE 1
 CREATE VIEW european_city_view AS
     SELECT * FROM city_view WHERE continent = 'Europe';
 SELECT count(*) FROM european_city_view;
- count 
+ count
 -------
      1
 (1 row)
@@ -1519,7 +1519,7 @@ DO INSTEAD DELETE FROM city_view WHERE city_id = OLD.city_id RETURNING *;
 -- INSERT not limited by view's WHERE clause, but UPDATE AND DELETE are
 INSERT INTO european_city_view(city_name, country_name)
     VALUES ('Cambridge', 'USA') RETURNING *;
- city_id | city_name | population | country_name |   continent   
+ city_id | city_name | population | country_name |   continent
 ---------+-----------+------------+--------------+---------------
        4 | Cambridge |            | USA          | North America
 (1 row)
@@ -1533,7 +1533,7 @@ DELETE 0
 -- UPDATE and DELETE via rule and trigger
 UPDATE city_view SET country_name = 'UK'
     WHERE city_name = 'Cambridge' RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
        4 | Cambridge |            | UK           | Europe
 (1 row)
@@ -1541,14 +1541,14 @@ UPDATE city_view SET country_name = 'UK'
 UPDATE 1
 UPDATE european_city_view SET population = 122800
     WHERE city_name = 'Cambridge' RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
        4 | Cambridge |     122800 | UK           | Europe
 (1 row)
 
 UPDATE 1
 DELETE FROM european_city_view WHERE city_name = 'Cambridge' RETURNING *;
- city_id | city_name | population | country_name | continent 
+ city_id | city_name | population | country_name | continent
 ---------+-----------+------------+--------------+-----------
        4 | Cambridge |     122800 | UK           | Europe
 (1 row)
@@ -1561,7 +1561,7 @@ UPDATE city_view v SET population = 599657
     AND v.city_id = ci.city_id AND v.country_name = co.country_name
     RETURNING co.country_id, v.country_name,
               v.city_id, v.city_name, v.population;
- country_id | country_name | city_id |   city_name   | population 
+ country_id | country_name | city_id |   city_name   | population
 ------------+--------------+---------+---------------+------------
           3 | USA          |       3 | Washington DC |     599657
 (1 row)
@@ -1569,7 +1569,7 @@ UPDATE city_view v SET population = 599657
 UPDATE 1
 \set QUIET true
 SELECT * FROM city_view;
- city_id |   city_name   | population | country_name |   continent   
+ city_id |   city_name   | population | country_name |   continent
 ---------+---------------+------------+--------------+---------------
        1 | Tokyo         |   13010279 | Japan        | Asia
   123456 | New York      |    8391881 | USA          | North America
@@ -1630,7 +1630,7 @@ $$;
 create trigger depth_c_tr before insert on depth_c
   for each row execute procedure depth_c_tf();
 select pg_trigger_depth();
- pg_trigger_depth 
+ pg_trigger_depth
 ------------------
                 0
 (1 row)
@@ -1649,7 +1649,7 @@ PL/pgSQL function depth_b_tf() line 12 at EXECUTE
 SQL statement "insert into depth_b values (new.id)"
 PL/pgSQL function depth_a_tf() line 4 at SQL statement
 select pg_trigger_depth();
- pg_trigger_depth 
+ pg_trigger_depth
 ------------------
                 0
 (1 row)
@@ -1662,7 +1662,7 @@ NOTICE:  depth_c_tr: depth = 3
 NOTICE:  depth_b_tr: depth = 2
 NOTICE:  depth_a_tr: depth = 1
 select pg_trigger_depth();
- pg_trigger_depth 
+ pg_trigger_depth
 ------------------
                 0
 (1 row)
@@ -1732,12 +1732,12 @@ create trigger child_del_trig after delete on child
 insert into parent values (1, 'a', 'a', 'a', 'a', 0);
 insert into child values (10, 1, 'b');
 select * from parent; select * from child;
- aid | val1 | val2 | val3 | val4 | bcnt 
+ aid | val1 | val2 | val3 | val4 | bcnt
 -----+------+------+------+------+------
    1 | a    | a    | a    | a    |    1
 (1 row)
 
- bid | aid | val1 
+ bid | aid | val1
 -----+-----+------
   10 |   1 | b
 (1 row)
@@ -1750,12 +1750,12 @@ merge into parent p using (values (1)) as v(id) on p.aid = v.id
 ERROR:  tuple to be updated or deleted was already modified by an operation triggered by the current command
 HINT:  Consider using an AFTER trigger instead of a BEFORE trigger to propagate changes to other rows.
 select * from parent; select * from child;
- aid | val1 | val2 | val3 | val4 | bcnt 
+ aid | val1 | val2 | val3 | val4 | bcnt
 -----+------+------+------+------+------
    1 | a    | a    | a    | a    |    1
 (1 row)
 
- bid | aid | val1 
+ bid | aid | val1
 -----+-----+------
   10 |   1 | b
 (1 row)
@@ -1768,12 +1768,12 @@ merge into parent p using (values (1)) as v(id) on p.aid = v.id
 ERROR:  tuple to be updated or deleted was already modified by an operation triggered by the current command
 HINT:  Consider using an AFTER trigger instead of a BEFORE trigger to propagate changes to other rows.
 select * from parent; select * from child;
- aid | val1 | val2 | val3 | val4 | bcnt 
+ aid | val1 | val2 | val3 | val4 | bcnt
 -----+------+------+------+------+------
    1 | a    | a    | a    | a    |    1
 (1 row)
 
- bid | aid | val1 
+ bid | aid | val1
 -----+-----+------
   10 |   1 | b
 (1 row)
@@ -1794,11 +1794,11 @@ end;
 $$;
 delete from parent where aid = 1;
 select * from parent; select * from child;
- aid | val1 | val2 | val3 | val4 | bcnt 
+ aid | val1 | val2 | val3 | val4 | bcnt
 -----+------+------+------+------+------
 (0 rows)
 
- bid | aid | val1 
+ bid | aid | val1
 -----+-----+------
 (0 rows)
 
@@ -1848,7 +1848,7 @@ insert into self_ref_trigger values (4, 2, 'grandchild 1');
 insert into self_ref_trigger values (5, 3, 'grandchild 2');
 update self_ref_trigger set data = 'root!' where id = 1;
 select * from self_ref_trigger;
- id | parent |     data     | nchildren 
+ id | parent |     data     | nchildren
 ----+--------+--------------+-----------
   2 |      1 | root child A |         1
   4 |      2 | grandchild 1 |         0
@@ -1861,7 +1861,7 @@ delete from self_ref_trigger;
 ERROR:  tuple to be updated was already modified by an operation triggered by the current command
 HINT:  Consider using an AFTER trigger instead of a BEFORE trigger to propagate changes to other rows.
 select * from self_ref_trigger;
- id | parent |     data     | nchildren 
+ id | parent |     data     | nchildren
 ----+--------+--------------+-----------
   2 |      1 | root child A |         1
   4 |      2 | grandchild 1 |         0
@@ -1893,14 +1893,14 @@ create trigger before_stmt_trigger
 -- inherited no-op update
 update stmt_trig_on_empty_upd set a = a where false returning a+1 as aa;
 NOTICE:  updating stmt_trig_on_empty_upd
- aa 
+ aa
 ----
 (0 rows)
 
 -- simple no-op update
 update stmt_trig_on_empty_upd1 set a = a where false returning a+1 as aa;
 NOTICE:  updating stmt_trig_on_empty_upd1
- aa 
+ aa
 ----
 (0 rows)
 
@@ -2014,7 +2014,7 @@ WARNING:  before insert (new): (8,yellow)
 WARNING:  before insert (new, modified): (9,"yellow trig modified")
 WARNING:  after insert (new): (9,"yellow trig modified")
 select * from upsert;
- key |            color            
+ key |            color
 -----+-----------------------------
    1 | black
    3 | updated red trig modified
@@ -2071,7 +2071,7 @@ create table trigpart42 (like trigpart);
 alter table trigpart4 attach partition trigpart42 for values from (3500) to (4000);
 select tgrelid::regclass, tgname, tgfoid::regproc from pg_trigger
   where tgrelid::regclass::text like 'trigpart%' order by tgrelid::regclass::text;
-  tgrelid   | tgname |     tgfoid      
+  tgrelid   | tgname |     tgfoid
 ------------+--------+-----------------
  trigpart   | trg1   | trigger_nothing
  trigpart1  | trg1   | trigger_nothing
@@ -2094,7 +2094,7 @@ HINT:  You can drop trigger trg1 on table trigpart instead.
 drop table trigpart2;			-- ok, trigger should be gone in that partition
 select tgrelid::regclass, tgname, tgfoid::regproc from pg_trigger
   where tgrelid::regclass::text like 'trigpart%' order by tgrelid::regclass::text;
-  tgrelid   | tgname |     tgfoid      
+  tgrelid   | tgname |     tgfoid
 ------------+--------+-----------------
  trigpart   | trg1   | trigger_nothing
  trigpart1  | trg1   | trigger_nothing
@@ -2107,7 +2107,7 @@ select tgrelid::regclass, tgname, tgfoid::regproc from pg_trigger
 drop trigger trg1 on trigpart;		-- ok, all gone
 select tgrelid::regclass, tgname, tgfoid::regproc from pg_trigger
   where tgrelid::regclass::text like 'trigpart%' order by tgrelid::regclass::text;
- tgrelid | tgname | tgfoid 
+ tgrelid | tgname | tgfoid
 ---------+--------+--------
 (0 rows)
 
@@ -2115,10 +2115,10 @@ select tgrelid::regclass, tgname, tgfoid::regproc from pg_trigger
 create trigger trg1 after insert on trigpart for each row execute procedure trigger_nothing();
 \d trigpart3
              Table "public.trigpart3"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
- b      | integer |           |          | 
+ a      | integer |           |          |
+ b      | integer |           |          |
 Partition of: trigpart FOR VALUES FROM (2000) TO (3000)
 Triggers:
     trg1 AFTER INSERT ON trigpart3 FOR EACH ROW EXECUTE FUNCTION trigger_nothing(), ON TABLE trigpart
@@ -2136,7 +2136,7 @@ alter table trigpart attach partition trigpart3 for values from (2000) to (3000)
 drop table trigpart3;
 select tgrelid::regclass::text, tgname, tgfoid::regproc, tgenabled, tgisinternal from pg_trigger
   where tgname ~ '^trg1' order by 1;
-  tgrelid  | tgname |     tgfoid      | tgenabled | tgisinternal 
+  tgrelid  | tgname |     tgfoid      | tgenabled | tgisinternal
 -----------+--------+-----------------+-----------+--------------
  trigpart  | trg1   | trigger_nothing | O         | f
  trigpart1 | trg1   | trigger_nothing | O         | f
@@ -2146,10 +2146,10 @@ create table trigpart3 (like trigpart);
 create trigger trg1 after insert on trigpart3 for each row execute procedure trigger_nothing();
 \d trigpart3
              Table "public.trigpart3"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
- b      | integer |           |          | 
+ a      | integer |           |          |
+ b      | integer |           |          |
 Triggers:
     trg1 AFTER INSERT ON trigpart3 FOR EACH ROW EXECUTE FUNCTION trigger_nothing()
 
@@ -2161,10 +2161,10 @@ create trigger samename after delete on trigpart execute function trigger_nothin
 create trigger samename after delete on trigpart1 execute function trigger_nothing();
 \d trigpart1
              Table "public.trigpart1"
- Column |  Type   | Collation | Nullable | Default 
+ Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
- a      | integer |           |          | 
- b      | integer |           |          | 
+ a      | integer |           |          |
+ b      | integer |           |          |
 Partition of: trigpart FOR VALUES FROM (0) TO (1000)
 Triggers:
     samename AFTER DELETE ON trigpart1 FOR EACH STATEMENT EXECUTE FUNCTION trigger_nothing()
@@ -2247,7 +2247,7 @@ NOTICE:  trigger trig_ins_after_parent on parted_stmt_trig1 AFTER INSERT for ROW
 NOTICE:  trigger trig_ins_after_parent on parted_stmt_trig2 AFTER INSERT for ROW
 NOTICE:  trigger trig_ins_after_3 on parted2_stmt_trig AFTER INSERT for STATEMENT
 NOTICE:  trigger trig_ins_after on parted_stmt_trig AFTER INSERT for STATEMENT
-     tableoid      | a 
+     tableoid      | a
 -------------------+---
  parted_stmt_trig1 | 1
  parted_stmt_trig2 | 2
@@ -2475,7 +2475,7 @@ $$;
 insert into parted values (1, 1, 'uno uno');       -- works
 update parted set c = c || ' v6';                   -- works
 select tableoid::regclass, * from parted;
-  tableoid  | a | b |                c                 
+  tableoid  | a | b |                c
 ------------+---+---+----------------------------------
  parted_1_1 | 1 | 1 | uno uno v1 v6 did UPDATE
  parted_1_1 | 1 | 1 | uno uno did INSERT v6 did UPDATE
@@ -2487,7 +2487,7 @@ create table parted_2 partition of parted for values in (2);
 insert into parted values (1, 1, 'uno uno v5');
 update parted set a = 2;
 select tableoid::regclass, * from parted;
- tableoid | a | b |                      c                      
+ tableoid | a | b |                      c
 ----------+---+---+---------------------------------------------
  parted_2 | 2 | 1 | uno uno v5 did INSERT did UPDATE did INSERT
 (1 row)
@@ -2506,7 +2506,7 @@ insert into parted values (1, 1, 'uno uno v6');
 create table parted_3 partition of parted for values in (3);
 update parted set a = a + 1;
 select tableoid::regclass, * from parted;
- tableoid | a | b |                      c                      
+ tableoid | a | b |                      c
 ----------+---+---+---------------------------------------------
  parted_3 | 3 | 1 | uno uno v6 did INSERT did UPDATE did INSERT
 (1 row)
@@ -2515,7 +2515,7 @@ select tableoid::regclass, * from parted;
 -- the trigger causes the tuple to be routed to another partition
 update parted set a = 0;
 select tableoid::regclass, * from parted;
-  tableoid  | a | b |                                 c                                 
+  tableoid  | a | b |                                 c
 ------------+---+---+-------------------------------------------------------------------
  parted_1_1 | 1 | 1 | uno uno v6 did INSERT did UPDATE did INSERT did UPDATE did INSERT
 (1 row)
@@ -2540,7 +2540,7 @@ insert into parted values (1, 2, 'two fail');
 ERROR:  moving row to another partition during a BEFORE FOR EACH ROW trigger is not supported
 DETAIL:  Before executing trigger "t", the row was to be in partition "public.parted_2".
 select * from parted;
- a | b |    c     
+ a | b |    c
 ---+---+----------
  1 | 1 | zero win
 (1 row)
@@ -2642,7 +2642,7 @@ select tgname, conname, t.tgrelid::regclass, t.tgconstrrelid::regclass,
   from pg_trigger t join pg_constraint c on (t.tgconstraint = c.oid)
   where tgname = 'parted_trigger'
   order by t.tgrelid::regclass::text;
-     tgname     |    conname     |      tgrelid       |   tgconstrrelid   |      conrelid      | confrelid 
+     tgname     |    conname     |      tgrelid       |   tgconstrrelid   |      conrelid      | confrelid
 ----------------+----------------+--------------------+-------------------+--------------------+-----------
  parted_trigger | parted_trigger | parted_trigger     | parted_referenced | parted_trigger     | -
  parted_trigger | parted_trigger | parted_trigger_1   | parted_referenced | parted_trigger_1   | -
@@ -2688,7 +2688,7 @@ select tgrelid::regclass, count(*) from pg_trigger
   where tgrelid::regclass in ('trg_clone', 'trg_clone1', 'trg_clone2',
 	'trg_clone3', 'trg_clone_3_3')
   group by tgrelid::regclass order by tgrelid::regclass;
-    tgrelid    | count 
+    tgrelid    | count
 ---------------+-------
  trg_clone     |     1
  trg_clone1    |     1
@@ -2713,7 +2713,7 @@ alter table parent disable trigger tg;
 select tgrelid::regclass, tgname, tgenabled from pg_trigger
   where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text;
- tgrelid | tgname | tgenabled 
+ tgrelid | tgname | tgenabled
 ---------+--------+-----------
  child1  | tg     | O
  parent  | tg     | D
@@ -2723,7 +2723,7 @@ alter table only parent enable always trigger tg;
 select tgrelid::regclass, tgname, tgenabled from pg_trigger
   where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text;
- tgrelid | tgname | tgenabled 
+ tgrelid | tgname | tgenabled
 ---------+--------+-----------
  child1  | tg     | O
  parent  | tg     | A
@@ -2739,7 +2739,7 @@ create trigger tg_stmt after insert on parent
 select tgrelid::regclass, tgname, tgenabled from pg_trigger
   where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text, tgname;
- tgrelid | tgname  | tgenabled 
+ tgrelid | tgname  | tgenabled
 ---------+---------+-----------
  child1  | tg      | O
  parent  | tg      | O
@@ -2751,7 +2751,7 @@ alter table parent enable always trigger tg_stmt;	-- no recursion because statem
 select tgrelid::regclass, tgname, tgenabled from pg_trigger
   where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text, tgname;
- tgrelid | tgname  | tgenabled 
+ tgrelid | tgname  | tgenabled
 ---------+---------+-----------
  child1  | tg      | O
  parent  | tg      | A
@@ -2764,7 +2764,7 @@ alter table parent enable always trigger tg;
 select tgrelid::regclass, tgname, tgenabled from pg_trigger
   where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text, tgname;
- tgrelid | tgname  | tgenabled 
+ tgrelid | tgname  | tgenabled
 ---------+---------+-----------
  child1  | tg      | A
  parent  | tg      | A
@@ -2776,7 +2776,7 @@ alter table parent disable trigger user;
 select tgrelid::regclass, tgname, tgenabled from pg_trigger
   where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text, tgname;
- tgrelid | tgname  | tgenabled 
+ tgrelid | tgname  | tgenabled
 ---------+---------+-----------
  child1  | tg      | D
  parent  | tg      | D
@@ -2792,7 +2792,7 @@ select tgrelid::regclass, rtrim(tgname, '0123456789') as tgname,
   tgfoid::regproc, tgenabled
   from pg_trigger where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text, tgfoid;
- tgrelid |         tgname          |         tgfoid         | tgenabled 
+ tgrelid |         tgname          |         tgfoid         | tgenabled
 ---------+-------------------------+------------------------+-----------
  child1  | RI_ConstraintTrigger_c_ | "RI_FKey_check_ins"    | O
  child1  | RI_ConstraintTrigger_c_ | "RI_FKey_check_upd"    | O
@@ -2807,7 +2807,7 @@ select tgrelid::regclass, rtrim(tgname, '0123456789') as tgname,
   tgfoid::regproc, tgenabled
   from pg_trigger where tgrelid in ('parent'::regclass, 'child1'::regclass)
   order by tgrelid::regclass::text, tgfoid;
- tgrelid |         tgname          |         tgfoid         | tgenabled 
+ tgrelid |         tgname          |         tgfoid         | tgenabled
 ---------+-------------------------+------------------------+-----------
  child1  | RI_ConstraintTrigger_c_ | "RI_FKey_check_ins"    | D
  child1  | RI_ConstraintTrigger_c_ | "RI_FKey_check_upd"    | D
@@ -2844,7 +2844,7 @@ INSERT INTO trgfire VALUES (40);
 SELECT tgrelid::regclass, tgenabled FROM pg_trigger
   WHERE tgrelid::regclass IN (SELECT oid from pg_class where relname LIKE 'trgfire%')
   ORDER BY tgrelid::regclass::text;
-   tgrelid   | tgenabled 
+   tgrelid   | tgenabled
 -------------+-----------
  trgfire     | D
  trgfire1    | D
@@ -2966,18 +2966,18 @@ SELECT trigger_name, event_manipulation, event_object_schema, event_object_table
   FROM information_schema.triggers
   WHERE event_object_table IN ('parent', 'child1', 'child2', 'child3')
   ORDER BY trigger_name COLLATE "C", 2;
-    trigger_name    | event_manipulation | event_object_schema | event_object_table | action_order | action_condition | action_orientation | action_timing | action_reference_old_table | action_reference_new_table 
+    trigger_name    | event_manipulation | event_object_schema | event_object_table | action_order | action_condition | action_orientation | action_timing | action_reference_old_table | action_reference_new_table
 --------------------+--------------------+---------------------+--------------------+--------------+------------------+--------------------+---------------+----------------------------+----------------------------
- child1_delete_trig | DELETE             | public              | child1             |            1 |                  | STATEMENT          | AFTER         | old_table                  | 
+ child1_delete_trig | DELETE             | public              | child1             |            1 |                  | STATEMENT          | AFTER         | old_table                  |
  child1_insert_trig | INSERT             | public              | child1             |            1 |                  | STATEMENT          | AFTER         |                            | new_table
  child1_update_trig | UPDATE             | public              | child1             |            1 |                  | STATEMENT          | AFTER         | old_table                  | new_table
- child2_delete_trig | DELETE             | public              | child2             |            1 |                  | STATEMENT          | AFTER         | old_table                  | 
+ child2_delete_trig | DELETE             | public              | child2             |            1 |                  | STATEMENT          | AFTER         | old_table                  |
  child2_insert_trig | INSERT             | public              | child2             |            1 |                  | STATEMENT          | AFTER         |                            | new_table
  child2_update_trig | UPDATE             | public              | child2             |            1 |                  | STATEMENT          | AFTER         | old_table                  | new_table
- child3_delete_trig | DELETE             | public              | child3             |            1 |                  | STATEMENT          | AFTER         | old_table                  | 
+ child3_delete_trig | DELETE             | public              | child3             |            1 |                  | STATEMENT          | AFTER         | old_table                  |
  child3_insert_trig | INSERT             | public              | child3             |            1 |                  | STATEMENT          | AFTER         |                            | new_table
  child3_update_trig | UPDATE             | public              | child3             |            1 |                  | STATEMENT          | AFTER         | old_table                  | new_table
- parent_delete_trig | DELETE             | public              | parent             |            1 |                  | STATEMENT          | AFTER         | old_table                  | 
+ parent_delete_trig | DELETE             | public              | parent             |            1 |                  | STATEMENT          | AFTER         | old_table                  |
  parent_insert_trig | INSERT             | public              | parent             |            1 |                  | STATEMENT          | AFTER         |                            | new_table
  parent_update_trig | UPDATE             | public              | parent             |            1 |                  | STATEMENT          | AFTER         | old_table                  | new_table
 (12 rows)
@@ -3220,7 +3220,7 @@ with wcte as (insert into table1 values (43))
   insert into table1 values (44);
 NOTICE:  trigger = table1_trig, new table = (43), (44)
 select * from table1;
- a  
+ a
 ----
  42
  44
@@ -3228,7 +3228,7 @@ select * from table1;
 (3 rows)
 
 select * from table2;
-      a      
+      a
 -------------
  hello world
 (1 row)
@@ -3350,7 +3350,7 @@ update refd_table set a = 11 where b = 'one';
 NOTICE:  trigger_func(trig_table) called: action = UPDATE, when = BEFORE, level = STATEMENT
 NOTICE:  trigger = trig_table_update_trig, old table = (1,"one a"), (1,"one b"), new table = (11,"one a"), (11,"one b")
 select * from trig_table;
- a  |    b    
+ a  |    b
 ----+---------
   2 | two a
   2 | two b
@@ -3364,7 +3364,7 @@ delete from refd_table where length(b) = 3;
 NOTICE:  trigger_func(trig_table) called: action = DELETE, when = BEFORE, level = STATEMENT
 NOTICE:  trigger = trig_table_delete_trig, old table = (2,"two a"), (2,"two b"), (11,"one a"), (11,"one b")
 select * from trig_table;
- a |    b    
+ a |    b
 ---+---------
  3 | three a
  3 | three b
@@ -3482,7 +3482,7 @@ create or replace trigger my_trig
 insert into my_table values (2);  -- this insert should become a no-op
 NOTICE:  hello from funcB
 table my_table;
- id 
+ id
 ----
   1
 (1 row)
@@ -3657,11 +3657,11 @@ select tgrelid::regclass, tgname,
 (select tgname from pg_trigger tr where tr.oid = pg_trigger.tgparentid) parent_tgname
 from pg_trigger where tgrelid in (select relid from pg_partition_tree('grandparent'))
 order by tgname, tgrelid::regclass::text COLLATE "C";
-   tgrelid   | tgname | parent_tgname 
+   tgrelid   | tgname | parent_tgname
 -------------+--------+---------------
  chi         | b      | b
  cho         | b      | b
- grandparent | b      | 
+ grandparent | b      |
  middle      | b      | b
 (4 rows)
 
@@ -3684,17 +3684,17 @@ select tgrelid::regclass, tgname,
 (select tgname from pg_trigger tr where tr.oid = pg_trigger.tgparentid) parent_tgname
 from pg_trigger where tgrelid in (select relid from pg_partition_tree('grandparent'))
 order by tgname, tgrelid::regclass::text COLLATE "C";
-   tgrelid   | tgname | parent_tgname 
+   tgrelid   | tgname | parent_tgname
 -------------+--------+---------------
  chi         | b      | b
  cho         | b      | b
- grandparent | b      | 
+ grandparent | b      |
  middle      | b      | b
  chi         | c      | c
  cho         | c      | c
- middle      | c      | 
- middle      | p      | 
- grandparent | q      | 
+ middle      | c      |
+ middle      | p      |
+ grandparent | q      |
 (9 rows)
 
 drop table grandparent;
@@ -3708,9 +3708,9 @@ for each row execute procedure f();
 alter trigger parenttrig on parent rename to anothertrig;
 \d+ child
                                    Table "public.child"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- a      | integer |           |          |         | plain   |              | 
+ a      | integer |           |          |         | plain   |              |
 Triggers:
     parenttrig AFTER INSERT ON child FOR EACH ROW EXECUTE FUNCTION f()
 Inherits: parent

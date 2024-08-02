@@ -4,26 +4,26 @@ starting permutation: s1a s1b s1c s2a s2b s2c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -32,26 +32,26 @@ starting permutation: s1a s1b s2a s1c s2b s2c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1c: COMMIT;
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -60,25 +60,25 @@ starting permutation: s1a s1b s2a s2b s1c s2c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -88,25 +88,25 @@ starting permutation: s1a s1b s2a s2b s2c s1c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -116,26 +116,26 @@ starting permutation: s1a s2a s1b s1c s2b s2c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -144,25 +144,25 @@ starting permutation: s1a s2a s1b s2b s1c s2c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -172,25 +172,25 @@ starting permutation: s1a s2a s1b s2b s2c s1c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -200,25 +200,25 @@ starting permutation: s1a s2a s2b s1b s1c s2c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -228,25 +228,25 @@ starting permutation: s1a s2a s2b s1b s2c s1c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -256,26 +256,26 @@ starting permutation: s1a s2a s2b s2c s1b s1c
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2c: COMMIT;
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -284,26 +284,26 @@ starting permutation: s2a s1a s1b s1c s2b s2c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1c: COMMIT;
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -312,25 +312,25 @@ starting permutation: s2a s1a s1b s2b s1c s2c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -340,25 +340,25 @@ starting permutation: s2a s1a s1b s2b s2c s1c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -368,25 +368,25 @@ starting permutation: s2a s1a s2b s1b s1c s2c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -396,25 +396,25 @@ starting permutation: s2a s1a s2b s1b s2c s1c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -424,26 +424,26 @@ starting permutation: s2a s1a s2b s2c s1b s1c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -452,25 +452,25 @@ starting permutation: s2a s2b s1a s1b s1c s2c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -480,25 +480,25 @@ starting permutation: s2a s2b s1a s1b s2c s1c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2c: COMMIT;
@@ -508,26 +508,26 @@ starting permutation: s2a s2b s1a s2c s1b s1c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 2|bar |NEW   
+ 2|bar |NEW
 (1 row)
 
 step s2c: COMMIT;
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;
@@ -536,26 +536,26 @@ starting permutation: s2a s2b s2c s1a s1b s1c
 step s2a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s2c: COMMIT;
 step s1a: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1b: SELECT * FROM queue ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1;
 id|data|status
 --+----+------
- 1|foo |NEW   
+ 1|foo |NEW
 (1 row)
 
 step s1c: COMMIT;

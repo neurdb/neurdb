@@ -2,41 +2,41 @@
 -- PGP Armor
 --
 select armor('');
-            armor            
+            armor
 -----------------------------
  -----BEGIN PGP MESSAGE-----+
                             +
  =twTO                      +
  -----END PGP MESSAGE-----  +
- 
+
 (1 row)
 
 select armor('test');
-            armor            
+            armor
 -----------------------------
  -----BEGIN PGP MESSAGE-----+
                             +
  dGVzdA==                   +
  =+G7Q                      +
  -----END PGP MESSAGE-----  +
- 
+
 (1 row)
 
 select encode(dearmor(armor('')), 'escape');
- encode 
+ encode
 --------
- 
+
 (1 row)
 
 select encode(dearmor(armor('zooka')), 'escape');
- encode 
+ encode
 --------
  zooka
 (1 row)
 
 select armor('0123456789abcdef0123456789abcdef0123456789abcdef
 0123456789abcdef0123456789abcdef0123456789abcdef');
-                                    armor                                     
+                                    armor
 ------------------------------------------------------------------------------
  -----BEGIN PGP MESSAGE-----                                                 +
                                                                              +
@@ -44,7 +44,7 @@ select armor('0123456789abcdef0123456789abcdef0123456789abcdef
  ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVmMDEyMzQ1Njc4OWFiY2RlZg==                    +
  =JFw5                                                                       +
  -----END PGP MESSAGE-----                                                   +
- 
+
 (1 row)
 
 -- lots formatting
@@ -58,7 +58,7 @@ em9va2E=
   =D5cR
 
 -----END PGP MESSAGE-----'), 'escape');
- encode 
+ encode
 --------
  zooka
 (1 row)
@@ -86,7 +86,7 @@ d3Jvbmc=
 =vCYP
 -----END PGP MESSAGE-----
 '), 'escape');
- encode 
+ encode
 --------
  right
 (1 row)
@@ -126,22 +126,22 @@ em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
- key | value 
+ key | value
 -----+-------
 (0 rows)
 
 -- header with empty value
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-foo: 
+foo:
 
 em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
- key | value 
+ key | value
 -----+-------
- foo | 
+ foo |
 (1 row)
 
 -- simple
@@ -154,7 +154,7 @@ em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
-  key   |  value   
+  key   |  value
 --------+----------
  fookey | foovalue
  barkey | barvalue
@@ -163,15 +163,15 @@ em9va2E=
 -- insane keys, part 1
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-insane:key : 
+insane:key :
 
 em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
-     key     | value 
+     key     | value
 -------------+-------
- insane:key  | 
+ insane:key  |
 (1 row)
 
 -- insane keys, part 2
@@ -183,7 +183,7 @@ em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
-     key     |      value      
+     key     |      value
 -------------+-----------------
  insane:key  | text value here
 (1 row)
@@ -197,7 +197,7 @@ em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
- key  |                                                      value                                                      
+ key  |                                                      value
 ------+-----------------------------------------------------------------------------------------------------------------
  long | this value is more than 76 characters long, but it should still parse correctly as that's permitted by RFC 4880
 (1 row)
@@ -205,61 +205,61 @@ em9va2E=
 -- long value, split up
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-long: this value is more than 76 characters long, but it should still 
+long: this value is more than 76 characters long, but it should still
 long: parse correctly as that''s permitted by RFC 4880
 
 em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
- key  |                              value                               
+ key  |                              value
 ------+------------------------------------------------------------------
- long | this value is more than 76 characters long, but it should still 
+ long | this value is more than 76 characters long, but it should still
  long | parse correctly as that's permitted by RFC 4880
 (2 rows)
 
 -- long value, split up, part 2
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-long: this value is more than 
-long: 76 characters long, but it should still 
+long: this value is more than
+long: 76 characters long, but it should still
 long: parse correctly as that''s permitted by RFC 4880
 
 em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
- key  |                      value                      
+ key  |                      value
 ------+-------------------------------------------------
- long | this value is more than 
- long | 76 characters long, but it should still 
+ long | this value is more than
+ long | 76 characters long, but it should still
  long | parse correctly as that's permitted by RFC 4880
 (3 rows)
 
 -- long value, split up, part 3
 select * from pgp_armor_headers('
 -----BEGIN PGP MESSAGE-----
-emptykey: 
-long: this value is more than 
-emptykey: 
-long: 76 characters long, but it should still 
-emptykey: 
+emptykey:
+long: this value is more than
+emptykey:
+long: 76 characters long, but it should still
+emptykey:
 long: parse correctly as that''s permitted by RFC 4880
-emptykey: 
+emptykey:
 
 em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ');
-   key    |                      value                      
+   key    |                      value
 ----------+-------------------------------------------------
- emptykey | 
- long     | this value is more than 
- emptykey | 
- long     | 76 characters long, but it should still 
- emptykey | 
+ emptykey |
+ long     | this value is more than
+ emptykey |
+ long     | 76 characters long, but it should still
+ emptykey |
  long     | parse correctly as that's permitted by RFC 4880
- emptykey | 
+ emptykey |
 (7 rows)
 
 select * from pgp_armor_headers('
@@ -271,7 +271,7 @@ yA6Ce1QTMK3KdL2MPfamsTUSAML8huCJMwYQFfE=
 =JcP+
 -----END PGP MESSAGE-----
 ');
-   key   |             value              
+   key   |             value
 ---------+--------------------------------
  Comment | dat1.blowfish.sha1.mdc.s2k3.z0
 (1 row)
@@ -286,7 +286,7 @@ em9va2E=
 =ZZZZ
 -----END PGP MESSAGE-----
 ', E'\n', E'\r\n'));
-  key   |  value   
+  key   |  value
 --------+----------
  fookey | foovalue
  barkey | barvalue
@@ -294,7 +294,7 @@ em9va2E=
 
 -- test header generation
 select armor('zooka', array['foo'], array['bar']);
-            armor            
+            armor
 -----------------------------
  -----BEGIN PGP MESSAGE-----+
  foo: bar                   +
@@ -302,11 +302,11 @@ select armor('zooka', array['foo'], array['bar']);
  em9va2E=                   +
  =D5cR                      +
  -----END PGP MESSAGE-----  +
- 
+
 (1 row)
 
 select armor('zooka', array['Version', 'Comment'], array['Created by pgcrypto', 'PostgreSQL, the world''s most advanced open source database']);
-                                armor                                
+                                armor
 ---------------------------------------------------------------------
  -----BEGIN PGP MESSAGE-----                                        +
  Version: Created by pgcrypto                                       +
@@ -315,13 +315,13 @@ select armor('zooka', array['Version', 'Comment'], array['Created by pgcrypto', 
  em9va2E=                                                           +
  =D5cR                                                              +
  -----END PGP MESSAGE-----                                          +
- 
+
 (1 row)
 
 select * from pgp_armor_headers(
   armor('zooka', array['Version', 'Comment'],
                  array['Created by pgcrypto', 'PostgreSQL, the world''s most advanced open source database']));
-   key   |                           value                            
+   key   |                           value
 ---------+------------------------------------------------------------
  Version | Created by pgcrypto
  Comment | PostgreSQL, the world's most advanced open source database
@@ -341,25 +341,25 @@ ERROR:  null value not allowed for header key
 select armor('', array['foo'], array[null]);
 ERROR:  null value not allowed for header value
 select armor('', '[0:0]={"foo"}', array['foo']);
-            armor            
+            armor
 -----------------------------
  -----BEGIN PGP MESSAGE-----+
  foo: foo                   +
                             +
  =twTO                      +
  -----END PGP MESSAGE-----  +
- 
+
 (1 row)
 
 select armor('', array['foo'], '[0:0]={"foo"}');
-            armor            
+            armor
 -----------------------------
  -----BEGIN PGP MESSAGE-----+
  foo: foo                   +
                             +
  =twTO                      +
  -----END PGP MESSAGE-----  +
- 
+
 (1 row)
 
 select armor('', array[E'embedded\nnewline'], array['foo']);

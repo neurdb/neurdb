@@ -29,32 +29,32 @@ int
 main (void)
 {
 /* exec sql begin declare section */
-		  
-		  
-		    
-		  
-		  
-		  
-		  
+
+
+
+
+
+
+
 
 #line 12 "describe.pgc"
  char * stmt1 = "SELECT id, t FROM t1" ;
- 
+
 #line 13 "describe.pgc"
  char * stmt2 = "SELECT id, t FROM t1 WHERE id = -1" ;
- 
+
 #line 14 "describe.pgc"
  int i , count1 , count2 , count3 , count4 ;
- 
+
 #line 15 "describe.pgc"
  char field_name1 [ 30 ] = "not set" ;
- 
+
 #line 16 "describe.pgc"
  char field_name2 [ 30 ] = "not set" ;
- 
+
 #line 17 "describe.pgc"
  char field_name3 [ 30 ] = "not set" ;
- 
+
 #line 18 "describe.pgc"
  char field_name4 [ 30 ] = "not set" ;
 /* exec sql end declare section */
@@ -66,7 +66,7 @@ main (void)
 	ECPGdebug(1, stderr);
 
 	strcpy(msg, "connect");
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 26 "describe.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
@@ -164,22 +164,22 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "describe");
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id1",
-	ECPGt_descriptor, "desc1", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc1", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 58 "describe.pgc"
 
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id1",
-	ECPGt_descriptor, "desc2", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc2", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 59 "describe.pgc"
 
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id1",
-	ECPGt_descriptor, "desc3", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc3", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 60 "describe.pgc"
 
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id1",
-	ECPGt_descriptor, "desc4", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc4", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 61 "describe.pgc"
 
@@ -326,22 +326,22 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "describe");
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id2",
-	ECPGt_descriptor, "desc1", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc1", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 102 "describe.pgc"
 
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id2",
-	ECPGt_descriptor, "desc2", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc2", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 103 "describe.pgc"
 
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id2",
-	ECPGt_descriptor, "desc3", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc3", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 104 "describe.pgc"
 
 	{ ECPGdescribe(__LINE__, 0, NULL, "st_id2",
-	ECPGt_descriptor, "desc4", 0L, 0L, 0L, 
+	ECPGt_descriptor, "desc4", 0L, 0L, 0L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);}
 #line 105 "describe.pgc"
 
@@ -469,7 +469,7 @@ if (sqlca.sqlcode < 0) exit (1);}
 #line 141 "describe.pgc"
 
 
-	strcpy(msg, "disconnect"); 
+	strcpy(msg, "disconnect");
 	{ ECPGdisconnect(__LINE__, "CURRENT");
 #line 144 "describe.pgc"
 

@@ -5,7 +5,7 @@
 SELECT ''::text AS two, unique1, unique2, stringu1
 		FROM onek WHERE unique1 > 50
 		ORDER BY unique1 LIMIT 2;
- two | unique1 | unique2 | stringu1 
+ two | unique1 | unique2 | stringu1
 -----+---------+---------+----------
      |      51 |      76 | ZBAAAA
      |      52 |     985 | ACAAAA
@@ -14,7 +14,7 @@ SELECT ''::text AS two, unique1, unique2, stringu1
 SELECT ''::text AS five, unique1, unique2, stringu1
 		FROM onek WHERE unique1 > 60
 		ORDER BY unique1 LIMIT 5;
- five | unique1 | unique2 | stringu1 
+ five | unique1 | unique2 | stringu1
 ------+---------+---------+----------
       |      61 |     560 | JCAAAA
       |      62 |     633 | KCAAAA
@@ -26,7 +26,7 @@ SELECT ''::text AS five, unique1, unique2, stringu1
 SELECT ''::text AS two, unique1, unique2, stringu1
 		FROM onek WHERE unique1 > 60 AND unique1 < 63
 		ORDER BY unique1 LIMIT 5;
- two | unique1 | unique2 | stringu1 
+ two | unique1 | unique2 | stringu1
 -----+---------+---------+----------
      |      61 |     560 | JCAAAA
      |      62 |     633 | KCAAAA
@@ -35,7 +35,7 @@ SELECT ''::text AS two, unique1, unique2, stringu1
 SELECT ''::text AS three, unique1, unique2, stringu1
 		FROM onek WHERE unique1 > 100
 		ORDER BY unique1 LIMIT 3 OFFSET 20;
- three | unique1 | unique2 | stringu1 
+ three | unique1 | unique2 | stringu1
 -------+---------+---------+----------
        |     121 |     700 | REAAAA
        |     122 |     519 | SEAAAA
@@ -45,14 +45,14 @@ SELECT ''::text AS three, unique1, unique2, stringu1
 SELECT ''::text AS zero, unique1, unique2, stringu1
 		FROM onek WHERE unique1 < 50
 		ORDER BY unique1 DESC LIMIT 8 OFFSET 99;
- zero | unique1 | unique2 | stringu1 
+ zero | unique1 | unique2 | stringu1
 ------+---------+---------+----------
 (0 rows)
 
 SELECT ''::text AS eleven, unique1, unique2, stringu1
 		FROM onek WHERE unique1 < 50
 		ORDER BY unique1 DESC LIMIT 20 OFFSET 39;
- eleven | unique1 | unique2 | stringu1 
+ eleven | unique1 | unique2 | stringu1
 --------+---------+---------+----------
         |      10 |     520 | KAAAAA
         |       9 |      49 | JAAAAA
@@ -70,7 +70,7 @@ SELECT ''::text AS eleven, unique1, unique2, stringu1
 SELECT ''::text AS ten, unique1, unique2, stringu1
 		FROM onek
 		ORDER BY unique1 OFFSET 990;
- ten | unique1 | unique2 | stringu1 
+ ten | unique1 | unique2 | stringu1
 -----+---------+---------+----------
      |     990 |     369 | CMAAAA
      |     991 |     426 | DMAAAA
@@ -87,7 +87,7 @@ SELECT ''::text AS ten, unique1, unique2, stringu1
 SELECT ''::text AS five, unique1, unique2, stringu1
 		FROM onek
 		ORDER BY unique1 OFFSET 990 LIMIT 5;
- five | unique1 | unique2 | stringu1 
+ five | unique1 | unique2 | stringu1
 ------+---------+---------+----------
       |     990 |     369 | CMAAAA
       |     991 |     426 | DMAAAA
@@ -99,7 +99,7 @@ SELECT ''::text AS five, unique1, unique2, stringu1
 SELECT ''::text AS five, unique1, unique2, stringu1
 		FROM onek
 		ORDER BY unique1 LIMIT 5 OFFSET 900;
- five | unique1 | unique2 | stringu1 
+ five | unique1 | unique2 | stringu1
 ------+---------+---------+----------
       |     900 |     913 | QIAAAA
       |     901 |     931 | RIAAAA
@@ -111,7 +111,7 @@ SELECT ''::text AS five, unique1, unique2, stringu1
 -- Test null limit and offset.  The planner would discard a simple null
 -- constant, so to ensure executor is exercised, do this:
 select * from int8_tbl limit (case when random() < 0.5 then null::bigint end);
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -121,7 +121,7 @@ select * from int8_tbl limit (case when random() < 0.5 then null::bigint end);
 (5 rows)
 
 select * from int8_tbl offset (case when random() < 0.5 then null::bigint end);
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -134,7 +134,7 @@ select * from int8_tbl offset (case when random() < 0.5 then null::bigint end);
 begin;
 declare c1 cursor for select * from int8_tbl limit 10;
 fetch all in c1;
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -144,18 +144,18 @@ fetch all in c1;
 (5 rows)
 
 fetch 1 in c1;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch backward 1 in c1;
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
  4567890123456789 | -4567890123456789
 (1 row)
 
 fetch backward all in c1;
-        q1        |        q2        
+        q1        |        q2
 ------------------+------------------
  4567890123456789 | 4567890123456789
  4567890123456789 |              123
@@ -164,12 +164,12 @@ fetch backward all in c1;
 (4 rows)
 
 fetch backward 1 in c1;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch all in c1;
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -180,7 +180,7 @@ fetch all in c1;
 
 declare c2 cursor for select * from int8_tbl limit 3;
 fetch all in c2;
-        q1        |        q2        
+        q1        |        q2
 ------------------+------------------
               123 |              456
               123 | 4567890123456789
@@ -188,30 +188,30 @@ fetch all in c2;
 (3 rows)
 
 fetch 1 in c2;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch backward 1 in c2;
-        q1        | q2  
+        q1        | q2
 ------------------+-----
  4567890123456789 | 123
 (1 row)
 
 fetch backward all in c2;
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 | 4567890123456789
  123 |              456
 (2 rows)
 
 fetch backward 1 in c2;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch all in c2;
-        q1        |        q2        
+        q1        |        q2
 ------------------+------------------
               123 |              456
               123 | 4567890123456789
@@ -220,36 +220,36 @@ fetch all in c2;
 
 declare c3 cursor for select * from int8_tbl offset 3;
 fetch all in c3;
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
  4567890123456789 |  4567890123456789
  4567890123456789 | -4567890123456789
 (2 rows)
 
 fetch 1 in c3;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch backward 1 in c3;
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
  4567890123456789 | -4567890123456789
 (1 row)
 
 fetch backward all in c3;
-        q1        |        q2        
+        q1        |        q2
 ------------------+------------------
  4567890123456789 | 4567890123456789
 (1 row)
 
 fetch backward 1 in c3;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch all in c3;
-        q1        |        q2         
+        q1        |        q2
 ------------------+-------------------
  4567890123456789 |  4567890123456789
  4567890123456789 | -4567890123456789
@@ -257,82 +257,82 @@ fetch all in c3;
 
 declare c4 cursor for select * from int8_tbl offset 10;
 fetch all in c4;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch 1 in c4;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch backward 1 in c4;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch backward all in c4;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch backward 1 in c4;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch all in c4;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 declare c5 cursor for select * from int8_tbl order by q1 fetch first 2 rows with ties;
 fetch all in c5;
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 |              456
  123 | 4567890123456789
 (2 rows)
 
 fetch 1 in c5;
- q1 | q2 
+ q1 | q2
 ----+----
 (0 rows)
 
 fetch backward 1 in c5;
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 | 4567890123456789
 (1 row)
 
 fetch backward 1 in c5;
- q1  | q2  
+ q1  | q2
 -----+-----
  123 | 456
 (1 row)
 
 fetch all in c5;
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 | 4567890123456789
 (1 row)
 
 fetch backward all in c5;
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 | 4567890123456789
  123 |              456
 (2 rows)
 
 fetch all in c5;
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 |              456
  123 | 4567890123456789
 (2 rows)
 
 fetch backward all in c5;
- q1  |        q2        
+ q1  |        q2
 -----+------------------
  123 | 4567890123456789
  123 |              456
@@ -346,7 +346,7 @@ SELECT
           (SELECT n FROM generate_series(1,10) AS n
              ORDER BY n LIMIT 1 OFFSET s-1) AS y) AS z
   FROM generate_series(1,10) AS s;
- z  
+ z
 ----
   1
   2
@@ -368,7 +368,7 @@ create temp sequence testseq;
 explain (verbose, costs off)
 select unique1, unique2, nextval('testseq')
   from tenk1 order by unique2 limit 10;
-                           QUERY PLAN                           
+                           QUERY PLAN
 ----------------------------------------------------------------
  Limit
    Output: unique1, unique2, (nextval('testseq'::regclass))
@@ -378,7 +378,7 @@ select unique1, unique2, nextval('testseq')
 
 select unique1, unique2, nextval('testseq')
   from tenk1 order by unique2 limit 10;
- unique1 | unique2 | nextval 
+ unique1 | unique2 | nextval
 ---------+---------+---------
     8800 |       0 |       1
     1891 |       1 |       2
@@ -393,7 +393,7 @@ select unique1, unique2, nextval('testseq')
 (10 rows)
 
 select currval('testseq');
- currval 
+ currval
 ---------
       10
 (1 row)
@@ -401,7 +401,7 @@ select currval('testseq');
 explain (verbose, costs off)
 select unique1, unique2, nextval('testseq')
   from tenk1 order by tenthous limit 10;
-                                QUERY PLAN                                
+                                QUERY PLAN
 --------------------------------------------------------------------------
  Limit
    Output: unique1, unique2, (nextval('testseq'::regclass)), tenthous
@@ -416,7 +416,7 @@ select unique1, unique2, nextval('testseq')
 
 select unique1, unique2, nextval('testseq')
   from tenk1 order by tenthous limit 10;
- unique1 | unique2 | nextval 
+ unique1 | unique2 | nextval
 ---------+---------+---------
        0 |    9998 |      11
        1 |    2838 |      12
@@ -431,7 +431,7 @@ select unique1, unique2, nextval('testseq')
 (10 rows)
 
 select currval('testseq');
- currval 
+ currval
 ---------
       20
 (1 row)
@@ -439,7 +439,7 @@ select currval('testseq');
 explain (verbose, costs off)
 select unique1, unique2, generate_series(1,10)
   from tenk1 order by unique2 limit 7;
-                                                                         QUERY PLAN                                                                          
+                                                                         QUERY PLAN
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
  Limit
    Output: unique1, unique2, (generate_series(1, 10))
@@ -451,7 +451,7 @@ select unique1, unique2, generate_series(1,10)
 
 select unique1, unique2, generate_series(1,10)
   from tenk1 order by unique2 limit 7;
- unique1 | unique2 | generate_series 
+ unique1 | unique2 | generate_series
 ---------+---------+-----------------
     8800 |       0 |               1
     8800 |       0 |               2
@@ -465,7 +465,7 @@ select unique1, unique2, generate_series(1,10)
 explain (verbose, costs off)
 select unique1, unique2, generate_series(1,10)
   from tenk1 order by tenthous limit 7;
-                             QUERY PLAN                             
+                             QUERY PLAN
 --------------------------------------------------------------------
  Limit
    Output: unique1, unique2, (generate_series(1, 10)), tenthous
@@ -480,7 +480,7 @@ select unique1, unique2, generate_series(1,10)
 
 select unique1, unique2, generate_series(1,10)
   from tenk1 order by tenthous limit 7;
- unique1 | unique2 | generate_series 
+ unique1 | unique2 | generate_series
 ---------+---------+-----------------
        0 |    9998 |               1
        0 |    9998 |               2
@@ -494,7 +494,7 @@ select unique1, unique2, generate_series(1,10)
 -- use of random() is to keep planner from folding the expressions together
 explain (verbose, costs off)
 select generate_series(0,2) as s1, generate_series((random()*.1)::int,2) as s2;
-                                              QUERY PLAN                                              
+                                              QUERY PLAN
 ------------------------------------------------------------------------------------------------------
  ProjectSet
    Output: generate_series(0, 2), generate_series(((random() * '0.1'::double precision))::integer, 2)
@@ -502,7 +502,7 @@ select generate_series(0,2) as s1, generate_series((random()*.1)::int,2) as s2;
 (3 rows)
 
 select generate_series(0,2) as s1, generate_series((random()*.1)::int,2) as s2;
- s1 | s2 
+ s1 | s2
 ----+----
   0 |  0
   1 |  1
@@ -512,7 +512,7 @@ select generate_series(0,2) as s1, generate_series((random()*.1)::int,2) as s2;
 explain (verbose, costs off)
 select generate_series(0,2) as s1, generate_series((random()*.1)::int,2) as s2
 order by s2 desc;
-                                                 QUERY PLAN                                                 
+                                                 QUERY PLAN
 ------------------------------------------------------------------------------------------------------------
  Sort
    Output: (generate_series(0, 2)), (generate_series(((random() * '0.1'::double precision))::integer, 2))
@@ -524,7 +524,7 @@ order by s2 desc;
 
 select generate_series(0,2) as s1, generate_series((random()*.1)::int,2) as s2
 order by s2 desc;
- s1 | s2 
+ s1 | s2
 ----+----
   2 |  2
   1 |  1
@@ -535,7 +535,7 @@ order by s2 desc;
 explain (verbose, costs off)
 select sum(tenthous) as s1, sum(tenthous) + random()*0 as s2
   from tenk1 group by thousand order by thousand limit 3;
-                                                    QUERY PLAN                                                     
+                                                    QUERY PLAN
 -------------------------------------------------------------------------------------------------------------------
  Limit
    Output: (sum(tenthous)), (((sum(tenthous))::double precision + (random() * '0'::double precision))), thousand
@@ -548,7 +548,7 @@ select sum(tenthous) as s1, sum(tenthous) + random()*0 as s2
 
 select sum(tenthous) as s1, sum(tenthous) + random()*0 as s2
   from tenk1 group by thousand order by thousand limit 3;
-  s1   |  s2   
+  s1   |  s2
 -------+-------
  45000 | 45000
  45010 | 45010
@@ -562,7 +562,7 @@ select sum(tenthous) as s1, sum(tenthous) + random()*0 as s2
 SELECT  thousand
 		FROM onek WHERE thousand < 5
 		ORDER BY thousand FETCH FIRST 2 ROW WITH TIES;
- thousand 
+ thousand
 ----------
         0
         0
@@ -579,7 +579,7 @@ SELECT  thousand
 SELECT  thousand
 		FROM onek WHERE thousand < 5
 		ORDER BY thousand FETCH FIRST ROWS WITH TIES;
- thousand 
+ thousand
 ----------
         0
         0
@@ -596,7 +596,7 @@ SELECT  thousand
 SELECT  thousand
 		FROM onek WHERE thousand < 5
 		ORDER BY thousand FETCH FIRST 1 ROW WITH TIES;
- thousand 
+ thousand
 ----------
         0
         0
@@ -613,7 +613,7 @@ SELECT  thousand
 SELECT  thousand
 		FROM onek WHERE thousand < 5
 		ORDER BY thousand FETCH FIRST 2 ROW ONLY;
- thousand 
+ thousand
 ----------
         0
         0
@@ -634,9 +634,9 @@ CREATE VIEW limit_thousand_v_1 AS SELECT thousand FROM onek WHERE thousand < 995
 		ORDER BY thousand FETCH FIRST 5 ROWS WITH TIES OFFSET 10;
 \d+ limit_thousand_v_1
                       View "public.limit_thousand_v_1"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+  Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ----------+---------+-----------+----------+---------+---------+-------------
- thousand | integer |           |          |         | plain   | 
+ thousand | integer |           |          |         | plain   |
 View definition:
  SELECT thousand
    FROM onek
@@ -649,9 +649,9 @@ CREATE VIEW limit_thousand_v_2 AS SELECT thousand FROM onek WHERE thousand < 995
 		ORDER BY thousand OFFSET 10 FETCH FIRST 5 ROWS ONLY;
 \d+ limit_thousand_v_2
                       View "public.limit_thousand_v_2"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+  Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ----------+---------+-----------+----------+---------+---------+-------------
- thousand | integer |           |          |         | plain   | 
+ thousand | integer |           |          |         | plain   |
 View definition:
  SELECT thousand
    FROM onek
@@ -667,9 +667,9 @@ CREATE VIEW limit_thousand_v_3 AS SELECT thousand FROM onek WHERE thousand < 995
 		ORDER BY thousand FETCH FIRST (NULL+1) ROWS WITH TIES;
 \d+ limit_thousand_v_3
                       View "public.limit_thousand_v_3"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+  Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ----------+---------+-----------+----------+---------+---------+-------------
- thousand | integer |           |          |         | plain   | 
+ thousand | integer |           |          |         | plain   |
 View definition:
  SELECT thousand
    FROM onek
@@ -681,9 +681,9 @@ CREATE VIEW limit_thousand_v_4 AS SELECT thousand FROM onek WHERE thousand < 995
 		ORDER BY thousand FETCH FIRST NULL ROWS ONLY;
 \d+ limit_thousand_v_4
                       View "public.limit_thousand_v_4"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Description 
+  Column  |  Type   | Collation | Nullable | Default | Storage | Description
 ----------+---------+-----------+----------+---------+---------+-------------
- thousand | integer |           |          |         | plain   | 
+ thousand | integer |           |          |         | plain   |
 View definition:
  SELECT thousand
    FROM onek

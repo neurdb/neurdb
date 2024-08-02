@@ -94,8 +94,8 @@ struct sqlca_t *ECPGget_sqlca(void);
 
 int main()
 {  /* exec sql begin declare section */
-    
-   
+
+
 #line 9 "code100.pgc"
  int index ;
 /* exec sql end declare section */
@@ -120,8 +120,8 @@ int main()
    if (sqlca.sqlcode) printf("%ld:%s\n",sqlca.sqlcode,sqlca.sqlerrm.sqlerrmc);
 
    for (index=0;index<10;++index)
-   {  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( payload , index ) values ( 0 , $1  )", 
-	ECPGt_int,&(index),(long)1,(long)1,sizeof(int), 
+   {  { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test ( payload , index ) values ( 0 , $1  )",
+	ECPGt_int,&(index),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);}
 #line 28 "code100.pgc"
 

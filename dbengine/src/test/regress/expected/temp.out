@@ -8,14 +8,14 @@ CREATE INDEX i_temptest ON temptest(col);
 CREATE TEMP TABLE temptest(tcol int);
 CREATE INDEX i_temptest ON temptest(tcol);
 SELECT * FROM temptest;
- tcol 
+ tcol
 ------
 (0 rows)
 
 DROP INDEX i_temptest;
 DROP TABLE temptest;
 SELECT * FROM temptest;
- col 
+ col
 -----
 (0 rows)
 
@@ -27,14 +27,14 @@ INSERT INTO temptest VALUES (1);
 CREATE TEMP TABLE temptest(tcol float);
 INSERT INTO temptest VALUES (2.1);
 SELECT * FROM temptest;
- tcol 
+ tcol
 ------
   2.1
 (1 row)
 
 DROP TABLE temptest;
 SELECT * FROM temptest;
- col 
+ col
 -----
    1
 (1 row)
@@ -55,7 +55,7 @@ BEGIN;
 INSERT INTO temptest VALUES (1);
 INSERT INTO temptest VALUES (2);
 SELECT * FROM temptest;
- col 
+ col
 -----
    1
    2
@@ -63,7 +63,7 @@ SELECT * FROM temptest;
 
 COMMIT;
 SELECT * FROM temptest;
- col 
+ col
 -----
 (0 rows)
 
@@ -71,14 +71,14 @@ DROP TABLE temptest;
 BEGIN;
 CREATE TEMP TABLE temptest(col) ON COMMIT DELETE ROWS AS SELECT 1;
 SELECT * FROM temptest;
- col 
+ col
 -----
    1
 (1 row)
 
 COMMIT;
 SELECT * FROM temptest;
- col 
+ col
 -----
 (0 rows)
 
@@ -89,7 +89,7 @@ CREATE TEMP TABLE temptest(col int) ON COMMIT DROP;
 INSERT INTO temptest VALUES (1);
 INSERT INTO temptest VALUES (2);
 SELECT * FROM temptest;
- col 
+ col
 -----
    1
    2
@@ -103,7 +103,7 @@ LINE 1: SELECT * FROM temptest;
 BEGIN;
 CREATE TEMP TABLE temptest(col) ON COMMIT DROP AS SELECT 1;
 SELECT * FROM temptest;
- col 
+ col
 -----
    1
 (1 row)
@@ -124,7 +124,7 @@ begin
      FROM generate_series(1, 100) g(i)));
 end$$;
 SELECT * FROM temptest;
- col 
+ col
 -----
 (0 rows)
 
@@ -147,13 +147,13 @@ INSERT INTO temptest1 VALUES (1);
 INSERT INTO temptest2 VALUES (1);
 COMMIT;
 SELECT * FROM temptest1;
- col 
+ col
 -----
    1
 (1 row)
 
 SELECT * FROM temptest2;
- col 
+ col
 -----
 (0 rows)
 
@@ -174,13 +174,13 @@ create function pg_temp.whoami() returns text
   as $$select 'temp'::text$$ language sql;
 -- default should have pg_temp implicitly first, but only for tables
 select * from whereami;
-  f1  
+  f1
 ------
  temp
 (1 row)
 
 select whoami();
- whoami 
+ whoami
 --------
  public
 (1 row)
@@ -188,13 +188,13 @@ select whoami();
 -- can list temp first explicitly, but it still doesn't affect functions
 set search_path = pg_temp, public;
 select * from whereami;
-  f1  
+  f1
 ------
  temp
 (1 row)
 
 select whoami();
- whoami 
+ whoami
 --------
  public
 (1 row)
@@ -202,20 +202,20 @@ select whoami();
 -- or put it last for security
 set search_path = public, pg_temp;
 select * from whereami;
-   f1   
+   f1
 --------
  public
 (1 row)
 
 select whoami();
- whoami 
+ whoami
 --------
  public
 (1 row)
 
 -- you can invoke a temp function explicitly, though
 select pg_temp.whoami();
- whoami 
+ whoami
 --------
  temp
 (1 row)
@@ -248,7 +248,7 @@ insert into temp_parted_oncommit values (1);
 commit;
 -- partitions are emptied by the previous commit
 select * from temp_parted_oncommit;
- a 
+ a
 ---
 (0 rows)
 
@@ -269,7 +269,7 @@ insert into temp_parted_oncommit_test values (1), (2);
 commit;
 -- no relations remain in this case.
 select relname from pg_class where relname ~ '^temp_parted_oncommit_test';
- relname 
+ relname
 ---------
 (0 rows)
 
@@ -289,7 +289,7 @@ commit;
 -- Data from the remaining partition is still here as its rows are
 -- preserved.
 select * from temp_parted_oncommit_test;
- a 
+ a
 ---
  1
 (1 row)
@@ -297,7 +297,7 @@ select * from temp_parted_oncommit_test;
 -- two relations remain in this case.
 select relname from pg_class where relname ~ '^temp_parted_oncommit_test'
   order by relname;
-          relname           
+          relname
 ----------------------------
  temp_parted_oncommit_test
  temp_parted_oncommit_test1
@@ -314,7 +314,7 @@ insert into temp_inh_oncommit_test1 values (1);
 commit;
 -- no relations remain in this case
 select relname from pg_class where relname ~ '^temp_inh_oncommit_test';
- relname 
+ relname
 ---------
 (0 rows)
 
@@ -327,13 +327,13 @@ insert into temp_inh_oncommit_test1 values (1);
 insert into temp_inh_oncommit_test values (1);
 commit;
 select * from temp_inh_oncommit_test;
- a 
+ a
 ---
 (0 rows)
 
 -- one relation remains
 select relname from pg_class where relname ~ '^temp_inh_oncommit_test';
-        relname         
+        relname
 ------------------------
  temp_inh_oncommit_test
 (1 row)
@@ -378,7 +378,7 @@ ERROR:  cannot PREPARE a transaction that has operated on temporary objects
 create temp table twophase_tab (a int);
 begin;
 select a from twophase_tab;
- a 
+ a
 ---
 (0 rows)
 
@@ -403,7 +403,7 @@ ERROR:  cannot PREPARE a transaction that has operated on temporary objects
 SET search_path TO 'pg_temp';
 BEGIN;
 SELECT current_schema() ~ 'pg_temp' AS is_temp_schema;
- is_temp_schema 
+ is_temp_schema
 ----------------
  t
 (1 row)

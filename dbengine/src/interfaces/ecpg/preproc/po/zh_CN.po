@@ -690,4 +690,3 @@ msgstr "对于这种数据类型不支持指向指针的指针"
 #, c-format
 msgid "multidimensional arrays for structures are not supported"
 msgstr "不支持结构类型的多维数组"
-

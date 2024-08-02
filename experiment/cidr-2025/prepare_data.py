@@ -60,12 +60,14 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
         # f"{table_name}_test3": data[int(0.7 * len(data)): int(0.8 * len(data))],
         # f"{table_name}_test4": data[int(0.8 * len(data)): int(0.9 * len(data))],
         # f"{table_name}_test5": data[int(0.9 * len(data)):],
-        f"{table_name}_raw": data   # Use the whole dataset
+        f"{table_name}_raw": data  # Use the whole dataset
     }
 
     for table_name, data in datasets.items():
         _create_table(cursor, conn, table_name, data)
-        data.to_csv("temp.csv", sep=",", header=False, index=False)  # Use COPY instead of INSERT
+        data.to_csv(
+            "temp.csv", sep=",", header=False, index=False
+        )  # Use COPY instead of INSERT
 
         with open("temp.csv", "r") as f:
             cursor.copy_from(f, table_name, sep=",", columns=data.columns)
@@ -83,26 +85,20 @@ def create_table_for_dataset(data: pd.DataFrame, table_name: str, random_state: 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_name", type=str, help="Name of the dataset")
     parser.add_argument(
-        "--dataset_name",
-        type=str,
-        help="Name of the dataset"
-    )
-    parser.add_argument(
-        "--random_state",
-        type=int,
-        help="Random state to shuffle the dataset"
+        "--random_state", type=int, help="Random state to shuffle the dataset"
     )
     parser.add_argument(
         "--input_file",
         type=str,
-        help="Path to the dataset file, e.g., /path/to/data.csv"
+        help="Path to the dataset file, e.g., /path/to/data.csv",
     )
     parser.add_argument(
         "--file_type",
         type=str,
         default="csv",
-        help="Type of the input file, csv, npy or libsvm"
+        help="Type of the input file, csv, npy or libsvm",
     )
     args = parser.parse_args()
     input_file = args.input_file

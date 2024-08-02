@@ -10,7 +10,7 @@ id
 --
 (0 rows)
 
-step s3getlocks: 
+step s3getlocks:
         SELECT s.query, c.relname, l.mode, l.granted
         FROM pg_locks l
                 JOIN pg_class c ON l.relation = c.oid
@@ -20,18 +20,18 @@ step s3getlocks:
 
 query                                               |relname                                      |mode               |granted
 ----------------------------------------------------+---------------------------------------------+-------------------+-------
-DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking                      |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking_idx                  |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking_subpart              |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking_subpart_child        |AccessExclusiveLock|f      
-SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child        |AccessShareLock    |t      
-SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx |AccessShareLock    |t      
-SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx1|AccessShareLock    |t      
+DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking                      |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking_idx                  |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking_subpart              |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;             |part_drop_index_locking_subpart_child        |AccessExclusiveLock|f
+SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child        |AccessShareLock    |t
+SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx |AccessShareLock    |t
+SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx1|AccessShareLock    |t
 (7 rows)
 
 step s1commit: COMMIT;
 step s2drop: <... completed>
-step s3getlocks: 
+step s3getlocks:
         SELECT s.query, c.relname, l.mode, l.granted
         FROM pg_locks l
                 JOIN pg_class c ON l.relation = c.oid
@@ -41,12 +41,12 @@ step s3getlocks:
 
 query                                  |relname                                     |mode               |granted
 ---------------------------------------+--------------------------------------------+-------------------+-------
-DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking                     |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_idx                 |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart             |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart_child       |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart_child_id_idx|AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart_id_idx      |AccessExclusiveLock|t      
+DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking                     |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_idx                 |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart             |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart_child       |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart_child_id_idx|AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_idx;|part_drop_index_locking_subpart_id_idx      |AccessExclusiveLock|t
 (6 rows)
 
 step s2commit: COMMIT;
@@ -61,7 +61,7 @@ id
 --
 (0 rows)
 
-step s3getlocks: 
+step s3getlocks:
         SELECT s.query, c.relname, l.mode, l.granted
         FROM pg_locks l
                 JOIN pg_class c ON l.relation = c.oid
@@ -71,17 +71,17 @@ step s3getlocks:
 
 query                                               |relname                                      |mode               |granted
 ----------------------------------------------------+---------------------------------------------+-------------------+-------
-DROP INDEX part_drop_index_locking_subpart_idx;     |part_drop_index_locking_subpart              |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_subpart_idx;     |part_drop_index_locking_subpart_child        |AccessExclusiveLock|f      
-DROP INDEX part_drop_index_locking_subpart_idx;     |part_drop_index_locking_subpart_idx          |AccessExclusiveLock|t      
-SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child        |AccessShareLock    |t      
-SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx |AccessShareLock    |t      
-SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx1|AccessShareLock    |t      
+DROP INDEX part_drop_index_locking_subpart_idx;     |part_drop_index_locking_subpart              |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_subpart_idx;     |part_drop_index_locking_subpart_child        |AccessExclusiveLock|f
+DROP INDEX part_drop_index_locking_subpart_idx;     |part_drop_index_locking_subpart_idx          |AccessExclusiveLock|t
+SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child        |AccessShareLock    |t
+SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx |AccessShareLock    |t
+SELECT * FROM part_drop_index_locking_subpart_child;|part_drop_index_locking_subpart_child_id_idx1|AccessShareLock    |t
 (6 rows)
 
 step s1commit: COMMIT;
 step s2dropsub: <... completed>
-step s3getlocks: 
+step s3getlocks:
         SELECT s.query, c.relname, l.mode, l.granted
         FROM pg_locks l
                 JOIN pg_class c ON l.relation = c.oid
@@ -91,10 +91,10 @@ step s3getlocks:
 
 query                                          |relname                                      |mode               |granted
 -----------------------------------------------+---------------------------------------------+-------------------+-------
-DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart              |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart_child        |AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart_child_id_idx1|AccessExclusiveLock|t      
-DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart_idx          |AccessExclusiveLock|t      
+DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart              |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart_child        |AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart_child_id_idx1|AccessExclusiveLock|t
+DROP INDEX part_drop_index_locking_subpart_idx;|part_drop_index_locking_subpart_idx          |AccessExclusiveLock|t
 (4 rows)
 
 step s2commit: COMMIT;

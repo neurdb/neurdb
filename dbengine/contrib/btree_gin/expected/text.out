@@ -5,7 +5,7 @@ CREATE TABLE test_text (
 INSERT INTO test_text VALUES ('a'),('ab'),('abc'),('abb'),('axy'),('xyz');
 CREATE INDEX idx_text ON test_text USING gin (i);
 SELECT * FROM test_text WHERE i<'abc' ORDER BY i;
-  i  
+  i
 -----
  a
  ab
@@ -13,7 +13,7 @@ SELECT * FROM test_text WHERE i<'abc' ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_text WHERE i<='abc' ORDER BY i;
-  i  
+  i
 -----
  a
  ab
@@ -22,13 +22,13 @@ SELECT * FROM test_text WHERE i<='abc' ORDER BY i;
 (4 rows)
 
 SELECT * FROM test_text WHERE i='abc' ORDER BY i;
-  i  
+  i
 -----
  abc
 (1 row)
 
 SELECT * FROM test_text WHERE i>='abc' ORDER BY i;
-  i  
+  i
 -----
  abc
  axy
@@ -36,9 +36,8 @@ SELECT * FROM test_text WHERE i>='abc' ORDER BY i;
 (3 rows)
 
 SELECT * FROM test_text WHERE i>'abc' ORDER BY i;
-  i  
+  i
 -----
  axy
  xyz
 (2 rows)
-

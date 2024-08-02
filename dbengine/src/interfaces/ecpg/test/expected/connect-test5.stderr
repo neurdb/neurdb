@@ -1,6 +1,6 @@
 [NO_PID]: ECPGdebug: set to 1
 [NO_PID]: sqlca: code: 0, state: 00000
-[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>  
+[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ecpg_execute on line 24: query: alter user regress_ecpg_user2 encrypted password 'insecure'; with 0 parameter(s) on connection main
 [NO_PID]: sqlca: code: 0, state: 00000
@@ -18,19 +18,19 @@
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ecpg_finish: connection main closed
 [NO_PID]: sqlca: code: 0, state: 00000
-[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>  
+[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ecpg_finish: connection main closed
 [NO_PID]: sqlca: code: 0, state: 00000
-[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>  
+[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ecpg_finish: connection main closed
 [NO_PID]: sqlca: code: 0, state: 00000
-[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>  
+[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ecpg_finish: connection main closed
 [NO_PID]: sqlca: code: 0, state: 00000
-[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>  
+[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ecpg_finish: connection main closed
 [NO_PID]: sqlca: code: 0, state: 00000
@@ -70,7 +70,7 @@
 [NO_PID]: sqlca: code: -402, state: 08001
 [NO_PID]: raising sqlcode -220 on line 65: connection "main" does not exist on line 65
 [NO_PID]: sqlca: code: -220, state: 08003
-[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>  
+[NO_PID]: ECPGconnect: opening database ecpg2_regression on <DEFAULT> port <DEFAULT>
 [NO_PID]: sqlca: code: 0, state: 00000
 [NO_PID]: ECPGconnect: connection identifier main is already in use
 [NO_PID]: sqlca: code: 0, state: 00000

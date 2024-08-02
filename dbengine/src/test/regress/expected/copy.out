@@ -19,7 +19,7 @@ copy copytest to :'filename' csv;
 create temp table copytest2 (like copytest);
 copy copytest2 from :'filename' csv;
 select * from copytest except select * from copytest2;
- style | test | filler 
+ style | test | filler
 -------+------+--------
 (0 rows)
 
@@ -28,7 +28,7 @@ truncate copytest2;
 copy copytest to :'filename' csv quote '''' escape E'\\';
 copy copytest2 from :'filename' csv quote '''' escape E'\\';
 select * from copytest except select * from copytest2;
- style | test | filler 
+ style | test | filler
 -------+------+--------
 (0 rows)
 
@@ -77,7 +77,7 @@ ERROR:  cannot perform COPY FREEZE on a partitioned table
 rollback;
 select tableoid::regclass,count(*),sum(a) from parted_copytest
 group by tableoid order by tableoid::regclass::name;
-      tableoid      | count |  sum   
+      tableoid      | count |  sum
 --------------------+-------+--------
  parted_copytest_a1 |  1010 | 510655
  parted_copytest_a2 |    10 |  10055
@@ -97,7 +97,7 @@ create trigger part_ins_trig
 copy parted_copytest from :'filename';
 select tableoid::regclass,count(*),sum(a) from parted_copytest
 group by tableoid order by tableoid::regclass::name;
-      tableoid      | count |  sum   
+      tableoid      | count |  sum
 --------------------+-------+--------
  parted_copytest_a1 |  1010 | 510655
  parted_copytest_a2 |    10 |  10055
@@ -109,13 +109,13 @@ drop trigger part_ins_trig on parted_copytest_a2;
 copy parted_copytest from stdin;
 -- Ensure index entries were properly added during the copy.
 select * from parted_copytest where b = 1;
- a | b |  c   
+ a | b |  c
 ---+---+------
  1 | 1 | str1
 (1 row)
 
 select * from parted_copytest where b = 2;
- a | b |  c   
+ a | b |  c
 ---+---+------
  2 | 2 | str2
 (1 row)
@@ -210,7 +210,7 @@ copy header_copytest from stdin with (header match);
 ERROR:  column name mismatch in header line field 3: got "d", expected "c"
 CONTEXT:  COPY header_copytest, line 1: "a	b	d"
 SELECT * FROM header_copytest ORDER BY a;
- a | b |  c  
+ a | b |  c
 ---+---+-----
  1 | 2 | foo
  3 | 4 | bar
@@ -230,7 +230,7 @@ copy header_copytest (a, c) from stdin with (header match);
 ERROR:  wrong number of fields in header line: got 3, expected 2
 CONTEXT:  COPY header_copytest, line 1: "a	c	b"
 SELECT * FROM header_copytest ORDER BY a;
- a |  c  
+ a |  c
 ---+-----
  1 | foo
  3 | bar
@@ -287,7 +287,7 @@ COPY parted_si(id, data) FROM :'filename';
 -- does so when shared_buffers is small enough.  To test if we encountered the
 -- bug, check that the partition condition isn't violated.
 SELECT tableoid::regclass, id % 2 = 0 is_even, count(*) from parted_si GROUP BY 1, 2 ORDER BY 1;
-     tableoid     | is_even | count 
+     tableoid     | is_even | count
 ------------------+---------+-------
  parted_si_p_even | t       |  5000
  parted_si_p_odd  | f       |  5000

@@ -58,7 +58,7 @@ SELECT objtype, objname, label FROM pg_seclabels
                       't1p_ones', 't1p_ones.o', 't1p_ones.p', 't1p_ones.q',
                       't1p_tens', 't1p_tens.o', 't1p_tens.p', 't1p_tens.q')
 ORDER BY objname COLLATE "C";
- objtype |  objname   |                    label                    
+ objtype |  objname   |                    label
 ---------+------------+---------------------------------------------
  table   | t1         | system_u:object_r:sepgsql_table_t:s0
  table   | t1p        | system_u:object_r:sepgsql_table_t:s0
@@ -100,13 +100,13 @@ ERROR:  SELinux: hardwired security policy violation
 -- Simple DML statements
 --
 SELECT sepgsql_getcon();	-- confirm client privilege
-                   sepgsql_getcon                    
+                   sepgsql_getcon
 -----------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_user_t:s0
 (1 row)
 
 SELECT * FROM t1;			-- ok
- a |  b  
+ a |  b
 ---+-----
  1 | aaa
  2 | bbb
@@ -114,7 +114,7 @@ SELECT * FROM t1;			-- ok
 (3 rows)
 
 SELECT * FROM t2;			-- ok
- x |  y  
+ x |  y
 ---+-----
  1 | xxx
  2 | yyy
@@ -122,7 +122,7 @@ SELECT * FROM t2;			-- ok
 (3 rows)
 
 SELECT * FROM t3;			-- ok
- s |  t  
+ s |  t
 ---+-----
  1 | sss
  2 | ttt
@@ -134,12 +134,12 @@ ERROR:  SELinux: security policy violation
 SELECT * FROM t5;			-- failed
 ERROR:  SELinux: security policy violation
 SELECT e,f FROM t5;			-- ok
- e | f 
+ e | f
 ---+---
 (0 rows)
 
 SELECT (t1.*)::record FROM t1;		-- ok
-   t1    
+   t1
 ---------
  (1,aaa)
  (2,bbb)
@@ -153,7 +153,7 @@ ERROR:  SELinux: security policy violation
 SELECT * FROM t1p;			-- failed
 ERROR:  SELinux: security policy violation
 SELECT o,p FROM t1p;		-- ok
- o | p 
+ o | p
 ---+---
 (0 rows)
 
@@ -161,24 +161,24 @@ SELECT o,p FROM t1p;		-- ok
 SELECT * FROM t1p_ones;			-- failed
 ERROR:  SELinux: security policy violation
 SELECT o FROM t1p_ones;			-- ok
- o 
+ o
 ---
 (0 rows)
 
 SELECT o,p FROM t1p_ones;		-- ok
- o | p 
+ o | p
 ---+---
 (0 rows)
 
 SELECT * FROM t1p_tens;			-- failed
 ERROR:  SELinux: security policy violation
 SELECT o FROM t1p_tens;			-- ok
- o 
+ o
 ---
 (0 rows)
 
 SELECT o,p FROM t1p_tens;		-- ok
- o | p 
+ o | p
 ---+---
 (0 rows)
 
@@ -186,14 +186,14 @@ SELECT o,p FROM t1p_tens;		-- ok
 SELECT * FROM customer;									-- failed
 ERROR:  SELinux: security policy violation
 SELECT cid, cname, customer_credit(cid) FROM customer;	-- ok
- cid | cname  |   customer_credit   
+ cid | cname  |   customer_credit
 -----+--------+---------------------
    1 | Taro   | 1111-2222-3333-????
    2 | Hanako | 5555-6666-7777-????
 (2 rows)
 
 SELECT count(*) FROM t5;					-- ok
- count 
+ count
 -------
      0
 (1 row)
@@ -203,7 +203,7 @@ ERROR:  SELinux: security policy violation
 ---
 -- partitioned table parent
 SELECT count(*) FROM t1p;					-- ok
- count 
+ count
 -------
      0
 (1 row)
@@ -212,7 +212,7 @@ SELECT count(*) FROM t1p WHERE q IS NULL;	-- failed
 ERROR:  SELinux: security policy violation
 -- partitioned table children
 SELECT count(*) FROM t1p_ones;					-- ok
- count 
+ count
 -------
      0
 (1 row)
@@ -220,7 +220,7 @@ SELECT count(*) FROM t1p_ones;					-- ok
 SELECT count(*) FROM t1p_ones WHERE q IS NULL;	-- failed
 ERROR:  SELinux: security policy violation
 SELECT count(*) FROM t1p_tens;					-- ok
- count 
+ count
 -------
      0
 (1 row)
@@ -361,7 +361,7 @@ COPY t1p_tens (o) FROM '/dev/null';			-- ok
 --
 SET search_path = my_schema_1, my_schema_2, public;
 SELECT * FROM ts1;		-- ok
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -377,7 +377,7 @@ LINE 1: SELECT * FROM my_schema_2.ts2;
 -- Clean up
 --
 SELECT sepgsql_getcon();	-- confirm client privilege
-                           sepgsql_getcon                            
+                           sepgsql_getcon
 ---------------------------------------------------------------------
  unconfined_u:unconfined_r:sepgsql_regtest_superuser_t:s0-s0:c0.c255
 (1 row)

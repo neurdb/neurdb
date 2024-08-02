@@ -30,10 +30,10 @@
 
 typedef char* c;
 
-/* exec sql type ind is union { 
+/* exec sql type ind is union {
 #line 11 "cursor.pgc"
  int integer ;
- 
+
 #line 11 "cursor.pgc"
  short smallint ;
  } */
@@ -52,40 +52,40 @@ int
 main (void)
 {
 /* exec sql begin declare section */
-		  
-		  
-		  
-		  
-		
-		  
-		
-		
-		
+
+
+
+
+
+
+
+
+
 
 #line 23 "cursor.pgc"
  char * stmt1 = "SELECT id, t FROM t1" ;
- 
+
 #line 24 "cursor.pgc"
  char * curname1 = CURNAME ;
- 
+
 #line 25 "cursor.pgc"
  char * curname2 = CURNAME ;
- 
+
 #line 26 "cursor.pgc"
  char * curname3 = CURNAME ;
- 
+
 #line 27 "cursor.pgc"
   struct varchar_1  { int len; char arr[ 50 ]; }  curname4 ;
- 
+
 #line 28 "cursor.pgc"
  char * curname5 = CURNAME ;
- 
+
 #line 29 "cursor.pgc"
  int count ;
- 
+
 #line 30 "cursor.pgc"
  int id ;
- 
+
 #line 31 "cursor.pgc"
  char t [ 64 ] ;
 /* exec sql end declare section */
@@ -97,13 +97,13 @@ main (void)
 	ECPGdebug(1, stderr);
 
 	strcpy(msg, "connect");
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , "test1", 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , "test1", 0);
 #line 39 "cursor.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
 #line 39 "cursor.pgc"
 
-	{ ECPGconnect(__LINE__, 0, "ecpg2_regression" , NULL, NULL , "test2", 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg2_regression" , NULL, NULL , "test2", 0);
 #line 40 "cursor.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
@@ -192,8 +192,8 @@ if (sqlca.sqlcode < 0) exit (1);
 
 
 	strcpy(msg, "open");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for select id , t from t1", 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for select id , t from t1",
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 67 "cursor.pgc"
 
@@ -202,12 +202,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch forward from $0", 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch forward from $0",
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 70 "cursor.pgc"
 
@@ -217,12 +217,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch forward $0", 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch forward $0",
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 74 "cursor.pgc"
 
@@ -232,12 +232,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch 1 from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0", 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0",
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 78 "cursor.pgc"
 
@@ -248,14 +248,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count from");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 83 "cursor.pgc"
 
@@ -265,8 +265,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "move in");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 in $0", 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 in $0",
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 87 "cursor.pgc"
 
@@ -275,12 +275,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch 1");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0", 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0",
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 90 "cursor.pgc"
 
@@ -291,14 +291,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 95 "cursor.pgc"
 
@@ -308,8 +308,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "close");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0", 
-	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0",
+	ECPGt_char,&(curname1),(long)0,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 99 "cursor.pgc"
 
@@ -333,12 +333,12 @@ if (sqlca.sqlcode < 0) exit (1);
 
 
 	strcpy(msg, "open");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for select id , t from t1", 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for select id , t from t1",
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 108 "cursor.pgc"
 
@@ -347,12 +347,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch from $0", 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch from $0",
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 111 "cursor.pgc"
 
@@ -362,12 +362,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0", 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0",
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 115 "cursor.pgc"
 
@@ -377,12 +377,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch 1 from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0", 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0",
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 119 "cursor.pgc"
 
@@ -393,14 +393,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count from");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 124 "cursor.pgc"
 
@@ -410,12 +410,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "move");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 $0", 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 $0",
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 128 "cursor.pgc"
 
@@ -424,12 +424,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch 1");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0", 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0",
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 131 "cursor.pgc"
 
@@ -440,14 +440,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 136 "cursor.pgc"
 
@@ -457,8 +457,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "close");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0", 
-	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0",
+	ECPGt_char,&(curname2),(long)0,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 140 "cursor.pgc"
 
@@ -503,20 +503,20 @@ if (sqlca.sqlcode < 0) exit (1);
 
 
 	strcpy(msg, "open");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for $1", 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char_variable,(ECPGprepared_statement("test1", "st_id1", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for $1",
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char_variable,(ECPGprepared_statement("test1", "st_id1", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 153 "cursor.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
 #line 153 "cursor.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, "test2", 0, ECPGst_normal, "declare $0 cursor for $1", 
-	ECPGt_char,&(curname5),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char_variable,(ECPGprepared_statement("test2", "st_id1", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test2", 0, ECPGst_normal, "declare $0 cursor for $1",
+	ECPGt_char,&(curname5),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char_variable,(ECPGprepared_statement("test2", "st_id1", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 154 "cursor.pgc"
 
@@ -525,12 +525,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch");
-	{ ECPGdo(__LINE__, 0, 1, "test2", 0, ECPGst_normal, "fetch $0", 
-	ECPGt_char,&(curname5),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test2", 0, ECPGst_normal, "fetch $0",
+	ECPGt_char,&(curname5),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 157 "cursor.pgc"
 
@@ -540,12 +540,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch from $0", 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch from $0",
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 161 "cursor.pgc"
 
@@ -555,12 +555,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch 1 from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0", 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0",
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 165 "cursor.pgc"
 
@@ -571,14 +571,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count from");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 170 "cursor.pgc"
 
@@ -588,8 +588,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "move");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 $0", 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 $0",
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 174 "cursor.pgc"
 
@@ -598,12 +598,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch 1");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0", 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0",
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 177 "cursor.pgc"
 
@@ -614,14 +614,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 182 "cursor.pgc"
 
@@ -631,16 +631,16 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "close");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0", 
-	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0",
+	ECPGt_char,&(curname3),(long)0,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 186 "cursor.pgc"
 
 if (sqlca.sqlcode < 0) exit (1);}
 #line 186 "cursor.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, "test2", 0, ECPGst_normal, "close $0", 
-	ECPGt_char,&(curname5),(long)0,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test2", 0, ECPGst_normal, "close $0",
+	ECPGt_char,&(curname5),(long)0,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 187 "cursor.pgc"
 
@@ -688,10 +688,10 @@ if (sqlca.sqlcode < 0) exit (1);
 
 
 	strcpy(msg, "open");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for $1", 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char_variable,(ECPGprepared_statement("test1", "st_id2", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "declare $0 cursor for $1",
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char_variable,(ECPGprepared_statement("test1", "st_id2", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 206 "cursor.pgc"
 
@@ -700,12 +700,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch from $0", 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch from $0",
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 209 "cursor.pgc"
 
@@ -715,12 +715,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0", 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0",
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 213 "cursor.pgc"
 
@@ -730,12 +730,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "fetch 1 from");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0", 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 from $0",
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 217 "cursor.pgc"
 
@@ -746,14 +746,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count from");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 from $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 222 "cursor.pgc"
 
@@ -763,8 +763,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "move");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 $0", 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "move absolute 0 $0",
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 226 "cursor.pgc"
 
@@ -773,12 +773,12 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 
 	strcpy(msg, "fetch 1");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0", 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch 1 $0",
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 229 "cursor.pgc"
 
@@ -789,14 +789,14 @@ if (sqlca.sqlcode < 0) exit (1);}
 
 	strcpy(msg, "fetch :count");
 	count = 1;
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0", 
-	ECPGt_int,&(count),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_int,&(id),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "fetch $0 $0",
+	ECPGt_int,&(count),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_int,&(id),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(t),(long)64,(long)1,(64)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 234 "cursor.pgc"
 
@@ -806,8 +806,8 @@ if (sqlca.sqlcode < 0) exit (1);}
 	printf("%d %s\n", id, t);
 
 	strcpy(msg, "close");
-	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0", 
-	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1), 
+	{ ECPGdo(__LINE__, 0, 1, "test1", 0, ECPGst_normal, "close $0",
+	ECPGt_varchar,&(curname4),(long)50,(long)1,sizeof(struct varchar_1),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 238 "cursor.pgc"
 

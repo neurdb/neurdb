@@ -67,7 +67,7 @@ If the extension cannot be installed, check the following:
 1. You might need to manually move the built `pg_model.so` file to the PostgreSQL **library** directory, and `pg_model.control`, `pg_model--1.0.0.sql` to the PostgreSQL **extension** directory.
 
    This can be done by running the following commands:
-   
+
    ```bash
    cp /path/to/libpg_model.so /path/to/postgresql/lib/libpg_model.so
    cp /path/to/pg_model.control /path/to/postgresql/share/extension/pg_model.control
@@ -108,4 +108,3 @@ You can check the available functions provided by the pg-model extension by runn
 ## Reference
 1. [MorphingDB](https://github.com/MorphingDB/MorphingDB)
 2. [FindPostgreSQL.cmake does not work on ubuntu](https://stackoverflow.com/questions/13920383/findpostgresql-cmake-wont-work-on-ubuntu)
-

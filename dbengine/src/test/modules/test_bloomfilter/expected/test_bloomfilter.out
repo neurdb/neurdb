@@ -4,9 +4,9 @@ SELECT test_bloomfilter(power => 23,
     nelements => 838861,
     seed => -1,
     tests => 1);
- test_bloomfilter 
+ test_bloomfilter
 ------------------
- 
+
 (1 row)
 
 -- Equivalent "10 bits per element" tests for all possible bitset sizes:

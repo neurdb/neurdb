@@ -276,4 +276,3 @@ msgstr "procesul fiu a fost terminat cu semnalul %d"
 #, c-format
 msgid "child process exited with unrecognized status %d"
 msgstr "procesul fiu a ieşit cu starea nerecunoscută %d"
-

@@ -27,26 +27,25 @@ return SD["call"]
 '
     LANGUAGE plpython3u;
 SELECT static_test();
- static_test 
+ static_test
 -------------
            1
 (1 row)
 
 SELECT static_test();
- static_test 
+ static_test
 -------------
            2
 (1 row)
 
 SELECT global_test_one();
-                    global_test_one                     
+                    global_test_one
 --------------------------------------------------------
  SD: set by global_test_one, GD: set by global_test_one
 (1 row)
 
 SELECT global_test_two();
-                    global_test_two                     
+                    global_test_two
 --------------------------------------------------------
  SD: set by global_test_two, GD: set by global_test_one
 (1 row)
-

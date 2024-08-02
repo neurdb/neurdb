@@ -1466,4 +1466,3 @@ msgstr "не вдалося передати дані серверу: %s"
 #, c-format
 msgid "unrecognized socket error: 0x%08X/%d"
 msgstr "нерозпізнана помилка сокету: 0x%08X/%d"
-

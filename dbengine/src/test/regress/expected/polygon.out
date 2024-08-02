@@ -34,7 +34,7 @@ ERROR:  invalid input syntax for type polygon: "asdf"
 LINE 1: INSERT INTO POLYGON_TBL(f1) VALUES ('asdf');
                                             ^
 SELECT * FROM POLYGON_TBL;
-             f1             
+             f1
 ----------------------------
  ((2,0),(2,4),(0,0))
  ((3,1),(3,3),(1,0))
@@ -75,7 +75,7 @@ SET enable_indexscan = OFF;
 SET enable_bitmapscan = ON;
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p << polygon '((300,300),(400,600),(600,500),(700,200))';
-                                      QUERY PLAN                                       
+                                      QUERY PLAN
 ---------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -85,14 +85,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p << polygon '((300,300),(400,600),(600
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p << polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   3890
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p &< polygon '((300,300),(400,600),(600,500),(700,200))';
-                                      QUERY PLAN                                       
+                                      QUERY PLAN
 ---------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -102,14 +102,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p &< polygon '((300,300),(400,600),(600
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p &< polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   7900
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p && polygon '((300,300),(400,600),(600,500),(700,200))';
-                                      QUERY PLAN                                       
+                                      QUERY PLAN
 ---------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -119,14 +119,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p && polygon '((300,300),(400,600),(600
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p && polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
    977
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p &> polygon '((300,300),(400,600),(600,500),(700,200))';
-                                      QUERY PLAN                                       
+                                      QUERY PLAN
 ---------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -136,14 +136,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p &> polygon '((300,300),(400,600),(600
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p &> polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   7000
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p >> polygon '((300,300),(400,600),(600,500),(700,200))';
-                                      QUERY PLAN                                       
+                                      QUERY PLAN
 ---------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -153,14 +153,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p >> polygon '((300,300),(400,600),(600
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p >> polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   2990
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p <<| polygon '((300,300),(400,600),(600,500),(700,200))';
-                                       QUERY PLAN                                       
+                                       QUERY PLAN
 ----------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -170,14 +170,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p <<| polygon '((300,300),(400,600),(60
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p <<| polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   1890
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p &<| polygon '((300,300),(400,600),(600,500),(700,200))';
-                                       QUERY PLAN                                       
+                                       QUERY PLAN
 ----------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -187,14 +187,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p &<| polygon '((300,300),(400,600),(60
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p &<| polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   6900
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p |&> polygon '((300,300),(400,600),(600,500),(700,200))';
-                                       QUERY PLAN                                       
+                                       QUERY PLAN
 ----------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -204,14 +204,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p |&> polygon '((300,300),(400,600),(60
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p |&> polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   9000
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p |>> polygon '((300,300),(400,600),(600,500),(700,200))';
-                                       QUERY PLAN                                       
+                                       QUERY PLAN
 ----------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -221,14 +221,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p |>> polygon '((300,300),(400,600),(60
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p |>> polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
   3990
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p <@ polygon '((300,300),(400,600),(600,500),(700,200))';
-                                      QUERY PLAN                                       
+                                      QUERY PLAN
 ---------------------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -238,14 +238,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p <@ polygon '((300,300),(400,600),(600
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p <@ polygon '((300,300),(400,600),(600,500),(700,200))';
- count 
+ count
 -------
    831
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p @> polygon '((340,550),(343,552),(341,553))';
-                                 QUERY PLAN                                  
+                                 QUERY PLAN
 -----------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -255,14 +255,14 @@ SELECT count(*) FROM quad_poly_tbl WHERE p @> polygon '((340,550),(343,552),(341
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p @> polygon '((340,550),(343,552),(341,553))';
- count 
+ count
 -------
      1
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM quad_poly_tbl WHERE p ~= polygon '((200, 300),(210, 310),(230, 290))';
-                                 QUERY PLAN                                  
+                                 QUERY PLAN
 -----------------------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on quad_poly_tbl
@@ -272,7 +272,7 @@ SELECT count(*) FROM quad_poly_tbl WHERE p ~= polygon '((200, 300),(210, 310),(2
 (5 rows)
 
 SELECT count(*) FROM quad_poly_tbl WHERE p ~= polygon '((200, 300),(210, 310),(230, 290))';
- count 
+ count
 -------
   1000
 (1 row)
@@ -283,7 +283,7 @@ SET enable_bitmapscan = OFF;
 EXPLAIN (COSTS OFF)
 SELECT rank() OVER (ORDER BY p <-> point '123,456') n, p <-> point '123,456' dist, id
 FROM quad_poly_tbl WHERE p <@ polygon '((300,300),(400,600),(600,500),(700,200))';
-                                   QUERY PLAN                                    
+                                   QUERY PLAN
 ---------------------------------------------------------------------------------
  WindowAgg
    ->  Index Scan using quad_poly_tbl_idx on quad_poly_tbl
@@ -299,7 +299,7 @@ FROM quad_poly_tbl_ord_seq2 seq FULL JOIN quad_poly_tbl_ord_idx2 idx
 	ON seq.n = idx.n AND seq.id = idx.id AND
 		(seq.dist = idx.dist OR seq.dist IS NULL AND idx.dist IS NULL)
 WHERE seq.id IS NULL OR idx.id IS NULL;
- n | dist | id | n | dist | id 
+ n | dist | id | n | dist | id
 ---+------+----+---+------+----
 (0 rows)
 
@@ -308,26 +308,25 @@ RESET enable_indexscan;
 RESET enable_bitmapscan;
 -- test non-error-throwing API for some core types
 SELECT pg_input_is_valid('(2.0,0.8,0.1)', 'polygon');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('(2.0,0.8,0.1)', 'polygon');
-                        message                         | detail | hint | sql_error_code 
+                        message                         | detail | hint | sql_error_code
 --------------------------------------------------------+--------+------+----------------
  invalid input syntax for type polygon: "(2.0,0.8,0.1)" |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('(2.0,xyz)', 'polygon');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('(2.0,xyz)', 'polygon');
-                      message                       | detail | hint | sql_error_code 
+                      message                       | detail | hint | sql_error_code
 ----------------------------------------------------+--------+------+----------------
  invalid input syntax for type polygon: "(2.0,xyz)" |        |      | 22P02
 (1 row)
-

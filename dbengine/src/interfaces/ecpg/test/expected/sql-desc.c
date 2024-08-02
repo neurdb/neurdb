@@ -25,41 +25,41 @@ int
 main(void)
 {
 	/* exec sql begin declare section */
-	   
-	   
-	   
 
-	   
-	      
-	      
-	   
-	  
-	   
-	
+
+
+
+
+
+
+
+
+
+
 #line 8 "desc.pgc"
  char * stmt1 = "INSERT INTO test1 VALUES ($1, $2)" ;
- 
+
 #line 9 "desc.pgc"
  char * stmt2 = "SELECT * from test1 where a = $1 and b = $2" ;
- 
+
 #line 10 "desc.pgc"
  char * stmt3 = "SELECT * from test1 where :var = a" ;
- 
+
 #line 12 "desc.pgc"
  int val1 = 1 ;
- 
+
 #line 13 "desc.pgc"
  char val2 [ 4 ] = "one" , val2output [] = "AAA" ;
- 
+
 #line 14 "desc.pgc"
  int val1output = 2 , val2i = 0 ;
- 
+
 #line 15 "desc.pgc"
  int val2null = - 1 ;
- 
+
 #line 16 "desc.pgc"
  int ind1 , ind2 ;
- 
+
 #line 17 "desc.pgc"
  char desc1 [ 8 ] = "outdesc" ;
 /* exec sql end declare section */
@@ -99,7 +99,7 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 26 "desc.pgc"
 
 
-	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+	{ ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 28 "desc.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint();}
@@ -137,8 +137,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 34 "desc.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "foo1", 
-	ECPGt_descriptor, "indesc", 1L, 1L, 1L, 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "foo1",
+	ECPGt_descriptor, "indesc", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 36 "desc.pgc"
 
@@ -164,8 +164,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 39 "desc.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "foo1", 
-	ECPGt_descriptor, "indesc", 1L, 1L, 1L, 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "foo1",
+	ECPGt_descriptor, "indesc", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 41 "desc.pgc"
 
@@ -191,8 +191,8 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 44 "desc.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "Foo-1", 
-	ECPGt_descriptor, "indesc", 1L, 1L, 1L, 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "Foo-1",
+	ECPGt_descriptor, "indesc", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 46 "desc.pgc"
 
@@ -225,10 +225,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 51 "desc.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "foo2", 
-	ECPGt_descriptor, "indesc", 1L, 1L, 1L, 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, 
-	ECPGt_descriptor, (desc1), 1L, 1L, 1L, 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_execute, "foo2",
+	ECPGt_descriptor, "indesc", 1L, 1L, 1L,
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT,
+	ECPGt_descriptor, (desc1), 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 53 "desc.pgc"
 
@@ -249,10 +249,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 	/* declare c1 cursor for $1 */
 #line 58 "desc.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare c1 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "foo2", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_descriptor, "indesc", 1L, 1L, 1L, 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare c1 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "foo2", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_descriptor, "indesc", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 59 "desc.pgc"
 
@@ -260,10 +260,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 59 "desc.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch next from c1", ECPGt_EOIT, 
-	ECPGt_int,&(val1output),(long)1,(long)1,sizeof(int), 
-	ECPGt_int,&(ind1),(long)1,(long)1,sizeof(int), 
-	ECPGt_char,(val2output),(long)sizeof("AAA"),(long)1,(sizeof("AAA"))*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch next from c1", ECPGt_EOIT,
+	ECPGt_int,&(val1output),(long)1,(long)1,sizeof(int),
+	ECPGt_int,&(ind1),(long)1,(long)1,sizeof(int),
+	ECPGt_char,(val2output),(long)sizeof("AAA"),(long)1,(sizeof("AAA"))*sizeof(char),
 	ECPGt_int,&(ind2),(long)1,(long)1,sizeof(int), ECPGt_EORT);
 #line 61 "desc.pgc"
 
@@ -299,10 +299,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 	/* declare c2 cursor for $1 */
 #line 70 "desc.pgc"
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare c2 cursor for $1", 
-	ECPGt_char_variable,(ECPGprepared_statement(NULL, "foo3", __LINE__)),(long)1,(long)1,(1)*sizeof(char), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_descriptor, "indesc", 1L, 1L, 1L, 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "declare c2 cursor for $1",
+	ECPGt_char_variable,(ECPGprepared_statement(NULL, "foo3", __LINE__)),(long)1,(long)1,(1)*sizeof(char),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_descriptor, "indesc", 1L, 1L, 1L,
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EOIT, ECPGt_EORT);
 #line 71 "desc.pgc"
 
@@ -310,10 +310,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 71 "desc.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch next from c2", ECPGt_EOIT, 
-	ECPGt_int,&(val1output),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(val2output),(long)sizeof("AAA"),(long)1,(sizeof("AAA"))*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "fetch next from c2", ECPGt_EOIT,
+	ECPGt_int,&(val1output),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(val2output),(long)sizeof("AAA"),(long)1,(sizeof("AAA"))*sizeof(char),
 	ECPGt_int,&(val2i),(long)1,(long)1,sizeof(int), ECPGt_EORT);
 #line 73 "desc.pgc"
 
@@ -329,10 +329,10 @@ if (sqlca.sqlcode < 0) sqlprint();}
 #line 76 "desc.pgc"
 
 
-	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select * from test1 where a = 3", ECPGt_EOIT, 
-	ECPGt_int,&(val1output),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(val2output),(long)sizeof("AAA"),(long)1,(sizeof("AAA"))*sizeof(char), 
+	{ ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select * from test1 where a = 3", ECPGt_EOIT,
+	ECPGt_int,&(val1output),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(val2output),(long)sizeof("AAA"),(long)1,(sizeof("AAA"))*sizeof(char),
 	ECPGt_int,&(val2i),(long)1,(long)1,sizeof(int), ECPGt_EORT);
 #line 78 "desc.pgc"
 

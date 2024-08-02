@@ -89,7 +89,7 @@ set local work_mem = '4MB';
 set local hash_mem_multiplier = 1.0;
 explain (costs off)
   select count(*) from simple r join simple s using (id);
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Aggregate
    ->  Hash Join
@@ -100,7 +100,7 @@ explain (costs off)
 (6 rows)
 
 select count(*) from simple r join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -110,7 +110,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join simple s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  f                    | f
 (1 row)
@@ -124,7 +124,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = off;
 explain (costs off)
   select count(*) from simple r join simple s using (id);
-                      QUERY PLAN                       
+                      QUERY PLAN
 -------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -138,7 +138,7 @@ explain (costs off)
 (9 rows)
 
 select count(*) from simple r join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -148,7 +148,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join simple s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  f                    | f
 (1 row)
@@ -162,7 +162,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = on;
 explain (costs off)
   select count(*) from simple r join simple s using (id);
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -176,7 +176,7 @@ explain (costs off)
 (9 rows)
 
 select count(*) from simple r join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -186,7 +186,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join simple s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  f                    | f
 (1 row)
@@ -202,7 +202,7 @@ set local work_mem = '128kB';
 set local hash_mem_multiplier = 1.0;
 explain (costs off)
   select count(*) from simple r join simple s using (id);
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Aggregate
    ->  Hash Join
@@ -213,7 +213,7 @@ explain (costs off)
 (6 rows)
 
 select count(*) from simple r join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -223,7 +223,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join simple s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  t                    | f
 (1 row)
@@ -237,7 +237,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = off;
 explain (costs off)
   select count(*) from simple r join simple s using (id);
-                      QUERY PLAN                       
+                      QUERY PLAN
 -------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -251,7 +251,7 @@ explain (costs off)
 (9 rows)
 
 select count(*) from simple r join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -261,7 +261,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join simple s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  t                    | f
 (1 row)
@@ -275,7 +275,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = on;
 explain (costs off)
   select count(*) from simple r join simple s using (id);
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -289,7 +289,7 @@ explain (costs off)
 (9 rows)
 
 select count(*) from simple r join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -299,14 +299,14 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join simple s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  t                    | f
 (1 row)
 
 -- parallel full multi-batch hash join
 select count(*) from simple r full outer join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -323,7 +323,7 @@ set local work_mem = '128kB';
 set local hash_mem_multiplier = 1.0;
 explain (costs off)
   select count(*) FROM simple r JOIN bigger_than_it_looks s USING (id);
-                      QUERY PLAN                      
+                      QUERY PLAN
 ------------------------------------------------------
  Aggregate
    ->  Hash Join
@@ -334,7 +334,7 @@ explain (costs off)
 (6 rows)
 
 select count(*) FROM simple r JOIN bigger_than_it_looks s USING (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -344,7 +344,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) FROM simple r JOIN bigger_than_it_looks s USING (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  f                    | t
 (1 row)
@@ -358,7 +358,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = off;
 explain (costs off)
   select count(*) from simple r join bigger_than_it_looks s using (id);
-                            QUERY PLAN                            
+                            QUERY PLAN
 ------------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -372,7 +372,7 @@ explain (costs off)
 (9 rows)
 
 select count(*) from simple r join bigger_than_it_looks s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -382,7 +382,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join bigger_than_it_looks s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  f                    | t
 (1 row)
@@ -396,7 +396,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = on;
 explain (costs off)
   select count(*) from simple r join bigger_than_it_looks s using (id);
-                                QUERY PLAN                                 
+                                QUERY PLAN
 ---------------------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -410,7 +410,7 @@ explain (costs off)
 (9 rows)
 
 select count(*) from simple r join bigger_than_it_looks s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -420,7 +420,7 @@ select original > 1 as initially_multibatch, final > original as increased_batch
 $$
   select count(*) from simple r join bigger_than_it_looks s using (id);
 $$);
- initially_multibatch | increased_batches 
+ initially_multibatch | increased_batches
 ----------------------+-------------------
  f                    | t
 (1 row)
@@ -438,7 +438,7 @@ set local work_mem = '128kB';
 set local hash_mem_multiplier = 1.0;
 explain (costs off)
   select count(*) from simple r join extremely_skewed s using (id);
-                    QUERY PLAN                    
+                    QUERY PLAN
 --------------------------------------------------
  Aggregate
    ->  Hash Join
@@ -449,7 +449,7 @@ explain (costs off)
 (6 rows)
 
 select count(*) from simple r join extremely_skewed s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -458,7 +458,7 @@ select * from hash_join_batches(
 $$
   select count(*) from simple r join extremely_skewed s using (id);
 $$);
- original | final 
+ original | final
 ----------+-------
         1 |     2
 (1 row)
@@ -472,7 +472,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = off;
 explain (costs off)
   select count(*) from simple r join extremely_skewed s using (id);
-                       QUERY PLAN                       
+                       QUERY PLAN
 --------------------------------------------------------
  Aggregate
    ->  Gather
@@ -485,7 +485,7 @@ explain (costs off)
 (8 rows)
 
 select count(*) from simple r join extremely_skewed s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -494,7 +494,7 @@ select * from hash_join_batches(
 $$
   select count(*) from simple r join extremely_skewed s using (id);
 $$);
- original | final 
+ original | final
 ----------+-------
         1 |     2
 (1 row)
@@ -508,7 +508,7 @@ set local hash_mem_multiplier = 1.0;
 set local enable_parallel_hash = on;
 explain (costs off)
   select count(*) from simple r join extremely_skewed s using (id);
-                              QUERY PLAN                               
+                              QUERY PLAN
 -----------------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -522,7 +522,7 @@ explain (costs off)
 (9 rows)
 
 select count(*) from simple r join extremely_skewed s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -531,7 +531,7 @@ select * from hash_join_batches(
 $$
   select count(*) from simple r join extremely_skewed s using (id);
 $$);
- original | final 
+ original | final
 ----------+-------
         1 |     4
 (1 row)
@@ -548,7 +548,7 @@ select * from hash_join_batches(
 $$
   select count(*) from simple r join simple s using (id);
 $$);
- original | final 
+ original | final
 ----------+-------
         1 |     1
 (1 row)
@@ -576,7 +576,7 @@ explain (costs off)
   select count(*) from join_foo
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Aggregate
    ->  Nested Loop Left Join
@@ -594,7 +594,7 @@ explain (costs off)
 select count(*) from join_foo
   left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
   on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
- count 
+ count
 -------
      3
 (1 row)
@@ -606,7 +606,7 @@ $$
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
 $$);
- multibatch 
+ multibatch
 ------------
  t
 (1 row)
@@ -628,7 +628,7 @@ explain (costs off)
   select count(*) from join_foo
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Aggregate
    ->  Nested Loop Left Join
@@ -646,7 +646,7 @@ explain (costs off)
 select count(*) from join_foo
   left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
   on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
- count 
+ count
 -------
      3
 (1 row)
@@ -658,7 +658,7 @@ $$
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
 $$);
- multibatch 
+ multibatch
 ------------
  f
 (1 row)
@@ -680,7 +680,7 @@ explain (costs off)
   select count(*) from join_foo
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Aggregate
    ->  Nested Loop Left Join
@@ -698,7 +698,7 @@ explain (costs off)
 select count(*) from join_foo
   left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
   on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
- count 
+ count
 -------
      3
 (1 row)
@@ -710,7 +710,7 @@ $$
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
 $$);
- multibatch 
+ multibatch
 ------------
  t
 (1 row)
@@ -732,7 +732,7 @@ explain (costs off)
   select count(*) from join_foo
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
-                                     QUERY PLAN                                     
+                                     QUERY PLAN
 ------------------------------------------------------------------------------------
  Aggregate
    ->  Nested Loop Left Join
@@ -750,7 +750,7 @@ explain (costs off)
 select count(*) from join_foo
   left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
   on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
- count 
+ count
 -------
      3
 (1 row)
@@ -762,7 +762,7 @@ $$
     left join (select b1.id, b1.t from join_bar b1 join join_bar b2 using (id)) ss
     on join_foo.id < ss.id + 1 and join_foo.id > ss.id - 1;
 $$);
- multibatch 
+ multibatch
 ------------
  f
 (1 row)
@@ -774,7 +774,7 @@ savepoint settings;
 set local max_parallel_workers_per_gather = 0;
 explain (costs off)
      select  count(*) from simple r full outer join simple s using (id);
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Aggregate
    ->  Hash Full Join
@@ -785,7 +785,7 @@ explain (costs off)
 (6 rows)
 
 select  count(*) from simple r full outer join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -797,7 +797,7 @@ set enable_parallel_hash = off;
 set local max_parallel_workers_per_gather = 2;
 explain (costs off)
      select  count(*) from simple r full outer join simple s using (id);
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Aggregate
    ->  Hash Full Join
@@ -808,7 +808,7 @@ explain (costs off)
 (6 rows)
 
 select  count(*) from simple r full outer join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -819,7 +819,7 @@ savepoint settings;
 set local max_parallel_workers_per_gather = 2;
 explain (costs off)
      select  count(*) from simple r full outer join simple s using (id);
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -833,7 +833,7 @@ explain (costs off)
 (9 rows)
 
 select  count(*) from simple r full outer join simple s using (id);
- count 
+ count
 -------
  20000
 (1 row)
@@ -845,7 +845,7 @@ savepoint settings;
 set local max_parallel_workers_per_gather = 0;
 explain (costs off)
      select  count(*) from simple r full outer join simple s on (r.id = 0 - s.id);
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Aggregate
    ->  Hash Full Join
@@ -856,7 +856,7 @@ explain (costs off)
 (6 rows)
 
 select  count(*) from simple r full outer join simple s on (r.id = 0 - s.id);
- count 
+ count
 -------
  40000
 (1 row)
@@ -868,7 +868,7 @@ set enable_parallel_hash = off;
 set local max_parallel_workers_per_gather = 2;
 explain (costs off)
      select  count(*) from simple r full outer join simple s on (r.id = 0 - s.id);
-               QUERY PLAN               
+               QUERY PLAN
 ----------------------------------------
  Aggregate
    ->  Hash Full Join
@@ -879,7 +879,7 @@ explain (costs off)
 (6 rows)
 
 select  count(*) from simple r full outer join simple s on (r.id = 0 - s.id);
- count 
+ count
 -------
  40000
 (1 row)
@@ -890,7 +890,7 @@ savepoint settings;
 set local max_parallel_workers_per_gather = 2;
 explain (costs off)
      select  count(*) from simple r full outer join simple s on (r.id = 0 - s.id);
-                         QUERY PLAN                          
+                         QUERY PLAN
 -------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -904,7 +904,7 @@ explain (costs off)
 (9 rows)
 
 select  count(*) from simple r full outer join simple s on (r.id = 0 - s.id);
- count 
+ count
 -------
  40000
 (1 row)
@@ -923,7 +923,7 @@ set hash_mem_multiplier = 1.0;
 explain (costs off)
   select length(max(s.t))
   from wide left join (select id, coalesce(t, '') || '' as t from wide) s using (id);
-                           QUERY PLAN                           
+                           QUERY PLAN
 ----------------------------------------------------------------
  Finalize Aggregate
    ->  Gather
@@ -938,7 +938,7 @@ explain (costs off)
 
 select length(max(s.t))
 from wide left join (select id, coalesce(t, '') || '' as t from wide) s using (id);
- length 
+ length
 --------
  320000
 (1 row)
@@ -949,7 +949,7 @@ $$
   select length(max(s.t))
   from wide left join (select id, coalesce(t, '') || '' as t from wide) s using (id);
 $$);
- multibatch 
+ multibatch
 ------------
  t
 (1 row)
@@ -973,9 +973,9 @@ INSERT INTO hjtest_matchbits_t2 VALUES (2);
 UPDATE hjtest_matchbits_t2 set id = 2;
 SELECT * FROM hjtest_matchbits_t1 t1 FULL JOIN hjtest_matchbits_t2 t2 ON t1.id = t2.id
   ORDER BY t1.id;
- id | id 
+ id | id
 ----+----
-  1 |   
+  1 |
     |  2
 (2 rows)
 
@@ -986,9 +986,9 @@ SELECT * FROM hjtest_matchbits_t1 t1 FULL JOIN hjtest_matchbits_t2 t2 ON t1.id =
 RESET parallel_setup_cost;
 SET enable_parallel_hash = off;
 SELECT * FROM hjtest_matchbits_t1 t1 FULL JOIN hjtest_matchbits_t2 t2 ON t1.id = t2.id;
- id | id 
+ id | id
 ----+----
-  1 |   
+  1 |
     |  2
 (2 rows)
 
@@ -1028,7 +1028,7 @@ WHERE
     AND (SELECT hjtest_1.b * 5) < 50
     AND (SELECT hjtest_2.c * 5) < 55
     AND hjtest_1.a <> hjtest_2.b;
-                                           QUERY PLAN                                           
+                                           QUERY PLAN
 ------------------------------------------------------------------------------------------------
  Hash Join
    Output: hjtest_1.a, hjtest_2.a, (hjtest_1.tableoid)::regclass, (hjtest_2.tableoid)::regclass
@@ -1068,7 +1068,7 @@ WHERE
     AND (SELECT hjtest_1.b * 5) < 50
     AND (SELECT hjtest_2.c * 5) < 55
     AND hjtest_1.a <> hjtest_2.b;
-  a1  | a2 |    t1    |    t2    
+  a1  | a2 |    t1    |    t2
 ------+----+----------+----------
  text | t  | hjtest_1 | hjtest_2
 (1 row)
@@ -1082,7 +1082,7 @@ WHERE
     AND (SELECT hjtest_1.b * 5) < 50
     AND (SELECT hjtest_2.c * 5) < 55
     AND hjtest_1.a <> hjtest_2.b;
-                                           QUERY PLAN                                           
+                                           QUERY PLAN
 ------------------------------------------------------------------------------------------------
  Hash Join
    Output: hjtest_1.a, hjtest_2.a, (hjtest_1.tableoid)::regclass, (hjtest_2.tableoid)::regclass
@@ -1122,7 +1122,7 @@ WHERE
     AND (SELECT hjtest_1.b * 5) < 50
     AND (SELECT hjtest_2.c * 5) < 55
     AND hjtest_1.a <> hjtest_2.b;
-  a1  | a2 |    t1    |    t2    
+  a1  | a2 |    t1    |    t2
 ------+----+----------+----------
  text | t  | hjtest_1 | hjtest_2
 (1 row)
@@ -1138,7 +1138,7 @@ select i8.q2, ss.* from
 int8_tbl i8,
 lateral (select t1.fivethous, i4.f1 from tenk1 t1 join int4_tbl i4
          on t1.fivethous = i4.f1+i8.q2 order by 1,2) ss;
-                        QUERY PLAN                         
+                        QUERY PLAN
 -----------------------------------------------------------
  Nested Loop
    ->  Seq Scan on int8_tbl i8
@@ -1155,7 +1155,7 @@ select i8.q2, ss.* from
 int8_tbl i8,
 lateral (select t1.fivethous, i4.f1 from tenk1 t1 join int4_tbl i4
          on t1.fivethous = i4.f1+i8.q2 order by 1,2) ss;
- q2  | fivethous | f1 
+ q2  | fivethous | f1
 -----+-----------+----
  456 |       456 |  0
  456 |       456 |  0

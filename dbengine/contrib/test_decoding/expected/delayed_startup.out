@@ -8,7 +8,7 @@ step s1c: COMMIT;
 step s2init: <... completed>
 ?column?
 --------
-init    
+init
 (1 row)
 
 step s2start: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'include-xids', 'false');
@@ -20,11 +20,11 @@ step s1b: BEGIN ISOLATION LEVEL SERIALIZABLE;
 step s1w: INSERT INTO do_write DEFAULT VALUES;
 step s1c: COMMIT;
 step s2start: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'include-xids', 'false');
-data                                        
+data
 --------------------------------------------
-BEGIN                                       
+BEGIN
 table public.do_write: INSERT: id[integer]:2
-COMMIT                                      
+COMMIT
 (3 rows)
 
 step s1b: BEGIN ISOLATION LEVEL SERIALIZABLE;
@@ -36,15 +36,14 @@ data
 
 step s1c: COMMIT;
 step s2start: SELECT data FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'include-xids', 'false');
-data                                        
+data
 --------------------------------------------
-BEGIN                                       
+BEGIN
 table public.do_write: INSERT: id[integer]:3
-COMMIT                                      
+COMMIT
 (3 rows)
 
 ?column?
 --------
-stop    
+stop
 (1 row)
-

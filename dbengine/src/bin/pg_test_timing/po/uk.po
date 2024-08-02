@@ -83,4 +83,3 @@ msgstr "кількість"
 #, c-format
 msgid "Histogram of timing durations:\n"
 msgstr "Гістограмма тривалості замірів часу:\n"
-

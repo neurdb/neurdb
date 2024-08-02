@@ -35,7 +35,7 @@ LINE 1: SELECT casttestfunc('foo'::text);
                ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 SELECT casttestfunc('foo'::text::casttesttype); -- should work
- casttestfunc 
+ casttestfunc
 --------------
             1
 (1 row)
@@ -44,7 +44,7 @@ DROP CAST (text AS casttesttype); -- cleanup
 -- Try IMPLICIT binary coercion cast
 CREATE CAST (text AS casttesttype) WITHOUT FUNCTION AS IMPLICIT;
 SELECT casttestfunc('foo'::text); -- Should work now
- casttestfunc 
+ casttestfunc
 --------------
             1
 (1 row)
@@ -56,7 +56,7 @@ LINE 1: SELECT 1234::int4::casttesttype;
                          ^
 CREATE CAST (int4 AS casttesttype) WITH INOUT;
 SELECT 1234::int4::casttesttype; -- Should work now
- casttesttype 
+ casttesttype
 --------------
  1234
 (1 row)
@@ -67,7 +67,7 @@ CREATE FUNCTION int4_casttesttype(int4) RETURNS casttesttype LANGUAGE SQL AS
 $$ SELECT ('foo'::text || $1::text)::casttesttype; $$;
 CREATE CAST (int4 AS casttesttype) WITH FUNCTION int4_casttesttype(int4) AS IMPLICIT;
 SELECT 1234::int4::casttesttype; -- Should work now
- casttesttype 
+ casttesttype
 --------------
  foo1234
 (1 row)
@@ -79,7 +79,7 @@ CREATE FUNCTION bar_int4_text(int4) RETURNS text LANGUAGE SQL AS
 $$ SELECT ('bar'::text || $1::text); $$;
 CREATE CAST (int4 AS casttesttype) WITH FUNCTION bar_int4_text(int4) AS IMPLICIT;
 SELECT 1234::int4::casttesttype; -- Should work now
- casttesttype 
+ casttesttype
 --------------
  bar1234
 (1 row)
@@ -94,10 +94,9 @@ WHERE classid = 'pg_cast'::regclass AND
                WHERE castsource = 'int4'::regtype
                  AND casttarget = 'casttesttype'::regtype)
 ORDER BY refclassid;
-                obj                |             objref              | deptype 
+                obj                |             objref              | deptype
 -----------------------------------+---------------------------------+---------
  cast from integer to casttesttype | type casttesttype               | n
  cast from integer to casttesttype | function bar_int4_text(integer) | n
  cast from integer to casttesttype | cast from text to casttesttype  | n
 (3 rows)
-

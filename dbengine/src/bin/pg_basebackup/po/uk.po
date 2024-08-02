@@ -1748,4 +1748,3 @@ msgstr "unink не підтримується зі стисканням"
 #: walmethods.c:1288
 msgid "could not close compression stream"
 msgstr "не вдалося закрити потік стискання"
-

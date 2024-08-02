@@ -22,7 +22,7 @@ typedef struct Complex
 	double		y;
 }	Complex;
 
-void 
+void
 t1 (char *a, int b,
 	void (*fn)(void))
 {}

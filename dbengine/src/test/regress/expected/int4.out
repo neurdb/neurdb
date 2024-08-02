@@ -36,7 +36,7 @@ ERROR:  invalid input syntax for type integer: ""
 LINE 1: INSERT INTO INT4_TBL(f1) VALUES ('');
                                          ^
 SELECT * FROM INT4_TBL;
-     f1      
+     f1
 -------------
            0
       123456
@@ -47,31 +47,31 @@ SELECT * FROM INT4_TBL;
 
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('34', 'int4');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('asdf', 'int4');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT pg_input_is_valid('1000000000000', 'int4');
- pg_input_is_valid 
+ pg_input_is_valid
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('1000000000000', 'int4');
-                        message                         | detail | hint | sql_error_code 
+                        message                         | detail | hint | sql_error_code
 --------------------------------------------------------+--------+------+----------------
  value "1000000000000" is out of range for type integer |        |      | 22003
 (1 row)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 <> int2 '0';
-     f1      
+     f1
 -------------
       123456
      -123456
@@ -80,7 +80,7 @@ SELECT i.* FROM INT4_TBL i WHERE i.f1 <> int2 '0';
 (4 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 <> int4 '0';
-     f1      
+     f1
 -------------
       123456
      -123456
@@ -89,33 +89,33 @@ SELECT i.* FROM INT4_TBL i WHERE i.f1 <> int4 '0';
 (4 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 = int2 '0';
- f1 
+ f1
 ----
   0
 (1 row)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 = int4 '0';
- f1 
+ f1
 ----
   0
 (1 row)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 < int2 '0';
-     f1      
+     f1
 -------------
      -123456
  -2147483647
 (2 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 < int4 '0';
-     f1      
+     f1
 -------------
      -123456
  -2147483647
 (2 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 <= int2 '0';
-     f1      
+     f1
 -------------
            0
      -123456
@@ -123,7 +123,7 @@ SELECT i.* FROM INT4_TBL i WHERE i.f1 <= int2 '0';
 (3 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 <= int4 '0';
-     f1      
+     f1
 -------------
            0
      -123456
@@ -131,21 +131,21 @@ SELECT i.* FROM INT4_TBL i WHERE i.f1 <= int4 '0';
 (3 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 > int2 '0';
-     f1     
+     f1
 ------------
      123456
  2147483647
 (2 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 > int4 '0';
-     f1     
+     f1
 ------------
      123456
  2147483647
 (2 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 >= int2 '0';
-     f1     
+     f1
 ------------
           0
      123456
@@ -153,7 +153,7 @@ SELECT i.* FROM INT4_TBL i WHERE i.f1 >= int2 '0';
 (3 rows)
 
 SELECT i.* FROM INT4_TBL i WHERE i.f1 >= int4 '0';
-     f1     
+     f1
 ------------
           0
      123456
@@ -162,14 +162,14 @@ SELECT i.* FROM INT4_TBL i WHERE i.f1 >= int4 '0';
 
 -- positive odds
 SELECT i.* FROM INT4_TBL i WHERE (i.f1 % int2 '2') = int2 '1';
-     f1     
+     f1
 ------------
  2147483647
 (1 row)
 
 -- any evens
 SELECT i.* FROM INT4_TBL i WHERE (i.f1 % int4 '2') = int2 '0';
-   f1    
+   f1
 ---------
        0
   123456
@@ -180,7 +180,7 @@ SELECT i.f1, i.f1 * int2 '2' AS x FROM INT4_TBL i;
 ERROR:  integer out of range
 SELECT i.f1, i.f1 * int2 '2' AS x FROM INT4_TBL i
 WHERE abs(f1) < 1073741824;
-   f1    |    x    
+   f1    |    x
 ---------+---------
        0 |       0
   123456 |  246912
@@ -191,7 +191,7 @@ SELECT i.f1, i.f1 * int4 '2' AS x FROM INT4_TBL i;
 ERROR:  integer out of range
 SELECT i.f1, i.f1 * int4 '2' AS x FROM INT4_TBL i
 WHERE abs(f1) < 1073741824;
-   f1    |    x    
+   f1    |    x
 ---------+---------
        0 |       0
   123456 |  246912
@@ -202,7 +202,7 @@ SELECT i.f1, i.f1 + int2 '2' AS x FROM INT4_TBL i;
 ERROR:  integer out of range
 SELECT i.f1, i.f1 + int2 '2' AS x FROM INT4_TBL i
 WHERE f1 < 2147483646;
-     f1      |      x      
+     f1      |      x
 -------------+-------------
            0 |           2
       123456 |      123458
@@ -214,7 +214,7 @@ SELECT i.f1, i.f1 + int4 '2' AS x FROM INT4_TBL i;
 ERROR:  integer out of range
 SELECT i.f1, i.f1 + int4 '2' AS x FROM INT4_TBL i
 WHERE f1 < 2147483646;
-     f1      |      x      
+     f1      |      x
 -------------+-------------
            0 |           2
       123456 |      123458
@@ -226,7 +226,7 @@ SELECT i.f1, i.f1 - int2 '2' AS x FROM INT4_TBL i;
 ERROR:  integer out of range
 SELECT i.f1, i.f1 - int2 '2' AS x FROM INT4_TBL i
 WHERE f1 > -2147483647;
-     f1     |     x      
+     f1     |     x
 ------------+------------
           0 |         -2
      123456 |     123454
@@ -238,7 +238,7 @@ SELECT i.f1, i.f1 - int4 '2' AS x FROM INT4_TBL i;
 ERROR:  integer out of range
 SELECT i.f1, i.f1 - int4 '2' AS x FROM INT4_TBL i
 WHERE f1 > -2147483647;
-     f1     |     x      
+     f1     |     x
 ------------+------------
           0 |         -2
      123456 |     123454
@@ -247,7 +247,7 @@ WHERE f1 > -2147483647;
 (4 rows)
 
 SELECT i.f1, i.f1 / int2 '2' AS x FROM INT4_TBL i;
-     f1      |      x      
+     f1      |      x
 -------------+-------------
            0 |           0
       123456 |       61728
@@ -257,7 +257,7 @@ SELECT i.f1, i.f1 / int2 '2' AS x FROM INT4_TBL i;
 (5 rows)
 
 SELECT i.f1, i.f1 / int4 '2' AS x FROM INT4_TBL i;
-     f1      |      x      
+     f1      |      x
 -------------+-------------
            0 |           0
       123456 |       61728
@@ -271,80 +271,80 @@ SELECT i.f1, i.f1 / int4 '2' AS x FROM INT4_TBL i;
 --
 -- variations on unary minus parsing
 SELECT -2+3 AS one;
- one 
+ one
 -----
    1
 (1 row)
 
 SELECT 4-2 AS two;
- two 
+ two
 -----
    2
 (1 row)
 
 SELECT 2- -1 AS three;
- three 
+ three
 -------
      3
 (1 row)
 
 SELECT 2 - -2 AS four;
- four 
+ four
 ------
     4
 (1 row)
 
 SELECT int2 '2' * int2 '2' = int2 '16' / int2 '4' AS true;
- true 
+ true
 ------
  t
 (1 row)
 
 SELECT int4 '2' * int2 '2' = int2 '16' / int4 '4' AS true;
- true 
+ true
 ------
  t
 (1 row)
 
 SELECT int2 '2' * int4 '2' = int4 '16' / int2 '4' AS true;
- true 
+ true
 ------
  t
 (1 row)
 
 SELECT int4 '1000' < int4 '999' AS false;
- false 
+ false
 -------
  f
 (1 row)
 
 SELECT 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 AS ten;
- ten 
+ ten
 -----
   10
 (1 row)
 
 SELECT 2 + 2 / 2 AS three;
- three 
+ three
 -------
      3
 (1 row)
 
 SELECT (2 + 2) / 2 AS two;
- two 
+ two
 -----
    2
 (1 row)
 
 -- corner case
 SELECT (-1::int4<<31)::text;
-    text     
+    text
 -------------
  -2147483648
 (1 row)
 
 SELECT ((-1::int4<<31)+1)::text;
-    text     
+    text
 -------------
  -2147483647
 (1 row)
@@ -355,7 +355,7 @@ ERROR:  integer out of range
 SELECT (-2147483648)::int4 / (-1)::int4;
 ERROR:  integer out of range
 SELECT (-2147483648)::int4 % (-1)::int4;
- ?column? 
+ ?column?
 ----------
         0
 (1 row)
@@ -365,7 +365,7 @@ ERROR:  integer out of range
 SELECT (-2147483648)::int4 / (-1)::int2;
 ERROR:  integer out of range
 SELECT (-2147483648)::int4 % (-1)::int2;
- ?column? 
+ ?column?
 ----------
         0
 (1 row)
@@ -379,7 +379,7 @@ FROM (VALUES (-2.5::float8),
              (0.5::float8),
              (1.5::float8),
              (2.5::float8)) t(x);
-  x   | int4_value 
+  x   | int4_value
 ------+------------
  -2.5 |         -2
  -1.5 |         -2
@@ -399,7 +399,7 @@ FROM (VALUES (-2.5::numeric),
              (0.5::numeric),
              (1.5::numeric),
              (2.5::numeric)) t(x);
-  x   | int4_value 
+  x   | int4_value
 ------+------------
  -2.5 |         -3
  -1.5 |         -2
@@ -419,7 +419,7 @@ FROM (VALUES (0::int4, 0::int4),
              ((-2147483648)::int4, 1::int4),
              ((-2147483648)::int4, 2147483647::int4),
              ((-2147483648)::int4, 1073741824::int4)) AS v(a, b);
-      a      |     b      |    gcd     |    gcd     |    gcd     |    gcd     
+      a      |     b      |    gcd     |    gcd     |    gcd     |    gcd
 -------------+------------+------------+------------+------------+------------
            0 |          0 |          0 |          0 |          0 |          0
            0 |    6410818 |    6410818 |    6410818 |    6410818 |    6410818
@@ -442,7 +442,7 @@ FROM (VALUES (0::int4, 0::int4),
              (330::int4, 462::int4),
              (-330::int4, 462::int4),
              ((-2147483648)::int4, 0::int4)) AS v(a, b);
-      a      |  b  | lcm  | lcm  | lcm  | lcm  
+      a      |  b  | lcm  | lcm  | lcm  | lcm
 -------------+-----+------+------+------+------
            0 |   0 |    0 |    0 |    0 |    0
            0 |  42 |    0 |    0 |    0 |    0
@@ -458,19 +458,19 @@ SELECT lcm(2147483647::int4, 2147483646::int4); -- overflow
 ERROR:  integer out of range
 -- non-decimal literals
 SELECT int4 '0b100101';
- int4 
+ int4
 ------
    37
 (1 row)
 
 SELECT int4 '0o273';
- int4 
+ int4
 ------
   187
 (1 row)
 
 SELECT int4 '0x42F';
- int4 
+ int4
 ------
  1071
 (1 row)
@@ -489,7 +489,7 @@ LINE 1: SELECT int4 '0x';
                     ^
 -- cases near overflow
 SELECT int4 '0b1111111111111111111111111111111';
-    int4    
+    int4
 ------------
  2147483647
 (1 row)
@@ -499,7 +499,7 @@ ERROR:  value "0b10000000000000000000000000000000" is out of range for type inte
 LINE 1: SELECT int4 '0b10000000000000000000000000000000';
                     ^
 SELECT int4 '0o17777777777';
-    int4    
+    int4
 ------------
  2147483647
 (1 row)
@@ -509,7 +509,7 @@ ERROR:  value "0o20000000000" is out of range for type integer
 LINE 1: SELECT int4 '0o20000000000';
                     ^
 SELECT int4 '0x7FFFFFFF';
-    int4    
+    int4
 ------------
  2147483647
 (1 row)
@@ -519,7 +519,7 @@ ERROR:  value "0x80000000" is out of range for type integer
 LINE 1: SELECT int4 '0x80000000';
                     ^
 SELECT int4 '-0b10000000000000000000000000000000';
-    int4     
+    int4
 -------------
  -2147483648
 (1 row)
@@ -529,7 +529,7 @@ ERROR:  value "-0b10000000000000000000000000000001" is out of range for type int
 LINE 1: SELECT int4 '-0b10000000000000000000000000000001';
                     ^
 SELECT int4 '-0o20000000000';
-    int4     
+    int4
 -------------
  -2147483648
 (1 row)
@@ -539,7 +539,7 @@ ERROR:  value "-0o20000000001" is out of range for type integer
 LINE 1: SELECT int4 '-0o20000000001';
                     ^
 SELECT int4 '-0x80000000';
-    int4     
+    int4
 -------------
  -2147483648
 (1 row)
@@ -550,31 +550,31 @@ LINE 1: SELECT int4 '-0x80000001';
                     ^
 -- underscores
 SELECT int4 '1_000_000';
-  int4   
+  int4
 ---------
  1000000
 (1 row)
 
 SELECT int4 '1_2_3';
- int4 
+ int4
 ------
   123
 (1 row)
 
 SELECT int4 '0x1EEE_FFFF';
-   int4    
+   int4
 -----------
  518979583
 (1 row)
 
 SELECT int4 '0o2_73';
- int4 
+ int4
 ------
   187
 (1 row)
 
 SELECT int4 '0b_10_0101';
- int4 
+ int4
 ------
    37
 (1 row)

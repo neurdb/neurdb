@@ -22,12 +22,12 @@ int
 main(void)
 {
 /* exec sql begin declare section */
-	 
-	 
+
+
 
 #line 16 "test1.pgc"
  char db [ 200 ] ;
- 
+
 #line 17 "test1.pgc"
  char pw [ 200 ] ;
 /* exec sql end declare section */

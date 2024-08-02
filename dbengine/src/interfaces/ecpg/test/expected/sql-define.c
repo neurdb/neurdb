@@ -110,12 +110,12 @@ struct sqlca_t *ECPGget_sqlca(void);
 int main(void)
 {
    /* exec sql begin declare section */
-      
-      
-   
+
+
+
 #line 10 "define.pgc"
  int i ;
- 
+
 #line 11 "define.pgc"
  char s [ 200 ] ;
 /* exec sql end declare section */
@@ -127,7 +127,7 @@ int main(void)
    /* exec sql whenever sqlerror  do sqlprint ( ) ; */
 #line 16 "define.pgc"
 
-   { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0); 
+   { ECPGconnect(__LINE__, 0, "ecpg1_regression" , NULL, NULL , NULL, 0);
 #line 17 "define.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
@@ -147,34 +147,34 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 20 "define.pgc"
 
 
-   
+
    { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test values ( null , 'defined' )", ECPGt_EOIT, ECPGt_EORT);
 #line 23 "define.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 23 "define.pgc"
 
-   
 
-   
-           
-   
-           
-   
+
+
+
+
+
+
    { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test values ( null , 'someothervar not defined' )", ECPGt_EOIT, ECPGt_EORT);
 #line 31 "define.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 31 "define.pgc"
 
-   
 
-   
 
-   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 1 , 29 :: text || '-' || 'abcdef'", ECPGt_EOIT, 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
-	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, 
-	ECPGt_char,(s),(long)200,(long)1,(200)*sizeof(char), 
+
+
+   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 1 , 29 :: text || '-' || 'abcdef'", ECPGt_EOIT,
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
+	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L,
+	ECPGt_char,(s),(long)200,(long)1,(200)*sizeof(char),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 36 "define.pgc"
 
@@ -184,35 +184,35 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
    printf("i: %d, s: %s\n", i, s);
 
-   
-   
+
+
    { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "insert into test values ( 29 , 'no string' )", ECPGt_EOIT, ECPGt_EORT);
 #line 42 "define.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 42 "define.pgc"
 
-   
+
 
      /* no value */
-   
 
-   
-        
-   
-        
-   
+
+
+
+
+
+
    { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "set TIMEZONE to 'UTC'", ECPGt_EOIT, ECPGt_EORT);
 #line 53 "define.pgc"
 
 if (sqlca.sqlcode < 0) sqlprint ( );}
 #line 53 "define.pgc"
 
-   
+
 
    /* test handling of a macro defined on the command line */
-   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 123", ECPGt_EOIT, 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
+   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 123", ECPGt_EOIT,
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 57 "define.pgc"
 
@@ -221,10 +221,10 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
    printf("original CMDLINESYM: %d\n", i);
 
-   
 
-   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 42", ECPGt_EOIT, 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
+
+   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 42", ECPGt_EOIT,
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 62 "define.pgc"
 
@@ -233,10 +233,10 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
    printf("redefined CMDLINESYM: %d\n", i);
 
-   
 
-   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 43", ECPGt_EOIT, 
-	ECPGt_int,&(i),(long)1,(long)1,sizeof(int), 
+
+   { ECPGdo(__LINE__, 0, 1, NULL, 0, ECPGst_normal, "select 43", ECPGt_EOIT,
+	ECPGt_int,&(i),(long)1,(long)1,sizeof(int),
 	ECPGt_NO_INDICATOR, NULL , 0L, 0L, 0L, ECPGt_EORT);
 #line 67 "define.pgc"
 
@@ -245,16 +245,16 @@ if (sqlca.sqlcode < 0) sqlprint ( );}
 
    printf("redefined CMDLINESYM: %d\n", i);
 
-   
 
-   
-           
-   
+
+
+
+
 
    /* this macro should not have carried over from define_prelim.pgc */
-   
-           
-   
+
+
+
 
    { ECPGdisconnect(__LINE__, "CURRENT");
 #line 81 "define.pgc"

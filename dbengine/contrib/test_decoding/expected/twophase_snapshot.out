@@ -5,7 +5,7 @@ step s2b: BEGIN;
 step s2txid: SELECT pg_current_xact_id() IS NULL;
 ?column?
 --------
-f       
+f
 (1 row)
 
 step s1init: SELECT 'init' FROM pg_create_logical_replication_slot('isolation_slot', 'test_decoding', false, true); <waiting ...>
@@ -13,7 +13,7 @@ step s3b: BEGIN;
 step s3txid: SELECT pg_current_xact_id() IS NULL;
 ?column?
 --------
-f       
+f
 (1 row)
 
 step s2c: COMMIT;
@@ -24,30 +24,29 @@ step s3c: COMMIT;
 step s1init: <... completed>
 ?column?
 --------
-init    
+init
 (1 row)
 
 step s1insert: INSERT INTO do_write DEFAULT VALUES;
 step s1start: SELECT data  FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'include-xids', 'false', 'skip-empty-xacts', '1');
-data                                        
+data
 --------------------------------------------
-BEGIN                                       
+BEGIN
 table public.do_write: INSERT: id[integer]:2
-COMMIT                                      
+COMMIT
 (3 rows)
 
 step s2cp: COMMIT PREPARED 'test1';
 step s1start: SELECT data  FROM pg_logical_slot_get_changes('isolation_slot', NULL, NULL, 'include-xids', 'false', 'skip-empty-xacts', '1');
-data                                        
+data
 --------------------------------------------
-BEGIN                                       
+BEGIN
 table public.do_write: INSERT: id[integer]:1
-PREPARE TRANSACTION 'test1'                 
-COMMIT PREPARED 'test1'                     
+PREPARE TRANSACTION 'test1'
+COMMIT PREPARED 'test1'
 (4 rows)
 
 ?column?
 --------
-stop    
+stop
 (1 row)
-

@@ -284,7 +284,7 @@ static int r_Step_1b(struct SN_env * z) {
             break;
         case 2:
             {   int m_test1 = z->l - z->c;
-                {   
+                {
                     int ret = out_grouping_b_U(z, g_v, 97, 121, 1);
                     if (ret < 0) return 0;
                     z->c -= ret;
@@ -356,7 +356,7 @@ static int r_Step_1c(struct SN_env * z) {
     }
 lab0:
     z->bra = z->c;
-    {   
+    {
         int ret = out_grouping_b_U(z, g_v, 97, 121, 1);
         if (ret < 0) return 0;
         z->c -= ret;
@@ -608,23 +608,23 @@ extern int porter_UTF_8_stem(struct SN_env * z) {
     z->I[1] = z->l;
     z->I[0] = z->l;
     {   int c5 = z->c;
-        {   
+        {
             int ret = out_grouping_U(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab4;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping_U(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab4;
             z->c += ret;
         }
         z->I[1] = z->c;
-        {   
+        {
             int ret = out_grouping_U(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab4;
             z->c += ret;
         }
-        {   
+        {
             int ret = in_grouping_U(z, g_v, 97, 121, 1);
             if (ret < 0) goto lab4;
             z->c += ret;
@@ -720,4 +720,3 @@ extern int porter_UTF_8_stem(struct SN_env * z) {
 extern struct SN_env * porter_UTF_8_create_env(void) { return SN_create_env(0, 3); }
 
 extern void porter_UTF_8_close_env(struct SN_env * z) { SN_close_env(z, 0); }
-

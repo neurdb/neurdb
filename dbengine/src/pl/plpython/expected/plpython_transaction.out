@@ -11,13 +11,13 @@ for i in range(0, 10):
 $$;
 CALL transaction_test1();
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
- 6 | 
- 8 | 
+ 0 |
+ 2 |
+ 4 |
+ 6 |
+ 8 |
 (5 rows)
 
 TRUNCATE test1;
@@ -32,13 +32,13 @@ for i in range(0, 10):
         plpy.rollback()
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
- 6 | 
- 8 | 
+ 0 |
+ 2 |
+ 4 |
+ 6 |
+ 8 |
 (5 rows)
 
 TRUNCATE test1;
@@ -61,7 +61,7 @@ CONTEXT:  Traceback (most recent call last):
     plpy.commit()
 PL/Python function "transaction_test2"
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -79,7 +79,7 @@ CONTEXT:  Traceback (most recent call last):
     plpy.execute("CALL transaction_test1()")
 PL/Python function "transaction_test3"
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
@@ -118,18 +118,18 @@ for row in plpy.cursor("SELECT * FROM test2 ORDER BY x"):
     plpy.commit()
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 1 | 
- 2 | 
- 3 | 
- 4 | 
+ 0 |
+ 1 |
+ 2 |
+ 3 |
+ 4 |
 (5 rows)
 
 -- check that this doesn't leak a holdable portal
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -146,14 +146,14 @@ CONTEXT:  Traceback (most recent call last):
     plpy.execute("INSERT INTO test1 (a) VALUES (12/(%s-2))" % row['x'])
 PL/Python anonymous code block
 SELECT * FROM test1;
-  a  | b 
+  a  | b
 -----+---
-  -6 | 
- -12 | 
+  -6 |
+ -12 |
 (2 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -165,12 +165,12 @@ for row in plpy.cursor("SELECT * FROM test2 ORDER BY x"):
     plpy.rollback()
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
 (0 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -185,15 +185,15 @@ for row in plpy.cursor("SELECT * FROM test2 ORDER BY x"):
         plpy.rollback()
 $$;
 SELECT * FROM test1;
- a | b 
+ a | b
 ---+---
- 0 | 
- 2 | 
- 4 | 
+ 0 |
+ 2 |
+ 4 |
 (3 rows)
 
 SELECT * FROM pg_cursors;
- name | statement | is_holdable | is_binary | is_scrollable | creation_time 
+ name | statement | is_holdable | is_binary | is_scrollable | creation_time
 ------+-----------+-------------+-----------+---------------+---------------
 (0 rows)
 
@@ -213,12 +213,12 @@ CONTEXT:  Traceback (most recent call last):
     plpy.commit()
 PL/Python anonymous code block
 SELECT * FROM testpk;
- id 
+ id
 ----
 (0 rows)
 
 SELECT * FROM testfk;
- f1 
+ f1
 ----
 (0 rows)
 
@@ -235,13 +235,13 @@ plpy.execute("INSERT INTO testfk VALUES (1)")
 $$;
 INFO:  sqlstate: 23503
 SELECT * FROM testpk;
- id 
+ id
 ----
   1
 (1 row)
 
 SELECT * FROM testfk;
- f1 
+ f1
 ----
   1
 (1 row)
