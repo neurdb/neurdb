@@ -8,15 +8,18 @@ set -x
 
 # Ensure NEURDBPATH is set
 NEURDBPATH=${NEURDBPATH:-/code/neurdb-dev}
+NR_PSQL_PATH=${NR_PSQL_PATH:-$NEURDBPATH/psql}
+
+NR_DBENGINE_PATH=$NEURDBPATH/dbengine
 
 # Clean files
-rm -rf $NEURDBPATH/psql || true
-rm $NEURDBPATH/logfile  || true
+rm -rf $NR_PSQL_PATH   || true
+rm $NEURDBPATH/logfile || true
 
 # Print and execute commands
-mkdir -p $NEURDBPATH/psql
+mkdir -p $NR_PSQL_PATH
 
-cd $NEURDBPATH
+cd $NEURDBPATH/dbengine
 
 make distclean || true
 

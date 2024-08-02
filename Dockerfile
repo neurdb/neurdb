@@ -62,19 +62,19 @@ RUN useradd -m -s /bin/bash postgres && \
 # Install Rust using rustup and cargo-pgrx as the postgres user
 # Ensure rustc 1.78.0 rustc --version
 # Ensure cargo-pgrx v0.11.4 cargo-pgrx --version
-USER postgres
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-    echo 'source $HOME/.cargo/env' >> $HOME/.bashrc && \
-    /bin/bash -c "source $HOME/.cargo/env && rustup install 1.78.0" && \
-    /bin/bash -c "source $HOME/.cargo/env && cargo install cargo-pgrx --version '0.11.4' --locked"
+# USER postgres
+# RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+#     echo 'source $HOME/.cargo/env' >> $HOME/.bashrc && \
+#     /bin/bash -c "source $HOME/.cargo/env && rustup install 1.78.0" && \
+#     /bin/bash -c "source $HOME/.cargo/env && cargo install cargo-pgrx --version '0.11.4' --locked"
 
 # Switch back to root to set system-wide environment variables
 USER root
 
 # Set the path for Rust and Cargo for both root and postgres users
-ENV PATH="/home/postgres/.cargo/bin:${PATH}"
-RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /etc/profile
-RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /home/postgres/.bashrc
+# ENV PATH="/home/postgres/.cargo/bin:${PATH}"
+# RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /etc/profile
+# RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /home/postgres/.bashrc
 
 # Set environment variables for both root and other users
 ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig"
@@ -93,10 +93,10 @@ RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
 WORKDIR /code/neurdb-dev
 
 # Copy the build script into the container
-COPY init.sh /usr/local/bin/init.sh
+COPY init.sh /usr/local/bin/docker-init.sh
 
 # Ensure the build script is executable
-RUN chmod +x /usr/local/bin/init.sh
+RUN chmod +x /usr/local/bin/docker-init.sh
 
 # Expose port
 EXPOSE 5432
@@ -104,4 +104,4 @@ EXPOSE 5432
 # Change to non-root user 'postgres' for database compilation and running the init script
 USER postgres
 # Command to run the init.sh script
-CMD ["bash", "/usr/local/bin/init.sh"]
+CMD ["bash", "/usr/local/bin/docker-init.sh"]
