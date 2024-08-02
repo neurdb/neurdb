@@ -43,12 +43,3 @@ lib*.pc
 /Release/
 /tmp_install/
 /portlock/
-
-# compiled output
-/psql/
-
-# Python installed packages
-/venv/
-
-# .vscode
-/.vscode/
