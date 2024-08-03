@@ -6,89 +6,92 @@ set -e
 # Print each command before executing it
 set -x
 
-# Ensure NEURDBPATH is set
+# Variables (can be changed by user)
 NEURDBPATH=${NEURDBPATH:-/code/neurdb-dev}
 NR_PSQL_PATH=${NR_PSQL_PATH:-$NEURDBPATH/psql}
+NR_DBDATA_PATH=${NR_DBDATA_PATH:-$NR_PSQL_PATH/data}
 
+# Variables (cannot be changed by user)
 NR_DBENGINE_PATH=$NEURDBPATH/dbengine
+NR_AIENGINE_PATH=$NEURDBPATH/aiengine
+NR_API_PATH=$NEURDBPATH/api
+NR_PIPELINE_PATH=$NR_AIENGINE_PATH/pgext/nr_pipeline
 
-# Clean files
-rm -rf $NR_PSQL_PATH   || true
+# Clean log file
 rm $NEURDBPATH/logfile || true
 
-# Print and execute commands
+# Clean the psql folder (only for debugging purposes)
+# rm -rf $NR_PSQL_PATH   || true
+
+# Create psql folder
 mkdir -p $NR_PSQL_PATH
 
-cd $NEURDBPATH/dbengine
-
+# Compile PostgreSQL
+cd $NR_DBENGINE_PATH
 make distclean || true
-
-# Compile the PostgreSQL.
-./configure --prefix=$NEURDBPATH/psql
+./configure --prefix=$NR_PSQL_PATH
 make -j
 make install
+echo 'Done! Now start the database'
 
-echo "Done! Now start the database"
-mkdir -p $NEURDBPATH/psql/data
-./psql/bin/initdb -D $NEURDBPATH/psql/data
-$NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
+# Crete DB engine if not exist
+if [ ! -d "$NR_DBDATA_PATH" ]; then
+  mkdir -p $NR_DBDATA_PATH
+  ./psql/bin/initdb -D $NR_DBDATA_PATH
+else
+  # make sure DBDATA folder is under permission 0750 to avoid PG start failure
+  sudo chmod 0750 $NR_DBDATA_PATH
+fi
 
-# Wait a few seconds to ensure the database is up and running
-until $NEURDBPATH/psql/bin/psql -h localhost -p 5432 -U postgres -c '\q'; do
-  >&2 echo "Postgres is unavailable - sleeping"
+# Start DB engine
+$NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l logfile start
+
+# Wait a few seconds to ensure DB engine is up and running
+until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U postgres -c '\q'; do
+  >&2 echo 'Postgres is unavailable - sleeping'
   sleep 1
 done
-
-# Load dataset
-$NEURDBPATH/psql/bin/psql -h localhost -p 5432 -U postgres -f $NEURDBPATH/dataset/iris/iris_psql.sql
 echo "DB Started!"
 
-# Install packages
-pip3 install --upgrade pip
-pip3 install -r $NEURDBPATH/contrib/nr/pysrc/requirement.txt --extra-index-url https://download.pytorch.org/whl/cu121
+# Load iris dataset
+# $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U postgres -f $NEURDBPATH/dataset/iris/iris_psql.sql
 
 # Install neurdb package
-cd $NEURDBPATH/neurdb_api/python
-pip3 install -e . --config-settings editable_mode=compat
+cd $NR_API_PATH/python
+## For older setuptools
+touch setup.cfg
+sudo pip install -e .
+rm setup.cfg
+## For newer setuptools
+# pip install -e . --config-settings editable_mode=compat
+
+# Install socket.io-client-cpp (for nr_pipeline)
+if [ ! -d "$NR_PIPELINE_PATH/lib" ]; then
+  mkdir -p $NR_PIPELINE_PATH/lib
+fi
+cd $NR_PIPELINE_PATH/lib
+
+if [ ! -d "socket.io-client-cpp" ]; then
+  git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git
+fi
+cd socket.io-client-cpp
+
+sudo chmod -R 777 ./
+cmake -DCMAKE_CXX_FLAGS="-fPIC" ./
+sudo make install
+
+# Compile nr_pipeline
+cd $NR_PIPELINE_PATH
+sudo make clean
+sudo make install
+echo "Install NR Data Pipeline Extension Done"
 
 # Run python server
-cd $NEURDBPATH/contrib/nr/pysrc
+cd $NR_AIENGINE_PATH/runtime
 nohup python3 app.py &
-echo "Python Server started!"
+echo 'Python Server started!'
 
-# Compile nr extension
-#cd $NEURDBPATH/contrib/nr
-#cargo pgrx init --pg16 $NEURDBPATH/psql/bin/pg_config
-#cargo clean
-#cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
-#echo "Extension Compile Done"
-
-#$NEURDBPATH/psql/bin/psql -h localhost -U postgres -p 5432 -c "CREATE EXTENSION neurdb_extension;"
-#echo "Install NR Extension Done"
-
-# Compile nr_model extension
-#cd $NEURDBPATH/contrib/pg_model
-#make
-#make install
-#cp pg_model.control $NEURDBPATH/psql/share/postgresql/extension
-#cp sql/pg_model--1.0.0.sql $NEURDBPATH/psql/share/postgresql/extension
-#cp build/libpg_model.so $NEURDBPATH/psql/lib/postgresql
-#echo "Install NR Model Extension Done"
-
-# Compile nr_preprocessing extension
-cd $NEURDBPATH/contrib/nr_preprocessing/lib
-git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git # socket.io-client-cpp
-cd socket.io-client-cpp
-sudo chmod 777 -R ./
-cmake -DCMAKE_CXX_FLAGS="-fPIC" ./
-make install
-
-cd $NEURDBPATH/contrib/nr_preprocessing
-make install
-cp build/libnr_preprocessing.so $NEURDBPATH/psql/lib/postgresql
-echo "Install NR Preprocessing Extension Done"
-
-echo "Please use 'control + c' to exist the logging print"
+echo "Please use 'control + c' to exit the logging print"
 
 # Continue
 tail -f /dev/null

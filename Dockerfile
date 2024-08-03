@@ -1,55 +1,65 @@
 # Use the official Ubuntu 22.04 as the base image
 FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
+# Expose port
+EXPOSE 5432
+
 # Set environment variables to avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Add the deadsnakes PPA to get Python 3.8
+# (Temporarily) Downgrade Python to 3.8
+# RUN apt-get update && \
+#     apt-get install -y software-properties-common && \
+#     add-apt-repository ppa:deadsnakes/ppa && \
+#     apt-get update && \
+#     apt-get install -y \
+#     python3.8 \
+#     python3.8-dev \
+#     python3.8-distutils \
+#     python3-pip
+
+# RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+
+# Upgrade pip
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa
+    apt-get install -y \
+    python3-dev \
+    python3-pip
+# RUN pip install --upgrade setuptools pip
 
 # Update package list and install necessary packages including Python 3.8, psycopg2, and LLVM distutils
 RUN apt-get update && \
     apt-get install -y \
-    python3.8 \
-    python3.8-dev \
-    python3-pip \
-    python3-psycopg2 \
-    python3.8-distutils \
-    pkg-config \
-    libssl-dev \
-    build-essential \
-    gdb \
+    python-is-python3 \
+    sudo \
     curl \
     git \
     vim \
-    gcc \
+    wget \
+    unzip \
+    pkg-config \
+    build-essential \
+    libssl-dev \
     make \
+    cmake \
+    gcc \
+    gdb \
+    clang \
+    flex \
+    bison \
     libreadline-dev \
     zlib1g-dev \
     libicu-dev \
-    pkg-config \
     libclang-dev \
     llvm-dev \
     libcurl4-openssl-dev \
     libwebsockets-dev \
     libcjson-dev \
-    clang \
-    flex \
-    bison \
-    wget \
-    unzip \
-    sudo \
-    cmake \
     && apt-get clean
 
-# Download torchlib CPU version and extract it to /home
-RUN wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.3.1%2Bcpu.zip
-RUN unzip libtorch-cxx11-abi-shared-with-deps-2.3.1+cpu.zip -d /home
-
-# Set Python 3.8 as the default python3
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+# Download libtorch CPU version and extract it to /home
+# RUN wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.3.1%2Bcpu.zip
+# RUN unzip libtorch-cxx11-abi-shared-with-deps-2.3.1+cpu.zip -d /home
 
 # Set root password
 RUN echo "root:rootpassword" | chpasswd
@@ -80,28 +90,34 @@ USER root
 ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig"
 ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 ENV NEURDBPATH="/code/neurdb-dev"
+
+# Set the working directory
+WORKDIR $NEURDBPATH
+
+# Add environmental variables
 RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /etc/profile && \
+    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /etc/profile && \
     echo "export NEURDBPATH=${NEURDBPATH}" >> /etc/profile && \
     echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /home/postgres/.bashrc && \
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /home/postgres/.bashrc && \
-    echo "export NEURDBPATH=${NEURDBPATH}" >> /home/postgres/.bashrc && \
-    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /etc/profile && \
-    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /home/postgres/.bashrc
+    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /home/postgres/.bashrc && \
+    echo "export NEURDBPATH=${NEURDBPATH}" >> /home/postgres/.bashrc
 
-# Set the working directory
-WORKDIR /code/neurdb-dev
+# Install Python packages
+USER postgres
+COPY aiengine/runtime/requirements.txt /usr/local/bin/requirements.txt
+RUN pip install -r /usr/local/bin/requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Copy the build script into the container
-COPY init.sh /usr/local/bin/docker-init.sh
+USER root
+COPY docker-init.sh /usr/local/bin/docker-init.sh
 
 # Ensure the build script is executable
 RUN chmod +x /usr/local/bin/docker-init.sh
 
-# Expose port
-EXPOSE 5432
-
 # Change to non-root user 'postgres' for database compilation and running the init script
 USER postgres
+
 # Command to run the init.sh script
 CMD ["bash", "/usr/local/bin/docker-init.sh"]
