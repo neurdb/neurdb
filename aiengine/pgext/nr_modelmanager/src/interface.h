@@ -1,6 +1,6 @@
 /*
  * interface.h
- *    APIs provided by the pg_model extension
+ *    APIs provided by the nr_model extension
  */
 #ifndef PG_MODEL_PG_MODEL_H
 #define PG_MODEL_PG_MODEL_H

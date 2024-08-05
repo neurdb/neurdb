@@ -1,4 +1,4 @@
--- script to define tables and functions for pg_model
+-- script to define tables and functions for nr_model
 
 -- create tables
 CREATE TABLE model

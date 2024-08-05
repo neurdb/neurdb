@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(pg_model C CXX)
+project(nr_model C CXX)
 
 #set(CMAKE_CXX_COMPILER /usr/bin/g++-13)
 #set(CMAKE_C_COMPILER /usr/bin/gcc-13)
@@ -30,11 +30,11 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH "${TORCH_LIBRARY_DIRS}")
 
 FILE(GLOB_RECURSE SOURCES src/*.c src/*.cpp src/*.h src/*.hpp)
-add_library(pg_model SHARED ${SOURCES})
-target_link_libraries(pg_model ${TORCH_LIBRARIES} ${PostgreSQL_LIBRARIES})
+add_library(nr_model SHARED ${SOURCES})
+target_link_libraries(nr_model ${TORCH_LIBRARIES} ${PostgreSQL_LIBRARIES})
 
 # Install
-install(TARGETS pg_model
+install(TARGETS nr_model
         LIBRARY DESTINATION ${PostgreSQL_LIBDIR})
-install(FILES pg_model.control sql/pg_model--1.0.0.sql
+install(FILES nr_model.control sql/nr_model--1.0.0.sql
         DESTINATION ${PostgreSQL_SHAREDIR}/extension)

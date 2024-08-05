@@ -128,8 +128,8 @@ $NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
 Drop/Create the extension
 
 ```sql
-DROP EXTENSION pg_model;
-CREATE EXTENSION pg_model;
+DROP EXTENSION nr_model;
+CREATE EXTENSION nr_model;
 ```
 
 
