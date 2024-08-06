@@ -20,7 +20,7 @@ In the server, use the following to clone the code, you may need to generate the
 cd ~
 git clone https://<username>:<token>@github.com/<username>/<repository>.git
 
-# give docker write premission
+# give docker write permission
 chmod -R 777 ~/neurdb-dev
 ```
 
@@ -42,7 +42,7 @@ bash build.sh
 su - postgres
 ```
 
-Chaning the postgresql code, then restart the pg server
+Change the PostgreSQL code, then restart the pg server
 
 ```bash
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
@@ -67,7 +67,7 @@ log_min_error_statement = DEBUG1
 
 
 
-## Debug Rust Extensin for training
+## Debug Rust Extension for training
 
 After updating the codebase, run the following
 
@@ -75,7 +75,7 @@ After updating the codebase, run the following
 cargo test -- --nocapture
 ```
 
-Once the test pass, re install extension
+Once the test passes, reinstall the extension
 
 ```bash
 cd /code/neurdb-dev/contrib/nr
@@ -110,7 +110,7 @@ CREATE EXTENSION pg_model;
 
 # Some CMDs
 
-Set global path of the neurdb
+Set the global path of the neurdb
 
 ```bash
 NEURDBPATH=/code/neurdb-dev
@@ -123,7 +123,7 @@ Debug if there is an error
 # if it's empty, then run
 cargo pgrx schema --pg-config ./psql/bin/pg_config --features python --release
 
-# if the PGRX_INCLUDEDIR_SERVER and PGXS cannot found, then run
+# if the PGRX_INCLUDEDIR_SERVER and PGXS cannot be found, then run
 PGRX_INCLUDEDIR_SERVER=$NEURDBPATH/psql/include/postgresql/server PGXS=$NEURDBPATH/psql/lib/postgresql/pgxs/src/makefiles/pgxs.mk cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
 
 ```
