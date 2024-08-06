@@ -33,40 +33,6 @@ cd ~/neurdb-dev/deploy
 bash build.sh
 ```
 
-## Install Extensions
-
-### Install nr
-
-```bash
-docker exec -it neurdb_dev bash
-```
-
-### Install nr_inference
-
-```bash
-docker exec -it neurdb_dev bash
-```
-
-## Test Extension
-
-```bash
-$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
-```
-
-Run extension
-
-```sql
-DROP EXTENSION neurdb_extension;
-CREATE EXTENSION neurdb_extension;
-
-SELECT mlp_clf('class', 'iris', '', '/code/neurdb-dev/contrib/nr/pysrc/config.ini');
-
-PREDICT VALUE OF
-  class
-FROM
-  iris;
-```
-
 # Debug
 
 ## Debug PostgreSQL
