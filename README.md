@@ -1,170 +1,101 @@
 ![logo](./doc/logo.jpg)
 
---------------------------------------------------------------------------------
+[![NeurDB Website](https://img.shields.io/badge/Website-neurdb.com-blue)](https://neurdb.com)
+[![Github](https://img.shields.io/badge/Github-100000.svg?logo=github&logoColor=white)](https://github.com/neurdb/neurdb)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/neurdb/neurdb)
+![GitHub contributors](https://img.shields.io/github/contributors-anon/neurdb/neurdb)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-NeurDB is an AI-Powered Autonomous Data System.
+[![arXiv](https://img.shields.io/badge/arXiv-2408.03013-b31b1b.svg?labelColor=f9f107)](https://arxiv.org/abs/2408.03013)
 
-[website](https://neurdb.com) | [github](https://github.com/neurdb/neurdb)
+NeurDB is an AI-powered autonomous data system.
 
+## Installation
 
-# NeurDB Deployment
-This is NeurDB.
-
-# Deployment on Server
-
-## Clone Codes
-
-In the server, use the following to clone the code, you may need to generate the token in Git Hub.
+### Clone the latest code
 
 ```bash
-cd ~
-git clone https://<username>:<token>@github.com/<username>/<repository>.git
+git clone https://github.com/neurdb/neurdb.git
+cd neurdb
 
-# give docker write premission
-chmod -R 777 ~/neurdb-dev
+# Optional: Give docker container write permission
+chmod -R 777 .
 ```
 
-## Build Dockerfile
-
-Build images
+### Build Dockerfile
 
 ```bash
-cd ~/neurdb-dev/deploy
 bash build.sh
 ```
 
-## Install Extensions
+Wait until the following prompt shows:
 
-### Install nr
+`Please use 'control + c' to exit the logging print`
 
-```bash
-docker exec -it neurdb_dev bash
-```
+## Usage
 
-### Install nr_inference
+### Create Shell
 
 ```bash
 docker exec -it neurdb_dev bash
 ```
 
-## Test Extension
+### Run Connector (in Docker Container)
 
 ```bash
-$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
+$NEURDBPATH/psql/bin/psql -h 0.0.0.0
 ```
 
-Run extension
+### Run tests
 
-```sql
-DROP EXTENSION neurdb_extension;
-CREATE EXTENSION neurdb_extension;
+> [!NOTE]
+> In the current state, the implementation of `PREDICT` syntax is not complete but scheduled. Once it is done, you can use the following syntax to run the training/inference on the specific data table, e.g.,
+> ```
+> PREDICT CLASS OF class FROM iris;
+> ```
 
-SELECT mlp_clf('class', 'iris', '', '/code/neurdb-dev/contrib/nr/pysrc/config.ini');
-
-PREDICT VALUE OF
-  class
-FROM
-  iris;
-```
-
-# Debug
-
-## Debug PostgreSQL
+### Start/stop the server (in Docker container)
 
 ```bash
-# users
-su - postgres
-```
-
-Chaning the postgresql code, then restart the pg server
-
-```bash
+# (Start/stop as a service)
+$NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data start
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 
-make
-make install
-$NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
-$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
+# (Start in frontend)
+$NEURDBPATH/psql/bin/postgres -D $NEURDBPATH/psql/data -h 0.0.0.0
 ```
 
-If there are any error, check the log at
+## Development
+
+### Code Formatting
+
+All tools are managed by pre-commit.
+
+After installing pre-commit, run the following command:
 
 ```bash
-# Update the `psql/postgresql.conf` by adding those two lines
+pre-commit run -a
+```
+
+### Increase logging level
+
+Update `$NEURDBPATH/psql/data/postgresql.conf` by changing the corresponding settings:
+
+```ini
 log_min_messages = DEBUG1
 log_min_error_statement = DEBUG1
-
-
-# then check the log file
-./logfile
 ```
 
+### Miscellaneous
 
-
-## Debug Rust Extensin for training
-
-After updating the codebase, run the following
+If the server complains about the permission of the data directory, run the following command to fix it:
 
 ```bash
-cargo test -- --nocapture
+chmod 750 $NEURDBPATH/psql/data
 ```
 
-Once the test pass, re install extension
-
-```bash
-cd /code/neurdb-dev/contrib/nr
-cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
-```
-
-Then
-
-```bash
-$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
-```
-
-```sql
-DROP EXTENSION neurdb_extension;
-CREATE EXTENSION neurdb_extension;
-```
-
-## Debug C Extension for inference
-Start the PostgreSQL server
-
-```bash
-$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
-```
-
-Drop/Create the extension
-
-```sql
-DROP EXTENSION pg_model;
-CREATE EXTENSION pg_model;
-```
-
-
-# Some CMDs
-
-Set global path of the neurdb
-
-```bash
-NEURDBPATH=/code/neurdb-dev
-```
-
-Debug if there is an error
-
-```bash
-# check if the .sql file generated in the folder psql/share/extension/
-# if it's empty, then run
-cargo pgrx schema --pg-config ./psql/bin/pg_config --features python --release
-
-# if the PGRX_INCLUDEDIR_SERVER and PGXS cannot found, then run
-PGRX_INCLUDEDIR_SERVER=$NEURDBPATH/psql/include/postgresql/server PGXS=$NEURDBPATH/psql/lib/postgresql/pgxs/src/makefiles/pgxs.mk cargo pgrx install --pg-config $NEURDBPATH/psql/bin/pg_config --release
-
-```
-
-```bash
-chown $(whoami) $NEURDBPATH/psql/data
-```
+Sometimes, the OS language settings could also affect the server starting. In such case, run the following commands:
 
 ```bash
 export LANG="en_US.UTF-8"
@@ -176,4 +107,3 @@ export LC_NUMERIC="en_US.UTF-8"
 export LC_TIME="en_US.UTF-8"
 export DYLD_LIBRARY_PATH=$NEURDBPATH/psql/lib:$DYLD_LIBRARY_PATH
 ```
-
