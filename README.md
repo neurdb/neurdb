@@ -18,8 +18,7 @@ NeurDB is an AI-powered autonomous data system.
 ```bash
 git clone https://github.com/neurdb/neurdb.git
 cd neurdb
-
-# Optional: Give docker container write permission
+# Give Docker container write permission
 chmod -R 777 .
 ```
 
@@ -31,7 +30,11 @@ bash build.sh
 
 Wait until the following prompt shows:
 
-`Please use 'control + c' to exit the logging print`
+```
+Please use 'control + c' to exit the logging print
+...
+Press CTRL+C to quit
+```
 
 ## Usage
 

@@ -37,7 +37,7 @@ echo 'Done! Now start the database'
 # Crete DB engine if not exist
 if [ ! -d "$NR_DBDATA_PATH" ]; then
   mkdir -p $NR_DBDATA_PATH
-  ./psql/bin/initdb -D $NR_DBDATA_PATH
+  $NR_PSQL_PATH/bin/initdb -D $NR_DBDATA_PATH
 else
   # make sure DBDATA folder is under permission 0750 to avoid PG start failure
   sudo chmod 0750 $NR_DBDATA_PATH
@@ -78,6 +78,7 @@ cd socket.io-client-cpp
 
 sudo chmod -R 777 ./
 cmake -DCMAKE_CXX_FLAGS="-fPIC" ./
+sudo make -j
 sudo make install
 
 # Compile nr_pipeline
