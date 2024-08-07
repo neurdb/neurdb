@@ -626,7 +626,7 @@ standard_ProcessUtility(PlannedStmt *pstmt,
 									SetPGVariable("transaction_isolation",
 												  list_make1(item->arg),
 												  true);
-								else if (strcmp(item->defname, "transaction_read_only") == 0)
+                                else if (strcmp(item->defname, "transaction_read_only") == 0)
 									SetPGVariable("transaction_read_only",
 												  list_make1(item->arg),
 												  true);

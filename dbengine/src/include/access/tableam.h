@@ -23,6 +23,7 @@
 #include "executor/tuptable.h"
 #include "utils/rel.h"
 #include "utils/snapshot.h"
+#include "xact.h"
 
 
 #define DEFAULT_TABLE_ACCESS_METHOD	"heap"

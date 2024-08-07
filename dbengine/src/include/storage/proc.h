@@ -190,6 +190,8 @@ struct PGPROC
 								 * being executed by this proc, if running;
 								 * else InvalidLocalTransactionId */
 	int			pid;			/* Backend's process ID; 0 if prepared xact */
+    double      rank;           /* Wait priority */
+    int         nDep;           /* dependency count */
 
 	int			pgxactoff;		/* offset into various ProcGlobal->arrays with
 								 * data mirrored from this PGPROC */

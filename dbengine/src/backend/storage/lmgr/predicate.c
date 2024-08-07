@@ -512,7 +512,7 @@ static inline bool
 SerializationNeededForRead(Relation relation, Snapshot snapshot)
 {
 	/* Nothing to do if this is not a serializable transaction */
-	if (MySerializableXact == InvalidSerializableXact)
+    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
 		return false;
 
 	/*
@@ -556,7 +556,7 @@ static inline bool
 SerializationNeededForWrite(Relation relation)
 {
 	/* Nothing to do if this is not a serializable transaction */
-	if (MySerializableXact == InvalidSerializableXact)
+    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
 		return false;
 
 	/* Check if the relation doesn't participate in predicate locking */
@@ -1876,6 +1876,7 @@ CreateLocalPredicateLockHash(void)
 	HASHCTL		hash_ctl;
 
 	/* Initialize the backend-local hash table of parent locks */
+    Assert(IsolationIsSSI());
 	Assert(LocalPredicateLockHash == NULL);
 	hash_ctl.keysize = sizeof(PREDICATELOCKTARGETTAG);
 	hash_ctl.entrysize = sizeof(LOCALPREDICATELOCK);
@@ -3299,7 +3300,7 @@ ReleasePredicateLocks(bool isCommit, bool isReadOnlySafe)
 		}
 	}
 
-	if (MySerializableXact == InvalidSerializableXact)
+    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
 	{
 		Assert(LocalPredicateLockHash == NULL);
 		return;
@@ -4435,8 +4436,15 @@ static void
 FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer)
 {
 	Assert(reader != writer);
+    // In case of lock-based, the add of rw conflict is not accepted at all.
+    if (IsolationNeedLock())
+        ereport(ERROR,
+                (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
+                        errmsg("could not serialize access due to lock violation"),
+                        errdetail_internal("Reason code: Canceled on conflict due to read write lock conflict (case 1)."),
+                        errhint("The transaction might succeed if retried.")));
 
-	/* First, see if this conflict causes failure. */
+    /* First, see if this conflict causes failure. */
 	OnConflict_CheckForSerializationFailure(reader, writer);
 
 	/* Actually do the conflict flagging. */
@@ -4475,6 +4483,7 @@ OnConflict_CheckForSerializationFailure(const SERIALIZABLEXACT *reader,
 	Assert(LWLockHeldByMe(SerializableXactHashLock));
 
 	failure = false;
+    Assert(!IsolationNeedLock());
 
 	/*------------------------------------------------------------------------
 	 * Check for already-committed writer with rw-conflict out flagged
@@ -4638,7 +4647,7 @@ PreCommit_CheckForSerializationFailure(void)
 {
 	dlist_iter	near_iter;
 
-	if (MySerializableXact == InvalidSerializableXact)
+    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
 		return;
 
 	Assert(IsolationIsSerializable());
@@ -4733,7 +4742,7 @@ AtPrepare_PredicateLocks(void)
 	xactRecord = &(record.data.xactRecord);
 	lockRecord = &(record.data.lockRecord);
 
-	if (MySerializableXact == InvalidSerializableXact)
+    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
 		return;
 
 	/* Generate an xact record for our SERIALIZABLEXACT */
@@ -4792,7 +4801,7 @@ AtPrepare_PredicateLocks(void)
 void
 PostPrepare_PredicateLocks(TransactionId xid)
 {
-	if (MySerializableXact == InvalidSerializableXact)
+    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
 		return;
 
 	Assert(SxactIsPrepared(MySerializableXact));

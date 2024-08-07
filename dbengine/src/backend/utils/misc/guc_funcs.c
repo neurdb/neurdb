@@ -87,6 +87,9 @@ ExecSetVariableStmt(VariableSetStmt *stmt, bool isTopLevel)
 					if (strcmp(item->defname, "transaction_isolation") == 0)
 						SetPGVariable("transaction_isolation",
 									  list_make1(item->arg), stmt->is_local);
+                    else if (strcmp(item->defname, "cc_strategy") == 0)
+                        SetPGVariable("cc_strategy",
+                                      list_make1(item->arg), stmt->is_local);
 					else if (strcmp(item->defname, "transaction_read_only") == 0)
 						SetPGVariable("transaction_read_only",
 									  list_make1(item->arg), stmt->is_local);
@@ -109,6 +112,9 @@ ExecSetVariableStmt(VariableSetStmt *stmt, bool isTopLevel)
 					if (strcmp(item->defname, "transaction_isolation") == 0)
 						SetPGVariable("default_transaction_isolation",
 									  list_make1(item->arg), stmt->is_local);
+                    else if (strcmp(item->defname, "cc_strategy") == 0)
+                        SetPGVariable("default_cc_strategy",
+                                      list_make1(item->arg), stmt->is_local);
 					else if (strcmp(item->defname, "transaction_read_only") == 0)
 						SetPGVariable("default_transaction_read_only",
 									  list_make1(item->arg), stmt->is_local);

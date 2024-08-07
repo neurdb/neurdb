@@ -366,6 +366,49 @@ heap_setscanlimits(TableScanDesc sscan, BlockNumber startBlk, BlockNumber numBlk
 	scan->rs_numblocks = numBlks;
 }
 
+#define IS_TEST_RELATION(relation)  (false && get_rel_name((relation)->rd_id)[0] == 'y')
+// For debug.
+
+void heap_lock_for_scan(Relation relation)
+{
+    if (IS_TEST_RELATION(relation))
+        printf("xact%d locking for scanning relation (%d)\n", GetCurrentTransactionId(), relation->rd_id);
+    LockRelation(relation, ShareLock);
+}
+
+void heap_lock_for_write(Relation relation,
+                         HeapTuple tuple, Buffer buffer)
+{
+    bool is_exclusive;
+    if (!IsolationNeedLock()) return;
+    if (IS_TEST_RELATION(relation))
+        printf("xact%d locking for writing tuple (%d:%d-%d:%d)\n", GetCurrentTransactionId(), relation->rd_id,
+               tuple->t_self.ip_blkid.bi_hi, tuple->t_self.ip_blkid.bi_lo, tuple->t_self.ip_posid);
+    is_exclusive = LockBuffer(buffer, BUFFER_LOCK_UNLOCK);
+    LockTuple(relation, &tuple->t_self, RowShareLock);
+    if (is_exclusive)
+        LockBuffer(buffer, BUFFER_LOCK_EXCLUSIVE);
+    else
+        LockBuffer(buffer, BUFFER_LOCK_SHARE);
+}
+
+void heap_lock_for_read(Relation relation,
+                        HeapTuple tuple, Buffer buffer)
+{
+    bool is_exclusive;
+    if (!IsolationNeedLock()) return;
+    if (IS_TEST_RELATION(relation))
+        printf("xact%d locking for reading tuple (%d:%d-%d:%d)\n", GetCurrentTransactionId(), relation->rd_id,
+               tuple->t_self.ip_blkid.bi_hi, tuple->t_self.ip_blkid.bi_lo, tuple->t_self.ip_posid);
+    is_exclusive = LockBuffer(buffer, BUFFER_LOCK_UNLOCK);
+
+    LockTuple(relation, &tuple->t_self, RowShareLock);
+    if (is_exclusive)
+        LockBuffer(buffer, BUFFER_LOCK_EXCLUSIVE);
+    else
+        LockBuffer(buffer, BUFFER_LOCK_SHARE);
+}
+
 /*
  * heapgetpage - subroutine for heapgettup()
  *
@@ -472,6 +515,7 @@ heapgetpage(TableScanDesc sscan, BlockNumber block)
 
 		HeapCheckForSerializableConflictOut(valid, scan->rs_base.rs_rd,
 											&loctup, buffer, snapshot);
+        heap_lock_for_read(scan->rs_base.rs_rd, &loctup, buffer);
 
 		if (valid)
 			scan->rs_vistuples[ntup++] = lineoff;
@@ -791,6 +835,7 @@ continue_page:
 			HeapCheckForSerializableConflictOut(visible, scan->rs_base.rs_rd,
 												tuple, scan->rs_cbuf,
 												scan->rs_base.rs_snapshot);
+            heap_lock_for_read(scan->rs_base.rs_rd, tuple, scan->rs_cbuf);
 
 			/* skip tuples not visible to this snapshot */
 			if (!visible)
@@ -991,6 +1036,8 @@ heap_beginscan(Relation relation, Snapshot snapshot,
 		 */
 		Assert(snapshot);
 		PredicateLockRelation(relation, snapshot);
+        if (IsolationNeedLock())
+            heap_lock_for_scan(relation);
 	}
 
 	/* we only need to set this up once */
@@ -1561,6 +1608,7 @@ heap_hot_search_buffer(ItemPointer tid, Relation relation, Buffer buffer,
 			valid = HeapTupleSatisfiesVisibility(heapTuple, snapshot, buffer);
 			HeapCheckForSerializableConflictOut(valid, relation, heapTuple,
 												buffer, snapshot);
+            heap_lock_for_read(relation, heapTuple, buffer);
 
 			if (valid)
 			{
@@ -1706,6 +1754,7 @@ heap_get_latest_tid(TableScanDesc sscan,
 		 */
 		valid = HeapTupleSatisfiesVisibility(&tp, snapshot, buffer);
 		HeapCheckForSerializableConflictOut(valid, relation, &tp, buffer, snapshot);
+        heap_lock_for_read(relation, &tp, buffer);
 		if (valid)
 			*tid = ctid;
 
@@ -3375,7 +3424,15 @@ l2:
 			result = TM_Updated;
 	}
 
-	if (result != TM_Ok)
+    if (IsolationNeedLock() && !have_tuple_lock && result == TM_Ok)
+    {
+        // the TM_Updated mark is kept for index conflicts.
+        heap_lock_for_write(relation, &oldtup, buffer);
+        have_tuple_lock = true;
+    }
+
+    // lock-based method does not accept parallel write.
+    if (result != TM_Ok)
 	{
 		tmfd->ctid = oldtup.t_data->t_ctid;
 		tmfd->xmax = HeapTupleHeaderGetUpdateXid(oldtup.t_data);
@@ -3871,8 +3928,8 @@ l2:
 	/*
 	 * Release the lmgr tuple lock, if we had it.
 	 */
-	if (have_tuple_lock)
-		UnlockTupleTuplock(relation, &(oldtup.t_self), *lockmode);
+    if (have_tuple_lock && !IsolationNeedLock())
+        UnlockTupleTuplock(relation, &(oldtup.t_self), *lockmode);
 
 	pgstat_count_heap_update(relation, use_hot_update, newbuf != buffer);
 
