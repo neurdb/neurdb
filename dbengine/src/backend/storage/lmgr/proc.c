@@ -1068,7 +1068,7 @@ ProcSleep(LOCALLOCK *locallock, LockMethod lockMethodTable)
 	 * we are only considering the part of the wait queue before my insertion
 	 * point.
 	 */
-	if (myHeldLocks != 0 && !dclist_is_empty(waitQueue))
+	if (!dclist_is_empty(waitQueue))
 	{
 		LOCKMASK	aheadRequests = 0;
 		dlist_iter	iter;
@@ -1076,55 +1076,65 @@ ProcSleep(LOCALLOCK *locallock, LockMethod lockMethodTable)
 		dclist_foreach(iter, waitQueue)
 		{
 			PGPROC	   *proc = dlist_container(PGPROC, links, iter.cur);
+            bool needWaitBefore = proc->rank > MyProc->rank;
+            if (lockMethodTable->conflictTab[proc->waitLockMode] & lockmode)
+                proc->nDep ++;
 
-			/*
-			 * If we're part of the same locking group as this waiter, its
-			 * locks neither conflict with ours nor contribute to
-			 * aheadRequests.
-			 */
-			if (leader != NULL && leader == proc->lockGroupLeader)
-				continue;
+            if (myHeldLocks != 0)
+            {
+                /*
+                 * If we're part of the same locking group as this waiter, its
+                 * locks neither conflict with ours nor contribute to
+                 * aheadRequests.
+                 */
+                if (leader != NULL && leader == proc->lockGroupLeader)
+                    continue;
+                /* Must he wait for me? */
+                if (lockMethodTable->conflictTab[proc->waitLockMode] & myHeldLocks)
+                {
+                    /* Must I wait for him ? */
+                    if (lockMethodTable->conflictTab[lockmode] & proc->heldLocks)
+                    {
+                        /*
+                         * Yes, so we have a deadlock.  Easiest way to clean up
+                         * correctly is to call RemoveFromWaitQueue(), but we
+                         * can't do that until we are *on* the wait queue. So, set
+                         * a flag to check below, and break out of loop.  Also,
+                         * record deadlock info for later message.
+                         */
+                        RememberSimpleDeadLock(MyProc, lockmode, lock, proc);
+                        early_deadlock = true;
+                        break;
+                    }
+                    needWaitBefore = true;
+                }
+            }
 
-			/* Must he wait for me? */
-			if (lockMethodTable->conflictTab[proc->waitLockMode] & myHeldLocks)
-			{
-				/* Must I wait for him ? */
-				if (lockMethodTable->conflictTab[lockmode] & proc->heldLocks)
-				{
-					/*
-					 * Yes, so we have a deadlock.  Easiest way to clean up
-					 * correctly is to call RemoveFromWaitQueue(), but we
-					 * can't do that until we are *on* the wait queue. So, set
-					 * a flag to check below, and break out of loop.  Also,
-					 * record deadlock info for later message.
-					 */
-					RememberSimpleDeadLock(MyProc, lockmode, lock, proc);
-					early_deadlock = true;
-					break;
-				}
-				/* I must go before this waiter.  Check special case. */
-				if ((lockMethodTable->conflictTab[lockmode] & aheadRequests) == 0 &&
-					!LockCheckConflicts(lockMethodTable, lockmode, lock,
-										proclock))
-				{
-					/* Skip the wait and just grant myself the lock. */
-					GrantLock(lock, proclock, lockmode);
-					GrantAwaitedLock();
-					return PROC_WAIT_STATUS_OK;
-				}
+            if (needWaitBefore)
+            {
+                /* I must go before this waiter.  Check special case. */
+                if ((lockMethodTable->conflictTab[lockmode] & aheadRequests) == 0 &&
+                    !LockCheckConflicts(lockMethodTable, lockmode, lock,
+                                        proclock))
+                {
+                    /* Skip the wait and just grant myself the lock. */
+                    GrantLock(lock, proclock, lockmode);
+                    GrantAwaitedLock();
+                    return PROC_WAIT_STATUS_OK;
+                }
 
-				/* Put myself into wait queue before conflicting process */
-				insert_before = proc;
-				break;
-			}
+                /* Put myself into wait queue before conflicting process */
+                insert_before = proc;
+                break;
+            }
 			/* Nope, so advance to next waiter */
 			aheadRequests |= LOCKBIT_ON(proc->waitLockMode);
 		}
 	}
 
-	/*
-	 * Insert self into queue, at the position determined above.
-	 */
+    /*
+     * Insert self into queue, at the position determined above.
+     */
 	if (insert_before)
 		dclist_insert_before(waitQueue, &insert_before->links, &MyProc->links);
 	else

@@ -31,6 +31,10 @@
 
 #include <signal.h>
 #include <unistd.h>
+#include <utils/lsyscache.h>
+#include <arpa/inet.h>
+#include <sys/mman.h>
+#include "storage/policy.h"
 
 #include "access/transam.h"
 #include "access/twophase.h"
@@ -465,6 +469,7 @@ InitLocks(void)
 									  16,
 									  &info,
 									  HASH_ELEM | HASH_BLOBS);
+    init_policy_maker();
 }
 
 
@@ -1026,6 +1031,15 @@ LockAcquireExtended(const LOCKTAG *locktag,
 	}
 	else
 	{
+        if (IsolationLearnCC())
+        {
+            before_lock(lockmode == ExclusiveLock? false:true,
+                        lock->nRequested,
+                        lock->nGranted,
+                        MyProc->nDep);
+            if (MyProc->rank > 9.8)
+                dontWait = true;
+        }
 		/*
 		 * We can't acquire the lock immediately.  If caller specified no
 		 * blocking, remove useless table entries and return

@@ -38,8 +38,20 @@
 #define XACT_REPEATABLE_READ	2
 #define XACT_SERIALIZABLE		3
 
+#define LOCK_NONE   0
+#define LOCK_RW    1
+#define LOCK_ASSERT_ABORT    2
+#define LOCK_LEARNED    3
+
+#define XACT_UPDATE 0
+#define XACT_READ   1
+#define XACT_INSERT   2
+#define XACT_INVALID   3
+
 extern PGDLLIMPORT int DefaultXactIsoLevel;
 extern PGDLLIMPORT int XactIsoLevel;
+extern int	DefaultXactLockStrategy;
+extern int  XactLockStrategy;
 
 /*
  * We implement three isolation levels internally.
@@ -50,6 +62,9 @@ extern PGDLLIMPORT int XactIsoLevel;
  */
 #define IsolationUsesXactSnapshot() (XactIsoLevel >= XACT_REPEATABLE_READ)
 #define IsolationIsSerializable() (XactIsoLevel == XACT_SERIALIZABLE)
+#define IsolationIsSSI() (IsolationIsSerializable() && XactLockStrategy == LOCK_NONE)
+#define IsolationNeedLock() (XactLockStrategy == LOCK_RW)
+#define IsolationLearnCC() (DefaultXactLockStrategy == LOCK_LEARNED)
 
 /* Xact read-only state */
 extern PGDLLIMPORT bool DefaultXactReadOnly;
@@ -151,7 +166,8 @@ typedef void (*SubXactCallback) (SubXactEvent event, SubTransactionId mySubid,
 /* Data structure for Save/RestoreTransactionCharacteristics */
 typedef struct SavedTransactionCharacteristics
 {
-	int			save_XactIsoLevel;
+    int			save_XactIsoLevel;
+    int			save_XactLockStrategy;
 	bool		save_XactReadOnly;
 	bool		save_XactDeferrable;
 } SavedTransactionCharacteristics;
@@ -430,8 +446,10 @@ typedef struct xl_xact_parsed_abort
  *		extern definitions
  * ----------------
  */
+extern void AdjustTransaction();
 extern bool IsTransactionState(void);
 extern bool IsAbortedTransactionBlockState(void);
+extern bool IsTransactionUseful(void);
 extern TransactionId GetTopTransactionId(void);
 extern TransactionId GetTopTransactionIdIfAny(void);
 extern TransactionId GetCurrentTransactionId(void);

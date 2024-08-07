@@ -288,7 +288,7 @@ GetTransactionSnapshot(void)
 		if (IsolationUsesXactSnapshot())
 		{
 			/* First, create the snapshot in CurrentSnapshotData */
-			if (IsolationIsSerializable())
+			if (IsolationIsSSI())
 				CurrentSnapshot = GetSerializableTransactionSnapshot(&CurrentSnapshotData);
 			else
 				CurrentSnapshot = GetSnapshotData(&CurrentSnapshotData);
@@ -584,7 +584,7 @@ SetTransactionSnapshot(Snapshot sourcesnap, VirtualTransactionId *sourcevxid,
 	 */
 	if (IsolationUsesXactSnapshot())
 	{
-		if (IsolationIsSerializable())
+		if (IsolationIsSSI())
 			SetSerializableTransactionSnapshot(CurrentSnapshot, sourcevxid,
 											   sourcepid);
 		/* Make a saved copy */
@@ -1533,7 +1533,7 @@ ImportSnapshot(const char *idstr)
 	 * non-read-only transaction can't adopt a snapshot from a read-only
 	 * transaction, as predicate.c handles the cases very differently.
 	 */
-	if (IsolationIsSerializable())
+	if (IsolationIsSSI())
 	{
 		if (src_isolevel != XACT_SERIALIZABLE)
 			ereport(ERROR,

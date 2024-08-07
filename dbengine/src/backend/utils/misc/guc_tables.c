@@ -213,6 +213,12 @@ static const struct config_enum_entry isolation_level_options[] = {
 	{NULL, 0}
 };
 
+static const struct config_enum_entry cc_strategy_options[] = {
+        {"ssi", LOCK_NONE, false},
+        {"learned", LOCK_LEARNED, false},
+        {NULL, 0}
+};
+
 static const struct config_enum_entry session_replication_role_options[] = {
 	{"origin", SESSION_REPLICATION_ROLE_ORIGIN, false},
 	{"replica", SESSION_REPLICATION_ROLE_REPLICA, false},
@@ -2601,7 +2607,7 @@ struct config_int ConfigureNamesInt[] =
 						 "transaction will need to be locked at any one time.")
 		},
 		&max_locks_per_xact,
-		64, 10, INT_MAX,
+		128, 10, INT_MAX,
 		NULL, NULL, NULL
 	},
 
@@ -4643,7 +4649,28 @@ struct config_enum ConfigureNamesEnum[] =
 		check_transaction_isolation, NULL, NULL
 	},
 
-	{
+    {
+        {"default_cc_strategy", PGC_USERSET, CLIENT_CONN_STATEMENT,
+            gettext_noop("Sets the default cc strategy of each new transaction."),
+            NULL
+        },
+        &DefaultXactLockStrategy,
+        LOCK_NONE, cc_strategy_options,
+        NULL, NULL, NULL
+    },
+
+    {
+        {"cc_strategy", PGC_USERSET, CLIENT_CONN_STATEMENT,
+            gettext_noop("Sets the current transaction's cc strategy."),
+            NULL,
+            GUC_NO_RESET_ALL | GUC_NOT_IN_SAMPLE | GUC_DISALLOW_IN_FILE
+        },
+        &XactLockStrategy,
+        LOCK_NONE, cc_strategy_options,
+        NULL, NULL, NULL
+    },
+
+    {
 		{"IntervalStyle", PGC_USERSET, CLIENT_CONN_LOCALE,
 			gettext_noop("Sets the display format for interval values."),
 			NULL,

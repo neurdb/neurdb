@@ -19,7 +19,10 @@
 
 #include <time.h>
 #include <unistd.h>
-
+#include <arpa/inet.h>
+#include <storage/predicate_internals.h>
+#include <utils/lsyscache.h>
+#include <assert.h>
 #include "access/commit_ts.h"
 #include "access/multixact.h"
 #include "access/parallel.h"
@@ -58,6 +61,7 @@
 #include "storage/md.h"
 #include "storage/predicate.h"
 #include "storage/proc.h"
+#include "storage/policy.h"
 #include "storage/procarray.h"
 #include "storage/sinvaladt.h"
 #include "storage/smgr.h"
@@ -77,6 +81,8 @@
  */
 int			DefaultXactIsoLevel = XACT_READ_COMMITTED;
 int			XactIsoLevel = XACT_READ_COMMITTED;
+int         DefaultXactLockStrategy = LOCK_NONE;
+int         XactLockStrategy;
 
 bool		DefaultXactReadOnly = false;
 bool		XactReadOnly;
@@ -221,6 +227,7 @@ typedef TransactionStateData *TransactionState;
 typedef struct SerializedTransactionState
 {
 	int			xactIsoLevel;
+    int         xactLockType;
 	bool		xactDeferrable;
 	FullTransactionId topFullTransactionId;
 	FullTransactionId currentFullTransactionId;
@@ -342,6 +349,7 @@ static void CheckTransactionBlock(bool isTopLevel, bool throwError,
 static void CommitTransaction(void);
 static TransactionId RecordTransactionAbort(bool isSubXact);
 static void StartTransaction(void);
+void AdjustTransaction(void);
 
 static void StartSubTransaction(void);
 static void CommitSubTransaction(void);
@@ -404,6 +412,15 @@ IsAbortedTransactionBlockState(void)
 		return true;
 
 	return false;
+}
+
+bool
+IsTransactionUseful(void)
+{
+    TransactionState s = CurrentTransactionState;
+    if (s->blockState >= TBLOCK_ABORT && s->blockState <= TBLOCK_ABORT_PENDING)
+        return false;
+    return true;
 }
 
 
@@ -1987,6 +2004,36 @@ AtSubCleanup_Memory(void)
  */
 
 /*
+ *	AdjustTransaction
+ */
+void
+AdjustTransaction()
+{
+    TransactionState s;
+    TBlockState tb;
+
+    s = &TopTransactionStateData;
+    CurrentTransactionState = s;
+    tb = s->blockState;
+
+    if (tb != TBLOCK_INPROGRESS && tb != TBLOCK_PARALLEL_INPROGRESS)
+        return;
+    CurTransactionContext = s->curTransactionContext;
+
+    Assert((!IsolationIsSerializable() && !IsolationNeedLock()) || IsolationLearnCC()
+           || XactLockStrategy == DefaultXactLockStrategy || IsolationIsSerializable());
+
+    if (XactLockStrategy == LOCK_ASSERT_ABORT)
+    {
+        ereport(ERROR,
+                (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
+                        errmsg("could not serialize access due to cc strategy"),
+                        errdetail_internal("Reason code: Asserted abort by AdjustTransaction."),
+                        errhint("The transaction might succeed if retried.")));
+    }
+}
+
+/*
  *	StartTransaction
  */
 static void
@@ -2059,7 +2106,6 @@ StartTransaction(void)
 		XactReadOnly = DefaultXactReadOnly;
 	}
 	XactDeferrable = DefaultXactDeferrable;
-	XactIsoLevel = DefaultXactIsoLevel;
 	forceSyncCommit = false;
 	MyXactFlags = 0;
 
@@ -2101,6 +2147,24 @@ StartTransaction(void)
 	 */
 	Assert(MyProc->backendId == vxid.backendId);
 	MyProc->lxid = vxid.localTransactionId;
+
+    if (!IsolationLearnCC())
+    {
+        XactIsoLevel = DefaultXactIsoLevel;
+        XactLockStrategy = DefaultXactLockStrategy;
+        if (!IsolationNeedLock())
+            XactIsoLevel = XACT_SERIALIZABLE;
+        if (IsolationIsSerializable())
+        {
+            // In case of SSI, disable locking based methods.
+            XactLockStrategy = LOCK_NONE;
+            Assert(XactLockStrategy == LOCK_NONE);
+        }
+
+        if (!(IsolationNeedLock() || IsolationIsSerializable()))
+            printf("[debug] xact%d is not running in serializable mode (iso:%d, lock:%d).\n", MyProc->lxid , XactIsoLevel, XactLockStrategy);
+    }
+    else init_rl_state(vxid.localTransactionId);
 
 	TRACE_POSTGRESQL_TRANSACTION_START(vxid.localTransactionId);
 
@@ -2153,6 +2217,7 @@ CommitTransaction(void)
 {
 	TransactionState s = CurrentTransactionState;
 	TransactionId latestXid;
+    LocalTransactionId tid;
 	bool		is_parallel_worker;
 
 	is_parallel_worker = (s->blockState == TBLOCK_PARALLEL_INPROGRESS);
@@ -2283,11 +2348,12 @@ CommitTransaction(void)
 
 	TRACE_POSTGRESQL_TRANSACTION_COMMIT(MyProc->lxid);
 
-	/*
-	 * Let others know about no transaction in progress by me. Note that this
-	 * must be done _before_ releasing locks we hold and _after_
-	 * RecordTransactionCommit.
-	 */
+    tid = MyProc->lxid;
+    /*
+     * Let others know about no transaction in progress by me. Note that this
+     * must be done _before_ releasing locks we hold and _after_
+     * RecordTransactionCommit.
+     */
 	ProcArrayEndTransaction(MyProc, latestXid);
 
 	/*
@@ -2329,6 +2395,7 @@ CommitTransaction(void)
 	AtEOXact_Inval(true);
 
 	AtEOXact_MultiXact();
+    report_xact_result(true, tid);
 
 	ResourceOwnerRelease(TopTransactionResourceOwner,
 						 RESOURCE_RELEASE_LOCKS,
@@ -3014,6 +3081,7 @@ void
 SaveTransactionCharacteristics(SavedTransactionCharacteristics *s)
 {
 	s->save_XactIsoLevel = XactIsoLevel;
+    s->save_XactLockStrategy = XactLockStrategy;
 	s->save_XactReadOnly = XactReadOnly;
 	s->save_XactDeferrable = XactDeferrable;
 }
@@ -3024,6 +3092,7 @@ RestoreTransactionCharacteristics(const SavedTransactionCharacteristics *s)
 	XactIsoLevel = s->save_XactIsoLevel;
 	XactReadOnly = s->save_XactReadOnly;
 	XactDeferrable = s->save_XactDeferrable;
+    XactLockStrategy = s->save_XactLockStrategy;
 }
 
 
@@ -3035,8 +3104,9 @@ CommitTransactionCommand(void)
 {
 	TransactionState s = CurrentTransactionState;
 	SavedTransactionCharacteristics savetc;
+    LocalTransactionId tid;
 
-	/* Must save in case we need to restore below */
+    /* Must save in case we need to restore below */
 	SaveTransactionCharacteristics(&savetc);
 
 	switch (s->blockState)
@@ -5381,6 +5451,7 @@ SerializeTransactionState(Size maxsize, char *start_address)
 
 	result->xactIsoLevel = XactIsoLevel;
 	result->xactDeferrable = XactDeferrable;
+    result->xactLockType = XactLockStrategy;
 	result->topFullTransactionId = XactTopFullTransactionId;
 	result->currentFullTransactionId =
 		CurrentTransactionState->fullTransactionId;
@@ -5449,6 +5520,7 @@ StartParallelWorkerTransaction(char *tstatespace)
 
 	tstate = (SerializedTransactionState *) tstatespace;
 	XactIsoLevel = tstate->xactIsoLevel;
+    XactLockStrategy = tstate->xactLockType;
 	XactDeferrable = tstate->xactDeferrable;
 	XactTopFullTransactionId = tstate->topFullTransactionId;
 	CurrentTransactionState->fullTransactionId =
