@@ -52,11 +52,13 @@ $NEURDBPATH/psql/bin/psql -h 0.0.0.0
 
 ### Run tests
 
+<!--
 > [!NOTE]
 > In the current state, the implementation of `PREDICT` syntax is not complete but scheduled. Once it is done, you can use the following syntax to run the training/inference on the specific data table, e.g.,
 > ```
 > PREDICT CLASS OF class FROM iris;
 > ```
+-->
 
 ### Start/stop the server (in Docker container)
 
