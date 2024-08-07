@@ -5,7 +5,9 @@ repos:
     -   id: check-yaml
         exclude: '^dbengine/\.cirrus\.tasks\.yml'
     -   id: end-of-file-fixer
+        exclude: '.*\.txt$'
     -   id: trailing-whitespace
+        exclude: '.*\.txt$'
 -   repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
