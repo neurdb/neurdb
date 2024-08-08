@@ -50,9 +50,9 @@ docker exec -it neurdb_dev bash
 $NEURDBPATH/psql/bin/psql -h 0.0.0.0
 ```
 
+<!--
 ### Run tests
 
-<!--
 > [!NOTE]
 > In the current state, the implementation of `PREDICT` syntax is not complete but scheduled. Once it is done, you can use the following syntax to run the training/inference on the specific data table, e.g.,
 > ```
@@ -112,3 +112,15 @@ export LC_NUMERIC="en_US.UTF-8"
 export LC_TIME="en_US.UTF-8"
 export DYLD_LIBRARY_PATH=$NEURDBPATH/psql/lib:$DYLD_LIBRARY_PATH
 ```
+
+## Troubleshooting
+
+### Building
+
+#### `./configure: line ...: config.log: Permission denied`
+
+Check the permissions of (1) executing for `dbengine/configure` (2) writing for other directories.
+
+#### `pg_ctl: directory "/code/neurdb-dev/psql/data" is not a database cluster directory`
+
+This happens when you have directory `psql/data` without initializing the database, e.g., if the init script exits abnormally before. By default, to avoid data loss, the init script will not touch `psql/data` if it already exists. To solve this, remove `psql/data` manually.
