@@ -2433,6 +2433,11 @@ redo_act:
 							/* tuple already deleted; nothing to do */
 							return NULL;
 
+                        case TM_BeingModified:
+                            ereport(ERROR,
+                                    (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
+                                            errmsg("could not serialize access via lock due to concurrent modification")));
+
 						case TM_SelfModified:
 
 							/*

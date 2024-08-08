@@ -138,6 +138,7 @@ ExecutorStart(QueryDesc *queryDesc, int eflags)
 	 * will be ignored if the top level query_id has already been reported.
 	 */
 	pgstat_report_query_id(queryDesc->plannedstmt->queryId, false);
+    AdjustTransaction();
 
 	if (ExecutorStart_hook)
 		(*ExecutorStart_hook) (queryDesc, eflags);
@@ -303,7 +304,8 @@ ExecutorRun(QueryDesc *queryDesc,
 			ScanDirection direction, uint64 count,
 			bool execute_once)
 {
-	if (ExecutorRun_hook)
+    AdjustTransaction();
+    if (ExecutorRun_hook)
 		(*ExecutorRun_hook) (queryDesc, direction, count, execute_once);
 	else
 		standard_ExecutorRun(queryDesc, direction, count, execute_once);

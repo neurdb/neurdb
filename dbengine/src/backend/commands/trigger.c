@@ -3382,6 +3382,11 @@ GetTupleForTrigger(EState *estate,
 				}
 				break;
 
+            case TM_BeingModified:
+                ereport(ERROR,
+                        (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
+                                errmsg("could not serialize access via lock due to concurrent modification")));
+
 			case TM_Updated:
 				if (IsolationUsesXactSnapshot())
 					ereport(ERROR,

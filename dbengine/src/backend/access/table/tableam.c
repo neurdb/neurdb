@@ -315,7 +315,12 @@ simple_table_tuple_delete(Relation rel, ItemPointer tid, Snapshot snapshot)
 			elog(ERROR, "tuple already updated by self");
 			break;
 
-		case TM_Ok:
+        case TM_BeingModified:
+            ereport(ERROR,
+                    (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
+                            errmsg("could not serialize access via lock due to concurrent modification")));
+
+        case TM_Ok:
 			/* done successfully */
 			break;
 

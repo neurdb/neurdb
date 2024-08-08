@@ -212,6 +212,11 @@ extern TableScanDesc heap_beginscan(Relation relation, Snapshot snapshot,
 									uint32 flags);
 extern void heap_setscanlimits(TableScanDesc sscan, BlockNumber startBlk,
 							   BlockNumber numBlks);
+extern void heap_lock_for_read(Relation relation,
+                               HeapTuple tuple, Buffer buffer);
+extern void heap_lock_for_write(Relation relation,
+                                HeapTuple tuple, Buffer buffer);
+extern void heap_lock_for_scan(Relation relation);
 extern void heapgetpage(TableScanDesc sscan, BlockNumber block);
 extern void heap_rescan(TableScanDesc sscan, ScanKey key, bool set_params,
 						bool allow_strat, bool allow_sync, bool allow_pagemode);
