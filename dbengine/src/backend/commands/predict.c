@@ -18,7 +18,20 @@
 #include "catalog/pg_type.h"
 #include "fmgr.h"
 #include "utils/builtins.h"
+#include "utils/array.h"
 #include "nodes/primnodes.h"
+
+
+static List *
+split_columns(const char *columns) {
+    List *result = NIL;
+    char *token = strtok(columns, ",");
+    while (token != NULL) {
+        result = lappend(result, makeString(token));
+        token = strtok(NULL, ",");
+    }
+    return result;
+}
 
 /*
 * exec_udf --- Execute customer UDFs
@@ -34,111 +47,69 @@
 void
 exec_udf(const char *columns, const char *table, const char *whereClause) {
     // initialize function call infos
-    FmgrInfo findModelFmgrInfo;
-    FmgrInfo trainingFmgrInfo;
     FmgrInfo inferenceFmgrInfo;
-
-    LOCAL_FCINFO(findModelFCInfo, FUNC_MAX_ARGS); // fcinfo for findModel function
-    LOCAL_FCINFO(trainingFCInfo, FUNC_MAX_ARGS); // fcinfo for training function
     LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS); // fcinfo for inference function
 
-    char modelName[] = "MLP";   // name of the model
-    Datum findModelResult;
-    Datum trainingResult;
+    // TODO: These parameters should be passed in as arguments, hard-coded for now
+    char modelName[] = "armnet"; // name of the model
+    int modelId = 1;
+    int batch_size = 4096;
+    int batch_num = 80;
+    int nfeat = 10;
+
     Datum inferenceResult;
-    Oid findModelArgTypes[1] = {TEXTOID};
-    Oid trainingArgTypes[4] = {TEXTOID, TEXTOID, TEXTOID, TEXTOID};
-    Oid inferenceArgTypes[4] = {TEXTOID, INT4OID, TEXTOID, TEXTARRAYOID};
-    char findModelFuncName[] = "pgm_get_model_id_by_name";
-    char trainingFuncName[] = "mlp_clf";
-    char inferenceFuncName[] = "pgm_predict_table";
+    Oid inferenceArgTypes[7] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID};
+    char inferenceFuncName[] = "nr_inference";
 
     if (columns == NULL || table == NULL || whereClause == NULL) {
         elog(ERROR, "Null argument passed to exec_udf");
         return;
     }
 
-    // check if the model exists
-    Oid findModelFuncOid = LookupFuncName(list_make1(makeString(findModelFuncName)), 1, findModelArgTypes, false);
-
-    if (!OidIsValid(findModelFuncOid)) {
-        elog(ERROR, "Function %s not found", findModelFuncName);
+    Oid inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
+    if (!OidIsValid(inferenceFuncOid)) {
+        elog(ERROR, "Function %s not found", inferenceFuncName);
         return;
     }
 
-    // get the model id
-    fmgr_info(findModelFuncOid, &findModelFmgrInfo);
-    InitFunctionCallInfoData(*findModelFCInfo, &findModelFmgrInfo, 1, InvalidOid, NULL, NULL);
+    fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
+    InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 4, InvalidOid, NULL, NULL);
 
-    findModelFCInfo->args[0].value = CStringGetTextDatum(modelName);
-    findModelFCInfo->args[0].isnull = false;
-    findModelResult = FunctionCallInvoke(findModelFCInfo);
+    // split columns into an array of text
+    List *columnList = split_columns(columns);
+    int ncolumns = list_length(columnList);
 
-    if (findModelResult == 0) {
-        // model not found, train the model
-        elog(INFO, "Model not found, training model");
+    Datum *columnDatums = (Datum *) palloc(sizeof(Datum) * ncolumns);
+    for (int i = 0; i < ncolumns; i++) {
+        columnDatums[i] = CStringGetTextDatum(strVal(list_nth(columnList, i)));
+    }
 
-        Oid trainingFuncOid = LookupFuncName(list_make1(makeString(trainingFuncName)), 4, trainingArgTypes, false);
-        if (!OidIsValid(trainingFuncOid)) {
-            elog(ERROR, "Function %s not found", trainingFuncName);
-            return;
-        }
+    ArrayType *columnArray = construct_array(columnDatums, ncolumns, TEXTOID, -1, false, 'i');
 
-        fmgr_info(trainingFuncOid, &trainingFmgrInfo);
-        InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, 4, InvalidOid, NULL, NULL);
+    inferenceFCInfo->args[0].value = CStringGetTextDatum(modelName);
+    inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
+    inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
+    inferenceFCInfo->args[3].value = Int32GetDatum(batch_size);
+    inferenceFCInfo->args[4].value = Int32GetDatum(batch_num);
+    inferenceFCInfo->args[5].value = Int32GetDatum(nfeat);
+    inferenceFCInfo->args[6].value = PointerGetDatum(columnArray);
 
-        trainingFCInfo->args[0].value = CStringGetTextDatum(columns);
-        trainingFCInfo->args[1].value = CStringGetTextDatum(table);
-        trainingFCInfo->args[2].value = CStringGetTextDatum(whereClause);
-        trainingFCInfo->args[3].value = CStringGetTextDatum("/code/neurdb-dev/contrib/nr/pysrc/config.ini");
+    inferenceFCInfo->args[0].isnull = false;
+    inferenceFCInfo->args[1].isnull = false;
+    inferenceFCInfo->args[2].isnull = false;
+    inferenceFCInfo->args[3].isnull = false;
+    inferenceFCInfo->args[4].isnull = false;
+    inferenceFCInfo->args[5].isnull = false;
+    inferenceFCInfo->args[6].isnull = false;
 
-        trainingFCInfo->args[0].isnull = false;
-        trainingFCInfo->args[1].isnull = false;
-        trainingFCInfo->args[2].isnull = false;
-        trainingFCInfo->args[3].isnull = false;
-
-        trainingResult = FunctionCallInvoke(trainingFCInfo);
-
-        if (!trainingFCInfo->isnull) {
-            text *resultText = DatumGetTextP(trainingResult);
-            char *resultCString = text_to_cstring(resultText);
-            pfree(resultCString);
-        } else {
-            elog(INFO, "Result is NULL");
-        }
+    inferenceResult = FunctionCallInvoke(inferenceFCInfo);
+    if (!inferenceFCInfo->isnull) {
+        text *resultText = DatumGetTextP(inferenceResult);
+        char *resultCString = text_to_cstring(resultText);
+        elog(INFO, "Inference result: %s", resultCString);
+        pfree(resultCString);
     } else {
-        // model found, make a prediction
-        elog(INFO, "Model found, making prediction");
-
-        Oid inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 4, inferenceArgTypes, false);
-        if (!OidIsValid(inferenceFuncOid)) {
-            elog(ERROR, "Function %s not found", inferenceFuncName);
-            return;
-        }
-
-        fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
-        InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 4, InvalidOid, NULL, NULL);
-
-        inferenceFCInfo->args[0].value = CStringGetTextDatum(modelName);
-        inferenceFCInfo->args[1].value = Int32GetDatum(100);        // change inference batch size here
-        inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
-        inferenceFCInfo->args[3].value = CStringGetTextDatum(columns);
-
-        inferenceFCInfo->args[0].isnull = false;
-        inferenceFCInfo->args[1].isnull = false;
-        inferenceFCInfo->args[2].isnull = false;
-        inferenceFCInfo->args[3].isnull = false;
-
-        inferenceResult = FunctionCallInvoke(inferenceFCInfo);
-
-        if (!inferenceFCInfo->isnull) {
-            text *resultText = DatumGetTextP(inferenceResult);
-            char *resultCString = text_to_cstring(resultText);
-            elog(INFO, "Inference result: %s", resultCString);
-            pfree(resultCString);
-        } else {
-            elog(INFO, "Inference result is NULL");
-        }
+        elog(INFO, "Inference result is NULL");
     }
 }
 
