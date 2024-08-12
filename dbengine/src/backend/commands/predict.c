@@ -124,7 +124,7 @@ ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereCl
     ListCell *o_target;
     StringInfoData columns;
     char *tableName = NULL;
-    char *whereClause = NULL;
+    char *whereClause = "<DEPRECATED>";
 
     elog(DEBUG1, "Starting ExecPredictStmt");
     initStringInfo(&columns);
@@ -169,13 +169,13 @@ ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereCl
     }
 
     /* Convert whereClause to string */
-    if (stmt->whereClause != NULL) {
-        whereClause = nodeToString(stmt->whereClause);
-        elog(DEBUG1, "Extracted where clause: %s", whereClause);
-    } else {
-        elog(DEBUG1, "No where clause provided");
-        whereClause = "";
-    }
+    // if (stmt->whereClause != NULL) {
+    //     whereClause = nodeToString(stmt->whereClause);
+    //     elog(DEBUG1, "Extracted where clause: %s", whereClause);
+    // } else {
+    //     elog(DEBUG1, "No where clause provided");
+    //     whereClause = "";
+    // }
 
     /* Execute the UDF with extracted columns, table name, and where clause */
     elog(DEBUG1, "Executing UDF with columns: %s, table: %s, whereClause: %s", columns.data, tableName, whereClause);
