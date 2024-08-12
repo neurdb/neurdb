@@ -107,7 +107,7 @@ RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
 # Install Python packages
 USER postgres
 COPY aiengine/runtime/requirements.txt /usr/local/bin/requirements.txt
-RUN pip install -r /usr/local/bin/requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
+RUN pip install -r /usr/local/bin/requirements.txt --extra-index-url https://download.pytorch.org/whl/cu113
 
 # Copy the build script into the container
 USER root
