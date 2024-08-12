@@ -18,12 +18,12 @@ const uint32_t timeout_choices[10] = {1, 4, 8, 16, 64, 128, 256, 512, 1024, 0};
 // OP, STEP, DEP, REQ, GRANTED
 const uint32_t feature_bits[] = {1, 3, 2, 2, 2};
 
-inline uint32_t minUInt32(uint32_t x, uint32_t y) {
+uint32_t minUInt32(uint32_t x, uint32_t y) {
 if (x < y) return x;
 return y;
 }
 
-inline uint32_t encode_tx_state() {
+uint32_t encode_tx_state() {
     uint32_t res = 0, i = 0;
     Assert(RLState->op >= 0 && RLState->op <= 1);
     Assert(RLState->n_r >= 0);

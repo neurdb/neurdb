@@ -660,8 +660,9 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 				json_object_constructor_null_clause_opt
 				json_array_constructor_null_clause_opt
 
-%type <node>	neurdb_target neurdb_from
-%type <boolean> opt_allow_train
+%type <node>	neurdb_target neurdb_from opt_neurdb_train_on opt_neurdb_with opt_neurdb_values
+%type <list> 	neurdb_train_on_columns
+/* %type <boolean> opt_allow_train */
 
 /*
  * Non-keyword token types.  These are hard-wired into the "flex" lexer.
@@ -16944,31 +16945,65 @@ NeurDBPredictStmt:
 				}
 		;
 
-neurdb_target: target_list neurdb_from opt_allow_train
+neurdb_target: target_list 
+			neurdb_from 
+			/*opt_allow_train*/
+			opt_neurdb_train_on
+			opt_neurdb_values
 				{
 					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $2;
 					n->targetList = $1;
-					n->allowTrain = $3;
+					/*n->allowTrain = $3;*/
+					n->trainOnSpec = $3;
+					n->values = $4;
 					$$ = (Node *) n;
 				}
 		;
 
+
+/*
 opt_allow_train:
 			TRAIN IF_P NOT EXISTS					{ $$ = true; }
-			| /*EMPTY*/								{ $$ = false; }
+			|  										{ $$ = false; }
 		;
+*/
 
 neurdb_from:
 			FROM from_list
-			where_clause
-			group_clause having_clause window_clause
-			opt_sort_clause opt_select_limit opt_for_locking_clause
+			/* where_clause */
+			/* group_clause having_clause window_clause */
+			/* opt_sort_clause opt_select_limit opt_for_locking_clause */
 				{
 					NeurDBPredictStmt *n = makeNode(NeurDBPredictStmt);
 					n->fromClause = $2;
-					n->whereClause = $3;
+					//n->whereClause = $3;
 					$$ = (Node *) n;
 				}
+		;
+
+opt_neurdb_train_on:
+			TRAIN ON neurdb_train_on_columns opt_neurdb_with
+				{
+					NeurDBTrainOnSpec *n = makeNode(NeurDBTrainOnSpec);
+					n->trainOn = $2;
+					n->trainOnWith = $3;
+					$$ = (Node *) n;
+				}
+		;
+
+neurdb_train_on_columns:
+			columnList								{ $$ = $1; }
+			| '*'									{ $$ = list_make1(makeNode(A_Star)); }
+		;
+
+opt_neurdb_with:
+			WITH a_expr								{ $$ = $2; }
+			| /*EMPTY*/								{ $$ = NULL; }
+		;
+
+opt_neurdb_values:
+			values_clause							{ $$ = $1; }
+			| /*EMPTY*/								{ $$ = NULL; }
 		;
 
 /*
