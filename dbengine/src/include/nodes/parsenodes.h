@@ -4052,22 +4052,37 @@ typedef struct DropSubscriptionStmt
  * NEURDB
 */
 
-typedef enum PredictType
+typedef struct NeurDBTrainOnSpec
 {
-	PREDICT_CLASS,				/* Classification prediction. */
-	PREDICT_VALUE				/* Value prediction. */
-}			PredictType;
+  NodeTag 		type;      /* Node type identifier */
+  
+  List 			*trainOn;     /* Columns used to train the model */
+  Node 			*trainOnWith; /* Filtering data. Same as WHERE clause before (and that in
+                        SELECT) */
+} NeurDBTrainOnSpec;
 
-typedef struct NeurDBPredictStmt
+typedef enum PredictType 
 {
-	NodeTag		type;			/* Node type identifier */
-	PredictType kind;			/* Task type (classification or value
-								 * prediction) */
-	List	   *targetList;		/* A list of targets (columns) for the
-								 * prediction */
-	List	   *fromClause;		/* A list of tables involved in the prediction */
-	Node	   *whereClause;	/* The WHERE clause for filtering data */
-	bool		allowTrain;	/* Let DB train a model if it does not exist? */
-}			NeurDBPredictStmt;
+  PREDICT_CLASS, /* Classification prediction. */
+  PREDICT_VALUE  /* Value prediction. */
+} PredictType;
+
+typedef struct NeurDBPredictStmt 
+{
+  	NodeTag 	type;      /* Node type identifier */
+
+  	PredictType kind;  /* Task type (classification or value
+                      * prediction) */
+  	List 		*targetList;  /* A list of targets (columns) for the
+                      * prediction */
+  	List 		*fromClause;  /* A list of tables involved in the prediction */
+  	Node 		*trainOnSpec;     /* Sepc for the TRAIN ON syntax */
+  	SelectStmt 	*values;    /* Values (following definition of 'values_clause' symbol) */
+} NeurDBPredictStmt;
 
 #endif							/* PARSENODES_H */
+
+#if 0
+Node *whereClause; /* The WHERE clause for filtering data */
+bool allowTrain;   /* Let DB train a model if it does not exist? */
+#endif
