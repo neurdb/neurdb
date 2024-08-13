@@ -24,6 +24,9 @@ void* send_train_task(void *arg) {
     const int train_batch_num = info->train_batch_num;
     const int eva_batch_num = info->eva_batch_num;
     const int test_batch_num = info->test_batch_num;
+    const char *features = info->features;
+    const char *target = info->target;
+
     curl_global_init(CURL_GLOBAL_ALL);
     CURL *curl = curl_easy_init();
 
@@ -82,6 +85,16 @@ void* send_train_task(void *arg) {
         char test_batch_num_str[10];
         snprintf(test_batch_num_str, sizeof(test_batch_num_str), "%d", test_batch_num);
         curl_mime_data(field, test_batch_num_str, CURL_ZERO_TERMINATED);
+
+        // Add features field
+        field = curl_mime_addpart(form);
+        curl_mime_name(field, "features");
+        curl_mime_data(field, features, CURL_ZERO_TERMINATED);
+
+        // Add target field
+        field = curl_mime_addpart(form);
+        curl_mime_name(field, "target");
+        curl_mime_data(field, target, CURL_ZERO_TERMINATED);
 
         // Set the URL and form
         curl_easy_setopt(curl, CURLOPT_URL, url);

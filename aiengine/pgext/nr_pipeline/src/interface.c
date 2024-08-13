@@ -23,6 +23,7 @@ PG_FUNCTION_INFO_V1(nr_finetune);
 
 // ******** Helper functions ********
 char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
+char *char_array2str(char **char_array, int n_elements);
 
 
 /**
@@ -296,6 +297,8 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     training_info->train_batch_num = n_batches_train;
     training_info->eva_batch_num = n_batches_evaluate;
     training_info->test_batch_num = n_batches_test;
+    training_info->features = char_array2str(feature_names, n_features);
+    training_info->target = target;
     pthread_create(&train_thread, NULL, send_train_task, (void *)training_info);
 
     // send_train_task(
@@ -659,4 +662,23 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out) {
     pfree(elements);
     pfree(nulls);
     return char_array;
+}
+
+
+/**
+ * Convert a char array into char*, separated by ','
+ * @param char_array char** The char array
+ * @param n_elements int The number of elements in the array
+ * @return
+ */
+char* char_array2str(char **char_array, int n_elements) {
+    StringInfoData str;
+    initStringInfo(&str);
+    for (int i = 0; i < n_elements; i++) {
+        appendStringInfo(&str, "%s", char_array[i]);
+        if (i < n_elements - 1) {
+            appendStringInfoString(&str, ",");
+        }
+    }
+    return str.data;
 }
