@@ -48,3 +48,6 @@ class NeurDBModelHandler:
         except FileNotFoundError:
             return False
         return True
+
+    def register_model(self, model_id: int, table_name: str, features: list[str], target: str):
+        self._conn.register_model(model_id, table_name, features, [target])

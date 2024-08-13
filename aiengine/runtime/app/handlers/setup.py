@@ -118,3 +118,10 @@ class Setup:
 
         except Exception:
             return [], str(traceback.format_exc())
+
+    def register_model(self, model_id: int, model_name: str, features: List[str], target: str):
+        try:
+            self._db.register_model(model_id, model_name, features, target)
+            return None
+        except Exception:
+            return str(traceback.format_exc())

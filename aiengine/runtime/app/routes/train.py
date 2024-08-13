@@ -22,6 +22,9 @@ def model_train():
         eva_batch_num = int(params.get("eva_batch_num"))
         test_batch_num = int(params.get("test_batch_num"))
 
+        features = params.get("features")
+        target = params.get("target")   # always one target
+
         config_args = current_app.config["config_args"]
         db_connector = current_app.config["db_connector"]
 
@@ -45,6 +48,9 @@ def model_train():
             train_batch_num=train_batch_num,
             eva_batch_num=eva_batch_num,
             test_batch_num=test_batch_num,
+            table_name=dataset_name,
+            features=features.split(","),
+            target=target,
         )
         logger.info(f"Training completed successfully with model_id: {model_id}")
         return jsonify({"model_id": model_id})

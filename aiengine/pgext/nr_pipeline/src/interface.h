@@ -13,6 +13,8 @@ typedef struct {
     int train_batch_num;
     int eva_batch_num;
     int test_batch_num;
+    char *features;
+    char *target;
 } TrainingInfo;
 
 typedef struct {
