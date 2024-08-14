@@ -126,8 +126,24 @@ ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereCl
     char *tableName = NULL;
     char *whereClause = "<DEPRECATED>";
 
+
     elog(DEBUG1, "Starting ExecPredictStmt");
     initStringInfo(&columns);
+
+    NeurDBTrainOnSpec *trainOnSpec = stmt->trainOnSpec;
+    foreach(o_target, trainOnSpec->trainOn)
+	{
+		Node *columnName = (Node *) lfirst(o_target);
+        if (columnName->type == T_A_Star)
+        {
+            elog(DEBUG1, "Train on all columns");
+            break;
+        }
+        else
+        {
+            elog(DEBUG1, "Train on a column: %s", strVal(columnName));
+        }
+	}
 
     /* Extract the column names from targetList and combine them into a single string */
     foreach(o_target, stmt->targetList) {

@@ -16985,8 +16985,8 @@ opt_neurdb_train_on:
 			TRAIN ON neurdb_train_on_columns opt_neurdb_with
 				{
 					NeurDBTrainOnSpec *n = makeNode(NeurDBTrainOnSpec);
-					n->trainOn = $2;
-					n->trainOnWith = $3;
+					n->trainOn = $3;
+					n->trainOnWith = $4;
 					$$ = (Node *) n;
 				}
 		;
