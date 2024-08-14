@@ -45,71 +45,146 @@ split_columns(const char *columns) {
 * needs to be revamped to be more general.
 */
 void
-exec_udf(const char *columns, const char *table, const char *whereClause) {
-    // initialize function call infos
-    FmgrInfo inferenceFmgrInfo;
-    LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS); // fcinfo for inference function
+exec_udf(const char *table, const char *trainColumns, const char *targetColumn, const char *whereClause) {
+    // lookup function call infos
+    FmgrInfo modelLookupFmgrInfo;
+    LOCAL_FCINFO(modelLookupFCInfo, FUNC_MAX_ARGS); // fcinfo for lookup function
+    Datum modelLookupResult;
+    Oid modelLookupArgTypes[3] = {TEXTOID, TEXTARRAYOID, TEXTOID};
+    char modelLookupFuncName[] = "nr_model_exist";
 
-    // TODO: These parameters should be passed in as arguments, hard-coded for now
-    char modelName[] = "armnet"; // name of the model
-    int modelId = 1;
-    int batch_size = 4096;
-    int batch_num = 80;
-    int nfeat = 10;
-
-    Datum inferenceResult;
-    Oid inferenceArgTypes[7] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID};
-    char inferenceFuncName[] = "nr_inference";
-
-    if (columns == NULL || table == NULL || whereClause == NULL) {
-        elog(ERROR, "Null argument passed to exec_udf");
+    Oid modelLookupFuncOid = LookupFuncName(list_make1(makeString(modelLookupFuncName)), 3, modelLookupArgTypes, false);
+    if (!OidIsValid(modelLookupFuncOid)) {
+        elog(ERROR, "Function %s not found", modelLookupFuncName);
         return;
     }
 
-    Oid inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
-    if (!OidIsValid(inferenceFuncOid)) {
-        elog(ERROR, "Function %s not found", inferenceFuncName);
-        return;
-    }
-
-    fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
-    InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 4, InvalidOid, NULL, NULL);
+    fmgr_info(modelLookupFuncOid, &modelLookupFmgrInfo);
+    InitFunctionCallInfoData(*modelLookupFCInfo, &modelLookupFmgrInfo, 3, InvalidOid, NULL, NULL);
 
     // split columns into an array of text
-    List *columnList = split_columns(columns);
-    int ncolumns = list_length(columnList);
+    List *trainColumnsList = split_columns(trainColumns);
+    int nTrainColumns = list_length(trainColumnsList);
 
-    Datum *columnDatums = (Datum *) palloc(sizeof(Datum) * ncolumns);
-    for (int i = 0; i < ncolumns; i++) {
-        columnDatums[i] = CStringGetTextDatum(strVal(list_nth(columnList, i)));
+    Datum *trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
+    for (int i = 0; i < nTrainColumns; i++) {
+        trainColumnDatums[i] = CStringGetTextDatum(strVal(list_nth(trainColumnsList, i)));
+    }
+    ArrayType *trainColumnArray = construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
+
+    modelLookupFCInfo->args[0].value = CStringGetTextDatum(table);
+    modelLookupFCInfo->args[1].value = PointerGetDatum(trainColumnArray);
+    modelLookupFCInfo->args[2].value = CStringGetTextDatum(targetColumn);
+
+    modelLookupResult = FunctionCallInvoke(modelLookupFCInfo);
+    int modelId = 0;
+    // modelLookupResult is a boolean
+    if (!modelLookupFCInfo->isnull) {
+        modelId = DatumGetInt32(modelLookupResult);
     }
 
-    ArrayType *columnArray = construct_array(columnDatums, ncolumns, TEXTOID, -1, false, 'i');
+    if (modelId == 0) {
+        // model does not exist, training
+        FmgrInfo trainingFmgrInfo;
+        LOCAL_FCINFO(trainingFCInfo, FUNC_MAX_ARGS); // fcinfo for training function
 
-    inferenceFCInfo->args[0].value = CStringGetTextDatum(modelName);
-    inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
-    inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
-    inferenceFCInfo->args[3].value = Int32GetDatum(batch_size);
-    inferenceFCInfo->args[4].value = Int32GetDatum(batch_num);
-    inferenceFCInfo->args[5].value = Int32GetDatum(nfeat);
-    inferenceFCInfo->args[6].value = PointerGetDatum(columnArray);
+        // TODO: These parameters should be passed in as arguments, hard-coded for now
+        char modelName[] = "armnet";
+        int batch_size = 4096;
+        int batch_num = 80;
+        int nfeat = 10;
+        int epoch = 1;
 
-    inferenceFCInfo->args[0].isnull = false;
-    inferenceFCInfo->args[1].isnull = false;
-    inferenceFCInfo->args[2].isnull = false;
-    inferenceFCInfo->args[3].isnull = false;
-    inferenceFCInfo->args[4].isnull = false;
-    inferenceFCInfo->args[5].isnull = false;
-    inferenceFCInfo->args[6].isnull = false;
+        Datum trainingResult;
 
-    inferenceResult = FunctionCallInvoke(inferenceFCInfo);
-    if (!inferenceFCInfo->isnull) {
-        text *resultText = DatumGetTextP(inferenceResult);
-        char *resultCString = text_to_cstring(resultText);
-        elog(INFO, "Inference result: %s", resultCString);
-        pfree(resultCString);
+        Oid trainingArgTypes[8] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID};
+        char trainingFuncName[] = "nr_train";
+
+        Oid trainingFuncOid = LookupFuncName(list_make1(makeString(trainingFuncName)), 8, trainingArgTypes, false);
+        if (!OidIsValid(trainingFuncOid)) {
+            elog(ERROR, "Function %s not found", trainingFuncName);
+            return;
+        }
+
+        fmgr_info(trainingFuncOid, &trainingFmgrInfo);
+        InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, 8, InvalidOid, NULL, NULL);
+
+        trainingFCInfo->args[0].value = CStringGetTextDatum(modelName);
+        trainingFCInfo->args[1].value = CStringGetTextDatum(table);
+        trainingFCInfo->args[2].value = Int32GetDatum(batch_size);
+        trainingFCInfo->args[3].value = Int32GetDatum(batch_num);
+        trainingFCInfo->args[4].value = Int32GetDatum(epoch);
+        trainingFCInfo->args[5].value = Int32GetDatum(nfeat);
+        trainingFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
+        trainingFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
+
+        trainingFCInfo->args[0].isnull = false;
+        trainingFCInfo->args[1].isnull = false;
+        trainingFCInfo->args[2].isnull = false;
+        trainingFCInfo->args[3].isnull = false;
+        trainingFCInfo->args[4].isnull = false;
+        trainingFCInfo->args[5].isnull = false;
+        trainingFCInfo->args[6].isnull = false;
+        trainingFCInfo->args[7].isnull = false;
+
+        trainingResult = FunctionCallInvoke(trainingFCInfo);
+        if (!trainingFCInfo->isnull) {
+            text *resultText = DatumGetTextP(trainingResult);
+            char *resultCString = text_to_cstring(resultText);
+            elog(INFO, "Training result: %s", resultCString);
+            pfree(resultCString);
+        } else {
+            elog(INFO, "Training result is NULL");
+        }
     } else {
-        elog(INFO, "Inference result is NULL");
+        // inference
+        FmgrInfo inferenceFmgrInfo;
+        LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS); // fcinfo for inference function
+
+        // TODO: These parameters should be passed in as arguments, hard-coded for now
+        char modelName[] = "armnet";
+        int batch_size = 4096;
+        int batch_num = 80;
+        int nfeat = 10;
+
+        Datum inferenceResult;
+        Oid inferenceArgTypes[7] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID};
+        char inferenceFuncName[] = "nr_inference";
+
+        Oid inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
+        if (!OidIsValid(inferenceFuncOid)) {
+            elog(ERROR, "Function %s not found", inferenceFuncName);
+            return;
+        }
+
+        fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
+        InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 4, InvalidOid, NULL, NULL);
+
+        inferenceFCInfo->args[0].value = CStringGetTextDatum(modelName);
+        inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
+        inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
+        inferenceFCInfo->args[3].value = Int32GetDatum(batch_size);
+        inferenceFCInfo->args[4].value = Int32GetDatum(batch_num);
+        inferenceFCInfo->args[5].value = Int32GetDatum(nfeat);
+        inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
+
+        inferenceFCInfo->args[0].isnull = false;
+        inferenceFCInfo->args[1].isnull = false;
+        inferenceFCInfo->args[2].isnull = false;
+        inferenceFCInfo->args[3].isnull = false;
+        inferenceFCInfo->args[4].isnull = false;
+        inferenceFCInfo->args[5].isnull = false;
+        inferenceFCInfo->args[6].isnull = false;
+
+        inferenceResult = FunctionCallInvoke(inferenceFCInfo);
+        if (!inferenceFCInfo->isnull) {
+            text *resultText = DatumGetTextP(inferenceResult);
+            char *resultCString = text_to_cstring(resultText);
+            elog(INFO, "Inference result: %s", resultCString);
+            pfree(resultCString);
+        } else {
+            elog(INFO, "Inference result is NULL");
+        }
     }
 }
 
@@ -120,59 +195,44 @@ exec_udf(const char *columns, const char *table, const char *whereClause) {
 */
 ObjectAddress
 ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereClauseString) {
-    List *p_target = NIL; /* A list of targets (columns) for the prediction */
-    ListCell *o_target;
-    StringInfoData columns;
+    ListCell *cell;
+    StringInfoData targetColumn;
+    StringInfoData trainOnColumns;
     char *tableName = NULL;
     char *whereClause = "<DEPRECATED>";
 
-
-    elog(DEBUG1, "Starting ExecPredictStmt");
-    initStringInfo(&columns);
+    initStringInfo(&targetColumn);
+    initStringInfo(&trainOnColumns);
 
     NeurDBTrainOnSpec *trainOnSpec = stmt->trainOnSpec;
-    foreach(o_target, trainOnSpec->trainOn)
-	{
-		Node *columnName = (Node *) lfirst(o_target);
-        if (columnName->type == T_A_Star)
-        {
+    foreach(cell, trainOnSpec->trainOn) {
+		Node *columnName = (Node *) lfirst(cell);
+        if (columnName->type == T_A_Star) {
             elog(DEBUG1, "Train on all columns");
             break;
         }
-        else
-        {
-            elog(DEBUG1, "Train on a column: %s", strVal(columnName));
-        }
+        elog(DEBUG1, "Train on a column: %s", strVal(columnName));
 	}
 
     /* Extract the column names from targetList and combine them into a single string */
-    foreach(o_target, stmt->targetList) {
-        ResTarget *res = (ResTarget *) lfirst(o_target);
-
+    foreach(cell, stmt->targetList) {
+        ResTarget *res = (ResTarget *) lfirst(cell);
         if (res == NULL || res->val == NULL) {
             elog(ERROR, "Null target column in statement");
             return InvalidObjectAddress;
         }
         char *colname = FigureColname(res->val);
-
         if (colname == NULL) {
             elog(ERROR, "Null column name in target list");
             return InvalidObjectAddress;
         }
-        appendStringInfo(&columns, "%s,", colname);
+        appendStringInfo(&targetColumn, "%s", colname);
     }
-
-    if (columns.len > 0) {
-        //Remove the trailing comma
-        columns.data[columns.len - 1] = '\0';
-    }
-
-    elog(DEBUG1, "Collected columns: %s", columns.data);
+    targetColumn.data[targetColumn.len] = '\0';
 
     /* Extract the table name from fromClause */
     if (stmt->fromClause != NIL) {
         RangeVar *rv = (RangeVar *) linitial(stmt->fromClause);
-
         if (rv == NULL) {
             elog(ERROR, "Null range variable in from clause");
             return InvalidObjectAddress;
@@ -184,41 +244,24 @@ ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereCl
         return InvalidObjectAddress;
     }
 
-    /* Convert whereClause to string */
-    // if (stmt->whereClause != NULL) {
-    //     whereClause = nodeToString(stmt->whereClause);
-    //     elog(DEBUG1, "Extracted where clause: %s", whereClause);
-    // } else {
-    //     elog(DEBUG1, "No where clause provided");
-    //     whereClause = "";
-    // }
+    /* Extract the TrainOnSpec */
+    if (stmt->trainOnSpec != NULL) {
+        NeurDBTrainOnSpec *trainOnSpec = (NeurDBTrainOnSpec *) stmt->trainOnSpec;
+        foreach(cell, trainOnSpec->trainOn) {
+            Node *columnName = (Node *) lfirst(cell);
+            if (columnName->type == T_A_Star) {
+                elog(DEBUG1, "Train on all columns");
+                break;
+            }
+            appendStringInfo(&trainOnColumns, "%s,", strVal(columnName));
+        }
+    } else {
+        elog(DEBUG1, "No TrainOnSpec provided");
+    }
+    trainOnColumns.data[trainOnColumns.len] = '\0';
 
     /* Execute the UDF with extracted columns, table name, and where clause */
-    elog(DEBUG1, "Executing UDF with columns: %s, table: %s, whereClause: %s", columns.data, tableName, whereClause);
-    exec_udf(columns.data, tableName, whereClause);
-
-    /* Free the list of targets */
-    list_free(p_target);
+    exec_udf(tableName, trainOnColumns.data, targetColumn.data, whereClause);
 
     return InvalidObjectAddress;
-
-    /**
-     * TODO:
-     * It looks like calling stmt-> kind will cause memory leak. So I commented
-     * it out for now. We will solve this issue later.
-     */
-    // switch (stmt->kind)
-    // {
-    // 	case PREDICT_CLASS:
-    // 		elog(ERROR, "PREDICT_CLASS prediction type not implemented: %d", (int) stmt->kind);
-    // 		return InvalidObjectAddress;
-    //
-    // 	case PREDICT_VALUE:
-    // 		elog(ERROR, "PREDICT_VALUE prediction type not implemented: %d", (int) stmt->kind);
-    // 		return InvalidObjectAddress;
-    //
-    // 	default:
-    // 		elog(ERROR, "unrecognized prediction type: %d", (int) stmt->kind);
-    // 		return InvalidObjectAddress;
-    // }
 }

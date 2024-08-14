@@ -31,9 +31,12 @@ find_library(LWS_LIBRARY NAMES websockets)
 # socket.io
 find_library(SIO_CLIENT NAMES sioclient)
 
+# openssl
+find_package(OpenSSL REQUIRED)
+
 FILE(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp")
 add_library(nr_preprocessing SHARED ${SOURCES})
-target_link_libraries(nr_preprocessing ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES} ${LWS_LIBRARY} ${SIO_CLIENT})
+target_link_libraries(nr_preprocessing ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES} ${LWS_LIBRARY} ${SIO_CLIENT} OpenSSL::SSL OpenSSL::Crypto)
 
 install(TARGETS nr_preprocessing DESTINATION ${PostgreSQL_LIBDIR})
 install(FILES sql/nr_preprocessing--1.0.0.sql DESTINATION ${PostgreSQL_SHAREDIR}/extension)

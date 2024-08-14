@@ -158,7 +158,7 @@ class NeurDB:
         self.database.create_table(
             "router",
             [
-                "model_id INT PRIMARY KEY",
+                "model_id INT",
                 "table_name TEXT",
                 "feature_columns TEXT",
                 "target_columns TEXT",

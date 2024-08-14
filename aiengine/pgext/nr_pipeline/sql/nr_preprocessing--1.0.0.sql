@@ -21,3 +21,11 @@ AS 'MODULE_PATHNAME',
 'nr_finetune'
     LANGUAGE C STRICT
                VOLATILE;
+
+
+CREATE FUNCTION nr_model_lookup(table_name text, features text[], target text)
+    RETURNS INT
+AS 'MODULE_PATHNAME',
+'nr_model_lookup'
+    LANGUAGE C STRICT
+               VOLATILE;
