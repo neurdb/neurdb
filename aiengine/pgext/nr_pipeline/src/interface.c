@@ -11,6 +11,7 @@
 #include "utils/network/socketio.h"
 #include "utils/network/socketio_nr.h"
 #include "utils/metric/time_metric.h"
+#include "utils/hash/md5.h"
 
 PG_MODULE_MAGIC;
 
@@ -23,6 +24,7 @@ PG_FUNCTION_INFO_V1(nr_finetune);
 
 // ******** Helper functions ********
 char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
+
 char *char_array2str(char **char_array, int n_elements);
 
 
@@ -103,7 +105,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     inference_info->client_socket_id = socketio_get_socket_id(sio_client);
     inference_info->batch_size = batch_size;
     inference_info->batch_num = n_batches;
-    pthread_create(&inference_thread, NULL, send_inference_task, (void *)inference_info);
+    pthread_create(&inference_thread, NULL, send_inference_task, (void *) inference_info);
 
     resetStringInfo(&query);
     char *cursor_name = "nr_inference_cursor";
@@ -299,7 +301,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     training_info->test_batch_num = n_batches_test;
     training_info->features = char_array2str(feature_names, n_features);
     training_info->target = target;
-    pthread_create(&train_thread, NULL, send_train_task, (void *)training_info);
+    pthread_create(&train_thread, NULL, send_train_task, (void *) training_info);
 
     // send_train_task(
     //     model_name,
@@ -513,7 +515,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     finetune_info->train_batch_num = n_batches_train;
     finetune_info->eva_batch_num = n_batches_evaluate;
     finetune_info->test_batch_num = n_batches_test;
-    pthread_create(&finetune_thread, NULL, send_finetune_task, (void *)finetune_info);
+    pthread_create(&finetune_thread, NULL, send_finetune_task, (void *) finetune_info);
 
     resetStringInfo(&query);
     char *cursor_name = "nr_finetune_cursor";
@@ -641,6 +643,46 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
 
 
 /**
+* Check if the model exists
+* @param table_name text The name of the table to be used in the inference
+* @param features text[] Columns to be used in the inference
+* @param target text The target column
+*/
+Datum nr_model_lookup(PG_FUNCTION_ARGS) {
+    char *table_name = text_to_cstring(PG_GETARG_TEXT_P(0));
+    ArrayType *features = PG_GETARG_ARRAYTYPE_P(1);
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(2));
+
+    int n_features;
+    char **feature_array = text_array2char_array(features, &n_features);
+    char *hash_features = nr_md5_list(feature_array, n_features); // hashed features
+    char *hash_target = nr_md5_str(target); // hashed target
+
+    StringInfoData query;
+    initStringInfo(&query);
+
+    SPI_connect();
+    appendStringInfo(&query,
+                     "SELECT * FROM router WHERE table_name = '%s' AND feature_columns = '%s' AND target_columns = '%s'",
+                     table_name,
+                     hash_features,
+                     hash_target
+    );
+
+    SPI_execute(query.data, false, 0);
+    if (SPI_processed == 0) {
+        SPI_finish();
+        PG_RETURN_INT32(0);
+    } else {
+        bool is_null;
+        Datum model_id = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &is_null);
+        SPI_finish();
+        PG_RETURN_INT32(DatumGetInt32(model_id));
+    }
+}
+
+
+/**
  * Convert a text array to a char array
  * @param text_array ArrayType * The text array, usually from PG_GETARG_ARRAYTYPE_P
  * @param n_elements_out int * The number of elements in the array
@@ -671,7 +713,7 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out) {
  * @param n_elements int The number of elements in the array
  * @return
  */
-char* char_array2str(char **char_array, int n_elements) {
+char *char_array2str(char **char_array, int n_elements) {
     StringInfoData str;
     initStringInfo(&str);
     for (int i = 0; i < n_elements; i++) {

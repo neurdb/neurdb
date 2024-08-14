@@ -7,17 +7,17 @@ from typing import List
 
 
 def train(
-        model_name: str,
-        training_libsvm: StreamingDataSet,
-        args: argparse.Namespace,
-        db: NeurDBModelHandler,
-        epochs: int,
-        train_batch_num: int,
-        eva_batch_num: int,
-        test_batch_num: int,
-        table_name: str,
-        features: List[str],
-        target: str,
+    model_name: str,
+    training_libsvm: StreamingDataSet,
+    args: argparse.Namespace,
+    db: NeurDBModelHandler,
+    epochs: int,
+    train_batch_num: int,
+    eva_batch_num: int,
+    test_batch_num: int,
+    table_name: str,
+    features: List[str],
+    target: str,
 ) -> int:
     s = Setup(model_name, training_libsvm, args, db)
 
