@@ -81,4 +81,12 @@ Datum nr_train(PG_FUNCTION_ARGS);
  */
 Datum nr_finetune(PG_FUNCTION_ARGS);
 
+/**
+* Check if the model exists
+* @param table_name text The name of the table to be used in the inference
+* @param features text[] Columns to be used in the inference
+* @param target text The target column
+*/
+Datum nr_model_lookup(PG_FUNCTION_ARGS);
+
 #endif //INTERFACE_H

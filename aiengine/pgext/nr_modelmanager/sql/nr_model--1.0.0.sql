@@ -15,6 +15,14 @@ CREATE TABLE layer
     layer_data bytea
 );
 
+CREATE TABLE router
+(
+    model_id int REFERENCES model(model_id),
+    table_name text,
+    feature_columns text,
+    target_columns text
+);
+
 -- save and load functions
 -- @see {src/access/model_sl.h}
 -- CREATE FUNCTION pgm_register_model(model_name text, model_path text) RETURNS BOOL
