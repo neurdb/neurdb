@@ -51,7 +51,7 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
     LOCAL_FCINFO(modelLookupFCInfo, FUNC_MAX_ARGS); // fcinfo for lookup function
     Datum modelLookupResult;
     Oid modelLookupArgTypes[3] = {TEXTOID, TEXTARRAYOID, TEXTOID};
-    char modelLookupFuncName[] = "nr_model_exist";
+    char modelLookupFuncName[] = "nr_model_lookup";
 
     Oid modelLookupFuncOid = LookupFuncName(list_make1(makeString(modelLookupFuncName)), 3, modelLookupArgTypes, false);
     if (!OidIsValid(modelLookupFuncOid)) {
@@ -204,16 +204,6 @@ ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereCl
     initStringInfo(&targetColumn);
     initStringInfo(&trainOnColumns);
 
-    NeurDBTrainOnSpec *trainOnSpec = stmt->trainOnSpec;
-    foreach(cell, trainOnSpec->trainOn) {
-		Node *columnName = (Node *) lfirst(cell);
-        if (columnName->type == T_A_Star) {
-            elog(DEBUG1, "Train on all columns");
-            break;
-        }
-        elog(DEBUG1, "Train on a column: %s", strVal(columnName));
-	}
-
     /* Extract the column names from targetList and combine them into a single string */
     foreach(cell, stmt->targetList) {
         ResTarget *res = (ResTarget *) lfirst(cell);
@@ -258,7 +248,7 @@ ExecPredictStmt(NeurDBPredictStmt *stmt, ParseState *pstate, const char *whereCl
     } else {
         elog(DEBUG1, "No TrainOnSpec provided");
     }
-    trainOnColumns.data[trainOnColumns.len] = '\0';
+    trainOnColumns.data[trainOnColumns.len - 1] = '\0';
 
     /* Execute the UDF with extracted columns, table name, and where clause */
     exec_udf(tableName, trainOnColumns.data, targetColumn.data, whereClause);
