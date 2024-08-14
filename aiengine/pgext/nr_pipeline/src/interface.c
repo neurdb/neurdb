@@ -21,6 +21,8 @@ PG_FUNCTION_INFO_V1(nr_train);
 
 PG_FUNCTION_INFO_V1(nr_finetune);
 
+PG_FUNCTION_INFO_V1(nr_model_lookup);
+
 
 // ******** Helper functions ********
 char **text_array2char_array(ArrayType *text_array, int *n_elements_out);

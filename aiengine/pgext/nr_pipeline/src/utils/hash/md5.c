@@ -48,7 +48,7 @@ char *nr_md5_str(const char *string) {
 }
 
 
-char *nr_md5_list(const char **str_list, int list_size) {
+char *nr_md5_list(char **str_list, int list_size) {
     // get the total length of the concatenated string
     int total_length = 0;
     for (int i = 0; i < list_size; i++) {

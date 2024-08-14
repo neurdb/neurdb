@@ -16,6 +16,6 @@ char *nr_md5_str(const char *string);
  * @param list_size The size of the list
  * @return
  */
-char *nr_md5_list(const char **str_list, int list_size);
+char *nr_md5_list(char **str_list, int list_size);
 
 #endif //MD5_H
