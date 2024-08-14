@@ -17,6 +17,7 @@ docker build -t neurdbimg .
 docker run -d --name neurdb_dev \
     -v $(pwd):/code/neurdb-dev \
     -p 5432:5432 \
+    --cap-add=SYS_PTRACE \
     --gpus all \
     neurdbimg
 
