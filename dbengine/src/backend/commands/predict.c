@@ -92,7 +92,7 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
         char modelName[] = "armnet";
         int batch_size = 4096;
         int batch_num = 80;
-        int nfeat = 10;
+        int nfeat = 5500;
         int epoch = 1;
 
         Datum trainingResult;
@@ -143,9 +143,9 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
 
         // TODO: These parameters should be passed in as arguments, hard-coded for now
         char modelName[] = "armnet";
-        int batch_size = 4096;
-        int batch_num = 80;
-        int nfeat = 10;
+        int batch_size = 100;
+        int batch_num = 4;
+        int nfeat = 5500;
 
         Datum inferenceResult;
         Oid inferenceArgTypes[7] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID};
@@ -158,7 +158,7 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
         }
 
         fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
-        InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 4, InvalidOid, NULL, NULL);
+        InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 7, InvalidOid, NULL, NULL);
 
         inferenceFCInfo->args[0].value = CStringGetTextDatum(modelName);
         inferenceFCInfo->args[1].value = Int32GetDatum(modelId);

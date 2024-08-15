@@ -1,6 +1,5 @@
 #include "interface.h"
 
-#include <unistd.h>
 #include <utils/builtins.h>
 #include <utils/array.h>
 #include <executor/spi.h>
@@ -73,7 +72,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 
     while (socketio_get_socket_id(sio_client) == 0) {
         // wait for the connection
-        usleep(10000); // sleep for 10ms
+        pg_usleep(10000); // sleep for 10ms
     }
 
     // prepare the query
@@ -262,7 +261,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
     while (socketio_get_socket_id(sio_client) == 0) {
         // wait for the connection
-        usleep(10000); // sleep for 10ms
+        pg_usleep(10000); // sleep for 10ms
     }
 
     // prepare the query
@@ -481,7 +480,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
 
     while (socketio_get_socket_id(sio_client) == 0) {
         // wait for the connection
-        usleep(10000); // sleep for 10ms
+        pg_usleep(10000); // sleep for 10ms
     }
 
     // prepare the query
