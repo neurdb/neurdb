@@ -140,16 +140,28 @@ fine-tune task:
 
 Send a batch of data to the Python server. `stage` can be `train`, `eval`, or `test`.
 
-  ```json
-  {
-      "version": 1,
-      "event": "batch_data",
-      "sessionId": "client_socket_id",
-      "batchId": 0,
-      "stage": "train",
-      "byte": "data in byte"
-  }
-  ```
+```json
+{
+  "version": 1,
+  "event": "batch_data",
+  "sessionId": "client_socket_id",
+  "batchId": 0,
+  "stage": "train",
+  "byte": "data in byte"
+}
+```
+
+#### ack_result
+
+Acknowledge the result.
+
+```json
+{
+    "version": 1,
+    "event": "ack_result",
+    "sessionId": "client_socket_id"
+}
+```
 
 ### Python Server -> DB Client
 
@@ -174,7 +186,12 @@ Request data from the DB client.
 When the task ends, send result to DB client.
 
 ```json
-// TODO
+{
+    "version": 1,
+    "event": "result",
+    "sessionId": "client_socket_id",
+    "payload": "object"
+}
 ```
 
 #### ack_connect
