@@ -37,6 +37,7 @@
 #include "catalog/namespace.h"
 #include "catalog/storage.h"
 #include "commands/async.h"
+#include "commands/predict.h"
 #include "commands/tablespace.h"
 #include "commands/trigger.h"
 #include "commands/user.h"
@@ -214,9 +215,9 @@ static const struct config_enum_entry isolation_level_options[] = {
 };
 
 static const struct config_enum_entry cc_strategy_options[] = {
-        {"ssi", LOCK_NONE, false},
-        {"learned", LOCK_LEARNED, false},
-        {NULL, 0}
+	{"ssi", LOCK_NONE, false},
+	{"learned", LOCK_LEARNED, false},
+	{NULL, 0}
 };
 
 static const struct config_enum_entry session_replication_role_options[] = {
@@ -666,6 +667,10 @@ const char *const config_group_names[] =
 {
 	/* UNGROUPED */
 	gettext_noop("Ungrouped"),
+	/* NEURDB_MODEL_OPTIONS */
+	gettext_noop("NeurDB Model Options"),
+	/* NEURDB_RUNTIME_OPTIONS */
+	gettext_noop("NeurDB Runtime Options"),
 	/* FILE_LOCATIONS */
 	gettext_noop("File Locations"),
 	/* CONN_AUTH_SETTINGS */
@@ -2012,6 +2017,58 @@ struct config_bool ConfigureNamesBool[] =
 
 struct config_int ConfigureNamesInt[] =
 {
+	{
+		{"nr_task_batch_size", PGC_USERSET, NEURDB_RUNTIME_OPTIONS,
+			gettext_noop("Sets the used model for ML tasks."),
+			NULL,
+			GUC_EXPLAIN,
+		},
+		&NRTaskBatchSize,
+		4096, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+
+	{
+		{"nr_task_epoch", PGC_USERSET, NEURDB_RUNTIME_OPTIONS,
+			gettext_noop("Sets the number of epoch for ML tasks."),
+			NULL,
+			GUC_EXPLAIN,
+		},
+		&NRTaskEpoch,
+		1, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+
+	/*
+	 * TODO: This may need a better way to set instead of as parameter, since
+	 * it may vary across models
+	 */
+	{
+		{"nr_task_max_features", PGC_USERSET, NEURDB_RUNTIME_OPTIONS,
+			gettext_noop("Sets the maximal features for ML models."),
+			NULL,
+			GUC_EXPLAIN,
+		},
+		&NRTaskEpoch,
+		5500, 0, INT_MAX,
+		NULL, NULL, NULL
+	},
+
+	/*
+	 * TODO: This should be computed from the table statistics (e.g., number
+	 * of rows)
+	 */
+	{
+		{"nr_task_num_batches", PGC_USERSET, NEURDB_RUNTIME_OPTIONS,
+			gettext_noop("Sets the number of batches for ML tasks."),
+			NULL,
+			GUC_EXPLAIN,
+		},
+		&NRTaskEpoch,
+		80, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+
 	{
 		{"archive_timeout", PGC_SIGHUP, WAL_ARCHIVING,
 			gettext_noop("Sets the amount of time to wait before forcing a "
@@ -3802,6 +3859,16 @@ struct config_real ConfigureNamesReal[] =
 struct config_string ConfigureNamesString[] =
 {
 	{
+		{"nr_model_name", PGC_USERSET, NEURDB_MODEL_OPTIONS,
+			gettext_noop("Sets the used model for ML tasks."),
+			NULL,
+		},
+		&NRModelName,
+		"armnet",
+		NULL, NULL, show_archive_command
+	},
+
+	{
 		{"archive_command", PGC_SIGHUP, WAL_ARCHIVING,
 			gettext_noop("Sets the shell command that will be called to archive a WAL file."),
 			gettext_noop("This is used only if \"archive_library\" is not set.")
@@ -4649,28 +4716,28 @@ struct config_enum ConfigureNamesEnum[] =
 		check_transaction_isolation, NULL, NULL
 	},
 
-    {
-        {"default_cc_strategy", PGC_USERSET, CLIENT_CONN_STATEMENT,
-            gettext_noop("Sets the default cc strategy of each new transaction."),
-            NULL
-        },
-        &DefaultXactLockStrategy,
-        LOCK_NONE, cc_strategy_options,
-        NULL, NULL, NULL
-    },
+	{
+		{"default_cc_strategy", PGC_USERSET, CLIENT_CONN_STATEMENT,
+			gettext_noop("Sets the default cc strategy of each new transaction."),
+			NULL
+		},
+		&DefaultXactLockStrategy,
+		LOCK_NONE, cc_strategy_options,
+		NULL, NULL, NULL
+	},
 
-    {
-        {"cc_strategy", PGC_USERSET, CLIENT_CONN_STATEMENT,
-            gettext_noop("Sets the current transaction's cc strategy."),
-            NULL,
-            GUC_NO_RESET_ALL | GUC_NOT_IN_SAMPLE | GUC_DISALLOW_IN_FILE
-        },
-        &XactLockStrategy,
-        LOCK_NONE, cc_strategy_options,
-        NULL, NULL, NULL
-    },
+	{
+		{"cc_strategy", PGC_USERSET, CLIENT_CONN_STATEMENT,
+			gettext_noop("Sets the current transaction's cc strategy."),
+			NULL,
+			GUC_NO_RESET_ALL | GUC_NOT_IN_SAMPLE | GUC_DISALLOW_IN_FILE
+		},
+		&XactLockStrategy,
+		LOCK_NONE, cc_strategy_options,
+		NULL, NULL, NULL
+	},
 
-    {
+	{
 		{"IntervalStyle", PGC_USERSET, CLIENT_CONN_LOCALE,
 			gettext_noop("Sets the display format for interval values."),
 			NULL,
