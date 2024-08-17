@@ -3865,7 +3865,7 @@ struct config_string ConfigureNamesString[] =
 		},
 		&NRModelName,
 		"armnet",
-		NULL, NULL, show_archive_command
+		NULL, NULL, NULL
 	},
 
 	{
