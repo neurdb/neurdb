@@ -8,5 +8,3 @@
 |    SubmitTxn     |       Submit a transaction with dedicated ACP.        |      T      |
 
 - Y for thread-safe, T for thread-safe between transactions.
-
-

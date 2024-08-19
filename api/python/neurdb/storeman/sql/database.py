@@ -115,7 +115,13 @@ class NeurDB:
         self.database.delete("model", ["model_id = %s"], [model_id])
         self.database.delete("layer", ["model_id = %s"], [model_id])
 
-    def register_model(self, model_id: int, table_name: str, feature_columns: List[str], target_columns: List[str]):
+    def register_model(
+        self,
+        model_id: int,
+        table_name: str,
+        feature_columns: List[str],
+        target_columns: List[str],
+    ):
         """
         Register the model to a table in the database
         """
@@ -138,11 +144,7 @@ class NeurDB:
 
     def _init_neurdb(self):
         self.database.create_table(
-            "model",
-            [
-                "model_id SERIAL PRIMARY KEY",
-                "model_meta BYTEA"
-            ]
+            "model", ["model_id SERIAL PRIMARY KEY", "model_meta BYTEA"]
         )  # model table
 
         self.database.create_table(

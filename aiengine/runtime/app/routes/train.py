@@ -23,7 +23,7 @@ def model_train():
         test_batch_num = int(params.get("test_batch_num"))
 
         features = params.get("features")
-        target = params.get("target")   # always one target
+        target = params.get("target")  # always one target
 
         config_args = current_app.config["config_args"]
         db_connector = current_app.config["db_connector"]

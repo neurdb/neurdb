@@ -14,4 +14,3 @@ pg_ctl start -D $PGDATA
 psql -d postgres -c 'create database ycsb';
 psql -d postgres -c 'create database sysbench';
 pg_ctl stop -D $PGDATA -m fast
-
