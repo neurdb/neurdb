@@ -23,7 +23,7 @@ sequenceDiagram
     C->>S: task
     S->>C: ack_task
     activate S
-    
+
     loop data streaming
         S->>C: request_data
         C->>S: batch_data

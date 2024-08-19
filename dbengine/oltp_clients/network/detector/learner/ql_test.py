@@ -3,6 +3,7 @@ import numpy as np
 
 from ql import QT_Learner
 
+
 def test_frozen_lake():
     env = gym.make("FrozenLake-v1")
     env.render()
@@ -17,7 +18,7 @@ def test_frozen_lake():
         s = env.reset()
         done = False
         epsilon = max(0.1, 0.3 - 0.3 * ((epoch + 1) / 10000))
-        #Linear annealing from 20% to 10%
+        # Linear annealing from 20% to 10%
         while not done:
             s, r, done = agent.train_next_step(env, s, epsilon)
             if done and r == 1:
@@ -34,5 +35,6 @@ def test_frozen_lake():
 
     print("win round = ", win)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_frozen_lake()

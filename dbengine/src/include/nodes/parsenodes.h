@@ -4055,19 +4055,19 @@ typedef struct DropSubscriptionStmt
 typedef struct NeurDBTrainOnSpec
 {
   NodeTag 		type;      /* Node type identifier */
-  
+
   List 			*trainOn;     /* Columns used to train the model */
   Node 			*trainOnWith; /* Filtering data. Same as WHERE clause before (and that in
                         SELECT) */
 } NeurDBTrainOnSpec;
 
-typedef enum PredictType 
+typedef enum PredictType
 {
   PREDICT_CLASS, /* Classification prediction. */
   PREDICT_VALUE  /* Value prediction. */
 } PredictType;
 
-typedef struct NeurDBPredictStmt 
+typedef struct NeurDBPredictStmt
 {
   	NodeTag 	type;      /* Node type identifier */
 

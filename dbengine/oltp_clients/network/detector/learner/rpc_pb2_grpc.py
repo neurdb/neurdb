@@ -15,10 +15,10 @@ class ActionStub(object):
             channel: A grpc.Channel.
         """
         self.action = channel.unary_unary(
-                '/Action/action',
-                request_serializer=rpc__pb2.Info.SerializeToString,
-                response_deserializer=rpc__pb2.Act.FromString,
-                )
+            "/Action/action",
+            request_serializer=rpc__pb2.Info.SerializeToString,
+            response_deserializer=rpc__pb2.Act.FromString,
+        )
 
 
 class ActionServicer(object):
@@ -27,43 +27,56 @@ class ActionServicer(object):
     def action(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_ActionServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'action': grpc.unary_unary_rpc_method_handler(
-                    servicer.action,
-                    request_deserializer=rpc__pb2.Info.FromString,
-                    response_serializer=rpc__pb2.Act.SerializeToString,
-            ),
+        "action": grpc.unary_unary_rpc_method_handler(
+            servicer.action,
+            request_deserializer=rpc__pb2.Info.FromString,
+            response_serializer=rpc__pb2.Act.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Action', rpc_method_handlers)
+        "Action", rpc_method_handlers
+    )
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class Action(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def action(request,
+    def action(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Action/action',
+            "/Action/action",
             rpc__pb2.Info.SerializeToString,
             rpc__pb2.Act.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
 
 class ResetStub(object):
@@ -76,10 +89,10 @@ class ResetStub(object):
             channel: A grpc.Channel.
         """
         self.reset = channel.unary_unary(
-                '/Reset/reset',
-                request_serializer=rpc__pb2.Info.SerializeToString,
-                response_deserializer=rpc__pb2.Act.FromString,
-                )
+            "/Reset/reset",
+            request_serializer=rpc__pb2.Info.SerializeToString,
+            response_deserializer=rpc__pb2.Act.FromString,
+        )
 
 
 class ResetServicer(object):
@@ -88,40 +101,51 @@ class ResetServicer(object):
     def reset(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_ResetServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'reset': grpc.unary_unary_rpc_method_handler(
-                    servicer.reset,
-                    request_deserializer=rpc__pb2.Info.FromString,
-                    response_serializer=rpc__pb2.Act.SerializeToString,
-            ),
+        "reset": grpc.unary_unary_rpc_method_handler(
+            servicer.reset,
+            request_deserializer=rpc__pb2.Info.FromString,
+            response_serializer=rpc__pb2.Act.SerializeToString,
+        ),
     }
-    generic_handler = grpc.method_handlers_generic_handler(
-            'Reset', rpc_method_handlers)
+    generic_handler = grpc.method_handlers_generic_handler("Reset", rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class Reset(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def reset(request,
+    def reset(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Reset/reset',
+            "/Reset/reset",
             rpc__pb2.Info.SerializeToString,
             rpc__pb2.Act.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
