@@ -6,7 +6,7 @@ from dataloader.steam_libsvm_dataset import StreamingDataSet
 from typing import List
 
 
-def train(
+async def train(
     model_name: str,
     training_libsvm: StreamingDataSet,
     args: argparse.Namespace,
@@ -21,7 +21,7 @@ def train(
 ) -> int:
     s = Setup(model_name, training_libsvm, args, db)
 
-    model_id, err = s.train(epochs, train_batch_num, eva_batch_num, test_batch_num)
+    model_id, err = await s.train(epochs, train_batch_num, eva_batch_num, test_batch_num)
 
     if err is not None:
         logger.error(f"train failed with error: {err}")

@@ -27,7 +27,7 @@ class Setup:
     #     with open(self._dataset_file_path, "rb") as f:
     #         return f.read()
 
-    def train(
+    async def train(
         self, epochs: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
     ) -> Tuple[int, Error]:
         try:
@@ -37,7 +37,7 @@ class Setup:
 
             builder = build_model(self._model_name, self._args)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(
+            await builder.train(
                 self.libsvm_data,
                 self.libsvm_data,
                 self.libsvm_data,
@@ -57,7 +57,7 @@ class Setup:
             print(traceback.format_exc())
             return -1, str(traceback.format_exc())
 
-    def finetune(
+    async def finetune(
         self,
         model_id: int,
         start_layer_id: int,
@@ -84,7 +84,7 @@ class Setup:
 
             builder.model = model.to(DEVICE)
             builder.model_dimension = (nfeat, nfields)
-            builder.train(
+            await builder.train(
                 self.libsvm_data,
                 self.libsvm_data,
                 self.libsvm_data,
@@ -101,7 +101,7 @@ class Setup:
         except Exception:
             return -1, str(traceback.format_exc())
 
-    def inference(
+    async def inference(
         self, model_id: int, inf_batch_num: int
     ) -> Tuple[List[np.ndarray], Error]:
         try:
@@ -113,7 +113,7 @@ class Setup:
             except FileNotFoundError:
                 return [], f"model {self._model_name} not trained yet"
 
-            infer_res = builder.inference(self.libsvm_data, inf_batch_num)
+            infer_res = await builder.inference(self.libsvm_data, inf_batch_num)
             return infer_res, None
 
         except Exception:

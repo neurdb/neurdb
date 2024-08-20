@@ -45,7 +45,7 @@ class BuilderBase(ABC):
         self._nfield = nfield
 
     @abstractmethod
-    def train(
+    async def train(
         self,
         train_loader: Union[DataLoader, StreamingDataSet],
         val_loader: Union[DataLoader, StreamingDataSet],
@@ -69,7 +69,7 @@ class BuilderBase(ABC):
         pass
 
     @abstractmethod
-    def inference(
+    async def inference(
         self, test_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
     ) -> List[np.ndarray]:
         """
