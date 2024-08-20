@@ -25,7 +25,7 @@ typedef struct BatchDataQueue {
     pthread_mutex_t mutex;
     pthread_cond_t consume; // condition variable for the consumer - websocket thread
     pthread_cond_t produce; // condition variable for the producer - main thread
-} BatchDataQueue;
+} BatchQueue;
 
 
 /**
@@ -34,26 +34,26 @@ typedef struct BatchDataQueue {
  * @param max_size The maximum size of the queue
  */
 void
-init_batch_data_queue(BatchDataQueue *queue, size_t max_size);
+init_batch_queue(BatchQueue *queue, size_t max_size);
 
 /**
  * Destroy a batch data queue
  * @param queue The batch data queue
  */
-void destroy_batch_data_queue(BatchDataQueue *queue);
+void destroy_batch_queue(BatchQueue *queue);
 
 /**
  * Enqueue a batch data to the queue
  * @param queue The batch data queue
  * @param batch_data The batch data
  */
-void enqueue(BatchDataQueue *queue, const char *batch_data);
+void enqueue(BatchQueue *queue, const char *batch_data);
 
 /**
  * Dequeue a batch data from the queue
  * @param queue The batch data queue
  * @return batch_data The batch data
  */
-char *dequeue(BatchDataQueue *queue);
+char *dequeue(BatchQueue *queue);
 
 #endif //QUEUE_H

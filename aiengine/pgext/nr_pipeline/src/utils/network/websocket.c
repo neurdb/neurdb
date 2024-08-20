@@ -2,148 +2,271 @@
 #include "../cjson/cJSON.h"
 
 
-// ****************************** Websocket ******************************
-static int callback_ws(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len) {
-    WebsocketInfo *ws_info = (WebsocketInfo *) lws_wsi_user(wsi);
-    switch (reason) {
-        case LWS_CALLBACK_CLIENT_ESTABLISHED:
-            // connection established
-            lwsl_user("Client has connected to the server\n");
-            break;
+// callback and handlers
+static int callback(struct lws *wsi, enum lws_callback_reasons callback_reason, void *user, void *input, size_t len);
+static void handle_request_data(NrWebsocket *ws, const cJSON *json);
+static void handle_result(NrWebsocket *ws, const cJSON *json);
+static void handle_ack_connect(NrWebsocket *ws, const cJSON *json);
+static void handle_ack_disconnect(NrWebsocket *ws);
+
+// message
+static void send(const NrWebsocket *ws, const cJSON *json);
+static void send_connect_signal(const NrWebsocket *ws, size_t cache_size);
+static void send_disconnect_signal(const NrWebsocket *ws);
+
+// websocket thread
+static void *websocket_thread(void *arg);
+
+// define the protocol in the websocket
+static const struct lws_protocols nws_protocol[] = {
+    {
+        "nws_protocol",
+        callback,
+        sizeof(NrWebsocket),
+        0,
+    },
+    {NULL, NULL, 0, 0}
+};
+
+
+// ****************************** Initialization, Connection, Disconnection ******************************
+NrWebsocket *
+nws_initialize(const char *url, const int port, const char *path, const size_t queue_max_size) {
+    NrWebsocket *websocket = (NrWebsocket *) malloc(sizeof(NrWebsocket));
+    memset(websocket, 0, sizeof(NrWebsocket));
+
+    init_batch_queue(&websocket->queue, queue_max_size);
+
+    struct lws_context_creation_info info = {0};
+    info.port = CONTEXT_PORT_NO_LISTEN; // client side, no need to listen
+    info.protocols = nws_protocol;
+    info.options = LWS_SERVER_OPTION_VALIDATE_UTF8;
+
+    websocket->context = lws_create_context(&info);
+    if (websocket->context == NULL) {
+        lwsl_err("Websocket failure: context creation failed\n");
+        lws_context_destroy(websocket->context);
+        free(websocket);
+        return NULL;
+    }
+
+    struct lws_client_connect_info connect_info = {0};
+    connect_info.context = websocket->context;
+    connect_info.address = url;
+    connect_info.port = port;
+    connect_info.path = path;
+    connect_info.host = lws_canonical_hostname(websocket->context);
+    connect_info.origin = lws_canonical_hostname(websocket->context); // localhost connection
+    connect_info.protocol = nws_protocol[0].name;
+    connect_info.pwsi = &websocket->instance;
+    connect_info.userdata = websocket;
+
+    websocket->instance = lws_client_connect_via_info(&connect_info);
+    if (websocket->instance == NULL) {
+        lwsl_err("Websocket failure: connection failed\n");
+        lws_context_destroy(websocket->context);
+        free(websocket);
+        return NULL;
+    }
+    websocket->interrupted = 0;
+    websocket->connnected = 0;
+    return websocket;
+}
+
+int
+nws_connect(NrWebsocket *ws) {
+    if (pthread_create(&ws->thread, NULL, (void *(*)(void *)) websocket_thread, ws) != 0) {
+        lwsl_err("Failed to create websocket thread\n");
+        lws_context_destroy(ws->context);
+        free(ws);
+        return -1;
+    }
+    while (!ws->connnected) {
+        // wait for the connection to be established
+        usleep(1000);  // TODO: consider using a condition variable instead of busy waiting
+    }
+    send_connect_signal(ws, ws->queue.max_size);
+    return 0;
+}
+
+int
+nws_disconnect(NrWebsocket *ws) {
+    send_disconnect_signal(ws);
+    ws->interrupted = 1;
+    pthread_join(ws->thread, NULL); // wait for the websocket thread to terminate
+    lws_context_destroy(ws->context);
+    destroy_batch_queue(&ws->queue);
+    free(ws);
+    return 0;
+}
+
+static void *
+websocket_thread(void *arg) {
+    const NrWebsocket *ws = (NrWebsocket *) arg;
+    while (!ws->interrupted) {
+        lws_service(ws->context, 50); // 50ms
+    }
+    return NULL;
+}
+
+
+// ****************************** Message ******************************
+void
+nws_send_batch_data(NrWebsocket *ws, const int batch_id, const MLStage ml_stage, const char *batch_data) {
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "version", "1");
+    cJSON_AddStringToObject(json, "event", "batch_data");
+    cJSON_AddStringToObject(json, "sessionId", ws->sid);
+    cJSON_AddNumberToObject(json, "batchId", batch_id);
+    cJSON_AddStringToObject(json, "stage", ML_STAGE[ml_stage]);
+    cJSON_AddStringToObject(json, "byte", batch_data);
+    char *data = cJSON_PrintUnformatted(json);
+    enqueue(&ws->queue, data); // enqueue the data
+    // clean up
+    cJSON_Delete(json);
+    free(data);
+    lws_callback_on_writable(ws->instance);
+}
+
+void
+nws_send_task(NrWebsocket *ws, const MLTask ml_task, const char *task_data) {
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "version", "1");
+    cJSON_AddStringToObject(json, "event", "task");
+    cJSON_AddStringToObject(json, "sessionId", ws->sid);
+    cJSON_AddStringToObject(json, "task", ML_TASK[ml_task]);
+    cJSON_AddStringToObject(json, "data", task_data);
+    send(ws, json);
+    cJSON_Delete(json);
+}
+
+static void send(const NrWebsocket *ws, const cJSON *json) {
+    char *data = cJSON_PrintUnformatted(json);
+    lws_write(ws->instance, (unsigned char *) data, strlen(data), LWS_WRITE_TEXT);
+    free(data);
+}
+
+static void send_connect_signal(const NrWebsocket *ws, const size_t cache_size) {
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "version", "1");
+    cJSON_AddStringToObject(json, "event", "connect");
+    cJSON_AddNumberToObject(json, "cacheSize", (double) cache_size);
+    send(ws, json);
+    cJSON_Delete(json);
+}
+
+static void send_disconnect_signal(const NrWebsocket *ws) {
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "version", "1");
+    cJSON_AddStringToObject(json, "event", "disconnect");
+    cJSON_AddStringToObject(json, "sessionId", ws->sid);
+    send(ws, json);
+    cJSON_Delete(json);
+}
+
+
+// ****************************** Callbacks and handler functions ******************************
+/**
+ * Callback function for the websocket
+ * @param wsi Websocket instance
+ * @param callback_reason The reason of the callback
+ * @param user User data
+ * @param input Input data
+ * @param len Length of the input data
+ * @return int The status of the callback
+ */
+static int
+callback(struct lws *wsi, enum lws_callback_reasons callback_reason, void *user, void *input, size_t len) {
+    NrWebsocket *websocket = (NrWebsocket *) lws_wsi_user(wsi);
+    switch (callback_reason) {
         case LWS_CALLBACK_CLIENT_RECEIVE:
-            // received data from the server
-            cJSON *json = cJSON_Parse((char *) in);
+            // received event
+            cJSON *json = cJSON_Parse((char *) input);
             if (json == NULL) {
                 lwsl_err("Failed to parse the received data\n");
                 break;
             }
-            // check if the JSON object has the key "data"
-            cJSON *data = cJSON_GetObjectItemCaseSensitive(json, "data");
-            if (cJSON_IsString(data) && (data->valuestring != NULL)) {
-                // store sid
-                strncpy(ws_info->sid, data->valuestring, sizeof(ws_info->sid));
-                ws_info->sid[sizeof(ws_info->sid) - 1] = '\0';
+
+            // get the "event" field from the JSON object
+            const cJSON *event = cJSON_GetObjectItem(json, "event");
+            if (event == NULL || !cJSON_IsString(event)) {
+                lwsl_err("Invalid JSON format: 'event' field missing or not a string\n");
+                cJSON_Delete(json);
+                break;
             }
-            // check if the JSON object has the key "key"
-            cJSON *key = cJSON_GetObjectItemCaseSensitive(json, "key");
-            if (cJSON_IsString(key) && (key->valuestring != NULL)) {
-                // TODO: Finish this
+
+            switch (event->valuestring) {
+                case "request_data":
+                    handle_request_data(websocket, json);
+                    break;
+                case "result":
+                    handle_result(websocket, json);
+                    break;
+                case "ack_connect":
+                    handle_ack_connect(websocket, json);
+                    break;
+                case "ack_disconnect":
+                    handle_ack_disconnect(websocket);
+                    break;
+                default:
+                    lwsl_err("Unknown event type: %s\n", event->valuestring);
+                    break;
             }
+            cJSON_Delete(json);
             break;
+
+        case LWS_CALLBACK_CLIENT_ESTABLISHED:
+            // connection established
+            break;
+
         case LWS_CALLBACK_CLIENT_WRITEABLE:
             // send data to the server
-            lwsl_user("Client is ready to send data to the server\n");
-            char *batch_data = dequeue(&ws_info->queue);
+            char *batch_data = dequeue(&websocket->queue);
             if (batch_data) {
                 lws_write(wsi, (unsigned char *) batch_data, strlen(batch_data), LWS_WRITE_TEXT);
                 free(batch_data);
             }
-            if (ws_info->queue.size > 0) {
+            if (websocket->queue.size > 0) {
                 lws_callback_on_writable(wsi); // this is done to keep the connection writable
             }
             break;
+
         case LWS_CALLBACK_CLOSED:
             // connection closed
-            lwsl_user("Client has disconnected from the server\n");
-            ws_info->interrupted = 1;
+            websocket->interrupted = 1;
             break;
+
         default:
             break;
     }
     return 0;
 }
 
-// define the protocol in the websocket
-static const struct lws_protocols protocols[] = {
-    {
-        "nr-protocol",
-        callback_ws,
-        0,
-        0,
-    },
-    {NULL, NULL, 0, 0}
-};
-
-WebsocketInfo *init_ws_connection(const char *url, const int port, const char *path, const size_t queue_max_size) {
-    WebsocketInfo *ws_info = (WebsocketInfo *) malloc(sizeof(WebsocketInfo));
-    memset(ws_info, 0, sizeof(WebsocketInfo));
-
-    init_batch_data_queue(&ws_info->queue, queue_max_size);
-
-    struct lws_context_creation_info info = {0};
-    info.port = CONTEXT_PORT_NO_LISTEN; // client side, no need to listen
-    info.protocols = protocols;
-    info.options = LWS_SERVER_OPTION_VALIDATE_UTF8;
-
-    ws_info->context = lws_create_context(&info);
-    if (ws_info->context == NULL) {
-        lwsl_err("Failed to create websocket context\n");
-        lws_context_destroy(ws_info->context);
-        free(ws_info);
-        return NULL;
-    }
-
-    struct lws_client_connect_info connect_info = {0};
-    connect_info.context = ws_info->context;
-    connect_info.address = url;
-    connect_info.port = port;
-    connect_info.path = path;
-    connect_info.host = lws_canonical_hostname(ws_info->context);
-    connect_info.origin = lws_canonical_hostname(ws_info->context); // localhost connection
-    connect_info.protocol = protocols[0].name;
-    connect_info.pwsi = &ws_info->wsi;
-    connect_info.userdata = ws_info;
-
-    ws_info->wsi = lws_client_connect_via_info(&connect_info);
-    if (ws_info->wsi == NULL) {
-        lwsl_err("Failed to create websocket connection\n");
-        lws_context_destroy(ws_info->context);
-        free(ws_info);
-        return NULL;
-    }
-    return ws_info;
+static void
+handle_request_data(NrWebsocket *ws, const cJSON *json) {
+    // TODO: handle the request data
 }
 
+static void
+handle_result(NrWebsocket *ws, const cJSON *json) {
+    // TODO: handle the result
+}
 
-// ****************************** Thread ******************************
-static void *websocket_threading(void *arg) {
-    WebsocketInfo *ws_info = (WebsocketInfo *) arg;
-    while (!ws_info->interrupted) {
-        lws_service(ws_info->context, 1000); // serving
+static void
+handle_ack_connect(NrWebsocket *ws, const cJSON *json) {
+    const cJSON *session_id = cJSON_GetObjectItem(json, "sessionId");
+    if (session_id == NULL || !cJSON_IsString(session_id)) {
+        lwsl_err("Invalid JSON format: 'sessionId' field missing or not a string\n");
+        return;
     }
-    return NULL;
+    strcpy(ws->sid, session_id->valuestring); // set the session id
+    ws->connnected = 1;
 }
 
-int start_ws_thread(WebsocketInfo *ws_info) {
-    if (pthread_create(&ws_info->thread, NULL, (void *(*)(void *)) websocket_threading, ws_info) != 0) {
-        lwsl_err("Failed to create websocket thread\n");
-        lws_context_destroy(ws_info->context);
-        free(ws_info);
-        return -1;
+static void
+handle_ack_disconnect(NrWebsocket *ws) {
+    destroy_batch_queue(&ws->queue);
+    if (ws->context) {
+        lws_cancel_service(ws->context);
     }
-    return 0;
-}
-
-int stop_ws_thread(WebsocketInfo *ws_info) {
-    ws_info->interrupted = 1;
-    pthread_join(ws_info->thread, NULL);
-    lws_context_destroy(ws_info->context);
-    destroy_batch_data_queue(&ws_info->queue);
-    free(ws_info);
-    return 0;
-}
-
-// ****************************** Message ******************************
-int send_batch_data(WebsocketInfo *ws_info, const char *dataset_name, const MLStage ml_stage, const char *batch_data) {
-    cJSON *json = cJSON_CreateObject();
-    cJSON_AddStringToObject(json, "dataset_name", dataset_name);
-    cJSON_AddStringToObject(json, "ml_stage", ML_STAGE[ml_stage]);
-    cJSON_AddStringToObject(json, "data", batch_data);
-    char *data = cJSON_PrintUnformatted(json);
-    enqueue(&ws_info->queue, data); // enqueue the data
-    // clean up
-    cJSON_Delete(json);
-    free(data);
-    lws_callback_on_writable(ws_info->wsi);
-    return 0;
 }

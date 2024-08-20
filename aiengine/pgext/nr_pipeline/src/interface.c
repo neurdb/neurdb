@@ -61,8 +61,8 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
 
-    BatchDataQueue *queue = malloc(sizeof(BatchDataQueue *));
-    init_batch_data_queue(queue, 10);
+    BatchQueue *queue = malloc(sizeof(BatchQueue *));
+    init_batch_queue(queue, 10);
 
     socketio_set_queue(sio_client, queue);
 
@@ -250,8 +250,8 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
 
-    BatchDataQueue *queue = malloc(sizeof(BatchDataQueue *));
-    init_batch_data_queue(queue, 10);
+    BatchQueue *queue = malloc(sizeof(BatchQueue *));
+    init_batch_queue(queue, 10);
 
     socketio_set_queue(sio_client, queue);
 
@@ -469,8 +469,8 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     // init SocketIO
     SocketIOClient *sio_client = socketio_client();
 
-    BatchDataQueue *queue = malloc(sizeof(BatchDataQueue *));
-    init_batch_data_queue(queue, 10);
+    BatchQueue *queue = malloc(sizeof(BatchQueue *));
+    init_batch_queue(queue, 10);
 
     socketio_set_queue(sio_client, queue);
 

@@ -54,9 +54,9 @@ socketio_get_socket_id(const SocketIOClient *client);
  * @param queue BatchDataQueue* The queue to set
  */
 void
-socketio_set_queue(SocketIOClient *client, BatchDataQueue *queue);
+socketio_set_queue(SocketIOClient *client, BatchQueue *queue);
 
-BatchDataQueue *
+BatchQueue *
 socketio_get_queue(const SocketIOClient *client);
 
 /**

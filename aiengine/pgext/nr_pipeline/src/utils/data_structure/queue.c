@@ -5,7 +5,7 @@
 #include <string.h>
 
 
-void init_batch_data_queue(BatchDataQueue *queue, size_t max_size) {
+void init_batch_queue(BatchQueue *queue, size_t max_size) {
     queue->head = NULL;
     queue->tail = NULL;
     queue->size = 0;
@@ -15,13 +15,13 @@ void init_batch_data_queue(BatchDataQueue *queue, size_t max_size) {
     pthread_cond_init(&queue->produce, NULL);
 }
 
-void destroy_batch_data_queue(BatchDataQueue *queue) {
+void destroy_batch_queue(BatchQueue *queue) {
     pthread_mutex_destroy(&queue->mutex);
     pthread_cond_destroy(&queue->consume);
     pthread_cond_destroy(&queue->produce);
 }
 
-void enqueue(BatchDataQueue *queue, const char *batch_data) {
+void enqueue(BatchQueue *queue, const char *batch_data) {
     BatchDataNode *node = (BatchDataNode *) malloc(sizeof(BatchDataNode));
     node->batched_data = strdup(batch_data);
     node->next = NULL;
@@ -43,16 +43,12 @@ void enqueue(BatchDataQueue *queue, const char *batch_data) {
     pthread_mutex_unlock(&queue->mutex); // unlock the mutex
 }
 
-char *dequeue(BatchDataQueue *queue) {
+char *dequeue(BatchQueue *queue) {
     pthread_mutex_lock(&queue->mutex); // lock the mutex
     while (queue->head == NULL) {
         // wait if the queue is empty
         pthread_cond_wait(&queue->consume, &queue->mutex);
     }
-    // if (queue->head == NULL) {
-    //     pthread_mutex_unlock(&queue->mutex); // unlock the mutex
-    //     return NULL;
-    // }
     // LOCKED
     BatchDataNode *node = queue->head;
     queue->head = node->next;
