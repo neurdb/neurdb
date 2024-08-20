@@ -1,6 +1,7 @@
+import asyncio
 from typing import Optional, Tuple
 from enum import Enum
-from queue import Queue, Full, Empty
+from queue import Full, Empty
 from logger.logger import logger
 
 
@@ -37,7 +38,7 @@ class DataCache:
         """
         self.current_dataset_name = dataset_name
         # self.lock = threading.Lock()
-        self.queue = Queue(maxsize=maxsize)
+        self.queue = asyncio.Queue(maxsize=maxsize)
 
         self.maxsize = maxsize
         self.total_batch_num = total_batch_num
@@ -67,7 +68,7 @@ class DataCache:
 
     # ------------------------- data operation -------------------------
 
-    def add(self, value) -> bool:
+    async def add(self, value) -> bool:
         """
         Add a value to the right of the queue if the queue is not full.
         :param value: The value to add to the queue.
@@ -75,7 +76,7 @@ class DataCache:
         """
         # with self.lock:
         try:
-            self.queue.put(value, timeout=600)
+            await self.queue.put(value)
             self.current_batch_num += 1
             return True
         except Full:
@@ -84,13 +85,14 @@ class DataCache:
             )
             return False
 
-    def get(self) -> Optional[dict]:
+    async def get(self) -> Optional[dict]:
         """
         Retrieve and remove the oldest value from the queue (read from left).
         :return: The oldest value from the queue, or None if the queue is empty.
         """
         try:
-            value = self.queue.get(timeout=600)  # Block up to 5 seconds
+            logger.debug("getting from data cache", remaining=self.queue.qsize())
+            value = await self.queue.get()  # Block up to 5 seconds
             return value
         except Empty:
             logger.debug(

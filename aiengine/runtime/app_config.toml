@@ -1,0 +1,6 @@
+accesslog='-'
+errorlog='-'
+
+debug=true
+
+bind='0.0.0.0:8090'

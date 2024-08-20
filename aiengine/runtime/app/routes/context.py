@@ -1,4 +1,6 @@
-from flask import current_app, g
+from typing import Tuple
+from quart import current_app, g
+from cache import DataCache, ContextStates
 from dataloader.steam_libsvm_dataset import StreamingDataSet
 from cache import Bufferkey
 
@@ -14,7 +16,7 @@ def after_request_func(response):
 
 def before_execute(
     dataset_name: str, data_key: Bufferkey, client_id: str
-) -> (bool, str):
+) -> Tuple[bool, str]:
     """
     1. check socket client is connected
     2. check data cache exist for dataset_name
@@ -31,7 +33,7 @@ def before_execute(
         return False, f"client {client_id} is not registered by socket, no data here !"
 
     # 2. check the data cache for that dataset
-    data_cache = current_app.config["data_cache"]
+    data_cache: ContextStates[DataCache] = current_app.config["data_cache"]
     if not data_cache.contains(client_id, dataset_name):
         return (
             False,

@@ -5,10 +5,17 @@
 ## Installation
 
 ```sh
-pip install -r requirement.txt --extra-index-url https://download.pytorch.org/whl/cu121
+pip install -r requirement.txt --extra-index-url https://download.pytorch.org/whl/cu113
 ```
 
-## CLI
+## Start server
+
+```sh
+export NR_LOG_LEVEL=INFO  # Set log level 
+python -m hypercorn server:app -c app_config.toml
+```
+
+## Start CLI (for testing)
 
 ```text
 usage: cli.py [-h] [-c CONFIG] [-l LOGFILE] [-t | --train | --no-train] [-i | --inference | --no-inference]

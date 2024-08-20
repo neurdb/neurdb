@@ -1,6 +1,11 @@
+import asyncio
+from quart import current_app
+from quart.utils import run_sync
 import threading
+
+import socketio
 from cache import DataCache
-from typing import Callable
+from typing import Any, Callable, Coroutine
 from dataloader.preprocessing import (
     libsvm_batch_preprocess,
     libsvm_batch_preprocess_id_only,
@@ -22,7 +27,7 @@ class LibSvmDataDispatcher:
         self.data_cache = data_cache
         self.client_id = None
 
-        self.thread = None
+        self.task = None
         self.stop_event = threading.Event()
         self.full_event = threading.Event()
 
@@ -38,27 +43,36 @@ class LibSvmDataDispatcher:
         self.data_cache = data_cache
         self.client_id = client_id
 
-    # ------------------------- threading -------------------------
+    def bound_sio(self, sio: socketio.AsyncServer):
+        """
+        Bind the data dispatcher to an SIO server.
+        :param sio: The SIO server to bind to.
+        """
+        self.sio = sio
 
-    def start(self, emit_request_data: Callable[[str], None]):
+    def bound_loop(self, loop: asyncio.AbstractEventLoop):
+        """
+        Bind the data dispatcher to an event loop.
+        :param loop: The event loop to bind to.
+        """
+        self.loop = loop
+
+    # ------------------------- threading -------------------------
+    def start(self):
         """
         Start the background thread to manage data dispatch.
         :param emit_request_data: The function to call for requesting data.
         """
+        logger.debug("starting dispatcher")
         # Ensure event is clear before starting the thread, not wating somewhere
         self.stop_event.clear()
         self.full_event.clear()
-
-        self.thread = threading.Thread(
-            target=self._background_thread, args=(emit_request_data,)
-        )
-        self.thread.daemon = True
-        self.thread.start()
 
     def stop(self):
         """
         Stop the background thread.
         """
+        logger.debug("stopping dispatcher")
         if self.thread is not None:
             self.stop_event.set()  # Signal the thread to stop
             self.full_event.set()  # Wake up the thread if it's waiting
@@ -73,19 +87,21 @@ class LibSvmDataDispatcher:
             finally:
                 self.thread = None
 
-    def _background_thread(self, emit_request_data: Callable[[str], None]):
+    def background_task(self):
         """
-        The background thread function for managing data dispatch.
-        :param emit_request_data: The function to call for requesting data.
+        The background task function for managing data dispatch.
         """
-        logger.debug("[LibSvmDataDispatcher] ----- Background thread started  ----- ")
+        logger.debug("[LibSvmDataDispatcher] ----- Background task started  ----- ")
 
         # Send the initial request to trigger the process
         logger.debug(
             f"[LibSvmDataDispatcher] Queue current length {self.data_cache.current_len()}, "
             f"emitting initial request to client_id {self.client_id}"
         )
-        emit_request_data(self.client_id)
+
+        asyncio.run_coroutine_threadsafe(
+            emit_request_data(self.sio, self.client_id), self.loop
+        )
 
         while not self.stop_event.is_set():
             # Check if we need to stop
@@ -102,7 +118,10 @@ class LibSvmDataDispatcher:
                     f"[LibSvmDataDispatcher] Sender wake up, queue current length {self.data_cache.current_len()}, "
                     f"emitting request to client_id {self.client_id}"
                 )
-                emit_request_data(self.client_id)
+
+                asyncio.run_coroutine_threadsafe(
+                    emit_request_data(self.sio, self.client_id), self.loop
+                )
                 # Reset the event
                 self.full_event.clear()
             else:
@@ -114,7 +133,7 @@ class LibSvmDataDispatcher:
 
     # ------------------------- data operation -------------------------
 
-    def add(self, data: str):
+    async def add(self, data: str):
         """
         Add data to the cache.
         :param data: The dataset in LibSVM format.
@@ -136,7 +155,7 @@ class LibSvmDataDispatcher:
         self.total_preprocessing_time += preprocessing_time
 
         # Add the processed data to the cache
-        if self.data_cache.add(batch_data):
+        if await self.data_cache.add(batch_data):
             # Notify that new data is available
             self.full_event.set()
             logger.debug(
@@ -144,6 +163,17 @@ class LibSvmDataDispatcher:
             )
         else:
             logger.debug(
-                f"[LibSvmDataDispatcher]: stopoing dispacher threads,no data to add after waiting for 10 mins"
+                f"[LibSvmDataDispatcher]: stopping dispacher threads, no data to add after waiting for 10 mins"
             )
-            self.stop()
+            # self.stop()
+
+
+async def emit_request_data(sio: socketio.AsyncServer, client_id: str):
+    """
+    Emit request_data event to clients.
+    :param client_id: The client ID to send the request to.
+    :return:
+    """
+
+    logger.debug("emit_request_data", sid=client_id)
+    await sio.emit("request_data", {}, to=client_id)

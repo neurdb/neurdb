@@ -37,11 +37,11 @@ class ARMNetModelBuilder(BuilderBase):
                 self.args.dnn_nhid,
             ).to(DEVICE)
 
-    def train(
+    async def train(
         self,
-        train_loader: Union[DataLoader, StreamingDataSet],
-        val_loader: Union[DataLoader, StreamingDataSet],
-        test_loader: Union[DataLoader, StreamingDataSet],
+        train_loader: StreamingDataSet,
+        val_loader: StreamingDataSet,
+        test_loader: StreamingDataSet,
         epochs: int,
         train_batch_num: int,
         eva_batch_num: int,
@@ -74,6 +74,7 @@ class ARMNetModelBuilder(BuilderBase):
         for p in self.model.parameters():
             if p.requires_grad:
                 p.register_hook(lambda grad: torch.clamp(grad, -1.0, 1.0))
+
         torch.backends.cudnn.benchmark = True
 
         logger.info("register_hook and build cudnn bencnmark")
@@ -97,7 +98,9 @@ class ARMNetModelBuilder(BuilderBase):
             )
             train_timestamp = time.time()
 
-            for batch_idx, batch in enumerate(train_loader):
+            batch_idx = -1
+            async for batch in train_loader:
+                batch_idx += 1
                 # logger.info(
                 #     "get batch",
                 #     id=batch_idx,
@@ -148,6 +151,7 @@ class ARMNetModelBuilder(BuilderBase):
                     )
                 if batch_idx + 1 == train_batch_num:
                     break
+
             logger.info(
                 "Epoch end",
                 time=timeSince(s=train_time_avg.sum),
@@ -160,8 +164,12 @@ class ARMNetModelBuilder(BuilderBase):
             # )
 
             # Validation phase
-            valid_auc = self._evaluate(val_loader, opt_metric, "val", eva_batch_num)
-            test_auc = self._evaluate(test_loader, opt_metric, "test", test_batch_num)
+            valid_auc = await self._evaluate(
+                val_loader, opt_metric, "val", eva_batch_num
+            )
+            test_auc = await self._evaluate(
+                test_loader, opt_metric, "test", test_batch_num
+            )
 
             # record best auc and save checkpoint
             if valid_auc >= best_valid_auc:
@@ -217,9 +225,9 @@ class ARMNetModelBuilder(BuilderBase):
         #     f"Total running time for training/validation/test: {timeSince(since=start_time)}"
         # )
 
-    def _evaluate(
+    async def _evaluate(
         self,
-        data_loader: Union[DataLoader, StreamingDataSet],
+        data_loader: StreamingDataSet,
         opt_metric,
         namespace: str,
         batch_num: int,
@@ -232,7 +240,10 @@ class ARMNetModelBuilder(BuilderBase):
         timestamp = time.time()
 
         with torch.no_grad():
-            for batch_idx, batch in enumerate(data_loader):
+            batch_idx = -1
+            async for batch in data_loader:
+                batch_idx += 1
+
                 target = batch["y"]
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
@@ -266,9 +277,7 @@ class ARMNetModelBuilder(BuilderBase):
         logger.info(f"Evaluate end", time=timeSince(s=time_avg.sum))
         return auc_avg.avg
 
-    def inference(
-        self, data_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
-    ):
+    async def inference(self, data_loader: StreamingDataSet, inf_batch_num: int):
         logger = self._logger.bind(task="inference")
         print(f"begin inference for {inf_batch_num} batches ")
         # if this is to load model from the dict,
@@ -283,7 +292,10 @@ class ARMNetModelBuilder(BuilderBase):
         start_time = time.time()
         predictions = []
         with torch.no_grad():
-            for batch_idx, batch in enumerate(data_loader):
+            batch_idx = -1
+            async for batch in data_loader:
+                batch_idx += 1
+
                 if torch.cuda.is_available():
                     batch["id"] = batch["id"].cuda(non_blocking=True)
                     batch["value"] = batch["value"].cuda(non_blocking=True)
@@ -293,6 +305,7 @@ class ARMNetModelBuilder(BuilderBase):
                 logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
                 if batch_idx + 1 == inf_batch_num:
                     break
+
         logger.info("Done inference for {inf_batch_num} batches ")
         logger.info("---- Inference end ---- ", time=timeSince(since=start_time))
         return predictions

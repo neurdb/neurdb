@@ -1,5 +1,5 @@
 from cache import DataCache, Bufferkey
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict
 from logger.logger import logger
 import time
 
@@ -34,17 +34,17 @@ class StreamingDataSet:
     def current_statistics(self) -> Tuple:
         return self.data_cache.dataset_statistics
 
-    def __iter__(self):
+    def __aiter__(self):
         return self
 
-    def __next__(self) -> Dict[str, List]:
+    async def __anext__(self):
         """
         Wait until the next data is available.
         :return: current batch data
         """
         logger.debug(f"[StreamingDataSet]: reading one data from queue...")
         begin_time = time.time()
-        batch_data = self.data_cache.get()
+        batch_data = await self.data_cache.get()
         end_time = time.time()
         self.total_time_fetching += end_time - begin_time
         if batch_data is None:
@@ -65,6 +65,7 @@ class StreamingDataSet:
                 f"{self.current_stage_batch_count} and switch to stage {self.current_stage}!!"
             )
             self.current_stage_batch_count = 0
+
         return batch_data
 
     def __len__(self):
