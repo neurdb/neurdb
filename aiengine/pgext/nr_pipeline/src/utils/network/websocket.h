@@ -1,10 +1,10 @@
 #ifndef WEBSOCKET_H
 #define WEBSOCKET_H
 
-
 #include <libwebsockets.h>
 
 #include "../data_structure/queue.h"
+#include "task.h"
 
 
 /**
@@ -19,6 +19,9 @@ typedef struct {
     BatchQueue queue;
     char sid[256];
 } NrWebsocket;
+
+
+// ****************************** Initialization, Connection, Disconnection ******************************
 
 /**
  * Initialize a websocket instance, it does not connect to the server
@@ -48,9 +51,9 @@ nws_connect(NrWebsocket *ws);
 int
 nws_disconnect(NrWebsocket *ws);
 
+// ****************************** Message ******************************
 
 static const char *ML_STAGE[] = {"train", "evaluate", "test", "inference"};
-static const char *ML_TASK[] = {"train", "inference", "finetune"};
 
 typedef enum {
     S_TRAIN = 0,
@@ -58,12 +61,6 @@ typedef enum {
     S_TEST = 2,
     S_INFERENCE = 3
 } MLStage;
-
-typedef enum {
-    T_TRAIN = 0,
-    T_INFERENCE = 1,
-    T_FINETUNE = 2
-} MLTask;
 
 /**
  * Send a batch of data from the main thread to the websocket thread.
@@ -81,9 +78,9 @@ nws_send_batch_data(NrWebsocket *ws, int batch_id, MLStage ml_stage, const char 
  * Send a task to the server
  * @param ws The websocket instance
  * @param ml_task The machine learning task
- * @param task_data The data of the task
+ * @param task_spec The task specification, it can be TrainTaskSpec, InferenceTaskSpec, or FinetuneTaskSpec
  */
 void
-nws_send_task(NrWebsocket *ws, MLTask ml_task, const char *task_data);
+nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec);
 
 #endif //WEBSOCKET_H

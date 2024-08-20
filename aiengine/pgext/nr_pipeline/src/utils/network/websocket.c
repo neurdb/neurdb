@@ -4,14 +4,20 @@
 
 // callback and handlers
 static int callback(struct lws *wsi, enum lws_callback_reasons callback_reason, void *user, void *input, size_t len);
+
 static void handle_request_data(NrWebsocket *ws, const cJSON *json);
+
 static void handle_result(NrWebsocket *ws, const cJSON *json);
-static void handle_ack_connect(NrWebsocket *ws, const cJSON *json);
+
+static void handle_ack_setup(NrWebsocket *ws, const cJSON *json);
+
 static void handle_ack_disconnect(NrWebsocket *ws);
 
 // message
-static void send(const NrWebsocket *ws, const cJSON *json);
-static void send_connect_signal(const NrWebsocket *ws, size_t cache_size);
+static void send_json(const NrWebsocket *ws, const cJSON *json);
+
+static void send_setup_signal(const NrWebsocket *ws, size_t cache_size);
+
 static void send_disconnect_signal(const NrWebsocket *ws);
 
 // websocket thread
@@ -83,9 +89,9 @@ nws_connect(NrWebsocket *ws) {
     }
     while (!ws->connnected) {
         // wait for the connection to be established
-        usleep(1000);  // TODO: consider using a condition variable instead of busy waiting
+        usleep(1000); // TODO: consider using a condition variable instead of busy waiting
     }
-    send_connect_signal(ws, ws->queue.max_size);
+    send_setup_signal(ws, ws->queue.max_size);
     return 0;
 }
 
@@ -129,38 +135,42 @@ nws_send_batch_data(NrWebsocket *ws, const int batch_id, const MLStage ml_stage,
 }
 
 void
-nws_send_task(NrWebsocket *ws, const MLTask ml_task, const char *task_data) {
+nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "version", "1");
     cJSON_AddStringToObject(json, "event", "task");
     cJSON_AddStringToObject(json, "sessionId", ws->sid);
     cJSON_AddStringToObject(json, "task", ML_TASK[ml_task]);
-    cJSON_AddStringToObject(json, "data", task_data);
-    send(ws, json);
+    task_append_to_json(json, task_spec, ml_task);
+    // send the task
+    send_json(ws, json);
     cJSON_Delete(json);
 }
 
-static void send(const NrWebsocket *ws, const cJSON *json) {
+static void
+send_json(const NrWebsocket *ws, const cJSON *json) {
     char *data = cJSON_PrintUnformatted(json);
     lws_write(ws->instance, (unsigned char *) data, strlen(data), LWS_WRITE_TEXT);
     free(data);
 }
 
-static void send_connect_signal(const NrWebsocket *ws, const size_t cache_size) {
+static void
+send_setup_signal(const NrWebsocket *ws, const size_t cache_size) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "version", "1");
-    cJSON_AddStringToObject(json, "event", "connect");
+    cJSON_AddStringToObject(json, "event", "setup");
     cJSON_AddNumberToObject(json, "cacheSize", (double) cache_size);
-    send(ws, json);
+    send_json(ws, json);
     cJSON_Delete(json);
 }
 
-static void send_disconnect_signal(const NrWebsocket *ws) {
+static void
+send_disconnect_signal(const NrWebsocket *ws) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "version", "1");
     cJSON_AddStringToObject(json, "event", "disconnect");
     cJSON_AddStringToObject(json, "sessionId", ws->sid);
-    send(ws, json);
+    send_json(ws, json);
     cJSON_Delete(json);
 }
 
@@ -187,7 +197,7 @@ callback(struct lws *wsi, enum lws_callback_reasons callback_reason, void *user,
                 break;
             }
 
-            // get the "event" field from the JSON object
+        // get the "event" field from the JSON object
             const cJSON *event = cJSON_GetObjectItem(json, "event");
             if (event == NULL || !cJSON_IsString(event)) {
                 lwsl_err("Invalid JSON format: 'event' field missing or not a string\n");
@@ -195,28 +205,23 @@ callback(struct lws *wsi, enum lws_callback_reasons callback_reason, void *user,
                 break;
             }
 
-            switch (event->valuestring) {
-                case "request_data":
-                    handle_request_data(websocket, json);
-                    break;
-                case "result":
-                    handle_result(websocket, json);
-                    break;
-                case "ack_connect":
-                    handle_ack_connect(websocket, json);
-                    break;
-                case "ack_disconnect":
-                    handle_ack_disconnect(websocket);
-                    break;
-                default:
-                    lwsl_err("Unknown event type: %s\n", event->valuestring);
-                    break;
+            if (strcmp(event->valuestring, "request_data") == 0) {
+                handle_request_data(websocket, json);
+            } else if (strcmp(event->valuestring, "result") == 0) {
+                handle_result(websocket, json);
+            } else if (strcmp(event->valuestring, "ack_connect") == 0) {
+                handle_ack_setup(websocket, json);
+            } else if (strcmp(event->valuestring, "ack_disconnect") == 0) {
+                handle_ack_disconnect(websocket);
+            } else {
+                lwsl_err("Unknown event type: %s\n", event->valuestring);
             }
             cJSON_Delete(json);
             break;
 
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
             // connection established
+            websocket->connnected = 1;
             break;
 
         case LWS_CALLBACK_CLIENT_WRITEABLE:
@@ -244,7 +249,17 @@ callback(struct lws *wsi, enum lws_callback_reasons callback_reason, void *user,
 
 static void
 handle_request_data(NrWebsocket *ws, const cJSON *json) {
-    // TODO: handle the request data
+    const int start_batch_id = cJSON_GetObjectItem(json, "startBatchId")->valueint;
+    int n_batch = cJSON_GetObjectItem(json, "nBatch")->valueint;
+
+    while (n_batch > 0) {
+        const char *batch_data = dequeue(&ws->queue);
+        if (batch_data == NULL) {
+            return;
+        }
+        nws_send_batch_data(ws, start_batch_id, S_TRAIN, batch_data);
+        n_batch--;
+    }
 }
 
 static void
@@ -253,14 +268,13 @@ handle_result(NrWebsocket *ws, const cJSON *json) {
 }
 
 static void
-handle_ack_connect(NrWebsocket *ws, const cJSON *json) {
+handle_ack_setup(NrWebsocket *ws, const cJSON *json) {
     const cJSON *session_id = cJSON_GetObjectItem(json, "sessionId");
     if (session_id == NULL || !cJSON_IsString(session_id)) {
         lwsl_err("Invalid JSON format: 'sessionId' field missing or not a string\n");
         return;
     }
     strcpy(ws->sid, session_id->valuestring); // set the session id
-    ws->connnected = 1;
 }
 
 static void
