@@ -52,7 +52,6 @@ establish a connection.
 {
     "version": 1,
     "event": "connect",
-    "cacheSize": 100
 }
 ```
 
@@ -81,6 +80,9 @@ training task:
     "type": "train",
     "architecture": "model_architecture",
     "sessionId": "client_socket_id",
+    "cacheSize": 100,
+    "features": "feature1,feature2",
+    "target": "target",
     "spec": {
         "batchSize": 32,
         "epochs": 10,
@@ -91,7 +93,9 @@ training task:
         "optimizer": "adam",
         "loss": "categorical_crossentropy",
         "metrics": ["accuracy"]
-    }
+    },
+    "nFeat": 100,
+    "nField": 10
 }
 ```
 
@@ -104,11 +108,15 @@ inference task:
     "type": "inference",
     "architecture": "model_architecture",
     "sessionId": "client_socket_id",
+    "cacheSize": 100,
     "spec": {
         "batchSize": 32,
         "nBatch": 10,
         "metrics": ["accuracy"]
-    }
+    },
+    "nFeat": 100,
+    "nField": 10,
+    "modelId": 1
 }
 ```
 
@@ -122,6 +130,7 @@ fine-tune task:
     "modelName": "model_name",
     "modelId": 1,
     "sessionId": "client_socket_id",
+    "cacheSize": 100,
     "spec": {
         "batch_size": 32,
         "epochs": 10,
@@ -132,7 +141,9 @@ fine-tune task:
         "optimizer": "adam",
         "loss": "categorical_crossentropy",
         "metrics": ["accuracy"]
-    }
+    },
+    "nFeat": 100,
+    "nField": 10
 }
 ```
 

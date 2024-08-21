@@ -5,7 +5,7 @@ from app.handlers.setup import Setup
 from dataloader.steam_libsvm_dataset import StreamingDataSet
 
 
-def finetune(
+async def finetune(
     model_name: str,
     finetune_libsvm: StreamingDataSet,
     args: argparse.Namespace,

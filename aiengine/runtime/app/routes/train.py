@@ -46,9 +46,8 @@ def model_train():
             db=db_connector,
             epochs=epoch,
             train_batch_num=train_batch_num,
-            eva_batch_num=eva_batch_num,
+            eval_batch_num=eva_batch_num,
             test_batch_num=test_batch_num,
-            table_name=dataset_name,
             features=features.split(","),
             target=target,
         )
