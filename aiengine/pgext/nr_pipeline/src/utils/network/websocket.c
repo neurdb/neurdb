@@ -1,7 +1,6 @@
 #include "websocket.h"
 
 #include <c.h>
-#include <utils/elog.h>
 
 #include "../cjson/cJSON.h"
 
@@ -27,7 +26,7 @@ static void send_setup_signal(const NrWebsocket *ws, size_t cache_size);
 static void send_disconnect_signal(const NrWebsocket *ws);
 
 // websocket thread
-static void *websocket_thread(void *arg);
+static void websocket_thread(void *arg);
 
 // define the protocol in the websocket
 static const struct lws_protocols nws_protocol[] = {
@@ -110,14 +109,9 @@ nws_connect(NrWebsocket *ws) {
 int
 nws_disconnect(NrWebsocket *ws) {
     send_disconnect_signal(ws);
-    // ws->interrupted = 1;
     pthread_join(ws->thread, NULL); // wait for the websocket thread to terminate
-    lws_context_destroy(ws->context);
-    destroy_batch_queue(&ws->queue);
-    free(ws);
     return 0;
 }
-
 
 void
 nws_wait_completion(NrWebsocket *ws) {
@@ -126,14 +120,23 @@ nws_wait_completion(NrWebsocket *ws) {
     }
 }
 
+void
+nws_free_websocket(NrWebsocket *ws) {
+    if (ws->thread) {
+        pthread_join(ws->thread, NULL);
+    }
+    lws_context_destroy(ws->context);
+    destroy_batch_queue(&ws->queue);
+    free(ws);
+}
 
-static void *
+static void
 websocket_thread(void *arg) {
     const NrWebsocket *ws = (NrWebsocket *) arg;
     while (!ws->interrupted) {
         lws_service(ws->context, 50); // 50ms
     }
-    return NULL;
+    pthread_exit(NULL);
 }
 
 
@@ -163,9 +166,8 @@ nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec) {
     cJSON_AddStringToObject(json, "sessionId", ws->sid);
     cJSON_AddStringToObject(json, "type", ML_TASK[ml_task]);
     task_append_to_json(json, task_spec, ml_task);
-    // send the task
+
     send_json(ws, json);
-    // cJSON_Delete(json);
     while (!ws->task_acknowledged) {
         // wait for the task to be acknowledged
         usleep(1000); // TODO: consider using a condition variable instead of busy waiting
@@ -175,8 +177,14 @@ nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec) {
 static void
 send_json(const NrWebsocket *ws, const cJSON *json) {
     char *data = cJSON_PrintUnformatted(json);
-    lws_write(ws->instance, (unsigned char *) data, strlen(data), LWS_WRITE_TEXT);
-    // free(data);
+    const size_t data_len = strlen(data);
+    unsigned char *buf = malloc(LWS_PRE + data_len);
+    if (buf) {
+        memcpy(buf + LWS_PRE, data, data_len);
+        lws_write(ws->instance, buf + LWS_PRE, data_len, LWS_WRITE_TEXT);
+        free(buf);
+    }
+    free(data);
 }
 
 static void
@@ -254,9 +262,8 @@ callback(struct lws *wsi, enum lws_callback_reasons callback_reason, void *user,
         case LWS_CALLBACK_CLIENT_WRITEABLE:
             break;
 
-        case LWS_CALLBACK_CLOSED:
+        case LWS_CALLBACK_CLIENT_CLOSED:
             // connection closed
-            elog(INFO, "Connection closed");
             websocket->interrupted = 1;
             break;
 
@@ -300,12 +307,8 @@ handle_ack_setup(NrWebsocket *ws, const cJSON *json) {
 
 static void
 handle_ack_disconnect(NrWebsocket *ws) {
-    if (ws->context) {
-        lws_cancel_service(ws->context);
-    }
-    ws->interrupted = 1;
-    destroy_batch_queue(&ws->queue);
-    elog(INFO, "Disconnected from the server");
+    lws_close_reason(ws->instance, LWS_CLOSE_STATUS_NOSTATUS, NULL, 0);
+    lws_set_timeout(ws->instance, PENDING_TIMEOUT_CLOSE_SEND, LWS_TO_KILL_SYNC);
 }
 
 static void

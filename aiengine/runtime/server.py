@@ -174,8 +174,8 @@ async def model_inference():
 
 @quart_app.websocket("/ws")
 async def handle_ws():
+    sender_task = asyncio.create_task(WebsocketSender.start_websocket_sender_task())
     logger.debug(f"Client event received.")
-    sender_task = asyncio.create_task(WebsocketSender.websocket_sender_task())
     while True:
         data = await websocket.receive()
         if data:
@@ -199,8 +199,7 @@ async def on_setup(data: json):
     logger.debug(f"Client connected: {data}")
     session_id = str(uuid.uuid4())
     quart_app.config["clients"][session_id] = session_id  # TODO: refactor the structure of clients map
-    json_data = json.dumps({"version": 1, "event": "ack_setup", "sessionId": session_id})
-    await websocket.send(json_data)
+    await WebsocketSender.send(json.dumps({"version": 1, "event": "ack_setup", "sessionId": session_id}))
 
 
 async def on_disconnect(data: json):
@@ -209,7 +208,8 @@ async def on_disconnect(data: json):
     quart_app.config["clients"].pop(session_id)
     quart_app.config["data_cache"].remove(session_id)
     quart_app.config["dispatchers"].remove(session_id)
-    await websocket.send(json.dumps({"version": 1, "event": "ack_disconnect", "sessionId": session_id}))
+    await WebsocketSender.send(json.dumps({"version": 1, "event": "ack_disconnect", "sessionId": session_id}))
+    WebsocketSender.stop()
 
 
 async def on_task(data: json):
@@ -279,7 +279,7 @@ async def on_train(data: json) -> int:
 
 def train_task_done_callback(task, session_id):
     asyncio.create_task(
-        WebsocketSender.send_message(
+        WebsocketSender.send(
             json.dumps(
                 {
                     "version": 1,

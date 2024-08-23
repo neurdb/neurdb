@@ -234,8 +234,8 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
  */
 Datum nr_train(PG_FUNCTION_ARGS) {
     TimeMetric *time_metric = init_time_metric("nr_train", MILLISECOND);
-    record_overall_start_time(time_metric); // record the start time of the function
-    record_query_start_time(time_metric); // record the start time of preprocessing
+    record_overall_start_time(time_metric);
+    record_query_start_time(time_metric);
 
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1)); // table name
@@ -247,9 +247,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // feature names
     char *target = text_to_cstring(PG_GETARG_TEXT_P(7)); // target column
-
-    BatchQueue *queue = malloc(sizeof(BatchQueue *));
-    init_batch_queue(queue, 10);
 
     // socketio_set_queue(sio_client, queue);
     NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
@@ -266,7 +263,9 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
 
     // init dataset
-    TrainTaskSpec *train_task_spec = create_train_task_spec(
+    TrainTaskSpec *train_task_spec = malloc(sizeof(TrainTaskSpec));
+    init_train_task_spec(
+        train_task_spec,
         model_name,
         batch_size,
         epoch,
@@ -284,6 +283,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         n_features
     );
     nws_send_task(ws, T_TRAIN, train_task_spec);
+    free_train_task_spec(train_task_spec);
 
     resetStringInfo(&query);
     char *cursor_name = "nr_train_cursor";
@@ -387,6 +387,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     }
     record_query_end_time(time_metric); // record the eventual end time of query
     nws_wait_completion(ws);
+
     // clean up
     pfree(table_name);
     pfree(features);
@@ -398,6 +399,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
     // close the connection
     nws_disconnect(ws);
+    nws_free_websocket(ws);
 
     SPI_finish();
     record_overall_end_time(time_metric); // record the end time of the function

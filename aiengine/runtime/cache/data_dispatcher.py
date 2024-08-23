@@ -182,7 +182,7 @@ async def emit_request_data(sio: socketio.AsyncServer, client_id: str):
 
 
 async def websocket_emit_request_data(session_id: str):
-    await WebsocketSender.send_message(
+    await WebsocketSender.send(
         json.dumps({
             "version": 1,
             "event": "request_data",

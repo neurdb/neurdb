@@ -6,7 +6,8 @@
 
 const char *ML_TASK[] = {"train", "inference", "finetune"};
 
-TrainTaskSpec *create_train_task_spec(
+void init_train_task_spec(
+    TrainTaskSpec *task,
     const char *architecture,
     int batch_size,
     int epoch,
@@ -23,7 +24,6 @@ TrainTaskSpec *create_train_task_spec(
     int nFeat,
     int nField
 ) {
-    TrainTaskSpec *task = (TrainTaskSpec *) malloc(sizeof(TrainTaskSpec));
     task->architecture = strdup(architecture);
     task->batch_size = batch_size;
     task->epoch = epoch;
@@ -39,10 +39,10 @@ TrainTaskSpec *create_train_task_spec(
     task->nField = nField;
     task->features = strdup(features);
     task->target = strdup(target);
-    return task;
 }
 
-InferenceTaskSpec *create_inference_task_spec(
+void init_inference_task_spec(
+    InferenceTaskSpec *task,
     const char *architecture,
     int batch_size,
     int n_batch,
@@ -52,7 +52,6 @@ InferenceTaskSpec *create_inference_task_spec(
     int nField,
     int modelId
 ) {
-    InferenceTaskSpec *task = (InferenceTaskSpec *) malloc(sizeof(InferenceTaskSpec));
     task->architecture = strdup(architecture);
     task->batch_size = batch_size;
     task->n_batch = n_batch;
@@ -61,10 +60,10 @@ InferenceTaskSpec *create_inference_task_spec(
     task->nFeat = nFeat;
     task->nField = nField;
     task->modelId = modelId;
-    return task;
 }
 
-FinetuneTaskSpec *create_finetune_task_spec(
+void init_finetune_task_spec(
+    FinetuneTaskSpec *task,
     const char *model_name,
     int model_id,
     int batch_size,
@@ -80,7 +79,6 @@ FinetuneTaskSpec *create_finetune_task_spec(
     int nFeat,
     int nField
 ) {
-    FinetuneTaskSpec *task = (FinetuneTaskSpec *) malloc(sizeof(FinetuneTaskSpec));
     task->model_name = strdup(model_name);
     task->model_id = model_id;
     task->batch_size = batch_size;
@@ -95,7 +93,6 @@ FinetuneTaskSpec *create_finetune_task_spec(
     task->cacheSize = cacheSize;
     task->nFeat = nFeat;
     task->nField = nField;
-    return task;
 }
 
 void free_train_task_spec(TrainTaskSpec *task) {

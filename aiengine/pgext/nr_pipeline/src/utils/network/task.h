@@ -67,7 +67,8 @@ typedef struct {
     int nField;
 } FinetuneTaskSpec;
 
-TrainTaskSpec *create_train_task_spec(
+void init_train_task_spec(
+    TrainTaskSpec *task,
     const char *architecture,
     int batch_size,
     int epoch,
@@ -85,7 +86,8 @@ TrainTaskSpec *create_train_task_spec(
     int nField
 );
 
-InferenceTaskSpec *create_inference_task_spec(
+void init_inference_task_spec(
+    InferenceTaskSpec *task,
     const char *architecture,
     int batch_size,
     int n_batch,
@@ -96,7 +98,8 @@ InferenceTaskSpec *create_inference_task_spec(
     int modelId
 );
 
-FinetuneTaskSpec *create_finetune_task_spec(
+void init_finetune_task_spec(
+    FinetuneTaskSpec *task,
     const char *model_name,
     int model_id,
     int batch_size,
@@ -112,6 +115,12 @@ FinetuneTaskSpec *create_finetune_task_spec(
     int nFeat,
     int nField
 );
+
+void free_train_task_spec(TrainTaskSpec *task);
+
+void free_inference_task_spec(InferenceTaskSpec *task);
+
+void free_finetune_task_spec(FinetuneTaskSpec *task);
 
 /**
  * Append the task specification to the json object

@@ -54,6 +54,14 @@ nws_connect(NrWebsocket *ws);
 int
 nws_disconnect(NrWebsocket *ws);
 
+/**
+ * Clean up the websocket instance
+ * @param ws The websocket instance
+ */
+void
+nws_free_websocket(NrWebsocket *ws);
+
+
 // ****************************** Message ******************************
 
 static const char *ML_STAGE[] = {"train", "evaluate", "test", "inference"};
