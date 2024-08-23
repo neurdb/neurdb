@@ -44,7 +44,7 @@ def model_train():
             training_libsvm=g.data_loader,
             args=config_args,
             db=db_connector,
-            epochs=epoch,
+            epoch=epoch,
             train_batch_num=train_batch_num,
             eval_batch_num=eva_batch_num,
             test_batch_num=test_batch_num,

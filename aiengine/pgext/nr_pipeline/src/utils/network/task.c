@@ -4,6 +4,8 @@
 #include <string.h>
 
 
+const char *ML_TASK[] = {"train", "inference", "finetune"};
+
 TrainTaskSpec *create_train_task_spec(
     const char *architecture,
     int batch_size,
@@ -14,7 +16,12 @@ TrainTaskSpec *create_train_task_spec(
     double learning_rate,
     const char *optimizer,
     const char *loss,
-    const char *metrics
+    const char *metrics,
+    int cacheSize,
+    char* features,
+    char* target,
+    int nFeat,
+    int nField
 ) {
     TrainTaskSpec *task = (TrainTaskSpec *) malloc(sizeof(TrainTaskSpec));
     task->architecture = strdup(architecture);
@@ -27,6 +34,11 @@ TrainTaskSpec *create_train_task_spec(
     task->optimizer = strdup(optimizer);
     task->loss = strdup(loss);
     task->metrics = strdup(metrics);
+    task->cacheSize = cacheSize;
+    task->nFeat = nFeat;
+    task->nField = nField;
+    task->features = strdup(features);
+    task->target = strdup(target);
     return task;
 }
 
@@ -34,13 +46,21 @@ InferenceTaskSpec *create_inference_task_spec(
     const char *architecture,
     int batch_size,
     int n_batch,
-    const char *metrics
+    const char *metrics,
+    int cacheSize,
+    int nFeat,
+    int nField,
+    int modelId
 ) {
     InferenceTaskSpec *task = (InferenceTaskSpec *) malloc(sizeof(InferenceTaskSpec));
     task->architecture = strdup(architecture);
     task->batch_size = batch_size;
     task->n_batch = n_batch;
     task->metrics = strdup(metrics);
+    task->cacheSize = cacheSize;
+    task->nFeat = nFeat;
+    task->nField = nField;
+    task->modelId = modelId;
     return task;
 }
 
@@ -55,7 +75,10 @@ FinetuneTaskSpec *create_finetune_task_spec(
     double learning_rate,
     const char *optimizer,
     const char *loss,
-    const char *metrics
+    const char *metrics,
+    int cacheSize,
+    int nFeat,
+    int nField
 ) {
     FinetuneTaskSpec *task = (FinetuneTaskSpec *) malloc(sizeof(FinetuneTaskSpec));
     task->model_name = strdup(model_name);
@@ -69,6 +92,9 @@ FinetuneTaskSpec *create_finetune_task_spec(
     task->optimizer = strdup(optimizer);
     task->loss = strdup(loss);
     task->metrics = strdup(metrics);
+    task->cacheSize = cacheSize;
+    task->nFeat = nFeat;
+    task->nField = nField;
     return task;
 }
 
@@ -99,38 +125,57 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
         case T_TRAIN: {
             TrainTaskSpec *spec = (TrainTaskSpec *) task_spec;
             cJSON_AddStringToObject(json, "architecture", spec->architecture);
-            cJSON_AddNumberToObject(json, "batchSize", spec->batch_size);
-            cJSON_AddNumberToObject(json, "epoch", spec->epoch);
-            cJSON_AddNumberToObject(json, "nBatchTrain", spec->n_batch_train);
-            cJSON_AddNumberToObject(json, "nBatchEval", spec->n_batch_eval);
-            cJSON_AddNumberToObject(json, "nBatchTest", spec->n_batch_test);
-            cJSON_AddNumberToObject(json, "learningRate", spec->learning_rate);
-            cJSON_AddStringToObject(json, "optimizer", spec->optimizer);
-            cJSON_AddStringToObject(json, "loss", spec->loss);
-            cJSON_AddStringToObject(json, "metrics", spec->metrics);
+            cJSON_AddStringToObject(json, "features", spec->features);
+            cJSON_AddStringToObject(json, "target", spec->target);
+            cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
+            cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
+            cJSON_AddNumberToObject(json, "nField", spec->nField);
+            cJSON *spec_json = cJSON_CreateObject();
+            cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);
+            cJSON_AddNumberToObject(spec_json, "epoch", spec->epoch);
+            cJSON_AddNumberToObject(spec_json, "nBatchTrain", spec->n_batch_train);
+            cJSON_AddNumberToObject(spec_json, "nBatchEval", spec->n_batch_eval);
+            cJSON_AddNumberToObject(spec_json, "nBatchTest", spec->n_batch_test);
+            cJSON_AddNumberToObject(spec_json, "learningRate", spec->learning_rate);
+            cJSON_AddStringToObject(spec_json, "optimizer", spec->optimizer);
+            cJSON_AddStringToObject(spec_json, "loss", spec->loss);
+            cJSON_AddStringToObject(spec_json, "metrics", spec->metrics);
+            cJSON_AddItemToObject(json, "spec", spec_json);
             break;
         }
         case T_INFERENCE: {
             InferenceTaskSpec *spec = (InferenceTaskSpec *) task_spec;
             cJSON_AddStringToObject(json, "architecture", spec->architecture);
-            cJSON_AddNumberToObject(json, "batchSize", spec->batch_size);
-            cJSON_AddNumberToObject(json, "nBatch", spec->n_batch);
-            cJSON_AddStringToObject(json, "metrics", spec->metrics);
+            cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
+            cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
+            cJSON_AddNumberToObject(json, "nField", spec->nField);
+            cJSON_AddNumberToObject(json, "modelId", spec->modelId);
+
+            cJSON *spec_json = cJSON_CreateObject();
+            cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);
+            cJSON_AddNumberToObject(spec_json, "nBatch", spec->n_batch);
+            cJSON_AddStringToObject(spec_json, "metrics", spec->metrics);
+            cJSON_AddItemToObject(json, "spec", spec_json);
             break;
         }
         case T_FINETUNE: {
             FinetuneTaskSpec *spec = (FinetuneTaskSpec *) task_spec;
             cJSON_AddStringToObject(json, "modelName", spec->model_name);
             cJSON_AddNumberToObject(json, "modelId", spec->model_id);
-            cJSON_AddNumberToObject(json, "batchSize", spec->batch_size);
-            cJSON_AddNumberToObject(json, "epochs", spec->epochs);
-            cJSON_AddNumberToObject(json, "nBatchTrain", spec->n_batch_train);
-            cJSON_AddNumberToObject(json, "nBatchEval", spec->n_batch_eval);
-            cJSON_AddNumberToObject(json, "nBatchTest", spec->n_batch_test);
-            cJSON_AddNumberToObject(json, "learningRate", spec->learning_rate);
-            cJSON_AddStringToObject(json, "optimizer", spec->optimizer);
-            cJSON_AddStringToObject(json, "loss", spec->loss);
-            cJSON_AddStringToObject(json, "metrics", spec->metrics);
+            cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
+            cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
+            cJSON_AddNumberToObject(json, "nField", spec->nField);
+
+            cJSON *spec_json = cJSON_CreateObject();
+            cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);
+            cJSON_AddNumberToObject(spec_json, "epochs", spec->epochs);
+            cJSON_AddNumberToObject(spec_json, "nBatchTrain", spec->n_batch_train);
+            cJSON_AddNumberToObject(spec_json, "nBatchEval", spec->n_batch_eval);
+            cJSON_AddNumberToObject(spec_json, "nBatchTest", spec->n_batch_test);
+            cJSON_AddNumberToObject(spec_json, "learningRate", spec->learning_rate);
+            cJSON_AddStringToObject(spec_json, "optimizer", spec->optimizer);
+            cJSON_AddStringToObject(spec_json, "loss", spec->loss);
+            cJSON_AddStringToObject(spec_json, "metrics", spec->metrics);
             break;
         }
     }

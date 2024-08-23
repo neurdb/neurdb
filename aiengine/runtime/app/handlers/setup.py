@@ -28,7 +28,7 @@ class Setup:
     #         return f.read()
 
     async def train(
-        self, epochs: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
+        self, epoch: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
     ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
@@ -41,7 +41,7 @@ class Setup:
                 self.libsvm_data,
                 self.libsvm_data,
                 self.libsvm_data,
-                epochs,
+                epoch,
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num,
@@ -61,7 +61,7 @@ class Setup:
         self,
         model_id: int,
         start_layer_id: int,
-        epochs: int,
+        epoch: int,
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
@@ -88,7 +88,7 @@ class Setup:
                 self.libsvm_data,
                 self.libsvm_data,
                 self.libsvm_data,
-                epochs,
+                epoch,
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num,

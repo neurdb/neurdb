@@ -112,7 +112,7 @@ class DataCache:
         Check if the queue is full.
         :return: True if the total batch meet
         """
-        return self.current_batch_num == self.total_batch_num
+        return self.current_batch_num >= self.total_batch_num - 1
 
     def is_empty(self) -> bool:
         """

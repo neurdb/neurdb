@@ -11,7 +11,7 @@ async def train(
     training_libsvm: StreamingDataSet,
     args: argparse.Namespace,
     db: NeurDBModelHandler,
-    epochs: int,
+    epoch: int,
     train_batch_num: int,
     eval_batch_num: int,
     test_batch_num: int,
@@ -20,7 +20,7 @@ async def train(
 ) -> int:
     s = Setup(model_name, training_libsvm, args, db)
 
-    model_id, err = await s.train(epochs, train_batch_num, eval_batch_num, test_batch_num)
+    model_id, err = await s.train(epoch, train_batch_num, eval_batch_num, test_batch_num)
 
     if err is not None:
         logger.error(f"train failed with error: {err}")

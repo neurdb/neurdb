@@ -4,7 +4,7 @@
 #include <cjson/cJSON.h>
 
 
-const char *ML_TASK[] = {"train", "inference", "finetune"};
+extern const char *ML_TASK[];
 
 /**
  * The machine learning task
@@ -29,6 +29,12 @@ typedef struct {
     char *optimizer;
     char *loss;
     char *metrics;
+
+    int cacheSize;
+    char* features;
+    char* target;
+    int nFeat;
+    int nField;
 } TrainTaskSpec;
 
 typedef struct {
@@ -36,6 +42,11 @@ typedef struct {
     int batch_size;
     int n_batch;
     char *metrics;
+
+    int cacheSize;
+    int nFeat;
+    int nField;
+    int modelId;
 } InferenceTaskSpec;
 
 typedef struct {
@@ -50,6 +61,10 @@ typedef struct {
     char *optimizer;
     char *loss;
     char *metrics;
+
+    int cacheSize;
+    int nFeat;
+    int nField;
 } FinetuneTaskSpec;
 
 TrainTaskSpec *create_train_task_spec(
@@ -62,14 +77,23 @@ TrainTaskSpec *create_train_task_spec(
     double learning_rate,
     const char *optimizer,
     const char *loss,
-    const char *metrics
+    const char *metrics,
+    int cacheSize,
+    char* features,
+    char* target,
+    int nFeat,
+    int nField
 );
 
 InferenceTaskSpec *create_inference_task_spec(
     const char *architecture,
     int batch_size,
     int n_batch,
-    const char *metrics
+    const char *metrics,
+    int cacheSize,
+    int nFeat,
+    int nField,
+    int modelId
 );
 
 FinetuneTaskSpec *create_finetune_task_spec(
@@ -83,7 +107,10 @@ FinetuneTaskSpec *create_finetune_task_spec(
     double learning_rate,
     const char *optimizer,
     const char *loss,
-    const char *metrics
+    const char *metrics,
+    int cacheSize,
+    int nFeat,
+    int nField
 );
 
 /**

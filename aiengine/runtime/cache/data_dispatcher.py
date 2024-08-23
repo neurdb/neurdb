@@ -1,13 +1,13 @@
 import asyncio
-from quart import current_app
-from quart.utils import run_sync
+import json
+
 import threading
+from websocket_sender import WebsocketSender
 
 import socketio
 from cache import DataCache
-from typing import Any, Callable, Coroutine
+
 from dataloader.preprocessing import (
-    libsvm_batch_preprocess,
     libsvm_batch_preprocess_id_only,
 )
 from logger.logger import logger
@@ -73,19 +73,19 @@ class LibSvmDataDispatcher:
         Stop the background thread.
         """
         logger.debug("stopping dispatcher")
-        if self.thread is not None:
-            self.stop_event.set()  # Signal the thread to stop
-            self.full_event.set()  # Wake up the thread if it's waiting
-            try:
-                self.thread.join(
-                    timeout=10
-                )  # Wait up to 10 seconds for the thread to stop
-            except Exception as e:
-                logger.debug(
-                    f"[LibSvmDataDispatcher] Exception while stopping thread: {e}"
-                )
-            finally:
-                self.thread = None
+        # if self.thread is not None:
+        self.stop_event.set()  # Signal the thread to stop
+        self.full_event.set()  # Wake up the thread if it's waiting
+        # try:
+        #     self.thread.join(
+        #         timeout=10
+        #     )  # Wait up to 10 seconds for the thread to stop
+        # except Exception as e:
+        #     logger.debug(
+        #         f"[LibSvmDataDispatcher] Exception while stopping thread: {e}"
+        #     )
+        # finally:
+        #     self.thread = None
 
     def background_task(self):
         """
@@ -100,7 +100,8 @@ class LibSvmDataDispatcher:
         )
 
         asyncio.run_coroutine_threadsafe(
-            emit_request_data(self.sio, self.client_id), self.loop
+            # emit_request_data(self.sio, self.client_id), self.loop
+            websocket_emit_request_data(self.client_id), self.loop
         )
 
         while not self.stop_event.is_set():
@@ -120,7 +121,8 @@ class LibSvmDataDispatcher:
                 )
 
                 asyncio.run_coroutine_threadsafe(
-                    emit_request_data(self.sio, self.client_id), self.loop
+                    # emit_request_data(self.sio, self.client_id), self.loop
+                    websocket_emit_request_data(self.client_id), self.loop
                 )
                 # Reset the event
                 self.full_event.clear()
@@ -177,3 +179,15 @@ async def emit_request_data(sio: socketio.AsyncServer, client_id: str):
 
     logger.debug("emit_request_data", sid=client_id)
     await sio.emit("request_data", {}, to=client_id)
+
+
+async def websocket_emit_request_data(session_id: str):
+    await WebsocketSender.send_message(
+        json.dumps({
+            "version": 1,
+            "event": "request_data",
+            "sessionId": session_id,
+            "startBatchId": 0,
+            "nBatch": 1
+        })
+    )

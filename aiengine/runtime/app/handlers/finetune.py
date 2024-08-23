@@ -11,7 +11,7 @@ async def finetune(
     args: argparse.Namespace,
     db: NeurDBModelHandler,
     model_id: int,
-    epochs: int,
+    epoch: int,
     train_batch_num: int,
     eva_batch_num: int,
     test_batch_num: int,
@@ -21,7 +21,7 @@ async def finetune(
     model_id, err = s.finetune(
         model_id,
         start_layer_id=5,
-        epochs=epochs,
+        epoch=epoch,
         train_batch_num=train_batch_num,
         eva_batch_num=eva_batch_num,
         test_batch_num=test_batch_num,

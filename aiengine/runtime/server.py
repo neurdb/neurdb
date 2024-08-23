@@ -1,5 +1,7 @@
+import asyncio
 import uuid
 from threading import Thread
+from websocket_sender import WebsocketSender
 
 from quart import Quart, current_app, jsonify, g
 from quart import request, websocket
@@ -104,7 +106,7 @@ async def model_train():
             training_libsvm=g.data_loader,
             args=config_args,
             db=db_connector,
-            epochs=epoch,
+            epoch=epoch,
             train_batch_num=train_batch_num,
             eval_batch_num=eva_batch_num,
             test_batch_num=test_batch_num,
@@ -173,13 +175,14 @@ async def model_inference():
 @quart_app.websocket("/ws")
 async def handle_ws():
     logger.debug(f"Client event received.")
+    sender_task = asyncio.create_task(WebsocketSender.websocket_sender_task())
     while True:
         data = await websocket.receive()
         if data:
             data_json = json.loads(data)
             event = data_json.get("event")
-            if event == "connect":
-                await on_connect(data_json)
+            if event == "setup":
+                await on_setup(data_json)
             elif event == "disconnect":
                 await on_disconnect(data_json)
             elif event == "task":
@@ -192,12 +195,11 @@ async def handle_ws():
                 pass
 
 
-async def on_connect(data: json):
+async def on_setup(data: json):
     logger.debug(f"Client connected: {data}")
     session_id = str(uuid.uuid4())
     quart_app.config["clients"][session_id] = session_id  # TODO: refactor the structure of clients map
-    logger.debug(session_id)
-    json_data = json.dumps({"version": 1, "event": "ack_connect", "sessionId": session_id})
+    json_data = json.dumps({"version": 1, "event": "ack_setup", "sessionId": session_id})
     await websocket.send(json_data)
 
 
@@ -205,15 +207,15 @@ async def on_disconnect(data: json):
     logger.debug(f"Client disconnected: {data}")
     session_id = data.get("sessionId")
     quart_app.config["clients"].pop(session_id)
-    quart_app.config["data_cache"].pop(session_id)
-    quart_app.config["dispatchers"].pop(session_id)
+    quart_app.config["data_cache"].remove(session_id)
+    quart_app.config["dispatchers"].remove(session_id)
     await websocket.send(json.dumps({"version": 1, "event": "ack_disconnect", "sessionId": session_id}))
 
 
 async def on_task(data: json):
     logger.debug(f"Task received: {data}")
     session_id = data.get("sessionId")
-    task: str = data.get("task")
+    task: str = data.get("type")
     if task == "train":
         await on_train(data)
     elif task == "inference":
@@ -222,7 +224,6 @@ async def on_task(data: json):
         await on_finetune(data)
     else:
         pass
-    await websocket.send(json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id}))
 
 
 async def on_batch_data(data: json):
@@ -233,7 +234,7 @@ async def on_batch_data(data: json):
     else:
         data = data["byte"]
         dispatcher = quart_app.config["dispatchers"].get(session_id, session_id)
-        dispatcher.add(data)
+        await dispatcher.add(data)
 
 
 async def on_ack_result(data: json):
@@ -247,6 +248,7 @@ async def on_train(data: json) -> int:
     cache_size = data["cacheSize"]
     session_id = data["sessionId"]
     await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
+    await websocket.send(json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id}))
 
     exe_flag, exe_info = before_execute(
         dataset_name=session_id,
@@ -257,20 +259,37 @@ async def on_train(data: json) -> int:
         logger.error(f"Execution flag failed: {exe_info}")
         return -1
 
-    model_id = await train(
-        model_name=data["architecture"],
-        training_libsvm=g.data_loader,
-        args=current_app.config["config_args"],
-        db=current_app.config["db_connector"],
-        epochs=data["spec"]["epochs"],
-        train_batch_num=data["spec"]["nBatchTrain"],
-        eval_batch_num=data["spec"]["nBatchEval"],
-        test_batch_num=data["spec"]["nBatchTest"],
-        features=data["features"],
-        target=data["target"]
+    train_task = asyncio.create_task(
+        train(
+            model_name=data["architecture"],
+            training_libsvm=g.data_loader,
+            args=current_app.config["config_args"],
+            db=current_app.config["db_connector"],
+            epoch=data["spec"]["epoch"],
+            train_batch_num=data["spec"]["nBatchTrain"],
+            eval_batch_num=data["spec"]["nBatchEval"],
+            test_batch_num=data["spec"]["nBatchTest"],
+            features=data["features"],
+            target=data["target"]
+        )
     )
 
-    return model_id
+    train_task.add_done_callback(lambda task: train_task_done_callback(task, session_id))
+
+
+def train_task_done_callback(task, session_id):
+    asyncio.create_task(
+        WebsocketSender.send_message(
+            json.dumps(
+                {
+                    "version": 1,
+                    "event": "result",
+                    "sessionId": session_id,
+                    "payload": task.result(),
+                }
+            )
+        )
+    )
 
 
 async def on_inference(data: json):
@@ -323,7 +342,7 @@ async def on_finetune(data: json):
         args=current_app.config["config_args"],
         db=current_app.config["db_connector"],
         model_id=data["modelId"],
-        epochs=data["spec"]["epochs"],
+        epoch=data["spec"]["epoch"],
         train_batch_num=data["spec"]["nBatchTrain"],
         eva_batch_num=data["spec"]["nBatchEval"],
         test_batch_num=data["spec"]["nBatchTest"]
@@ -349,7 +368,9 @@ async def init_database(n_feat: int, n_field: int, total_batch_num: int, cache_s
         dispatchers.add(session_id, session_id, _data_dispatcher)
         _data_dispatcher.bound_client_to_cache(_cache, session_id)
         _data_dispatcher.start()
-
+        loop = asyncio.get_event_loop()
+        _data_dispatcher.bound_loop(loop)
+        _data_dispatcher.start()
         t = Thread(target=_data_dispatcher.background_task)
         t.daemon = True
         t.start()

@@ -11,6 +11,7 @@
 #include "utils/network/socketio_nr.h"
 #include "utils/metric/time_metric.h"
 #include "utils/hash/md5.h"
+#include "utils/network/websocket.h"
 
 PG_MODULE_MAGIC;
 
@@ -247,39 +248,17 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     char **feature_names = text_array2char_array(features, &n_features); // feature names
     char *target = text_to_cstring(PG_GETARG_TEXT_P(7)); // target column
 
-    // init SocketIO
-    SocketIOClient *sio_client = socketio_client();
-
     BatchQueue *queue = malloc(sizeof(BatchQueue *));
     init_batch_queue(queue, 10);
 
-    socketio_set_queue(sio_client, queue);
-
-    socketio_register_callback(sio_client, "connection", nr_socketio_connect_callback);
-    socketio_register_callback(sio_client, "request_data", nr_socketio_request_data_callback);
-    socketio_connect(sio_client, "http://localhost:8090");
-
-    while (socketio_get_socket_id(sio_client) == 0) {
-        // wait for the connection
-        pg_usleep(10000); // sleep for 10ms
-    }
+    // socketio_set_queue(sio_client, queue);
+    NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
+    nws_connect(ws);
 
     // prepare the query
     StringInfoData query;
     initStringInfo(&query);
-
-    // appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
-    // calling SPI execution
     SPI_connect();
-    // SPI_execute(query.data, false, 0);
-
-    // bool isnull;
-    // const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
-
-    // const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
-    // const int n_batches_train = (int) ceil(n_batches * 0.8);
-    // const int n_batches_evaluate = (int) ceil(n_batches * 0.1);
-    // const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
 
     const int n_batches = batch_num;
     const int n_batches_train = (int) ceil(n_batches * 0.8);
@@ -287,33 +266,24 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
 
     // init dataset
-    nr_socketio_emit_db_init(sio_client, table_name, nfeat, n_features, n_batches * epoch, 80);
-
-    // create a new thread to send the training task
-    pthread_t train_thread;
-    TrainingInfo *training_info = malloc(sizeof(TrainingInfo));
-    training_info->model_name = model_name;
-    training_info->table_name = table_name;
-    training_info->client_socket_id = socketio_get_socket_id(sio_client);
-    training_info->batch_size = batch_size;
-    training_info->epoch = epoch;
-    training_info->train_batch_num = n_batches_train;
-    training_info->eva_batch_num = n_batches_evaluate;
-    training_info->test_batch_num = n_batches_test;
-    training_info->features = char_array2str(feature_names, n_features);
-    training_info->target = target;
-    pthread_create(&train_thread, NULL, send_train_task, (void *) training_info);
-
-    // send_train_task(
-    //     model_name,
-    //     table_name,
-    //     socketio_get_socket_id(sio_client),
-    //     batch_size,
-    //     epoch,
-    //     n_batches_train,
-    //     n_batches_evaluate,
-    //     n_batches_test
-    // );
+    TrainTaskSpec *train_task_spec = create_train_task_spec(
+        model_name,
+        batch_size,
+        epoch,
+        n_batches_train,
+        n_batches_evaluate,
+        n_batches_test,
+        0.001,
+        "optimizer",
+        "loss",
+        "metrics",
+        80,
+        char_array2str(feature_names, n_features),
+        target,
+        nfeat,
+        n_features
+    );
+    nws_send_task(ws, T_TRAIN, train_task_spec);
 
     resetStringInfo(&query);
     char *cursor_name = "nr_train_cursor";
@@ -349,7 +319,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
             current_batch = 1; // reset the current batch
             // if the current epoch is greater than the specified epoch, break the loop
             if (current_epoch >= epoch) {
-                elog(INFO, "Training completed");
                 break;
             }
             // reset the cursor
@@ -411,13 +380,13 @@ Datum nr_train(PG_FUNCTION_ARGS) {
         record_query_end_time(time_metric);
         record_operation_start_time(time_metric);
         // send training data to the Python Server, blocking operation if the queue is full
-        nr_socketio_emit_batch_data(sio_client, table_name, libsvm_data.data);
+        nws_send_batch_data(ws, 0, S_TRAIN, libsvm_data.data);
         record_operation_end_time(time_metric); // record the end time of operation
         record_query_start_time(time_metric);
         resetStringInfo(&row_data);
     }
     record_query_end_time(time_metric); // record the eventual end time of query
-
+    nws_wait_completion(ws);
     // clean up
     pfree(table_name);
     pfree(features);
@@ -427,14 +396,10 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     }
     pfree(feature_names);
 
-    // wait until the send_train_task thread is completed
-    pthread_join(train_thread, NULL);
-
     // close the connection
-    nr_socketio_emit_force_disconnect(sio_client);
+    nws_disconnect(ws);
 
     SPI_finish();
-
     record_overall_end_time(time_metric); // record the end time of the function
     postgres_log_time(time_metric); // log the time metric
     free_time_metric(time_metric);

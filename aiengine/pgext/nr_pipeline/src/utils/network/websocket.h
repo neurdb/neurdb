@@ -16,6 +16,9 @@ typedef struct {
     pthread_t thread;
     int interrupted;
     int connnected;
+    int setuped;
+    int task_acknowledged;
+    int completed;
     BatchQueue queue;
     char sid[256];
 } NrWebsocket;
@@ -82,5 +85,8 @@ nws_send_batch_data(NrWebsocket *ws, int batch_id, MLStage ml_stage, const char 
  */
 void
 nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec);
+
+void
+nws_wait_completion(NrWebsocket *ws);
 
 #endif //WEBSOCKET_H

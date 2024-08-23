@@ -42,7 +42,7 @@ class ARMNetModelBuilder(BuilderBase):
         train_loader: StreamingDataSet,
         val_loader: StreamingDataSet,
         test_loader: StreamingDataSet,
-        epochs: int,
+        epoch: int,
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
