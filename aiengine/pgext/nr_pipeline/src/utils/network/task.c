@@ -67,7 +67,7 @@ void init_finetune_task_spec(
     const char *model_name,
     int model_id,
     int batch_size,
-    int epochs,
+    int epoch,
     int n_batch_train,
     int n_batch_eval,
     int n_batch_test,
@@ -79,10 +79,10 @@ void init_finetune_task_spec(
     int nFeat,
     int nField
 ) {
-    task->model_name = strdup(model_name);
+    task->architecture = strdup(model_name);
     task->model_id = model_id;
     task->batch_size = batch_size;
-    task->epochs = epochs;
+    task->epoch = epoch;
     task->n_batch_train = n_batch_train;
     task->n_batch_eval = n_batch_eval;
     task->n_batch_test = n_batch_test;
@@ -110,7 +110,7 @@ void free_inference_task_spec(InferenceTaskSpec *task) {
 }
 
 void free_finetune_task_spec(FinetuneTaskSpec *task) {
-    free(task->model_name);
+    free(task->architecture);
     free(task->optimizer);
     free(task->loss);
     free(task->metrics);
@@ -127,6 +127,7 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
             cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
             cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
             cJSON_AddNumberToObject(json, "nField", spec->nField);
+
             cJSON *spec_json = cJSON_CreateObject();
             cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);
             cJSON_AddNumberToObject(spec_json, "epoch", spec->epoch);
@@ -157,7 +158,7 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
         }
         case T_FINETUNE: {
             FinetuneTaskSpec *spec = (FinetuneTaskSpec *) task_spec;
-            cJSON_AddStringToObject(json, "modelName", spec->model_name);
+            cJSON_AddStringToObject(json, "architecture", spec->architecture);
             cJSON_AddNumberToObject(json, "modelId", spec->model_id);
             cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
             cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
@@ -165,7 +166,7 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
 
             cJSON *spec_json = cJSON_CreateObject();
             cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);
-            cJSON_AddNumberToObject(spec_json, "epochs", spec->epochs);
+            cJSON_AddNumberToObject(spec_json, "epoch", spec->epoch);
             cJSON_AddNumberToObject(spec_json, "nBatchTrain", spec->n_batch_train);
             cJSON_AddNumberToObject(spec_json, "nBatchEval", spec->n_batch_eval);
             cJSON_AddNumberToObject(spec_json, "nBatchTest", spec->n_batch_test);
@@ -173,6 +174,7 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
             cJSON_AddStringToObject(spec_json, "optimizer", spec->optimizer);
             cJSON_AddStringToObject(spec_json, "loss", spec->loss);
             cJSON_AddStringToObject(spec_json, "metrics", spec->metrics);
+            cJSON_AddItemToObject(json, "spec", spec_json);
             break;
         }
     }

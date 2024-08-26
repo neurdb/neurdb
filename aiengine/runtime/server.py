@@ -241,7 +241,7 @@ async def on_ack_result(data: json):
     logger.debug(f"Ack result received")
 
 
-async def on_train(data: json) -> int:
+async def on_train(data: json):
     n_feat = data["nFeat"]
     n_field = data["nField"]
     total_batch_num = data["spec"]["nBatchTrain"] + data["spec"]["nBatchEval"] + data["spec"]["nBatchTest"]
@@ -257,7 +257,7 @@ async def on_train(data: json) -> int:
     )
     if not exe_flag:
         logger.error(f"Execution flag failed: {exe_info}")
-        return -1
+        return
 
     train_task = asyncio.create_task(
         train(
@@ -274,10 +274,10 @@ async def on_train(data: json) -> int:
         )
     )
 
-    train_task.add_done_callback(lambda task: train_task_done_callback(task, session_id))
+    train_task.add_done_callback(lambda task: task_done_callback(task, session_id))
 
 
-def train_task_done_callback(task, session_id):
+def task_done_callback(task, session_id):
     asyncio.create_task(
         WebsocketSender.send(
             json.dumps(
@@ -285,7 +285,7 @@ def train_task_done_callback(task, session_id):
                     "version": 1,
                     "event": "result",
                     "sessionId": session_id,
-                    "payload": task.result(),
+                    "payload": "Task completed",
                 }
             )
         )
@@ -299,6 +299,7 @@ async def on_inference(data: json):
     cache_size = data["cacheSize"]
     session_id = data["sessionId"]
     await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
+    await websocket.send(json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id}))
 
     exe_flag, exe_info = before_execute(
         dataset_name=session_id,
@@ -309,14 +310,18 @@ async def on_inference(data: json):
         logger.error(f"Execution flag failed: {exe_info}")
         return
 
-    await inference(
-        model_name=data["architecture"],
-        inference_libsvm=g.data_loader,
-        args=current_app.config["config_args"],
-        db=current_app.config["db_connector"],
-        model_id=data["modelId"],
-        inf_batch_num=total_batch_num
+    inference_task = asyncio.create_task(
+        inference(
+            model_name=data["architecture"],
+            inference_libsvm=g.data_loader,
+            args=current_app.config["config_args"],
+            db=current_app.config["db_connector"],
+            model_id=data["modelId"],
+            inf_batch_num=total_batch_num
+        )
     )
+
+    inference_task.add_done_callback(lambda task: task_done_callback(task, session_id))
 
 
 async def on_finetune(data: json):
@@ -326,27 +331,32 @@ async def on_finetune(data: json):
     cache_size = data["cacheSize"]
     session_id = data["sessionId"]
     await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
+    await websocket.send(json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id}))
 
     exe_flag, exe_info = before_execute(
         dataset_name=session_id,
-        data_key=Bufferkey.INFERENCE_KEY,
+        data_key=Bufferkey.TRAIN_KEY,
         client_id=session_id,
     )
     if not exe_flag:
         logger.error(f"Execution flag failed: {exe_info}")
         return
 
-    await finetune(
-        model_name=data["architecture"],
-        finetune_libsvm=g.data_loader,
-        args=current_app.config["config_args"],
-        db=current_app.config["db_connector"],
-        model_id=data["modelId"],
-        epoch=data["spec"]["epoch"],
-        train_batch_num=data["spec"]["nBatchTrain"],
-        eva_batch_num=data["spec"]["nBatchEval"],
-        test_batch_num=data["spec"]["nBatchTest"]
+    finetune_task = asyncio.create_task(
+        finetune(
+            model_name=data["architecture"],
+            finetune_libsvm=g.data_loader,
+            args=current_app.config["config_args"],
+            db=current_app.config["db_connector"],
+            model_id=data["modelId"],
+            epoch=data["spec"]["epoch"],
+            train_batch_num=data["spec"]["nBatchTrain"],
+            eva_batch_num=data["spec"]["nBatchEval"],
+            test_batch_num=data["spec"]["nBatchTest"]
+        )
     )
+
+    finetune_task.add_done_callback(lambda task: task_done_callback(task, session_id))
 
 
 async def init_database(n_feat: int, n_field: int, total_batch_num: int, cache_size: int, session_id: str):

@@ -6,9 +6,6 @@
 #include <math.h>
 
 #include "labeling/encode.h"
-#include "utils/network/http.h"
-#include "utils/network/socketio.h"
-#include "utils/network/socketio_nr.h"
 #include "utils/metric/time_metric.h"
 #include "utils/hash/md5.h"
 #include "utils/network/websocket.h"
@@ -59,55 +56,31 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     int n_features;
     char **feature_names = text_array2char_array(features, &n_features); // column names
 
-    // init SocketIO
-    SocketIOClient *sio_client = socketio_client();
-
-    BatchQueue *queue = malloc(sizeof(BatchQueue *));
-    init_batch_queue(queue, 10);
-
-    socketio_set_queue(sio_client, queue);
-
-    socketio_register_callback(sio_client, "connection", nr_socketio_connect_callback);
-    socketio_register_callback(sio_client, "request_data", nr_socketio_request_data_callback);
-    socketio_connect(sio_client, "http://localhost:8090");
-
-    while (socketio_get_socket_id(sio_client) == 0) {
-        // wait for the connection
-        pg_usleep(10000); // sleep for 10ms
-    }
+    NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
+    nws_connect(ws);
 
     // prepare the query
-    SPI_connect();
     StringInfoData query;
     initStringInfo(&query);
-    //
-    // appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
-    // // calling SPI execution
-    // SPI_execute(query.data, false, 0);
-    //
-    // bool isnull;
-    // const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
-    //
-    // int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
+    SPI_connect();
 
-    // if (batch_num >= 0) {
-    //     n_batches = batch_num;
-    // }
-    int n_batches = batch_num;
+    const int n_batches = batch_num;
 
     // init dataset
-    nr_socketio_emit_db_init(sio_client, table_name, nfeat, n_features, n_batches, 80);
-
-    // create a new thread to send the training task
-    pthread_t inference_thread;
-    InferenceInfo *inference_info = malloc(sizeof(InferenceInfo));
-    inference_info->model_name = model_name;
-    inference_info->model_id = model_id;
-    inference_info->table_name = table_name;
-    inference_info->client_socket_id = socketio_get_socket_id(sio_client);
-    inference_info->batch_size = batch_size;
-    inference_info->batch_num = n_batches;
-    pthread_create(&inference_thread, NULL, send_inference_task, (void *) inference_info);
+    InferenceTaskSpec *inference_task_spec = malloc(sizeof(InferenceTaskSpec));
+    init_inference_task_spec(
+        inference_task_spec,
+        model_name,
+        batch_size,
+        n_batches,
+        "metrics",
+        80,
+        nfeat,
+        n_features,
+        model_id
+    );
+    nws_send_task(ws, T_INFERENCE, inference_task_spec);
+    free_inference_task_spec(inference_task_spec);
 
     resetStringInfo(&query);
     char *cursor_name = "nr_inference_cursor";
@@ -132,7 +105,6 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     StringInfoData row_data;
     initStringInfo(&libsvm_data);
     initStringInfo(&row_data);
-
     int current_batch = 0;
 
     while (true) {
@@ -191,19 +163,14 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
         appendStringInfoString(&libsvm_data, row_data.data);
         record_query_end_time(time_metric);
         record_operation_start_time(time_metric);
-        // send inference request to the Python Server
-        nr_socketio_emit_batch_data(sio_client, table_name, libsvm_data.data);
+        // send training data to the Python Server, blocking operation if the queue is full
+        nws_send_batch_data(ws, 0, S_INFERENCE, libsvm_data.data);
         record_operation_end_time(time_metric); // record the end time of operation
         record_query_start_time(time_metric);
         resetStringInfo(&row_data);
     }
     record_query_end_time(time_metric); // record the eventual end time of query
-
-    // wait until the send_inference_task thread is completed
-    pthread_join(inference_thread, NULL);
-
-    // close the connection
-    nr_socketio_emit_force_disconnect(sio_client);
+    nws_wait_completion(ws);
 
     // clean up
     pfree(table_name);
@@ -212,9 +179,13 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
         pfree(feature_names[i]);
     }
     pfree(feature_names);
-    SPI_finish();
 
-    record_overall_end_time(time_metric); // record the end time of the function
+    // close the connection
+    nws_disconnect(ws);
+    nws_free_websocket(ws);
+
+    SPI_finish();
+    record_overall_end_time(time_metric);
     postgres_log_time(time_metric); // log the time metric
     free_time_metric(time_metric);
     PG_RETURN_NULL();
@@ -248,7 +219,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     char **feature_names = text_array2char_array(features, &n_features); // feature names
     char *target = text_to_cstring(PG_GETARG_TEXT_P(7)); // target column
 
-    // socketio_set_queue(sio_client, queue);
     NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
     nws_connect(ws);
 
@@ -402,7 +372,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     nws_free_websocket(ws);
 
     SPI_finish();
-    record_overall_end_time(time_metric); // record the end time of the function
+    record_overall_end_time(time_metric);
     postgres_log_time(time_metric); // log the time metric
     free_time_metric(time_metric);
     PG_RETURN_NULL();
@@ -418,8 +388,8 @@ Datum nr_train(PG_FUNCTION_ARGS) {
  */
 Datum nr_finetune(PG_FUNCTION_ARGS) {
     TimeMetric *time_metric = init_time_metric("nr_finetune", MILLISECOND);
-    record_overall_start_time(time_metric); // record the start time of the function
-    record_query_start_time(time_metric); // record the start time of preprocessing
+    record_overall_start_time(time_metric);
+    record_query_start_time(time_metric);
 
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0)); // model name
     int model_id = PG_GETARG_INT32(1); // model id
@@ -433,57 +403,40 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     char **feature_names = text_array2char_array(features, &n_features); // feature names
     char *target = text_to_cstring(PG_GETARG_TEXT_P(8)); // target column
 
-    // init SocketIO
-    SocketIOClient *sio_client = socketio_client();
-
-    BatchQueue *queue = malloc(sizeof(BatchQueue *));
-    init_batch_queue(queue, 10);
-
-    socketio_set_queue(sio_client, queue);
-
-    socketio_register_callback(sio_client, "connection", nr_socketio_connect_callback);
-    socketio_register_callback(sio_client, "request_data", nr_socketio_request_data_callback);
-    socketio_connect(sio_client, "http://localhost:8090");
-
-    while (socketio_get_socket_id(sio_client) == 0) {
-        // wait for the connection
-        pg_usleep(10000); // sleep for 10ms
-    }
+    NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
+    nws_connect(ws);
 
     // prepare the query
     StringInfoData query;
     initStringInfo(&query);
-
-    // appendStringInfo(&query, "SELECT COUNT(*) FROM %s", table_name);
-    // calling SPI execution
     SPI_connect();
-    // SPI_execute(query.data, false, 0);
-
-    // bool isnull;
-    // const Datum n_rows = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
 
     const int n_batches = batch_num;
-    // const int n_batches = (DatumGetInt32(n_rows) - 1) / batch_size + 1; // ceil(n_rows / batch_size)
     const int n_batches_train = (int) ceil(n_batches * 0.8);
     const int n_batches_evaluate = (int) ceil(n_batches * 0.1);
     const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
 
     // init dataset
-    nr_socketio_emit_db_init(sio_client, table_name, nfeat, n_features, n_batches * epoch, 80);
-
-    // create a new thread to send the finetune task
-    pthread_t finetune_thread;
-    FinetuneInfo *finetune_info = malloc(sizeof(FinetuneInfo));
-    finetune_info->model_name = model_name;
-    finetune_info->model_id = model_id;
-    finetune_info->table_name = table_name;
-    finetune_info->client_socket_id = socketio_get_socket_id(sio_client);
-    finetune_info->batch_size = batch_size;
-    finetune_info->epoch = epoch;
-    finetune_info->train_batch_num = n_batches_train;
-    finetune_info->eva_batch_num = n_batches_evaluate;
-    finetune_info->test_batch_num = n_batches_test;
-    pthread_create(&finetune_thread, NULL, send_finetune_task, (void *) finetune_info);
+    FinetuneTaskSpec *finetune_task_spec = malloc(sizeof(FinetuneTaskSpec));
+    init_finetune_task_spec(
+        finetune_task_spec,
+        model_name,
+        model_id,
+        batch_size,
+        epoch,
+        n_batches_train,
+        n_batches_evaluate,
+        n_batches_test,
+        0.001,
+        "optimizer",
+        "loss",
+        "metrics",
+        80,
+        nfeat,
+        n_features
+    );
+    nws_send_task(ws, T_FINETUNE, finetune_task_spec);
+    free_finetune_task_spec(finetune_task_spec);
 
     resetStringInfo(&query);
     char *cursor_name = "nr_finetune_cursor";
@@ -582,16 +535,13 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
         appendStringInfoString(&libsvm_data, row_data.data);
         record_query_end_time(time_metric);
         record_operation_start_time(time_metric);
-        nr_socketio_emit_batch_data(sio_client, table_name, libsvm_data.data);
+        nws_send_batch_data(ws, 0, S_TRAIN, libsvm_data.data);
         record_operation_end_time(time_metric); // record the end time of operation
         record_query_start_time(time_metric);
         resetStringInfo(&row_data);
     }
     record_query_end_time(time_metric); // record the eventual end time of query
-
-    pthread_join(finetune_thread, NULL);
-
-    nr_socketio_emit_force_disconnect(sio_client);
+    nws_wait_completion(ws);
 
     // clean up
     pfree(table_name);
@@ -601,9 +551,13 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
         pfree(feature_names[i]);
     }
     pfree(feature_names);
-    SPI_finish();
 
-    record_overall_end_time(time_metric); // record the end time of the function
+    // close the connection
+    nws_disconnect(ws);
+    nws_free_websocket(ws);
+
+    SPI_finish();
+    record_overall_end_time(time_metric);
     postgres_log_time(time_metric); // log the time metric
     free_time_metric(time_metric);
     PG_RETURN_NULL();

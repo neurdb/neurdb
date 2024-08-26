@@ -50,10 +50,10 @@ typedef struct {
 } InferenceTaskSpec;
 
 typedef struct {
-    char *model_name;
+    char *architecture;
     int model_id;
     int batch_size;
-    int epochs;
+    int epoch;
     int n_batch_train;
     int n_batch_eval;
     int n_batch_test;
@@ -103,7 +103,7 @@ void init_finetune_task_spec(
     const char *model_name,
     int model_id,
     int batch_size,
-    int epochs,
+    int epoch,
     int n_batch_train,
     int n_batch_eval,
     int n_batch_test,

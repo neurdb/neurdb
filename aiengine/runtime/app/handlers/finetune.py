@@ -18,7 +18,7 @@ async def finetune(
 ) -> int:
     s = Setup(model_name, finetune_libsvm, args, db)
 
-    model_id, err = s.finetune(
+    model_id, err = await s.finetune(
         model_id,
         start_layer_id=5,
         epoch=epoch,
