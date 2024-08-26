@@ -50,17 +50,16 @@ class BuilderBase(ABC):
         train_loader: Union[DataLoader, StreamingDataSet],
         val_loader: Union[DataLoader, StreamingDataSet],
         test_loader: Union[DataLoader, StreamingDataSet],
-        epochs: int,
+        epoch: int,
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
     ):
         """
-
         :param train_loader:
         :param val_loader:
         :param test_loader:
-        :param epochs: num of epoch
+        :param epoch: num of epoch
         :param train_batch_num: batch in each epoch
         :param eva_batch_num: overall batch
         :param test_batch_num: overall batch

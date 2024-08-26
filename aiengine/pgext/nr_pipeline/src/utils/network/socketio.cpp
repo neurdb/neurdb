@@ -8,7 +8,7 @@ struct SocketIOClient {
     sio::client client;
     std::map<std::string, MessageCallback> callbacks;
     char* socket_id = nullptr;
-    BatchDataQueue *queue = nullptr;
+    BatchQueue *queue = nullptr;
 };
 
 SocketIOClient *socketio_client() {
@@ -16,11 +16,11 @@ SocketIOClient *socketio_client() {
     return new SocketIOClient();
 }
 
-void socketio_set_queue(SocketIOClient *client, BatchDataQueue *queue) {
+void socketio_set_queue(SocketIOClient *client, BatchQueue *queue) {
     client->queue = queue;
 }
 
-BatchDataQueue *socketio_get_queue(const SocketIOClient *client) {
+BatchQueue *socketio_get_queue(const SocketIOClient *client) {
     return client->queue;
 }
 

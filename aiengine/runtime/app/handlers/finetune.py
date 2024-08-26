@@ -5,23 +5,23 @@ from app.handlers.setup import Setup
 from dataloader.steam_libsvm_dataset import StreamingDataSet
 
 
-def finetune(
+async def finetune(
     model_name: str,
     finetune_libsvm: StreamingDataSet,
     args: argparse.Namespace,
     db: NeurDBModelHandler,
     model_id: int,
-    epochs: int,
+    epoch: int,
     train_batch_num: int,
     eva_batch_num: int,
     test_batch_num: int,
 ) -> int:
     s = Setup(model_name, finetune_libsvm, args, db)
 
-    model_id, err = s.finetune(
+    model_id, err = await s.finetune(
         model_id,
         start_layer_id=5,
-        epochs=epochs,
+        epoch=epoch,
         train_batch_num=train_batch_num,
         eva_batch_num=eva_batch_num,
         test_batch_num=test_batch_num,
