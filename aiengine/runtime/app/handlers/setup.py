@@ -5,7 +5,7 @@ import traceback
 from dataloader.steam_libsvm_dataset import StreamingDataSet
 from connection import NeurDBModelHandler
 from models import build_model
-from shared_config.config import DEVICE
+from config import DEVICE
 
 Error = Optional[str]
 

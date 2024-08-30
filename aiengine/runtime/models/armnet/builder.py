@@ -9,7 +9,7 @@ import time
 from utils.date import timeSince
 from utils.metrics import AverageMeter, roc_auc_compute_fn
 from torch.utils.data import DataLoader
-from shared_config.config import DEVICE
+from config import DEVICE
 from dataloader.steam_libsvm_dataset import StreamingDataSet
 
 

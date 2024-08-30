@@ -3,22 +3,19 @@ import uuid
 from threading import Thread
 from websocket_sender import WebsocketSender
 
-from quart import Quart, current_app, jsonify, g
-from quart import request, websocket
-from sio import create_sio_app
+from quart import Quart, current_app, g
+from quart import websocket
 from cache import LibSvmDataDispatcher, DataCache, ContextStates
 from connection.nr import NeurDBModelHandler
-from shared_config.config import parse_config_arguments
+from config import parse_config_arguments
 from logger.logger import logger
 from cache import Bufferkey
 from app.routes.context import before_execute
 from app.handlers.train import train
 from app.handlers.inference import inference
 from app.handlers.finetune import finetune
-import traceback
 from logger.logger import configure_logging
 from neurdb.logger import configure_logging as api_configure_logging
-import socketio
 import json
 
 configure_logging(None)
@@ -27,8 +24,6 @@ api_configure_logging(None)
 MSG_NO_PARAMS = "No params"
 
 quart_app = Quart(__name__)
-sio = create_sio_app(quart_app)
-sio_app = socketio.ASGIApp(sio, other_asgi_app=quart_app)
 
 config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
@@ -66,112 +61,6 @@ async def hello():
     return "This is NeurDB Python Server."
 
 
-@quart_app.route("/train", methods=["POST"])
-async def model_train():
-    try:
-        # Use request.form to get form data
-        params = await request.form
-        if not params:
-            return {"message": MSG_NO_PARAMS}, 400
-
-        batch_size = params.get("batch_size", type=int)
-        model_name = params.get("model_name")
-        dataset_name = params.get("table_name")
-        client_socket_id = params.get("client_socket_id")
-
-        epoch = params.get("epoch", type=int)
-        train_batch_num = params.get("train_batch_num", type=int)
-        eva_batch_num = params.get("eva_batch_num", type=int)
-        test_batch_num = params.get("test_batch_num", type=int)
-
-        features = params.get("features")
-        target = params.get("target")  # always one target
-
-        config_args = current_app.config["config_args"]
-        db_connector = current_app.config["db_connector"]
-
-        logger.info(f"[model_train]: receive params {params}")
-
-        exe_flag, exe_info = before_execute(
-            dataset_name=dataset_name,
-            data_key=Bufferkey.TRAIN_KEY,
-            client_id=client_socket_id,
-        )
-        if not exe_flag:
-            logger.error(f"Execution flag failed: {exe_info}")
-            return jsonify(exe_info), 400
-
-        model_id = await train(
-            model_name=model_name,
-            training_libsvm=g.data_loader,
-            args=config_args,
-            db=db_connector,
-            epoch=epoch,
-            train_batch_num=train_batch_num,
-            eval_batch_num=eva_batch_num,
-            test_batch_num=test_batch_num,
-            features=features.split(","),
-            target=target,
-        )
-        logger.info(f"Training completed successfully with model_id: {model_id}")
-        return jsonify({"model_id": model_id})
-
-    except Exception as e:
-        stacktrace = traceback.format_exc()
-        error_message = {"res": "NA", "Errored": stacktrace}
-        logger.error(f"model_train error: {str(e)}", stacktrace=stacktrace)
-        return jsonify(error_message), 500
-
-
-@quart_app.route("/inference", methods=["POST"])
-async def model_inference():
-    try:
-        params = await request.form
-        if not params:
-            return {"message": MSG_NO_PARAMS}, 400
-
-        model_name = params.get("model_name")
-        model_id = params.get("model_id", type=int)
-        batch_size = params.get("batch_size", type=int)
-        dataset_name = params.get("table_name")
-        client_socket_id = params.get("client_socket_id")
-
-        inf_batch_num = params.get("batch_num", type=int)
-
-        config_args = current_app.config["config_args"]
-        db_connector = current_app.config["db_connector"]
-
-        exe_flag, exe_info = before_execute(
-            dataset_name=dataset_name,
-            data_key=Bufferkey.INFERENCE_KEY,
-            client_id=client_socket_id,
-        )
-        if not exe_flag:
-            return jsonify(exe_info), 400
-
-        result = await inference(
-            model_name=model_name,
-            inference_libsvm=g.data_loader,
-            args=config_args,
-            db=db_connector,
-            model_id=model_id,
-            inf_batch_num=inf_batch_num,
-        )
-
-        # todo: make the response as result
-        logger.debug("---- Inference return to UDF ---- ")
-        logger.info(
-            f"---- Inference done for {len(result) * len(result[0])} samples ----"
-        )
-        return jsonify({"res": "Done"})
-
-    except Exception:
-        stacktrace = traceback.format_exc()
-        error_message = {"res": "NA", "Errored": stacktrace}
-        logger.error("model_inference error", stacktrace=stacktrace)
-        return jsonify(error_message), 500
-
-
 @quart_app.websocket("/ws")
 async def handle_ws():
     sender_task = asyncio.create_task(WebsocketSender.start_websocket_sender_task())
@@ -179,7 +68,7 @@ async def handle_ws():
     while True:
         data = await websocket.receive()
         if data:
-            data_json = json.loads(data)
+            data_json: dict = json.loads(data)
             event = data_json.get("event")
             if event == "setup":
                 await on_setup(data_json)
@@ -195,24 +84,30 @@ async def handle_ws():
                 pass
 
 
-async def on_setup(data: json):
+async def on_setup(data: dict):
     logger.debug(f"Client connected: {data}")
     session_id = str(uuid.uuid4())
-    quart_app.config["clients"][session_id] = session_id  # TODO: refactor the structure of clients map
-    await WebsocketSender.send(json.dumps({"version": 1, "event": "ack_setup", "sessionId": session_id}))
+    quart_app.config["clients"][
+        session_id
+    ] = session_id  # TODO: refactor the structure of clients map
+    await WebsocketSender.send(
+        json.dumps({"version": 1, "event": "ack_setup", "sessionId": session_id})
+    )
 
 
-async def on_disconnect(data: json):
+async def on_disconnect(data: dict):
     logger.debug(f"Client disconnected: {data}")
     session_id = data.get("sessionId")
     quart_app.config["clients"].pop(session_id)
     quart_app.config["data_cache"].remove(session_id)
     quart_app.config["dispatchers"].remove(session_id)
-    await WebsocketSender.send(json.dumps({"version": 1, "event": "ack_disconnect", "sessionId": session_id}))
+    await WebsocketSender.send(
+        json.dumps({"version": 1, "event": "ack_disconnect", "sessionId": session_id})
+    )
     WebsocketSender.stop()
 
 
-async def on_task(data: json):
+async def on_task(data: dict):
     logger.debug(f"Task received: {data}")
     session_id = data.get("sessionId")
     task: str = data.get("type")
@@ -226,29 +121,37 @@ async def on_task(data: json):
         pass
 
 
-async def on_batch_data(data: json):
+async def on_batch_data(data: dict):
     logger.debug(f"Batch data received")
     session_id = data.get("sessionId")
     if not quart_app.config["data_cache"].contains(session_id, session_id):
-        logger.error(f"Data cache is not initialized for client {session_id} but received batch data")
+        logger.error(
+            f"Data cache is not initialized for client {session_id} but received batch data"
+        )
     else:
         data = data["byte"]
         dispatcher = quart_app.config["dispatchers"].get(session_id, session_id)
         await dispatcher.add(data)
 
 
-async def on_ack_result(data: json):
+async def on_ack_result(data: dict):
     logger.debug(f"Ack result received")
 
 
-async def on_train(data: json):
+async def on_train(data: dict):
     n_feat = data["nFeat"]
     n_field = data["nField"]
-    total_batch_num = data["spec"]["nBatchTrain"] + data["spec"]["nBatchEval"] + data["spec"]["nBatchTest"]
+    total_batch_num = (
+        data["spec"]["nBatchTrain"]
+        + data["spec"]["nBatchEval"]
+        + data["spec"]["nBatchTest"]
+    )
     cache_size = data["cacheSize"]
     session_id = data["sessionId"]
     await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
-    await websocket.send(json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id}))
+    await websocket.send(
+        json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id})
+    )
 
     exe_flag, exe_info = before_execute(
         dataset_name=session_id,
@@ -270,7 +173,7 @@ async def on_train(data: json):
             eval_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
             features=data["features"],
-            target=data["target"]
+            target=data["target"],
         )
     )
 
@@ -292,14 +195,16 @@ def task_done_callback(task, session_id):
     )
 
 
-async def on_inference(data: json):
+async def on_inference(data: dict):
     n_feat = data["nFeat"]
     n_field = data["nField"]
     total_batch_num = data["spec"]["nBatch"]
     cache_size = data["cacheSize"]
     session_id = data["sessionId"]
     await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
-    await websocket.send(json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id}))
+    await websocket.send(
+        json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id})
+    )
 
     exe_flag, exe_info = before_execute(
         dataset_name=session_id,
@@ -317,21 +222,27 @@ async def on_inference(data: json):
             args=current_app.config["config_args"],
             db=current_app.config["db_connector"],
             model_id=data["modelId"],
-            inf_batch_num=total_batch_num
+            inf_batch_num=total_batch_num,
         )
     )
 
     inference_task.add_done_callback(lambda task: task_done_callback(task, session_id))
 
 
-async def on_finetune(data: json):
+async def on_finetune(data: dict):
     n_feat = data["nFeat"]
     n_field = data["nField"]
-    total_batch_num = data["spec"]["nBatchTrain"] + data["spec"]["nBatchEval"] + data["spec"]["nBatchTest"]
+    total_batch_num = (
+        data["spec"]["nBatchTrain"]
+        + data["spec"]["nBatchEval"]
+        + data["spec"]["nBatchTest"]
+    )
     cache_size = data["cacheSize"]
     session_id = data["sessionId"]
     await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
-    await websocket.send(json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id}))
+    await websocket.send(
+        json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id})
+    )
 
     exe_flag, exe_info = before_execute(
         dataset_name=session_id,
@@ -352,14 +263,16 @@ async def on_finetune(data: json):
             epoch=data["spec"]["epoch"],
             train_batch_num=data["spec"]["nBatchTrain"],
             eva_batch_num=data["spec"]["nBatchEval"],
-            test_batch_num=data["spec"]["nBatchTest"]
+            test_batch_num=data["spec"]["nBatchTest"],
         )
     )
 
     finetune_task.add_done_callback(lambda task: task_done_callback(task, session_id))
 
 
-async def init_database(n_feat: int, n_field: int, total_batch_num: int, cache_size: int, session_id: str):
+async def init_database(
+    n_feat: int, n_field: int, total_batch_num: int, cache_size: int, session_id: str
+):
     data_cache = quart_app.config["data_cache"]
     if not data_cache.contains(session_id, session_id):
         _cache = DataCache(
@@ -386,4 +299,4 @@ async def init_database(n_feat: int, n_field: int, total_batch_num: int, cache_s
         t.start()
 
 
-app = sio_app
+app = quart_app

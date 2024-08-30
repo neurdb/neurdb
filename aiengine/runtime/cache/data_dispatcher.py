@@ -4,7 +4,6 @@ import json
 import threading
 from websocket_sender import WebsocketSender
 
-import socketio
 from cache import DataCache
 
 from dataloader.preprocessing import (
@@ -42,13 +41,6 @@ class LibSvmDataDispatcher:
         """
         self.data_cache = data_cache
         self.client_id = client_id
-
-    def bound_sio(self, sio: socketio.AsyncServer):
-        """
-        Bind the data dispatcher to an SIO server.
-        :param sio: The SIO server to bind to.
-        """
-        self.sio = sio
 
     def bound_loop(self, loop: asyncio.AbstractEventLoop):
         """
@@ -100,8 +92,8 @@ class LibSvmDataDispatcher:
         )
 
         asyncio.run_coroutine_threadsafe(
-            # emit_request_data(self.sio, self.client_id), self.loop
-            websocket_emit_request_data(self.client_id), self.loop
+            websocket_emit_request_data(self.client_id),
+            self.loop,
         )
 
         while not self.stop_event.is_set():
@@ -121,8 +113,8 @@ class LibSvmDataDispatcher:
                 )
 
                 asyncio.run_coroutine_threadsafe(
-                    # emit_request_data(self.sio, self.client_id), self.loop
-                    websocket_emit_request_data(self.client_id), self.loop
+                    websocket_emit_request_data(self.client_id),
+                    self.loop,
                 )
                 # Reset the event
                 self.full_event.clear()
@@ -170,24 +162,15 @@ class LibSvmDataDispatcher:
             # self.stop()
 
 
-async def emit_request_data(sio: socketio.AsyncServer, client_id: str):
-    """
-    Emit request_data event to clients.
-    :param client_id: The client ID to send the request to.
-    :return:
-    """
-
-    logger.debug("emit_request_data", sid=client_id)
-    await sio.emit("request_data", {}, to=client_id)
-
-
 async def websocket_emit_request_data(session_id: str):
     await WebsocketSender.send(
-        json.dumps({
-            "version": 1,
-            "event": "request_data",
-            "sessionId": session_id,
-            "startBatchId": 0,
-            "nBatch": 1
-        })
+        json.dumps(
+            {
+                "version": 1,
+                "event": "request_data",
+                "sessionId": session_id,
+                "startBatchId": 0,
+                "nBatch": 1,
+            }
+        )
     )

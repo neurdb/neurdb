@@ -9,7 +9,7 @@ from config import DB_CONFIG
 from config import logger
 from models import build_model
 from python.dataloader import table_dataloader
-from shared_config.config import parse_config_arguments
+from config import parse_config_arguments
 import time
 
 
