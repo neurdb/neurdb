@@ -59,6 +59,7 @@ echo "DB Started!"
 # Install neurdb package
 cd $NR_API_PATH/python
 ## For older setuptools
+## Reference: https://stackoverflow.com/a/71946741
 touch setup.cfg
 sudo pip install -e .
 rm setup.cfg
