@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 
-from ..utils.entmax import EntmaxBisect
-from .layers import MLP, Embedding
+from .entmax import EntmaxBisect
+from .layer import MLP, Embedding
 
 
 class SparseAttLayer(nn.Module):

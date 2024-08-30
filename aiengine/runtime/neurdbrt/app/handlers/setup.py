@@ -6,7 +6,7 @@ import numpy as np
 from neurdbrt.config import DEVICE
 from neurdbrt.connection import NeurDBModelHandler
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
-from neurdbrt.models import build_model
+from neurdbrt.model import build_model
 
 Error = Optional[str]
 

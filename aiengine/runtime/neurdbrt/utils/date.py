@@ -2,7 +2,7 @@ import math
 import time
 
 
-def timeSince(since=None, s=None):
+def time_since(since=None, s=None):
     if s is None:
         s = int(time.time() - since)
     m = math.floor(s / 60)

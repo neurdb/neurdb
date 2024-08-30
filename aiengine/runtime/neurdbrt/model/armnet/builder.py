@@ -6,10 +6,11 @@ import torch.optim as optim
 from neurdbrt.config import DEVICE
 from neurdbrt.dataloader import StreamingDataSet
 from neurdbrt.log import logger
-from neurdbrt.models.armnet import ARMNetModel
-from neurdbrt.models.base import BuilderBase
-from neurdbrt.utils.date import timeSince
+from neurdbrt.utils.date import time_since
 from neurdbrt.utils.metrics import AverageMeter, roc_auc_compute_fn
+
+from ..base import BuilderBase
+from . import ARMNetModel
 
 
 class ARMNetModelBuilder(BuilderBase):
@@ -153,12 +154,12 @@ class ARMNetModelBuilder(BuilderBase):
 
             logger.info(
                 "Epoch end",
-                time=timeSince(s=train_time_avg.sum),
+                time=time_since(s=train_time_avg.sum),
                 auc=train_auc_avg.avg,
                 loss=train_loss_avg.avg,
             )
             # logger.info(
-            #     f"train\tTime {timeSince(s=train_time_avg.sum):>12s} "
+            #     f"train\tTime {time_since(s=train_time_avg.sum):>12s} "
             #     f"AUC {train_auc_avg.avg:8.4f} Loss {train_loss_avg.avg:8.4f}"
             # )
 
@@ -214,14 +215,14 @@ class ARMNetModelBuilder(BuilderBase):
 
         self._model.eval()
 
-        self._logger.info("Train end", time=timeSince(since=start_time))
+        self._logger.info("Train end", time=time_since(since=start_time))
 
         if isinstance(train_loader, StreamingDataSet):
             self._logger.info(
                 f"streaming dataloader time usage = {train_loader.total_time_fetching}"
             )
         # logger.info(
-        #     f"Total running time for training/validation/test: {timeSince(since=start_time)}"
+        #     f"Total running time for training/validation/test: {time_since(since=start_time)}"
         # )
 
     async def _evaluate(
@@ -269,11 +270,11 @@ class ARMNetModelBuilder(BuilderBase):
                 if batch_idx + 1 == batch_num:
                     break
         logger.info(
-            f"Time {timeSince(s=time_avg.sum):>12s} "
+            f"Time {time_since(s=time_avg.sum):>12s} "
             f"AUC {auc_avg.avg:8.4f} Loss {loss_avg.avg:8.4f}"
         )
 
-        logger.info(f"Evaluate end", time=timeSince(s=time_avg.sum))
+        logger.info(f"Evaluate end", time=time_since(s=time_avg.sum))
         return auc_avg.avg
 
     async def inference(self, data_loader: StreamingDataSet, inf_batch_num: int):
@@ -306,5 +307,5 @@ class ARMNetModelBuilder(BuilderBase):
                     break
 
         logger.info("Done inference for {inf_batch_num} batches ")
-        logger.info("---- Inference end ---- ", time=timeSince(since=start_time))
+        logger.info("---- Inference end ---- ", time=time_since(since=start_time))
         return predictions
