@@ -1,8 +1,8 @@
 from typing import TypedDict
 
 import neurdb
-from neurdbrt.log import logger
 from neurdb.storeman import ModelStorage
+from neurdbrt.log import logger
 from torch import nn
 
 

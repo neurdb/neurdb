@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from einops import rearrange
-from ..utils.entmax import EntmaxBisect
 
+from ..utils.entmax import EntmaxBisect
 from .layers import MLP, Embedding
 
 

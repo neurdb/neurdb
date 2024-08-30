@@ -1,2 +1,2 @@
-from .model import *
 from .builder import *
+from .model import *

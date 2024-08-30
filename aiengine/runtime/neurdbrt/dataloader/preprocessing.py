@@ -148,8 +148,7 @@ def _fill_data_into_tensor(nsamples: int, ids_list, feat_id):
 if __name__ == "__main__":
     import time
 
-    from clients.client_socket import (generate_dataset,
-                                       generate_id_only_dataset)
+    from clients.client_socket import generate_dataset, generate_id_only_dataset
 
     begin_time = time.time()
     data = generate_id_only_dataset(1000000)
