@@ -1,6 +1,6 @@
-from models.mlp_clf.builder import MLPBuilder
-from models.base.builder import BuilderBase
 from models.armnet.builder import ARMNetModelBuilder
+from models.base.builder import BuilderBase
+from models.mlp_clf.builder import MLPBuilder
 
 
 def build_model(model_name: str, config_args) -> BuilderBase:

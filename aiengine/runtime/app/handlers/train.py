@@ -1,9 +1,10 @@
-from log import logger
 import argparse
-from connection import NeurDBModelHandler
-from app.handlers.setup import Setup
-from dataloader.steam_libsvm_dataset import StreamingDataSet
 from typing import List
+
+from app.handlers.setup import Setup
+from connection import NeurDBModelHandler
+from dataloader.steam_libsvm_dataset import StreamingDataSet
+from log import logger
 
 
 async def train(
@@ -20,7 +21,9 @@ async def train(
 ) -> int:
     s = Setup(model_name, training_libsvm, args, db)
 
-    model_id, err = await s.train(epoch, train_batch_num, eval_batch_num, test_batch_num)
+    model_id, err = await s.train(
+        epoch, train_batch_num, eval_batch_num, test_batch_num
+    )
 
     if err is not None:
         logger.error(f"train failed with error: {err}")

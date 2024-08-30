@@ -1,4 +1,5 @@
 import sys
+
 import requests
 
 # Define the server address and port
@@ -6,14 +7,14 @@ SERVER_URL = "http://localhost:8090"
 
 
 def test_train_endpoint(
-        batch_size,
-        model_name,
-        dataset_name,
-        client_id,
-        epoch,
-        train_batch_num,
-        eva_batch_num,
-        test_batch_num,
+    batch_size,
+    model_name,
+    dataset_name,
+    client_id,
+    epoch,
+    train_batch_num,
+    eva_batch_num,
+    test_batch_num,
 ):
     url = f"{SERVER_URL}/train"
     data = {

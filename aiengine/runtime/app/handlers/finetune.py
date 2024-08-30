@@ -1,8 +1,9 @@
-from log import logger
 import argparse
-from connection import NeurDBModelHandler
+
 from app.handlers.setup import Setup
+from connection import NeurDBModelHandler
 from dataloader.steam_libsvm_dataset import StreamingDataSet
+from log import logger
 
 
 async def finetune(

@@ -2,11 +2,12 @@ from datetime import datetime
 from typing import List, Optional
 
 import psycopg2
-from ..config import Configuration
-from ..common.storage import ModelStorage
-from .entity import ModelEntity, LayerEntity
 from neurdb.logger import logger
+
+from ..common.storage import ModelStorage
+from ..config import Configuration
 from ..utils.hash import Hash
+from .entity import LayerEntity, ModelEntity
 
 
 class NeurDB:

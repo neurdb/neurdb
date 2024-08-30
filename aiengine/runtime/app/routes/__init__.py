@@ -1,2 +1,2 @@
-from app.routes import train, inference, finetune
-from app.routes.routes import train_bp, inference_bp, finetune_bp
+from app.routes import finetune, inference, train
+from app.routes.routes import finetune_bp, inference_bp, train_bp

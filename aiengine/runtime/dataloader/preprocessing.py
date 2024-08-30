@@ -1,6 +1,7 @@
+import time
+
 import torch
 from log import logger
-import time
 
 
 def libsvm_batch_preprocess(data: str, max_nfileds: int):
@@ -145,8 +146,10 @@ def _fill_data_into_tensor(nsamples: int, ids_list, feat_id):
 
 
 if __name__ == "__main__":
-    from clients.client_socket import generate_dataset, generate_id_only_dataset
     import time
+
+    from clients.client_socket import (generate_dataset,
+                                       generate_id_only_dataset)
 
     begin_time = time.time()
     data = generate_id_only_dataset(1000000)

@@ -1,10 +1,11 @@
-from flask import request, jsonify, current_app, g
-from app.handlers.train import train
 import traceback
-from log import logger
-from app.routes.routes import train_bp
+
+from app.handlers.train import train
 from app.routes.context import before_execute
+from app.routes.routes import train_bp
 from cache import Bufferkey
+from flask import current_app, g, jsonify, request
+from log import logger
 
 
 @train_bp.route("/train", methods=["POST"])

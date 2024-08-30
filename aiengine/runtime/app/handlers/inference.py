@@ -1,10 +1,11 @@
-from log import logger
-from typing import List
 import argparse
-from connection import NeurDBModelHandler
-from app.handlers.setup import Setup
+from typing import List
+
 import numpy as np
+from app.handlers.setup import Setup
+from connection import NeurDBModelHandler
 from dataloader.steam_libsvm_dataset import StreamingDataSet
+from log import logger
 
 
 async def inference(

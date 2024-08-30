@@ -1,6 +1,7 @@
 import json
-import socketio
 import random
+
+import socketio
 
 
 class SocketClient:

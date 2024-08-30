@@ -1,5 +1,5 @@
 import threading
-from typing import Dict, TypeVar, Generic, Optional, Union
+from typing import Dict, Generic, Optional, TypeVar, Union
 
 T = TypeVar("T")  # Generic type
 

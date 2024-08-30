@@ -1,8 +1,9 @@
-from decimal import ROUND_HALF_UP, Decimal
 import logging
 import os
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Optional
+
 import structlog
 
 

@@ -1,8 +1,8 @@
 from typing import Tuple
-from quart import current_app, g
-from cache import DataCache, ContextStates
+
+from cache import Bufferkey, ContextStates, DataCache
 from dataloader.steam_libsvm_dataset import StreamingDataSet
-from cache import Bufferkey
+from quart import current_app, g
 
 
 def before_request_func():

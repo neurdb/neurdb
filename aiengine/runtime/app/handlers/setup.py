@@ -1,11 +1,12 @@
 import argparse
-from typing import List, Tuple, Optional
-import numpy as np
 import traceback
-from dataloader.steam_libsvm_dataset import StreamingDataSet
-from connection import NeurDBModelHandler
-from models import build_model
+from typing import List, Optional, Tuple
+
+import numpy as np
 from config import DEVICE
+from connection import NeurDBModelHandler
+from dataloader.steam_libsvm_dataset import StreamingDataSet
+from models import build_model
 
 Error = Optional[str]
 

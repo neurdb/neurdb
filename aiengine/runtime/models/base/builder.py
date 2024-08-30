@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
-from torch import nn
+
 import numpy as np
-from torch.utils.data import DataLoader
 from dataloader.steam_libsvm_dataset import StreamingDataSet
+from torch import nn
+from torch.utils.data import DataLoader
 
 
 class BuilderBase(ABC):

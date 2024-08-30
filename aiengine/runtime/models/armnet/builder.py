@@ -1,16 +1,17 @@
-from log import logger
-import torch
+import time
 from typing import List, Union
+
+import torch
 import torch.nn as nn
 import torch.optim as optim
-from models.armnet.model.model import ARMNetModel
-from models.base.builder import BuilderBase
-import time
-from utils.date import timeSince
-from utils.metrics import AverageMeter, roc_auc_compute_fn
-from torch.utils.data import DataLoader
 from config import DEVICE
 from dataloader.steam_libsvm_dataset import StreamingDataSet
+from log import logger
+from models.armnet.model.model import ARMNetModel
+from models.base.builder import BuilderBase
+from torch.utils.data import DataLoader
+from utils.date import timeSince
+from utils.metrics import AverageMeter, roc_auc_compute_fn
 
 
 class ARMNetModelBuilder(BuilderBase):

@@ -1,10 +1,11 @@
-from flask import request, jsonify, current_app, g
-from app.handlers.inference import inference
 import traceback
-from log import logger
-from app.routes.routes import inference_bp
+
+from app.handlers.inference import inference
 from app.routes.context import before_execute
+from app.routes.routes import inference_bp
 from cache import Bufferkey
+from flask import current_app, g, jsonify, request
+from log import logger
 
 
 @inference_bp.route("/inference", methods=["POST"])

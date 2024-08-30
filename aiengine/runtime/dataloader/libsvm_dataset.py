@@ -1,10 +1,9 @@
 import os
-import torch
-from torch.utils.data import Dataset
-from tqdm import tqdm
-from torch.utils.data import DataLoader, random_split
 
+import torch
 from log import logger
+from torch.utils.data import DataLoader, Dataset, random_split
+from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 

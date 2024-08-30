@@ -20,7 +20,9 @@ class WebsocketSender:
     async def send(message):
         if not WebsocketSender.active:
             return
-        asyncio.run_coroutine_threadsafe(WebsocketSender.message_queue.put(message), asyncio.get_event_loop())
+        asyncio.run_coroutine_threadsafe(
+            WebsocketSender.message_queue.put(message), asyncio.get_event_loop()
+        )
 
     @staticmethod
     def stop():

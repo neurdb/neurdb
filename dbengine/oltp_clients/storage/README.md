@@ -22,4 +22,3 @@ You can just use MockKV with the following APIs.
 | RollBack         |                Abandon the logs, and release                 |      T      |
 
 - Y for thread-safe, T for thread-safe between different transactions.
-

@@ -1,16 +1,12 @@
 import asyncio
 import json
-
 import threading
-from websocket_sender import WebsocketSender
+import time
 
 from cache import DataCache
-
-from dataloader.preprocessing import (
-    libsvm_batch_preprocess_id_only,
-)
+from dataloader.preprocessing import libsvm_batch_preprocess_id_only
 from log import logger
-import time
+from websocket_sender import WebsocketSender
 
 
 class LibSvmDataDispatcher:

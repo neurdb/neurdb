@@ -1,7 +1,8 @@
 import asyncio
-from typing import Optional, Tuple
 from enum import Enum
-from queue import Full, Empty
+from queue import Empty, Full
+from typing import Optional, Tuple
+
 from log import logger
 
 

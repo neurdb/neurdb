@@ -11,7 +11,7 @@ pip install -r requirement.txt --extra-index-url https://download.pytorch.org/wh
 ## Start server
 
 ```sh
-export NR_LOG_LEVEL=INFO  # Set log level 
+export NR_LOG_LEVEL=INFO  # Set log level
 python -m hypercorn server:app -c app_config.toml
 ```
 

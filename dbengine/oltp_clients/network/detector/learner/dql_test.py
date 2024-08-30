@@ -1,6 +1,6 @@
 import gym
-from dql import DQLearning
 import numpy as np
+from dql import DQLearning
 
 
 def test_frozen_lake():

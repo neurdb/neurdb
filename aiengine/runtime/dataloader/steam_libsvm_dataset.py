@@ -1,7 +1,8 @@
-from cache import DataCache, Bufferkey
-from typing import Tuple, Dict
-from log import logger
 import time
+from typing import Dict, Tuple
+
+from cache import Bufferkey, DataCache
+from log import logger
 
 
 class StreamingDataSet:

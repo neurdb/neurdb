@@ -1,10 +1,10 @@
 import sys
-
-import ql
-from concurrent import futures
 import time
-import rpc_pb2
+from concurrent import futures
+
 import grpc
+import ql
+import rpc_pb2
 import rpc_pb2_grpc
 
 Train_Round = 500

@@ -1,7 +1,7 @@
 import os
+
 import structlog
 from neurdb.logger import configure_logging
-
 
 DB_CONFIG = {
     "dbname": "postgres",

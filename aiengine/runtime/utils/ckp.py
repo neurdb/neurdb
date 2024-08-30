@@ -1,6 +1,7 @@
 import os
-import torch
 import shutil
+
+import torch
 
 
 def load_checkpoint(args):

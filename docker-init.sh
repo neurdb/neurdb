@@ -89,7 +89,7 @@ echo "Install NR Data Pipeline Extension Done"
 
 # Run python server
 cd $NR_AIENGINE_PATH/runtime
-export NR_LOG_LEVEL=INFO  # Set log level 
+export NR_LOG_LEVEL=INFO  # Set log level
 nohup python -m hypercorn server:app -c app_config.toml &
 echo 'Python Server started!'
 

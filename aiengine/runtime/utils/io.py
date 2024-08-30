@@ -1,10 +1,11 @@
-import numpy as np
-from multiprocessing import shared_memory
-import torch.nn as nn
-import torch
-import tempfile
-import os
 import io
+import os
+import tempfile
+from multiprocessing import shared_memory
+
+import numpy as np
+import torch
+import torch.nn as nn
 
 
 def get_data_from_shared_memory_int(n_rows):

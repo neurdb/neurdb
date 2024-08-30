@@ -1,12 +1,12 @@
-import random
+import collections
 import math
+import random
 
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-import collections
+import torch.optim as optim
 
 # Hyper-parameters
 buffer_limit = 50000
@@ -14,6 +14,7 @@ batch_size = 32
 net_wide = 50
 
 from learn import Learner
+
 
 # from https://github.com/seungeunrho/minimalRL/blob/master/dqn.py
 class ReplayBuffer:
