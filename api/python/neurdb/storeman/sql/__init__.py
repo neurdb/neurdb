@@ -1,1 +1,2 @@
-from .database import NeurDB
+from .database import *
+from .entity import *

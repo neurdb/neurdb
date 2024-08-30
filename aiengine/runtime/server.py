@@ -3,17 +3,17 @@ import json
 import uuid
 from threading import Thread
 
-from app.handlers.finetune import finetune
-from app.handlers.inference import inference
-from app.handlers.train import train
-from app.routes.context import before_execute
-from cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
-from config import parse_config_arguments
-from connection.nr import NeurDBModelHandler
-from log import configure_logging, logger
 from neurdb.logger import configure_logging as api_configure_logging
+from neurdbrt.app.handlers.finetune import finetune
+from neurdbrt.app.handlers.inference import inference
+from neurdbrt.app.handlers.train import train
+from neurdbrt.app.routes.context import before_execute
+from neurdbrt.cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
+from neurdbrt.config import parse_config_arguments
+from neurdbrt.connection.nr import NeurDBModelHandler
+from neurdbrt.log import configure_logging, logger
+from neurdbrt.websocket_sender import WebsocketSender
 from quart import Quart, current_app, g, websocket
-from websocket_sender import WebsocketSender
 
 configure_logging(None)
 api_configure_logging(None)
