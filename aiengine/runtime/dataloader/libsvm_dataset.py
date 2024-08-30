@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 from torch.utils.data import DataLoader, random_split
 
-from logger.logger import logger
+from log import logger
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 

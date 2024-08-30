@@ -2,7 +2,7 @@ from typing import TypedDict
 from neurdb.storeman.common import ModelStorage
 from torch import nn
 import neurdb
-from logger.logger import logger
+from log import logger
 
 
 class DBParams(TypedDict):

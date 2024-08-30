@@ -1,4 +1,4 @@
-from logger.logger import logger
+from log import logger
 
 
 class AverageMeter(object):

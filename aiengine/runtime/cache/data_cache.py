@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional, Tuple
 from enum import Enum
 from queue import Full, Empty
-from logger.logger import logger
+from log import logger
 
 
 # Define global variables for cache keys

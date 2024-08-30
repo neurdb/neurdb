@@ -1,6 +1,6 @@
 from cache import DataCache, Bufferkey
 from typing import Tuple, Dict
-from logger.logger import logger
+from log import logger
 import time
 
 

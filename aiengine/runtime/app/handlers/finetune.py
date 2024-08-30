@@ -1,4 +1,4 @@
-from logger.logger import logger
+from log import logger
 import argparse
 from connection import NeurDBModelHandler
 from app.handlers.setup import Setup

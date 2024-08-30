@@ -9,7 +9,7 @@ from cache import DataCache
 from dataloader.preprocessing import (
     libsvm_batch_preprocess_id_only,
 )
-from logger.logger import logger
+from log import logger
 import time
 
 

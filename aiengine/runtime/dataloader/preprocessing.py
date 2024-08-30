@@ -1,5 +1,5 @@
 import torch
-from logger.logger import logger
+from log import logger
 import time
 
 
