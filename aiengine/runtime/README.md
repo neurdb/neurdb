@@ -5,7 +5,7 @@
 ## Installation
 
 ```sh
-pip install -r requirement.txt --extra-index-url https://download.pytorch.org/whl/cu113
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu113
 ```
 
 ## Start server
