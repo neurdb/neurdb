@@ -1,10 +1,11 @@
 import asyncio
 import json
-from typing import List
 from threading import Thread
+from typing import List
 
 import numpy as np
-
+from neurdb.logger import configure_logging as api_configure_logging
+from neurdbrt.app import Setup, WebsocketSender, before_execute
 from neurdbrt.app.msg import (
     AckTaskResponse,
     DisconnectRequest,
@@ -14,8 +15,6 @@ from neurdbrt.app.msg import (
     SetupResponse,
     TaskRequest,
 )
-from neurdbrt.app import Setup, WebsocketSender, before_execute
-from neurdb.logger import configure_logging as api_configure_logging
 from neurdbrt.cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
 from neurdbrt.config import parse_config_arguments
 from neurdbrt.log import configure_logging, logger
@@ -247,7 +246,7 @@ async def inference_task(
 
 
 async def on_finetune(data: dict):
-    req = TaskRequest(data, is_inference=True)
+    req = TaskRequest(data, is_inference=False)
 
     await init_database(req)
     await websocket.send(AckTaskResponse(req.session_id).to_json())

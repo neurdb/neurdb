@@ -1,6 +1,6 @@
-from abc import ABCMeta, abstractmethod
 import json
 import uuid
+from abc import ABCMeta, abstractmethod
 
 
 class Request(metaclass=ABCMeta):

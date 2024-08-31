@@ -3,10 +3,10 @@ import json
 import threading
 import time
 
+from neurdbrt.app.ws import WebsocketSender
 from neurdbrt.cache import DataCache
 from neurdbrt.dataloader.preprocessing import libsvm_batch_preprocess_id_only
 from neurdbrt.log import logger
-from neurdbrt.app.ws import WebsocketSender
 
 
 class LibSvmDataDispatcher:
