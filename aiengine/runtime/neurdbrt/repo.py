@@ -13,7 +13,7 @@ class DBParams(TypedDict):
     db_port: str
 
 
-class NeurDBModelHandler:
+class ModelRepository:
     def __init__(self, db_params: DBParams):
         self._db_params = db_params
         self._conn = neurdb.NeurDB(**self._db_params)

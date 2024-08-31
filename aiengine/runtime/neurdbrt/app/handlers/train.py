@@ -2,7 +2,7 @@ import argparse
 from typing import List
 
 from neurdbrt.app.handlers.setup import Setup
-from neurdbrt.connection import NeurDBModelHandler
+from neurdbrt.repo import ModelRepository
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdbrt.log import logger
 
@@ -11,7 +11,7 @@ async def train(
     model_name: str,
     training_libsvm: StreamingDataSet,
     args: argparse.Namespace,
-    db: NeurDBModelHandler,
+    db: ModelRepository,
     epoch: int,
     train_batch_num: int,
     eval_batch_num: int,

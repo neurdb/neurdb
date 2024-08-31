@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 from neurdbrt.config import DEVICE
-from neurdbrt.connection import NeurDBModelHandler
+from neurdbrt.repo import ModelRepository
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdbrt.model import build_model
 
@@ -17,7 +17,7 @@ class Setup:
         model_name: str,
         libsvm_data: StreamingDataSet,
         args: argparse.Namespace,
-        db: NeurDBModelHandler,
+        db: ModelRepository,
     ) -> None:
         self._model_name = model_name
         self.libsvm_data = libsvm_data

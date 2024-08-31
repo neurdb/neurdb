@@ -1,7 +1,7 @@
 import argparse
 
 from neurdbrt.app.handlers.setup import Setup
-from neurdbrt.connection import NeurDBModelHandler
+from neurdbrt.repo import ModelRepository
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdbrt.log import logger
 
@@ -10,7 +10,7 @@ async def finetune(
     model_name: str,
     finetune_libsvm: StreamingDataSet,
     args: argparse.Namespace,
-    db: NeurDBModelHandler,
+    db: ModelRepository,
     model_id: int,
     epoch: int,
     train_batch_num: int,

@@ -7,10 +7,10 @@ from neurdb.logger import configure_logging as api_configure_logging
 from neurdbrt.app.handlers.finetune import finetune
 from neurdbrt.app.handlers.inference import inference
 from neurdbrt.app.handlers.train import train
-from neurdbrt.app.routes.context import before_execute
+from neurdbrt.app.hook import before_execute
 from neurdbrt.cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
 from neurdbrt.config import parse_config_arguments
-from neurdbrt.connection.nr import NeurDBModelHandler
+from neurdbrt.repo import ModelRepository
 from neurdbrt.log import configure_logging, logger
 from neurdbrt.websocket_sender import WebsocketSender
 from quart import Quart, current_app, g, websocket
@@ -29,7 +29,7 @@ print(config_args)
 if config_args.run_model != "in_database":
     NEURDB_CONNECTOR = None
 else:
-    NEURDB_CONNECTOR = NeurDBModelHandler(
+    NEURDB_CONNECTOR = ModelRepository(
         {
             "db_name": config_args.db_name,
             "db_user": config_args.db_user,

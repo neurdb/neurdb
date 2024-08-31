@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 from neurdbrt.app.handlers.setup import Setup
-from neurdbrt.connection import NeurDBModelHandler
+from neurdbrt.repo import ModelRepository
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdbrt.log import logger
 
@@ -12,7 +12,7 @@ async def inference(
     model_name: str,
     inference_libsvm: StreamingDataSet,
     args: argparse.Namespace,
-    db: NeurDBModelHandler,
+    db: ModelRepository,
     model_id: int,
     inf_batch_num: int,
 ) -> List[np.ndarray]:
