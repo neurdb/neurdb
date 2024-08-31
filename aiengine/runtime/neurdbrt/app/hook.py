@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from neurdbrt.cache import Bufferkey, ContextStates, DataCache
-from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
+from neurdbrt.dataloader import StreamingDataSet
 from quart import current_app, g
 
 

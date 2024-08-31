@@ -6,7 +6,7 @@ import time
 from neurdbrt.cache import DataCache
 from neurdbrt.dataloader.preprocessing import libsvm_batch_preprocess_id_only
 from neurdbrt.log import logger
-from neurdbrt.websocket_sender import WebsocketSender
+from neurdbrt.app.ws import WebsocketSender
 
 
 class LibSvmDataDispatcher:

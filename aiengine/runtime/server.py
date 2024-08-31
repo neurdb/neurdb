@@ -1,18 +1,19 @@
+import argparse
 import asyncio
 import json
+from typing import List
 import uuid
 from threading import Thread
 
+import numpy as np
+
+from neurdbrt.app import Setup, WebsocketSender, before_execute
+from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdb.logger import configure_logging as api_configure_logging
-from neurdbrt.app.handlers.finetune import finetune
-from neurdbrt.app.handlers.inference import inference
-from neurdbrt.app.handlers.train import train
-from neurdbrt.app.hook import before_execute
 from neurdbrt.cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
 from neurdbrt.config import parse_config_arguments
 from neurdbrt.log import configure_logging, logger
 from neurdbrt.repo import ModelRepository
-from neurdbrt.websocket_sender import WebsocketSender
 from quart import Quart, current_app, g, websocket
 
 configure_logging(None)
@@ -177,6 +178,33 @@ async def on_train(data: dict):
     train_task.add_done_callback(lambda task: task_done_callback(task, session_id))
 
 
+async def train(
+    model_name: str,
+    training_libsvm: StreamingDataSet,
+    args: argparse.Namespace,
+    db: ModelRepository,
+    epoch: int,
+    train_batch_num: int,
+    eval_batch_num: int,
+    test_batch_num: int,
+    features: List[str],
+    target: str,
+) -> int:
+    s = Setup(model_name, training_libsvm, args, db)
+
+    model_id, err = await s.train(
+        epoch, train_batch_num, eval_batch_num, test_batch_num
+    )
+
+    if err is not None:
+        logger.error(f"train failed with error: {err}")
+        return -1
+    print(f"train done. model_id: {model_id}")
+    s.register_model(model_id, "armnet", features, target)
+
+    return model_id
+
+
 def task_done_callback(task, session_id):
     asyncio.create_task(
         WebsocketSender.send(
@@ -226,6 +254,24 @@ async def on_inference(data: dict):
     inference_task.add_done_callback(lambda task: task_done_callback(task, session_id))
 
 
+async def inference(
+    model_name: str,
+    inference_libsvm: StreamingDataSet,
+    args: argparse.Namespace,
+    db: ModelRepository,
+    model_id: int,
+    inf_batch_num: int,
+) -> List[np.ndarray]:
+    s = Setup(model_name, inference_libsvm, args, db)
+    response, err = await s.inference(model_id, inf_batch_num)
+    if err is not None:
+        logger.error(f"inference failed with error: {err}")
+        return []
+    logger.debug(f"inference done. response")
+
+    return response
+
+
 async def on_finetune(data: dict):
     n_feat = data["nFeat"]
     n_field = data["nField"]
@@ -265,6 +311,35 @@ async def on_finetune(data: dict):
     )
 
     finetune_task.add_done_callback(lambda task: task_done_callback(task, session_id))
+
+
+async def finetune(
+    model_name: str,
+    finetune_libsvm: StreamingDataSet,
+    args: argparse.Namespace,
+    db: ModelRepository,
+    model_id: int,
+    epoch: int,
+    train_batch_num: int,
+    eva_batch_num: int,
+    test_batch_num: int,
+) -> int:
+    s = Setup(model_name, finetune_libsvm, args, db)
+
+    model_id, err = await s.finetune(
+        model_id,
+        start_layer_id=5,
+        epoch=epoch,
+        train_batch_num=train_batch_num,
+        eva_batch_num=eva_batch_num,
+        test_batch_num=test_batch_num,
+    )
+    if err is not None:
+        logger.error(f"train failed with error: {err}")
+        return -1
+
+    print(f"finetune done. model_id: {model_id}")
+    return model_id
 
 
 async def init_database(
