@@ -10,8 +10,8 @@ from neurdbrt.app.handlers.train import train
 from neurdbrt.app.hook import before_execute
 from neurdbrt.cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
 from neurdbrt.config import parse_config_arguments
-from neurdbrt.repo import ModelRepository
 from neurdbrt.log import configure_logging, logger
+from neurdbrt.repo import ModelRepository
 from neurdbrt.websocket_sender import WebsocketSender
 from quart import Quart, current_app, g, websocket
 

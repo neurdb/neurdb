@@ -10,7 +10,7 @@ from neurdbrt.utils.date import time_since
 from neurdbrt.utils.metrics import AverageMeter, roc_auc_compute_fn
 
 from ..base import BuilderBase
-from . import ARMNetModel
+from .model import ARMNetModel
 
 
 class ARMNetModelBuilder(BuilderBase):

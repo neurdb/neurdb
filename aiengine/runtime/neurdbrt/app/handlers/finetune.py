@@ -1,9 +1,10 @@
 import argparse
 
-from neurdbrt.app.handlers.setup import Setup
-from neurdbrt.repo import ModelRepository
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdbrt.log import logger
+from neurdbrt.repo import ModelRepository
+
+from .setup import Setup
 
 
 async def finetune(

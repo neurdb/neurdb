@@ -2,9 +2,9 @@ import argparse
 from typing import List
 
 from neurdbrt.app.handlers.setup import Setup
-from neurdbrt.repo import ModelRepository
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdbrt.log import logger
+from neurdbrt.repo import ModelRepository
 
 
 async def train(

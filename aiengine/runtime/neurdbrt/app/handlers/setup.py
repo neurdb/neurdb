@@ -4,9 +4,9 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 from neurdbrt.config import DEVICE
-from neurdbrt.repo import ModelRepository
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdbrt.model import build_model
+from neurdbrt.repo import ModelRepository
 
 Error = Optional[str]
 
