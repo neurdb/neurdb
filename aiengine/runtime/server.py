@@ -1,14 +1,20 @@
-import argparse
 import asyncio
 import json
 from typing import List
-import uuid
 from threading import Thread
 
 import numpy as np
 
+from neurdbrt.app.msg import (
+    AckTaskResponse,
+    DisconnectRequest,
+    DisconnectResponse,
+    ResultResponse,
+    SetupRequest,
+    SetupResponse,
+    TaskRequest,
+)
 from neurdbrt.app import Setup, WebsocketSender, before_execute
-from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
 from neurdb.logger import configure_logging as api_configure_logging
 from neurdbrt.cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
 from neurdbrt.config import parse_config_arguments
@@ -84,30 +90,29 @@ async def handle_ws():
 
 async def on_setup(data: dict):
     logger.debug(f"Client connected: {data}")
-    session_id = str(uuid.uuid4())
+
+    req = SetupRequest(data)
     quart_app.config["clients"][
-        session_id
-    ] = session_id  # TODO: refactor the structure of clients map
-    await WebsocketSender.send(
-        json.dumps({"version": 1, "event": "ack_setup", "sessionId": session_id})
-    )
+        req.session_id
+    ] = req.session_id  # TODO: refactor the structure of clients map
+
+    await WebsocketSender.send(SetupResponse(req.session_id).to_json())
 
 
 async def on_disconnect(data: dict):
     logger.debug(f"Client disconnected: {data}")
-    session_id = data.get("sessionId")
-    quart_app.config["clients"].pop(session_id)
-    quart_app.config["data_cache"].remove(session_id)
-    quart_app.config["dispatchers"].remove(session_id)
-    await WebsocketSender.send(
-        json.dumps({"version": 1, "event": "ack_disconnect", "sessionId": session_id})
-    )
+
+    req = DisconnectRequest(data)
+    quart_app.config["clients"].pop(req.session_id)
+    quart_app.config["data_cache"].remove(req.session_id)
+    quart_app.config["dispatchers"].remove(req.session_id)
+
+    await WebsocketSender.send(DisconnectResponse(req.session_id).to_json())
     WebsocketSender.stop()
 
 
 async def on_task(data: dict):
     logger.debug(f"Task received: {data}")
-    session_id = data.get("sessionId")
     task: str = data.get("type")
     if task == "train":
         await on_train(data)
@@ -137,35 +142,28 @@ async def on_ack_result(data: dict):
 
 
 async def on_train(data: dict):
-    n_feat = data["nFeat"]
-    n_field = data["nField"]
-    total_batch_num = (
-        data["spec"]["nBatchTrain"]
-        + data["spec"]["nBatchEval"]
-        + data["spec"]["nBatchTest"]
-    )
-    cache_size = data["cacheSize"]
-    session_id = data["sessionId"]
-    await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
-    await websocket.send(
-        json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id})
-    )
+    req = TaskRequest(data, is_inference=False)
+    await init_database(req)
+
+    await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
-        dataset_name=session_id,
+        dataset_name=req.session_id,
         data_key=Bufferkey.TRAIN_KEY,
-        client_id=session_id,
+        client_id=req.session_id,
     )
     if not exe_flag:
         logger.error(f"Execution flag failed: {exe_info}")
         return
 
-    train_task = asyncio.create_task(
-        train(
-            model_name=data["architecture"],
-            training_libsvm=g.data_loader,
-            args=current_app.config["config_args"],
-            db=current_app.config["db_connector"],
+    asyncio.create_task(
+        train_task(
+            setup=Setup(
+                model_name=data["architecture"],
+                libsvm_data=g.data_loader,
+                args=current_app.config["config_args"],
+                db=current_app.config["db_connector"],
+            ),
             epoch=data["spec"]["epoch"],
             train_batch_num=data["spec"]["nBatchTrain"],
             eval_batch_num=data["spec"]["nBatchEval"],
@@ -173,16 +171,11 @@ async def on_train(data: dict):
             features=data["features"],
             target=data["target"],
         )
-    )
-
-    train_task.add_done_callback(lambda task: task_done_callback(task, session_id))
+    ).add_done_callback(lambda task: task_done_callback(task, req.session_id))
 
 
-async def train(
-    model_name: str,
-    training_libsvm: StreamingDataSet,
-    args: argparse.Namespace,
-    db: ModelRepository,
+async def train_task(
+    setup: Setup,
     epoch: int,
     train_batch_num: int,
     eval_batch_num: int,
@@ -190,143 +183,110 @@ async def train(
     features: List[str],
     target: str,
 ) -> int:
-    s = Setup(model_name, training_libsvm, args, db)
-
-    model_id, err = await s.train(
+    model_id, err = await setup.train(
         epoch, train_batch_num, eval_batch_num, test_batch_num
     )
-
     if err is not None:
         logger.error(f"train failed with error: {err}")
         return -1
+
     print(f"train done. model_id: {model_id}")
-    s.register_model(model_id, "armnet", features, target)
+
+    if NEURDB_CONNECTOR:
+        NEURDB_CONNECTOR.register_model(model_id, "armnet", features, target)
 
     return model_id
 
 
 def task_done_callback(task, session_id):
-    asyncio.create_task(
-        WebsocketSender.send(
-            json.dumps(
-                {
-                    "version": 1,
-                    "event": "result",
-                    "sessionId": session_id,
-                    "payload": "Task completed",
-                }
-            )
-        )
-    )
+    asyncio.create_task(WebsocketSender.send(ResultResponse(session_id).to_json()))
 
 
 async def on_inference(data: dict):
-    n_feat = data["nFeat"]
-    n_field = data["nField"]
-    total_batch_num = data["spec"]["nBatch"]
-    cache_size = data["cacheSize"]
-    session_id = data["sessionId"]
-    await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
-    await websocket.send(
-        json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id})
-    )
+    req = TaskRequest(data, is_inference=True)
+
+    await init_database(req)
+    await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
-        dataset_name=session_id,
+        dataset_name=req.session_id,
         data_key=Bufferkey.INFERENCE_KEY,
-        client_id=session_id,
+        client_id=req.session_id,
     )
     if not exe_flag:
         logger.error(f"Execution flag failed: {exe_info}")
         return
 
-    inference_task = asyncio.create_task(
-        inference(
-            model_name=data["architecture"],
-            inference_libsvm=g.data_loader,
-            args=current_app.config["config_args"],
-            db=current_app.config["db_connector"],
+    asyncio.create_task(
+        inference_task(
+            setup=Setup(
+                model_name=data["architecture"],
+                libsvm_data=g.data_loader,
+                args=current_app.config["config_args"],
+                db=current_app.config["db_connector"],
+            ),
             model_id=data["modelId"],
-            inf_batch_num=total_batch_num,
+            inf_batch_num=req.total_batch_num,
         )
-    )
-
-    inference_task.add_done_callback(lambda task: task_done_callback(task, session_id))
+    ).add_done_callback(lambda task: task_done_callback(task, req.session_id))
 
 
-async def inference(
-    model_name: str,
-    inference_libsvm: StreamingDataSet,
-    args: argparse.Namespace,
-    db: ModelRepository,
+async def inference_task(
+    setup: Setup,
     model_id: int,
     inf_batch_num: int,
 ) -> List[np.ndarray]:
-    s = Setup(model_name, inference_libsvm, args, db)
-    response, err = await s.inference(model_id, inf_batch_num)
+    response, err = await setup.inference(model_id, inf_batch_num)
     if err is not None:
         logger.error(f"inference failed with error: {err}")
         return []
+
     logger.debug(f"inference done. response")
 
     return response
 
 
 async def on_finetune(data: dict):
-    n_feat = data["nFeat"]
-    n_field = data["nField"]
-    total_batch_num = (
-        data["spec"]["nBatchTrain"]
-        + data["spec"]["nBatchEval"]
-        + data["spec"]["nBatchTest"]
-    )
-    cache_size = data["cacheSize"]
-    session_id = data["sessionId"]
-    await init_database(n_feat, n_field, total_batch_num, cache_size, session_id)
-    await websocket.send(
-        json.dumps({"version": 1, "event": "ack_task", "sessionId": session_id})
-    )
+    req = TaskRequest(data, is_inference=True)
+
+    await init_database(req)
+    await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
-        dataset_name=session_id,
+        dataset_name=req.session_id,
         data_key=Bufferkey.TRAIN_KEY,
-        client_id=session_id,
+        client_id=req.session_id,
     )
     if not exe_flag:
         logger.error(f"Execution flag failed: {exe_info}")
         return
 
-    finetune_task = asyncio.create_task(
-        finetune(
-            model_name=data["architecture"],
-            finetune_libsvm=g.data_loader,
-            args=current_app.config["config_args"],
-            db=current_app.config["db_connector"],
+    asyncio.create_task(
+        finetune_task(
+            setup=Setup(
+                model_name=data["architecture"],
+                libsvm_data=g.data_loader,
+                args=current_app.config["config_args"],
+                db=current_app.config["db_connector"],
+            ),
             model_id=data["modelId"],
             epoch=data["spec"]["epoch"],
             train_batch_num=data["spec"]["nBatchTrain"],
             eva_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
         )
-    )
-
-    finetune_task.add_done_callback(lambda task: task_done_callback(task, session_id))
+    ).add_done_callback(lambda task: task_done_callback(task, req.session_id))
 
 
-async def finetune(
-    model_name: str,
-    finetune_libsvm: StreamingDataSet,
-    args: argparse.Namespace,
-    db: ModelRepository,
+async def finetune_task(
+    setup: Setup,
     model_id: int,
     epoch: int,
     train_batch_num: int,
     eva_batch_num: int,
     test_batch_num: int,
 ) -> int:
-    s = Setup(model_name, finetune_libsvm, args, db)
-
-    model_id, err = await s.finetune(
+    model_id, err = await setup.finetune(
         model_id,
         start_layer_id=5,
         epoch=epoch,
@@ -342,31 +302,39 @@ async def finetune(
     return model_id
 
 
-async def init_database(
-    n_feat: int, n_field: int, total_batch_num: int, cache_size: int, session_id: str
-):
-    data_cache = quart_app.config["data_cache"]
-    if not data_cache.contains(session_id, session_id):
-        _cache = DataCache(
-            dataset_name=session_id,
-            total_batch_num=total_batch_num,
-            maxsize=cache_size,
-        )
-        _cache.dataset_statistics = (n_feat, n_field)
-        data_cache.add(session_id, session_id, _cache)
-    else:
-        _cache = data_cache.get(session_id, session_id)
+async def init_database(req: TaskRequest):
+    # Get the arguments from the request
+    session_id = req.session_id
+    n_feat = req.n_feat
+    n_field = req.n_field
+    total_batch_num = req.total_batch_num
+    cache_size = req.cache_size
 
+    # Create the data cache if it doesn't exist
+    cache = quart_app.config["data_cache"]
+    if not cache.contains(session_id, session_id):
+        c = DataCache(
+            dataset_name=session_id, total_batch_num=total_batch_num, maxsize=cache_size
+        )
+        c.dataset_statistics = (n_feat, n_field)
+        cache.add(session_id, session_id, c)
+    else:
+        c = cache.get(session_id, session_id)
+
+    # Create the data dispatcher if it doesn't exist
     dispatchers = quart_app.config["dispatchers"]
     if not dispatchers.contains(session_id, session_id):
-        _data_dispatcher = LibSvmDataDispatcher()
-        dispatchers.add(session_id, session_id, _data_dispatcher)
-        _data_dispatcher.bound_client_to_cache(_cache, session_id)
-        _data_dispatcher.start()
+        d = LibSvmDataDispatcher()
+        dispatchers.add(session_id, session_id, d)
+
+        d.bound_client_to_cache(c, session_id)
+        d.start()
+
         loop = asyncio.get_event_loop()
-        _data_dispatcher.bound_loop(loop)
-        _data_dispatcher.start()
-        t = Thread(target=_data_dispatcher.background_task)
+        d.bound_loop(loop)
+        d.start()
+
+        t = Thread(target=d.background_task)
         t.daemon = True
         t.start()
 
