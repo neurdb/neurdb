@@ -1,8 +1,9 @@
-import random
 import math
-import numpy as np
+import random
 
+import numpy as np
 from learn import Learner
+
 
 # Q-Table q-learn agent.
 class QT_Learner(Learner):

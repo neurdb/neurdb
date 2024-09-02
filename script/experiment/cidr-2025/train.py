@@ -2,19 +2,18 @@
 
 import argparse
 import os
+import time
 
 import torch
-
-from config import DB_CONFIG
-from config import logger
+from config import DB_CONFIG, logger, parse_config_arguments
 from models import build_model
 from python.dataloader import table_dataloader
-from shared_config.config import parse_config_arguments
-import time
 
 
 def seed_everything(seed: int):
-    import random, os
+    import os
+    import random
+
     import numpy as np
     import torch
 

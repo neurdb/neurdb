@@ -3,9 +3,9 @@ This scrit puts a csv file into a table in a database.
 """
 
 import argparse
-from util.database import connect_db
 
 import pandas as pd
+from util.database import connect_db
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-
 from ql import QT_Learner
 
 

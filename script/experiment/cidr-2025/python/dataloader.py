@@ -1,13 +1,12 @@
-from typing import List
 import warnings
-from torch.utils.data import Dataset, Subset
-from torch.utils.data import DataLoader, random_split
+from typing import List
 
+import config
 import pandas as pd
 import psycopg2
 import torch
-import config
 from config import logger
+from torch.utils.data import DataLoader, Dataset, Subset, random_split
 
 
 class TableDataset(Dataset):

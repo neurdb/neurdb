@@ -5,8 +5,8 @@ This script combine three avazu npy files into one csv file.
 import argparse
 import os
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def avazu2csv(input_file: str, output_file: str):
