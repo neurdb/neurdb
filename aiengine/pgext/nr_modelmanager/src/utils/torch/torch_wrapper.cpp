@@ -1,7 +1,7 @@
 #include "torch_wrapper.h"
 
-#include <torch/script.h>
 #include <torch/torch.h>
+#include <torch/script.h>
 
 #include "device.h"
 

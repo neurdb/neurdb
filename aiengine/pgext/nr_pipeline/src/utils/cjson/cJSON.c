@@ -37,13 +37,13 @@
 #pragma warning(disable : 4001)
 #endif
 
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <limits.h>
 #include <ctype.h>
 #include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #ifdef ENABLE_LOCALES
 #include <locale.h>

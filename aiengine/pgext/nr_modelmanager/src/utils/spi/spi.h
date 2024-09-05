@@ -6,8 +6,8 @@
 #ifndef PG_MODEL_SPI_H
 #define PG_MODEL_SPI_H
 
-#include <executor/spi.h>
 #include <postgres.h>
+#include <executor/spi.h>
 #include <postgres_ext.h>
 #include <stdbool.h>
 

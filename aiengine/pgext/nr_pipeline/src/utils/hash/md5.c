@@ -1,9 +1,9 @@
-#include "md5.h"
-
-#include <openssl/evp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <openssl/evp.h>
+
+#include "md5.h"
 
 static int compute_md5(const char *str, unsigned char *md5_hash,
                        unsigned int *md5_length) {

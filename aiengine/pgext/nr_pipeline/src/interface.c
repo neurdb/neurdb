@@ -1,13 +1,13 @@
 #include "interface.h"
 
+#include <utils/builtins.h>
+#include <utils/array.h>
 #include <executor/spi.h>
 #include <math.h>
-#include <utils/array.h>
-#include <utils/builtins.h>
 
 #include "labeling/encode.h"
-#include "utils/hash/md5.h"
 #include "utils/metric/time_metric.h"
+#include "utils/hash/md5.h"
 #include "utils/network/websocket.h"
 
 PG_MODULE_MAGIC;

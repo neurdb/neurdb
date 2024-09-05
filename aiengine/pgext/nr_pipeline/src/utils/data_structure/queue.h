@@ -1,8 +1,8 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include <pthread.h>
 #include <stddef.h>
+#include <pthread.h>
 
 /**
  * Batch data node

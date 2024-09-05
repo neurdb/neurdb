@@ -5,8 +5,8 @@
 #ifndef PG_MODEL_PG_MODEL_H
 #define PG_MODEL_PG_MODEL_H
 
-#include <fmgr.h>
 #include <postgres.h>
+#include <fmgr.h>
 
 // /**
 //  * @description: register a model to the model table

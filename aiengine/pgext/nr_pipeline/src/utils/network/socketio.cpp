@@ -1,7 +1,6 @@
 #include "socketio.h"
 
 #include <sio_client.h>
-
 #include <cstring>
 
 struct SocketIOClient {

@@ -1,7 +1,7 @@
 #include "module_wraper.h"
 
-#include <torch/script.h>
 #include <torch/torch.h>
+#include <torch/script.h>
 
 TensorWrapper *mw_forward(const ModuleWrapper *model,
                           const TensorWrapper *input) {

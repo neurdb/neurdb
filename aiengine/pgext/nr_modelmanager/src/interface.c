@@ -1,13 +1,13 @@
 #include "interface.h"
 
+#include <unistd.h>
 #include <catalog/pg_type_d.h>
 #include <executor/spi.h>
-#include <unistd.h>
 #include <utils/array.h>
 #include <utils/builtins.h>
+#include "funcapi.h"
 
 #include "access/model_sl.h"
-#include "funcapi.h"
 #include "inference/model_inference.h"
 #include "utils/log/logger.h"
 #include "utils/torch/device.h"
@@ -385,6 +385,7 @@ Datum pgm_predict_table(PG_FUNCTION_ARGS) {
       PG_RETURN_NULL();
     }
     batch++;
+    // elog(INFO, "[batch %d] forward inference completed", batch);
 
     // clean up
     tw_free_tensor(input);

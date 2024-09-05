@@ -6,8 +6,8 @@
 #ifndef PG_MODEL_MODEL_SL_H
 #define PG_MODEL_MODEL_SL_H
 
-#include <c.h>
 #include <stdbool.h>
+#include <c.h>
 
 #include "../utils/torch/torch_wrapper.h"
 

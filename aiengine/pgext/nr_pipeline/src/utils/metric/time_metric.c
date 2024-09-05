@@ -1,9 +1,9 @@
 #include "time_metric.h"
 
 #include <c.h>
-#include <time.h>
 #include <utils/elog.h>
 #include <utils/palloc.h>
+#include <time.h>
 
 // Helper function
 char *_time_unit_to_str(TimeUnit unit);

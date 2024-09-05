@@ -1,8 +1,8 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <fmgr.h>
 #include <postgres.h>
+#include <fmgr.h>
 
 typedef struct {
   char *model_name;

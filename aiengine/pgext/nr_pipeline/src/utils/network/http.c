@@ -1,9 +1,9 @@
 #include "http.h"
 
 #include <c.h>
-#include <curl/curl.h>
 #include <stdio.h>
 #include <string.h>
+#include <curl/curl.h>
 #include <utils/elog.h>
 
 #include "../../interface.h"
