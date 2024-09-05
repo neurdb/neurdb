@@ -140,11 +140,11 @@ Our vision paper can be found in:
             Kian-Lee Tan and
             Yuncheng Wu and
             Xiaokui Xiao and
-            Xing Naili and
-            Yue Cong and
-            Zeng Lingze and
-            Zhang Meihui and
-            Zhao Zhanhao},
+            Naili Xing and
+            Cong Yue and
+            Lingze Zeng and
+            Meihui Zhang and
+            Zhanhao Zhao},
   title  =  {NeurDB: An AI-powered Autonomous Data System},
   journal=  {SCIENCE CHINA Information Sciences},
   year   =  {2024},
