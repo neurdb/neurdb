@@ -148,7 +148,7 @@ Our vision paper can be found in:
   journal=  {SCIENCE CHINA Information Sciences},
   year   =  {2024},
   pages  =  {-},
-  url    =  {http://www.sciengine.com/publisher/Science China Press/journal/SCIENCE CHINA Information Sciences///10.1007/s11432-024-4125-9},
+  url    =  {https://www.sciengine.com/SCIS/doi/10.1007/s11432-024-4125-9},
   doi    =  {https://doi.org/10.1007/s11432-024-4125-9}
 }
 ```
