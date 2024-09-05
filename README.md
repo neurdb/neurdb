@@ -9,6 +9,7 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2408.03013-b31b1b.svg?labelColor=f9f107)](https://arxiv.org/abs/2408.03013)
 
+
 NeurDB is an AI-powered autonomous data system.
 
 ## Installation
