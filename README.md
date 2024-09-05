@@ -124,3 +124,31 @@ Check the permissions of (1) executing for `dbengine/configure` (2) writing for 
 #### `pg_ctl: directory "/code/neurdb-dev/psql/data" is not a database cluster directory`
 
 This happens when you have directory `psql/data` without initializing the database, e.g., if the init script exits abnormally before. By default, to avoid data loss, the init script will not touch `psql/data` if it already exists. To solve this, remove `psql/data` manually.
+
+
+## Citation
+
+Our vision paper can be found in:
+
+```
+@article{neurdb-scis-24,
+  author = {Beng Chin Ooi and
+            Shaofeng Cai and
+            Gang Chen and
+            Yanyan Shen and
+            Kian-Lee Tan and
+            Yuncheng Wu and
+            Xiaokui Xiao and
+            Xing Naili and
+            Yue Cong and
+            Zeng Lingze and
+            Zhang Meihui and
+            Zhao Zhanhao},
+  title  =  {NeurDB: An AI-powered Autonomous Data System},
+  journal=  {SCIENCE CHINA Information Sciences},
+  year   =  {2024},
+  pages  =  {-},
+  url    =  {http://www.sciengine.com/publisher/Science China Press/journal/SCIENCE CHINA Information Sciences///10.1007/s11432-024-4125-9},
+  doi    =  {https://doi.org/10.1007/s11432-024-4125-9}
+}
+```
