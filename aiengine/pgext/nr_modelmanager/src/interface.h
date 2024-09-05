@@ -5,9 +5,8 @@
 #ifndef PG_MODEL_PG_MODEL_H
 #define PG_MODEL_PG_MODEL_H
 
-#include <postgres.h>
 #include <fmgr.h>
-
+#include <postgres.h>
 
 // /**
 //  * @description: register a model to the model table
@@ -54,8 +53,7 @@
  * @see https://www.postgresql.org/docs/16/functions-array.html
  * @see https://www.postgresql.org/docs/current/xfunc-c.html
  */
-Datum
-pgm_predict_float4(PG_FUNCTION_ARGS);
+Datum pgm_predict_float4(PG_FUNCTION_ARGS);
 
 /**
  * @description make a prediction using the model by passing a table
@@ -66,9 +64,7 @@ pgm_predict_float4(PG_FUNCTION_ARGS);
  * @return {null}      void
  * This function is temporary and designed for testing purposes
  */
-Datum
-pgm_predict_table(PG_FUNCTION_ARGS);
-
+Datum pgm_predict_table(PG_FUNCTION_ARGS);
 
 /**
  * @description: make a prediction using the model

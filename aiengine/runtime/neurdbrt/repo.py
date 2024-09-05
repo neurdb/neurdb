@@ -1,9 +1,10 @@
 from typing import TypedDict
 
-import neurdb
 from neurdb.storeman import ModelStorage
 from neurdbrt.log import logger
 from torch import nn
+
+import neurdb
 
 
 class DBParams(TypedDict):
