@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - 'dev'
+  pull_request:
+    branches:
+      - 'dev'
 
 env:
   DOCKER_IMAGE_NAME: neurdb-dev
