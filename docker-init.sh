@@ -59,6 +59,7 @@ echo "DB Started!"
 # Install neurdb package
 cd $NR_API_PATH/python
 ## For older setuptools
+## Reference: https://stackoverflow.com/a/71946741
 touch setup.cfg
 sudo pip install -e .
 rm setup.cfg
@@ -89,7 +90,8 @@ echo "Install NR Data Pipeline Extension Done"
 
 # Run python server
 cd $NR_AIENGINE_PATH/runtime
-nohup python3 app.py &
+export NR_LOG_LEVEL=INFO  # Set log level
+nohup python -m hypercorn server:app -c app_config.toml &
 echo 'Python Server started!'
 
 echo "Please use 'control + c' to exit the logging print"

@@ -21,8 +21,7 @@ void *send_train_task(
     // int train_batch_num,
     // int eva_batch_num,
     // int test_batch_num
-    void *arg
-);
+    void *arg);
 
 /**
  * Resquest the server to make a forward inference with a model
@@ -38,8 +37,7 @@ void *send_inference_task(
     // const char *client_socket_id,
     // const int batch_size,
     // const int batch_num
-    void *arg
-);
+    void *arg);
 
 /**
  * Resquest the server to finetune a model
@@ -58,6 +56,5 @@ void *send_finetune_task(
     // int train_batch_num;
     // int eva_batch_num;
     // int test_batch_num;
-    void *arg
-);
+    void *arg);
 #endif

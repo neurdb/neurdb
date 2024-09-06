@@ -1,1 +1,1 @@
-from .storeman import NeurDB, ModelSerializer
+from .storeman import ModelSerializer, NeurDB

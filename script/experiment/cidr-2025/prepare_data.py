@@ -1,13 +1,12 @@
-import os
-from psycopg2.extensions import register_adapter, AsIs
-import numpy as np
 import argparse
-import pandas as pd
-from util.file2dataframe import libsvm2csv, npy2csv
-from neurdb.logger import configure_logging
-from neurdb.logger import logger
+import os
 
+import numpy as np
+import pandas as pd
+from neurdb.logger import configure_logging, logger
+from psycopg2.extensions import AsIs, register_adapter
 from util.database import connect_db
+from util.file2dataframe import libsvm2csv, npy2csv
 
 configure_logging(None)
 

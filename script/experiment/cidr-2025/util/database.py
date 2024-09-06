@@ -2,7 +2,6 @@
 This script provides some simple functions to connect to a database.
 """
 import psycopg2
-
 from config import DB_CONFIG
 
 
