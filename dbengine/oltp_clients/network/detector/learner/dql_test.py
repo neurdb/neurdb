@@ -1,6 +1,7 @@
 import gym
-from dql import DQLearning
 import numpy as np
+from dql import DQLearning
+
 
 def test_frozen_lake():
     env = gym.make("FrozenLake-v1")
@@ -33,5 +34,6 @@ def test_frozen_lake():
 
     print("win round = ", win)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_frozen_lake()

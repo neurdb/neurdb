@@ -2,11 +2,7 @@ import psycopg2
 
 # Connect to PostgreSQL database
 conn = psycopg2.connect(
-    dbname='flexi',
-    user='postgres',
-    password='bench',
-    host='localhost',
-    port='5432'
+    dbname="flexi", user="postgres", password="bench", host="localhost", port="5432"
 )
 
 # Create a cursor object

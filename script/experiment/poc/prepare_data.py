@@ -1,6 +1,7 @@
+import argparse
+
 import psycopg2
 from psycopg2 import extras
-import argparse
 
 NUM_ROWS = 150
 

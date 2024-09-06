@@ -10,6 +10,7 @@
 [![paper-24-1](https://img.shields.io/badge/DOI-10.1007/s11432--024--4125--9-B31B1B.svg)](https://www.sciengine.com/SCIS/doi/10.1007/s11432-024-4125-9)
 [![paper-24-2](https://img.shields.io/badge/arXiv-2408.03013-b31b1b.svg?labelColor=f9f107)](https://arxiv.org/abs/2408.03013)
 
+
 NeurDB is an AI-powered autonomous data system.
 
 ## Installation

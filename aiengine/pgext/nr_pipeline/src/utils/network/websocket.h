@@ -1,26 +1,32 @@
 #ifndef WEBSOCKET_H
 #define WEBSOCKET_H
 
-
 #include <libwebsockets.h>
 
 #include "../data_structure/queue.h"
+#include "task.h"
 
-/******** Websocket ********/
 /**
- * Information of a websocket connection
+ * NeurDB websocket connection
  */
 typedef struct {
-    struct lws_context *context;
-    struct lws *wsi;
-    pthread_t thread;
-    int interrupted;
-    BatchDataQueue queue;
-    char sid[256];
-} WebsocketInfo;
+  struct lws_context *context;
+  struct lws *instance;
+  pthread_t thread;
+  int interrupted;
+  int connnected;
+  int setuped;
+  int task_acknowledged;
+  int completed;
+  BatchQueue queue;
+  char sid[256];
+} NrWebsocket;
+
+// ****************************** Initialization, Connection, Disconnection
+// ******************************
 
 /**
- * Initialize a websocket connection
+ * Initialize a websocket instance, it does not connect to the server
  * @param url The url of the python server
  * @param port The port of the python server
  * @param path The path of the websocket
@@ -28,41 +34,62 @@ typedef struct {
  * this is the queue between the main thread and the websocket thread
  * @return websocket_info The information of the websocket connection
  */
-WebsocketInfo *
-init_ws_connection(const char *url, const int port, const char *path, size_t queue_max_size);
-
-
-/******** Thread ********/
-/**
- * Start a websocket thread
- * @param ws_info The information of the websocket connection
- * @return int The status of the thread
- */
-int
-start_ws_thread(WebsocketInfo *ws_info);
+NrWebsocket *nws_initialize(const char *url, int port, const char *path,
+                            size_t queue_max_size);
 
 /**
- * Stop a websocket thread
+ * Connect the websocket connection to the server
+ * @param ws The websocket instance
+ * @return int The status of the websocket thread
  */
-int
-stop_ws_thread(WebsocketInfo *ws_info);
+int nws_connect(NrWebsocket *ws);
 
-/******** Message (main thread and websocket thread) ********/
+/**
+ * Disconnect the websocket connection
+ * @param ws The websocket instance
+ * @return int The status of the websocket thread
+ */
+int nws_disconnect(NrWebsocket *ws);
+
+/**
+ * Clean up the websocket instance
+ * @param ws The websocket instance
+ */
+void nws_free_websocket(NrWebsocket *ws);
+
+// ****************************** Message ******************************
+
 static const char *ML_STAGE[] = {"train", "evaluate", "test", "inference"};
 
 typedef enum {
-    TRAIN = 0,
-    EVALUATE = 1,
-    TEST = 2,
-    INFERENCE = 3
+  S_TRAIN = 0,
+  S_EVALUATE = 1,
+  S_TEST = 2,
+  S_INFERENCE = 3
 } MLStage;
 
 /**
  * Send a batch of data from the main thread to the websocket thread.
  * The data will be temporarily stored in a queue and will be extracted
  * by the websocket thread.
+ * @param ws The websocket instance
+ * @param batch_id The id of the batch
+ * @param ml_stage The machine learning stage, i.e., train, evaluate, test, or
+ * inference
+ * @param batch_data The data of the batch
  */
-int
-send_batch_data(WebsocketInfo *ws_info, const char *dataset_name, MLStage ml_stage, const char *batch_data);
+void nws_send_batch_data(NrWebsocket *ws, int batch_id, MLStage ml_stage,
+                         const char *batch_data);
 
-#endif //WEBSOCKET_H
+/**
+ * Send a task to the server
+ * @param ws The websocket instance
+ * @param ml_task The machine learning task
+ * @param task_spec The task specification, it can be TrainTaskSpec,
+ * InferenceTaskSpec, or FinetuneTaskSpec
+ */
+void nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec);
+
+void nws_wait_completion(NrWebsocket *ws);
+
+#endif  // WEBSOCKET_H

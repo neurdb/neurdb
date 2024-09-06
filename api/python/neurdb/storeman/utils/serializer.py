@@ -1,7 +1,9 @@
-from ..common import ModelStorage
-from io import BytesIO
-import torch
 import pickle
+from io import BytesIO
+
+import torch
+
+from ..common import ModelStorage
 
 
 class ModelSerializer:

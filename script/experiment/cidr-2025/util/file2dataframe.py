@@ -5,9 +5,7 @@ import argparse
 
 import numpy as np
 import pandas as pd
-
-from neurdb.logger import configure_logging
-from neurdb.logger import logger
+from neurdb.logger import configure_logging, logger
 
 configure_logging(None)
 
