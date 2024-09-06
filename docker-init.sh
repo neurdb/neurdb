@@ -96,7 +96,7 @@ echo 'Python Server started!'
 
 echo "Please use 'control + c' to exit the logging print"
 
-# If not in GitHub Actions, keep container running 
+# If not in GitHub Actions, keep container running
 if [ "$GITHUB_ACTIONS" != "true" ]; then
   tail -f /dev/null
 fi
