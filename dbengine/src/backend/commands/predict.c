@@ -61,7 +61,7 @@ split_columns(const char *columns)
 	return result;
 }
 
-static void 
+static void
 set_false_to_all_params(NullableDatum *args, int size)
 {
 	for (int i = 0; i < size; i++)
