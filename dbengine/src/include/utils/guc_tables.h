@@ -55,6 +55,8 @@ typedef struct config_var_value
 enum config_group
 {
 	UNGROUPED,					/* use for options not shown in pg_settings */
+	NEURDB_MODEL_OPTIONS,
+	NEURDB_RUNTIME_OPTIONS,
 	FILE_LOCATIONS,
 	CONN_AUTH_SETTINGS,
 	CONN_AUTH_TCP,
@@ -97,7 +99,7 @@ enum config_group
 	ERROR_HANDLING_OPTIONS,
 	PRESET_OPTIONS,
 	CUSTOM_OPTIONS,
-	DEVELOPER_OPTIONS
+	DEVELOPER_OPTIONS,
 };
 
 /*
