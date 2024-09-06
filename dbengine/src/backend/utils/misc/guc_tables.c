@@ -2049,7 +2049,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskEpoch,
+		&NRTaskMaxFeatures,
 		5500, 0, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -2064,7 +2064,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskEpoch,
+		&NRTaskNumBatches,
 		80, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
