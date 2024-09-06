@@ -26,6 +26,9 @@ jobs:
     - name: Set dev version number
       run: export RELEASE_VERSION="${RELEASE_VERSION}-dev"
 
+    - name: Give Docker container write permission
+      run: find . -type f -exec chmod uga+rw {} \; ; find . -type d -exec chmod uga+rwx {} \;
+
     - name: Build the Docker image
       run: docker build . --file Dockerfile.cpu --tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION --progress=plain --no-cache
 
