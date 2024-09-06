@@ -1,0 +1,39 @@
+name: Build and run dev Docker image
+
+on:
+  # Trigger the action manually from the UI
+  workflow_dispatch:
+  # Trigger the action when push to the `dev` branch
+  push:
+    branches:
+      - 'dev'
+
+env:
+  DOCKER_IMAGE_NAME: neurdb-dev
+  RELEASE_VERSION: 0.1.0
+
+jobs:
+  build_and_run_dev_docker_cpu:
+    # Job name that shows in the GitHub UI
+    name: Build Docker Images
+    # Runner to use
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set dev version number
+      run: export RELEASE_VERSION="${RELEASE_VERSION}-dev"
+
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile.cpu --tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION --progress=plain --no-cache
+
+    - name: Start the Docker container
+      run: docker run -e GITHUB_ACTIONS=true --name ${DOCKER_IMAGE_NAME}_app_1 -v $(pwd):/code/neurdb-dev $DOCKER_IMAGE_NAME:$RELEASE_VERSION
+
+    - name: Remove the Docker container
+      run: docker rm -f ${DOCKER_IMAGE_NAME}_app_1
+
+    - name: Remove the Docker image
+      run: docker rmi $DOCKER_IMAGE_NAME:$RELEASE_VERSION
