@@ -29,7 +29,7 @@ include_directories(${CURL_INCLUDE_DIRS})
 find_library(LWS_LIBRARY NAMES websockets)
 
 # socket.io
-find_library(SIO_CLIENT NAMES sioclient)
+# find_library(SIO_CLIENT NAMES sioclient)
 
 # openssl
 find_package(OpenSSL REQUIRED)
