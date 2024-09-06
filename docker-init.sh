@@ -67,20 +67,20 @@ rm setup.cfg
 # pip install -e . --config-settings editable_mode=compat
 
 # Install socket.io-client-cpp (for nr_pipeline)
-if [ ! -d "$NR_PIPELINE_PATH/lib" ]; then
-  mkdir -p $NR_PIPELINE_PATH/lib
-fi
-cd $NR_PIPELINE_PATH/lib
+## Since we have migrated to websockets, we don't need this
+# if [ ! -d "$NR_PIPELINE_PATH/lib" ]; then
+#   mkdir -p $NR_PIPELINE_PATH/lib
+# fi
+# cd $NR_PIPELINE_PATH/lib
 
-if [ ! -d "socket.io-client-cpp" ]; then
-  git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git
-fi
-cd socket.io-client-cpp
-
-sudo chmod -R 777 ./
-cmake -DCMAKE_CXX_FLAGS="-fPIC" ./
-sudo make -j
-sudo make install
+# if [ ! -d "socket.io-client-cpp" ]; then
+#   git clone --recurse-submodules https://github.com/socketio/socket.io-client-cpp.git
+# fi
+# cd socket.io-client-cpp
+# sudo chmod -R 777 ./
+# cmake -DCMAKE_CXX_FLAGS="-fPIC" ./
+# sudo make -j
+# sudo make install
 
 # Compile nr_pipeline
 cd $NR_PIPELINE_PATH
@@ -96,5 +96,10 @@ echo 'Python Server started!'
 
 echo "Please use 'control + c' to exit the logging print"
 
-# Continue
-tail -f /dev/null
+# If not in GitHub Actions, keep container running
+if [ "$GITHUB_ACTIONS" != "true" ]; then
+  tail -f /dev/null
+fi
+
+# If in GitHub Actions, exit normally
+exit 0
