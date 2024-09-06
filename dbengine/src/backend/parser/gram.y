@@ -16945,8 +16945,8 @@ NeurDBPredictStmt:
 				}
 		;
 
-neurdb_target: target_list 
-			neurdb_from 
+neurdb_target: target_list
+			neurdb_from
 			/*opt_allow_train*/
 			opt_neurdb_train_on
 			opt_neurdb_values

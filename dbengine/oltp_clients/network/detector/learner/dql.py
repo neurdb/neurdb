@@ -1,22 +1,23 @@
-import random
+import collections
 import math
+import random
 
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-import collections
+import torch.optim as optim
 
 # Hyper-parameters
-buffer_limit  = 50000
-batch_size    = 32
+buffer_limit = 50000
+batch_size = 32
 net_wide = 50
 
 from learn import Learner
 
+
 # from https://github.com/seungeunrho/minimalRL/blob/master/dqn.py
-class ReplayBuffer():
+class ReplayBuffer:
     def __init__(self):
         self.buffer = collections.deque(maxlen=buffer_limit)
 
@@ -35,12 +36,17 @@ class ReplayBuffer():
             s_prime_lst.append(s_prime)
             done_mask_lst.append([done_mask])
 
-        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst), \
-               torch.tensor(r_lst), torch.tensor(s_prime_lst, dtype=torch.float), \
-               torch.tensor(done_mask_lst)
+        return (
+            torch.tensor(s_lst, dtype=torch.float),
+            torch.tensor(a_lst),
+            torch.tensor(r_lst),
+            torch.tensor(s_prime_lst, dtype=torch.float),
+            torch.tensor(done_mask_lst),
+        )
 
     def size(self):
         return len(self.buffer)
+
 
 # DQN model.
 class DQN(nn.Module):
@@ -62,17 +68,18 @@ class DQN(nn.Module):
         out = self.forward(state)
         coin = random.random()
         if coin < eps:
-            action = random.randint(0, self.num_actions-1)
+            action = random.randint(0, self.num_actions - 1)
         else:
             action = out.argmax().item()
         return action, out[action]
 
+
 class DQLearning(Learner):
-    def __init__(self, action_space, in_dim, lr = 0.01, ga = 0.98):
+    def __init__(self, action_space, in_dim, lr=0.01, ga=0.98):
         self.q = DQN(in_dim, action_space.n)
         self.q_target = DQN(in_dim, action_space.n)
         self.q_target.load_state_dict(self.q.state_dict())
-        self.optimizer = optim.Adam(self.q.parameters(), lr = lr)
+        self.optimizer = optim.Adam(self.q.parameters(), lr=lr)
         self.action_space = action_space
         self.lr = lr
         self.ga = ga
@@ -83,19 +90,27 @@ class DQLearning(Learner):
             s, a, r, s_prime, done_mask = self.memory.sample(batch_size)
 
             q_out = self.q(s)
-#            print(q_out)
+            #            print(q_out)
             q_a = q_out.gather(1, a)
             max_q_prime = self.q_target(s_prime).max(1)[0].unsqueeze(1)
             target = r + self.ga * max_q_prime * done_mask
-#            print(target)
+            #            print(target)
             loss = F.smooth_l1_loss(q_a, target)
             self.optimizer.zero_grad()
             loss.backward()
-#            print(loss.item())
+            #            print(loss.item())
             self.optimizer.step()
 
     def max_q(self, s):
-        return self.q.sample_action(torch.tensor([s,], dtype=torch.float), 0)
+        return self.q.sample_action(
+            torch.tensor(
+                [
+                    s,
+                ],
+                dtype=torch.float,
+            ),
+            0,
+        )
 
     def choose_action(self, s, eps):
         return self.q.sample_action(s, eps)
@@ -107,7 +122,31 @@ class DQLearning(Learner):
 
     # Sacrifice the exploitation and have more exploration for training.
     def train_next_step(self, env, s, eps):
-        a, _ = self.choose_action(torch.tensor([s,], dtype=torch.float), eps)
+        a, _ = self.choose_action(
+            torch.tensor(
+                [
+                    s,
+                ],
+                dtype=torch.float,
+            ),
+            eps,
+        )
         s_, r, done, _ = env.step(a)
-        self.update_transition(np.array([s,], dtype=np.float), a, r, np.array([s_,], dtype=np.float), 0. if done else 1.)
+        self.update_transition(
+            np.array(
+                [
+                    s,
+                ],
+                dtype=np.float,
+            ),
+            a,
+            r,
+            np.array(
+                [
+                    s_,
+                ],
+                dtype=np.float,
+            ),
+            0.0 if done else 1.0,
+        )
         return s_, r, done

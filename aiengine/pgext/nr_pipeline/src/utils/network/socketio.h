@@ -42,33 +42,27 @@ SocketIOClient *socketio_client();
  * @param client SocketIOClient* The client to set the socket id
  * @param socket_id char* The socket id to set
  */
-void
-socketio_set_socket_id(SocketIOClient *client, const char *socket_id);
+void socketio_set_socket_id(SocketIOClient *client, const char *socket_id);
 
-char *
-socketio_get_socket_id(const SocketIOClient *client);
+char *socketio_get_socket_id(const SocketIOClient *client);
 
 /**
  * Set the queue for the client
  * @param client SocketIOClient* The client to set the queue
  * @param queue BatchDataQueue* The queue to set
  */
-void
-socketio_set_queue(SocketIOClient *client, BatchDataQueue *queue);
+void socketio_set_queue(SocketIOClient *client, BatchQueue *queue);
 
-BatchDataQueue *
-socketio_get_queue(const SocketIOClient *client);
+BatchQueue *socketio_get_queue(const SocketIOClient *client);
 
 /**
  * Connect to the socket.io server
  * @param client SocketIOClient* The client to connect
  * @param url const char* The url of the server
  */
-void
-socketio_connect(SocketIOClient *client, const char *url);
+void socketio_connect(SocketIOClient *client, const char *url);
 
-void
-socketio_disconnect(SocketIOClient *client);
+void socketio_disconnect(SocketIOClient *client);
 
 /**
  * Emit an event to the server
@@ -76,8 +70,7 @@ socketio_disconnect(SocketIOClient *client);
  * @param event const char* The event to emit
  * @param data const char* The data to emit
  */
-void
-socketio_emit(SocketIOClient *client, const char *event, const char *data);
+void socketio_emit(SocketIOClient *client, const char *event, const char *data);
 
 /**
  * Register a callback function for the event
@@ -85,10 +78,10 @@ socketio_emit(SocketIOClient *client, const char *event, const char *data);
  * @param event const char* The event name
  * @param callback MessageCallback Pointer to the callback function
  */
-void
-socketio_register_callback(SocketIOClient *client, const char *event, MessageCallback callback);
+void socketio_register_callback(SocketIOClient *client, const char *event,
+                                MessageCallback callback);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
-#endif //SOCKETIO_H
+#endif  // __cplusplus
+#endif  // SOCKETIO_H

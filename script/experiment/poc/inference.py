@@ -1,11 +1,10 @@
 # main script for PoC experiment, inference running in python environment
-import time
-import torch
-from torch import nn
 import argparse
+import time
 
+import torch
 from prepare_data import connect_to_db
-
+from torch import nn
 
 BATCH_SIZE = 10
 MODEL_PATH = "mlp_model.pt"
