@@ -18,5 +18,14 @@
 #include "nodes/parsenodes.h"
 #include "parser/parse_node.h"
 
+/*
+ * GUC variable for current configuration
+ */
+extern PGDLLIMPORT char *NRModelName;
+extern PGDLLIMPORT int NRTaskBatchSize;
+extern PGDLLIMPORT int NRTaskEpoch;
+extern PGDLLIMPORT int NRTaskMaxFeatures;
+extern PGDLLIMPORT int NRTaskNumBatches;
+
 extern ObjectAddress ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString);
 #endif							/* PREDICT_H */
