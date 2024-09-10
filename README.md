@@ -15,6 +15,12 @@ NeurDB is an AI-powered autonomous data system.
 
 ## Installation
 
+### Dependences
+
+```bash
+Python == 3.10.12
+```
+
 ### Clone the latest code
 
 ```bash
