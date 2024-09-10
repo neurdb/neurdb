@@ -1,12 +1,12 @@
 from .armnet import *
 from .base import *
-from .mlp_clf import *
+from .dnn import *
 
 
 def build_model(model_name: str, config_args) -> BuilderBase:
-    model = None
+    _model = None
     if model_name == "armnet":
-        model = ARMNetModelBuilder(config_args)
-    # if model_name == "mlp":
-    # model = MLPBuilder(config_args)
-    return model
+        _model = ARMNetModelBuilder(config_args)
+    if model_name == "dnn":
+        _model = DNNModelBuilder(config_args)
+    return _model
