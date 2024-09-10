@@ -41,7 +41,6 @@ else:
             "db_user": config_args.db_user,
             "db_host": config_args.db_host,
             "db_port": config_args.db_port,
-            # "password": config_args.db_password,
         }
     )
 
@@ -329,6 +328,8 @@ async def init_database(req: TaskRequest):
         d.bound_client_to_cache(c, session_id)
         d.start()
 
+        # retrieves the main event loop and ensure async task can be executed
+        # todo: do we needs async to send data here? it waiting data added anyway.
         loop = asyncio.get_event_loop()
         d.bound_loop(loop)
         d.start()
