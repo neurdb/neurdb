@@ -2,7 +2,6 @@ import torch
 from neurdbrt.log import logger
 from torch.utils.data import DataLoader, Dataset, random_split
 from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
 
 
 class LibsvmDataset(Dataset):

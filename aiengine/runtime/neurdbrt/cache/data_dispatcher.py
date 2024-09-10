@@ -24,10 +24,13 @@ class LibSvmDataDispatcher:
 
         self.task = None
         self.stop_event = threading.Event()
+        # full_event notify the new data is added
         self.full_event = threading.Event()
 
         # Initialize aggregation variables
         self.total_preprocessing_time = 0.0
+
+        self.loop = None
 
     def bound_client_to_cache(self, data_cache: DataCache, client_id: str):
         """
@@ -108,6 +111,7 @@ class LibSvmDataDispatcher:
                     f"emitting request to client_id {self.client_id}"
                 )
 
+                # todo: do we needs async to send data here? it waiting data added anyway.
                 asyncio.run_coroutine_threadsafe(
                     websocket_emit_request_data(self.client_id),
                     self.loop,
