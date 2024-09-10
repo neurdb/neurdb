@@ -32,14 +32,14 @@ class DNNModelBuilder(BuilderBase):
             ).to(DEVICE)
 
     async def train(
-            self,
-            train_loader: StreamingDataSet,
-            val_loader: StreamingDataSet,
-            test_loader: StreamingDataSet,
-            epoch: int,
-            train_batch_num: int,
-            eva_batch_num: int,
-            test_batch_num: int,
+        self,
+        train_loader: StreamingDataSet,
+        val_loader: StreamingDataSet,
+        test_loader: StreamingDataSet,
+        epoch: int,
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int,
     ):
         logger = self._logger.bind(task="train")
 
@@ -181,11 +181,11 @@ class DNNModelBuilder(BuilderBase):
             )
 
     async def _evaluate(
-            self,
-            data_loader: StreamingDataSet,
-            opt_metric,
-            namespace: str,
-            batch_num: int,
+        self,
+        data_loader: StreamingDataSet,
+        opt_metric,
+        namespace: str,
+        batch_num: int,
     ):
         logger = self._logger.bind(task=namespace)
 

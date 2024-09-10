@@ -18,7 +18,6 @@ class Embedding(nn.Module):
 
 
 class MLP(nn.Module):
-
     def __init__(self, ninput, nlayers, nhid, dropout, noutput=1):
         super().__init__()
         layers = list()
@@ -28,7 +27,8 @@ class MLP(nn.Module):
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(p=dropout))
             ninput = nhid
-        if nlayers == 0: nhid = ninput
+        if nlayers == 0:
+            nhid = ninput
         layers.append(nn.Linear(nhid, noutput))
         self.mlp = nn.Sequential(*layers)
 
