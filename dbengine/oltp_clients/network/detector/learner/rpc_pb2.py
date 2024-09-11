@@ -150,7 +150,7 @@ Info = _reflection.GeneratedProtocolMessageType(
     (_message.Message,),
     {
         "DESCRIPTOR": _INFO,
-        "__module__": "rpc_pb2"
+        "__module__": "rpc_pb2",
         # @@protoc_insertion_point(class_scope:Info)
     },
 )
@@ -161,7 +161,7 @@ Act = _reflection.GeneratedProtocolMessageType(
     (_message.Message,),
     {
         "DESCRIPTOR": _ACT,
-        "__module__": "rpc_pb2"
+        "__module__": "rpc_pb2",
         # @@protoc_insertion_point(class_scope:Act)
     },
 )
