@@ -35,7 +35,7 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile.cpu --tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION --progress=plain --no-cache
 
-    - name: Start the Docker container
+    - name: Start the Docker container and perform end-to-end test
       run: docker run -e GITHUB_ACTIONS=true --name ${DOCKER_IMAGE_NAME}_app_1 -v $(pwd):/code/neurdb-dev $DOCKER_IMAGE_NAME:$RELEASE_VERSION
 
     - name: Remove the Docker container
