@@ -96,10 +96,24 @@ echo 'Python Server started!'
 
 echo "Please use 'control + c' to exit the logging print"
 
-# If not in GitHub Actions, keep container running
 if [ "$GITHUB_ACTIONS" != "true" ]; then
+  # If not in GitHub Actions, keep container running
   tail -f /dev/null
-fi
+else
+  # If in GitHub Actions
+  # Wait for Python server to start
+  echo -n 'Waiting for Python server to start '
+  until curl --output /dev/null --silent --head --fail http://127.0.0.1:8090/; do
+    printf '.'
+    sleep 1
+  done
+  echo 'OK'
 
-# If in GitHub Actions, exit normally
-exit 0
+  # Do test
+  cd $NEURDBPATH/test
+  export PATH=$NR_PSQL_PATH/bin:$PATH
+  bash test.sh
+
+  # Exit normally
+  exit 0
+fi
