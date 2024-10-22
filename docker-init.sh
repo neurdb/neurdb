@@ -108,7 +108,7 @@ else
     sleep 1
   done
   echo 'OK'
-  
+
   # Do test
   cd $NEURDBPATH/test
   export PATH=$NR_PSQL_PATH/bin:$PATH
