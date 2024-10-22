@@ -1,5 +1,5 @@
-# run with pip install torch==1.6.0 --timeout 100 if above failed.
-torch==1.6.0
+# run with pip install torch==2.2.0 --timeout 100 if above failed.
+torch==2.2.0
 torchaudio==0.6.0
 torchinfo==0.3.1
 torchvision==0.7.0
