@@ -5,6 +5,6 @@ This folder contains some test scripts for developers to quickly test the correc
 Before running the test script, make sure you have set up NeurDB and started the Python server.
 
 ```bash
-chmod +x run_tests.sh
+chmod +x test.sh
 ./test.sh
 ```
