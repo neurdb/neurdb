@@ -89,7 +89,7 @@ RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /home/postgres/.bashrc && \
     echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /home/postgres/.bashrc && \
     echo "export NEURDBPATH=${NEURDBPATH}" >> /home/postgres/.bashrc && \
-    echo "export PATH=${PATH}:/home/postgres/.local/bin" >> /home/postgres/.bashrc
+    echo "export PATH=${PATH}:/home/postgres/.local/bin:${NEURDBPATH}/psql/bin" >> /home/postgres/.bashrc
 
 # Install Python packages
 USER postgres
