@@ -4286,7 +4286,7 @@ struct config_string ConfigureNamesString[] =
 
 	{
 		{"syslog_ident", PGC_SIGHUP, LOGGING_WHERE,
-			gettext_noop("Sets the program name used to identify PostgreSQL "
+			gettext_noop("Sets the program name used to identify NeurDB "
 						 "messages in syslog."),
 			NULL
 		},
@@ -4298,7 +4298,7 @@ struct config_string ConfigureNamesString[] =
 	{
 		{"event_source", PGC_POSTMASTER, LOGGING_WHERE,
 			gettext_noop("Sets the application name used to identify "
-						 "PostgreSQL messages in the event log."),
+						 "NeurDB messages in the event log."),
 			NULL
 		},
 		&event_source,

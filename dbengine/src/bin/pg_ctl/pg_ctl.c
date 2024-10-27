@@ -86,7 +86,7 @@ static const char *progname;
 static char *log_file = NULL;
 static char *exec_path = NULL;
 static char *event_source = NULL;
-static char *register_servicename = "PostgreSQL";	/* FIXME: + version ID? */
+static char *register_servicename = "NeurDB";	/* FIXME: + version ID? */
 static char *register_username = NULL;
 static char *register_password = NULL;
 static char *argv0 = NULL;
@@ -1846,7 +1846,7 @@ CreateRestrictedProcess(char *cmd, PROCESS_INFORMATION *processInfo, bool as_ser
 			HANDLE		job;
 			char		jobname[128];
 
-			sprintf(jobname, "PostgreSQL_%lu",
+			sprintf(jobname, "NeurDB_%lu",
 					(unsigned long) processInfo->dwProcessId);
 
 			job = CreateJobObject(NULL, jobname);

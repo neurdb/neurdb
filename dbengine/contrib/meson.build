@@ -1,4 +1,5 @@
 # Copyright (c) 2022-2023, PostgreSQL Global Development Group
+# Copyright (c) 2024, NeurDB
 
 contrib_mod_args = pg_mod_args
 

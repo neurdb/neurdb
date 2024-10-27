@@ -79,7 +79,7 @@ InitializeBackupManifest(backup_manifest_info *manifest,
 
 	if (want_manifest != MANIFEST_OPTION_NO)
 		AppendToManifest(manifest,
-						 "{ \"PostgreSQL-Backup-Manifest-Version\": 1,\n"
+						 "{ \"NeurDB-Backup-Manifest-Version\": 1,\n"
 						 "\"Files\": [");
 }
 
