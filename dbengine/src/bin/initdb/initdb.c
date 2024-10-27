@@ -10,7 +10,7 @@
  * all its data, create the files that hold the global tables, create
  * a few other control files for it, and create three databases: the
  * template databases "template0" and "template1", and a default user
- * database "postgres".
+ * database "neurdb".
  *
  * The template databases are ordinary PostgreSQL databases.  template0
  * is never supposed to change after initdb, whereas template1 can be
@@ -19,7 +19,7 @@
  *
  * For largely-historical reasons, the template1 database is the one built
  * by the basic bootstrap process.  After it is complete, template0 and
- * the default database, postgres, are made just by copying template1.
+ * the default database, neurdb, are made just by copying template1.
  *
  * To create template1, we run the postgres (backend) program in bootstrap
  * mode and feed it data from the postgres.bki library file.  After this
@@ -1977,18 +1977,18 @@ make_template0(FILE *cmdfd)
 }
 
 /*
- * copy template1 to postgres
+ * copy template1 to neurdb
  */
 static void
 make_postgres(FILE *cmdfd)
 {
 	/*
 	 * Just as we did for template0, and for the same reasons, assign a fixed
-	 * OID to postgres and select the file_copy strategy.
+	 * OID to neurdb and select the file_copy strategy.
 	 */
-	PG_CMD_PUTS("CREATE DATABASE postgres OID = " CppAsString2(PostgresDbOid)
+	PG_CMD_PUTS("CREATE DATABASE neurdb OID = " CppAsString2(PostgresDbOid)
 				" STRATEGY = file_copy;\n\n");
-	PG_CMD_PUTS("COMMENT ON DATABASE postgres IS 'default administrative connection database';\n\n");
+	PG_CMD_PUTS("COMMENT ON DATABASE neurdb IS 'default administrative connection database';\n\n");
 }
 
 /*
@@ -2538,7 +2538,7 @@ setup_pgdata(void)
 	canonicalize_path(pg_data);
 
 	/*
-	 * we have to set PGDATA for postgres rather than pass it on the command
+	 * we have to set PGDATA for neurdb rather than pass it on the command
 	 * line to avoid dumb quoting problems on Windows, and we would especially
 	 * need quotes otherwise on Windows because paths there are most likely to
 	 * have embedded spaces.

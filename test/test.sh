@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DB_NAME="postgres"
-DB_USER="postgres"
+DB_NAME="neurdb"
+DB_USER="neurdb"
 SQL_SCRIPT="$(pwd)/test.sql"
 DATASET_PATH="$(pwd)/frappe.csv"
 

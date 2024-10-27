@@ -50,15 +50,15 @@ RUN apt-get install -y \
 # Set root password
 RUN echo "root:rootpassword" | chpasswd
 
-# Create a non-root user 'postgres' with an empty password and add to sudoers
-RUN useradd -m -s /bin/bash postgres && \
-    passwd -d postgres && \
-    echo "postgres ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Create a non-root user 'neurdb' with an empty password and add to sudoers
+RUN useradd -m -s /bin/bash neurdb && \
+    passwd -d neurdb && \
+    echo "neurdb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Install Rust using rustup and cargo-pgrx as the postgres user
+# Install Rust using rustup and cargo-pgrx as the neurdb user
 # Ensure rustc 1.78.0 rustc --version
 # Ensure cargo-pgrx v0.11.4 cargo-pgrx --version
-# USER postgres
+# USER neurdb
 # RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
 #     echo 'source $HOME/.cargo/env' >> $HOME/.bashrc && \
 #     /bin/bash -c "source $HOME/.cargo/env && rustup install 1.78.0" && \
@@ -67,10 +67,10 @@ RUN useradd -m -s /bin/bash postgres && \
 # Switch back to root to set system-wide environment variables
 USER root
 
-# Set the path for Rust and Cargo for both root and postgres users
-# ENV PATH="/home/postgres/.cargo/bin:${PATH}"
-# RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /etc/profile
-# RUN echo 'export PATH="$PATH:/home/postgres/.cargo/bin"' >> /home/postgres/.bashrc
+# Set the path for Rust and Cargo for both root and neurdb users
+# ENV PATH="/home/neurdb/.cargo/bin:${PATH}"
+# RUN echo 'export PATH="$PATH:/home/neurdb/.cargo/bin"' >> /etc/profile
+# RUN echo 'export PATH="$PATH:/home/neurdb/.cargo/bin"' >> /home/neurdb/.bashrc
 
 # Set environment variables for both root and other users
 ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig"
@@ -85,14 +85,14 @@ RUN echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /etc/profile && \
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /etc/profile && \
     echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /etc/profile && \
     echo "export NEURDBPATH=${NEURDBPATH}" >> /etc/profile && \
-    echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /home/postgres/.bashrc && \
-    echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /home/postgres/.bashrc && \
-    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /home/postgres/.bashrc && \
-    echo "export NEURDBPATH=${NEURDBPATH}" >> /home/postgres/.bashrc && \
-    echo "export PATH=${PATH}:/home/postgres/.local/bin:${NEURDBPATH}/psql/bin" >> /home/postgres/.bashrc
+    echo "export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> /home/neurdb/.bashrc && \
+    echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /home/neurdb/.bashrc && \
+    echo 'export LIBCLANG_PATH=$(llvm-config --libdir)' >> /home/neurdb/.bashrc && \
+    echo "export NEURDBPATH=${NEURDBPATH}" >> /home/neurdb/.bashrc && \
+    echo "export PATH=${PATH}:/home/neurdb/.local/bin:${NEURDBPATH}/psql/bin" >> /home/neurdb/.bashrc
 
 # Install Python packages
-USER postgres
+USER neurdb
 COPY aiengine/runtime/requirements.cpu.txt /usr/local/bin/requirements.txt
 RUN pip install -r /usr/local/bin/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
@@ -103,8 +103,8 @@ COPY docker-init.sh /usr/local/bin/docker-init.sh
 # Ensure the build script is executable
 RUN chmod +x /usr/local/bin/docker-init.sh
 
-# Change to non-root user 'postgres' for database compilation and running the init script
-USER postgres
+# Change to non-root user 'neurdb' for database compilation and running the init script
+USER neurdb
 
 # Command to run the init.sh script
 CMD ["bash", "/usr/local/bin/docker-init.sh"]

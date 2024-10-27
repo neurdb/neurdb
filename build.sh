@@ -10,7 +10,7 @@ set -x
 docker rm -f neurdb_dev || true
 
 # Build the Docker image
-docker build -t neurdbimg . --dockerfile Dockerfile.cuda11 --progress=plain --no-cache
+docker build -t neurdbimg . -f Dockerfile.cuda11 --progress=plain --no-cache
 
 # Run the Docker container
 # You may replace or delete the port mapping
