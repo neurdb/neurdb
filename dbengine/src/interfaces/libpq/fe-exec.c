@@ -1154,16 +1154,19 @@ pqSaveParameterStatus(PGconn *conn, const char *name, const char *value)
 		}
 		else if (cnt == 2)
 		{
+			/*
 			if (vmaj >= 10)
 			{
+			*/
 				/* new style, e.g. 10.1 */
-				conn->sversion = 100 * 100 * vmaj + vmin;
+			conn->sversion = 100 * 100 * vmaj + vmin;
+			/*
 			}
 			else
 			{
-				/* old style without minor version, e.g. 9.6devel */
+				/* old style without minor version, e.g. 9.6devel **
 				conn->sversion = (100 * vmaj + vmin) * 100;
-			}
+			}*/
 		}
 		else if (cnt == 1)
 		{

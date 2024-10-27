@@ -192,7 +192,7 @@ get_configdata(const char *my_exec_path, size_t *configdata_len)
 	i++;
 
 	configdata[i].name = pstrdup("VERSION");
-	configdata[i].setting = pstrdup("PostgreSQL " PG_VERSION);
+	configdata[i].setting = pstrdup("NeurDB " PG_VERSION);
 	i++;
 
 	Assert(i == *configdata_len);

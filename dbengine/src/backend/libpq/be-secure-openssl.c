@@ -907,7 +907,7 @@ my_BIO_s_socket(void)
 		if (my_bio_index == -1)
 			return NULL;
 		my_bio_index |= (BIO_TYPE_DESCRIPTOR | BIO_TYPE_SOURCE_SINK);
-		my_bio_methods = BIO_meth_new(my_bio_index, "PostgreSQL backend socket");
+		my_bio_methods = BIO_meth_new(my_bio_index, "NeurDB backend socket");
 		if (!my_bio_methods)
 			return NULL;
 		if (!BIO_meth_set_write(my_bio_methods, my_sock_write) ||
