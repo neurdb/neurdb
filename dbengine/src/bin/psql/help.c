@@ -752,7 +752,6 @@ void
 print_copyright(void)
 {
 	puts("NeurDB Database Management System\n"
-		 "(formerly known as Postgres, then as Postgres95)\n\n"
 		 "Portions Copyright (c) 2024, NeurDB\n\n"
 		 "Portions Copyright (c) 1996-2023, PostgreSQL Global Development Group\n\n"
 		 "Portions Copyright (c) 1994, The Regents of the University of California\n\n"
