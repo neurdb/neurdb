@@ -3764,9 +3764,9 @@ connection_warnings(bool in_startup)
 		/*
 		 * Warn if server's major version is newer than ours, or if server
 		 * predates our support cutoff (currently 9.2).
+		 * NEURDB: Version re-counted
 		 */
 		if (pset.sversion / 100 > client_ver / 100) {
-			printf("%d %d\n", pset.sversion, client_ver);
 		/* || pset.sversion < 90200) */
 			printf(_("WARNING: %s major version %s, server major version %s.\n"
 					 "         Some psql features might not work.\n"),
