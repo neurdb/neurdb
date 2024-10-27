@@ -47,14 +47,14 @@ fi
 $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l logfile start
 
 # Wait a few seconds to ensure DB engine is up and running
-until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U postgres -c '\q'; do
+until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U neurdb -c '\q'; do
   >&2 echo 'Postgres is unavailable - sleeping'
   sleep 1
 done
 echo "DB Started!"
 
 # Load iris dataset
-# $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U postgres -f $NEURDBPATH/dataset/iris/iris_psql.sql
+# $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U neurdb -f $NEURDBPATH/dataset/iris/iris_psql.sql
 
 # Install neurdb package
 cd $NR_API_PATH/python

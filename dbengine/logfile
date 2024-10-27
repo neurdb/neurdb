@@ -1,0 +1,13 @@
+2024-10-27 05:55:28.745 UTC [9691] LOG:  starting NeurDB 0.2-devel on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0, 64-bit
+2024-10-27 05:55:28.745 UTC [9691] LOG:  listening on IPv6 address "::1", port 5432
+2024-10-27 05:55:28.745 UTC [9691] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2024-10-27 05:55:28.745 UTC [9691] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2PL lock graph initialized (new)
+2024-10-27 05:55:28.747 UTC [9694] LOG:  database system was interrupted; last known up at 2024-10-27 05:48:11 UTC
+2024-10-27 05:55:28.753 UTC [9694] LOG:  database system was not properly shut down; automatic recovery in progress
+2024-10-27 05:55:28.753 UTC [9694] LOG:  redo starts at 0/14E6F00
+2024-10-27 05:55:28.754 UTC [9694] LOG:  invalid record length at 0/151BE58: expected at least 24, got 0
+2024-10-27 05:55:28.754 UTC [9694] LOG:  redo done at 0/151B9D0 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2024-10-27 05:55:28.755 UTC [9692] LOG:  checkpoint starting: end-of-recovery immediate wait
+2024-10-27 05:55:28.757 UTC [9692] LOG:  checkpoint complete: wrote 62 buffers (0.4%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=49, longest=0.001 s, average=0.001 s; distance=211 kB, estimate=211 kB; lsn=0/151BE58, redo lsn=0/151BE58
+2024-10-27 05:55:28.758 UTC [9691] LOG:  database system is ready to accept connections

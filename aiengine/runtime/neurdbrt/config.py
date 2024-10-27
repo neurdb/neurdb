@@ -38,8 +38,8 @@ def parse_config_arguments(config_path: str) -> argparse.Namespace:
     args.model_repo = parser.get("DEFAULT", "model_repo", fallback="./models")
 
     # DB config
-    args.db_name = parser.get("DB_CONFIG", "db_name", fallback="postgres")
-    args.db_user = parser.get("DB_CONFIG", "db_user", fallback="postgres")
+    args.db_name = parser.get("DB_CONFIG", "db_name", fallback="neurdb")
+    args.db_user = parser.get("DB_CONFIG", "db_user", fallback="neurdb")
     args.db_host = parser.get("DB_CONFIG", "db_host", fallback="localhost")
     args.db_port = parser.get("DB_CONFIG", "db_port", fallback="5432")
     # this is set via environment variable in psql

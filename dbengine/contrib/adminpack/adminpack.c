@@ -505,10 +505,10 @@ pg_logdir_ls_internal(FunctionCallInfo fcinfo)
 	struct dirent *de;
 	MemoryContext oldcontext;
 
-	if (strcmp(Log_filename, "postgresql-%Y-%m-%d_%H%M%S.log") != 0)
+	if (strcmp(Log_filename, "neurdb-%Y-%m-%d_%H%M%S.log") != 0)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				 errmsg("the log_filename parameter must equal 'postgresql-%%Y-%%m-%%d_%%H%%M%%S.log'")));
+				 errmsg("the log_filename parameter must equal 'neurdb-%%Y-%%m-%%d_%%H%%M%%S.log'")));
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
@@ -556,16 +556,16 @@ pg_logdir_ls_internal(FunctionCallInfo fcinfo)
 		DateTimeErrorExtra extra;
 
 		/*
-		 * Default format: postgresql-YYYY-MM-DD_HHMMSS.log
+		 * Default format: neurdb-YYYY-MM-DD_HHMMSS.log
 		 */
 		if (strlen(de->d_name) != 32
-			|| strncmp(de->d_name, "postgresql-", 11) != 0
+			|| strncmp(de->d_name, "neurdb-", 7) != 0
 			|| de->d_name[21] != '_'
-			|| strcmp(de->d_name + 28, ".log") != 0)
+			|| strcmp(de->d_name + 24, ".log") != 0)
 			continue;
 
 		/* extract timestamp portion of filename */
-		strcpy(timestampbuf, de->d_name + 11);
+		strcpy(timestampbuf, de->d_name + 7);
 		timestampbuf[17] = '\0';
 
 		/* parse and decode expected timestamp to verify it's OK format */
