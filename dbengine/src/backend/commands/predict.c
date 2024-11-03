@@ -82,10 +82,11 @@ set_false_to_all_params(NullableDatum *args, int size)
 * needs to be revamped to be more general.
 */
 void
-exec_udf(const char *table, const char *trainColumns, const char *targetColumn, const char *whereClause)
+exec_udf(const char *model, const char *table, const char *trainColumns, const char *targetColumn, const char *whereClause)
 {
 	/* lookup function call infos */
 	FmgrInfo	modelLookupFmgrInfo;
+
 	/* fcinfo for lookup function */
 	LOCAL_FCINFO(modelLookupFCInfo, FUNC_MAX_ARGS);
 	Datum		modelLookupResult;
@@ -146,7 +147,7 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
 		fmgr_info(trainingFuncOid, &trainingFmgrInfo);
 		InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, 8, InvalidOid, NULL, NULL);
 
-		trainingFCInfo->args[0].value = CStringGetTextDatum(NRModelName);
+		trainingFCInfo->args[0].value = CStringGetTextDatum(model);
 		trainingFCInfo->args[1].value = CStringGetTextDatum(table);
 		trainingFCInfo->args[2].value = Int32GetDatum(NRTaskBatchSize);
 		trainingFCInfo->args[3].value = Int32GetDatum(NRTaskNumBatches);
@@ -155,7 +156,7 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
 		trainingFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
 		trainingFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
 
-        set_false_to_all_params(trainingFCInfo->args, TRAINING_PARAMS_ARRAY_SIZE);
+		set_false_to_all_params(trainingFCInfo->args, TRAINING_PARAMS_ARRAY_SIZE);
 
 		trainingResult = FunctionCallInvoke(trainingFCInfo);
 		if (!trainingFCInfo->isnull)
@@ -199,7 +200,7 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
 		inferenceFCInfo->args[5].value = Int32GetDatum(NRTaskMaxFeatures);
 		inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
 
-        set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
+		set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
 
 		inferenceResult = FunctionCallInvoke(inferenceFCInfo);
 		if (!inferenceFCInfo->isnull)
@@ -228,6 +229,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	ListCell   *cell;
 	StringInfoData targetColumn;
 	StringInfoData trainOnColumns;
+	char	   *modelName = NULL;
 	char	   *tableName = NULL;
 	char	   *whereClause = "<DEPRECATED>";
 
@@ -293,6 +295,17 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 			}
 			appendStringInfo(&trainOnColumns, "%s,", strVal(columnName));
 		}
+
+		if (trainOnSpec->modelName != NULL)
+		{
+			elog(DEBUG1, "User specified model name: %s", trainOnSpec->modelName);
+			modelName = trainOnSpec->modelName;
+		}
+		else
+		{
+			elog(DEBUG1, "No model name provided. Use config NRModelName: %s", NRModelName);
+			modelName = NRModelName;
+		}
 	}
 	else
 	{
@@ -301,7 +314,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	trainOnColumns.data[trainOnColumns.len - 1] = '\0';
 
 	/* Execute the UDF with extracted columns, table name, and where clause */
-	exec_udf(tableName, trainOnColumns.data, targetColumn.data, whereClause);
+	exec_udf(modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause);
 
 	return InvalidObjectAddress;
 }
