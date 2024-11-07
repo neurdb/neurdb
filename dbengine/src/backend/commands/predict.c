@@ -192,7 +192,7 @@ exec_udf(const char *model, const char *table, const char *trainColumns, const c
 		fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
 		InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 7, InvalidOid, NULL, NULL);
 
-		inferenceFCInfo->args[0].value = CStringGetTextDatum(NRModelName);
+		inferenceFCInfo->args[0].value = CStringGetTextDatum(model);
 		inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
 		inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
 		inferenceFCInfo->args[3].value = Int32GetDatum(NRTaskBatchSize);
@@ -296,14 +296,14 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 			appendStringInfo(&trainOnColumns, "%s,", strVal(columnName));
 		}
 
-		if (trainOnSpec->modelName != NULL)
+		if (strlen(trainOnSpec->modelName) > 0)
 		{
-			elog(DEBUG1, "User specified model name: %s", trainOnSpec->modelName);
+			elog(WARNING, "User specified model name: %s", trainOnSpec->modelName);
 			modelName = trainOnSpec->modelName;
 		}
 		else
 		{
-			elog(DEBUG1, "No model name provided. Use config NRModelName: %s", NRModelName);
+			elog(WARNING, "No model name provided. Use config NRModelName: %s", NRModelName);
 			modelName = NRModelName;
 		}
 	}
