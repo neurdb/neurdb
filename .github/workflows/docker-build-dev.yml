@@ -21,6 +21,8 @@ jobs:
     name: Build Docker Images
     # Runner to use
     runs-on: ubuntu-latest
+    # Timeout
+    timeout-minutes: 5
 
     steps:
     - name: Checkout
