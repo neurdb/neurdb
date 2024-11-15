@@ -3,7 +3,7 @@ torch==2.2.0
 torchaudio==0.6.0
 torchinfo==0.3.1
 torchvision==0.7.0
-numpy==1.18.5
+numpy==1.24.4
 tqdm==4.66.3
 scikit_learn==0.24.2
 tensorboardX==2.3
