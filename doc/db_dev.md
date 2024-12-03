@@ -124,6 +124,3 @@ log_min_error_statement = DEBUG1
 [Hook Functions](https://github.com/taminomara/psql-hooks/blob/master/Detailed.md)
 
 [Hook Examples](https://wiki.postgresql.org/images/e/e3/Hooks_in_postgresql.pdf)
-
-
-
