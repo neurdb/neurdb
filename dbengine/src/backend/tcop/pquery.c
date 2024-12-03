@@ -263,6 +263,10 @@ ChoosePortalStrategy(List *stmts)
 					/* it can't be ONE_RETURNING, so give up */
 					return PORTAL_MULTI_QUERY;
 				}
+				if (pstmt->commandType == CMD_PREDICT)
+				{
+					return PORTAL_MULTI_QUERY;
+				}
 			}
 		}
 		else

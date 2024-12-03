@@ -278,6 +278,7 @@ typedef enum CmdType
 	CMD_INSERT,					/* insert stmt */
 	CMD_DELETE,					/* delete stmt */
 	CMD_MERGE,					/* merge stmt */
+	CMD_PREDICT,				/* predict stmt */
 	CMD_UTILITY,				/* cmds like create, destroy, copy, vacuum,
 								 * etc. */
 	CMD_NOTHING					/* dummy command for instead nothing rules
