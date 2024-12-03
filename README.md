@@ -27,7 +27,8 @@ chmod -R 777 .
 ### Build Dockerfile
 
 ```bash
-bash build.sh
+bash build.sh --gpu
+bash build.sh --cpu
 ```
 
 Wait until the following prompt shows:
