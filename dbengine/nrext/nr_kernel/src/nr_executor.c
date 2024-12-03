@@ -1,9 +1,10 @@
 #include "postgres.h"
 
+#include "nr_kernel.h"
+
 #include "access/xact.h"
 #include "catalog/namespace.h"
 #include "commands/trigger.h"
-#include "executor/executor.h"
 #include "foreign/fdwapi.h"
 #include "miscadmin.h"
 #include "tcop/utility.h"
@@ -17,31 +18,6 @@ extern ExecutorRun_hook_type ExecutorRun_hook;
 
 ExecutorStart_hook_type original_executorstart_hook = NULL;
 ExecutorRun_hook_type original_executorrun_hook = NULL;
-
-/* decls for local routines only used within this module */
-/*  static void InitPlan(QueryDesc *queryDesc, int eflags); */
-/*  static void CheckValidRowMarkRel(Relation rel, RowMarkType markType); */
-/*  static void ExecPostprocessPlan(EState *estate); */
-/*  static void ExecEndPlan(PlanState *planstate, EState *estate); */
-/*  static void ExecutePlan(EState *estate, PlanState *planstate, */
-/*  						bool use_parallel_mode, */
-/*  						CmdType operation, */
-/*  						bool sendTuples, */
-/*  						uint64 numberTuples, */
-/*  						ScanDirection direction, */
-/*  						DestReceiver *dest, */
-/*  						bool execute_once); */
-/*  static bool ExecCheckOneRelPerms(RTEPermissionInfo *perminfo); */
-/*  static bool ExecCheckPermissionsModified(Oid relOid, Oid userid, */
-/*  										 Bitmapset *modifiedCols, */
-/*  										 AclMode requiredPerms); */
-/*  static void ExecCheckXactReadOnly(PlannedStmt *plannedstmt); */
-/*  static char *ExecBuildSlotValueDescription(Oid reloid, */
-/*  										   TupleTableSlot *slot, */
-/*  										   TupleDesc tupdesc, */
-/*  										   Bitmapset *modifiedCols, */
-/*  										   int maxfieldlen); */
-/*  static void EvalPlanQualStart(EPQState *epqstate, Plan *planTree); */
 
 
 /* --- START ---------------------------------------------------------------- */
@@ -287,7 +263,7 @@ InitPlan(QueryDesc *queryDesc, int eflags)
 	 * tree.  This opens files, allocates storage and leaves us ready to start
 	 * processing tuples.
 	 */
-	planstate = ExecInitNode(plan, estate, eflags);
+	planstate = NeurDB_ExecInitNode(plan, estate, eflags);
 
 	/*
 	 * Get the tuple descriptor describing the type of tuples to return.
@@ -420,6 +396,10 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 			 */
 			if (!queryDesc->plannedstmt->hasModifyingCTE)
 				eflags |= EXEC_FLAG_SKIP_TRIGGERS;
+			break;
+
+		case CMD_PREDICT:
+			eflags |= EXEC_FLAG_SKIP_TRIGGERS;
 			break;
 
 		case CMD_INSERT:

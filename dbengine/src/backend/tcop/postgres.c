@@ -812,7 +812,7 @@ pg_rewrite_query(Query *query)
 	if (log_parser_stats)
 		ResetUsage();
 
-	if (query->commandType == CMD_UTILITY)
+	if (query->commandType == CMD_UTILITY || query-> commandType == CMD_PREDICT)
 	{
 		/* don't rewrite utilities, just dump 'em into result list */
 		querytree_list = list_make1(query);
@@ -980,11 +980,11 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 		Query	   *query = lfirst_node(Query, query_list);
 		PlannedStmt *stmt;
 
-		if (query->commandType == CMD_UTILITY)
+		if (query->commandType == CMD_UTILITY || query->commandType == CMD_PREDICT)
 		{
 			/* Utility commands require no planning. */
 			stmt = makeNode(PlannedStmt);
-			stmt->commandType = CMD_UTILITY;
+			stmt->commandType = query->commandType;
 			stmt->canSetTag = query->canSetTag;
 			stmt->utilityStmt = query->utilityStmt;
 			stmt->stmt_location = query->stmt_location;
