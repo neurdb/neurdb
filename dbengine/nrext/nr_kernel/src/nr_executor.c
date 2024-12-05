@@ -568,6 +568,93 @@ ExecutePlan(EState *estate,
 }
 
 
+/* ----------------------------------------------------------------
+ *		ExecEndPlan
+ *
+ *		Cleans up the query plan -- closes files and frees up storage
+ *
+ * NOTE: we are no longer very worried about freeing storage per se
+ * in this code; FreeExecutorState should be guaranteed to release all
+ * memory that needs to be released.  What we are worried about doing
+ * is closing relations and dropping buffer pins.  Thus, for example,
+ * tuple tables must be cleared or dropped to ensure pins are released.
+ * ----------------------------------------------------------------
+ */
+static void
+ExecEndPlan(PlanState *planstate, EState *estate)
+{
+  ListCell   *l;
+
+  /*
+	 * shut down the node-type-specific query processing
+   */
+  ExecEndNode(planstate);
+
+  /*
+	 * for subplans too
+   */
+  foreach(l, estate->es_subplanstates)
+  {
+    PlanState  *subplanstate = (PlanState *) lfirst(l);
+
+    ExecEndNode(subplanstate);
+  }
+
+  /*
+	 * destroy the executor's tuple table.  Actually we only care about
+	 * releasing buffer pins and tupdesc refcounts; there's no need to pfree
+	 * the TupleTableSlots, since the containing memory context is about to go
+	 * away anyway.
+   */
+  ExecResetTupleTable(estate->es_tupleTable, false);
+
+  /*
+	 * Close any Relations that have been opened for range table entries or
+	 * result relations.
+   */
+  ExecCloseResultRelations(estate);
+  ExecCloseRangeTableRelations(estate);
+}
+
+/* ----------------------------------------------------------------
+ *		ExecPostprocessPlan
+ *
+ *		Give plan nodes a final chance to execute before shutdown
+ * ----------------------------------------------------------------
+ */
+static void
+ExecPostprocessPlan(EState *estate)
+{
+  ListCell   *lc;
+
+  /*
+	 * Make sure nodes run forward.
+   */
+  estate->es_direction = ForwardScanDirection;
+
+  /*
+	 * Run any secondary ModifyTable nodes to completion, in case the main
+	 * query did not fetch all rows from them.  (We do this to ensure that
+	 * such nodes have predictable results.)
+   */
+  foreach(lc, estate->es_auxmodifytables)
+  {
+    PlanState  *ps = (PlanState *) lfirst(lc);
+
+    for (;;)
+    {
+      TupleTableSlot *slot;
+
+      /* Reset the per-output-tuple exprcontext each time */
+      ResetPerTupleExprContext(estate);
+
+      slot = ExecProcNode(ps);
+
+      if (TupIsNull(slot))
+        break;
+    }
+  }
+}
 
 
 void
