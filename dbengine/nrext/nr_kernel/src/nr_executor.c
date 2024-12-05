@@ -314,10 +314,227 @@ InitPlan(QueryDesc *queryDesc, int eflags)
 }
 
 
+/* --- RUN ------------------------------------------------------------------ */
+
+/* ----------------------------------------------------------------
+ *		ExecutePlan
+ *
+ *		Processes the query plan until we have retrieved 'numberTuples' tuples,
+ *		moving in the specified direction.
+ *
+ *		Runs to completion if numberTuples is 0
+ *
+ * Note: the ctid attribute is a 'junk' attribute that is removed before the
+ * user can see it
+ * ----------------------------------------------------------------
+ */
+static void
+ExecutePlan(EState *estate,
+            PlanState *planstate,
+            bool use_parallel_mode,
+            CmdType operation,
+            bool sendTuples,
+            uint64 numberTuples,
+            ScanDirection direction,
+            DestReceiver *dest,
+            bool execute_once)
+{
+  TupleTableSlot *slot;
+  uint64		current_tuple_count;
+
+  /*
+	 * initialize local variables
+   */
+  current_tuple_count = 0;
+
+  /*
+	 * Set the direction.
+   */
+  estate->es_direction = direction;
+
+  /*
+	 * If the plan might potentially be executed multiple times, we must force
+	 * it to run without parallelism, because we might exit early.
+   */
+  if (!execute_once)
+    use_parallel_mode = false;
+
+  estate->es_use_parallel_mode = use_parallel_mode;
+  if (use_parallel_mode)
+    EnterParallelMode();
+
+  /*
+	 * Loop until we've processed the proper number of tuples from the plan.
+   */
+  for (;;)
+  {
+    /* Reset the per-output-tuple exprcontext */
+    ResetPerTupleExprContext(estate);
+
+    /*
+		 * Execute the plan and obtain a tuple
+     */
+    slot = ExecProcNode(planstate);
+
+    /*
+		 * if the tuple is null, then we assume there is nothing more to
+		 * process so we just end the loop...
+     */
+    if (TupIsNull(slot))
+      break;
+
+    /*
+		 * If we have a junk filter, then project a new tuple with the junk
+		 * removed.
+		 *
+		 * Store this new "clean" tuple in the junkfilter's resultSlot.
+		 * (Formerly, we stored it back over the "dirty" tuple, which is WRONG
+		 * because that tuple slot has the wrong descriptor.)
+     */
+    if (estate->es_junkFilter != NULL)
+      slot = ExecFilterJunk(estate->es_junkFilter, slot);
+
+    /*
+		 * If we are supposed to send the tuple somewhere, do so. (In
+		 * practice, this is probably always the case at this point.)
+     */
+    if (sendTuples)
+    {
+      /*
+			 * If we are not able to send the tuple, we assume the destination
+			 * has closed and no more tuples can be sent. If that's the case,
+			 * end the loop.
+       */
+      if (!dest->receiveSlot(slot, dest))
+        break;
+    }
+
+    /*
+		 * Count tuples processed, if this is a SELECT.  (For other operation
+		 * types, the ModifyTable plan node must count the appropriate
+		 * events.)
+     */
+    if (operation == CMD_SELECT)
+      (estate->es_processed)++;
+
+    /*
+		 * check our tuple count.. if we've processed the proper number then
+		 * quit, else loop again and process more tuples.  Zero numberTuples
+		 * means no limit.
+     */
+    current_tuple_count++;
+    if (numberTuples && numberTuples == current_tuple_count)
+      break;
+  }
+
+  /*
+	 * If we know we won't need to back up, we can release resources at this
+	 * point.
+   */
+  if (!(estate->es_top_eflags & EXEC_FLAG_BACKWARD))
+    ExecShutdownNode(planstate);
+
+  if (use_parallel_mode)
+    ExitParallelMode();
+}
+
+
+/* ----------------------------------------------------------------
+ *		ExecEndPlan
+ *
+ *		Cleans up the query plan -- closes files and frees up storage
+ *
+ * NOTE: we are no longer very worried about freeing storage per se
+ * in this code; FreeExecutorState should be guaranteed to release all
+ * memory that needs to be released.  What we are worried about doing
+ * is closing relations and dropping buffer pins.  Thus, for example,
+ * tuple tables must be cleared or dropped to ensure pins are released.
+ * ----------------------------------------------------------------
+ */
+static void
+ExecEndPlan(PlanState *planstate, EState *estate)
+{
+  ListCell   *l;
+
+  /*
+	 * shut down the node-type-specific query processing
+   */
+  ExecEndNode(planstate);
+
+  /*
+	 * for subplans too
+   */
+  foreach(l, estate->es_subplanstates)
+  {
+    PlanState  *subplanstate = (PlanState *) lfirst(l);
+
+    ExecEndNode(subplanstate);
+  }
+
+  /*
+	 * destroy the executor's tuple table.  Actually we only care about
+	 * releasing buffer pins and tupdesc refcounts; there's no need to pfree
+	 * the TupleTableSlots, since the containing memory context is about to go
+	 * away anyway.
+   */
+  ExecResetTupleTable(estate->es_tupleTable, false);
+
+  /*
+	 * Close any Relations that have been opened for range table entries or
+	 * result relations.
+   */
+  ExecCloseResultRelations(estate);
+  ExecCloseRangeTableRelations(estate);
+}
+
+/* ----------------------------------------------------------------
+ *		ExecPostprocessPlan
+ *
+ *		Give plan nodes a final chance to execute before shutdown
+ * ----------------------------------------------------------------
+ */
+static void
+ExecPostprocessPlan(EState *estate)
+{
+  ListCell   *lc;
+
+  /*
+	 * Make sure nodes run forward.
+   */
+  estate->es_direction = ForwardScanDirection;
+
+  /*
+	 * Run any secondary ModifyTable nodes to completion, in case the main
+	 * query did not fetch all rows from them.  (We do this to ensure that
+	 * such nodes have predictable results.)
+   */
+  foreach(lc, estate->es_auxmodifytables)
+  {
+    PlanState  *ps = (PlanState *) lfirst(lc);
+
+    for (;;)
+    {
+      TupleTableSlot *slot;
+
+      /* Reset the per-output-tuple exprcontext each time */
+      ResetPerTupleExprContext(estate);
+
+      slot = ExecProcNode(ps);
+
+      if (TupIsNull(slot))
+        break;
+    }
+  }
+}
+
 void
 NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 {
 	elog(DEBUG1, "In NeurDB's executor start");
+
+        if (original_executorstart_hook)
+          original_executorstart_hook(queryDesc, eflags);
+
 
 	EState	   *estate;
 	MemoryContext oldcontext;
@@ -443,223 +660,13 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 	MemoryContextSwitchTo(oldcontext);
 }
 
-/* --- RUN ------------------------------------------------------------------ */
-
-/* ----------------------------------------------------------------
- *		ExecutePlan
- *
- *		Processes the query plan until we have retrieved 'numberTuples' tuples,
- *		moving in the specified direction.
- *
- *		Runs to completion if numberTuples is 0
- *
- * Note: the ctid attribute is a 'junk' attribute that is removed before the
- * user can see it
- * ----------------------------------------------------------------
- */
-static void
-ExecutePlan(EState *estate,
-			PlanState *planstate,
-			bool use_parallel_mode,
-			CmdType operation,
-			bool sendTuples,
-			uint64 numberTuples,
-			ScanDirection direction,
-			DestReceiver *dest,
-			bool execute_once)
-{
-	TupleTableSlot *slot;
-	uint64		current_tuple_count;
-
-	/*
-	 * initialize local variables
-	 */
-	current_tuple_count = 0;
-
-	/*
-	 * Set the direction.
-	 */
-	estate->es_direction = direction;
-
-	/*
-	 * If the plan might potentially be executed multiple times, we must force
-	 * it to run without parallelism, because we might exit early.
-	 */
-	if (!execute_once)
-		use_parallel_mode = false;
-
-	estate->es_use_parallel_mode = use_parallel_mode;
-	if (use_parallel_mode)
-		EnterParallelMode();
-
-	/*
-	 * Loop until we've processed the proper number of tuples from the plan.
-	 */
-	for (;;)
-	{
-		/* Reset the per-output-tuple exprcontext */
-		ResetPerTupleExprContext(estate);
-
-		/*
-		 * Execute the plan and obtain a tuple
-		 */
-		slot = ExecProcNode(planstate);
-
-		/*
-		 * if the tuple is null, then we assume there is nothing more to
-		 * process so we just end the loop...
-		 */
-		if (TupIsNull(slot))
-			break;
-
-		/*
-		 * If we have a junk filter, then project a new tuple with the junk
-		 * removed.
-		 *
-		 * Store this new "clean" tuple in the junkfilter's resultSlot.
-		 * (Formerly, we stored it back over the "dirty" tuple, which is WRONG
-		 * because that tuple slot has the wrong descriptor.)
-		 */
-		if (estate->es_junkFilter != NULL)
-			slot = ExecFilterJunk(estate->es_junkFilter, slot);
-
-		/*
-		 * If we are supposed to send the tuple somewhere, do so. (In
-		 * practice, this is probably always the case at this point.)
-		 */
-		if (sendTuples)
-		{
-			/*
-			 * If we are not able to send the tuple, we assume the destination
-			 * has closed and no more tuples can be sent. If that's the case,
-			 * end the loop.
-			 */
-			if (!dest->receiveSlot(slot, dest))
-				break;
-		}
-
-		/*
-		 * Count tuples processed, if this is a SELECT.  (For other operation
-		 * types, the ModifyTable plan node must count the appropriate
-		 * events.)
-		 */
-		if (operation == CMD_SELECT)
-			(estate->es_processed)++;
-
-		/*
-		 * check our tuple count.. if we've processed the proper number then
-		 * quit, else loop again and process more tuples.  Zero numberTuples
-		 * means no limit.
-		 */
-		current_tuple_count++;
-		if (numberTuples && numberTuples == current_tuple_count)
-			break;
-	}
-
-	/*
-	 * If we know we won't need to back up, we can release resources at this
-	 * point.
-	 */
-	if (!(estate->es_top_eflags & EXEC_FLAG_BACKWARD))
-		ExecShutdownNode(planstate);
-
-	if (use_parallel_mode)
-		ExitParallelMode();
-}
-
-
-/* ----------------------------------------------------------------
- *		ExecEndPlan
- *
- *		Cleans up the query plan -- closes files and frees up storage
- *
- * NOTE: we are no longer very worried about freeing storage per se
- * in this code; FreeExecutorState should be guaranteed to release all
- * memory that needs to be released.  What we are worried about doing
- * is closing relations and dropping buffer pins.  Thus, for example,
- * tuple tables must be cleared or dropped to ensure pins are released.
- * ----------------------------------------------------------------
- */
-static void
-ExecEndPlan(PlanState *planstate, EState *estate)
-{
-  ListCell   *l;
-
-  /*
-	 * shut down the node-type-specific query processing
-   */
-  ExecEndNode(planstate);
-
-  /*
-	 * for subplans too
-   */
-  foreach(l, estate->es_subplanstates)
-  {
-    PlanState  *subplanstate = (PlanState *) lfirst(l);
-
-    ExecEndNode(subplanstate);
-  }
-
-  /*
-	 * destroy the executor's tuple table.  Actually we only care about
-	 * releasing buffer pins and tupdesc refcounts; there's no need to pfree
-	 * the TupleTableSlots, since the containing memory context is about to go
-	 * away anyway.
-   */
-  ExecResetTupleTable(estate->es_tupleTable, false);
-
-  /*
-	 * Close any Relations that have been opened for range table entries or
-	 * result relations.
-   */
-  ExecCloseResultRelations(estate);
-  ExecCloseRangeTableRelations(estate);
-}
-
-/* ----------------------------------------------------------------
- *		ExecPostprocessPlan
- *
- *		Give plan nodes a final chance to execute before shutdown
- * ----------------------------------------------------------------
- */
-static void
-ExecPostprocessPlan(EState *estate)
-{
-  ListCell   *lc;
-
-  /*
-	 * Make sure nodes run forward.
-   */
-  estate->es_direction = ForwardScanDirection;
-
-  /*
-	 * Run any secondary ModifyTable nodes to completion, in case the main
-	 * query did not fetch all rows from them.  (We do this to ensure that
-	 * such nodes have predictable results.)
-   */
-  foreach(lc, estate->es_auxmodifytables)
-  {
-    PlanState  *ps = (PlanState *) lfirst(lc);
-
-    for (;;)
-    {
-      TupleTableSlot *slot;
-
-      /* Reset the per-output-tuple exprcontext each time */
-      ResetPerTupleExprContext(estate);
-
-      slot = ExecProcNode(ps);
-
-      if (TupIsNull(slot))
-        break;
-    }
-  }
-}
-
-
 void
 NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction, uint64 count, bool execute_once)
 {
+
+        if (original_executorrun_hook)
+          original_executorrun_hook(queryDesc, direction, count, execute_once);
+
 	elog(DEBUG1, "In NeurDB's executor run");
 
 	EState	   *estate;
@@ -743,6 +750,10 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction, uint64 count, 
 void
 NeurDB_ExecutorEnd(QueryDesc *queryDesc)
 {
+
+  if (original_executorend_hook)
+    original_executorend_hook(queryDesc);
+
   EState	   *estate;
   MemoryContext oldcontext;
 
@@ -793,6 +804,10 @@ NeurDB_ExecutorEnd(QueryDesc *queryDesc)
 void
 NeurDB_ExecutorFinish(QueryDesc *queryDesc)
 {
+
+  if (original_executorfinish_hook)
+    original_executorfinish_hook(queryDesc);
+
   EState	   *estate;
   MemoryContext oldcontext;
 
