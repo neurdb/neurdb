@@ -101,6 +101,7 @@ su - postgres
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 
 # build and restart
+./configure
 make
 make install
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
