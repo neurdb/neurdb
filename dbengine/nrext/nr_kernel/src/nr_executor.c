@@ -11,6 +11,7 @@
 #include "utils/lsyscache.h"
 #include "utils/snapmgr.h"
 
+/* required metadata marker for PostgreSQL extensions */
 PG_MODULE_MAGIC;
 
 extern ExecutorStart_hook_type ExecutorStart_hook;
@@ -160,6 +161,8 @@ InitPlan(QueryDesc *queryDesc, int eflags)
 
 	/*
 	 * Next, build the ExecRowMark array from the PlanRowMark(s), if any.
+	 * RowMaker is mainly for row-level locking,
+	 * However, the actual locking happens during execution when rows are accessed for the first time
 	 */
 	if (plannedstmt->rowMarks)
 	{
@@ -372,7 +375,10 @@ ExecutePlan(EState *estate,
     ResetPerTupleExprContext(estate);
 
     /*
-		 * Execute the plan and obtain a tuple
+		 * Execute the plan and obtain a tuple.
+                 * This fetches tuples incrementally
+                 * Each call to ExecProcNode performs all the necessary computations
+                 * required to produce one tuple of the final result set
      */
     slot = ExecProcNode(planstate);
 
@@ -620,6 +626,9 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 			break;
 
 		case CMD_PREDICT:
+                        /*
+                          * Bypass the trigger which are often associated with INSERT, UPDATE, and DELETE operations
+                         */
 			eflags |= EXEC_FLAG_SKIP_TRIGGERS;
 			break;
 
