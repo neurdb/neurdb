@@ -15,9 +15,13 @@ PG_MODULE_MAGIC;
 
 extern ExecutorStart_hook_type ExecutorStart_hook;
 extern ExecutorRun_hook_type ExecutorRun_hook;
+extern ExecutorEnd_hook_type ExecutorEnd_hook;
+extern ExecutorFinish_hook_type ExecutorFinish_hook;
 
 ExecutorStart_hook_type original_executorstart_hook = NULL;
 ExecutorRun_hook_type original_executorrun_hook = NULL;
+ExecutorEnd_hook_type original_executorend_hook = NULL;
+ExecutorFinish_hook_type original_executorfinish_hook = NULL;
 
 
 /* --- START ---------------------------------------------------------------- */
@@ -649,6 +653,94 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction, uint64 count, 
 	MemoryContextSwitchTo(oldcontext);
 }
 
+void
+NeurDB_ExecutorEnd(QueryDesc *queryDesc)
+{
+  EState	   *estate;
+  MemoryContext oldcontext;
+
+  /* sanity checks */
+  Assert(queryDesc != NULL);
+
+  estate = queryDesc->estate;
+
+  Assert(estate != NULL);
+
+  /*
+	 * Check that ExecutorFinish was called, unless in EXPLAIN-only mode. This
+	 * Assert is needed because ExecutorFinish is new as of 9.1, and callers
+	 * might forget to call it.
+   */
+  Assert(estate->es_finished ||
+         (estate->es_top_eflags & EXEC_FLAG_EXPLAIN_ONLY));
+
+  /*
+	 * Switch into per-query memory context to run ExecEndPlan
+   */
+  oldcontext = MemoryContextSwitchTo(estate->es_query_cxt);
+
+  ExecEndPlan(queryDesc->planstate, estate);
+
+  /* do away with our snapshots */
+  UnregisterSnapshot(estate->es_snapshot);
+  UnregisterSnapshot(estate->es_crosscheck_snapshot);
+
+  /*
+	 * Must switch out of context before destroying it
+   */
+  MemoryContextSwitchTo(oldcontext);
+
+  /*
+	 * Release EState and per-query memory context.  This should release
+	 * everything the executor has allocated.
+   */
+  FreeExecutorState(estate);
+
+  /* Reset queryDesc fields that no longer point to anything */
+  queryDesc->tupDesc = NULL;
+  queryDesc->estate = NULL;
+  queryDesc->planstate = NULL;
+  queryDesc->totaltime = NULL;
+}
+
+void
+NeurDB_ExecutorFinish(QueryDesc *queryDesc)
+{
+  EState	   *estate;
+  MemoryContext oldcontext;
+
+  /* sanity checks */
+  Assert(queryDesc != NULL);
+
+  estate = queryDesc->estate;
+
+  Assert(estate != NULL);
+  Assert(!(estate->es_top_eflags & EXEC_FLAG_EXPLAIN_ONLY));
+
+  /* This should be run once and only once per Executor instance */
+  Assert(!estate->es_finished);
+
+  /* Switch into per-query memory context */
+  oldcontext = MemoryContextSwitchTo(estate->es_query_cxt);
+
+  /* Allow instrumentation of Executor overall runtime */
+  if (queryDesc->totaltime)
+    InstrStartNode(queryDesc->totaltime);
+
+  /* Run ModifyTable nodes to completion */
+  ExecPostprocessPlan(estate);
+
+  /* Execute queued AFTER triggers, unless told not to */
+  if (!(estate->es_top_eflags & EXEC_FLAG_SKIP_TRIGGERS))
+    AfterTriggerEndQuery(estate);
+
+  if (queryDesc->totaltime)
+    InstrStopNode(queryDesc->totaltime, 0);
+
+  MemoryContextSwitchTo(oldcontext);
+
+  estate->es_finished = true;
+}
 
 /*  Called upon extension load. */
 void
@@ -657,9 +749,13 @@ _PG_init(void)
 	/* Save the original hook value. */
 	original_executorstart_hook = ExecutorStart_hook;
 	original_executorrun_hook = ExecutorRun_hook;
+        original_executorend_hook = ExecutorEnd_hook;
+        original_executorfinish_hook = ExecutorFinish_hook;
 	/* Register our handler. */
 	ExecutorStart_hook = NeurDB_ExecutorStart;
 	ExecutorRun_hook = NeurDB_ExecutorRun;
+        ExecutorFinish_hook = NeurDB_ExecutorFinish;
+        ExecutorEnd_hook = NeurDB_ExecutorEnd;
 }
 
 /*  Called with extension unload. */
@@ -669,4 +765,6 @@ _PG_fini(void)
 	/* Return back the original hook value. */
 	ExecutorStart_hook = original_executorstart_hook;
 	ExecutorRun_hook = original_executorrun_hook;
+        ExecutorEnd_hook = original_executorend_hook;
+        ExecutorFinish_hook = original_executorfinish_hook;
 }
