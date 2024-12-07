@@ -221,6 +221,7 @@ ChoosePortalStrategy(List *stmts)
 	{
 		Node	   *stmt = (Node *) linitial(stmts);
 
+                /* query is the AST tree */
 		if (IsA(stmt, Query))
 		{
 			Query	   *query = (Query *) stmt;
@@ -243,6 +244,7 @@ ChoosePortalStrategy(List *stmts)
 				}
 			}
 		}
+                /* PlannedStmt is execution plan */
 		else if (IsA(stmt, PlannedStmt))
 		{
 			PlannedStmt *pstmt = (PlannedStmt *) stmt;
@@ -265,6 +267,7 @@ ChoosePortalStrategy(List *stmts)
 				}
 				if (pstmt->commandType == CMD_PREDICT)
 				{
+                                  /* Executes multiple queries or complex cases that don't fit the above categories. */
 					return PORTAL_MULTI_QUERY;
 				}
 			}

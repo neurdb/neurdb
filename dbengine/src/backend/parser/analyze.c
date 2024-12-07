@@ -3607,7 +3607,7 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 
 	qry->commandType = CMD_PREDICT;
 
-	/* there's no DISTINCT in DELETE */
+	/* there's no DISTINCT in PREDICT */
 	qry->distinctClause = NIL;
 
 	/* process the FROM clause */

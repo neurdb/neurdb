@@ -889,7 +889,8 @@ pg_plan_query(Query *querytree, const char *query_string, int cursorOptions,
 	PlannedStmt *plan;
 
 	/* Utility commands have no plans. */
-	if (querytree->commandType == CMD_UTILITY)
+        /* Predict commands have no plans currently. */
+	if (querytree->commandType == CMD_UTILITY || query->commandType == CMD_PREDICT)
 		return NULL;
 
 	/* Planner must have a snapshot in case it calls user-defined functions. */
@@ -980,7 +981,8 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 		Query	   *query = lfirst_node(Query, query_list);
 		PlannedStmt *stmt;
 
-		if (query->commandType == CMD_UTILITY || query->commandType == CMD_PREDICT)
+                /* Commands like EXPLAIN, VACUUM, PREDICT are handled directly without invoking the query planner. */
+                if (query->commandType == CMD_UTILITY || query->commandType == CMD_PREDICT)
 		{
 			/* Utility commands require no planning. */
 			stmt = makeNode(PlannedStmt);
