@@ -96,14 +96,19 @@ This happens when you have directory `psql/data` without initializing the databa
 ```bash
 # users
 su - postgres
+make clean
 
 # stop existing db
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 
 # build and restart
-./configure
+./configure --prefix=$NEURDBPATH/psql
 make
 make install
+
+mkdir -p $NEURDBPATH/psql/data
+sudo chown $(whoami) $NEURDBPATH/psql/data
+$NEURDBPATH/psql/bin/initdb -D $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
 $NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
 ```
@@ -119,6 +124,40 @@ log_min_error_statement = DEBUG1
 # then check the log file
 ./logfile
 ```
+
+## Buiild extension
+
+Stop DB, recompile the extension, start DB.
+
+## Usage
+
+```sql
+CREATE TABLE IF NOT EXISTS frappe_test (
+  click_rate INT,
+  feature1 INT,
+  feature2 INT,
+  feature3 INT,
+  feature4 INT,
+  feature5 INT,
+  feature6 INT,
+  feature7 INT,
+  feature8 INT,
+  feature9 INT,
+  feature10 INT
+);
+```
+
+```bash
+psql -h localhost -U postgres -d postgres -c "\copy frappe_test FROM './frappe.csv' DELIMITER ',' CSV HEADER;"
+```
+
+```sql
+PREDICT VALUE OF click_rate
+FROM frappe_test
+TRAIN ON feature1, feature2;
+```
+
+
 
 # Useful references
 

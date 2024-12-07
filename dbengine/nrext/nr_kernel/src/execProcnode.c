@@ -146,12 +146,15 @@ NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags)
 	PlanState  *result;
 	List	   *subps;
 	ListCell   *l;
+        elog(DEBUG1, "[NeurDB_ExecInitNode], Begin to check the node");
 
 	/*
 	 * do nothing when we get to the end of a leaf on tree.
 	 */
-	if (node == NULL)
-		return NULL;
+	if (node == NULL){
+          elog(DEBUG1, "[NeurDB_ExecInitNode] Received NULL node");
+          return NULL;
+        }
 
 	/*
 	 * Make sure there's enough stack available. Need to check here, in
@@ -412,6 +415,9 @@ NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags)
 	if (estate->es_instrument)
 		result->instrument = InstrAlloc(1, estate->es_instrument,
 										result->async_capable);
+
+        elog(DEBUG1, "unrecognized node type: %d", (int) nodeTag(node));
+        elog(DEBUG1, "In NeurDB's ExecInitNode(), Done 123");
 
 	return result;
 }

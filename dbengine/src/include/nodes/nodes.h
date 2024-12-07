@@ -281,7 +281,7 @@ typedef enum CmdType
 
 	CMD_UTILITY,				/* cmds like create, destroy, copy, vacuum,
 								 * etc. */
-	CMD_NOTHING					/* dummy command for instead nothing rules
+	CMD_NOTHING,					/* dummy command for instead nothing rules
 								 * with qual */
         /* ------------------------------------------------------------------------
         *		NeurDB stmt
