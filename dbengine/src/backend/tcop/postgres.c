@@ -890,7 +890,7 @@ pg_plan_query(Query *querytree, const char *query_string, int cursorOptions,
 
 	/* Utility commands have no plans. */
         /* Predict commands have no plans currently. */
-	if (querytree->commandType == CMD_UTILITY || query->commandType == CMD_PREDICT)
+	if (querytree->commandType == CMD_UTILITY)
 		return NULL;
 
 	/* Planner must have a snapshot in case it calls user-defined functions. */
