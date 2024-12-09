@@ -13,7 +13,7 @@ $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop || {
 }
 
 # Build and install the kernel
-make && make install || {
+make debug && make install || {
     echo "Failed to build and install the kernel"
     exit 1
 }
