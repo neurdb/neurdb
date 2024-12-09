@@ -35,12 +35,14 @@ if [ "$MODE" == "cpu" ]; then
     docker run -d --name neurdb_dev \
         -v $(pwd):/code/neurdb-dev \
         -p 5432:5432 \
+        -p 1234:1234 \
         --cap-add=SYS_PTRACE \
         neurdbimg
 else
     docker run -d --name neurdb_dev \
         -v $(pwd):/code/neurdb-dev \
         -p 5432:5432 \
+        -p 1234:1234 \
         --cap-add=SYS_PTRACE \
         --gpus all \
         neurdbimg

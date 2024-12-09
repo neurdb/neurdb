@@ -102,7 +102,7 @@ make clean
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 
 # build and restart
-./configure --prefix=$NEURDBPATH/psql
+./configure --prefix=$NEURDBPATH/psql --enable-debug
 make
 make install
 
@@ -111,6 +111,9 @@ sudo chown $(whoami) $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/initdb -D $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
 $NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
+
+# restart 
+$NEURDBPATH/psql/bin/pg_ctl reload -D $NEURDBPATH/psql/data
 ```
 
 If there are any error, check the log at
@@ -155,6 +158,21 @@ psql -h localhost -U postgres -d postgres -c "\copy frappe_test FROM './frappe.c
 PREDICT VALUE OF click_rate
 FROM frappe_test
 TRAIN ON feature1, feature2;
+```
+
+
+
+# Debug PG
+
+```bash
+apt-get update && apt-get install -y gdb
+apt-get update && apt-get install -y gdbserver
+apt-get update && apt-get install -y net-tools
+sudo apt install lsof -y
+
+
+gdbserver 0.0.0.0:1234 --attach 10928
+
 ```
 
 
