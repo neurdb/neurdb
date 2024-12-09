@@ -104,6 +104,7 @@ $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 # build and restart
 ./configure --prefix=$NEURDBPATH/psql --enable-debug
 make
+# if debug use 'make debug' instead
 make install
 
 mkdir -p $NEURDBPATH/psql/data
@@ -131,6 +132,13 @@ log_min_error_statement = DEBUG1
 ## Buiild extension
 
 Stop DB, recompile the extension, start DB.
+
+```bash
+# For debug, build extension with 
+make debug && make install
+```
+
+
 
 ## Usage
 
@@ -164,6 +172,8 @@ TRAIN ON feature1, feature2;
 
 # Debug PG
 
+Inside docker container, 
+
 ```bash
 apt-get update && apt-get install -y gdb
 apt-get update && apt-get install -y gdbserver
@@ -171,7 +181,7 @@ apt-get update && apt-get install -y net-tools
 sudo apt install lsof -y
 
 
-gdbserver 0.0.0.0:1234 --attach 10928
+gdbserver 0.0.0.0:1234 --attach 9948
 
 ```
 
