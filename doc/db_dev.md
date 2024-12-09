@@ -112,7 +112,7 @@ $NEURDBPATH/psql/bin/initdb -D $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
 $NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
 
-# restart 
+# restart
 $NEURDBPATH/psql/bin/pg_ctl reload -D $NEURDBPATH/psql/data
 ```
 
