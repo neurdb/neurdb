@@ -134,7 +134,7 @@ log_min_error_statement = DEBUG1
 Stop DB, recompile the extension, start DB.
 
 ```bash
-# For debug, build extension with 
+# For debug, build extension with
 make debug && make install
 ```
 
@@ -172,7 +172,7 @@ TRAIN ON feature1, feature2;
 
 # Debug PG
 
-Inside docker container, 
+Inside docker container,
 
 ```bash
 apt-get update && apt-get install -y gdb
