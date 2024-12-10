@@ -2772,7 +2772,7 @@ typedef struct LimitState
 /*
 * TEMP: NeurDBPredictState
 *
-* A temp dummy execution-state node for NeurDBPredict. Should copy all info 
+* A temp dummy execution-state node for NeurDBPredict. Should copy all info
 * in NeurDBPredict.
 */
 typedef struct NeurDBPredictState
