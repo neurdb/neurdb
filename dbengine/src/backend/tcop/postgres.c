@@ -961,6 +961,23 @@ pg_plan_query(Query *querytree, const char *query_string, int cursorOptions,
 	return plan;
 }
 
+static SeqScan *
+make_neurdbpredict(NeurDBPredictStmt *stmt)
+{
+	NeurDBPredict   *node = makeNode(NeurDBPredict);
+	Plan	   		*plan = &(node->plan);
+
+	node->stmt = stmt;
+
+	// node->fromClause = stmt->fromClause;
+	// node->targetList = stmt->targetList;
+
+	plan->lefttree = NULL;
+	plan->righttree = NULL;
+
+	return node;
+}
+
 /*
  * Generate plans for a list of already-rewritten queries.
  *
@@ -981,8 +998,20 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 		Query	   *query = lfirst_node(Query, query_list);
 		PlannedStmt *stmt;
 
-                /* Commands like EXPLAIN, VACUUM, PREDICT are handled directly without invoking the query planner. */
-                if (query->commandType == CMD_UTILITY || query->commandType == CMD_PREDICT)
+		/* TEMP: Skip planning for PREDICT queries */
+		if (query->commandType == CMD_PREDICT)
+		{
+			/* Utility commands require no planning. */
+			stmt = makeNode(PlannedStmt);
+			stmt->planTree = make_neurdbpredict(query->utilityStmt);
+			stmt->commandType = query->commandType;
+			stmt->canSetTag = query->canSetTag;
+			stmt->stmt_location = query->stmt_location;
+			stmt->stmt_len = query->stmt_len;
+			stmt->queryId = query->queryId;
+		}
+        /* Commands like EXPLAIN, VACUUM are handled directly without invoking the query planner. */
+        else if (query->commandType == CMD_UTILITY)
 		{
 			/* Utility commands require no planning. */
 			stmt = makeNode(PlannedStmt);

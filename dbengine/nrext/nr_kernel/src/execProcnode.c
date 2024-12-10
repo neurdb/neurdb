@@ -124,6 +124,19 @@ static TupleTableSlot *ExecProcNodeInstr(PlanState *node);
 static bool ExecShutdownNode_walker(PlanState *node, void *context);
 
 
+
+static NeurDBPredictState *
+ExecNeurDBPredict(NeurDBPredict *node, EState *estate, int eflags)
+{
+	NeurDBPredictState *result = makeNode(NeurDBPredictState);
+	result->ps.plan = (Plan *) node;
+	// result->targetList = node->targetList;
+	// result->fromClause = node->fromClause;
+	result->stmt = node->stmt;
+
+	return result;
+}
+
 /* ------------------------------------------------------------------------
  *		ExecInitNode
  *
@@ -387,6 +400,11 @@ NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags)
 												 estate, eflags);
 			break;
 
+		case T_NeurDBPredict:
+			result = (PlanState *) ExecNeurDBPredict((NeurDBPredict *) node,
+													 estate, eflags);
+			break;
+
 		default:
 			elog(ERROR, "unrecognized node type: %d", (int) nodeTag(node));
 			result = NULL;		/* keep compiler quiet */
@@ -416,11 +434,9 @@ NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags)
 		result->instrument = InstrAlloc(1, estate->es_instrument,
 										result->async_capable);
 
-        elog(DEBUG1, "unrecognized node type: %d", (int) nodeTag(node));
-        elog(DEBUG1, "In NeurDB's ExecInitNode(), Done 123");
-
 	return result;
 }
+
 
 
 /*

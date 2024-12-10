@@ -226,7 +226,7 @@ exec_udf(const char *model, const char *table, const char *trainColumns, const c
 ObjectAddress
 ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString)
 {
-        elog(DEBUG1, "[ExecPredictStmt] In the ExecPredictStmt");
+    elog(DEBUG1, "[ExecPredictStmt] In the ExecPredictStmt");
 
 	ListCell   *cell;
 	StringInfoData targetColumn;
