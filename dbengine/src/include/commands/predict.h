@@ -27,5 +27,6 @@ extern PGDLLIMPORT int NRTaskEpoch;
 extern PGDLLIMPORT int NRTaskMaxFeatures;
 extern PGDLLIMPORT int NRTaskNumBatches;
 
+extern void exec_udf(const char *model, const char *table, const char *trainColumns, const char *targetColumn, const char *whereClause);
 extern ObjectAddress ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString);
 #endif							/* PREDICT_H */
