@@ -2769,4 +2769,16 @@ typedef struct LimitState
 	TupleTableSlot *last_slot;	/* slot for evaluation of ties */
 } LimitState;
 
+/*
+* TEMP: NeurDBPredictState
+*
+* A temp dummy execution-state node for NeurDBPredict. Should copy all info 
+* in NeurDBPredict.
+*/
+typedef struct NeurDBPredictState
+{
+	PlanState	ps;				/* its first field is NodeTag */
+	NeurDBPredictStmt *stmt;
+} NeurDBPredictState;
+
 #endif							/* EXECNODES_H */

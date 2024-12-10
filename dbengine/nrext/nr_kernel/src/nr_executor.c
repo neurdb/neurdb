@@ -237,7 +237,7 @@ static void InitPlan(QueryDesc *queryDesc, int eflags) {
     if (bms_is_member(i, plannedstmt->rewindPlanIDs))
       sp_eflags |= EXEC_FLAG_REWIND;
 
-    subplanstate = ExecInitNode(subplan, estate, sp_eflags);
+    subplanstate = NeurDB_ExecInitNode(subplan, estate, sp_eflags);
 
     estate->es_subplanstates = lappend(estate->es_subplanstates, subplanstate);
 
@@ -253,14 +253,14 @@ static void InitPlan(QueryDesc *queryDesc, int eflags) {
   elog(DEBUG1, "[InitPlan] after NeurDB_ExecInitNode");
 
   // If planstate is NULL, log and continue with a no-op plan state
-  if (planstate == NULL) {
-    elog(DEBUG1,
-         "[InitPlan] NeurDB_ExecInitNode returned NULL, proceeding with custom "
-         "logic.");
-    queryDesc->planstate = NULL;
-    queryDesc->tupDesc = NULL;
-    return;
-  }
+  // if (planstate == NULL) {
+  //   elog(DEBUG1,
+  //        "[InitPlan] NeurDB_ExecInitNode returned NULL, proceeding with custom "
+  //        "logic.");
+  //   queryDesc->planstate = NULL;
+  //   queryDesc->tupDesc = NULL;
+  //   return;
+  // }
 
   /*
    * Get the tuple descriptor describing the type of tuples to return.
@@ -488,10 +488,33 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
   }
 
   if (operation == CMD_PREDICT) {
-    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] CMD_PREDICT detected");
-    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling parse_and_exec_udf");
-    parse_and_exec_udf(estate->es_sourceText);
-    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling parse_and_exec_udf Done");
+    // elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] CMD_PREDICT detected");
+    // elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling parse_and_exec_udf");
+    // parse_and_exec_udf(estate->es_sourceText);
+    // elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling parse_and_exec_udf Done");
+
+    if (planstate == NULL) {
+      elog(ERROR, "[NeurDB_ExecutePlanWrapper] PlannedStmt is NULL.");
+      return;  // Handle gracefully
+    }else{
+      elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] PlannedStmt: %p",
+           (void *)planstate);
+    }
+
+    /* Cast the utility statement to NeurDBPredictStmt */
+    NeurDBPredictState *state = (NeurDBPredictState *) planstate;
+    NeurDBPredictStmt *stmt = state->stmt;
+
+    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] NeurDBPredictStmt extracted: %p",
+         (void *)stmt);
+
+    ParseState *pstate = NULL;
+    const char *whereClauseString = "";
+
+    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt");
+    ExecPredictStmt(stmt, pstate, whereClauseString);
+    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt Done");
+
 
   } else {
     elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecutePlan");

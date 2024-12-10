@@ -3645,5 +3645,13 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	if (pstate->p_hasAggs)
 		parseCheckAggregates(pstate, qry);
 
+	/*
+	* TEMP: Pass the raw parse node to the planner.
+	*
+	* Although we have already parsed and filled all necessary fields above, to
+	* simplify the later planning, we temporarily use the raw parse node.
+	*/
+	qry->utilityStmt = stmt;
+
 	return qry;
 }
