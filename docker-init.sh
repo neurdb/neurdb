@@ -16,6 +16,7 @@ NR_DBENGINE_PATH=$NEURDBPATH/dbengine
 NR_AIENGINE_PATH=$NEURDBPATH/aiengine
 NR_API_PATH=$NEURDBPATH/api
 NR_PIPELINE_PATH=$NR_AIENGINE_PATH/pgext/nr_pipeline
+NR_KERNEL_PATH=$NR_DBENGINE_PATH/nrext/nr_kernel
 
 # Clean log file
 rm $NEURDBPATH/logfile || true
@@ -87,6 +88,16 @@ cd $NR_PIPELINE_PATH
 sudo make clean
 sudo make install
 echo "Install NR Data Pipeline Extension Done"
+
+# Compile nr_kernel
+cd $NR_KERNEL_PATH
+sudo make clean
+sudo make install
+
+## Register nr_kernel as preloaded library
+echo 'shared_preload_libraries = '\''nr_kernel'\''' >> $NR_DBDATA_PATH/postgresql.conf
+
+echo "Install NR Kernel Done"
 
 # Run python server
 cd $NR_AIENGINE_PATH/runtime
