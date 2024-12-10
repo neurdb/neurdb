@@ -257,7 +257,7 @@ static void InitPlan(QueryDesc *queryDesc, int eflags) {
     elog(DEBUG1,
          "[InitPlan] NeurDB_ExecInitNode returned NULL, proceeding with custom "
          "logic.");
-    queryDesc->planstate = estate->es_plannedstmt;
+    queryDesc->planstate = NULL;
     queryDesc->tupDesc = NULL;
     return;
   }
@@ -415,6 +415,42 @@ static void ExecutePlan(EState *estate, PlanState *planstate,
   if (use_parallel_mode) ExitParallelMode();
 }
 
+/* Function to parse sourceText and populate NeurDBPredictStmt */
+void parse_and_exec_udf(const char *es_sourceText) {
+  if (es_sourceText == NULL) {
+    elog(ERROR, "es_sourceText is NULL");
+    return;
+  }
+
+  // Buffers to hold parsed values
+  char targetColumn[256];
+  char table[256];
+  char trainColumns[1024];
+
+  // Parse es_sourceText
+  int scanned = sscanf(es_sourceText,
+                       "PREDICT VALUE OF %255s FROM %255s TRAIN ON %[^\n;]",
+                       targetColumn, table, trainColumns);
+
+  if (scanned < 3) {
+    elog(ERROR, "Failed to parse es_sourceText: %s", es_sourceText);
+    return;
+  }
+
+  // Log parsed values
+  elog(DEBUG1, "Parsed targetColumn: %s", targetColumn);
+  elog(DEBUG1, "Parsed table: %s", table);
+  elog(DEBUG1, "Parsed trainColumns: %s", trainColumns);
+
+  // Placeholder for the model name
+  const char *model = NRModelName;
+
+  // Call exec_udf directly with parsed values
+  elog(DEBUG1, "Calling exec_udf with parsed values");
+  exec_udf(model, table, trainColumns, targetColumn, NULL);
+}
+
+
 /* ----------------------------------------------------------------
  *		ExecutePlan
  *
@@ -427,16 +463,16 @@ static void ExecutePlan(EState *estate, PlanState *planstate,
  * user can see it
  * ----------------------------------------------------------------
  */
-static void NeurDB_ExecutePlanWrapper(EState *estate, PlanState *planstate,
-                                      bool use_parallel_mode, CmdType operation,
-                                      bool sendTuples, uint64 numberTuples,
-                                      ScanDirection direction,
+static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
+                                      PlanState *planstate, bool use_parallel_mode,
+                                      CmdType operation, bool sendTuples,
+                                      uint64 numberTuples, ScanDirection direction,
                                       DestReceiver *dest, bool execute_once) {
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Start logging parameters:");
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] estate: %p", (void *)estate);
+  elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] plannedstmt: %p", (void *)plannedstmt);
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] planstate: %p", (void *)planstate);
-  elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] use_parallel_mode: %d",
-       use_parallel_mode);
+  elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] use_parallel_mode: %d", use_parallel_mode);
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] operation: %d", operation);
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] sendTuples: %d", sendTuples);
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] numberTuples: %lu", numberTuples);
@@ -444,30 +480,18 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlanState *planstate,
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] dest: %p", (void *)dest);
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] execute_once: %d", execute_once);
 
+  // Validate inputs
+  if (estate == NULL || plannedstmt == NULL || dest == NULL)
+  {
+    elog(ERROR, "[NeurDB_ExecutePlanWrapper] Invalid input: estate, plannedstmt, or dest is NULL");
+    return;
+  }
+
   if (operation == CMD_PREDICT) {
-    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] CMD_PREDICT detected.");
-
-    if (planstate == NULL) {
-      elog(ERROR, "[NeurDB_ExecutePlanWrapper] PlannedStmt is NULL.");
-      return;  // Handle gracefully
-    }else{
-      elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] PlannedStmt: %p",
-           (void *)planstate);
-    }
-
-    /* Cast the utility statement to NeurDBPredictStmt */
-    NeurDBPredictStmt *stmt = (NeurDBPredictStmt *)planstate;
-
-    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] NeurDBPredictStmt extracted: %p",
-         (void *)stmt);
-
-    ParseState *pstate = NULL;
-    const char *whereClauseString = "";
-
-    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt");
-    ExecPredictStmt(stmt, pstate, whereClauseString);
-    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt Done");
-
+    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] CMD_PREDICT detected");
+    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling parse_and_exec_udf");
+    parse_and_exec_udf(estate->es_sourceText);
+    elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling parse_and_exec_udf Done");
 
   } else {
     elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecutePlan");
@@ -757,7 +781,7 @@ void NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 
     elog(DEBUG1, "[NeurDB_ExecutorRun] begin NeurDB_ExecutePlanWrapper");
 
-    NeurDB_ExecutePlanWrapper(estate, queryDesc->planstate,
+    NeurDB_ExecutePlanWrapper(estate, queryDesc->plannedstmt, queryDesc->planstate,
                               queryDesc->plannedstmt->parallelModeNeeded,
                               operation, sendTuples, count, direction, dest,
                               execute_once);
