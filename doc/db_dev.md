@@ -104,7 +104,6 @@ $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 # build and restart
 ./configure --prefix=$NEURDBPATH/psql --enable-debug
 make
-# if debug use 'make debug' instead
 make install
 
 mkdir -p $NEURDBPATH/psql/data
