@@ -1010,8 +1010,8 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 			stmt->stmt_len = query->stmt_len;
 			stmt->queryId = query->queryId;
 		}
-        /* Commands like EXPLAIN, VACUUM are handled directly without invoking the query planner. */
-        else if (query->commandType == CMD_UTILITY)
+                /* Commands like EXPLAIN, VACUUM are handled directly without invoking the query planner. */
+                else if (query->commandType == CMD_UTILITY)
 		{
 			/* Utility commands require no planning. */
 			stmt = makeNode(PlannedStmt);
