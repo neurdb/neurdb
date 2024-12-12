@@ -454,10 +454,10 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
   if (operation == CMD_PREDICT) {
 
     if (planstate == NULL) {
-      elog(ERROR, "[NeurDB_ExecutePlanWrapper] PlannedStmt is NULL.");
-      return;  // Handle gracefully
+      elog(ERROR, "[NeurDB_ExecutePlanWrapper] planstate is NULL.");
+      return;
     }else{
-      elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] PlannedStmt: %p",
+      elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] planstate: %p",
            (void *)planstate);
     }
 
