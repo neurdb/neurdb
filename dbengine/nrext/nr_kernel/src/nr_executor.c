@@ -432,7 +432,7 @@ return_dummy_table(DestReceiver *dest)
 	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
 
 	/* Construct and send the directory information */
-  for (int i = 0; i < 10; i++) 
+  for (int i = 0; i < 10; i++)
   {
     Datum		values[3];
 		bool		nulls[3] = {0};
@@ -470,7 +470,7 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
                                       PlanState *planstate, bool use_parallel_mode,
                                       CmdType operation, bool sendTuples,
                                       uint64 numberTuples, ScanDirection direction,
-                                      DestReceiver *dest, bool execute_once) 
+                                      DestReceiver *dest, bool execute_once)
 {
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Start logging parameters:");
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] estate: %p", (void *)estate);
@@ -491,9 +491,9 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
     return;
   }
 
-  if (operation == CMD_PREDICT) 
+  if (operation == CMD_PREDICT)
   {
-    if (planstate == NULL) 
+    if (planstate == NULL)
     {
       elog(ERROR, "[NeurDB_ExecutePlanWrapper] planstate is NULL.");
       return;
@@ -521,7 +521,7 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
     ExecPredictStmt(stmt, pstate, whereClauseString);
     elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt Done");
   }
-  else 
+  else
   {
     elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecutePlan");
     ExecutePlan(estate, planstate, use_parallel_mode, operation, sendTuples,
