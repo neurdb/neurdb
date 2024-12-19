@@ -565,6 +565,26 @@ MultiExecProcNode(PlanState *node)
 	return result;
 }
 
+void
+ExecEndNeurDBPredict(NeurDBPredictState *node)
+{
+	/*
+	 * Free the exprcontext
+	 */
+	ExecFreeExprContext(&node->ps);
+
+	/*
+	 * clean out the tuple table
+	 * TEMP: For now, no tuple table stored in result slot
+	 */
+	// ExecClearTuple(node->ps.ps_ResultTupleSlot);
+
+	/*
+	 * shut down subplans
+	 */
+	ExecEndNode(outerPlanState(node));
+}
+
 
 /* ----------------------------------------------------------------
  *		ExecEndNode
@@ -578,7 +598,7 @@ MultiExecProcNode(PlanState *node)
  * ----------------------------------------------------------------
  */
 void
-ExecEndNode(PlanState *node)
+NeurDB_ExecEndNode(PlanState *node)
 {
 	/*
 	 * do nothing when we get to the end of a leaf on tree.
@@ -779,6 +799,10 @@ ExecEndNode(PlanState *node)
 
 		case T_LimitState:
 			ExecEndLimit((LimitState *) node);
+			break;
+
+		case T_NeurDBPredictState:
+			ExecEndNeurDBPredict((NeurDBPredictState *) node);
 			break;
 
 		default:

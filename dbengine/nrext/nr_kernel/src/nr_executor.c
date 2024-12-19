@@ -8,6 +8,7 @@
 #include "foreign/fdwapi.h"
 #include "miscadmin.h"
 #include "tcop/utility.h"
+#include "utils/builtins.h"
 #include "utils/lsyscache.h"
 #include "utils/snapmgr.h"
 
@@ -415,6 +416,44 @@ static void ExecutePlan(EState *estate, PlanState *planstate,
   if (use_parallel_mode) ExitParallelMode();
 }
 
+static void
+return_dummy_table(DestReceiver *dest)
+{
+	TupOutputState *tstate;
+	TupleDesc	tupdesc;
+	ListCell   *lc;
+
+	tupdesc = CreateTemplateTupleDesc(3);
+	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 1, "dummy1", OIDOID, -1, 0);
+	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID, -1, 0);
+	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID, -1, 0);
+
+	/* send RowDescription */
+	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
+
+	/* Construct and send the directory information */
+  for (int i = 0; i < 10; i++) 
+  {
+    Datum		values[3];
+		bool		nulls[3] = {0};
+
+    char valueStr[10] = {0};
+    sprintf(valueStr, "str: %d", i);
+
+		values[0] = ObjectIdGetDatum(strtoul("10001", NULL, 10));
+		values[1] = CStringGetTextDatum(valueStr);
+		if (i >= 5)
+			values[2] = Int64GetDatum((long) i / 2);
+		else
+			nulls[2] = true;
+
+		do_tup_output(tstate, values, nulls);
+  }
+
+	end_tup_output(tstate);
+}
+
+
 /* ----------------------------------------------------------------
  *		ExecutePlan
  *
@@ -431,7 +470,8 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
                                       PlanState *planstate, bool use_parallel_mode,
                                       CmdType operation, bool sendTuples,
                                       uint64 numberTuples, ScanDirection direction,
-                                      DestReceiver *dest, bool execute_once) {
+                                      DestReceiver *dest, bool execute_once) 
+{
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Start logging parameters:");
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] estate: %p", (void *)estate);
   elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] plannedstmt: %p", (void *)plannedstmt);
@@ -451,12 +491,15 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
     return;
   }
 
-  if (operation == CMD_PREDICT) {
-
-    if (planstate == NULL) {
+  if (operation == CMD_PREDICT) 
+  {
+    if (planstate == NULL) 
+    {
       elog(ERROR, "[NeurDB_ExecutePlanWrapper] planstate is NULL.");
       return;
-    }else{
+    }
+    else
+    {
       elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] planstate: %p",
            (void *)planstate);
     }
@@ -471,12 +514,15 @@ static void NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
     ParseState *pstate = NULL;
     const char *whereClauseString = "";
 
+    return_dummy_table(dest);
+    return;
+
     elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt");
     ExecPredictStmt(stmt, pstate, whereClauseString);
     elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt Done");
-
-
-  } else {
+  }
+  else 
+  {
     elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecutePlan");
     ExecutePlan(estate, planstate, use_parallel_mode, operation, sendTuples,
                 numberTuples, direction, dest, execute_once);
@@ -502,7 +548,7 @@ static void ExecEndPlan(PlanState *planstate, EState *estate) {
   /*
    * shut down the node-type-specific query processing
    */
-  ExecEndNode(planstate);
+  NeurDB_ExecEndNode(planstate);
 
   /*
    * for subplans too
@@ -510,7 +556,7 @@ static void ExecEndPlan(PlanState *planstate, EState *estate) {
   foreach (l, estate->es_subplanstates) {
     PlanState *subplanstate = (PlanState *)lfirst(l);
 
-    ExecEndNode(subplanstate);
+    NeurDB_ExecEndNode(subplanstate);
   }
 
   /*

@@ -6,5 +6,6 @@
 #include "executor/executor.h"
 
 extern PlanState *NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags);
+extern PlanState *NeurDB_ExecEndNode(PlanState *node);
 
 #endif
