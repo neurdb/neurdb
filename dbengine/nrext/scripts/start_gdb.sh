@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Find the PID of the target PostgreSQL process
-pid=$(ps aux | grep 'postgres: postgres postgres' | grep -v grep | awk '{print $2}')
+pid=$(ps aux | grep 'postgres: postgres' | grep -v grep | awk '{print $2}')
 
 # Check if a PID was found
 if [ -z "$pid" ]; then
