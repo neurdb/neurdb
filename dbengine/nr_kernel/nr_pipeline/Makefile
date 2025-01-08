@@ -13,6 +13,13 @@ build:
 	mkdir -p build
 	cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
 
+debug: builddbg buildextdbg
+
+builddbg:
+	mkdir -p build
+	cd build && cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+buildextdbg: buildext
 buildext: build
 	cd build; make -j; cd ..
 
