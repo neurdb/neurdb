@@ -15,6 +15,7 @@ $NEURDBPATH/psql/bin/psql -h 0.0.0.0
 ```
 
 <!--
+
 ### Run tests
 
 > [!NOTE]

@@ -1,7 +1,7 @@
 # Make file for NeurDB kernel
 # It calls the CMakelists.txt file in the same directory
 
-EXT_NAME = nr_kernel
+EXT_NAME = nr_ext
 
 NEURDBPATH ?= /code/neurdb-dev
 

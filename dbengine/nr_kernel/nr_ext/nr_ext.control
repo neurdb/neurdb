@@ -1,5 +1,5 @@
 # nr_kernel extension
 comment = 'NeurDB kernel'
 default_version = '1.0.0'
-module_pathname = '$libdir/nr_kernel'
+module_pathname = '$libdir/nr_ext'
 relocatable = true
