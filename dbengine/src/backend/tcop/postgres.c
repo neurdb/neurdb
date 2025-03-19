@@ -4648,7 +4648,7 @@ PostgresMain(const char *dbname, const char *username)
 		if (ignore_till_sync && firstchar != EOF)
 			continue;
 
-make 		switch (firstchar)
+ 		switch (firstchar)
 		{
 			case 'Q':			/* simple query */
 				{
