@@ -126,12 +126,13 @@ static bool ExecShutdownNode_walker(PlanState *node, void *context);
 
 
 static NeurDBPredictState *
-ExecNeurDBPredict(NeurDBPredict *node, EState *estate, int eflags)
+ExecNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 {
 	NeurDBPredictState *result = makeNode(NeurDBPredictState);
+
 	result->ps.plan = (Plan *) node;
-	// result->targetList = node->targetList;
-	// result->fromClause = node->fromClause;
+	/* result->targetList = node->targetList; */
+	/* result->fromClause = node->fromClause; */
 	result->stmt = node->stmt;
 
 	return result;
@@ -159,15 +160,17 @@ NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags)
 	PlanState  *result;
 	List	   *subps;
 	ListCell   *l;
-        elog(DEBUG1, "[NeurDB_ExecInitNode], Begin to check the node");
+
+	elog(DEBUG1, "[NeurDB_ExecInitNode], Begin to check the node");
 
 	/*
 	 * do nothing when we get to the end of a leaf on tree.
 	 */
-	if (node == NULL){
-          elog(DEBUG1, "[NeurDB_ExecInitNode] Received NULL node");
-          return NULL;
-        }
+	if (node == NULL)
+	{
+		elog(DEBUG1, "[NeurDB_ExecInitNode] Received NULL node");
+		return NULL;
+	}
 
 	/*
 	 * Make sure there's enough stack available. Need to check here, in
@@ -566,7 +569,7 @@ MultiExecProcNode(PlanState *node)
 }
 
 void
-ExecEndNeurDBPredict(NeurDBPredictState *node)
+ExecEndNeurDBPredict(NeurDBPredictState * node)
 {
 	/*
 	 * Free the exprcontext
@@ -575,6 +578,7 @@ ExecEndNeurDBPredict(NeurDBPredictState *node)
 
 	/*
 	 * clean out the tuple table
+	 *
 	 * TEMP: For now, no tuple table stored in result slot
 	 */
 	// ExecClearTuple(node->ps.ps_ResultTupleSlot);

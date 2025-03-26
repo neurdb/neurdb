@@ -12,6 +12,7 @@
 #include "postgres.h"
 
 #include "commands/predict.h"
+#include "executor/executor.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
 #include "parser/parse_target.h"
@@ -70,6 +71,45 @@ set_false_to_all_params(NullableDatum *args, int size)
 	}
 }
 
+
+static void
+return_dummy_table(DestReceiver *dest)
+{
+	TupOutputState *tstate;
+	TupleDesc	tupdesc;
+	ListCell   *lc;
+
+	tupdesc = CreateTemplateTupleDesc(3);
+	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 1, "dummy1", OIDOID, -1, 0);
+	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID, -1, 0);
+	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID, -1, 0);
+
+	/* send RowDescription */
+	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
+
+	/* Construct and send the directory information */
+	for (int i = 0; i < 10; i++)
+	{
+		Datum		values[3];
+		bool		nulls[3] = {0};
+
+		char		valueStr[10] = {0};
+
+		sprintf(valueStr, "str: %d", i);
+
+		values[0] = ObjectIdGetDatum(strtoul("10001", NULL, 10));
+		values[1] = CStringGetTextDatum(valueStr);
+		if (i >= 5)
+			values[2] = Int64GetDatum((long) i / 2);
+		else
+			nulls[2] = true;
+
+		do_tup_output(tstate, values, nulls);
+	}
+
+	end_tup_output(tstate);
+}
+
 /*
 * exec_udf --- Execute customer UDFs
 *
@@ -82,7 +122,12 @@ set_false_to_all_params(NullableDatum *args, int size)
 * needs to be revamped to be more general.
 */
 void
-exec_udf(const char *model, const char *table, const char *trainColumns, const char *targetColumn, const char *whereClause)
+exec_udf(const char *model,
+		 const char *table,
+		 const char *trainColumns,
+		 const char *targetColumn,
+		 const char *whereClause,
+		 DestReceiver *dest)
 {
 	/* lookup function call infos */
 	FmgrInfo	modelLookupFmgrInfo;
@@ -216,6 +261,8 @@ exec_udf(const char *model, const char *table, const char *trainColumns, const c
 			elog(INFO, "Inference result is NULL");
 		}
 	}
+
+	return_dummy_table(dest);
 }
 
 /*
@@ -224,9 +271,9 @@ exec_udf(const char *model, const char *table, const char *trainColumns, const c
 * NeurDBPredictStmt: Node structure in include/nodes/parsenodes.h
 */
 ObjectAddress
-ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString)
+ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString, DestReceiver *dest)
 {
-    elog(DEBUG1, "[ExecPredictStmt] In the ExecPredictStmt");
+	elog(DEBUG1, "[ExecPredictStmt] In the ExecPredictStmt");
 
 	ListCell   *cell;
 	StringInfoData targetColumn;
@@ -316,7 +363,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	trainOnColumns.data[trainOnColumns.len - 1] = '\0';
 
 	/* Execute the UDF with extracted columns, table name, and where clause */
-	exec_udf(modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause);
+	exec_udf(modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause, dest);
 
 	return InvalidObjectAddress;
 }
