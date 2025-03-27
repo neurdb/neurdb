@@ -155,12 +155,13 @@ void nws_send_batch_data(NrWebsocket *ws, const int batch_id,
   lws_callback_on_writable(ws->instance);
 }
 
-void nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec) {
+void nws_send_task(NrWebsocket *ws, MLTask ml_task, const char *table_name, void *task_spec) {
   cJSON *json = cJSON_CreateObject();
   cJSON_AddStringToObject(json, "version", "1");
   cJSON_AddStringToObject(json, "event", "task");
   cJSON_AddStringToObject(json, "sessionId", ws->sid);
   cJSON_AddStringToObject(json, "type", ML_TASK[ml_task]);
+  cJSON_AddStringToObject(json, "table", table_name);
   task_append_to_json(json, task_spec, ml_task);
 
   send_json(ws, json);
