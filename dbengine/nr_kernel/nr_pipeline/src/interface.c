@@ -187,7 +187,11 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   record_overall_end_time(time_metric);
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
-  PG_RETURN_NULL();
+
+  char *presult = pstrdup(ws->result);
+  free(ws->result); 
+
+  PG_RETURN_CSTRING(presult);
 }
 
 /**
@@ -364,6 +368,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   record_overall_end_time(time_metric);
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
+  
   PG_RETURN_NULL();
 }
 
@@ -538,6 +543,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
   record_overall_end_time(time_metric);
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
+
   PG_RETURN_NULL();
 }
 

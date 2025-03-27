@@ -430,7 +430,8 @@ handle_result(NrWebsocket * ws, const cJSON * json)
 		ws->result = NULL;
 	} else {
 		elog(INFO, "'byte' found in response. Should be inference\n");
-		ws->result = result->valuestring;
+		ws->result = (char *) malloc(strlen(result->valuestring) + 1);
+		strcpy(ws->result, result->valuestring);
 	}
 	ws->completed = 1;
 }

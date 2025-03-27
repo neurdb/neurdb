@@ -79,10 +79,18 @@ return_dummy_table(DestReceiver *dest)
 	TupleDesc	tupdesc;
 	ListCell   *lc;
 
-	tupdesc = CreateTemplateTupleDesc(3);
-	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 1, "dummy1", OIDOID, -1, 0);
-	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID, -1, 0);
-	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID, -1, 0);
+	tupdesc = CreateTemplateTupleDesc(1);
+	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 1, "result", FLOAT8OID, -1, 0);
+
+	/*
+	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID,
+	 * -1, 0);
+	 */
+
+	/*
+	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID,
+	 * -1, 0);
+	 */
 
 	/* send RowDescription */
 	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
@@ -90,24 +98,63 @@ return_dummy_table(DestReceiver *dest)
 	/* Construct and send the directory information */
 	for (int i = 0; i < 10; i++)
 	{
-		Datum		values[3];
-		bool		nulls[3] = {0};
+		Datum		values[1];
+		bool		nulls[1] = {0};
 
-		char		valueStr[10] = {0};
-
-		sprintf(valueStr, "str: %d", i);
-
-		values[0] = ObjectIdGetDatum(strtoul("10001", NULL, 10));
-		values[1] = CStringGetTextDatum(valueStr);
-		if (i >= 5)
-			values[2] = Int64GetDatum((long) i / 2);
-		else
-			nulls[2] = true;
-
+		values[0] = Float8GetDatum((float8) i);
 		do_tup_output(tstate, values, nulls);
 	}
 
 	end_tup_output(tstate);
+}
+
+void
+parseDoubles(const char *str)
+{
+	char		buffer[64];
+
+	/* Buffer to accumulate characters */
+	int			bufIndex = 0;
+
+	while (*str)
+	{
+		if (*str == ' ')
+		{
+			/* When space is found, terminate the buffer and parse */
+			if (bufIndex > 0)
+			{
+				/* Null terminate the string */
+				buffer[bufIndex] = '\0';
+
+				double		value = atof(buffer);
+
+				/* Convert to double */
+				printf("Found double: %f\n", value);
+
+				/* Reset buffer index */
+				bufIndex = 0;
+			}
+		}
+		else
+		{
+			/* Add character to buffer if there's space */
+			if (bufIndex < sizeof(buffer) - 1)
+			{
+				buffer[bufIndex++] = *str;
+			}
+		}
+		/* Move to next character */
+		str++;
+	}
+
+	/* Handle the last number if string doesn't end with space */
+	if (bufIndex > 0)
+	{
+		buffer[bufIndex] = '\0';
+		double		value = atof(buffer);
+
+		printf("Found double: %f\n", value);
+	}
 }
 
 /*
@@ -172,9 +219,9 @@ exec_udf(const char *model,
 		modelId = DatumGetInt32(modelLookupResult);
 	}
 
+	/* model does not exist, training first */
 	if (modelId == 0)
 	{
-		/* model does not exist, training */
 		FmgrInfo	trainingFmgrInfo;
 
 		/* fcinfo for training function */
@@ -217,49 +264,46 @@ exec_udf(const char *model,
 			elog(INFO, "Training result is NULL");
 		}
 	}
+
+	/* inference */
+	FmgrInfo	inferenceFmgrInfo;
+
+	/* fcinfo for inference function */
+	LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS);
+	Datum		inferenceResult;
+
+	Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
+
+	if (!OidIsValid(inferenceFuncOid))
+	{
+		elog(ERROR, "Function %s not found", inferenceFuncName);
+		return;
+	}
+
+	fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
+	InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 7, InvalidOid, NULL, NULL);
+
+	inferenceFCInfo->args[0].value = CStringGetTextDatum(model);
+	inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
+	inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
+	inferenceFCInfo->args[3].value = Int32GetDatum(NRTaskBatchSize);
+	inferenceFCInfo->args[4].value = Int32GetDatum(NRTaskNumBatches);
+	inferenceFCInfo->args[5].value = Int32GetDatum(NRTaskMaxFeatures);
+	inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
+
+	set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
+
+	inferenceResult = FunctionCallInvoke(inferenceFCInfo);
+	if (!inferenceFCInfo->isnull)
+	{
+		char	   *resultCString = DatumGetCString(inferenceResult);
+		parseDoubles(resultCString);
+
+		// elog(DEBUG2, "Inference result: %s", resultCString);
+	}
 	else
 	{
-		/* inference */
-		FmgrInfo	inferenceFmgrInfo;
-
-		/* fcinfo for inference function */
-		LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS);
-		Datum		inferenceResult;
-
-		Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
-
-		if (!OidIsValid(inferenceFuncOid))
-		{
-			elog(ERROR, "Function %s not found", inferenceFuncName);
-			return;
-		}
-
-		fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
-		InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 7, InvalidOid, NULL, NULL);
-
-		inferenceFCInfo->args[0].value = CStringGetTextDatum(model);
-		inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
-		inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
-		inferenceFCInfo->args[3].value = Int32GetDatum(NRTaskBatchSize);
-		inferenceFCInfo->args[4].value = Int32GetDatum(NRTaskNumBatches);
-		inferenceFCInfo->args[5].value = Int32GetDatum(NRTaskMaxFeatures);
-		inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
-
-		set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
-
-		inferenceResult = FunctionCallInvoke(inferenceFCInfo);
-		if (!inferenceFCInfo->isnull)
-		{
-			text	   *resultText = DatumGetTextP(inferenceResult);
-			char	   *resultCString = text_to_cstring(resultText);
-
-			elog(INFO, "Inference result: %s", resultCString);
-			pfree(resultCString);
-		}
-		else
-		{
-			elog(INFO, "Inference result is NULL");
-		}
+		elog(DEBUG2, "Inference result is NULL");
 	}
 
 	return_dummy_table(dest);
