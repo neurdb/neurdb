@@ -1,7 +1,7 @@
 import asyncio
 import json
 from threading import Thread
-from typing import List
+from typing import Any, List
 
 import numpy as np
 from neurdb.logger import configure_logging as api_configure_logging
@@ -245,7 +245,7 @@ async def inference_task(
     setup: Setup,
     model_id: int,
     inf_batch_num: int,
-) -> List[np.ndarray]:
+) -> List[List[Any]]:
     response, err = await setup.inference(model_id, inf_batch_num)
     if err is not None:
         logger.error(f"inference failed with error: {err}")

@@ -1,6 +1,7 @@
 import io
 import os
 from multiprocessing import shared_memory
+from typing import Any, List
 
 import numpy as np
 import torch
@@ -44,3 +45,7 @@ def load_model_jit(model_binary: bytes) -> torch.nn.Module:
     buffer = io.BytesIO(model_binary)
     model = torch.jit.load(buffer)
     return model
+
+
+def flatten_2d_array(arr: List[List[Any]]) -> str:
+    return " ".join([" ".join(map(str, row)) for row in arr])
