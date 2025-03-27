@@ -71,45 +71,8 @@ set_false_to_all_params(NullableDatum *args, int size)
 	}
 }
 
-
-static void
-return_dummy_table(DestReceiver *dest)
-{
-	TupOutputState *tstate;
-	TupleDesc	tupdesc;
-	ListCell   *lc;
-
-	tupdesc = CreateTemplateTupleDesc(1);
-	TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 1, "result", FLOAT8OID, -1, 0);
-
-	/*
-	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID,
-	 * -1, 0);
-	 */
-
-	/*
-	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID,
-	 * -1, 0);
-	 */
-
-	/* send RowDescription */
-	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
-
-	/* Construct and send the directory information */
-	for (int i = 0; i < 10; i++)
-	{
-		Datum		values[1];
-		bool		nulls[1] = {0};
-
-		values[0] = Float8GetDatum((float8) i);
-		do_tup_output(tstate, values, nulls);
-	}
-
-	end_tup_output(tstate);
-}
-
 void
-parseDoubles(const char *str)
+parseDoubles(const char *str, void (*callback) (TupOutputState *, double), TupOutputState *tstate)
 {
 	char		buffer[64];
 
@@ -129,7 +92,8 @@ parseDoubles(const char *str)
 				double		value = atof(buffer);
 
 				/* Convert to double */
-				printf("Found double: %f\n", value);
+				/* printf("Found double: %f\n", value); */
+				callback(tstate, value);
 
 				/* Reset buffer index */
 				bufIndex = 0;
@@ -153,8 +117,44 @@ parseDoubles(const char *str)
 		buffer[bufIndex] = '\0';
 		double		value = atof(buffer);
 
-		printf("Found double: %f\n", value);
+		/* printf("Found double: %f\n", value); */
+		callback(tstate, value);
 	}
+}
+
+void
+insert_float8_to_tup_output(TupOutputState *tstate, float8 value)
+{
+	Datum		values[1];
+	bool		nulls[1] = {0};
+
+	values[0] = Float8GetDatum(value);
+	do_tup_output(tstate, values, nulls);
+}
+
+static void
+return_table(DestReceiver *dest, const char *result_string)
+{
+	TupOutputState *tstate;
+	TupleDesc	tupdesc;
+	ListCell   *lc;
+
+	tupdesc = CreateTemplateTupleDesc(1);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "result", FLOAT8OID, -1, 0);
+
+	/*
+	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID,
+	 * -1, 0);
+	 */
+
+	/*
+	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID,
+	 * -1, 0);
+	 */
+
+	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
+	parseDoubles(result_string, &insert_float8_to_tup_output, tstate);
+	end_tup_output(tstate);
 }
 
 /*
@@ -297,16 +297,14 @@ exec_udf(const char *model,
 	if (!inferenceFCInfo->isnull)
 	{
 		char	   *resultCString = DatumGetCString(inferenceResult);
-		parseDoubles(resultCString);
 
-		// elog(DEBUG2, "Inference result: %s", resultCString);
+		/* elog(DEBUG2, "Inference result: %s", resultCString); */
+		return_table(dest, resultCString);
 	}
 	else
 	{
 		elog(DEBUG2, "Inference result is NULL");
 	}
-
-	return_dummy_table(dest);
 }
 
 /*
