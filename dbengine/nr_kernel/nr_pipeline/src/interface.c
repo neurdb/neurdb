@@ -75,7 +75,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   init_inference_task_spec(inference_task_spec, model_name, batch_size,
                            n_batches, "metrics", 80, nfeat, n_features,
                            model_id);
-  nws_send_task(ws, T_INFERENCE, inference_task_spec);
+  nws_send_task(ws, T_INFERENCE, table_name, inference_task_spec);
   free_inference_task_spec(inference_task_spec);
 
   resetStringInfo(&query);
@@ -187,7 +187,11 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   record_overall_end_time(time_metric);
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
-  PG_RETURN_NULL();
+
+  char *presult = pstrdup(ws->result);
+  free(ws->result);
+
+  PG_RETURN_CSTRING(presult);
 }
 
 /**
@@ -237,7 +241,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
       train_task_spec, model_name, batch_size, epoch, n_batches_train,
       n_batches_evaluate, n_batches_test, 0.001, "optimizer", "loss", "metrics",
       80, char_array2str(feature_names, n_features), target, nfeat, n_features);
-  nws_send_task(ws, T_TRAIN, train_task_spec);
+  nws_send_task(ws, T_TRAIN, table_name, train_task_spec);
   free_train_task_spec(train_task_spec);
 
   resetStringInfo(&query);
@@ -356,6 +360,8 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   }
   pfree(feature_names);
 
+  int model_id = ws->model_id;
+
   // close the connection
   nws_disconnect(ws);
   nws_free_websocket(ws);
@@ -364,7 +370,8 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   record_overall_end_time(time_metric);
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
-  PG_RETURN_NULL();
+
+  PG_RETURN_INT32(model_id);
 }
 
 /**
@@ -411,7 +418,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
                           epoch, n_batches_train, n_batches_evaluate,
                           n_batches_test, 0.001, "optimizer", "loss", "metrics",
                           80, nfeat, n_features);
-  nws_send_task(ws, T_FINETUNE, finetune_task_spec);
+  nws_send_task(ws, T_FINETUNE, table_name, finetune_task_spec);
   free_finetune_task_spec(finetune_task_spec);
 
   resetStringInfo(&query);
@@ -538,6 +545,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
   record_overall_end_time(time_metric);
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
+
   PG_RETURN_NULL();
 }
 

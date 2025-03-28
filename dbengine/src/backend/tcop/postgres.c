@@ -812,7 +812,7 @@ pg_rewrite_query(Query *query)
 	if (log_parser_stats)
 		ResetUsage();
 
-	if (query->commandType == CMD_UTILITY)
+	if (query->commandType == CMD_UTILITY || query-> commandType == CMD_PREDICT)
 	{
 		/* don't rewrite utilities, just dump 'em into result list */
 		querytree_list = list_make1(query);
@@ -889,6 +889,7 @@ pg_plan_query(Query *querytree, const char *query_string, int cursorOptions,
 	PlannedStmt *plan;
 
 	/* Utility commands have no plans. */
+        /* Predict commands have no plans currently. */
 	if (querytree->commandType == CMD_UTILITY)
 		return NULL;
 
@@ -960,6 +961,23 @@ pg_plan_query(Query *querytree, const char *query_string, int cursorOptions,
 	return plan;
 }
 
+static SeqScan *
+make_neurdbpredict(NeurDBPredictStmt *stmt)
+{
+	NeurDBPredict   *node = makeNode(NeurDBPredict);
+	Plan	   		*plan = &(node->plan);
+
+	node->stmt = stmt;
+
+	// node->fromClause = stmt->fromClause;
+	// node->targetList = stmt->targetList;
+
+	plan->lefttree = NULL;
+	plan->righttree = NULL;
+
+	return node;
+}
+
 /*
  * Generate plans for a list of already-rewritten queries.
  *
@@ -980,11 +998,24 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 		Query	   *query = lfirst_node(Query, query_list);
 		PlannedStmt *stmt;
 
-		if (query->commandType == CMD_UTILITY)
+		/* TEMP: Skip planning for PREDICT queries */
+		if (query->commandType == CMD_PREDICT)
 		{
 			/* Utility commands require no planning. */
 			stmt = makeNode(PlannedStmt);
-			stmt->commandType = CMD_UTILITY;
+			stmt->planTree = make_neurdbpredict(query->utilityStmt);
+			stmt->commandType = query->commandType;
+			stmt->canSetTag = query->canSetTag;
+			stmt->stmt_location = query->stmt_location;
+			stmt->stmt_len = query->stmt_len;
+			stmt->queryId = query->queryId;
+		}
+                /* Commands like EXPLAIN, VACUUM are handled directly without invoking the query planner. */
+                else if (query->commandType == CMD_UTILITY)
+		{
+			/* Utility commands require no planning. */
+			stmt = makeNode(PlannedStmt);
+			stmt->commandType = query->commandType;
 			stmt->canSetTag = query->canSetTag;
 			stmt->utilityStmt = query->utilityStmt;
 			stmt->stmt_location = query->stmt_location;
@@ -4617,7 +4648,7 @@ PostgresMain(const char *dbname, const char *username)
 		if (ignore_till_sync && firstchar != EOF)
 			continue;
 
-		switch (firstchar)
+ 		switch (firstchar)
 		{
 			case 'Q':			/* simple query */
 				{

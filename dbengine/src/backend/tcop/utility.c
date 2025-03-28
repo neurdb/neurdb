@@ -1918,30 +1918,6 @@ ProcessUtilitySlow(ParseState *pstate,
 				address = AlterCollation((AlterCollationStmt *) parsetree);
 				break;
 
-			case T_NeurDBPredictStmt:
-				{
-					/*
-					 * FIXME: The logic is currently problematic. It does not
-					 * handle the case where the user-defined names include
-					 * `where`. However, I think we should not rely on string
-					 * anyway. Instead, try to parse from the whereClause
-					 * parse tree node whenever possible (since that's the
-					 * point of the parse tree)
-					 */
-					const char *queryStringLowerCase = str_tolower(
-																   queryString,
-																   strlen(queryString),
-																   DEFAULT_COLLATION_OID
-						);
-					const char *whereClauseString = strstr(
-														   queryStringLowerCase,
-														   "where"
-						);
-
-					address = ExecPredictStmt((NeurDBPredictStmt *) parsetree, pstate, whereClauseString);
-				}
-				break;
-
 			default:
 				elog(ERROR, "unrecognized node type: %d",
 					 (int) nodeTag(parsetree));

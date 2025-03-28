@@ -4054,35 +4054,37 @@ typedef struct DropSubscriptionStmt
 
 typedef struct NeurDBTrainOnSpec
 {
-  NodeTag 		type;      /* Node type identifier */
+	NodeTag		type;			/* Node type identifier */
 
-  List 			*trainOn;     /* Columns used to train the model */
-  Node 			*trainOnWith; /* Filtering data. Same as WHERE clause before (and that in
-                        SELECT) */
-} NeurDBTrainOnSpec;
+	List	   *trainOn;		/* Columns used to train the model */
+	char	   *modelName;		/* Model name */
+	Node	   *trainOnWith;	/* Filtering data. Same as WHERE clause before
+								 * (and that in SELECT) */
+}			NeurDBTrainOnSpec;
 
 typedef enum PredictType
 {
-  PREDICT_CLASS, /* Classification prediction. */
-  PREDICT_VALUE  /* Value prediction. */
-} PredictType;
+	PREDICT_CLASS,				/* Classification prediction. */
+	PREDICT_VALUE				/* Value prediction. */
+}			PredictType;
 
 typedef struct NeurDBPredictStmt
 {
-  	NodeTag 	type;      /* Node type identifier */
+	NodeTag		type;			/* Node type identifier */
 
-  	PredictType kind;  /* Task type (classification or value
-                      * prediction) */
-  	List 		*targetList;  /* A list of targets (columns) for the
-                      * prediction */
-  	List 		*fromClause;  /* A list of tables involved in the prediction */
-  	Node 		*trainOnSpec;     /* Sepc for the TRAIN ON syntax */
-  	SelectStmt 	*values;    /* Values (following definition of 'values_clause' symbol) */
-} NeurDBPredictStmt;
+	PredictType kind;			/* Task type (classification or value
+								 * prediction) */
+	List	   *targetList;		/* A list of targets (columns) for the
+								 * prediction */
+	List	   *fromClause;		/* A list of tables involved in the prediction */
+	NeurDBTrainOnSpec *trainOnSpec; /* Sepc for the TRAIN ON syntax */
+	SelectStmt *values;			/* Values (following definition of
+								 * 'values_clause' symbol) */
+}			NeurDBPredictStmt;
 
 #endif							/* PARSENODES_H */
 
 #if 0
-Node *whereClause; /* The WHERE clause for filtering data */
-bool allowTrain;   /* Let DB train a model if it does not exist? */
+Node	   *whereClause;		/* The WHERE clause for filtering data */
+bool		allowTrain;			/* Let DB train a model if it does not exist? */
 #endif

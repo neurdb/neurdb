@@ -1,6 +1,6 @@
 import argparse
 import traceback
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from neurdbrt.config import DEVICE
@@ -104,7 +104,7 @@ class Setup:
 
     async def inference(
         self, model_id: int, inf_batch_num: int
-    ) -> Tuple[List[np.ndarray], Error]:
+    ) -> Tuple[List[List[Any]], Error]:
         try:
             self.libsvm_data.setup_for_inference_task(inf_batch_num)
 

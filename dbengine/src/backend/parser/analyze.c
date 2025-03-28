@@ -87,6 +87,8 @@ static Query *transformCallStmt(ParseState *pstate,
 								CallStmt *stmt);
 static void transformLockingClause(ParseState *pstate, Query *qry,
 								   LockingClause *lc, bool pushedDown);
+static Query *transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt);
+
 #ifdef RAW_EXPRESSION_COVERAGE_TEST
 static bool test_raw_expression_coverage(Node *node, void *context);
 #endif
@@ -404,6 +406,11 @@ transformStmt(ParseState *pstate, Node *parseTree)
 		case T_CallStmt:
 			result = transformCallStmt(pstate,
 									   (CallStmt *) parseTree);
+			break;
+
+		case T_NeurDBPredictStmt:
+			result = transformNeurDBPredictStmt(pstate,
+												(NeurDBPredictStmt *) parseTree);
 			break;
 
 		default:
@@ -3591,3 +3598,60 @@ test_raw_expression_coverage(Node *node, void *context)
 }
 
 #endif							/* RAW_EXPRESSION_COVERAGE_TEST */
+
+
+static Query *
+transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
+{
+	Query	   *qry = makeNode(Query);
+
+	qry->commandType = CMD_PREDICT;
+
+	/* there's no DISTINCT in PREDICT */
+	qry->distinctClause = NIL;
+
+	/* process the FROM clause */
+	transformFromClause(pstate, stmt->fromClause);
+
+	/* transform targetlist */
+	qry->targetList = transformTargetList(pstate, stmt->targetList,
+										  EXPR_KIND_SELECT_TARGET);
+
+	/* mark column origins */
+	markTargetListOrigins(pstate, qry->targetList);
+
+	/* TODO: Add where clause to PREDICT syntax */
+#if 0
+	Node *qual;
+	qual = transformWhereClause(pstate, stmt->whereClause, EXPR_KIND_WHERE,
+	 							"WHERE");
+#endif
+
+	qry->returningList = NIL;
+
+	/* done building the range table and jointree */
+	qry->rtable = pstate->p_rtable;
+	qry->rteperminfos = pstate->p_rteperminfos;
+	qry->jointree = makeFromExpr(pstate->p_joinlist, NULL);
+
+	qry->hasSubLinks = pstate->p_hasSubLinks;
+	qry->hasWindowFuncs = pstate->p_hasWindowFuncs;
+	qry->hasTargetSRFs = pstate->p_hasTargetSRFs;
+	qry->hasAggs = pstate->p_hasAggs;
+
+	assign_query_collations(pstate, qry);
+
+	/* this must be done after collations, for reliable comparison of exprs */
+	if (pstate->p_hasAggs)
+		parseCheckAggregates(pstate, qry);
+
+	/*
+	* TEMP: Pass the raw parse node to the planner.
+	*
+	* Although we have already parsed and filled all necessary fields above, to
+	* simplify the later planning, we temporarily use the raw parse node.
+	*/
+	qry->utilityStmt = stmt;
+
+	return qry;
+}

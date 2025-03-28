@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import Any, List, Union
 
 import numpy as np
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
@@ -71,7 +71,7 @@ class BuilderBase(ABC):
     @abstractmethod
     async def inference(
         self, test_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
-    ) -> List[np.ndarray]:
+    ) -> List[List[Any]]:
         """
 
         :param test_loader:

@@ -1,7 +1,7 @@
 import asyncio
 import json
 from threading import Thread
-from typing import List
+from typing import Any, List
 
 import numpy as np
 from neurdb.logger import configure_logging as api_configure_logging
@@ -10,7 +10,8 @@ from neurdbrt.app.msg import (
     AckTaskResponse,
     DisconnectRequest,
     DisconnectResponse,
-    ResultResponse,
+    InferenceResultResponse,
+    ModelResultResponse,
     SetupRequest,
     SetupResponse,
     TaskRequest,
@@ -163,6 +164,7 @@ async def on_train(data: dict):
                 args=current_app.config["config_args"],
                 db=current_app.config["db_connector"],
             ),
+            table_name=data["table"],
             epoch=data["spec"]["epoch"],
             train_batch_num=data["spec"]["nBatchTrain"],
             eval_batch_num=data["spec"]["nBatchEval"],
@@ -170,11 +172,18 @@ async def on_train(data: dict):
             features=data["features"],
             target=data["target"],
         )
-    ).add_done_callback(lambda task: task_done_callback(task, req.session_id))
+    ).add_done_callback(lambda task: train_done_callback(task.result(), req.session_id))
+
+
+def train_done_callback(model_id, session_id):
+    asyncio.create_task(
+        WebsocketSender.send(ModelResultResponse(session_id, model_id).to_json())
+    )
 
 
 async def train_task(
     setup: Setup,
+    table_name: str,
     epoch: int,
     train_batch_num: int,
     eval_batch_num: int,
@@ -192,13 +201,9 @@ async def train_task(
     print(f"train done. model_id: {model_id}")
 
     if NEURDB_CONNECTOR:
-        NEURDB_CONNECTOR.register_model(model_id, "armnet", features, target)
+        NEURDB_CONNECTOR.register_model(model_id, table_name, features, target)
 
     return model_id
-
-
-def task_done_callback(task, session_id):
-    asyncio.create_task(WebsocketSender.send(ResultResponse(session_id).to_json()))
 
 
 async def on_inference(data: dict):
@@ -227,14 +232,22 @@ async def on_inference(data: dict):
             model_id=data["modelId"],
             inf_batch_num=req.total_batch_num,
         )
-    ).add_done_callback(lambda task: task_done_callback(task, req.session_id))
+    ).add_done_callback(
+        lambda task: inference_done_callback(task.result(), req.session_id)
+    )
+
+
+def inference_done_callback(result, session_id):
+    asyncio.create_task(
+        WebsocketSender.send(InferenceResultResponse(session_id, result).to_json())
+    )
 
 
 async def inference_task(
     setup: Setup,
     model_id: int,
     inf_batch_num: int,
-) -> List[np.ndarray]:
+) -> List[List[Any]]:
     response, err = await setup.inference(model_id, inf_batch_num)
     if err is not None:
         logger.error(f"inference failed with error: {err}")
@@ -274,7 +287,15 @@ async def on_finetune(data: dict):
             eva_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
         )
-    ).add_done_callback(lambda task: task_done_callback(task, req.session_id))
+    ).add_done_callback(
+        lambda task: finetune_done_callback(task.result(), req.session_id)
+    )
+
+
+def finetune_done_callback(model_id, session_id):
+    asyncio.create_task(
+        WebsocketSender.send(ModelResultResponse(session_id, model_id).to_json())
+    )
 
 
 async def finetune_task(

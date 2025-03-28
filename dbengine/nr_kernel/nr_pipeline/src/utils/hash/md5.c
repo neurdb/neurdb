@@ -54,11 +54,14 @@ char *nr_md5_list(char **str_list, int list_size) {
     total_length += strlen(str_list[i]);
   }
 
-  char *concat_str = (char *)malloc(total_length + 1);
+  char *concat_str = (char *)malloc(total_length + (list_size - 1) + 1);
   concat_str[0] = '\0';  // str is null-terminated
-  for (int i = 0; i < list_size; i++) {
+
+  for (int i = 0; i < list_size - 1; i++) {
     strcat(concat_str, str_list[i]);
+    strcat(concat_str, ",");
   }
+  strcat(concat_str, str_list[list_size - 1]);
 
   char *md5_result = nr_md5_str(concat_str);
   free(concat_str);

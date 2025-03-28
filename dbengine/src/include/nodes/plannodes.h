@@ -1589,4 +1589,16 @@ typedef enum MonotonicFunction
 	MONOTONICFUNC_BOTH = MONOTONICFUNC_INCREASING | MONOTONICFUNC_DECREASING
 } MonotonicFunction;
 
+/*
+* TEMP: NeurDBPredict
+*
+* A temp plan node used to represent all prediction-related activities.
+* Currently, it only contains a pointer to the prediction statement.
+*/
+typedef struct NeurDBPredict
+{
+	Plan 		plan;
+	NeurDBPredictStmt *stmt;
+} NeurDBPredict;
+
 #endif							/* PLANNODES_H */

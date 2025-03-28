@@ -2,6 +2,8 @@ import json
 import uuid
 from abc import ABCMeta, abstractmethod
 
+from neurdbrt import utils
+
 
 class Request(metaclass=ABCMeta):
     def __init__(self, data_json: dict) -> None:
@@ -68,9 +70,10 @@ class DisconnectResponse(Response):
         )
 
 
-class ResultResponse(Response):
-    def __init__(self, session_id) -> None:
+class ModelResultResponse(Response):
+    def __init__(self, session_id, model_id) -> None:
         self._session_id = session_id
+        self._model_id = model_id
 
     def to_json(self) -> str:
         return json.dumps(
@@ -79,6 +82,24 @@ class ResultResponse(Response):
                 "event": "result",
                 "sessionId": self._session_id,
                 "payload": "Task completed",
+                "modelId": self._model_id,
+            }
+        )
+
+
+class InferenceResultResponse(Response):
+    def __init__(self, session_id, result) -> None:
+        self._session_id = session_id
+        self._result = result
+
+    def to_json(self) -> str:
+        return json.dumps(
+            {
+                "version": 1,
+                "event": "result",
+                "sessionId": self._session_id,
+                "payload": "Inference completed",
+                "byte": utils.flatten_2d_array(self._result),
             }
         )
 
