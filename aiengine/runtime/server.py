@@ -164,7 +164,7 @@ async def on_train(data: dict):
                 args=current_app.config["config_args"],
                 db=current_app.config["db_connector"],
             ),
-            table_name=data['table'],
+            table_name=data["table"],
             epoch=data["spec"]["epoch"],
             train_batch_num=data["spec"]["nBatchTrain"],
             eval_batch_num=data["spec"]["nBatchEval"],
@@ -232,7 +232,9 @@ async def on_inference(data: dict):
             model_id=data["modelId"],
             inf_batch_num=req.total_batch_num,
         )
-    ).add_done_callback(lambda task: inference_done_callback(task.result(), req.session_id))
+    ).add_done_callback(
+        lambda task: inference_done_callback(task.result(), req.session_id)
+    )
 
 
 def inference_done_callback(result, session_id):
@@ -285,7 +287,9 @@ async def on_finetune(data: dict):
             eva_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
         )
-    ).add_done_callback(lambda task: finetune_done_callback(task.result(), req.session_id))
+    ).add_done_callback(
+        lambda task: finetune_done_callback(task.result(), req.session_id)
+    )
 
 
 def finetune_done_callback(model_id, session_id):

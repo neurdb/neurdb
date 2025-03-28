@@ -189,7 +189,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   free_time_metric(time_metric);
 
   char *presult = pstrdup(ws->result);
-  free(ws->result); 
+  free(ws->result);
 
   PG_RETURN_CSTRING(presult);
 }
@@ -370,7 +370,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   record_overall_end_time(time_metric);
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
-  
+
   PG_RETURN_INT32(model_id);
 }
 
@@ -605,7 +605,7 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out) {
   for (int i = 0; i < *n_elements_out; i++) {
     if (nulls[i]) {
       char_array[i] = NULL;
-    } else { 
+    } else {
       char_array[i] = text_to_cstring(DatumGetTextP(elements[i]));
     }
   }

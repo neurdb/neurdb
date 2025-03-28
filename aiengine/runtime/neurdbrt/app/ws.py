@@ -1,8 +1,7 @@
 import asyncio
 
-from quart import websocket
-
 from neurdbrt.log import logger
+from quart import websocket
 
 
 class WebsocketSender:
