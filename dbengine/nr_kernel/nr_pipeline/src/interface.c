@@ -360,6 +360,8 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   }
   pfree(feature_names);
 
+  int model_id = ws->model_id;
+
   // close the connection
   nws_disconnect(ws);
   nws_free_websocket(ws);
@@ -369,7 +371,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   postgres_log_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
   
-  PG_RETURN_NULL();
+  PG_RETURN_INT32(model_id);
 }
 
 /**

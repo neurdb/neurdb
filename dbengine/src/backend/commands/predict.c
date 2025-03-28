@@ -256,11 +256,9 @@ exec_udf(const char *model,
 		trainingResult = FunctionCallInvoke(trainingFCInfo);
 		if (!trainingFCInfo->isnull)
 		{
-			text	   *resultText = DatumGetTextP(trainingResult);
-			char	   *resultCString = text_to_cstring(resultText);
-
-			elog(INFO, "Training result: %s", resultCString);
-			pfree(resultCString);
+			int result = DatumGetInt32(trainingResult);
+			elog(INFO, "Training result: %d", result);
+			modelId = result;
 		}
 		else
 		{

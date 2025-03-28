@@ -82,7 +82,7 @@ class ModelResultResponse(Response):
                 "event": "result",
                 "sessionId": self._session_id,
                 "payload": "Task completed",
-                "model_id": self._model_id,
+                "modelId": self._model_id,
             }
         )
 

@@ -425,7 +425,7 @@ handle_result(NrWebsocket * ws, const cJSON * json)
 	if (result == NULL || !cJSON_IsString(result))
 	{
 		elog(INFO, "No 'byte' in response. Should be training/finetuning\n");
-		int model_id = cJSON_GetObjectItem(json, "model_id")->valueint;
+		int model_id = cJSON_GetObjectItem(json, "modelId")->valueint;
 		ws->model_id = model_id;
 		ws->result = NULL;
 	} else {
