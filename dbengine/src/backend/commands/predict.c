@@ -236,6 +236,9 @@ exec_udf(const char *model,
 			return;
 		}
 
+		/* rebuild trainColumnArray since it's freed in nr_train() */
+		ArrayType  *trainColumnArray = construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
+
 		fmgr_info(trainingFuncOid, &trainingFmgrInfo);
 		InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, 8, InvalidOid, NULL, NULL);
 
