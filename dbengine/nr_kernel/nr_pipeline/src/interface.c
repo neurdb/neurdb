@@ -25,9 +25,42 @@ char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
 
 char *char_array2str(char **char_array, int n_elements);
 
-void build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
-  int n_features, char **feature_names, char *table_name,
-  StringInfo libsvm_data, bool has_label, int label_col);
+void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
+                        int n_features, char **feature_names, char *table_name,
+                        StringInfo libsvm_data, bool has_label, int label_col);
+
+static NrWebsocket *_connect_to_ai_engine() {
+  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
+  nws_connect(ws);
+  return ws;
+}
+
+static void _get_n_batches_train_eval_test(int n_batches, int *n_batches_train,
+                                           int *n_batches_eval,
+                                           int *n_batches_test) {
+  *n_batches_train = (int)ceil(n_batches * 0.8);
+  *n_batches_eval = (int)ceil(n_batches * 0.1);
+  *n_batches_test = n_batches - *n_batches_train - *n_batches_eval;
+}
+
+static void _clean_up_common(NrWebsocket *ws, char *table_name,
+                             ArrayType *features, char **feature_names,
+                             int n_features) {
+  // free
+  pfree(table_name);
+  pfree(features);
+  for (int i = 0; i < n_features; ++i) {
+    pfree(feature_names[i]);
+  }
+  pfree(feature_names);
+
+  // close the connection
+  nws_disconnect(ws);
+  nws_free_websocket(ws);
+
+  // close SPI
+  SPI_finish();
+}
 
 /**
  * Preprocess the input data for model inference. It contains the following
@@ -48,31 +81,24 @@ void build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
  */
 Datum nr_inference(PG_FUNCTION_ARGS) {
   TimeMetric *time_metric = init_time_metric("nr_inference", MILLISECOND);
-  record_overall_start_time(
-      time_metric);  // record the start time of the function
-  record_query_start_time(
-      time_metric);  // record the start time of preprocessing
+  // record the start time of the function
+  record_overall_start_time(time_metric);
+  // record the start time of preprocessing
+  record_query_start_time(time_metric);
 
   char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));  // model name
   int model_id = PG_GETARG_INT32(1);                        // model id
   char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2));  // table name
   int batch_size = PG_GETARG_INT32(3);                      // batch size
-  int batch_num = PG_GETARG_INT32(4);                       // batch number
+  int n_batches = PG_GETARG_INT32(4);                       // batch number
   int nfeat = PG_GETARG_INT32(5);  // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
+
   int n_features;
   char **feature_names =
       text_array2char_array(features, &n_features);  // column names
 
-  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
-  nws_connect(ws);
-
-  // prepare the query
-  StringInfoData query;
-  initStringInfo(&query);
-  SPI_connect();
-
-  const int n_batches = batch_num;
+  NrWebsocket *ws = _connect_to_ai_engine();
 
   // init dataset
   InferenceTaskSpec *inference_task_spec = malloc(sizeof(InferenceTaskSpec));
@@ -82,7 +108,11 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   nws_send_task(ws, T_INFERENCE, table_name, inference_task_spec);
   free_inference_task_spec(inference_task_spec);
 
+  // prepare the query
+  StringInfoData query;
+  initStringInfo(&query);
   resetStringInfo(&query);
+
   char *cursor_name = "nr_inference_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ", cursor_name);
   appendStringInfo(&query, "SELECT ");
@@ -96,6 +126,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   appendStringInfo(&query, " FROM %s", table_name);
 
   // create the cursor for training data
+  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);
@@ -112,14 +143,15 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
       elog(INFO, "Inference completed");
       break;  // no more rows to fetch, break the loop
     }
+
     resetStringInfo(&libsvm_data);
 
     // get the query result
     SPITupleTable *tuptable = SPI_tuptable;
     TupleDesc tupdesc = tuptable->tupdesc;
 
-    build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
-                      &libsvm_data, false, 0);
+    _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
+                       &libsvm_data, false, 0);
 
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
@@ -127,28 +159,19 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     // send training data to the Python Server, blocking operation if the queue
     // is full
     nws_send_batch_data(ws, 0, S_INFERENCE, libsvm_data.data);
+
     record_operation_end_time(time_metric);  // record the end time of operation
     record_query_start_time(time_metric);
     // resetStringInfo(&row_data);
   }
   record_query_end_time(time_metric);  // record the eventual end time of query
+
   nws_wait_completion(ws);
 
-  // clean up
-  pfree(table_name);
-  pfree(features);
-  for (int i = 0; i < n_features; ++i) {
-    pfree(feature_names[i]);
-  }
-  pfree(feature_names);
+  _clean_up_common(ws, table_name, features, feature_names, n_features);
 
-  // close the connection
-  nws_disconnect(ws);
-  nws_free_websocket(ws);
-
-  SPI_finish();
   record_overall_end_time(time_metric);
-  postgres_log_time(time_metric);  // log the time metric
+  elog_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
 
   char *presult = pstrdup(ws->result);
@@ -176,27 +199,21 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));  // model name
   char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1));  // table name
   int batch_size = PG_GETARG_INT32(2);                      // batch size
-  int batch_num = PG_GETARG_INT32(3);  // batch number for each epoch
+  int n_batches = PG_GETARG_INT32(3);  // batch number for each epoch
   int epoch = PG_GETARG_INT32(4);      // epoch
   int nfeat = PG_GETARG_INT32(5);      // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
-  int n_features;
-  char **feature_names =
-      text_array2char_array(features, &n_features);     // feature names
   char *target = text_to_cstring(PG_GETARG_TEXT_P(7));  // target column
 
-  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
-  nws_connect(ws);
+  int n_features;
+  char **feature_names =
+      text_array2char_array(features, &n_features);  // feature names
 
-  // prepare the query
-  StringInfoData query;
-  initStringInfo(&query);
-  SPI_connect();
+  NrWebsocket *ws = _connect_to_ai_engine();
 
-  const int n_batches = batch_num;
-  const int n_batches_train = (int)ceil(n_batches * 0.8);
-  const int n_batches_evaluate = (int)ceil(n_batches * 0.1);
-  const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
+  int n_batches_train, n_batches_evaluate, n_batches_test;
+  _get_n_batches_train_eval_test(n_batches, &n_batches_train,
+                                 &n_batches_evaluate, &n_batches_test);
 
   // init dataset
   TrainTaskSpec *train_task_spec = malloc(sizeof(TrainTaskSpec));
@@ -207,7 +224,11 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   nws_send_task(ws, T_TRAIN, table_name, train_task_spec);
   free_train_task_spec(train_task_spec);
 
+  // prepare the query
+  StringInfoData query;
+  initStringInfo(&query);
   resetStringInfo(&query);
+
   char *cursor_name = "nr_train_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ",
                    cursor_name);  // SCROLL is necessrary for rewind
@@ -222,6 +243,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
   // create the cursor for training data
+  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);
@@ -229,6 +251,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
 
   StringInfoData libsvm_data;
   initStringInfo(&libsvm_data);
+
   int current_epoch = 0;
   int current_batch = 0;
 
@@ -247,47 +270,41 @@ Datum nr_train(PG_FUNCTION_ARGS) {
       resetStringInfo(&query);
       appendStringInfo(&query, "MOVE ABSOLUTE 0 IN %s", cursor_name);
       SPI_execute(query.data, false, 0);
+
       resetStringInfo(&query);
       appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
     }
+
     resetStringInfo(&libsvm_data);
 
     // get the query result
     SPITupleTable *tuptable = SPI_tuptable;
     TupleDesc tupdesc = tuptable->tupdesc;
 
-    build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
-                      &libsvm_data, true, n_features + 1);
+    _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
+                       &libsvm_data, true, n_features + 1);
 
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
+
     // send training data to the Python Server, blocking operation if the queue
     // is full
     nws_send_batch_data(ws, 0, S_TRAIN, libsvm_data.data);
+
     record_operation_end_time(time_metric);  // record the end time of operation
     record_query_start_time(time_metric);
   }
   record_query_end_time(time_metric);  // record the eventual end time of query
-  nws_wait_completion(ws);
 
-  // clean up
-  pfree(table_name);
-  pfree(features);
-  pfree(target);
-  for (int i = 0; i < n_features; ++i) {
-    pfree(feature_names[i]);
-  }
-  pfree(feature_names);
+  nws_wait_completion(ws);
 
   int model_id = ws->model_id;
 
-  // close the connection
-  nws_disconnect(ws);
-  nws_free_websocket(ws);
+  _clean_up_common(ws, table_name, features, feature_names, n_features);
+  pfree(target);
 
-  SPI_finish();
   record_overall_end_time(time_metric);
-  postgres_log_time(time_metric);  // log the time metric
+  elog_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
 
   PG_RETURN_INT32(model_id);
@@ -309,27 +326,21 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
   int model_id = PG_GETARG_INT32(1);                        // model id
   char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2));  // table name
   int batch_size = PG_GETARG_INT32(3);                      // batch size
-  int batch_num = PG_GETARG_INT32(4);                       // batch number
+  int n_batches = PG_GETARG_INT32(4);                       // batch number
   int epoch = PG_GETARG_INT32(5);                           // epoch
   int nfeat = PG_GETARG_INT32(6);  // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(7);
-  int n_features;
-  char **feature_names =
-      text_array2char_array(features, &n_features);     // feature names
   char *target = text_to_cstring(PG_GETARG_TEXT_P(8));  // target column
 
-  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
-  nws_connect(ws);
+  int n_features;
+  char **feature_names =
+      text_array2char_array(features, &n_features);  // feature names
 
-  // prepare the query
-  StringInfoData query;
-  initStringInfo(&query);
-  SPI_connect();
+  NrWebsocket *ws = _connect_to_ai_engine();
 
-  const int n_batches = batch_num;
-  const int n_batches_train = (int)ceil(n_batches * 0.8);
-  const int n_batches_evaluate = (int)ceil(n_batches * 0.1);
-  const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
+  int n_batches_train, n_batches_evaluate, n_batches_test;
+  _get_n_batches_train_eval_test(n_batches, &n_batches_train,
+                                 &n_batches_evaluate, &n_batches_test);
 
   // init dataset
   FinetuneTaskSpec *finetune_task_spec = malloc(sizeof(FinetuneTaskSpec));
@@ -340,7 +351,11 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
   nws_send_task(ws, T_FINETUNE, table_name, finetune_task_spec);
   free_finetune_task_spec(finetune_task_spec);
 
+  // prepare the query
+  StringInfoData query;
+  initStringInfo(&query);
   resetStringInfo(&query);
+
   char *cursor_name = "nr_finetune_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ", cursor_name);
   appendStringInfo(&query, "SELECT ");
@@ -354,6 +369,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
   appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
   // calling SPI execution
+  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);
@@ -383,6 +399,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
       resetStringInfo(&query);
       appendStringInfo(&query, "MOVE ABSOLUTE 0 IN %s", cursor_name);
       SPI_execute(query.data, false, 0);
+
       resetStringInfo(&query);
       appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
     }
@@ -391,34 +408,26 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     SPITupleTable *tuptable = SPI_tuptable;
     TupleDesc tupdesc = tuptable->tupdesc;
 
-    build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
-                      &libsvm_data, true, n_features + 1);
+    _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
+                       &libsvm_data, true, n_features + 1);
 
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
+
     nws_send_batch_data(ws, 0, S_TRAIN, libsvm_data.data);
+
     record_operation_end_time(time_metric);  // record the end time of operation
     record_query_start_time(time_metric);
   }
   record_query_end_time(time_metric);  // record the eventual end time of query
+
   nws_wait_completion(ws);
 
-  // clean up
-  pfree(table_name);
-  pfree(features);
+  _clean_up_common(ws, table_name, features, feature_names, n_features);
   pfree(target);
-  for (int i = 0; i < n_features; ++i) {
-    pfree(feature_names[i]);
-  }
-  pfree(feature_names);
 
-  // close the connection
-  nws_disconnect(ws);
-  nws_free_websocket(ws);
-
-  SPI_finish();
   record_overall_end_time(time_metric);
-  postgres_log_time(time_metric);  // log the time metric
+  elog_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
 
   PG_RETURN_NULL();
@@ -437,9 +446,9 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
  * @param label_col int Column index of the label (ignored if has_label is
  * false)
  */
-void build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
-                       int n_features, char **feature_names, char *table_name,
-                       StringInfo libsvm_data, bool has_label, int label_col) {
+void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
+                        int n_features, char **feature_names, char *table_name,
+                        StringInfo libsvm_data, bool has_label, int label_col) {
   StringInfoData row_data;
   initStringInfo(&row_data);
 
