@@ -49,8 +49,6 @@ void record_operation_start_time(TimeMetric *time_metric);
 void record_operation_end_time(TimeMetric *time_metric);
 
 // ****** Output Time Functions ******
-void print_time(const TimeMetric *time_metric);
-
-void postgres_log_time(const TimeMetric *time_metric);
+void elog_time(const TimeMetric *time_metric);
 
 #endif  // TIME_METRIC_H
