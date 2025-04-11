@@ -31,11 +31,11 @@ Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOI
  *
  * Set in `backend/utils/misc/guc_tables.c`
  */
-char	   *NRModelName = NULL;
-int			NRTaskBatchSize;
-int			NRTaskEpoch;
-int			NRTaskMaxFeatures;
-int			NRTaskNumBatches;
+char	   *NrModelName = NULL;
+int			NrTaskBatchSize;
+int			NrTaskEpoch;
+int			NrTaskMaxFeatures;
+int			NrTaskNumBatches;
 
 static List *
 split_columns(const char *columns)
@@ -233,10 +233,10 @@ exec_udf(const char *model,
 
 		trainingFCInfo->args[0].value = CStringGetTextDatum(model);
 		trainingFCInfo->args[1].value = CStringGetTextDatum(table);
-		trainingFCInfo->args[2].value = Int32GetDatum(NRTaskBatchSize);
-		trainingFCInfo->args[3].value = Int32GetDatum(NRTaskNumBatches);
-		trainingFCInfo->args[4].value = Int32GetDatum(NRTaskEpoch);
-		trainingFCInfo->args[5].value = Int32GetDatum(NRTaskMaxFeatures);
+		trainingFCInfo->args[2].value = Int32GetDatum(NrTaskBatchSize);
+		trainingFCInfo->args[3].value = Int32GetDatum(NrTaskNumBatches);
+		trainingFCInfo->args[4].value = Int32GetDatum(NrTaskEpoch);
+		trainingFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
 		trainingFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
 		trainingFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
 
@@ -276,9 +276,9 @@ exec_udf(const char *model,
 	inferenceFCInfo->args[0].value = CStringGetTextDatum(model);
 	inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
 	inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
-	inferenceFCInfo->args[3].value = Int32GetDatum(NRTaskBatchSize);
-	inferenceFCInfo->args[4].value = Int32GetDatum(NRTaskNumBatches);
-	inferenceFCInfo->args[5].value = Int32GetDatum(NRTaskMaxFeatures);
+	inferenceFCInfo->args[3].value = Int32GetDatum(NrTaskBatchSize);
+	inferenceFCInfo->args[4].value = Int32GetDatum(NrTaskNumBatches);
+	inferenceFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
 	inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
 
 	set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
@@ -384,8 +384,8 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 		}
 		else
 		{
-			elog(WARNING, "No model name provided. Use config NRModelName: %s", NRModelName);
-			modelName = NRModelName;
+			elog(WARNING, "No model name provided. Use config NrModelName: %s", NrModelName);
+			modelName = NrModelName;
 		}
 	}
 	else

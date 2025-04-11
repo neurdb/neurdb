@@ -9,11 +9,11 @@
 /*
  * GUC variable for current configuration
  */
-extern PGDLLIMPORT char *NRModelName;
-extern PGDLLIMPORT int NRTaskBatchSize;
-extern PGDLLIMPORT int NRTaskEpoch;
-extern PGDLLIMPORT int NRTaskMaxFeatures;
-extern PGDLLIMPORT int NRTaskNumBatches;
+extern PGDLLIMPORT char *NrModelName;
+extern PGDLLIMPORT int NrTaskBatchSize;
+extern PGDLLIMPORT int NrTaskEpoch;
+extern PGDLLIMPORT int NrTaskMaxFeatures;
+extern PGDLLIMPORT int NrTaskNumBatches;
 
 extern ObjectAddress ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString, DestReceiver *dest);
 #endif							/* PREDICT_H */
