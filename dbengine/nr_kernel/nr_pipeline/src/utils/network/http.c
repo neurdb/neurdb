@@ -6,17 +6,10 @@
 #include <curl/curl.h>
 #include <utils/elog.h>
 
-#include "../../interface.h"
+#include "interface.h"
+#include "utils/network/url.h"
 
-#define SERVER_URL "http://localhost:8090"
-
-// void send_train_task(const char *model_name, const char *table_name, const
-// char *client_socket_id,
-//                      const int batch_size, const int epoch, const int
-//                      train_batch_num, const int eva_batch_num, const int
-//                      test_batch_num)
-void *send_train_task(void *arg) {
-  TrainingInfo *info = (TrainingInfo *)arg;
+void *send_train_task(TrainingInfo *info) {
   const char *model_name = info->model_name;
   const char *table_name = info->table_name;
   const char *client_socket_id = info->client_socket_id;
@@ -32,8 +25,7 @@ void *send_train_task(void *arg) {
   CURL *curl = curl_easy_init();
 
   if (curl) {
-    char url[256];
-    snprintf(url, sizeof(url), "%s/train", SERVER_URL);
+    char *url = make_http_url(NrAIEngineHost, NrAIEnginePort, "/train");
 
     curl_mime *form = curl_mime_init(curl);
 
@@ -125,20 +117,14 @@ void *send_train_task(void *arg) {
     // }
     curl_mime_free(form);
     curl_easy_cleanup(curl);
+
+    free(url);
   }
   curl_global_cleanup();
   return NULL;
 }
 
-// /**
-//  * Resquest the server to make a forward inference with a model
-//  * @param libsvm_data char* Inference data in libsvm format
-//  * @param model_name char* Model name
-//  * @param model_id int Trained model id
-//  * @param batch_size int Batch size in inference
-//  */
-void *send_inference_task(void *arg) {
-  InferenceInfo *info = (InferenceInfo *)arg;
+void *send_inference_task(InferenceInfo *info) {
   const char *model_name = info->model_name;
   const int model_id = info->model_id;
   const char *table_name = info->table_name;
@@ -152,8 +138,7 @@ void *send_inference_task(void *arg) {
   curl = curl_easy_init();
 
   if (curl) {
-    char url[256];
-    snprintf(url, sizeof(url), "%s/inference", SERVER_URL);
+    char *url = make_http_url(NrAIEngineHost, NrAIEnginePort, "/inference");
 
     curl_mime *form = curl_mime_init(curl);
     // set up fields in the form
@@ -211,20 +196,14 @@ void *send_inference_task(void *arg) {
     // }
     curl_mime_free(form);
     curl_easy_cleanup(curl);
+
+    free(url);
   }
   curl_global_cleanup();
   return NULL;
 }
 
-// /**
-//  * Resquest the server to finetune a model
-//  * @param libsvm_data char* Finetune data in libsvm format
-//  * @param model_name char* Model name
-//  * @param model_id int Trained model id
-//  * @param batch_size int Batch size in finetune
-//  */
-void *send_finetune_task(void *arg) {
-  FinetuneInfo *info = (FinetuneInfo *)arg;
+void *send_finetune_task(FinetuneInfo *info) {
   const char *model_name = info->model_name;
   const int model_id = info->model_id;
   const char *table_name = info->table_name;
@@ -239,8 +218,7 @@ void *send_finetune_task(void *arg) {
   CURL *curl = curl_easy_init();
 
   if (curl) {
-    char url[256];
-    snprintf(url, sizeof(url), "%s/finetune", SERVER_URL);
+    char *url = make_http_url(NrAIEngineHost, NrAIEnginePort, "/finetune");
 
     curl_mime *form = curl_mime_init(curl);
     // set up fields in the form
@@ -318,6 +296,8 @@ void *send_finetune_task(void *arg) {
     // }
     curl_mime_free(form);
     curl_easy_cleanup(curl);
+
+    free(url);
   }
   curl_global_cleanup();
   return NULL;
