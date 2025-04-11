@@ -1,14 +1,3 @@
-/*-------------------------------------------------------------------------
- *
- * predict.c
- *	  Commands for NeurDB predict commands.
- *
- * Copyright (c) 2024, NeurDB Contributors
- *
- * src/backend/commands/predict.c
- *
- *-------------------------------------------------------------------------
- */
 #include "postgres.h"
 
 #include "predict.h"
