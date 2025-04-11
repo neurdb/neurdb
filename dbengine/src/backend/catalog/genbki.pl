@@ -35,7 +35,7 @@ GetOptions(
 
 # Sanity check arguments.
 die "No input files.\n" unless @ARGV;
-die "--set-version must be specified.\n" unless $major_version;
+# die "--set-version must be specified.\n" unless $major_version;
 die "Invalid version string: $major_version\n"
   unless $major_version =~ /^\d+$/;
 die "--include-path must be specified.\n" unless $include_path;

@@ -16,8 +16,8 @@ prefix=/usr/local/pgsql
 # Data directory
 PGDATA="/usr/local/pgsql/data"
 
-# Who to run postgres as, usually "postgres".  (NOT "root")
-PGUSER=postgres
+# Who to run postgres as, usually "neurdb".  (NOT "root")
+PGUSER=neurdb
 
 # Where to keep a log file
 PGLOG="$PGDATA/serverlog"

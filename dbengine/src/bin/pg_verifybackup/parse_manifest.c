@@ -302,7 +302,7 @@ json_manifest_object_field_start(void *state, char *fname, bool isnull)
 			 */
 			if (!parse->saw_version_field)
 			{
-				if (strcmp(fname, "PostgreSQL-Backup-Manifest-Version") != 0)
+				if (strcmp(fname, "NeurDB-Backup-Manifest-Version") != 0)
 					json_manifest_parse_failure(parse->context,
 												"expected version indicator");
 				parse->state = JM_EXPECT_VERSION_VALUE;

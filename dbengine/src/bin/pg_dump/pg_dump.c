@@ -793,7 +793,7 @@ main(int argc, char **argv)
 	 * We allow the server to be back to 9.2, and up to any minor release of
 	 * our own major version.  (See also version check in pg_dumpall.c.)
 	 */
-	fout->minRemoteVersion = 90200;
+	fout->minRemoteVersion = 00001;
 	fout->maxRemoteVersion = (PG_VERSION_NUM / 100) * 100 + 99;
 
 	fout->numWorkers = numWorkers;

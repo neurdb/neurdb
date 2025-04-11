@@ -350,7 +350,7 @@ check_timezone(char **newval, void **extra, GucSource source)
 			{
 				GUC_check_errmsg("time zone \"%s\" appears to use leap seconds",
 								 *newval);
-				GUC_check_errdetail("PostgreSQL does not support leap seconds.");
+				GUC_check_errdetail("NeurDB does not support leap seconds.");
 				return false;
 			}
 		}
@@ -432,7 +432,7 @@ check_log_timezone(char **newval, void **extra, GucSource source)
 	{
 		GUC_check_errmsg("time zone \"%s\" appears to use leap seconds",
 						 *newval);
-		GUC_check_errdetail("PostgreSQL does not support leap seconds.");
+		GUC_check_errdetail("NeurDB does not support leap seconds.");
 		return false;
 	}
 

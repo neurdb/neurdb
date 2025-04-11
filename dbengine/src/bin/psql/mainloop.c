@@ -298,7 +298,7 @@ MainLoop(FILE *source)
 #endif
 				else
 				{
-					puts(_("You are using psql, the command-line interface to PostgreSQL."));
+					puts(_("You are using psql, the command-line interface to NeurDB."));
 					printf(_("Type:  \\copyright for distribution terms\n"
 							 "       \\h for help with SQL commands\n"
 							 "       \\? for help with psql commands\n"

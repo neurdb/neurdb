@@ -1806,7 +1806,7 @@ connectDatabase(const char *dbname, const char *connection_string,
 	 * our own major version.  (See also version check in pg_dump.c.)
 	 */
 	if (my_version != server_version
-		&& (server_version < 90200 ||
+		&& (server_version < 00001 ||
 			(server_version / 100) > (my_version / 100)))
 	{
 		pg_log_error("aborting because of server version mismatch");
