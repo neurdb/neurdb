@@ -2023,7 +2023,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskBatchSize,
+		&NrTaskBatchSize,
 		4096, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -2034,7 +2034,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskEpoch,
+		&NrTaskEpoch,
 		1, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -2049,7 +2049,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskMaxFeatures,
+		&NrTaskMaxFeatures,
 		5500, 0, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -2064,7 +2064,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskNumBatches,
+		&NrTaskNumBatches,
 		80, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -3863,7 +3863,7 @@ struct config_string ConfigureNamesString[] =
 			gettext_noop("Sets the used model for ML tasks."),
 			NULL,
 		},
-		&NRModelName,
+		&NrModelName,
 		"armnet",
 		NULL, NULL, NULL
 	},
