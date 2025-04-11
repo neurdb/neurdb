@@ -2,13 +2,11 @@
 
 [![NeurDB Website](https://img.shields.io/badge/Website-neurdb.com-blue)](https://neurdb.com)
 [![Github](https://img.shields.io/badge/Github-100000.svg?logo=github&logoColor=white)](https://github.com/neurdb/neurdb)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/neurdb/neurdb)
 ![GitHub contributors](https://img.shields.io/github/contributors-anon/neurdb/neurdb)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
-[![paper-24-1](https://img.shields.io/badge/DOI-10.1007/s11432--024--4125--9-B31B1B.svg)](https://www.sciengine.com/SCIS/doi/10.1007/s11432-024-4125-9)
-[![paper-24-2](https://img.shields.io/badge/arXiv-2408.03013-b31b1b.svg?labelColor=f9f107)](https://arxiv.org/abs/2408.03013)
+[![paper-24-1](https://img.shields.io/badge/DOI-10.1007/s11432--024--4125--9-B31B1B.svg)](http://scis.scichina.com/en/2024/200901.pdf)
+[![paper-24-2](https://img.shields.io/badge/CIDR--25--Paper-F7C15D)](https://vldb.org/cidrdb/papers/2025/p29-zhao.pdf)
 
 
 NeurDB is an AI-powered autonomous data system.
