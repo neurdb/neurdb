@@ -29,8 +29,8 @@ include_directories(${CURL_INCLUDE_DIRS})
 # libwebsockets
 find_library(LWS_LIBRARY NAMES websockets)
 
-# socket.io
-# find_library(SIO_CLIENT NAMES sioclient)
+# Base dir
+include_directories(${nr_pipeline_SOURCE_DIR}/src)
 
 # openssl
 find_package(OpenSSL REQUIRED)
