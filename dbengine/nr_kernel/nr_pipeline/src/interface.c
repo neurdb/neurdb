@@ -10,6 +10,9 @@
 #include "utils/hash/md5.h"
 #include "utils/network/websocket.h"
 
+char *NrAIEngineHost = "localhost";
+int NrAIEnginePort = 8090;
+
 PG_MODULE_MAGIC;
 
 PG_FUNCTION_INFO_V1(nr_inference);
@@ -30,7 +33,7 @@ void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
                         StringInfo libsvm_data, bool has_label, int label_col);
 
 static NrWebsocket *_connect_to_ai_engine() {
-  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
+  NrWebsocket *ws = nws_initialize(NrAIEngineHost, NrAIEnginePort, "/ws", 10);
   nws_connect(ws);
   return ws;
 }

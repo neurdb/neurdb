@@ -4,6 +4,9 @@
 #include <postgres.h>
 #include <fmgr.h>
 
+extern char *NrAIEngineHost;
+extern int NrAIEnginePort;
+
 typedef struct {
   char *model_name;
   char *table_name;
