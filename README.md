@@ -11,6 +11,8 @@
 
 NeurDB is an AI-powered autonomous data system.
 
+![NeurDB demo](assets/demo.gif)
+
 ## Installation
 
 ### Clone the latest code
