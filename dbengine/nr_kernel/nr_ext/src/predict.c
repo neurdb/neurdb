@@ -11,7 +11,7 @@
  */
 #include "postgres.h"
 
-#include "commands/predict.h"
+#include "predict.h"
 #include "executor/executor.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
