@@ -9,21 +9,27 @@
 /**
  * NeurDB websocket connection
  */
-typedef struct {
-  struct lws_context *context;
-  struct lws *instance;
-  pthread_t thread;
-  int interrupted;
-  int connnected;
-  int setuped;
-  int task_acknowledged;
-  int completed;
-  BatchQueue queue;
-  char sid[256];
-} NrWebsocket;
+typedef struct
+{
+	struct lws_context *context;
+	struct lws *instance;
+	pthread_t	thread;
+	int			interrupted;
+	int			connnected;
+	int			setuped;
+	int			task_acknowledged;
+	int			completed;
+	BatchQueue	queue;
+	char		sid[256];
+	char		*buf;
+	int			buf_used;
+	int			buf_size;
+	char 		*result;
+	int			model_id;
+}			NrWebsocket;
 
-// ****************************** Initialization, Connection, Disconnection
-// ******************************
+/*  ****************************** Initialization, Connection, Disconnection */
+/*  ****************************** */
 
 /**
  * Initialize a websocket instance, it does not connect to the server
@@ -35,37 +41,38 @@ typedef struct {
  * @return websocket_info The information of the websocket connection
  */
 NrWebsocket *nws_initialize(const char *url, int port, const char *path,
-                            size_t queue_max_size);
+							size_t queue_max_size);
 
 /**
  * Connect the websocket connection to the server
  * @param ws The websocket instance
  * @return int The status of the websocket thread
  */
-int nws_connect(NrWebsocket *ws);
+int			nws_connect(NrWebsocket * ws);
 
 /**
  * Disconnect the websocket connection
  * @param ws The websocket instance
  * @return int The status of the websocket thread
  */
-int nws_disconnect(NrWebsocket *ws);
+int			nws_disconnect(NrWebsocket * ws);
 
 /**
  * Clean up the websocket instance
  * @param ws The websocket instance
  */
-void nws_free_websocket(NrWebsocket *ws);
+void		nws_free_websocket(NrWebsocket * ws);
 
-// ****************************** Message ******************************
+/*  ****************************** Message ****************************** */
 
 static const char *ML_STAGE[] = {"train", "evaluate", "test", "inference"};
 
-typedef enum {
-  S_TRAIN = 0,
-  S_EVALUATE = 1,
-  S_TEST = 2,
-  S_INFERENCE = 3
+typedef enum
+{
+	S_TRAIN = 0,
+	S_EVALUATE = 1,
+	S_TEST = 2,
+	S_INFERENCE = 3
 } MLStage;
 
 /**
@@ -78,8 +85,8 @@ typedef enum {
  * inference
  * @param batch_data The data of the batch
  */
-void nws_send_batch_data(NrWebsocket *ws, int batch_id, MLStage ml_stage,
-                         const char *batch_data);
+void		nws_send_batch_data(NrWebsocket * ws, int batch_id, MLStage ml_stage,
+								const char *batch_data);
 
 /**
  * Send a task to the server
@@ -88,8 +95,8 @@ void nws_send_batch_data(NrWebsocket *ws, int batch_id, MLStage ml_stage,
  * @param task_spec The task specification, it can be TrainTaskSpec,
  * InferenceTaskSpec, or FinetuneTaskSpec
  */
-void nws_send_task(NrWebsocket *ws, MLTask ml_task, void *task_spec);
+void		nws_send_task(NrWebsocket * ws, MLTask ml_task, const char *table_name, void *task_spec);
 
-void nws_wait_completion(NrWebsocket *ws);
+void		nws_wait_completion(NrWebsocket * ws);
 
-#endif  // WEBSOCKET_H
+#endif							/* // WEBSOCKET_H */

@@ -1,17 +1,7 @@
-/*-------------------------------------------------------------------------
- *
- * predict.c
- *	  Commands for NeurDB predict commands.
- *
- * Copyright (c) 2024, NeurDB Contributors
- *
- * src/backend/commands/predict.c
- *
- *-------------------------------------------------------------------------
- */
 #include "postgres.h"
 
-#include "commands/predict.h"
+#include "predict.h"
+#include "executor/executor.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
 #include "parser/parse_target.h"
@@ -41,11 +31,11 @@ Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOI
  *
  * Set in `backend/utils/misc/guc_tables.c`
  */
-char	   *NRModelName = NULL;
-int			NRTaskBatchSize;
-int			NRTaskEpoch;
-int			NRTaskMaxFeatures;
-int			NRTaskNumBatches;
+char	   *NrModelName = NULL;
+int			NrTaskBatchSize;
+int			NrTaskEpoch;
+int			NrTaskMaxFeatures;
+int			NrTaskNumBatches;
 
 static List *
 split_columns(const char *columns)
@@ -70,6 +60,92 @@ set_false_to_all_params(NullableDatum *args, int size)
 	}
 }
 
+void
+parseDoubles(const char *str, void (*callback) (TupOutputState *, double), TupOutputState *tstate)
+{
+	char		buffer[64];
+
+	/* Buffer to accumulate characters */
+	int			bufIndex = 0;
+
+	while (*str)
+	{
+		if (*str == ' ')
+		{
+			/* When space is found, terminate the buffer and parse */
+			if (bufIndex > 0)
+			{
+				/* Null terminate the string */
+				buffer[bufIndex] = '\0';
+
+				double		value = atof(buffer);
+
+				/* Convert to double */
+				/* printf("Found double: %f\n", value); */
+				callback(tstate, value);
+
+				/* Reset buffer index */
+				bufIndex = 0;
+			}
+		}
+		else
+		{
+			/* Add character to buffer if there's space */
+			if (bufIndex < sizeof(buffer) - 1)
+			{
+				buffer[bufIndex++] = *str;
+			}
+		}
+		/* Move to next character */
+		str++;
+	}
+
+	/* Handle the last number if string doesn't end with space */
+	if (bufIndex > 0)
+	{
+		buffer[bufIndex] = '\0';
+		double		value = atof(buffer);
+
+		/* printf("Found double: %f\n", value); */
+		callback(tstate, value);
+	}
+}
+
+void
+insert_float8_to_tup_output(TupOutputState *tstate, float8 value)
+{
+	Datum		values[1];
+	bool		nulls[1] = {0};
+
+	values[0] = Float8GetDatum(value);
+	do_tup_output(tstate, values, nulls);
+}
+
+static void
+return_table(DestReceiver *dest, const char *result_string)
+{
+	TupOutputState *tstate;
+	TupleDesc	tupdesc;
+	ListCell   *lc;
+
+	tupdesc = CreateTemplateTupleDesc(1);
+	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "result", FLOAT8OID, -1, 0);
+
+	/*
+	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID,
+	 * -1, 0);
+	 */
+
+	/*
+	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID,
+	 * -1, 0);
+	 */
+
+	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
+	parseDoubles(result_string, &insert_float8_to_tup_output, tstate);
+	end_tup_output(tstate);
+}
+
 /*
 * exec_udf --- Execute customer UDFs
 *
@@ -82,10 +158,16 @@ set_false_to_all_params(NullableDatum *args, int size)
 * needs to be revamped to be more general.
 */
 void
-exec_udf(const char *table, const char *trainColumns, const char *targetColumn, const char *whereClause)
+exec_udf(const char *model,
+		 const char *table,
+		 const char *trainColumns,
+		 const char *targetColumn,
+		 const char *whereClause,
+		 DestReceiver *dest)
 {
 	/* lookup function call infos */
 	FmgrInfo	modelLookupFmgrInfo;
+
 	/* fcinfo for lookup function */
 	LOCAL_FCINFO(modelLookupFCInfo, FUNC_MAX_ARGS);
 	Datum		modelLookupResult;
@@ -126,9 +208,9 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
 		modelId = DatumGetInt32(modelLookupResult);
 	}
 
+	/* model does not exist, training first */
 	if (modelId == 0)
 	{
-		/* model does not exist, training */
 		FmgrInfo	trainingFmgrInfo;
 
 		/* fcinfo for training function */
@@ -143,77 +225,75 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
 			return;
 		}
 
+		/* rebuild trainColumnArray since it's freed in nr_train() */
+		ArrayType  *trainColumnArray = construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
+
 		fmgr_info(trainingFuncOid, &trainingFmgrInfo);
 		InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, 8, InvalidOid, NULL, NULL);
 
-		trainingFCInfo->args[0].value = CStringGetTextDatum(NRModelName);
+		trainingFCInfo->args[0].value = CStringGetTextDatum(model);
 		trainingFCInfo->args[1].value = CStringGetTextDatum(table);
-		trainingFCInfo->args[2].value = Int32GetDatum(NRTaskBatchSize);
-		trainingFCInfo->args[3].value = Int32GetDatum(NRTaskNumBatches);
-		trainingFCInfo->args[4].value = Int32GetDatum(NRTaskEpoch);
-		trainingFCInfo->args[5].value = Int32GetDatum(NRTaskMaxFeatures);
+		trainingFCInfo->args[2].value = Int32GetDatum(NrTaskBatchSize);
+		trainingFCInfo->args[3].value = Int32GetDatum(NrTaskNumBatches);
+		trainingFCInfo->args[4].value = Int32GetDatum(NrTaskEpoch);
+		trainingFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
 		trainingFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
 		trainingFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
 
-        set_false_to_all_params(trainingFCInfo->args, TRAINING_PARAMS_ARRAY_SIZE);
+		set_false_to_all_params(trainingFCInfo->args, TRAINING_PARAMS_ARRAY_SIZE);
 
 		trainingResult = FunctionCallInvoke(trainingFCInfo);
 		if (!trainingFCInfo->isnull)
 		{
-			text	   *resultText = DatumGetTextP(trainingResult);
-			char	   *resultCString = text_to_cstring(resultText);
-
-			elog(INFO, "Training result: %s", resultCString);
-			pfree(resultCString);
+			int result = DatumGetInt32(trainingResult);
+			elog(INFO, "Training result: %d", result);
+			modelId = result;
 		}
 		else
 		{
 			elog(INFO, "Training result is NULL");
 		}
 	}
+
+	/* inference */
+	FmgrInfo	inferenceFmgrInfo;
+
+	/* fcinfo for inference function */
+	LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS);
+	Datum		inferenceResult;
+
+	Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
+
+	if (!OidIsValid(inferenceFuncOid))
+	{
+		elog(ERROR, "Function %s not found", inferenceFuncName);
+		return;
+	}
+
+	fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
+	InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 7, InvalidOid, NULL, NULL);
+
+	inferenceFCInfo->args[0].value = CStringGetTextDatum(model);
+	inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
+	inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
+	inferenceFCInfo->args[3].value = Int32GetDatum(NrTaskBatchSize);
+	inferenceFCInfo->args[4].value = Int32GetDatum(NrTaskNumBatches);
+	inferenceFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
+	inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
+
+	set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
+
+	inferenceResult = FunctionCallInvoke(inferenceFCInfo);
+	if (!inferenceFCInfo->isnull)
+	{
+		char	   *resultCString = DatumGetCString(inferenceResult);
+
+		/* elog(DEBUG2, "Inference result: %s", resultCString); */
+		return_table(dest, resultCString);
+	}
 	else
 	{
-		/* inference */
-		FmgrInfo	inferenceFmgrInfo;
-
-		/* fcinfo for inference function */
-		LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS);
-		Datum		inferenceResult;
-
-		Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
-
-		if (!OidIsValid(inferenceFuncOid))
-		{
-			elog(ERROR, "Function %s not found", inferenceFuncName);
-			return;
-		}
-
-		fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
-		InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 7, InvalidOid, NULL, NULL);
-
-		inferenceFCInfo->args[0].value = CStringGetTextDatum(NRModelName);
-		inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
-		inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
-		inferenceFCInfo->args[3].value = Int32GetDatum(NRTaskBatchSize);
-		inferenceFCInfo->args[4].value = Int32GetDatum(NRTaskNumBatches);
-		inferenceFCInfo->args[5].value = Int32GetDatum(NRTaskMaxFeatures);
-		inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
-
-        set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
-
-		inferenceResult = FunctionCallInvoke(inferenceFCInfo);
-		if (!inferenceFCInfo->isnull)
-		{
-			text	   *resultText = DatumGetTextP(inferenceResult);
-			char	   *resultCString = text_to_cstring(resultText);
-
-			elog(INFO, "Inference result: %s", resultCString);
-			pfree(resultCString);
-		}
-		else
-		{
-			elog(INFO, "Inference result is NULL");
-		}
+		elog(DEBUG2, "Inference result is NULL");
 	}
 }
 
@@ -223,11 +303,14 @@ exec_udf(const char *table, const char *trainColumns, const char *targetColumn, 
 * NeurDBPredictStmt: Node structure in include/nodes/parsenodes.h
 */
 ObjectAddress
-ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString)
+ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString, DestReceiver *dest)
 {
+	elog(DEBUG1, "[ExecPredictStmt] In the ExecPredictStmt");
+
 	ListCell   *cell;
 	StringInfoData targetColumn;
 	StringInfoData trainOnColumns;
+	char	   *modelName = NULL;
 	char	   *tableName = NULL;
 	char	   *whereClause = "<DEPRECATED>";
 
@@ -293,6 +376,17 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 			}
 			appendStringInfo(&trainOnColumns, "%s,", strVal(columnName));
 		}
+
+		if (strlen(trainOnSpec->modelName) > 0)
+		{
+			elog(WARNING, "User specified model name: %s", trainOnSpec->modelName);
+			modelName = trainOnSpec->modelName;
+		}
+		else
+		{
+			elog(WARNING, "No model name provided. Use config NrModelName: %s", NrModelName);
+			modelName = NrModelName;
+		}
 	}
 	else
 	{
@@ -301,7 +395,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	trainOnColumns.data[trainOnColumns.len - 1] = '\0';
 
 	/* Execute the UDF with extracted columns, table name, and where clause */
-	exec_udf(tableName, trainOnColumns.data, targetColumn.data, whereClause);
+	exec_udf(modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause, dest);
 
 	return InvalidObjectAddress;
 }

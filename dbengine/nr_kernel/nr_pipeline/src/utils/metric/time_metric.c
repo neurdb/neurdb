@@ -61,20 +61,7 @@ void record_operation_end_time(TimeMetric *time_metric) {
                 &time_metric->operation_end_time, time_metric->unit);
 }
 
-void print_time(const TimeMetric *time_metric) {
-  if (time_metric->unit == 0) {
-    return;  // unit is not set
-  }
-  elog(INFO, "################################");
-  elog(INFO, "TIME METRIC FOR: %s", time_metric->name);
-  printf("Unit: %s\n", _time_unit_to_str(time_metric->unit));
-  printf("Overall time: %f\n", time_metric->overall_time);
-  printf("Query time: %f\n", time_metric->query_time);
-  printf("Operation time: %f\n", time_metric->operation_time);
-  elog(INFO, "################################");
-}
-
-void postgres_log_time(const TimeMetric *time_metric) {
+void elog_time(const TimeMetric *time_metric) {
   if (time_metric->unit == 0) {
     return;  // unit is not set
   }

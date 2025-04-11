@@ -1,5 +1,6 @@
 import asyncio
 
+from neurdbrt.log import logger
 from quart import websocket
 
 
@@ -14,6 +15,8 @@ class WebsocketSender:
         while WebsocketSender.active:
             data = await WebsocketSender.message_queue.get()
             if data:
+                logger.debug(f"Sending: {data}")
+
                 await websocket.send(data)
 
     @staticmethod

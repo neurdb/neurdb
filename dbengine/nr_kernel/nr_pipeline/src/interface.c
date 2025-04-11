@@ -10,6 +10,9 @@
 #include "utils/hash/md5.h"
 #include "utils/network/websocket.h"
 
+char *NrAIEngineHost = "localhost";
+int NrAIEnginePort = 8090;
+
 PG_MODULE_MAGIC;
 
 PG_FUNCTION_INFO_V1(nr_inference);
@@ -24,6 +27,43 @@ PG_FUNCTION_INFO_V1(nr_model_lookup);
 char **text_array2char_array(ArrayType *text_array, int *n_elements_out);
 
 char *char_array2str(char **char_array, int n_elements);
+
+void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
+                        int n_features, char **feature_names, char *table_name,
+                        StringInfo libsvm_data, bool has_label, int label_col);
+
+static NrWebsocket *_connect_to_ai_engine() {
+  NrWebsocket *ws = nws_initialize(NrAIEngineHost, NrAIEnginePort, "/ws", 10);
+  nws_connect(ws);
+  return ws;
+}
+
+static void _get_n_batches_train_eval_test(int n_batches, int *n_batches_train,
+                                           int *n_batches_eval,
+                                           int *n_batches_test) {
+  *n_batches_train = (int)ceil(n_batches * 0.8);
+  *n_batches_eval = (int)ceil(n_batches * 0.1);
+  *n_batches_test = n_batches - *n_batches_train - *n_batches_eval;
+}
+
+static void _clean_up_common(NrWebsocket *ws, char *table_name,
+                             ArrayType *features, char **feature_names,
+                             int n_features) {
+  // free
+  pfree(table_name);
+  pfree(features);
+  for (int i = 0; i < n_features; ++i) {
+    pfree(feature_names[i]);
+  }
+  pfree(feature_names);
+
+  // close the connection
+  nws_disconnect(ws);
+  nws_free_websocket(ws);
+
+  // close SPI
+  SPI_finish();
+}
 
 /**
  * Preprocess the input data for model inference. It contains the following
@@ -44,41 +84,38 @@ char *char_array2str(char **char_array, int n_elements);
  */
 Datum nr_inference(PG_FUNCTION_ARGS) {
   TimeMetric *time_metric = init_time_metric("nr_inference", MILLISECOND);
-  record_overall_start_time(
-      time_metric);  // record the start time of the function
-  record_query_start_time(
-      time_metric);  // record the start time of preprocessing
+  // record the start time of the function
+  record_overall_start_time(time_metric);
+  // record the start time of preprocessing
+  record_query_start_time(time_metric);
 
   char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));  // model name
   int model_id = PG_GETARG_INT32(1);                        // model id
   char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2));  // table name
   int batch_size = PG_GETARG_INT32(3);                      // batch size
-  int batch_num = PG_GETARG_INT32(4);                       // batch number
+  int n_batches = PG_GETARG_INT32(4);                       // batch number
   int nfeat = PG_GETARG_INT32(5);  // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
+
   int n_features;
   char **feature_names =
       text_array2char_array(features, &n_features);  // column names
 
-  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
-  nws_connect(ws);
-
-  // prepare the query
-  StringInfoData query;
-  initStringInfo(&query);
-  SPI_connect();
-
-  const int n_batches = batch_num;
+  NrWebsocket *ws = _connect_to_ai_engine();
 
   // init dataset
   InferenceTaskSpec *inference_task_spec = malloc(sizeof(InferenceTaskSpec));
   init_inference_task_spec(inference_task_spec, model_name, batch_size,
                            n_batches, "metrics", 80, nfeat, n_features,
                            model_id);
-  nws_send_task(ws, T_INFERENCE, inference_task_spec);
+  nws_send_task(ws, T_INFERENCE, table_name, inference_task_spec);
   free_inference_task_spec(inference_task_spec);
 
+  // prepare the query
+  StringInfoData query;
+  initStringInfo(&query);
   resetStringInfo(&query);
+
   char *cursor_name = "nr_inference_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ", cursor_name);
   appendStringInfo(&query, "SELECT ");
@@ -92,15 +129,14 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   appendStringInfo(&query, " FROM %s", table_name);
 
   // create the cursor for training data
+  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);
   appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
 
   StringInfoData libsvm_data;
-  StringInfoData row_data;
   initStringInfo(&libsvm_data);
-  initStringInfo(&row_data);
   int current_batch = 0;
 
   while (true) {
@@ -110,84 +146,41 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
       elog(INFO, "Inference completed");
       break;  // no more rows to fetch, break the loop
     }
+
     resetStringInfo(&libsvm_data);
-    resetStringInfo(&row_data);
+
     // get the query result
     SPITupleTable *tuptable = SPI_tuptable;
     TupleDesc tupdesc = tuptable->tupdesc;
 
-    bool is_null;
-    // build libsvm format data
-    for (int i = 0; i < SPI_processed; i++) {
-      appendStringInfoString(&row_data,
-                             "0");  // for inference, the label is always 0
-      // add features
-      for (int col = 0; col < n_features; col++) {
-        Datum value =
-            SPI_getbinval(tuptable->vals[i], tupdesc, col + 1, &is_null);
-        // check the type of value
-        int type = SPI_gettypeid(tupdesc, col + 1);
-        switch (type) {
-          case INT2OID:
-            appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
-            break;
-          case INT4OID:
-            appendStringInfo(&row_data, " %d", DatumGetInt32(value));
-            break;
-          case INT8OID:
-            appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
-            break;
-          case FLOAT4OID:
-            appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
-            break;
-          case FLOAT8OID:
-            appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
-            break;
-          case TEXTOID:
-          case VARCHAROID:
-          case CHAROID:
-            // do tokenization
-            char *text = DatumGetCString(value);
-            int token = encode_text(text, table_name, feature_names[col]);
-            appendStringInfo(&row_data, " %d", token);
-            break;
-          default:
-            SPI_finish();
-            elog(ERROR, "Unsupported data type");
-        }
-      }
-      appendStringInfoString(&row_data, "\n");
-    }
-    appendStringInfoString(&libsvm_data, row_data.data);
+    _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
+                       &libsvm_data, false, 0);
+
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
+
     // send training data to the Python Server, blocking operation if the queue
     // is full
     nws_send_batch_data(ws, 0, S_INFERENCE, libsvm_data.data);
+
     record_operation_end_time(time_metric);  // record the end time of operation
     record_query_start_time(time_metric);
-    resetStringInfo(&row_data);
+    // resetStringInfo(&row_data);
   }
   record_query_end_time(time_metric);  // record the eventual end time of query
+
   nws_wait_completion(ws);
 
-  // clean up
-  pfree(table_name);
-  pfree(features);
-  for (int i = 0; i < n_features; ++i) {
-    pfree(feature_names[i]);
-  }
-  pfree(feature_names);
+  _clean_up_common(ws, table_name, features, feature_names, n_features);
 
-  // close the connection
-  nws_disconnect(ws);
-  nws_free_websocket(ws);
-
-  SPI_finish();
   record_overall_end_time(time_metric);
-  postgres_log_time(time_metric);  // log the time metric
+  elog_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
-  PG_RETURN_NULL();
+
+  char *presult = pstrdup(ws->result);
+  free(ws->result);
+
+  PG_RETURN_CSTRING(presult);
 }
 
 /**
@@ -209,27 +202,21 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));  // model name
   char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1));  // table name
   int batch_size = PG_GETARG_INT32(2);                      // batch size
-  int batch_num = PG_GETARG_INT32(3);  // batch number for each epoch
+  int n_batches = PG_GETARG_INT32(3);  // batch number for each epoch
   int epoch = PG_GETARG_INT32(4);      // epoch
   int nfeat = PG_GETARG_INT32(5);      // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
-  int n_features;
-  char **feature_names =
-      text_array2char_array(features, &n_features);     // feature names
   char *target = text_to_cstring(PG_GETARG_TEXT_P(7));  // target column
 
-  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
-  nws_connect(ws);
+  int n_features;
+  char **feature_names =
+      text_array2char_array(features, &n_features);  // feature names
 
-  // prepare the query
-  StringInfoData query;
-  initStringInfo(&query);
-  SPI_connect();
+  NrWebsocket *ws = _connect_to_ai_engine();
 
-  const int n_batches = batch_num;
-  const int n_batches_train = (int)ceil(n_batches * 0.8);
-  const int n_batches_evaluate = (int)ceil(n_batches * 0.1);
-  const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
+  int n_batches_train, n_batches_evaluate, n_batches_test;
+  _get_n_batches_train_eval_test(n_batches, &n_batches_train,
+                                 &n_batches_evaluate, &n_batches_test);
 
   // init dataset
   TrainTaskSpec *train_task_spec = malloc(sizeof(TrainTaskSpec));
@@ -237,10 +224,14 @@ Datum nr_train(PG_FUNCTION_ARGS) {
       train_task_spec, model_name, batch_size, epoch, n_batches_train,
       n_batches_evaluate, n_batches_test, 0.001, "optimizer", "loss", "metrics",
       80, char_array2str(feature_names, n_features), target, nfeat, n_features);
-  nws_send_task(ws, T_TRAIN, train_task_spec);
+  nws_send_task(ws, T_TRAIN, table_name, train_task_spec);
   free_train_task_spec(train_task_spec);
 
+  // prepare the query
+  StringInfoData query;
+  initStringInfo(&query);
   resetStringInfo(&query);
+
   char *cursor_name = "nr_train_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ",
                    cursor_name);  // SCROLL is necessrary for rewind
@@ -255,15 +246,15 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
   // create the cursor for training data
+  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);
   appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
 
   StringInfoData libsvm_data;
-  StringInfoData row_data;
   initStringInfo(&libsvm_data);
-  initStringInfo(&row_data);
+
   int current_epoch = 0;
   int current_batch = 0;
 
@@ -282,89 +273,44 @@ Datum nr_train(PG_FUNCTION_ARGS) {
       resetStringInfo(&query);
       appendStringInfo(&query, "MOVE ABSOLUTE 0 IN %s", cursor_name);
       SPI_execute(query.data, false, 0);
+
       resetStringInfo(&query);
       appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
     }
+
     resetStringInfo(&libsvm_data);
-    resetStringInfo(&row_data);
+
     // get the query result
     SPITupleTable *tuptable = SPI_tuptable;
     TupleDesc tupdesc = tuptable->tupdesc;
 
-    bool is_null;
-    // build libsvm format data
-    for (int i = 0; i < SPI_processed; i++) {
-      // add label
-      Datum value =
-          SPI_getbinval(tuptable->vals[i], tupdesc, n_features + 1, &is_null);
-      appendStringInfo(&row_data, "%d", DatumGetInt32(value));
-      // add features
-      for (int col = 0; col < n_features; col++) {
-        value = SPI_getbinval(tuptable->vals[i], tupdesc, col + 1, &is_null);
-        // check the type of value
-        int type = SPI_gettypeid(tupdesc, col + 1);
-        switch (type) {
-          case INT2OID:
-            appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
-            break;
-          case INT4OID:
-            appendStringInfo(&row_data, " %d", DatumGetInt32(value));
-            break;
-          case INT8OID:
-            appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
-            break;
-          case FLOAT4OID:
-            appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
-            break;
-          case FLOAT8OID:
-            appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
-            break;
-          case TEXTOID:
-          case VARCHAROID:
-          case CHAROID:
-            // do tokenization
-            char *text = DatumGetCString(value);
-            int token = encode_text(text, table_name, feature_names[col]);
-            appendStringInfo(&row_data, " %d", token);
-            break;
-          default:
-            SPI_finish();
-            elog(ERROR, "Unsupported data type");
-        }
-      }
-      appendStringInfoString(&row_data, "\n");
-    }
-    appendStringInfoString(&libsvm_data, row_data.data);
+    _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
+                       &libsvm_data, true, n_features + 1);
+
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
+
     // send training data to the Python Server, blocking operation if the queue
     // is full
     nws_send_batch_data(ws, 0, S_TRAIN, libsvm_data.data);
+
     record_operation_end_time(time_metric);  // record the end time of operation
     record_query_start_time(time_metric);
-    resetStringInfo(&row_data);
   }
   record_query_end_time(time_metric);  // record the eventual end time of query
+
   nws_wait_completion(ws);
 
-  // clean up
-  pfree(table_name);
-  pfree(features);
+  int model_id = ws->model_id;
+
+  _clean_up_common(ws, table_name, features, feature_names, n_features);
   pfree(target);
-  for (int i = 0; i < n_features; ++i) {
-    pfree(feature_names[i]);
-  }
-  pfree(feature_names);
 
-  // close the connection
-  nws_disconnect(ws);
-  nws_free_websocket(ws);
-
-  SPI_finish();
   record_overall_end_time(time_metric);
-  postgres_log_time(time_metric);  // log the time metric
+  elog_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
-  PG_RETURN_NULL();
+
+  PG_RETURN_INT32(model_id);
 }
 
 /**
@@ -383,27 +329,21 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
   int model_id = PG_GETARG_INT32(1);                        // model id
   char *table_name = text_to_cstring(PG_GETARG_TEXT_P(2));  // table name
   int batch_size = PG_GETARG_INT32(3);                      // batch size
-  int batch_num = PG_GETARG_INT32(4);                       // batch number
+  int n_batches = PG_GETARG_INT32(4);                       // batch number
   int epoch = PG_GETARG_INT32(5);                           // epoch
   int nfeat = PG_GETARG_INT32(6);  // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(7);
-  int n_features;
-  char **feature_names =
-      text_array2char_array(features, &n_features);     // feature names
   char *target = text_to_cstring(PG_GETARG_TEXT_P(8));  // target column
 
-  NrWebsocket *ws = nws_initialize("localhost", 8090, "/ws", 10);
-  nws_connect(ws);
+  int n_features;
+  char **feature_names =
+      text_array2char_array(features, &n_features);  // feature names
 
-  // prepare the query
-  StringInfoData query;
-  initStringInfo(&query);
-  SPI_connect();
+  NrWebsocket *ws = _connect_to_ai_engine();
 
-  const int n_batches = batch_num;
-  const int n_batches_train = (int)ceil(n_batches * 0.8);
-  const int n_batches_evaluate = (int)ceil(n_batches * 0.1);
-  const int n_batches_test = n_batches - n_batches_train - n_batches_evaluate;
+  int n_batches_train, n_batches_evaluate, n_batches_test;
+  _get_n_batches_train_eval_test(n_batches, &n_batches_train,
+                                 &n_batches_evaluate, &n_batches_test);
 
   // init dataset
   FinetuneTaskSpec *finetune_task_spec = malloc(sizeof(FinetuneTaskSpec));
@@ -411,10 +351,14 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
                           epoch, n_batches_train, n_batches_evaluate,
                           n_batches_test, 0.001, "optimizer", "loss", "metrics",
                           80, nfeat, n_features);
-  nws_send_task(ws, T_FINETUNE, finetune_task_spec);
+  nws_send_task(ws, T_FINETUNE, table_name, finetune_task_spec);
   free_finetune_task_spec(finetune_task_spec);
 
+  // prepare the query
+  StringInfoData query;
+  initStringInfo(&query);
   resetStringInfo(&query);
+
   char *cursor_name = "nr_finetune_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ", cursor_name);
   appendStringInfo(&query, "SELECT ");
@@ -428,15 +372,15 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
   appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
   // calling SPI execution
+  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);
   appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
 
   StringInfoData libsvm_data;
-  StringInfoData row_data;
   initStringInfo(&libsvm_data);
-  initStringInfo(&row_data);
+
   int current_epoch = 0;
   int current_batch = 0;
 
@@ -458,87 +402,110 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
       resetStringInfo(&query);
       appendStringInfo(&query, "MOVE ABSOLUTE 0 IN %s", cursor_name);
       SPI_execute(query.data, false, 0);
+
       resetStringInfo(&query);
       appendStringInfo(&query, "FETCH %d FROM %s", batch_size, cursor_name);
     }
     resetStringInfo(&libsvm_data);
-    resetStringInfo(&row_data);
     // get the query result
     SPITupleTable *tuptable = SPI_tuptable;
     TupleDesc tupdesc = tuptable->tupdesc;
 
-    bool is_null;
-    // build libsvm format data
-    for (int i = 0; i < SPI_processed; i++) {
-      // add label
-      Datum value =
-          SPI_getbinval(tuptable->vals[i], tupdesc, n_features + 1, &is_null);
-      appendStringInfo(&row_data, "%d", DatumGetInt32(value));
-      // add features
-      for (int col = 0; col < n_features; col++) {
-        value = SPI_getbinval(tuptable->vals[i], tupdesc, col + 1, &is_null);
-        // check the type of value
-        int type = SPI_gettypeid(tupdesc, col + 1);
-        switch (type) {
-          case INT2OID:
-            appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
-            break;
-          case INT4OID:
-            appendStringInfo(&row_data, " %d", DatumGetInt32(value));
-            break;
-          case INT8OID:
-            appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
-            break;
-          case FLOAT4OID:
-            appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
-            break;
-          case FLOAT8OID:
-            appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
-            break;
-          case TEXTOID:
-          case VARCHAROID:
-          case CHAROID:
-            // do tokenization
-            char *text = DatumGetCString(value);
-            int token = encode_text(text, table_name, feature_names[col]);
-            appendStringInfo(&row_data, " %d", token);
-            break;
-          default:
-            SPI_finish();
-            elog(ERROR, "Unsupported data type");
-        }
-      }
-      appendStringInfoString(&row_data, "\n");
-    }
-    appendStringInfoString(&libsvm_data, row_data.data);
+    _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
+                       &libsvm_data, true, n_features + 1);
+
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
+
     nws_send_batch_data(ws, 0, S_TRAIN, libsvm_data.data);
+
     record_operation_end_time(time_metric);  // record the end time of operation
     record_query_start_time(time_metric);
-    resetStringInfo(&row_data);
   }
   record_query_end_time(time_metric);  // record the eventual end time of query
+
   nws_wait_completion(ws);
 
-  // clean up
-  pfree(table_name);
-  pfree(features);
+  _clean_up_common(ws, table_name, features, feature_names, n_features);
   pfree(target);
-  for (int i = 0; i < n_features; ++i) {
-    pfree(feature_names[i]);
-  }
-  pfree(feature_names);
 
-  // close the connection
-  nws_disconnect(ws);
-  nws_free_websocket(ws);
-
-  SPI_finish();
   record_overall_end_time(time_metric);
-  postgres_log_time(time_metric);  // log the time metric
+  elog_time(time_metric);  // log the time metric
   free_time_metric(time_metric);
+
   PG_RETURN_NULL();
+}
+
+/**
+ * Convert a batch of SPI query results into libsvm format.
+ * @param tuptable SPITupleTable* The SPI tuple table containing query results
+ * @param tupdesc TupleDesc The tuple descriptor
+ * @param n_features int Number of feature columns
+ * @param feature_names char** Array of feature column names
+ * @param table_name char* Name of the table (for tokenization)
+ * @param libsvm_data StringInfo* Output buffer for libsvm-formatted data
+ * @param has_label bool Whether to include a label (true for train/finetune,
+ * false for inference)
+ * @param label_col int Column index of the label (ignored if has_label is
+ * false)
+ */
+void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
+                        int n_features, char **feature_names, char *table_name,
+                        StringInfo libsvm_data, bool has_label, int label_col) {
+  StringInfoData row_data;
+  initStringInfo(&row_data);
+
+  bool is_null;
+  for (int i = 0; i < SPI_processed; i++) {
+    resetStringInfo(&row_data);
+
+    // handle label if present
+    if (has_label) {
+      Datum value =
+          SPI_getbinval(tuptable->vals[i], tupdesc, label_col, &is_null);
+      appendStringInfo(&row_data, "%d", DatumGetInt32(value));
+    } else {
+      appendStringInfoString(&row_data, "0");  // Default for inference
+    }
+
+    // process features
+    for (int col = 0; col < n_features; col++) {
+      Datum value =
+          SPI_getbinval(tuptable->vals[i], tupdesc, col + 1, &is_null);
+      int type = SPI_gettypeid(tupdesc, col + 1);
+      switch (type) {
+        case INT2OID:
+          appendStringInfo(&row_data, " %hd", DatumGetInt16(value));
+          break;
+        case INT4OID:
+          appendStringInfo(&row_data, " %d", DatumGetInt32(value));
+          break;
+        case INT8OID:
+          appendStringInfo(&row_data, " %ld", DatumGetInt64(value));
+          break;
+        case FLOAT4OID:
+          appendStringInfo(&row_data, " %f", DatumGetFloat4(value));
+          break;
+        case FLOAT8OID:
+          appendStringInfo(&row_data, " %lf", DatumGetFloat8(value));
+          break;
+        case TEXTOID:
+        case VARCHAROID:
+        case CHAROID:
+          char *text = DatumGetCString(value);
+          int token = encode_text(text, table_name, feature_names[col]);
+          appendStringInfo(&row_data, " %d", token);
+          break;
+        default:
+          SPI_finish();
+          elog(ERROR, "Unsupported data type");
+      }
+    }
+    appendStringInfoString(&row_data, "\n");
+    appendStringInfoString(libsvm_data, row_data.data);
+  }
+
+  pfree(row_data.data);  // free the string info
 }
 
 /**
