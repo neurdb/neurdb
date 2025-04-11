@@ -6,7 +6,7 @@
  * @param host hostname
  * @param port port
  * @param path URL path
- * @return 
+ * @return
  */
 char *make_http_url(const char *host, const int port, const char *path);
 
