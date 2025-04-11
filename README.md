@@ -6,7 +6,7 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![paper-24-1](https://img.shields.io/badge/DOI-10.1007/s11432--024--4125--9-B31B1B.svg)](http://scis.scichina.com/en/2024/200901.pdf)
-[![paper-24-2](https://img.shields.io/badge/CIDR--25--Paper-F7C15D)](https://vldb.org/cidrdb/papers/2025/p29-zhao.pdf)
+[![paper-24-2](https://img.shields.io/badge/CIDR--25%20Paper-F7C15D)](https://vldb.org/cidrdb/papers/2025/p29-zhao.pdf)
 
 
 NeurDB is an AI-powered autonomous data system.
