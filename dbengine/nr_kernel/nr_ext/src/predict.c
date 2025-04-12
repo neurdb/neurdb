@@ -237,12 +237,12 @@ exec_udf(const char *model,
 		{
 			int			result = DatumGetInt32(trainingResult);
 
-			elog(INFO, "Training result: %d", result);
+			elog(NOTICE, "Training result: %d", result);
 			modelId = result;
 		}
 		else
 		{
-			elog(INFO, "Training result is NULL");
+			elog(NOTICE, "Training result is NULL");
 		}
 	}
 

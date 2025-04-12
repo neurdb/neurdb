@@ -65,13 +65,13 @@ void elog_time(const TimeMetric *time_metric) {
   if (time_metric->unit == 0) {
     return;  // unit is not set
   }
-  elog(INFO, "################################");
-  elog(INFO, "TIME METRIC FOR: %s", time_metric->name);
-  elog(INFO, "Unit: %s", _time_unit_to_str(time_metric->unit));
-  elog(INFO, "Overall time: %f", time_metric->overall_time);
-  elog(INFO, "Query time: %f", time_metric->query_time);
-  elog(INFO, "Operation time: %f", time_metric->operation_time);
-  elog(INFO, "################################");
+  elog(NOTICE, "################################");
+  elog(NOTICE, "TIME METRIC FOR: %s", time_metric->name);
+  elog(NOTICE, "Unit: %s", _time_unit_to_str(time_metric->unit));
+  elog(NOTICE, "Overall time: %f", time_metric->overall_time);
+  elog(NOTICE, "Query time: %f", time_metric->query_time);
+  elog(NOTICE, "Operation time: %f", time_metric->operation_time);
+  elog(NOTICE, "################################");
 }
 
 char *_time_unit_to_str(const TimeUnit unit) {

@@ -424,12 +424,12 @@ handle_result(NrWebsocket * ws, const cJSON * json)
 	cJSON *result = cJSON_GetObjectItem(json, "byte");
 	if (result == NULL || !cJSON_IsString(result))
 	{
-		elog(INFO, "No 'byte' in response. Should be training/finetuning\n");
+		elog(NOTICE, "No 'byte' in response. Should be training/finetuning\n");
 		int model_id = cJSON_GetObjectItem(json, "modelId")->valueint;
 		ws->model_id = model_id;
 		ws->result = NULL;
 	} else {
-		elog(INFO, "'byte' found in response. Should be inference\n");
+		elog(NOTICE, "'byte' found in response. Should be inference\n");
 		ws->result = (char *) malloc(strlen(result->valuestring) + 1);
 		strcpy(ws->result, result->valuestring);
 	}

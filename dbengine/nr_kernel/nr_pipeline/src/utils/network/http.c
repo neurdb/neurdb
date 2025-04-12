@@ -95,9 +95,9 @@ void *send_train_task(TrainingInfo *info) {
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
 
-    elog(INFO, "Train task sent to server: %s", url);
+    elog(NOTICE, "Train task sent to server: %s", url);
     const CURLcode res = curl_easy_perform(curl);
-    elog(INFO, "Train task completed");
+    elog(NOTICE, "Train task completed");
     // TODO: here we skip the response code check, need to add them later
     // if (res != CURLE_OK) {
     //     fprintf(stderr, "curl_easy_perform() failed: %s\n",
@@ -176,7 +176,7 @@ void *send_inference_task(InferenceInfo *info) {
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
 
     CURLcode res = curl_easy_perform(curl);
-    elog(INFO, "Inference task sent to server: %s", url);
+    elog(NOTICE, "Inference task sent to server: %s", url);
 
     // if (res != CURLE_OK) {
     //     fprintf(stderr, "curl_easy_perform() failed: %s\n",
@@ -276,7 +276,7 @@ void *send_finetune_task(FinetuneInfo *info) {
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
 
     CURLcode res = curl_easy_perform(curl);
-    elog(INFO, "Finetune task sent to server: %s", url);
+    elog(NOTICE, "Finetune task sent to server: %s", url);
 
     // if (res != CURLE_OK) {
     //     fprintf(stderr, "curl_easy_perform() failed: %s\n",

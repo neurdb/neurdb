@@ -143,7 +143,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     current_batch++;
     SPI_execute(query.data, false, batch_size);
     if (SPI_processed == 0 || current_batch > n_batches) {
-      elog(INFO, "Inference completed");
+      elog(NOTICE, "Inference completed");
       break;  // no more rows to fetch, break the loop
     }
 
@@ -395,7 +395,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
       // if the current epoch is greater than the specified epoch, break the
       // loop
       if (current_epoch >= epoch) {
-        elog(INFO, "Finetune completed");
+        elog(NOTICE, "Finetune completed");
         break;
       }
       // reset the cursor
