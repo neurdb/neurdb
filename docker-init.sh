@@ -49,8 +49,10 @@ $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l logfile start
 
 # Wait a few seconds to ensure DB engine is up and running
 until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U neurdb -c '\q'; do
-  >&2 echo 'Postgres is unavailable - sleeping'
+  >&2 echo 'NeurDB is unavailable - sleeping'
   sleep 1
+  # try to create `neurdb` database into the cluster
+  $NR_PSQL_PATH/bin/createdb -h localhost -p 5432 neurdb
 done
 echo "DB Started!"
 
