@@ -3754,19 +3754,20 @@ connection_warnings(bool in_startup)
 				server_version = sverbuf;
 			}
 
-			printf(_("%s (%s, server %s)\n"),
+			printf(_("%s (%s, NeurDB %s)\n"),
 				   pset.progname, PG_VERSION, server_version);
 		}
 		/* For version match, only print psql banner on startup. */
 		else if (in_startup)
-			printf("%s (%s)\n", pset.progname, PG_VERSION);
+			printf("%s (NeurDB %s)\n", pset.progname, PG_VERSION);
 
 		/*
 		 * Warn if server's major version is newer than ours, or if server
 		 * predates our support cutoff (currently 9.2).
+		 * NEURDB: Version re-counted
 		 */
-		if (pset.sversion / 100 > client_ver / 100 ||
-			pset.sversion < 90200)
+		if (pset.sversion / 100 > client_ver / 100) {
+		/* || pset.sversion < 90200) */
 			printf(_("WARNING: %s major version %s, server major version %s.\n"
 					 "         Some psql features might not work.\n"),
 				   pset.progname,
@@ -3774,6 +3775,7 @@ connection_warnings(bool in_startup)
 										 cverbuf, sizeof(cverbuf)),
 				   formatPGVersionNumber(pset.sversion, false,
 										 sverbuf, sizeof(sverbuf)));
+		}
 
 #ifdef WIN32
 		if (in_startup)

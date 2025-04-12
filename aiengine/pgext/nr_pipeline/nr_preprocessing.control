@@ -1,4 +1,0 @@
-comment = 'A postgres extension to make data preprocessing'
-default_version = '1.0.0'
-module_pathname = '$libdir/libnr_preprocessing'
-relocatable = true

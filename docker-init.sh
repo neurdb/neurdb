@@ -15,7 +15,8 @@ NR_DBDATA_PATH=${NR_DBDATA_PATH:-$NR_PSQL_PATH/data}
 NR_DBENGINE_PATH=$NEURDBPATH/dbengine
 NR_AIENGINE_PATH=$NEURDBPATH/aiengine
 NR_API_PATH=$NEURDBPATH/api
-NR_PIPELINE_PATH=$NR_AIENGINE_PATH/pgext/nr_pipeline
+#NR_PIPELINE_PATH=$NR_DBENGINE_PATH/nr_kernel/nrext
+NR_KERNEL_PATH=$NR_DBENGINE_PATH/nr_kernel
 
 # Clean log file
 rm $NEURDBPATH/logfile || true
@@ -47,14 +48,14 @@ fi
 $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l logfile start
 
 # Wait a few seconds to ensure DB engine is up and running
-until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U postgres -c '\q'; do
+until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U neurdb -c '\q'; do
   >&2 echo 'Postgres is unavailable - sleeping'
   sleep 1
 done
 echo "DB Started!"
 
 # Load iris dataset
-# $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U postgres -f $NEURDBPATH/dataset/iris/iris_psql.sql
+# $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U neurdb -f $NEURDBPATH/dataset/iris/iris_psql.sql
 
 # Install neurdb package
 cd $NR_API_PATH/python
@@ -83,10 +84,20 @@ rm setup.cfg
 # sudo make install
 
 # Compile nr_pipeline
-cd $NR_PIPELINE_PATH
+#cd $NR_PIPELINE_PATH
+#sudo make clean
+#sudo make install
+#echo "Install NR Data Pipeline Extension & NR kernel extension Done"
+
+# Compile nr_kernel
+cd $NR_KERNEL_PATH
 sudo make clean
 sudo make install
-echo "Install NR Data Pipeline Extension Done"
+
+## Register nr_kernel as preloaded library
+echo 'shared_preload_libraries = '\''nr_ext'\''' >> $NR_DBDATA_PATH/postgresql.conf
+
+echo "Install NR Data Pipeline Extension & NR kernel extension Done"
 
 # Run python server
 cd $NR_AIENGINE_PATH/runtime

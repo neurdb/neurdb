@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # chkconfig: 2345 98 02
-# description: PostgreSQL RDBMS
+# description: NeurDB RDBMS
 
 # This is an example of a start/stop script for SysV-style init, such
 # as is used on Linux systems.  You should edit some of the variables
@@ -34,8 +34,8 @@ prefix=/usr/local/pgsql
 # Data directory
 PGDATA="/usr/local/pgsql/data"
 
-# Who to run postgres as, usually "postgres".  (NOT "root")
-PGUSER=postgres
+# Who to run postgres as, usually "neurdb".  (NOT "root")
+PGUSER=neurdb
 
 # Where to keep a log file
 PGLOG="$PGDATA/serverlog"
@@ -89,25 +89,25 @@ fi
 # Parse command line parameters.
 case $1 in
   start)
-	echo -n "Starting PostgreSQL: "
+	echo -n "Starting NeurDB: "
 	test -e "$PG_OOM_ADJUST_FILE" && echo "$PG_MASTER_OOM_SCORE_ADJ" > "$PG_OOM_ADJUST_FILE"
 	su - $PGUSER -c "$DAEMON_ENV $DAEMON -D '$PGDATA' >>$PGLOG 2>&1 &"
 	echo "ok"
 	;;
   stop)
-	echo -n "Stopping PostgreSQL: "
+	echo -n "Stopping NeurDB: "
 	su - $PGUSER -c "$PGCTL stop -D '$PGDATA' -s"
 	echo "ok"
 	;;
   restart)
-	echo -n "Restarting PostgreSQL: "
+	echo -n "Restarting NeurDB: "
 	su - $PGUSER -c "$PGCTL stop -D '$PGDATA' -s"
 	test -e "$PG_OOM_ADJUST_FILE" && echo "$PG_MASTER_OOM_SCORE_ADJ" > "$PG_OOM_ADJUST_FILE"
 	su - $PGUSER -c "$DAEMON_ENV $DAEMON -D '$PGDATA' >>$PGLOG 2>&1 &"
 	echo "ok"
 	;;
   reload)
-	echo -n "Reload PostgreSQL: "
+	echo -n "Reload NeurDB: "
 	su - $PGUSER -c "$PGCTL reload -D '$PGDATA' -s"
 	echo "ok"
 	;;

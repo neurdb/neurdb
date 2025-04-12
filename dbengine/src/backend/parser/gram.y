@@ -662,6 +662,7 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 
 %type <node>	neurdb_target neurdb_from opt_neurdb_train_on opt_neurdb_with opt_neurdb_values
 %type <list> 	neurdb_train_on_columns
+%type <str>		opt_neurdb_model_name
 /* %type <boolean> opt_allow_train */
 
 /*
@@ -16954,8 +16955,8 @@ neurdb_target: target_list
 					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $2;
 					n->targetList = $1;
 					/*n->allowTrain = $3;*/
-					n->trainOnSpec = $3;
-					n->values = $4;
+					n->trainOnSpec = (NeurDBTrainOnSpec *) $3;
+					n->values = (SelectStmt *) $4;
 					$$ = (Node *) n;
 				}
 		;
@@ -16970,9 +16971,9 @@ opt_allow_train:
 
 neurdb_from:
 			FROM from_list
-			/* where_clause */
-			/* group_clause having_clause window_clause */
-			/* opt_sort_clause opt_select_limit opt_for_locking_clause */
+			where_clause
+			group_clause having_clause window_clause
+			opt_sort_clause opt_select_limit opt_for_locking_clause
 				{
 					NeurDBPredictStmt *n = makeNode(NeurDBPredictStmt);
 					n->fromClause = $2;
@@ -16982,13 +16983,19 @@ neurdb_from:
 		;
 
 opt_neurdb_train_on:
-			TRAIN ON neurdb_train_on_columns opt_neurdb_with
+			TRAIN opt_neurdb_model_name ON neurdb_train_on_columns opt_neurdb_with
 				{
 					NeurDBTrainOnSpec *n = makeNode(NeurDBTrainOnSpec);
-					n->trainOn = $3;
-					n->trainOnWith = $4;
+					n->modelName = $2;
+					n->trainOn = $4;
+					n->trainOnWith = $5;
 					$$ = (Node *) n;
 				}
+		;
+
+opt_neurdb_model_name:
+			NonReservedWord							{ $$ = $1; }
+			| /*EMPTY*/								{ $$ = ""; }
 		;
 
 neurdb_train_on_columns:
@@ -16997,7 +17004,7 @@ neurdb_train_on_columns:
 		;
 
 opt_neurdb_with:
-			WITH a_expr								{ $$ = $2; }
+			HAVING a_expr							{ $$ = $2; }
 			| /*EMPTY*/								{ $$ = NULL; }
 		;
 

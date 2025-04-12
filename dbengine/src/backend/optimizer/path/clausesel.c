@@ -99,11 +99,11 @@ static Selectivity clauselist_selectivity_or(PlannerInfo *root,
  * selectivity functions; perhaps some day we can generalize the approach.
  */
 Selectivity
-clauselist_selectivity(PlannerInfo *root,
-					   List *clauses,
-					   int varRelid,
-					   JoinType jointype,
-					   SpecialJoinInfo *sjinfo)
+clauselist_selectivity(PlannerInfo *root, // planner state
+					   List *clauses, //A list of conditions
+					   int varRelid, // Identifier for the variable (relation) to compute selectivity for.
+					   JoinType jointype, // Type of join if these clauses are part of a join condition (e.g., INNER, LEFT).
+					   SpecialJoinInfo *sjinfo)  // Additional information about joins, if applicable.
 {
 	return clauselist_selectivity_ext(root, clauses, varRelid,
 									  jointype, sjinfo, true);

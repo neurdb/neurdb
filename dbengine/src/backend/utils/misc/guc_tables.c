@@ -37,7 +37,6 @@
 #include "catalog/namespace.h"
 #include "catalog/storage.h"
 #include "commands/async.h"
-#include "commands/predict.h"
 #include "commands/tablespace.h"
 #include "commands/trigger.h"
 #include "commands/user.h"
@@ -47,6 +46,7 @@
 #include "libpq/auth.h"
 #include "libpq/libpq.h"
 #include "libpq/scram.h"
+#include "neurdb.h"
 #include "nodes/queryjumble.h"
 #include "optimizer/cost.h"
 #include "optimizer/geqo.h"
@@ -2023,7 +2023,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskBatchSize,
+		&NrTaskBatchSize,
 		4096, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -2034,7 +2034,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskEpoch,
+		&NrTaskEpoch,
 		1, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -2049,7 +2049,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskMaxFeatures,
+		&NrTaskMaxFeatures,
 		5500, 0, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -2064,7 +2064,7 @@ struct config_int ConfigureNamesInt[] =
 			NULL,
 			GUC_EXPLAIN,
 		},
-		&NRTaskNumBatches,
+		&NrTaskNumBatches,
 		80, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
@@ -3863,7 +3863,7 @@ struct config_string ConfigureNamesString[] =
 			gettext_noop("Sets the used model for ML tasks."),
 			NULL,
 		},
-		&NRModelName,
+		&NrModelName,
 		"armnet",
 		NULL, NULL, NULL
 	},
@@ -4286,7 +4286,7 @@ struct config_string ConfigureNamesString[] =
 
 	{
 		{"syslog_ident", PGC_SIGHUP, LOGGING_WHERE,
-			gettext_noop("Sets the program name used to identify PostgreSQL "
+			gettext_noop("Sets the program name used to identify NeurDB "
 						 "messages in syslog."),
 			NULL
 		},
@@ -4298,7 +4298,7 @@ struct config_string ConfigureNamesString[] =
 	{
 		{"event_source", PGC_POSTMASTER, LOGGING_WHERE,
 			gettext_noop("Sets the application name used to identify "
-						 "PostgreSQL messages in the event log."),
+						 "NeurDB messages in the event log."),
 			NULL
 		},
 		&event_source,

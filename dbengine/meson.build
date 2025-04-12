@@ -1,4 +1,5 @@
 # Copyright (c) 2022-2023, PostgreSQL Global Development Group
+# Copyrigth (c) 2024, NeurDB
 
 # Entry point for building PostgreSQL with meson
 #
@@ -6,10 +7,10 @@
 #  - https://mesonbuild.com/Syntax.html
 #  - https://mesonbuild.com/Reference-manual.html
 
-project('postgresql',
+project('neurdb',
   ['c'],
-  version: '16.3',
-  license: 'PostgreSQL',
+  version: '0.1.0',
+  license: 'NeurDB',
 
   # We want < 0.56 for python 3.5 compatibility on old platforms. EPEL for
   # RHEL 7 has 0.55. < 0.54 would require replacing some uses of the fs
@@ -135,14 +136,14 @@ pg_version_major = pg_version_arr[0].to_int()
 pg_version_minor = pg_version_arr[1].to_int()
 pg_version_num = (pg_version_major * 10000) + pg_version_minor
 
-pg_url = 'https://www.postgresql.org/'
+pg_url = 'https://neurdb.com/'
 
-cdata.set_quoted('PACKAGE_NAME', 'PostgreSQL')
+cdata.set_quoted('PACKAGE_NAME', 'NeurDB')
 cdata.set_quoted('PACKAGE_BUGREPORT', 'pgsql-bugs@lists.postgresql.org')
 cdata.set_quoted('PACKAGE_URL', pg_url)
 cdata.set_quoted('PACKAGE_VERSION', pg_version)
-cdata.set_quoted('PACKAGE_STRING', 'PostgreSQL @0@'.format(pg_version))
-cdata.set_quoted('PACKAGE_TARNAME', 'postgresql')
+cdata.set_quoted('PACKAGE_STRING', 'NeurDB @0@'.format(pg_version))
+cdata.set_quoted('PACKAGE_TARNAME', 'neurdb')
 
 pg_version += get_option('extra_version')
 cdata.set_quoted('PG_VERSION', pg_version)
@@ -475,10 +476,10 @@ endif
 ###############################################################
 
 # These are set by the equivalent --xxxdir configure options.  We
-# append "postgresql" to some of them, if the string does not already
+# append "neurdb" to some of them, if the string does not already
 # contain "pgsql" or "postgres", in order to avoid directory clutter.
 
-pkg = 'postgresql'
+pkg = 'neurdb'
 
 dir_prefix = get_option('prefix')
 
@@ -517,7 +518,7 @@ endif
 dir_man = get_option('mandir')
 
 # FIXME: These used to be separately configurable - worth adding?
-dir_doc = get_option('datadir') / 'doc' / 'postgresql'
+dir_doc = get_option('datadir') / 'doc' / 'neurdb'
 dir_doc_html = dir_doc / 'html'
 
 dir_locale = get_option('localedir')

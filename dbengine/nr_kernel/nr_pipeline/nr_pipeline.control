@@ -1,0 +1,4 @@
+comment = 'A postgres extension to make data preprocessing'
+default_version = '1.0.0'
+module_pathname = '$libdir/nr_pipeline'
+relocatable = true
