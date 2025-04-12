@@ -26,16 +26,6 @@ Oid			trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID,
 char	   *inferenceFuncName = "nr_inference";
 Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID};
 
-/**
- * Configurable parameters
- *
- * Set in `backend/utils/misc/guc_tables.c`
- */
-char	   *NrModelName = NULL;
-int			NrTaskBatchSize;
-int			NrTaskEpoch;
-int			NrTaskMaxFeatures;
-int			NrTaskNumBatches;
 
 static List *
 split_columns(const char *columns)
@@ -245,7 +235,8 @@ exec_udf(const char *model,
 		trainingResult = FunctionCallInvoke(trainingFCInfo);
 		if (!trainingFCInfo->isnull)
 		{
-			int result = DatumGetInt32(trainingResult);
+			int			result = DatumGetInt32(trainingResult);
+
 			elog(INFO, "Training result: %d", result);
 			modelId = result;
 		}

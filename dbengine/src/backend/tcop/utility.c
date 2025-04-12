@@ -46,7 +46,6 @@
 #include "commands/matview.h"
 #include "commands/policy.h"
 #include "commands/portalcmds.h"
-#include "commands/predict.h"
 #include "commands/prepare.h"
 #include "commands/proclang.h"
 #include "commands/publicationcmds.h"
