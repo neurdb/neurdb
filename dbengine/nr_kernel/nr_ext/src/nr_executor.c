@@ -13,7 +13,7 @@
 #include "utils/snapmgr.h"
 
 #include "parser/parse_node.h"
-#include "commands/predict.h"
+#include "predict.h"
 
 /* required metadata marker for PostgreSQL extensions */
 PG_MODULE_MAGIC;
