@@ -388,6 +388,12 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	initStringInfo(&targetColumn);
 	initStringInfo(&trainOnColumns);
 
+	if (stmt->kind == PREDICT_CLASS)
+	{
+		elog(ERROR, "PREDICT CLASS OF is not implemented");
+		return InvalidObjectAddress;
+	}
+
 	/*
 	 * Extract the column names from targetList and combine them into a single
 	 * string
