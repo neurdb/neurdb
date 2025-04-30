@@ -1,6 +1,9 @@
 #include "postgres.h"
 
 #include "predict.h"
+
+#include "access/relation.h"
+#include "access/heapam.h"
 #include "executor/executor.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
@@ -10,6 +13,7 @@
 #include "utils/builtins.h"
 #include "utils/array.h"
 #include "nodes/primnodes.h"
+#include "nodes/makefuncs.h"
 
 /**
  * Static (fixed) look-up variables
@@ -136,6 +140,58 @@ return_table(DestReceiver *dest, const char *result_string)
 	end_tup_output(tstate);
 }
 
+char	  **
+get_column_names(const char *schema_name, const char *table_name, const char *exclude, int *num_included_out)
+{
+	int			max_num_columns = 100;
+
+	char	  **column_names = (char **) palloc(sizeof(char *) * max_num_columns);
+
+	/* Get table Oid */
+	RangeVar   *rangeVar = makeRangeVar((char *) schema_name, (char *) table_name, -1);
+	Oid			tableOid = RangeVarGetRelid(rangeVar, AccessShareLock, false);
+
+	if (tableOid == InvalidOid)
+	{
+		elog(ERROR, "Table %s.%s not found", schema_name, table_name);
+	}
+
+	/* Open relation and get column names */
+	Relation	rel = relation_open(tableOid, AccessShareLock);
+	TupleDesc	tupleDesc = rel->rd_att;
+
+	if (tupleDesc->natts > max_num_columns)
+	{
+		elog(ERROR, "Too many columns in table %s.%s", schema_name, table_name);
+	}
+
+	int			num_included = 0;
+
+	for (int i = 0; i < tupleDesc->natts; i++)
+	{
+		Form_pg_attribute attr = TupleDescAttr(tupleDesc, i);
+
+		if (!attr->attisdropped)
+		{
+			char	   *colName = NameStr(attr->attname);
+
+			elog(DEBUG1, "Column %d: %s", i + 1, colName);
+
+			if (strcmp(colName, exclude) != 0)
+			{
+				column_names[num_included] = strcpy((char *) palloc(strlen(colName) + 1), colName);
+				num_included++;
+			}
+		}
+	}
+
+	*num_included_out = num_included;
+
+	relation_close(rel, AccessShareLock);
+
+	return column_names;
+}
+
 /*
 * exec_udf --- Execute customer UDFs
 *
@@ -175,13 +231,37 @@ exec_udf(const char *model,
 
 	/* split columns into an array of text */
 	List	   *trainColumnsList = split_columns(trainColumns);
-	int			nTrainColumns = list_length(trainColumnsList);
+	Datum	   *trainColumnDatums;
+	int			nTrainColumns = 0;
 
-	Datum	   *trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
-
-	for (int i = 0; i < nTrainColumns; i++)
+	if (strlen(trainColumns) == 0)
 	{
-		trainColumnDatums[i] = CStringGetTextDatum(strVal(list_nth(trainColumnsList, i)));
+		/* all columns are used for training */
+
+		/* get all column names */
+
+		char	  **allColumns = get_column_names("public", table, targetColumn, &nTrainColumns);
+
+		trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
+		for (int i = 0; i < nTrainColumns; i++)
+		{
+			trainColumnDatums[i] = CStringGetTextDatum(allColumns[i]);
+		}
+
+		for (int i = 0; i < nTrainColumns; i++)
+		{
+			pfree(allColumns[i]);
+		}
+	}
+	else
+	{
+		nTrainColumns = list_length(trainColumnsList);
+		trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
+		for (int i = 0; i < nTrainColumns; i++)
+		{
+			trainColumnDatums[i] = CStringGetTextDatum(strVal(list_nth(trainColumnsList, i)));
+		}
+
 	}
 	ArrayType  *trainColumnArray = construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
 
@@ -363,6 +443,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 			if (columnName->type == T_A_Star)
 			{
 				elog(DEBUG1, "Train on all columns");
+				resetStringInfo(&trainOnColumns);
 				break;
 			}
 			appendStringInfo(&trainOnColumns, "%s,", strVal(columnName));
@@ -383,7 +464,11 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	{
 		elog(DEBUG1, "No TrainOnSpec provided");
 	}
-	trainOnColumns.data[trainOnColumns.len - 1] = '\0';
+
+	if (trainOnColumns.len > 0)
+	{
+		trainOnColumns.data[trainOnColumns.len - 1] = '\0';
+	}
 
 	/* Execute the UDF with extracted columns, table name, and where clause */
 	exec_udf(modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause, dest);
