@@ -14,7 +14,6 @@ from typing import Callable, List
 
 from neurdbrt.log import logger
 
-
 _on_start_hooks: List[Callable[[], None]] = []
 
 
@@ -50,7 +49,7 @@ def register_hooks():
     Register all hooks.
     """
     BASE_MODULE = "neurdbrt.model"
-    
+
     modules = _find_child_modules(BASE_MODULE)
     for module_name in modules:
         try:
