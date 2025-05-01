@@ -3,7 +3,7 @@ import json
 from threading import Thread
 from typing import Any, List
 
-import numpy as np
+from neurdbrt.hook import exec_hooks_on_start, register_hooks
 from neurdb.logger import configure_logging as api_configure_logging
 from neurdbrt.app import Setup, WebsocketSender, before_execute
 from neurdbrt.app.msg import (
@@ -31,7 +31,7 @@ quart_app = Quart(__name__)
 
 config_path = "./config.ini"
 config_args = parse_config_arguments(config_path)
-print(config_args)
+logger.info(config_args)
 
 if config_args.run_model != "in_database":
     NEURDB_CONNECTOR = None
@@ -45,6 +45,9 @@ else:
             # "password": config_args.db_password,
         }
     )
+    
+register_hooks()
+exec_hooks_on_start()
 
 
 @quart_app.before_serving
