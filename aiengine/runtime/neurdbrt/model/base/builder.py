@@ -15,8 +15,6 @@ class BuilderBase(ABC):
 
     def __init__(self):
         self._model: nn.Module = None
-        self._nfeat = None
-        self._nfield = None
 
     @property
     def model(self) -> nn.Module:
@@ -25,25 +23,6 @@ class BuilderBase(ABC):
     @model.setter
     def model(self, value):
         self._model = value
-
-    @property
-    def model_dimension(self):
-        """
-        Get the model dimensions.
-        @return: A tuple containing (nfeat, nfield)
-        """
-        return self._nfeat, self._nfield
-
-    @model_dimension.setter
-    def model_dimension(self, dimensions):
-        """
-        Set the model dimensions.
-        @param dimensions: A tuple containing (nfeat, nfield)
-        @return: None
-        """
-        nfeat, nfield = dimensions
-        self._nfeat = nfeat
-        self._nfield = nfield
 
     @abstractmethod
     async def train(

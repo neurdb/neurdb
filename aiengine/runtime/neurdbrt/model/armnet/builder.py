@@ -23,8 +23,8 @@ class ARMNetModelBuilder(BuilderBase):
         print(f"[_init_model_arch]: Moving model to {DEVICE}")
         if self._model is None:
             self._model = ARMNetModel(
-                self._nfield if self._nfield else self.args.nfield,
-                self._nfeat if self._nfeat else self.args.nfeat,
+                self.args.nfields,
+                self.args.nfeat,
                 self.args.nemb,
                 self.args.nattn_head,
                 self.args.alpha,
@@ -49,7 +49,6 @@ class ARMNetModelBuilder(BuilderBase):
     ):
         logger = self._logger.bind(task="train")
 
-        # _nfeat, _nfield = self.model_dimension
         # create model
         self._init_model_arch()
 
