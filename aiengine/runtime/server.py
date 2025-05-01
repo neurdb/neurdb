@@ -3,7 +3,6 @@ import json
 from threading import Thread
 from typing import Any, List
 
-from neurdbrt.hook import exec_hooks_on_start, register_hooks
 from neurdb.logger import configure_logging as api_configure_logging
 from neurdbrt.app import Setup, WebsocketSender, before_execute
 from neurdbrt.app.msg import (
@@ -18,6 +17,7 @@ from neurdbrt.app.msg import (
 )
 from neurdbrt.cache import Bufferkey, ContextStates, DataCache, LibSvmDataDispatcher
 from neurdbrt.config import parse_config_arguments
+from neurdbrt.hook import exec_hooks_on_start, register_hooks
 from neurdbrt.log import configure_logging, logger
 from neurdbrt.repo import ModelRepository
 from quart import Quart, current_app, g, websocket
@@ -45,7 +45,7 @@ else:
             # "password": config_args.db_password,
         }
     )
-    
+
 register_hooks()
 exec_hooks_on_start()
 
