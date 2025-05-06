@@ -14,3 +14,19 @@ Traceback (most recent call last):
   File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 273, in _create_sockets
     sock.bind(binding)
 OSError: [Errno 98] Address already in use
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 308, in <module>
+    sys.exit(main())
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 304, in main
+    return run(config)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/run.py", line 39, in run
+    sockets = config.create_sockets()
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 206, in create_sockets
+    insecure_sockets = self._create_sockets(self.bind)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 273, in _create_sockets
+    sock.bind(binding)
+OSError: [Errno 98] Address already in use

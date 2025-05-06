@@ -33,7 +33,7 @@ $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data start
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 
 # (Start in frontend)
-$NEURDBPATH/psql/bin/neurdb -D $NEURDBPATH/psql/data -h 0.0.0.0
+$NEURDBPATH/psql/bin/postgres -D $NEURDBPATH/psql/data -h 0.0.0.0
 ```
 
 

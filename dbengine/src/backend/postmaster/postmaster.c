@@ -1537,7 +1537,7 @@ getInstallationPaths(const char *argv0)
 
 #ifdef EXEC_BACKEND
 	/* Locate executable backend before we change working directory */
-	if (find_other_exec(argv0, "neurdb", PG_BACKEND_VERSIONSTR,
+	if (find_other_exec(argv0, "postgres", PG_BACKEND_VERSIONSTR,
 						postgres_exec_path) < 0)
 		ereport(FATAL,
 				(errmsg("%s: could not locate matching postgres executable",

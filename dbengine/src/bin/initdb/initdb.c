@@ -2553,7 +2553,7 @@ setup_bin_paths(const char *argv0)
 {
 	int			ret;
 
-	if ((ret = find_other_exec(argv0, "neurdb", PG_BACKEND_VERSIONSTR,
+	if ((ret = find_other_exec(argv0, "postgres", PG_BACKEND_VERSIONSTR,
 							   backend_exec)) < 0)
 	{
 		char		full_path[MAXPGPATH];
