@@ -17,7 +17,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1insert: insert into d4_fk values (1);
@@ -57,7 +57,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1insert: insert into d4_fk values (1);
@@ -91,7 +91,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1fetchall: fetch all from f;
@@ -133,7 +133,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1svpt: savepoint f;
@@ -176,7 +176,7 @@ step s1declare: declare f cursor for select * from d4_primary;
 step s1cancel: select pg_cancel_backend(pid) from d4_pid;
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1fetchall: fetch all from f;
@@ -212,7 +212,7 @@ step s1declare: declare f cursor for select * from d4_primary;
 step s1cancel: select pg_cancel_backend(pid) from d4_pid;
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1svpt: savepoint f;
@@ -261,7 +261,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1updcur: update d4_fk set a = 1 where current of f;
@@ -337,7 +337,7 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
 step s1c: commit;
@@ -377,10 +377,10 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
-step s1noop:
+step s1noop: 
 step s3vacfreeze: vacuum freeze pg_catalog.pg_inherits;
 step s1s: select * from d4_primary;
 a
@@ -410,10 +410,10 @@ ERROR:  canceling statement due to user request
 step s1cancel: <... completed>
 pg_cancel_backend
 -----------------
-t
+t                
 (1 row)
 
-step s1noop:
+step s1noop: 
 step s3vacfreeze: vacuum freeze pg_catalog.pg_inherits;
 step s1s: select * from d4_primary;
 a

@@ -16,7 +16,7 @@ FROM pg_depend as d1
 WHERE refclassid = 0 OR refobjid = 0 OR
       classid = 0 OR objid = 0 OR
       deptype NOT IN ('a', 'e', 'i', 'n', 'x', 'P', 'S');
- classid | objid | objsubid | refclassid | refobjid | refobjsubid | deptype
+ classid | objid | objsubid | refclassid | refobjid | refobjsubid | deptype 
 ---------+-------+----------+------------+----------+-------------+---------
 (0 rows)
 
@@ -27,7 +27,7 @@ FROM pg_shdepend as d1
 WHERE refclassid = 0 OR refobjid = 0 OR
       classid = 0 OR objid = 0 OR
       deptype NOT IN ('a', 'o', 'r', 't');
- dbid | classid | objid | objsubid | refclassid | refobjid | deptype
+ dbid | classid | objid | objsubid | refclassid | refobjid | deptype 
 ------+---------+-------+----------+------------+----------+---------
 (0 rows)
 
@@ -47,7 +47,7 @@ WHERE c.oid < 16384 AND
       relkind = 'r' AND
       attstorage != 'p'
 ORDER BY 1, 2;
-         relname         |    attname    |   atttypid
+         relname         |    attname    |   atttypid   
 -------------------------+---------------+--------------
  pg_attribute            | attacl        | aclitem[]
  pg_attribute            | attfdwoptions | text[]
@@ -71,7 +71,7 @@ FROM pg_class
 WHERE relnamespace = 'pg_catalog'::regnamespace AND relkind = 'r'
       AND pg_class.oid NOT IN (SELECT indrelid FROM pg_index WHERE indisprimary)
 ORDER BY 1;
-   relname
+   relname   
 -------------
  pg_depend
  pg_shdepend
@@ -85,6 +85,7 @@ WHERE relnamespace = 'pg_catalog'::regnamespace AND relkind = 'i'
       AND i.indisunique
       AND c.oid NOT IN (SELECT conindid FROM pg_constraint)
 ORDER BY 1;
- relname
+ relname 
 ---------
 (0 rows)
+

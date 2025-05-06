@@ -74,233 +74,233 @@ LINE 1: select '{[z,a]}'::textmultirange;
                ^
 -- should succeed
 select '{}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 select '  {}  '::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 select ' { empty, empty }  '::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 select ' {( " a " " a ", " z " " z " )  }'::textmultirange;
-       textmultirange
+       textmultirange       
 ----------------------------
  {("  a   a ","  z   z  ")}
 (1 row)
 
 select textrange('\\\\', repeat('a', 200))::textmultirange;
-                                                                                                        textrange
+                                                                                                        textrange                                                                                                        
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {["\\\\\\\\",aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)}
 (1 row)
 
 select '{(,z)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {(,z)}
 (1 row)
 
 select '{(a,)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {(a,)}
 (1 row)
 
 select '{[,z]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {(,z]}
 (1 row)
 
 select '{[a,]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,)}
 (1 row)
 
 select '{(,)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {(,)}
 (1 row)
 
 select '{[ , ]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[" "," "]}
 (1 row)
 
 select '{["",""]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {["",""]}
 (1 row)
 
 select '{[",",","]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[",",","]}
 (1 row)
 
 select '{["\\","\\"]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {["\\","\\"]}
 (1 row)
 
 select '{["""","\""]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {["""",""""]}
 (1 row)
 
 select '{(\\,a)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {("\\",a)}
 (1 row)
 
 select '{((,z)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {("(",z)}
 (1 row)
 
 select '{([,z)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {("[",z)}
 (1 row)
 
 select '{(!,()}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {(!,"(")}
 (1 row)
 
 select '{(!,[)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {(!,"[")}
 (1 row)
 
 select '{[a,a]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,a]}
 (1 row)
 
 select '{[a,a],[a,b]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,b]}
 (1 row)
 
 select '{[a,b), [b,e]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,e]}
 (1 row)
 
 select '{[a,d), [b,f]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,f]}
 (1 row)
 
 select '{[a,a],[b,b]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,a],[b,b]}
 (1 row)
 
 -- without canonicalization, we can't join these:
 select '{[a,a], [b,b]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,a],[b,b]}
 (1 row)
 
 -- with canonicalization, we can join these:
 select '{[1,2], [3,4]}'::int4multirange;
- int4multirange
+ int4multirange 
 ----------------
  {[1,5)}
 (1 row)
 
 select '{[a,a], [b,b], [c,c]}'::textmultirange;
-   textmultirange
+   textmultirange    
 ---------------------
  {[a,a],[b,b],[c,c]}
 (1 row)
 
 select '{[a,d], [b,e]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,e]}
 (1 row)
 
 select '{[a,d), [d,e)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {[a,e)}
 (1 row)
 
 -- these are allowed but normalize to empty:
 select '{[a,a)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 select '{(a,a]}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 select '{(a,a)}'::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 -- Also try it with non-error-throwing API
 select pg_input_is_valid('{[1,2], [4,5]}', 'int4multirange');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
 
 select pg_input_is_valid('{[1,2], [4,5]', 'int4multirange');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 select * from pg_input_error_info('{[1,2], [4,5]', 'int4multirange');
-                    message                    |          detail          | hint | sql_error_code
+                    message                    |          detail          | hint | sql_error_code 
 -----------------------------------------------+--------------------------+------+----------------
  malformed multirange literal: "{[1,2], [4,5]" | Unexpected end of input. |      | 22P02
 (1 row)
 
 select pg_input_is_valid('{[1,2], [4,zed]}', 'int4multirange');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 select * from pg_input_error_info('{[1,2], [4,zed]}', 'int4multirange');
-                   message                    | detail | hint | sql_error_code
+                   message                    | detail | hint | sql_error_code 
 ----------------------------------------------+--------+------+----------------
  invalid input syntax for type integer: "zed" |        |      | 22P02
 (1 row)
@@ -309,25 +309,25 @@ select * from pg_input_error_info('{[1,2], [4,zed]}', 'int4multirange');
 -- test the constructor
 ---
 select textmultirange();
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 select textmultirange(textrange('a', 'c'));
- textmultirange
+ textmultirange 
 ----------------
  {[a,c)}
 (1 row)
 
 select textmultirange(textrange('a', 'c'), textrange('f', 'g'));
- textmultirange
+ textmultirange 
 ----------------
  {[a,c),[f,g)}
 (1 row)
 
 select textmultirange(textrange('\\\\', repeat('a', 200)), textrange('c', 'd'));
-                                                                                                        textmultirange
+                                                                                                        textmultirange                                                                                                         
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {["\\\\\\\\",aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa),[c,d)}
 (1 row)
@@ -336,49 +336,49 @@ select textmultirange(textrange('\\\\', repeat('a', 200)), textrange('c', 'd'));
 -- test casts, both a built-in range type and a user-defined one:
 --
 select 'empty'::int4range::int4multirange;
- int4multirange
+ int4multirange 
 ----------------
  {}
 (1 row)
 
 select int4range(1, 3)::int4multirange;
- int4range
+ int4range 
 -----------
  {[1,3)}
 (1 row)
 
 select int4range(1, null)::int4multirange;
- int4range
+ int4range 
 -----------
  {[1,)}
 (1 row)
 
 select int4range(null, null)::int4multirange;
- int4range
+ int4range 
 -----------
  {(,)}
 (1 row)
 
 select 'empty'::textrange::textmultirange;
- textmultirange
+ textmultirange 
 ----------------
  {}
 (1 row)
 
 select textrange('a', 'c')::textmultirange;
- textrange
+ textrange 
 -----------
  {[a,c)}
 (1 row)
 
 select textrange('a', null)::textmultirange;
- textrange
+ textrange 
 -----------
  {[a,)}
 (1 row)
 
 select textrange(null, null)::textmultirange;
- textrange
+ textrange 
 -----------
  {(,)}
 (1 row)
@@ -387,21 +387,21 @@ select textrange(null, null)::textmultirange;
 -- test unnest(multirange) function
 --
 select unnest(int4multirange(int4range('5', '6'), int4range('1', '2')));
- unnest
+ unnest 
 --------
  [1,2)
  [5,6)
 (2 rows)
 
 select unnest(textmultirange(textrange('a', 'b'), textrange('d', 'e')));
- unnest
+ unnest 
 --------
  [a,b)
  [d,e)
 (2 rows)
 
 select unnest(textmultirange(textrange('\\\\', repeat('a', 200)), textrange('c', 'd')));
-                                                                                                        unnest
+                                                                                                        unnest                                                                                                         
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  ["\\\\\\\\",aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
  [c,d)
@@ -424,23 +424,23 @@ INSERT INTO nummultirange_test VALUES('{empty}');
 INSERT INTO nummultirange_test VALUES(nummultirange(numrange(1.7, 1.7, '[]'), numrange(1.7, 1.9)));
 INSERT INTO nummultirange_test VALUES(nummultirange(numrange(1.7, 1.7, '[]'), numrange(1.9, 2.1)));
 SELECT nmr, isempty(nmr), lower(nmr), upper(nmr) FROM nummultirange_test ORDER BY nmr;
-          nmr          | isempty | lower | upper
+          nmr          | isempty | lower | upper 
 -----------------------+---------+-------+-------
- {}                    | t       |       |
- {}                    | t       |       |
- {}                    | t       |       |
- {}                    | t       |       |
+ {}                    | t       |       |      
+ {}                    | t       |       |      
+ {}                    | t       |       |      
+ {}                    | t       |       |      
  {(,5)}                | f       |       |     5
- {(,)}                 | f       |       |
- {(,)}                 | f       |       |
+ {(,)}                 | f       |       |      
+ {(,)}                 | f       |       |      
  {[1.1,2.2)}           | f       |   1.1 |   2.2
  {[1.7,1.7],[1.9,2.1)} | f       |   1.7 |   2.1
  {[1.7,1.9)}           | f       |   1.7 |   1.9
- {[3,)}                | f       |     3 |
+ {[3,)}                | f       |     3 |      
 (11 rows)
 
 SELECT nmr, lower_inc(nmr), lower_inf(nmr), upper_inc(nmr), upper_inf(nmr) FROM nummultirange_test ORDER BY nmr;
-          nmr          | lower_inc | lower_inf | upper_inc | upper_inf
+          nmr          | lower_inc | lower_inf | upper_inc | upper_inf 
 -----------------------+-----------+-----------+-----------+-----------
  {}                    | f         | f         | f         | f
  {}                    | f         | f         | f         | f
@@ -456,7 +456,7 @@ SELECT nmr, lower_inc(nmr), lower_inf(nmr), upper_inc(nmr), upper_inf(nmr) FROM 
 (11 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr = '{}';
- nmr
+ nmr 
 -----
  {}
  {}
@@ -465,35 +465,35 @@ SELECT * FROM nummultirange_test WHERE nmr = '{}';
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr = '{(,5)}';
-  nmr
+  nmr   
 --------
  {(,5)}
 (1 row)
 
 SELECT * FROM nummultirange_test WHERE nmr = '{[3,)}';
-  nmr
+  nmr   
 --------
  {[3,)}
 (1 row)
 
 SELECT * FROM nummultirange_test WHERE nmr = '{[1.7,1.7]}';
- nmr
+ nmr 
 -----
 (0 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr = '{[1.7,1.7],[1.9,2.1)}';
-          nmr
+          nmr          
 -----------------------
  {[1.7,1.7],[1.9,2.1)}
 (1 row)
 
 SELECT * FROM nummultirange_test WHERE nmr < '{}';
- nmr
+ nmr 
 -----
 (0 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr < '{[-1000.0, -1000.0]}';
-  nmr
+  nmr   
 --------
  {}
  {(,)}
@@ -505,7 +505,7 @@ SELECT * FROM nummultirange_test WHERE nmr < '{[-1000.0, -1000.0]}';
 (7 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr < '{[0.0, 1.0]}';
-  nmr
+  nmr   
 --------
  {}
  {(,)}
@@ -517,7 +517,7 @@ SELECT * FROM nummultirange_test WHERE nmr < '{[0.0, 1.0]}';
 (7 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr < '{[1000.0, 1001.0]}';
-          nmr
+          nmr          
 -----------------------
  {}
  {(,)}
@@ -533,7 +533,7 @@ SELECT * FROM nummultirange_test WHERE nmr < '{[1000.0, 1001.0]}';
 (11 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr <= '{}';
- nmr
+ nmr 
 -----
  {}
  {}
@@ -542,7 +542,7 @@ SELECT * FROM nummultirange_test WHERE nmr <= '{}';
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr <= '{[3,)}';
-          nmr
+          nmr          
 -----------------------
  {}
  {(,)}
@@ -558,7 +558,7 @@ SELECT * FROM nummultirange_test WHERE nmr <= '{[3,)}';
 (11 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr >= '{}';
-          nmr
+          nmr          
 -----------------------
  {}
  {(,)}
@@ -574,13 +574,13 @@ SELECT * FROM nummultirange_test WHERE nmr >= '{}';
 (11 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr >= '{[3,)}';
-  nmr
+  nmr   
 --------
  {[3,)}
 (1 row)
 
 SELECT * FROM nummultirange_test WHERE nmr > '{}';
-          nmr
+          nmr          
 -----------------------
  {(,)}
  {[3,)}
@@ -592,7 +592,7 @@ SELECT * FROM nummultirange_test WHERE nmr > '{}';
 (7 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr > '{[-1000.0, -1000.0]}';
-          nmr
+          nmr          
 -----------------------
  {[3,)}
  {[1.1,2.2)}
@@ -601,7 +601,7 @@ SELECT * FROM nummultirange_test WHERE nmr > '{[-1000.0, -1000.0]}';
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr > '{[0.0, 1.0]}';
-          nmr
+          nmr          
 -----------------------
  {[3,)}
  {[1.1,2.2)}
@@ -610,12 +610,12 @@ SELECT * FROM nummultirange_test WHERE nmr > '{[0.0, 1.0]}';
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr > '{[1000.0, 1001.0]}';
- nmr
+ nmr 
 -----
 (0 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr <> '{}';
-          nmr
+          nmr          
 -----------------------
  {(,)}
  {[3,)}
@@ -627,7 +627,7 @@ SELECT * FROM nummultirange_test WHERE nmr <> '{}';
 (7 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr <> '{(,5)}';
-          nmr
+          nmr          
 -----------------------
  {}
  {(,)}
@@ -644,7 +644,7 @@ SELECT * FROM nummultirange_test WHERE nmr <> '{(,5)}';
 select nummultirange(numrange(2.0, 1.0));
 ERROR:  range lower bound must be less than or equal to range upper bound
 select nummultirange(numrange(5.0, 6.0), numrange(1.0, 2.0));
-     nummultirange
+     nummultirange     
 -----------------------
  {[1.0,2.0),[5.0,6.0)}
 (1 row)
@@ -652,7 +652,7 @@ select nummultirange(numrange(5.0, 6.0), numrange(1.0, 2.0));
 analyze nummultirange_test;
 -- overlaps
 SELECT * FROM nummultirange_test WHERE range_overlaps_multirange(numrange(4.0, 4.2), nmr);
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -661,7 +661,7 @@ SELECT * FROM nummultirange_test WHERE range_overlaps_multirange(numrange(4.0, 4
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE numrange(4.0, 4.2) && nmr;
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -670,7 +670,7 @@ SELECT * FROM nummultirange_test WHERE numrange(4.0, 4.2) && nmr;
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE multirange_overlaps_range(nmr, numrange(4.0, 4.2));
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -679,7 +679,7 @@ SELECT * FROM nummultirange_test WHERE multirange_overlaps_range(nmr, numrange(4
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr && numrange(4.0, 4.2);
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -688,7 +688,7 @@ SELECT * FROM nummultirange_test WHERE nmr && numrange(4.0, 4.2);
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE multirange_overlaps_multirange(nmr, nummultirange(numrange(4.0, 4.2), numrange(6.0, 7.0)));
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -697,7 +697,7 @@ SELECT * FROM nummultirange_test WHERE multirange_overlaps_multirange(nmr, nummu
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr && nummultirange(numrange(4.0, 4.2), numrange(6.0, 7.0));
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -706,7 +706,7 @@ SELECT * FROM nummultirange_test WHERE nmr && nummultirange(numrange(4.0, 4.2), 
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr && nummultirange(numrange(6.0, 7.0));
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -714,7 +714,7 @@ SELECT * FROM nummultirange_test WHERE nmr && nummultirange(numrange(6.0, 7.0));
 (3 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr && nummultirange(numrange(6.0, 7.0), numrange(8.0, 9.0));
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -723,7 +723,7 @@ SELECT * FROM nummultirange_test WHERE nmr && nummultirange(numrange(6.0, 7.0), 
 
 -- mr contains x
 SELECT * FROM nummultirange_test WHERE multirange_contains_elem(nmr, 4.0);
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -732,7 +732,7 @@ SELECT * FROM nummultirange_test WHERE multirange_contains_elem(nmr, 4.0);
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr @> 4.0;
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -741,7 +741,7 @@ SELECT * FROM nummultirange_test WHERE nmr @> 4.0;
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE multirange_contains_range(nmr, numrange(4.0, 4.2));
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -750,7 +750,7 @@ SELECT * FROM nummultirange_test WHERE multirange_contains_range(nmr, numrange(4
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr @> numrange(4.0, 4.2);
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -759,7 +759,7 @@ SELECT * FROM nummultirange_test WHERE nmr @> numrange(4.0, 4.2);
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE multirange_contains_multirange(nmr, '{[4.0,4.2), [6.0, 8.0)}');
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -767,7 +767,7 @@ SELECT * FROM nummultirange_test WHERE multirange_contains_multirange(nmr, '{[4.
 (3 rows)
 
 SELECT * FROM nummultirange_test WHERE nmr @> '{[4.0,4.2), [6.0, 8.0)}'::nummultirange;
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -776,7 +776,7 @@ SELECT * FROM nummultirange_test WHERE nmr @> '{[4.0,4.2), [6.0, 8.0)}'::nummult
 
 -- x is contained by mr
 SELECT * FROM nummultirange_test WHERE elem_contained_by_multirange(4.0, nmr);
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -785,7 +785,7 @@ SELECT * FROM nummultirange_test WHERE elem_contained_by_multirange(4.0, nmr);
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE 4.0 <@ nmr;
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -794,7 +794,7 @@ SELECT * FROM nummultirange_test WHERE 4.0 <@ nmr;
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE range_contained_by_multirange(numrange(4.0, 4.2), nmr);
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -803,7 +803,7 @@ SELECT * FROM nummultirange_test WHERE range_contained_by_multirange(numrange(4.
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE numrange(4.0, 4.2) <@ nmr;
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -812,7 +812,7 @@ SELECT * FROM nummultirange_test WHERE numrange(4.0, 4.2) <@ nmr;
 (4 rows)
 
 SELECT * FROM nummultirange_test WHERE multirange_contained_by_multirange('{[4.0,4.2), [6.0, 8.0)}', nmr);
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -820,7 +820,7 @@ SELECT * FROM nummultirange_test WHERE multirange_contained_by_multirange('{[4.0
 (3 rows)
 
 SELECT * FROM nummultirange_test WHERE '{[4.0,4.2), [6.0, 8.0)}'::nummultirange <@ nmr;
-  nmr
+  nmr   
 --------
  {(,)}
  {[3,)}
@@ -829,1458 +829,1458 @@ SELECT * FROM nummultirange_test WHERE '{[4.0,4.2), [6.0, 8.0)}'::nummultirange 
 
 -- overlaps
 SELECT 'empty'::numrange && nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT 'empty'::numrange && nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() && 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) && 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() && nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() && nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) && nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) && nummultirange(numrange(1,2), numrange(7,8));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(7,8)) && nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) && nummultirange(numrange(1,2), numrange(3.5,8));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(3.5,8)) && numrange(3,4);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(3.5,8)) && nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select '{(10,20),(30,40),(50,60)}'::nummultirange && '(42,92)'::numrange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 -- contains
 SELECT nummultirange() @> nummultirange();
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange() @> 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,null)) @> numrange(1,2);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,null)) @> numrange(null,2);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,null)) @> numrange(2,null);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,5)) @> numrange(null,3);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,5)) @> numrange(null,8);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(5,null)) @> numrange(8,null);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(5,null)) @> numrange(3,null);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,5)) @> numrange(8,9);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,5)) @> numrange(3,9);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,5)) @> numrange(1,4);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,5)) @> numrange(1,5);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(-4,-2), numrange(1,5)) @> numrange(1,5);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,5), numrange(8,9)) @> numrange(1,5);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,5), numrange(8,9)) @> numrange(6,7);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,5), numrange(6,9)) @> numrange(6,7);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5)}'::nummultirange @> '{[1,5)}';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[-4,-2), [1,5)}'::nummultirange @> '{[1,5)}';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5), [8,9)}'::nummultirange @> '{[1,5)}';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5), [8,9)}'::nummultirange @> '{[6,7)}';
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT '{[1,5), [6,9)}'::nummultirange @> '{[6,7)}';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select '{(10,20),(30,40),(50,60)}'::nummultirange @> '(52,56)'::numrange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,null) @> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,null) @> nummultirange(numrange(null,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,null) @> nummultirange(numrange(2,null));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,5) @> nummultirange(numrange(null,3));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,5) @> nummultirange(numrange(null,8));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(5,null) @> nummultirange(numrange(8,null));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(5,null) @> nummultirange(numrange(3,null));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(1,5) @> nummultirange(numrange(8,9));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(1,5) @> nummultirange(numrange(3,9));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(1,5) @> nummultirange(numrange(1,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,5) @> nummultirange(numrange(1,5));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,9) @> nummultirange(numrange(-4,-2), numrange(1,5));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(1,9) @> nummultirange(numrange(1,5), numrange(8,9));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,9) @> nummultirange(numrange(1,5), numrange(6,9));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,9) @> nummultirange(numrange(1,5), numrange(6,10));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT '{[1,9)}' @> '{[1,5)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,9)}' @> '{[-4,-2), [1,5)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT '{[1,9)}' @> '{[1,5), [8,9)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,9)}' @> '{[1,5), [6,9)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,9)}' @> '{[1,5), [6,10)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 -- is contained by
 SELECT nummultirange() <@ nummultirange();
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT 'empty'::numrange <@ nummultirange();
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,2) <@ nummultirange(numrange(null,null));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,2) <@ nummultirange(numrange(null,null));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(2,null) <@ nummultirange(numrange(null,null));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,3) <@ nummultirange(numrange(null,5));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(null,8) <@ nummultirange(numrange(null,5));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(8,null) <@ nummultirange(numrange(5,null));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(3,null) <@ nummultirange(numrange(5,null));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(8,9) <@ nummultirange(numrange(1,5));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(3,9) <@ nummultirange(numrange(1,5));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(1,4) <@ nummultirange(numrange(1,5));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,5) <@ nummultirange(numrange(1,5));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,5) <@ nummultirange(numrange(-4,-2), numrange(1,5));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,5) <@ nummultirange(numrange(1,5), numrange(8,9));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(6,7) <@ nummultirange(numrange(1,5), numrange(8,9));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(6,7) <@ nummultirange(numrange(1,5), numrange(6,9));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5)}' <@ '{[1,5)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5)}' <@ '{[-4,-2), [1,5)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5)}' <@ '{[1,5), [8,9)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[6,7)}' <@ '{[1,5), [8,9)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT '{[6,7)}' <@ '{[1,5), [6,9)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) <@ numrange(null,null);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,2)) <@ numrange(null,null);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(2,null)) <@ numrange(null,null);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,3)) <@ numrange(null,5);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(null,8)) <@ numrange(null,5);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(8,null)) <@ numrange(5,null);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(3,null)) <@ numrange(5,null);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(8,9)) <@ numrange(1,5);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3,9)) <@ numrange(1,5);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,4)) <@ numrange(1,5);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,5)) <@ numrange(1,5);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(-4,-2), numrange(1,5)) <@ numrange(1,9);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,5), numrange(8,9)) <@ numrange(1,9);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,5), numrange(6,9)) <@ numrange(1,9);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,5), numrange(6,10)) <@ numrange(1,9);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT '{[1,5)}'::nummultirange <@ '{[1,9)}';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[-4,-2), [1,5)}'::nummultirange <@ '{[1,9)}';
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT '{[1,5), [8,9)}'::nummultirange <@ '{[1,9)}';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5), [6,9)}'::nummultirange <@ '{[1,9)}';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT '{[1,5), [6,10)}'::nummultirange <@ '{[1,9)}';
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 -- overleft
 SELECT 'empty'::numrange &< nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT 'empty'::numrange &< nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() &< 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) &< 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() &< nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) &< nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() &< nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(6,7) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(1,2) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,4) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,6) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(3.5,6) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(6,7)) &< numrange(3,4);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) &< numrange(3,4);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,4)) &< numrange(3,4);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,6)) &< numrange(3,4);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3.5,6)) &< numrange(3,4);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(6,7)) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,4)) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,6)) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3.5,6)) &< nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 -- overright
 SELECT nummultirange() &> 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) &> 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT 'empty'::numrange &> nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT 'empty'::numrange &> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() &> nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() &> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) &> nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> numrange(6,7);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> numrange(1,2);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> numrange(1,4);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> numrange(1,6);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> numrange(3.5,6);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(3,4) &> nummultirange(numrange(6,7));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(3,4) &> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(3,4) &> nummultirange(numrange(1,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(3,4) &> nummultirange(numrange(1,6));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(3,4) &> nummultirange(numrange(3.5,6));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> nummultirange(numrange(6,7));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> nummultirange(numrange(1,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> nummultirange(numrange(1,6));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(3,4)) &> nummultirange(numrange(3.5,6));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 -- meets
 SELECT 'empty'::numrange -|- nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT 'empty'::numrange -|- nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() -|- 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) -|- 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() -|- nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) -|- nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange() -|- nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT numrange(1,2) -|- nummultirange(numrange(2,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT numrange(1,2) -|- nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) -|- numrange(2,4);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) -|- numrange(3,4);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) -|- nummultirange(numrange(2,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) -|- nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(5,6)) -|- nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(5,6)) -|- nummultirange(numrange(6,7));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(5,6)) -|- nummultirange(numrange(8,9));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) -|- nummultirange(numrange(2,4), numrange(6,7));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 -- strictly left
 select 'empty'::numrange << nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select numrange(1,2) << nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select numrange(1,2) << nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select numrange(1,2) << nummultirange(numrange(0,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select numrange(1,2) << nummultirange(numrange(0,4), numrange(7,8));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange() << 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange() << numrange(1,2);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(3,4)) << numrange(3,6);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(0,2)) << numrange(3,6);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange(numrange(0,2), numrange(7,8)) << numrange(3,6);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(-4,-2), numrange(0,2)) << numrange(3,6);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange() << nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange() << nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(1,2)) << nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(1,2)) << nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(1,2)) << nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange(numrange(1,2)) << nummultirange(numrange(3,4), numrange(7,8));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange(numrange(1,2), numrange(4,5)) << nummultirange(numrange(3,4), numrange(7,8));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 -- strictly right
 select nummultirange() >> 'empty'::numrange;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange() >> numrange(1,2);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(3,4)) >> numrange(1,2);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange(numrange(0,4)) >> numrange(1,2);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(0,4), numrange(7,8)) >> numrange(1,2);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select 'empty'::numrange >> nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select numrange(1,2) >> nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select numrange(3,6) >> nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select numrange(3,6) >> nummultirange(numrange(0,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select numrange(3,6) >> nummultirange(numrange(0,2), numrange(7,8));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select numrange(3,6) >> nummultirange(numrange(-4,-2), numrange(0,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange() >> nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(1,2)) >> nummultirange();
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange() >> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(1,2)) >> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select nummultirange(numrange(3,4)) >> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange(numrange(3,4), numrange(7,8)) >> nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select nummultirange(numrange(3,4), numrange(7,8)) >> nummultirange(numrange(1,2), numrange(4,5));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 -- union
 SELECT nummultirange() + nummultirange();
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange() + nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) + nummultirange();
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) + nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) + nummultirange(numrange(2,4));
- ?column?
+ ?column? 
 ----------
  {[1,4)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) + nummultirange(numrange(3,4));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[3,4)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) + nummultirange(numrange(2,4));
- ?column?
+ ?column? 
 ----------
  {[1,5)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) + nummultirange(numrange(3,4));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[3,5)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) + nummultirange(numrange(0,9));
- ?column?
+ ?column? 
 ----------
  {[0,9)}
 (1 row)
 
 -- merge
 SELECT range_merge(nummultirange());
- range_merge
+ range_merge 
 -------------
  empty
 (1 row)
 
 SELECT range_merge(nummultirange(numrange(1,2)));
- range_merge
+ range_merge 
 -------------
  [1,2)
 (1 row)
 
 SELECT range_merge(nummultirange(numrange(1,2), numrange(7,8)));
- range_merge
+ range_merge 
 -------------
  [1,8)
 (1 row)
 
 -- minus
 SELECT nummultirange() - nummultirange();
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange() - nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) - nummultirange();
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(3,4)) - nummultirange();
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[3,4)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) - nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) - nummultirange(numrange(2,4));
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) - nummultirange(numrange(3,4));
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,4)) - nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  {[2,4)}
 (1 row)
 
 SELECT nummultirange(numrange(1,4)) - nummultirange(numrange(2,3));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[3,4)}
 (1 row)
 
 SELECT nummultirange(numrange(1,4)) - nummultirange(numrange(0,8));
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange(numrange(1,4)) - nummultirange(numrange(0,2));
- ?column?
+ ?column? 
 ----------
  {[2,4)}
 (1 row)
 
 SELECT nummultirange(numrange(1,8)) - nummultirange(numrange(0,2), numrange(3,4));
-   ?column?
+   ?column?    
 ---------------
  {[2,3),[4,8)}
 (1 row)
 
 SELECT nummultirange(numrange(1,8)) - nummultirange(numrange(2,3), numrange(5,null));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[3,5)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) - nummultirange(numrange(-2,0));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[4,5)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) - nummultirange(numrange(2,4));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[4,5)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) - nummultirange(numrange(3,5));
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) - nummultirange(numrange(0,9));
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange(numrange(1,3), numrange(4,5)) - nummultirange(numrange(2,9));
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) - nummultirange(numrange(8,9));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[4,5)}
 (1 row)
 
 SELECT nummultirange(numrange(1,2), numrange(4,5)) - nummultirange(numrange(-2,0), numrange(8,9));
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[4,5)}
 (1 row)
 
 -- intersection
 SELECT nummultirange() * nummultirange();
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange() * nummultirange(numrange(1,2));
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT nummultirange(numrange(1,2)) * nummultirange();
- ?column?
+ ?column? 
 ----------
  {}
 (1 row)
 
 SELECT '{[1,3)}'::nummultirange * '{[1,5)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  {[1,3)}
 (1 row)
 
 SELECT '{[1,3)}'::nummultirange * '{[0,5)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  {[1,3)}
 (1 row)
 
 SELECT '{[1,3)}'::nummultirange * '{[0,2)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  {[1,2)}
 (1 row)
 
 SELECT '{[1,3)}'::nummultirange * '{[2,5)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  {[2,3)}
 (1 row)
 
 SELECT '{[1,4)}'::nummultirange * '{[2,3)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  {[2,3)}
 (1 row)
 
 SELECT '{[1,4)}'::nummultirange * '{[0,2), [3,5)}'::nummultirange;
-   ?column?
+   ?column?    
 ---------------
  {[1,2),[3,4)}
 (1 row)
 
 SELECT '{[1,4), [7,10)}'::nummultirange * '{[0,8), [9,12)}'::nummultirange;
-       ?column?
+       ?column?       
 ----------------------
  {[1,4),[7,8),[9,10)}
 (1 row)
 
 SELECT '{[1,4), [7,10)}'::nummultirange * '{[9,12)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  {[9,10)}
 (1 row)
 
 SELECT '{[1,4), [7,10)}'::nummultirange * '{[-5,-4), [5,6), [9,12)}'::nummultirange;
- ?column?
+ ?column? 
 ----------
  {[9,10)}
 (1 row)
 
 SELECT '{[1,4), [7,10)}'::nummultirange * '{[0,2), [3,8), [9,12)}'::nummultirange;
-          ?column?
+          ?column?          
 ----------------------------
  {[1,2),[3,4),[7,8),[9,10)}
 (1 row)
 
 SELECT '{[1,4), [7,10)}'::nummultirange * '{[0,2), [3,8), [9,12)}'::nummultirange;
-          ?column?
+          ?column?          
 ----------------------------
  {[1,2),[3,4),[7,8),[9,10)}
 (1 row)
@@ -2303,223 +2303,223 @@ SET enable_seqscan    = t;
 SET enable_indexscan  = f;
 SET enable_bitmapscan = f;
 select count(*) from test_multirange_gist where mr = '{}'::int4multirange;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> 'empty'::int4range;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr && 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ 'empty'::int4range;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> '{}'::int4multirange;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> '{}'::int4multirange;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr && '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ '{}'::int4multirange;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr = int4multirange(int4range(10,20), int4range(30,40), int4range(50,60));
- count
+ count 
 -------
      1
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> 10;
- count
+ count 
 -------
    120
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> int4range(10,20);
- count
+ count 
 -------
    111
 (1 row)
 
 select count(*) from test_multirange_gist where mr && int4range(10,20);
- count
+ count 
 -------
    139
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ int4range(10,50);
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << int4range(100,500);
- count
+ count 
 -------
     54
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> int4range(100,500);
- count
+ count 
 -------
   2053
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< int4range(100,500);
- count
+ count 
 -------
    474
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> int4range(100,500);
- count
+ count 
 -------
   2893
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- int4range(100,500);
- count
+ count 
 -------
      3
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> '{}'::int4multirange;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> int4multirange(int4range(10,20), int4range(30,40));
- count
+ count 
 -------
    110
 (1 row)
 
 select count(*) from test_multirange_gist where mr && '{(10,20),(30,40),(50,60)}'::int4multirange;
- count
+ count 
 -------
    218
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ '{(10,30),(40,60),(70,90)}'::int4multirange;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
     54
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
   2053
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
    474
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
   2893
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
      3
 (1 row)
@@ -2529,229 +2529,229 @@ SET enable_seqscan    = f;
 SET enable_indexscan  = t;
 SET enable_bitmapscan = f;
 select count(*) from test_multirange_gist where mr = '{}'::int4multirange;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> 'empty'::int4range;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr && 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ 'empty'::int4range;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- 'empty'::int4range;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> '{}'::int4multirange;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> '{}'::int4multirange;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr && '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ '{}'::int4multirange;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- '{}'::int4multirange;
- count
+ count 
 -------
      0
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> 'empty'::int4range;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr = int4multirange(int4range(10,20), int4range(30,40), int4range(50,60));
- count
+ count 
 -------
      1
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> 10;
- count
+ count 
 -------
    120
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> int4range(10,20);
- count
+ count 
 -------
    111
 (1 row)
 
 select count(*) from test_multirange_gist where mr && int4range(10,20);
- count
+ count 
 -------
    139
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ int4range(10,50);
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << int4range(100,500);
- count
+ count 
 -------
     54
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> int4range(100,500);
- count
+ count 
 -------
   2053
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< int4range(100,500);
- count
+ count 
 -------
    474
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> int4range(100,500);
- count
+ count 
 -------
   2893
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- int4range(100,500);
- count
+ count 
 -------
      3
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> '{}'::int4multirange;
- count
+ count 
 -------
   3700
 (1 row)
 
 select count(*) from test_multirange_gist where mr @> int4multirange(int4range(10,20), int4range(30,40));
- count
+ count 
 -------
    110
 (1 row)
 
 select count(*) from test_multirange_gist where mr && '{(10,20),(30,40),(50,60)}'::int4multirange;
- count
+ count 
 -------
    218
 (1 row)
 
 select count(*) from test_multirange_gist where mr <@ '{(10,30),(40,60),(70,90)}'::int4multirange;
- count
+ count 
 -------
    500
 (1 row)
 
 select count(*) from test_multirange_gist where mr << int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
     54
 (1 row)
 
 select count(*) from test_multirange_gist where mr >> int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
   2053
 (1 row)
 
 select count(*) from test_multirange_gist where mr &< int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
    474
 (1 row)
 
 select count(*) from test_multirange_gist where mr &> int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
   2893
 (1 row)
 
 select count(*) from test_multirange_gist where mr -|- int4multirange(int4range(100,200), int4range(400,500));
- count
+ count 
 -------
      3
 (1 row)
@@ -2789,12 +2789,12 @@ SELECT   room_id, range_agg(booked_during)
 FROM     reservations
 GROUP BY room_id
 ORDER BY room_id;
- room_id |                     range_agg
+ room_id |                     range_agg                     
 ---------+---------------------------------------------------
        1 | {[07-01-2018,07-14-2018),[07-20-2018,07-22-2018)}
        2 | {[07-01-2018,07-03-2018)}
-       3 |
-       4 |
+       3 | 
+       4 | 
        5 | {[07-01-2018,07-03-2018)}
        6 | {[07-01-2018,07-10-2018)}
        7 | {[07-01-2018,07-14-2018)}
@@ -2810,68 +2810,68 @@ FROM    (VALUES
           ('[g,h)'::textrange),
           ('[h,j)'::textrange)
         ) t(r);
-   range_agg
+   range_agg   
 ---------------
  {[a,f],[g,j)}
 (1 row)
 
 -- range_agg with multirange inputs
 select range_agg(nmr) from nummultirange_test;
- range_agg
+ range_agg 
 -----------
  {(,)}
 (1 row)
 
 select range_agg(nmr) from nummultirange_test where false;
- range_agg
+ range_agg 
 -----------
-
+ 
 (1 row)
 
 select range_agg(null::nummultirange) from nummultirange_test;
- range_agg
+ range_agg 
 -----------
-
+ 
 (1 row)
 
 select range_agg(nmr) from (values ('{}'::nummultirange)) t(nmr);
- range_agg
+ range_agg 
 -----------
  {}
 (1 row)
 
 select range_agg(nmr) from (values ('{}'::nummultirange), ('{}'::nummultirange)) t(nmr);
- range_agg
+ range_agg 
 -----------
  {}
 (1 row)
 
 select range_agg(nmr) from (values ('{[1,2]}'::nummultirange)) t(nmr);
- range_agg
+ range_agg 
 -----------
  {[1,2]}
 (1 row)
 
 select range_agg(nmr) from (values ('{[1,2], [5,6]}'::nummultirange)) t(nmr);
-   range_agg
+   range_agg   
 ---------------
  {[1,2],[5,6]}
 (1 row)
 
 select range_agg(nmr) from (values ('{[1,2], [2,3]}'::nummultirange)) t(nmr);
- range_agg
+ range_agg 
 -----------
  {[1,3]}
 (1 row)
 
 select range_agg(nmr) from (values ('{[1,2]}'::nummultirange), ('{[5,6]}'::nummultirange)) t(nmr);
-   range_agg
+   range_agg   
 ---------------
  {[1,2],[5,6]}
 (1 row)
 
 select range_agg(nmr) from (values ('{[1,2]}'::nummultirange), ('{[2,3]}'::nummultirange)) t(nmr);
- range_agg
+ range_agg 
 -----------
  {[1,3]}
 (1 row)
@@ -2880,62 +2880,62 @@ select range_agg(nmr) from (values ('{[1,2]}'::nummultirange), ('{[2,3]}'::nummu
 -- range_intersect_agg function
 --
 select range_intersect_agg(nmr) from nummultirange_test;
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {}
 (1 row)
 
 select range_intersect_agg(nmr) from nummultirange_test where false;
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
-
+ 
 (1 row)
 
 select range_intersect_agg(null::nummultirange) from nummultirange_test;
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
-
+ 
 (1 row)
 
 select range_intersect_agg(nmr) from (values ('{[1,3]}'::nummultirange), ('{[6,12]}'::nummultirange)) t(nmr);
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {}
 (1 row)
 
 select range_intersect_agg(nmr) from (values ('{[1,6]}'::nummultirange), ('{[3,12]}'::nummultirange)) t(nmr);
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {[3,6]}
 (1 row)
 
 select range_intersect_agg(nmr) from (values ('{[1,6], [10,12]}'::nummultirange), ('{[4,14]}'::nummultirange)) t(nmr);
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {[4,6],[10,12]}
 (1 row)
 
 -- test with just one input:
 select range_intersect_agg(nmr) from (values ('{}'::nummultirange)) t(nmr);
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {}
 (1 row)
 
 select range_intersect_agg(nmr) from (values ('{[1,2]}'::nummultirange)) t(nmr);
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {[1,2]}
 (1 row)
 
 select range_intersect_agg(nmr) from (values ('{[1,6], [10,12]}'::nummultirange)) t(nmr);
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {[1,6],[10,12]}
 (1 row)
 
 select range_intersect_agg(nmr) from nummultirange_test where nmr @> 4.0;
- range_intersect_agg
+ range_intersect_agg 
 ---------------------
  {[3,5)}
 (1 row)
@@ -2948,20 +2948,20 @@ INSERT INTO nummultirange_test2 VALUES(nummultirange(numrange(1.1, 2.2)));
 INSERT INTO nummultirange_test2 VALUES(nummultirange(numrange(1.1, 2.2,'()')));
 INSERT INTO nummultirange_test2 VALUES('{}');
 select * from nummultirange_test2 where nmr = '{}';
- nmr
+ nmr 
 -----
  {}
 (1 row)
 
 select * from nummultirange_test2 where nmr = nummultirange(numrange(1.1, 2.2));
-     nmr
+     nmr     
 -------------
  {[1.1,2.2)}
  {[1.1,2.2)}
 (2 rows)
 
 select * from nummultirange_test2 where nmr = nummultirange(numrange(1.1, 2.3));
- nmr
+ nmr 
 -----
 (0 rows)
 
@@ -2969,7 +2969,7 @@ set enable_nestloop=t;
 set enable_hashjoin=f;
 set enable_mergejoin=f;
 select * from nummultirange_test natural join nummultirange_test2 order by nmr;
-     nmr
+     nmr     
 -------------
  {}
  {}
@@ -2984,7 +2984,7 @@ set enable_nestloop=f;
 set enable_hashjoin=t;
 set enable_mergejoin=f;
 select * from nummultirange_test natural join nummultirange_test2 order by nmr;
-     nmr
+     nmr     
 -------------
  {}
  {}
@@ -2999,7 +2999,7 @@ set enable_nestloop=f;
 set enable_hashjoin=f;
 set enable_mergejoin=t;
 select * from nummultirange_test natural join nummultirange_test2 order by nmr;
-     nmr
+     nmr     
 -------------
  {}
  {}
@@ -3018,7 +3018,7 @@ DROP TABLE nummultirange_test2;
 -- Test user-defined multirange of floats
 --
 select '{[123.001, 5.e9)}'::float8multirange @> 888.882::float8;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -3026,7 +3026,7 @@ select '{[123.001, 5.e9)}'::float8multirange @> 888.882::float8;
 create table float8multirange_test(f8mr float8multirange, i int);
 insert into float8multirange_test values(float8multirange(float8range(-100.00007, '1.111113e9')), 42);
 select * from float8multirange_test;
-           f8mr            | i
+           f8mr            | i  
 ---------------------------+----
  {[-100.00007,1111113000)} | 42
 (1 row)
@@ -3038,7 +3038,7 @@ drop table float8multirange_test;
 create domain mydomain as int4;
 create type mydomainrange as range(subtype=mydomain);
 select '{[4,50)}'::mydomainmultirange @> 7::mydomain;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -3050,7 +3050,7 @@ NOTICE:  drop cascades to type mydomainrange
 --
 create domain restrictedmultirange as int4multirange check (upper(value) < 10);
 select '{[4,5)}'::restrictedmultirange @> 7;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
@@ -3063,7 +3063,7 @@ drop domain restrictedmultirange;
 ---
 create type intr as range(subtype=int);
 select intr_multirange(intr(1,10));
- intr_multirange
+ intr_multirange 
 -----------------
  {[1,10)}
 (1 row)
@@ -3100,14 +3100,14 @@ HINT:  No function matches the given name and argument types. You might need to 
 select multirange_of_text(textrange1('a','Z')) @> 'b'::text;
 ERROR:  range lower bound must be less than or equal to range upper bound
 select unnest(multirange_of_text(textrange1('a','b'), textrange1('d','e')));
- unnest
+ unnest 
 --------
  [a,b)
  [d,e)
 (2 rows)
 
 select _textrange1(textrange2('a','z')) @> 'b'::text;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -3120,7 +3120,7 @@ drop type textrange2;
 create function anyarray_anymultirange_func(a anyarray, r anymultirange)
   returns anyelement as 'select $1[1] + lower($2);' language sql;
 select anyarray_anymultirange_func(ARRAY[1,2], int4multirange(int4range(10,20)));
- anyarray_anymultirange_func
+ anyarray_anymultirange_func 
 -----------------------------
                           11
 (1 row)
@@ -3145,13 +3145,13 @@ DETAIL:  A result of type anymultirange requires at least one input of type anyr
 create function range_add_bounds(anymultirange)
   returns anyelement as 'select lower($1) + upper($1)' language sql;
 select range_add_bounds(int4multirange(int4range(1, 17)));
- range_add_bounds
+ range_add_bounds 
 ------------------
                18
 (1 row)
 
 select range_add_bounds(nummultirange(numrange(1.0001, 123.123)));
- range_add_bounds
+ range_add_bounds 
 ------------------
          124.1231
 (1 row)
@@ -3160,7 +3160,7 @@ create function multirangetypes_sql(q anymultirange, b anyarray, out c anyelemen
   as $$ select upper($1) + $2[1] $$
   language sql;
 select multirangetypes_sql(int4multirange(int4range(1,10)), ARRAY[2,20]);
- multirangetypes_sql
+ multirangetypes_sql 
 ---------------------
                   12
 (1 row)
@@ -3173,13 +3173,13 @@ HINT:  No function matches the given name and argument types. You might need to 
 create function anycompatiblearray_anycompatiblemultirange_func(a anycompatiblearray, mr anycompatiblemultirange)
   returns anycompatible as 'select $1[1] + lower($2);' language sql;
 select anycompatiblearray_anycompatiblemultirange_func(ARRAY[1,2], multirange(int4range(10,20)));
- anycompatiblearray_anycompatiblemultirange_func
+ anycompatiblearray_anycompatiblemultirange_func 
 -------------------------------------------------
                                               11
 (1 row)
 
 select anycompatiblearray_anycompatiblemultirange_func(ARRAY[1,2], multirange(numrange(10,20)));
- anycompatiblearray_anycompatiblemultirange_func
+ anycompatiblearray_anycompatiblemultirange_func 
 -------------------------------------------------
                                               11
 (1 row)
@@ -3194,7 +3194,7 @@ drop function anycompatiblearray_anycompatiblemultirange_func(anycompatiblearray
 create function anycompatiblerange_anycompatiblemultirange_func(r anycompatiblerange, mr anycompatiblemultirange)
   returns anycompatible as 'select lower($1) + lower($2);' language sql;
 select anycompatiblerange_anycompatiblemultirange_func(int4range(1,2), multirange(int4range(10,20)));
- anycompatiblerange_anycompatiblemultirange_func
+ anycompatiblerange_anycompatiblemultirange_func 
 -------------------------------------------------
                                               11
 (1 row)
@@ -3215,7 +3215,7 @@ DETAIL:  A result of type anycompatiblerange requires at least one input of type
 -- Arrays of multiranges
 --
 select ARRAY[nummultirange(numrange(1.1, 1.2)), nummultirange(numrange(12.3, 155.5))];
-              array
+              array               
 ----------------------------------
  {"{[1.1,1.2)}","{[12.3,155.5)}"}
 (1 row)
@@ -3223,7 +3223,7 @@ select ARRAY[nummultirange(numrange(1.1, 1.2)), nummultirange(numrange(12.3, 155
 create table i8mr_array (f1 int, f2 int8multirange[]);
 insert into i8mr_array values (42, array[int8multirange(int8range(1,10)), int8multirange(int8range(2,20))]);
 select * from i8mr_array;
- f1 |           f2
+ f1 |           f2            
 ----+-------------------------
  42 | {"{[1,10)}","{[2,20)}"}
 (1 row)
@@ -3233,7 +3233,7 @@ drop table i8mr_array;
 -- Multiranges of arrays
 --
 select arraymultirange(arrayrange(ARRAY[1,2], ARRAY[2,1]));
-   arraymultirange
+   arraymultirange   
 ---------------------
  {["{1,2}","{2,1}")}
 (1 row)
@@ -3241,13 +3241,13 @@ select arraymultirange(arrayrange(ARRAY[1,2], ARRAY[2,1]));
 select arraymultirange(arrayrange(ARRAY[2,1], ARRAY[1,2]));  -- fail
 ERROR:  range lower bound must be less than or equal to range upper bound
 select array[1,1] <@ arraymultirange(arrayrange(array[1,2], array[2,1]));
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select array[1,3] <@ arraymultirange(arrayrange(array[1,2], array[2,1]));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -3261,7 +3261,7 @@ create type two_ints_range as range (subtype = two_ints);
 select *, row_to_json(upper(t)) as u from
   (values (two_ints_multirange(two_ints_range(row(1,2), row(3,4)))),
           (two_ints_multirange(two_ints_range(row(5,6), row(7,8))))) v(t);
-          t          |       u
+          t          |       u       
 ---------------------+---------------
  {["(1,2)","(3,4)")} | {"a":3,"b":4}
  {["(5,6)","(7,8)")} | {"a":7,"b":8}
@@ -3274,7 +3274,7 @@ NOTICE:  drop cascades to type two_ints_range
 --
 set enable_sort = off;  -- try to make it pick a hash setop implementation
 select '{(2,5)}'::cashmultirange except select '{(5,6)}'::cashmultirange;
- cashmultirange
+ cashmultirange  
 -----------------
  {($2.00,$5.00)}
 (1 row)
@@ -3287,7 +3287,7 @@ reset enable_sort;
 create function mr_outparam_succeed(i anymultirange, out r anymultirange, out t text)
   as $$ select $1, 'foo'::text $$ language sql;
 select * from mr_outparam_succeed(int4multirange(int4range(1,2)));
-    r    |  t
+    r    |  t  
 ---------+-----
  {[1,2)} | foo
 (1 row)
@@ -3296,7 +3296,7 @@ select * from mr_outparam_succeed(int4multirange(int4range(1,2)));
 create function mr_outparam_succeed2(i anymultirange, out r anyarray, out t text)
   as $$ select ARRAY[upper($1)], 'foo'::text $$ language sql;
 select * from mr_outparam_succeed2(int4multirange(int4range(1,2)));
-  r  |  t
+  r  |  t  
 -----+-----
  {2} | foo
 (1 row)
@@ -3305,7 +3305,7 @@ select * from mr_outparam_succeed2(int4multirange(int4range(1,2)));
 create function mr_outparam_succeed3(i anymultirange, out r anyrange, out t text)
   as $$ select range_merge($1), 'foo'::text $$ language sql;
 select * from mr_outparam_succeed3(int4multirange(int4range(1,2)));
-   r   |  t
+   r   |  t  
 -------+-----
  [1,2) | foo
 (1 row)
@@ -3314,7 +3314,7 @@ select * from mr_outparam_succeed3(int4multirange(int4range(1,2)));
 create function mr_outparam_succeed4(i anyrange, out r anymultirange, out t text)
   as $$ select multirange($1), 'foo'::text $$ language sql;
 select * from mr_outparam_succeed4(int4range(1,2));
-    r    |  t
+    r    |  t  
 ---------+-----
  {[1,2)} | foo
 (1 row)
@@ -3323,7 +3323,7 @@ select * from mr_outparam_succeed4(int4range(1,2));
 create function mr_inoutparam_succeed(out i anyelement, inout r anymultirange)
   as $$ select upper($1), $1 $$ language sql;
 select * from mr_inoutparam_succeed(int4multirange(int4range(1,2)));
- i |    r
+ i |    r    
 ---+---------
  2 | {[1,2)}
 (1 row)
@@ -3332,7 +3332,7 @@ select * from mr_inoutparam_succeed(int4multirange(int4range(1,2)));
 create function mr_table_succeed(i anyelement, r anymultirange) returns table(i anyelement, r anymultirange)
   as $$ select $1, $2 $$ language sql;
 select * from mr_table_succeed(123, int4multirange(int4range(1,11)));
-  i  |    r
+  i  |    r     
 -----+----------
  123 | {[1,11)}
 (1 row)
@@ -3341,7 +3341,7 @@ select * from mr_table_succeed(123, int4multirange(int4range(1,11)));
 create function mr_polymorphic(i anyrange) returns anymultirange
   as $$ begin return multirange($1); end; $$ language plpgsql;
 select mr_polymorphic(int4range(1, 4));
- mr_polymorphic
+ mr_polymorphic 
 ----------------
  {[1,4)}
 (1 row)

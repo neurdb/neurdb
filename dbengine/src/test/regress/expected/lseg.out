@@ -30,7 +30,7 @@ ERROR:  invalid input syntax for type lseg: "[(1,2),(3,4)"
 LINE 1: INSERT INTO LSEG_TBL VALUES ('[(1,2),(3,4)');
                                      ^
 select * from LSEG_TBL;
-               s
+               s               
 -------------------------------
  [(1,2),(3,4)]
  [(0,0),(6,6)]
@@ -44,13 +44,14 @@ select * from LSEG_TBL;
 
 -- test non-error-throwing API for some core types
 SELECT pg_input_is_valid('[(1,2),(3)]', 'lseg');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('[(1,2),(3)]', 'lseg');
-                      message                      | detail | hint | sql_error_code
+                      message                      | detail | hint | sql_error_code 
 ---------------------------------------------------+--------+------+----------------
  invalid input syntax for type lseg: "[(1,2),(3)]" |        |      | 22P02
 (1 row)
+

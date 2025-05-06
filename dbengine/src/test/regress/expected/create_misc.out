@@ -122,64 +122,64 @@ ANALYZE f_star;
 -- inheritance stress test
 --
 SELECT * FROM a_star*;
- class | a
+ class | a  
 -------+----
  a     |  1
  a     |  2
- a     |
+ a     |   
  b     |  3
  b     |  4
- b     |
- b     |
+ b     |   
+ b     |   
  c     |  5
  c     |  6
- c     |
- c     |
+ c     |   
+ c     |   
  d     |  7
  d     |  8
  d     |  9
  d     | 10
- d     |
+ d     |   
  d     | 11
  d     | 12
  d     | 13
- d     |
- d     |
- d     |
+ d     |   
+ d     |   
+ d     |   
  d     | 14
- d     |
- d     |
- d     |
- d     |
+ d     |   
+ d     |   
+ d     |   
+ d     |   
  e     | 15
  e     | 16
  e     | 17
- e     |
+ e     |   
  e     | 18
- e     |
- e     |
+ e     |   
+ e     |   
  f     | 19
  f     | 20
  f     | 21
  f     | 22
- f     |
+ f     |   
  f     | 24
  f     | 25
  f     | 26
- f     |
- f     |
- f     |
+ f     |   
+ f     |   
+ f     |   
  f     | 27
- f     |
- f     |
- f     |
- f     |
+ f     |   
+ f     |   
+ f     |   
+ f     |   
 (50 rows)
 
 SELECT *
    FROM b_star* x
    WHERE x.b = text 'bumble' or x.a < 3;
- class | a |   b
+ class | a |   b    
 -------+---+--------
  b     |   | bumble
 (1 row)
@@ -187,49 +187,49 @@ SELECT *
 SELECT class, a
    FROM c_star* x
    WHERE x.c ~ text 'hi';
- class | a
+ class | a  
 -------+----
  c     |  5
- c     |
+ c     |   
  d     |  7
  d     |  8
  d     | 10
- d     |
+ d     |   
  d     | 12
- d     |
- d     |
- d     |
+ d     |   
+ d     |   
+ d     |   
  e     | 15
  e     | 16
- e     |
- e     |
+ e     |   
+ e     |   
  f     | 19
  f     | 20
  f     | 21
- f     |
+ f     |   
  f     | 24
- f     |
- f     |
- f     |
+ f     |   
+ f     |   
+ f     |   
 (22 rows)
 
 SELECT class, b, c
    FROM d_star* x
    WHERE x.a < 100;
- class |    b    |     c
+ class |    b    |     c      
 -------+---------+------------
  d     | grumble | hi sunita
  d     | stumble | hi koko
- d     | rumble  |
+ d     | rumble  | 
  d     |         | hi kristin
- d     | fumble  |
+ d     | fumble  | 
  d     |         | hi avi
- d     |         |
- d     |         |
+ d     |         | 
+ d     |         | 
 (8 rows)
 
 SELECT class, c FROM e_star* x WHERE x.c NOTNULL;
- class |      c
+ class |      c      
 -------+-------------
  e     | hi carol
  e     | hi bob
@@ -246,27 +246,27 @@ SELECT class, c FROM e_star* x WHERE x.c NOTNULL;
 (12 rows)
 
 SELECT * FROM f_star* x WHERE x.c ISNULL;
- class | a  | c |  e  |                     f
+ class | a  | c |  e  |                     f                     
 -------+----+---+-----+-------------------------------------------
  f     | 22 |   |  -7 | ((111,555),(222,666),(333,777),(444,888))
- f     | 25 |   |  -9 |
+ f     | 25 |   |  -9 | 
  f     | 26 |   |     | ((11111,33333),(22222,44444))
  f     |    |   | -11 | ((1111111,3333333),(2222222,4444444))
- f     | 27 |   |     |
- f     |    |   | -12 |
+ f     | 27 |   |     | 
+ f     |    |   | -12 | 
  f     |    |   |     | ((11111111,33333333),(22222222,44444444))
- f     |    |   |     |
+ f     |    |   |     | 
 (8 rows)
 
 -- grouping and aggregation on inherited sets have been busted in the past...
 SELECT sum(a) FROM a_star*;
- sum
+ sum 
 -----
  355
 (1 row)
 
 SELECT class, sum(a) FROM a_star* GROUP BY class ORDER BY class;
- class | sum
+ class | sum 
 -------+-----
  a     |   3
  b     |   7
@@ -285,32 +285,32 @@ ALTER TABLE a_star* RENAME COLUMN a TO aa;
 SELECT class, aa
    FROM a_star* x
    WHERE aa ISNULL;
- class | aa
+ class | aa 
 -------+----
- a     |
- b     |
- b     |
- c     |
- c     |
- d     |
- d     |
- d     |
- d     |
- d     |
- d     |
- d     |
- d     |
- e     |
- e     |
- e     |
- f     |
- f     |
- f     |
- f     |
- f     |
- f     |
- f     |
- f     |
+ a     |   
+ b     |   
+ b     |   
+ c     |   
+ c     |   
+ d     |   
+ d     |   
+ d     |   
+ d     |   
+ d     |   
+ d     |   
+ d     |   
+ d     |   
+ e     |   
+ e     |   
+ e     |   
+ f     |   
+ f     |   
+ f     |   
+ f     |   
+ f     |   
+ f     |   
+ f     |   
+ f     |   
 (24 rows)
 
 -- As of Postgres 7.1, ALTER implicitly recurses,
@@ -319,7 +319,7 @@ ALTER TABLE a_star RENAME COLUMN aa TO foo;
 SELECT class, foo
    FROM a_star* x
    WHERE x.foo >= 2;
- class | foo
+ class | foo 
 -------+-----
  a     |   2
  b     |   3
@@ -352,7 +352,7 @@ ALTER TABLE a_star RENAME COLUMN foo TO aa;
 SELECT *
    from a_star*
    WHERE aa < 1000;
- class | aa
+ class | aa 
 -------+----
  a     |  1
  a     |  2
@@ -387,31 +387,31 @@ UPDATE f_star SET f = 10;
 ALTER TABLE e_star* ADD COLUMN e int4;
 --UPDATE e_star* SET e = 42;
 SELECT * FROM e_star*;
- class | aa |     cc      | ee  | e
+ class | aa |     cc      | ee  | e 
 -------+----+-------------+-----+---
- e     | 15 | hi carol    |  -1 |
- e     | 16 | hi bob      |     |
- e     | 17 |             |  -2 |
- e     |    | hi michelle |  -3 |
- e     | 18 |             |     |
- e     |    | hi elisa    |     |
- e     |    |             |  -4 |
- f     | 19 | hi claire   |  -5 |
- f     | 20 | hi mike     |  -6 |
- f     | 21 | hi marcel   |     |
- f     | 22 |             |  -7 |
- f     |    | hi keith    |  -8 |
- f     | 24 | hi marc     |     |
- f     | 25 |             |  -9 |
- f     | 26 |             |     |
- f     |    | hi allison  | -10 |
- f     |    | hi jeff     |     |
- f     |    |             | -11 |
- f     | 27 |             |     |
- f     |    | hi carl     |     |
- f     |    |             | -12 |
- f     |    |             |     |
- f     |    |             |     |
+ e     | 15 | hi carol    |  -1 |  
+ e     | 16 | hi bob      |     |  
+ e     | 17 |             |  -2 |  
+ e     |    | hi michelle |  -3 |  
+ e     | 18 |             |     |  
+ e     |    | hi elisa    |     |  
+ e     |    |             |  -4 |  
+ f     | 19 | hi claire   |  -5 |  
+ f     | 20 | hi mike     |  -6 |  
+ f     | 21 | hi marcel   |     |  
+ f     | 22 |             |  -7 |  
+ f     |    | hi keith    |  -8 |  
+ f     | 24 | hi marc     |     |  
+ f     | 25 |             |  -9 |  
+ f     | 26 |             |     |  
+ f     |    | hi allison  | -10 |  
+ f     |    | hi jeff     |     |  
+ f     |    |             | -11 |  
+ f     | 27 |             |     |  
+ f     |    | hi carl     |     |  
+ f     |    |             | -12 |  
+ f     |    |             |     |  
+ f     |    |             |     |  
 (23 rows)
 
 ALTER TABLE a_star* ADD COLUMN a text;
@@ -421,7 +421,7 @@ SELECT relname, reltoastrelid <> 0 AS has_toast_table
    FROM pg_class
    WHERE oid::regclass IN ('a_star', 'c_star')
    ORDER BY 1;
- relname | has_toast_table
+ relname | has_toast_table 
 ---------+-----------------
  a_star  | t
  c_star  | t
@@ -431,56 +431,57 @@ SELECT relname, reltoastrelid <> 0 AS has_toast_table
 --   SET a = text 'gazpacho'
 --   WHERE aa > 4;
 SELECT class, aa, a FROM a_star*;
- class | aa | a
+ class | aa | a 
 -------+----+---
- a     |  1 |
- a     |  2 |
- a     |    |
- b     |  3 |
- b     |  4 |
- b     |    |
- b     |    |
- c     |  5 |
- c     |  6 |
- c     |    |
- c     |    |
- d     |  7 |
- d     |  8 |
- d     |  9 |
- d     | 10 |
- d     |    |
- d     | 11 |
- d     | 12 |
- d     | 13 |
- d     |    |
- d     |    |
- d     |    |
- d     | 14 |
- d     |    |
- d     |    |
- d     |    |
- d     |    |
- e     | 15 |
- e     | 16 |
- e     | 17 |
- e     |    |
- e     | 18 |
- e     |    |
- e     |    |
- f     | 19 |
- f     | 20 |
- f     | 21 |
- f     | 22 |
- f     |    |
- f     | 24 |
- f     | 25 |
- f     | 26 |
- f     |    |
- f     |    |
- f     |    |
- f     | 27 |
- f     |    |
- f     |    |
- f     |    |
- f     |    |
+ a     |  1 | 
+ a     |  2 | 
+ a     |    | 
+ b     |  3 | 
+ b     |  4 | 
+ b     |    | 
+ b     |    | 
+ c     |  5 | 
+ c     |  6 | 
+ c     |    | 
+ c     |    | 
+ d     |  7 | 
+ d     |  8 | 
+ d     |  9 | 
+ d     | 10 | 
+ d     |    | 
+ d     | 11 | 
+ d     | 12 | 
+ d     | 13 | 
+ d     |    | 
+ d     |    | 
+ d     |    | 
+ d     | 14 | 
+ d     |    | 
+ d     |    | 
+ d     |    | 
+ d     |    | 
+ e     | 15 | 
+ e     | 16 | 
+ e     | 17 | 
+ e     |    | 
+ e     | 18 | 
+ e     |    | 
+ e     |    | 
+ f     | 19 | 
+ f     | 20 | 
+ f     | 21 | 
+ f     | 22 | 
+ f     |    | 
+ f     | 24 | 
+ f     | 25 | 
+ f     | 26 | 
+ f     |    | 
+ f     |    | 
+ f     |    | 
+ f     | 27 | 
+ f     |    | 
+ f     |    | 
+ f     |    | 
+ f     |    | 
 (50 rows)
+

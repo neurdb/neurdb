@@ -18,7 +18,7 @@ CREATE TEMP TABLE articles_in_category (
 SELECT id, keywords, title, body, created
 FROM articles
 GROUP BY id;
- id | keywords | title | body | created
+ id | keywords | title | body | created 
 ----+----------+-------+------+---------
 (0 rows)
 
@@ -49,7 +49,7 @@ SELECT a.id, a.keywords, a.title, a.body, a.created
 FROM articles AS a, articles_in_category AS aic
 WHERE a.id = aic.article_id AND aic.category_id in (14,62,70,53,138)
 GROUP BY a.id;
- id | keywords | title | body | created
+ id | keywords | title | body | created 
 ----+----------+-------+------+---------
 (0 rows)
 
@@ -67,7 +67,7 @@ SELECT a.id, a.keywords, a.title, a.body, a.created
 FROM articles AS a JOIN articles_in_category AS aic ON a.id = aic.article_id
 WHERE aic.category_id in (14,62,70,53,138)
 GROUP BY a.id;
- id | keywords | title | body | created
+ id | keywords | title | body | created 
 ----+----------+-------+------+---------
 (0 rows)
 
@@ -84,7 +84,7 @@ SELECT aic.changed
 FROM articles AS a JOIN articles_in_category AS aic ON a.id = aic.article_id
 WHERE aic.category_id in (14,62,70,53,138)
 GROUP BY aic.category_id, aic.article_id;
- changed
+ changed 
 ---------
 (0 rows)
 
@@ -103,7 +103,7 @@ CREATE TEMP TABLE sales (product_id int, units int);
 SELECT product_id, p.name, (sum(s.units) * p.price) AS sales
     FROM products p LEFT JOIN sales s USING (product_id)
     GROUP BY product_id, p.name, p.price;
- product_id | name | sales
+ product_id | name | sales 
 ------------+------+-------
 (0 rows)
 
@@ -119,7 +119,7 @@ ALTER TABLE products ADD PRIMARY KEY (product_id);
 SELECT product_id, p.name, (sum(s.units) * p.price) AS sales
     FROM products p LEFT JOIN sales s USING (product_id)
     GROUP BY product_id;
- product_id | name | sales
+ product_id | name | sales 
 ------------+------+-------
 (0 rows)
 
@@ -148,7 +148,7 @@ SELECT u.uid, u.name FROM node n
 INNER JOIN users u ON u.uid = n.uid
 WHERE n.type = 'blog' AND n.status = 1
 GROUP BY u.uid, u.name;
- uid | name
+ uid | name 
 -----+------
 (0 rows)
 
@@ -157,7 +157,7 @@ SELECT u.uid, u.name FROM node n
 INNER JOIN users u ON u.uid = n.uid
 WHERE n.type = 'blog' AND n.status = 1
 GROUP BY u.uid;
- uid | name
+ uid | name 
 -----+------
 (0 rows)
 
@@ -223,7 +223,7 @@ PREPARE foo AS
   FROM articles
   GROUP BY id;
 EXECUTE foo;
- id | keywords | title | body | created
+ id | keywords | title | body | created 
 ----+----------+-------+------+---------
 (0 rows)
 

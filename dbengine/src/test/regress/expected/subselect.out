@@ -2,78 +2,78 @@
 -- SUBSELECT
 --
 SELECT 1 AS one WHERE 1 IN (SELECT 1);
- one
+ one 
 -----
    1
 (1 row)
 
 SELECT 1 AS zero WHERE 1 NOT IN (SELECT 1);
- zero
+ zero 
 ------
 (0 rows)
 
 SELECT 1 AS zero WHERE 1 IN (SELECT 2);
- zero
+ zero 
 ------
 (0 rows)
 
 -- Check grammar's handling of extra parens in assorted contexts
 SELECT * FROM (SELECT 1 AS x) ss;
- x
+ x 
 ---
  1
 (1 row)
 
 SELECT * FROM ((SELECT 1 AS x)) ss;
- x
+ x 
 ---
  1
 (1 row)
 
 SELECT * FROM ((SELECT 1 AS x)), ((SELECT * FROM ((SELECT 2 AS y))));
- x | y
+ x | y 
 ---+---
  1 | 2
 (1 row)
 
 (SELECT 2) UNION SELECT 2;
- ?column?
+ ?column? 
 ----------
         2
 (1 row)
 
 ((SELECT 2)) UNION SELECT 2;
- ?column?
+ ?column? 
 ----------
         2
 (1 row)
 
 SELECT ((SELECT 2) UNION SELECT 2);
- ?column?
+ ?column? 
 ----------
         2
 (1 row)
 
 SELECT (((SELECT 2)) UNION SELECT 2);
- ?column?
+ ?column? 
 ----------
         2
 (1 row)
 
 SELECT (SELECT ARRAY[1,2,3])[1];
- array
+ array 
 -------
      1
 (1 row)
 
 SELECT ((SELECT ARRAY[1,2,3]))[2];
- array
+ array 
 -------
      2
 (1 row)
 
 SELECT (((SELECT ARRAY[1,2,3])))[3];
- array
+ array 
 -------
      3
 (1 row)
@@ -93,7 +93,7 @@ INSERT INTO SUBSELECT_TBL VALUES (3, 3, 3);
 INSERT INTO SUBSELECT_TBL VALUES (6, 7, 8);
 INSERT INTO SUBSELECT_TBL VALUES (8, 9, NULL);
 SELECT * FROM SUBSELECT_TBL;
- f1 | f2 | f3
+ f1 | f2 | f3 
 ----+----+----
   1 |  2 |  3
   2 |  3 |  4
@@ -102,13 +102,13 @@ SELECT * FROM SUBSELECT_TBL;
   2 |  2 |  2
   3 |  3 |  3
   6 |  7 |  8
-  8 |  9 |
+  8 |  9 |   
 (8 rows)
 
 -- Uncorrelated subselects
 SELECT f1 AS "Constant Select" FROM SUBSELECT_TBL
   WHERE f1 IN (SELECT 1);
- Constant Select
+ Constant Select 
 -----------------
                1
                1
@@ -116,7 +116,7 @@ SELECT f1 AS "Constant Select" FROM SUBSELECT_TBL
 
 SELECT f1 AS "Uncorrelated Field" FROM SUBSELECT_TBL
   WHERE f1 IN (SELECT f2 FROM SUBSELECT_TBL);
- Uncorrelated Field
+ Uncorrelated Field 
 --------------------
                   1
                   2
@@ -129,7 +129,7 @@ SELECT f1 AS "Uncorrelated Field" FROM SUBSELECT_TBL
 SELECT f1 AS "Uncorrelated Field" FROM SUBSELECT_TBL
   WHERE f1 IN (SELECT f2 FROM SUBSELECT_TBL WHERE
     f2 IN (SELECT f1 FROM SUBSELECT_TBL));
- Uncorrelated Field
+ Uncorrelated Field 
 --------------------
                   1
                   2
@@ -143,7 +143,7 @@ SELECT f1, f2
   FROM SUBSELECT_TBL
   WHERE (f1, f2) NOT IN (SELECT f2, CAST(f3 AS int4) FROM SUBSELECT_TBL
                          WHERE f3 IS NOT NULL);
- f1 | f2
+ f1 | f2 
 ----+----
   1 |  2
   6 |  7
@@ -154,7 +154,7 @@ SELECT f1, f2
 SELECT f1 AS "Correlated Field", f2 AS "Second Field"
   FROM SUBSELECT_TBL upper
   WHERE f1 IN (SELECT f2 FROM SUBSELECT_TBL WHERE f1 = upper.f1);
- Correlated Field | Second Field
+ Correlated Field | Second Field 
 ------------------+--------------
                 1 |            2
                 2 |            3
@@ -168,7 +168,7 @@ SELECT f1 AS "Correlated Field", f3 AS "Second Field"
   FROM SUBSELECT_TBL upper
   WHERE f1 IN
     (SELECT f2 FROM SUBSELECT_TBL WHERE CAST(upper.f2 AS float) = f3);
- Correlated Field | Second Field
+ Correlated Field | Second Field 
 ------------------+--------------
                 2 |            4
                 3 |            5
@@ -181,7 +181,7 @@ SELECT f1 AS "Correlated Field", f3 AS "Second Field"
   FROM SUBSELECT_TBL upper
   WHERE f3 IN (SELECT upper.f1 + f2 FROM SUBSELECT_TBL
                WHERE f2 = CAST(f3 AS integer));
- Correlated Field | Second Field
+ Correlated Field | Second Field 
 ------------------+--------------
                 1 |            3
                 2 |            4
@@ -193,7 +193,7 @@ SELECT f1 AS "Correlated Field"
   FROM SUBSELECT_TBL
   WHERE (f1, f2) IN (SELECT f2, CAST(f3 AS int4) FROM SUBSELECT_TBL
                      WHERE f3 IS NOT NULL);
- Correlated Field
+ Correlated Field 
 ------------------
                 2
                 3
@@ -204,19 +204,19 @@ SELECT f1 AS "Correlated Field"
 
 -- Subselects without aliases
 SELECT count FROM (SELECT COUNT(DISTINCT name) FROM road);
- count
+ count 
 -------
   2911
 (1 row)
 
 SELECT COUNT(*) FROM (SELECT DISTINCT name FROM road);
- count
+ count 
 -------
   2911
 (1 row)
 
 SELECT * FROM (SELECT * FROM int4_tbl), (VALUES (123456)) WHERE f1 = column1;
-   f1   | column1
+   f1   | column1 
 --------+---------
  123456 |  123456
 (1 row)
@@ -226,7 +226,7 @@ SELECT * FROM (SELECT * FROM (SELECT abs(f1) AS a1 FROM int4_tbl)),
               (SELECT * FROM int8_tbl)
   WHERE a1 < 10 AND q1 > a1 ORDER BY q1, q2;
 SELECT * FROM view_unnamed_ss;
- a1 |        q1        |        q2
+ a1 |        q1        |        q2         
 ----+------------------+-------------------
   0 |              123 |               456
   0 |              123 |  4567890123456789
@@ -272,19 +272,19 @@ SELECT ss.f1 AS "Correlated Field", ss.f3 AS "Second Field"
   FROM SUBSELECT_TBL ss
   WHERE f1 NOT IN (SELECT f1+1 FROM INT4_TBL
                    WHERE f1 != ss.f1 AND f1 < 2147483647);
- Correlated Field | Second Field
+ Correlated Field | Second Field 
 ------------------+--------------
                 2 |            4
                 3 |            5
                 2 |            2
                 3 |            3
                 6 |            8
-                8 |
+                8 |             
 (6 rows)
 
 select q1, float8(count(*)) / (select count(*) from int8_tbl)
 from int8_tbl group by q1 order by q1;
-        q1        | ?column?
+        q1        | ?column? 
 ------------------+----------
               123 |      0.4
  4567890123456789 |      0.6
@@ -293,7 +293,7 @@ from int8_tbl group by q1 order by q1;
 -- Unspecified-type literals in output columns should resolve as text
 SELECT *, pg_typeof(f1) FROM
   (SELECT 'foo' AS f1 FROM generate_series(1,3)) ss ORDER BY 1;
- f1  | pg_typeof
+ f1  | pg_typeof 
 -----+-----------
  foo | text
  foo | text
@@ -302,7 +302,7 @@ SELECT *, pg_typeof(f1) FROM
 
 -- ... unless there's context to suggest differently
 explain (verbose, costs off) select '42' union all select '43';
-         QUERY PLAN
+         QUERY PLAN         
 ----------------------------
  Append
    ->  Result
@@ -312,7 +312,7 @@ explain (verbose, costs off) select '42' union all select '43';
 (5 rows)
 
 explain (verbose, costs off) select '42' union all select 43;
-     QUERY PLAN
+     QUERY PLAN     
 --------------------
  Append
    ->  Result
@@ -324,7 +324,7 @@ explain (verbose, costs off) select '42' union all select 43;
 -- check materialization of an initplan reference (bug #14524)
 explain (verbose, costs off)
 select 1 = all (select (select 1));
-            QUERY PLAN
+            QUERY PLAN             
 -----------------------------------
  Result
    Output: (SubPlan 2)
@@ -339,7 +339,7 @@ select 1 = all (select (select 1));
 (10 rows)
 
 select 1 = all (select (select 1));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -350,7 +350,7 @@ select 1 = all (select (select 1));
 explain (costs off)
 select * from int4_tbl o where exists
   (select 1 from int4_tbl i where i.f1=o.f1 limit null);
-             QUERY PLAN
+             QUERY PLAN             
 ------------------------------------
  Hash Semi Join
    Hash Cond: (o.f1 = i.f1)
@@ -362,7 +362,7 @@ select * from int4_tbl o where exists
 explain (costs off)
 select * from int4_tbl o where not exists
   (select 1 from int4_tbl i where i.f1=o.f1 limit 1);
-             QUERY PLAN
+             QUERY PLAN             
 ------------------------------------
  Hash Anti Join
    Hash Cond: (o.f1 = i.f1)
@@ -374,7 +374,7 @@ select * from int4_tbl o where not exists
 explain (costs off)
 select * from int4_tbl o where exists
   (select 1 from int4_tbl i where i.f1=o.f1 limit 0);
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  Seq Scan on int4_tbl o
    Filter: (SubPlan 1)
@@ -391,7 +391,7 @@ select * from int4_tbl o where exists
 select count(*) from
   (select 1 from tenk1 a
    where unique1 IN (select hundred from tenk1 b)) ss;
- count
+ count 
 -------
    100
 (1 row)
@@ -399,7 +399,7 @@ select count(*) from
 select count(distinct ss.ten) from
   (select ten from tenk1 a
    where unique1 IN (select hundred from tenk1 b)) ss;
- count
+ count 
 -------
     10
 (1 row)
@@ -407,7 +407,7 @@ select count(distinct ss.ten) from
 select count(*) from
   (select 1 from tenk1 a
    where unique1 IN (select distinct hundred from tenk1 b)) ss;
- count
+ count 
 -------
    100
 (1 row)
@@ -415,7 +415,7 @@ select count(*) from
 select count(distinct ss.ten) from
   (select ten from tenk1 a
    where unique1 IN (select distinct hundred from tenk1 b)) ss;
- count
+ count 
 -------
     10
 (1 row)
@@ -434,14 +434,14 @@ INSERT INTO bar VALUES (3, 1);
 -- These cases require an extra level of distinct-ing above subquery s
 SELECT * FROM foo WHERE id IN
     (SELECT id2 FROM (SELECT DISTINCT id1, id2 FROM bar) AS s);
- id
+ id 
 ----
   1
 (1 row)
 
 SELECT * FROM foo WHERE id IN
     (SELECT id2 FROM (SELECT id1,id2 FROM bar GROUP BY id1,id2) AS s);
- id
+ id 
 ----
   1
 (1 row)
@@ -449,7 +449,7 @@ SELECT * FROM foo WHERE id IN
 SELECT * FROM foo WHERE id IN
     (SELECT id2 FROM (SELECT id1, id2 FROM bar UNION
                       SELECT id1, id2 FROM bar) AS s);
- id
+ id 
 ----
   1
 (1 row)
@@ -457,14 +457,14 @@ SELECT * FROM foo WHERE id IN
 -- These cases do not
 SELECT * FROM foo WHERE id IN
     (SELECT id2 FROM (SELECT DISTINCT ON (id2) id1, id2 FROM bar) AS s);
- id
+ id 
 ----
   1
 (1 row)
 
 SELECT * FROM foo WHERE id IN
     (SELECT id2 FROM (SELECT id2 FROM bar GROUP BY id2) AS s);
- id
+ id 
 ----
   1
 (1 row)
@@ -472,7 +472,7 @@ SELECT * FROM foo WHERE id IN
 SELECT * FROM foo WHERE id IN
     (SELECT id2 FROM (SELECT id2 FROM bar UNION
                       SELECT id2 FROM bar) AS s);
- id
+ id 
 ----
   1
 (1 row)
@@ -534,7 +534,7 @@ END) AS "Status",
 END) AS "Status_OK"
 FROM orderstest ord;
 SELECT * FROM orders_view;
- approver_ref | po_ref | ordercanceled | Approved |  Status  | Status_OK
+ approver_ref | po_ref | ordercanceled | Approved |  Status  | Status_OK 
 --------------+--------+---------------+----------+----------+-----------
             1 |      1 | f             | ---      | ---      | ---
            66 |      5 | f             | Approved | PO       | PO
@@ -573,7 +573,7 @@ insert into parts (partnum, cost) values (1, 1234.56);
 insert into shipped_view (ordnum, partnum, value)
     values (0, 1, (select cost from parts where partnum = '1'));
 select * from shipped_view;
- ttype | ordnum | partnum |  value
+ ttype | ordnum | partnum |  value  
 -------+--------+---------+---------
  wt    |      0 | 1       | 1234.56
 (1 row)
@@ -586,7 +586,7 @@ update shipped_view set value = 11
       on (a.f1 = (select f1 from int4_tbl c where c.f1=b.f1))
     where ordnum = a.f1;
 select * from shipped_view;
- ttype | ordnum | partnum | value
+ ttype | ordnum | partnum | value 
 -------+--------+---------+-------
  wt    |      0 | 1       |    11
 (1 row)
@@ -594,7 +594,7 @@ select * from shipped_view;
 select f1, ss1 as relabel from
     (select *, (select sum(f1) from int4_tbl b where f1 >= a.f1) as ss1
      from int4_tbl a) ss;
-     f1      |  relabel
+     f1      |  relabel   
 -------------+------------
            0 | 2147607103
       123456 | 2147607103
@@ -611,7 +611,7 @@ select * from (
   select max(unique1) from tenk1 as a
   where exists (select 1 from tenk1 as b where b.thousand = a.unique2)
 ) ss;
- max
+ max  
 ------
  9997
 (1 row)
@@ -620,7 +620,7 @@ select * from (
   select min(unique1) from tenk1 as a
   where not exists (select 1 from tenk1 as b where b.unique2 = 10000)
 ) ss;
- min
+ min 
 -----
    0
 (1 row)
@@ -639,7 +639,7 @@ create temp table float_table (float_col float8);
 insert into float_table values (1), (2), (3);
 select * from float_table
   where float_col in (select num_col from numeric_table);
- float_col
+ float_col 
 -----------
          1
          2
@@ -648,7 +648,7 @@ select * from float_table
 
 select * from numeric_table
   where num_col in (select float_col from float_table);
-         num_col
+         num_col         
 -------------------------
                        1
  1.000000000000000000001
@@ -674,7 +674,7 @@ select
   ( select min(tb.id) from tb
     where tb.aval = (select ta.val from ta where ta.id = tc.aid) ) as min_tb_id
 from tc;
- min_tb_id
+ min_tb_id 
 -----------
          1
          3
@@ -688,7 +688,7 @@ select * from
   (select distinct f1, f2, (select f2 from t1 x where x.f1 = up.f1) as fs
    from t1 up) ss
 group by f1,f2,fs;
- f1 | f2 | fs
+ f1 | f2 | fs 
 ----+----+----
 (0 rows)
 
@@ -699,25 +699,25 @@ create temp table table_a(id integer);
 insert into table_a values (42);
 create temp view view_a as select * from table_a;
 select view_a from view_a;
- view_a
+ view_a 
 --------
  (42)
 (1 row)
 
 select (select view_a) from view_a;
- view_a
+ view_a 
 --------
  (42)
 (1 row)
 
 select (select (select view_a)) from view_a;
- view_a
+ view_a 
 --------
  (42)
 (1 row)
 
 select (select (a.*)::text) from view_a a;
-  a
+  a   
 ------
  (42)
 (1 row)
@@ -727,7 +727,7 @@ select (select (a.*)::text) from view_a a;
 -- any junk columns therein
 --
 select q from (select max(f1) from int4_tbl group by f1 order by f1) q;
-       q
+       q       
 ---------------
  (-2147483647)
  (-123456)
@@ -738,7 +738,7 @@ select q from (select max(f1) from int4_tbl group by f1 order by f1) q;
 
 with q as (select max(f1) from int4_tbl group by f1 order by f1)
   select q from q;
-       q
+       q       
 ---------------
  (-2147483647)
  (-123456)
@@ -771,7 +771,7 @@ from
    from int8_tbl) sq0
   join
   int4_tbl i4 on dummy = i4.f1;
- qq1
+ qq1 
 -----
 (0 rows)
 
@@ -782,7 +782,7 @@ create temp table upsert(key int4 primary key, val text);
 insert into upsert values(1, 'val') on conflict (key) do update set val = 'not seen';
 insert into upsert values(1, 'val') on conflict (key) do update set val = 'seen with subselect ' || (select f1 from int4_tbl where f1 != 0 limit 1)::text;
 select * from upsert;
- key |            val
+ key |            val             
 -----+----------------------------
    1 | seen with subselect 123456
 (1 row)
@@ -791,7 +791,7 @@ with aa as (select 'int4_tbl' u from int4_tbl limit 1)
 insert into upsert values (1, 'x'), (999, 'y')
 on conflict (key) do update set val = (select u from aa)
 returning *;
- key |   val
+ key |   val    
 -----+----------
    1 | int4_tbl
  999 | y
@@ -808,10 +808,10 @@ insert into outer_7597 values (1, null);
 create temp table inner_7597(c1 int8, c2 int8);
 insert into inner_7597 values(0, null);
 select * from outer_7597 where (f1, f2) not in (select * from inner_7597);
- f1 | f2
+ f1 | f2 
 ----+----
   1 |  0
-  1 |
+  1 |   
 (2 rows)
 
 --
@@ -828,10 +828,10 @@ create temp table inner_text (c1 text, c2 text);
 insert into inner_text values ('a', null);
 insert into inner_text values ('123', '456');
 select * from outer_text where (f1, f2) not in (select * from inner_text);
- f1 | f2
+ f1 | f2 
 ----+----
  b  | a
- b  |
+ b  | 
 (2 rows)
 
 --
@@ -840,7 +840,7 @@ select * from outer_text where (f1, f2) not in (select * from inner_text);
 --
 explain (verbose, costs off)
 select 'foo'::text in (select 'bar'::name union all select 'bar'::name);
-             QUERY PLAN
+             QUERY PLAN              
 -------------------------------------
  Result
    Output: (hashed SubPlan 1)
@@ -853,7 +853,7 @@ select 'foo'::text in (select 'bar'::name union all select 'bar'::name);
 (8 rows)
 
 select 'foo'::text in (select 'bar'::name union all select 'bar'::name);
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
@@ -864,7 +864,7 @@ select 'foo'::text in (select 'bar'::name union all select 'bar'::name);
 --
 explain (verbose, costs off)
 select row(row(row(1))) = any (select row(row(1)));
-                QUERY PLAN
+                QUERY PLAN                 
 -------------------------------------------
  Result
    Output: (SubPlan 1)
@@ -876,7 +876,7 @@ select row(row(row(1))) = any (select row(row(1)));
 (7 rows)
 
 select row(row(row(1))) = any (select row(row(1)));
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -885,7 +885,7 @@ select row(row(row(1))) = any (select row(row(1)));
 -- Test case for premature memory release during hashing of subplan output
 --
 select '1'::text in (select '1'::name union all select '1'::name);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -907,7 +907,7 @@ language sql as 'select $1::text = $2';
 create operator = (procedure=bogus_int8_text_eq, leftarg=int8, rightarg=text);
 explain (costs off)
 select * from int8_tbl where q1 in (select c1 from inner_text);
-           QUERY PLAN
+           QUERY PLAN           
 --------------------------------
  Seq Scan on int8_tbl
    Filter: (hashed SubPlan 1)
@@ -916,7 +916,7 @@ select * from int8_tbl where q1 in (select c1 from inner_text);
 (4 rows)
 
 select * from int8_tbl where q1 in (select c1 from inner_text);
- q1  |        q2
+ q1  |        q2        
 -----+------------------
  123 |              456
  123 | 4567890123456789
@@ -928,7 +928,7 @@ create or replace function bogus_int8_text_eq(int8, text) returns boolean
 language sql as 'select $1::text = $2 and $1::text = $2';
 explain (costs off)
 select * from int8_tbl where q1 in (select c1 from inner_text);
-           QUERY PLAN
+           QUERY PLAN           
 --------------------------------
  Seq Scan on int8_tbl
    Filter: (hashed SubPlan 1)
@@ -937,7 +937,7 @@ select * from int8_tbl where q1 in (select c1 from inner_text);
 (4 rows)
 
 select * from int8_tbl where q1 in (select c1 from inner_text);
- q1  |        q2
+ q1  |        q2        
 -----+------------------
  123 |              456
  123 | 4567890123456789
@@ -949,7 +949,7 @@ create or replace function bogus_int8_text_eq(int8, text) returns boolean
 language sql as 'select $2 = $1::text';
 explain (costs off)
 select * from int8_tbl where q1 in (select c1 from inner_text);
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  Seq Scan on int8_tbl
    Filter: (SubPlan 1)
@@ -959,7 +959,7 @@ select * from int8_tbl where q1 in (select c1 from inner_text);
 (5 rows)
 
 select * from int8_tbl where q1 in (select c1 from inner_text);
- q1  |        q2
+ q1  |        q2        
 -----+------------------
  123 |              456
  123 | 4567890123456789
@@ -972,7 +972,7 @@ rollback;  -- to get rid of the bogus operator
 explain (costs off)
 select count(*) from tenk1 t
 where (exists(select 1 from tenk1 k where k.unique1 = t.unique2) or ten < 0);
-                          QUERY PLAN
+                          QUERY PLAN                          
 --------------------------------------------------------------
  Aggregate
    ->  Seq Scan on tenk1 t
@@ -983,7 +983,7 @@ where (exists(select 1 from tenk1 k where k.unique1 = t.unique2) or ten < 0);
 
 select count(*) from tenk1 t
 where (exists(select 1 from tenk1 k where k.unique1 = t.unique2) or ten < 0);
- count
+ count 
 -------
  10000
 (1 row)
@@ -992,7 +992,7 @@ explain (costs off)
 select count(*) from tenk1 t
 where (exists(select 1 from tenk1 k where k.unique1 = t.unique2) or ten < 0)
   and thousand = 1;
-                          QUERY PLAN
+                          QUERY PLAN                          
 --------------------------------------------------------------
  Aggregate
    ->  Bitmap Heap Scan on tenk1 t
@@ -1008,7 +1008,7 @@ where (exists(select 1 from tenk1 k where k.unique1 = t.unique2) or ten < 0)
 select count(*) from tenk1 t
 where (exists(select 1 from tenk1 k where k.unique1 = t.unique2) or ten < 0)
   and thousand = 1;
- count
+ count 
 -------
     10
 (1 row)
@@ -1022,7 +1022,7 @@ analyze exists_tbl;
 explain (costs off)
 select * from exists_tbl t1
   where (exists(select 1 from exists_tbl t2 where t1.c1 = t2.c2) or c3 < 0);
-                      QUERY PLAN
+                      QUERY PLAN                      
 ------------------------------------------------------
  Append
    ->  Seq Scan on exists_tbl_null t1_1
@@ -1043,7 +1043,7 @@ select * from exists_tbl t1
 
 select * from exists_tbl t1
   where (exists(select 1 from exists_tbl t2 where t1.c1 = t2.c2) or c3 < 0);
- c1 | c2 | c3
+ c1 | c2 | c3 
 ----+----+----
   0 |  0 |  1
   1 |  0 |  2
@@ -1061,7 +1061,7 @@ where a.thousand = b.thousand
   and exists ( select 1 from tenk1 c where b.hundred = c.hundred
                    and not exists ( select 1 from tenk1 d
                                     where a.thousand = d.thousand ) );
- thousand
+ thousand 
 ----------
 (0 rows)
 
@@ -1071,7 +1071,7 @@ where a.thousand = b.thousand
 explain (verbose, costs off)
   select x, x from
     (select (select now()) as x from (values(1),(2)) v(y)) ss;
-        QUERY PLAN
+        QUERY PLAN         
 ---------------------------
  Values Scan on "*VALUES*"
    Output: $0, $1
@@ -1086,7 +1086,7 @@ explain (verbose, costs off)
 explain (verbose, costs off)
   select x, x from
     (select (select random()) as x from (values(1),(2)) v(y)) ss;
-            QUERY PLAN
+            QUERY PLAN            
 ----------------------------------
  Subquery Scan on ss
    Output: ss.x, ss.x
@@ -1100,7 +1100,7 @@ explain (verbose, costs off)
 explain (verbose, costs off)
   select x, x from
     (select (select now() where y=y) as x from (values(1),(2)) v(y)) ss;
-                              QUERY PLAN
+                              QUERY PLAN                              
 ----------------------------------------------------------------------
  Values Scan on "*VALUES*"
    Output: (SubPlan 1), (SubPlan 2)
@@ -1117,7 +1117,7 @@ explain (verbose, costs off)
 explain (verbose, costs off)
   select x, x from
     (select (select random() where y=y) as x from (values(1),(2)) v(y)) ss;
-                                 QUERY PLAN
+                                 QUERY PLAN                                 
 ----------------------------------------------------------------------------
  Subquery Scan on ss
    Output: ss.x, ss.x
@@ -1140,7 +1140,7 @@ select sum(ss.tst::int) from
          random() as r
   from onek i where i.unique1 = o.unique1 ) ss
 where o.ten = 0;
-                                                                                         QUERY PLAN
+                                                                                         QUERY PLAN                                                                                          
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Aggregate
    Output: sum((((hashed SubPlan 1)))::integer)
@@ -1164,7 +1164,7 @@ select sum(ss.tst::int) from
          random() as r
   from onek i where i.unique1 = o.unique1 ) ss
 where o.ten = 0;
- sum
+ sum 
 -----
  100
 (1 row)
@@ -1180,7 +1180,7 @@ select count(*) from
     select * from onek i2 where i2.unique1 = o.unique2
   ) ss
 where o.ten = 1;
-                                  QUERY PLAN
+                                  QUERY PLAN                                  
 ------------------------------------------------------------------------------
  Aggregate
    ->  Nested Loop
@@ -1204,7 +1204,7 @@ select count(*) from
     select * from onek i2 where i2.unique1 = o.unique2
   ) ss
 where o.ten = 1;
- count
+ count 
 -------
    100
 (1 row)
@@ -1223,7 +1223,7 @@ select sum(o.four), sum(ss.a) from
     select * from x
   ) ss
 where o.ten = 1;
-                       QUERY PLAN
+                       QUERY PLAN                        
 ---------------------------------------------------------
  Aggregate
    ->  Nested Loop
@@ -1250,7 +1250,7 @@ select sum(o.four), sum(ss.a) from
     select * from x
   ) ss
 where o.ten = 1;
- sum  | sum
+ sum  | sum  
 ------+------
  1700 | 5350
 (1 row)
@@ -1262,9 +1262,9 @@ create temp table notinouter (a int);
 create temp table notininner (b int not null);
 insert into notinouter values (null), (1);
 select * from notinouter where a not in (select b from notininner);
- a
+ a 
 ---
-
+  
  1
 (2 rows)
 
@@ -1273,7 +1273,7 @@ select * from notinouter where a not in (select b from notininner);
 --
 create temp table nocolumns();
 select exists(select * from nocolumns);
- exists
+ exists 
 --------
  f
 (1 row)
@@ -1287,7 +1287,7 @@ select val.x
     values ((select s.i + 1)), (s.i + 101)
   ) as val(x)
 where s.i < 10 and (select val.x) < 110;
-  x
+  x  
 -----
    2
  102
@@ -1315,7 +1315,7 @@ select * from
   (3 not in (select * from (values (1), (2)) ss1)),
   (false)
 ) ss;
-               QUERY PLAN
+               QUERY PLAN               
 ----------------------------------------
  Values Scan on "*VALUES*"
    Output: "*VALUES*".column1
@@ -1329,7 +1329,7 @@ select * from
   (3 not in (select * from (values (1), (2)) ss1)),
   (false)
 ) ss;
- column1
+ column1 
 ---------
  t
  f
@@ -1342,7 +1342,7 @@ explain (verbose, costs off)
 select * from int4_tbl where
   (case when f1 in (select unique1 from tenk1 a) then f1 else null end) in
   (select ten from tenk1 b);
-                                                                                      QUERY PLAN
+                                                                                      QUERY PLAN                                                                                       
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop Semi Join
    Output: int4_tbl.f1
@@ -1359,7 +1359,7 @@ select * from int4_tbl where
 select * from int4_tbl where
   (case when f1 in (select unique1 from tenk1 a) then f1 else null end) in
   (select ten from tenk1 b);
- f1
+ f1 
 ----
   0
 (1 row)
@@ -1370,7 +1370,7 @@ select * from int4_tbl where
 explain (verbose, costs off)
 select * from int4_tbl o where (f1, f1) in
   (select f1, generate_series(1,50) / 10 g from int4_tbl i group by f1);
-                            QUERY PLAN
+                            QUERY PLAN                             
 -------------------------------------------------------------------
  Nested Loop Semi Join
    Output: o.f1
@@ -1395,7 +1395,7 @@ select * from int4_tbl o where (f1, f1) in
 
 select * from int4_tbl o where (f1, f1) in
   (select f1, generate_series(1,50) / 10 g from int4_tbl i group by f1);
- f1
+ f1 
 ----
   0
 (1 row)
@@ -1409,7 +1409,7 @@ select (select q from
           select 4,5,6.0 where f1 <= 0
          ) q )
 from int4_tbl;
-     q
+     q     
 -----------
  (4,5,6.0)
  (1,2,3)
@@ -1433,7 +1433,7 @@ select * from
         select true as b, 2 as id
     ) as t2
 where b and f1 >= 0;
-                 QUERY PLAN
+                 QUERY PLAN                 
 --------------------------------------------
  Nested Loop
    Output: i4.f1, ((i4.f1 > 1)), (1)
@@ -1462,7 +1462,7 @@ select * from
         select true as b, 2 as id
     ) as t2
 where b and f1 >= 0;
-     f1     | b | id
+     f1     | b | id 
 ------------+---+----
           0 | t |  2
      123456 | t |  1
@@ -1480,7 +1480,7 @@ select * from
   (select distinct ten from tenk1) ss
   where ten < 10 + nextval('ts1')
   order by 1;
- ten
+ ten 
 -----
    0
    1
@@ -1495,7 +1495,7 @@ select * from
 (10 rows)
 
 select nextval('ts1');
- nextval
+ nextval 
 ---------
       11
 (1 row)
@@ -1514,7 +1514,7 @@ explain (verbose, costs off)
 select * from
   (select 9 as x, unnest(array[1,2,3,11,12,13]) as u) ss
   where tattle(x, 8);
-                        QUERY PLAN
+                        QUERY PLAN                        
 ----------------------------------------------------------
  Subquery Scan on ss
    Output: ss.x, ss.u
@@ -1533,7 +1533,7 @@ NOTICE:  x = 9, y = 8
 NOTICE:  x = 9, y = 8
 NOTICE:  x = 9, y = 8
 NOTICE:  x = 9, y = 8
- x | u
+ x | u  
 ---+----
  9 |  1
  9 |  2
@@ -1549,7 +1549,7 @@ explain (verbose, costs off)
 select * from
   (select 9 as x, unnest(array[1,2,3,11,12,13]) as u) ss
   where tattle(x, 8);
-                     QUERY PLAN
+                     QUERY PLAN                     
 ----------------------------------------------------
  ProjectSet
    Output: 9, unnest('{1,2,3,11,12,13}'::integer[])
@@ -1561,7 +1561,7 @@ select * from
   (select 9 as x, unnest(array[1,2,3,11,12,13]) as u) ss
   where tattle(x, 8);
 NOTICE:  x = 9, y = 8
- x | u
+ x | u  
 ---+----
  9 |  1
  9 |  2
@@ -1576,7 +1576,7 @@ explain (verbose, costs off)
 select * from
   (select 9 as x, unnest(array[1,2,3,11,12,13]) as u) ss
   where tattle(x, u);
-                        QUERY PLAN
+                        QUERY PLAN                        
 ----------------------------------------------------------
  Subquery Scan on ss
    Output: ss.x, ss.u
@@ -1595,7 +1595,7 @@ NOTICE:  x = 9, y = 3
 NOTICE:  x = 9, y = 11
 NOTICE:  x = 9, y = 12
 NOTICE:  x = 9, y = 13
- x | u
+ x | u 
 ---+---
  9 | 1
  9 | 2
@@ -1633,7 +1633,7 @@ begin
 end;
 $$;
 select * from explain_sq_limit();
-                        explain_sq_limit
+                        explain_sq_limit                        
 ----------------------------------------------------------------
  Limit (actual rows=3 loops=1)
    ->  Subquery Scan on x (actual rows=3 loops=1)
@@ -1644,7 +1644,7 @@ select * from explain_sq_limit();
 (6 rows)
 
 select * from (select pk,c2 from sq_limit order by c1,pk) as x limit 3;
- pk | c2
+ pk | c2 
 ----+----
   1 |  1
   5 |  1
@@ -1663,7 +1663,7 @@ declare c1 scroll cursor for
   where i <> all (values (2),(3));
 move forward all in c1;
 fetch backward all in c1;
- i
+ i 
 ---
  4
  1
@@ -1677,7 +1677,7 @@ commit;
 explain (verbose, costs off)
 with x as (select * from (select f1 from subselect_tbl) ss)
 select * from x where f1 = 1;
-            QUERY PLAN
+            QUERY PLAN            
 ----------------------------------
  Seq Scan on public.subselect_tbl
    Output: subselect_tbl.f1
@@ -1688,7 +1688,7 @@ select * from x where f1 = 1;
 explain (verbose, costs off)
 with x as materialized (select * from (select f1 from subselect_tbl) ss)
 select * from x where f1 = 1;
-                QUERY PLAN
+                QUERY PLAN                
 ------------------------------------------
  CTE Scan on x
    Output: x.f1
@@ -1702,7 +1702,7 @@ select * from x where f1 = 1;
 explain (verbose, costs off)
 with x as (select * from (select f1, now() from subselect_tbl) ss)
 select * from x where f1 = 1;
-            QUERY PLAN
+            QUERY PLAN             
 -----------------------------------
  Seq Scan on public.subselect_tbl
    Output: subselect_tbl.f1, now()
@@ -1713,7 +1713,7 @@ select * from x where f1 = 1;
 explain (verbose, costs off)
 with x as (select * from (select f1, random() from subselect_tbl) ss)
 select * from x where f1 = 1;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  CTE Scan on x
    Output: x.f1, x.random
@@ -1727,7 +1727,7 @@ select * from x where f1 = 1;
 explain (verbose, costs off)
 with x as (select * from (select f1 from subselect_tbl for update) ss)
 select * from x where f1 = 1;
-                             QUERY PLAN
+                             QUERY PLAN                             
 --------------------------------------------------------------------
  CTE Scan on x
    Output: x.f1
@@ -1745,7 +1745,7 @@ select * from x where f1 = 1;
 explain (verbose, costs off)
 with x as (select * from (select f1, now() as n from subselect_tbl) ss)
 select * from x, x x2 where x.n = x2.n;
-                QUERY PLAN
+                QUERY PLAN                 
 -------------------------------------------
  Merge Join
    Output: x.f1, x.n, x2.f1, x2.n
@@ -1768,7 +1768,7 @@ select * from x, x x2 where x.n = x2.n;
 explain (verbose, costs off)
 with x as not materialized (select * from (select f1, now() as n from subselect_tbl) ss)
 select * from x, x x2 where x.n = x2.n;
-                                 QUERY PLAN
+                                 QUERY PLAN                                 
 ----------------------------------------------------------------------------
  Result
    Output: subselect_tbl.f1, now(), subselect_tbl_1.f1, now()
@@ -1792,7 +1792,7 @@ with recursive x(a) as
     select z.a || z1.a as a from z cross join z as z1
     where length(z.a || z1.a) < 5))
 select * from x;
-                        QUERY PLAN
+                        QUERY PLAN                        
 ----------------------------------------------------------
  CTE Scan on x
    Output: x.a
@@ -1819,7 +1819,7 @@ with recursive x(a) as
     select z.a || z1.a as a from z cross join z as z1
     where length(z.a || z1.a) < 5))
 select * from x;
-  a
+  a   
 ------
  a
  b
@@ -1853,7 +1853,7 @@ with recursive x(a) as
     select z.a || z.a as a from z
     where length(z.a || z.a) < 5))
 select * from x;
-                       QUERY PLAN
+                       QUERY PLAN                       
 --------------------------------------------------------
  CTE Scan on x
    Output: x.a
@@ -1873,7 +1873,7 @@ with recursive x(a) as
     select z.a || z.a as a from z
     where length(z.a || z.a) < 5))
 select * from x;
-  a
+  a   
 ------
  a
  b
@@ -1887,7 +1887,7 @@ select * from x;
 explain (verbose, costs off)
 with x as (select * from int4_tbl)
 select * from (with y as (select * from x) select * from y) ss;
-         QUERY PLAN
+         QUERY PLAN          
 -----------------------------
  Seq Scan on public.int4_tbl
    Output: int4_tbl.f1
@@ -1896,7 +1896,7 @@ select * from (with y as (select * from x) select * from y) ss;
 explain (verbose, costs off)
 with x as materialized (select * from int4_tbl)
 select * from (with y as (select * from x) select * from y) ss;
-             QUERY PLAN
+             QUERY PLAN              
 -------------------------------------
  CTE Scan on x
    Output: x.f1
@@ -1910,7 +1910,7 @@ select * from (with y as (select * from x) select * from y) ss;
 explain (verbose, costs off)
 with x as (select 1 as y)
 select * from (with x as (select 2 as y) select * from x) ss;
- QUERY PLAN
+ QUERY PLAN  
 -------------
  Result
    Output: 2
@@ -1920,8 +1920,9 @@ select * from (with x as (select 2 as y) select * from x) ss;
 explain (verbose, costs off)
 with x as (select * from subselect_tbl)
 select * from x for update;
-                           QUERY PLAN
+                           QUERY PLAN                           
 ----------------------------------------------------------------
  Seq Scan on public.subselect_tbl
    Output: subselect_tbl.f1, subselect_tbl.f2, subselect_tbl.f3
 (2 rows)
+

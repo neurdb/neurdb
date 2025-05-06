@@ -61,9 +61,9 @@ NOTICE:  rewriting table has_volatile for reason 2
 -- Test a large sample of different datatypes
 CREATE TABLE T(pk INT NOT NULL PRIMARY KEY, c_int INT DEFAULT 1);
 SELECT set('t');
- set
+ set 
 -----
-
+ 
 (1 row)
 
 INSERT INTO T VALUES (1), (2);
@@ -126,7 +126,7 @@ SELECT pk, c_int, c_bpchar, c_text, c_date, c_timestamp,
        c_hugetext = repeat('abcdefg',1000) as c_hugetext_origdef,
        c_hugetext = repeat('poiuyt', 1000) as c_hugetext_newdef
 FROM T ORDER BY pk;
- pk | c_int | c_bpchar | c_text |   c_date   |       c_timestamp        |     c_timestamp_null     |         c_array          | c_small | c_small_null |       c_big       |       c_num       |  c_time  | c_interval | c_hugetext_origdef | c_hugetext_newdef
+ pk | c_int | c_bpchar | c_text |   c_date   |       c_timestamp        |     c_timestamp_null     |         c_array          | c_small | c_small_null |       c_big       |       c_num       |  c_time  | c_interval | c_hugetext_origdef | c_hugetext_newdef 
 ----+-------+----------+--------+------------+--------------------------+--------------------------+--------------------------+---------+--------------+-------------------+-------------------+----------+------------+--------------------+-------------------
   1 |     1 | hello    | world  | 06-02-2016 | Thu Sep 01 12:00:00 2016 |                          | {This,is,the,real,world} |      -5 |              |   180000000000018 |     1.00000000001 | 12:00:00 | @ 1 day    | t                  | f
   2 |     1 | hello    | world  | 06-02-2016 | Thu Sep 01 12:00:00 2016 |                          | {This,is,the,real,world} |      -5 |              |   180000000000018 |     1.00000000001 | 12:00:00 | @ 1 day    | t                  | f
@@ -154,12 +154,12 @@ FROM T ORDER BY pk;
  24 |     2 | dog      | cat    | 01-01-2010 | Thu Dec 31 11:12:13 1970 | Thu Sep 29 12:00:00 2016 | {This,is,no,fantasy}     |       9 |           13 | -9999999999999999 | 2.000000000000002 | 23:59:59 | @ 3 hours  | t                  | f
  25 |     2 | dog      | cat    | 01-01-2010 | Thu Dec 31 11:12:13 1970 | Thu Sep 29 12:00:00 2016 | {This,is,no,fantasy}     |       9 |           13 | -9999999999999999 | 2.000000000000002 | 23:59:59 |            | f                  | t
  26 |     2 | dog      | cat    | 01-01-2010 | Thu Dec 31 11:12:13 1970 | Thu Sep 29 12:00:00 2016 | {This,is,no,fantasy}     |       9 |           13 | -9999999999999999 | 2.000000000000002 | 23:59:59 |            | f                  | t
- 27 |     2 |          |        |            |                          | Thu Sep 29 12:00:00 2016 |                          |         |           13 |                   |                   |          |            |                    |
- 28 |     2 |          |        |            |                          | Thu Sep 29 12:00:00 2016 |                          |         |           13 |                   |                   |          |            |                    |
+ 27 |     2 |          |        |            |                          | Thu Sep 29 12:00:00 2016 |                          |         |           13 |                   |                   |          |            |                    | 
+ 28 |     2 |          |        |            |                          | Thu Sep 29 12:00:00 2016 |                          |         |           13 |                   |                   |          |            |                    | 
 (28 rows)
 
 SELECT comp();
-   comp
+   comp    
 -----------
  Unchanged
 (1 row)
@@ -179,9 +179,9 @@ BEGIN
 END; $$ LANGUAGE PLPGSQL STABLE;
 CREATE TABLE T(pk INT NOT NULL PRIMARY KEY, c_int INT DEFAULT LENGTH(foo(6)));
 SELECT set('t');
- set
+ set 
 -----
-
+ 
 (1 row)
 
 INSERT INTO T VALUES (1), (2);
@@ -218,7 +218,7 @@ ALTER TABLE T ALTER COLUMN c_bpchar    DROP DEFAULT,
               ALTER COLUMN c_array     DROP DEFAULT;
 INSERT INTO T VALUES (15), (16);
 SELECT * FROM T;
- pk | c_int | c_bpchar |    c_text    |   c_date   |       c_timestamp        |            c_array
+ pk | c_int | c_bpchar |    c_text    |   c_date   |       c_timestamp        |            c_array            
 ----+-------+----------+--------------+------------+--------------------------+-------------------------------
   1 |     6 | abcd     | abcdef       | 06-12-2016 | Sun Sep 11 00:00:00 2016 | {This,is,abcd,the,real,world}
   2 |     6 | abcd     | abcdef       | 06-12-2016 | Sun Sep 11 00:00:00 2016 | {This,is,abcd,the,real,world}
@@ -234,12 +234,12 @@ SELECT * FROM T;
  12 |     8 | abc      | abcdefghijkl | 12-28-2009 | Sat Jan 30 00:00:00 1971 | {This,is,abcd,the,real,world}
  13 |       | abc      | abcdefghijkl | 12-28-2009 | Sat Jan 30 00:00:00 1971 | {This,is,a,fantasy}
  14 |       | abc      | abcdefghijkl | 12-28-2009 | Sat Jan 30 00:00:00 1971 | {This,is,a,fantasy}
- 15 |       |          |              |            |                          |
- 16 |       |          |              |            |                          |
+ 15 |       |          |              |            |                          | 
+ 16 |       |          |              |            |                          | 
 (16 rows)
 
 SELECT comp();
-   comp
+   comp    
 -----------
  Unchanged
 (1 row)
@@ -250,15 +250,15 @@ DROP FUNCTION foo(INT);
 CREATE TABLE T(pk INT NOT NULL PRIMARY KEY);
 INSERT INTO T VALUES (1);
 SELECT set('t');
- set
+ set 
 -----
-
+ 
 (1 row)
 
 -- now() is stable, because it returns the transaction timestamp
 ALTER TABLE T ADD COLUMN c1 TIMESTAMP DEFAULT now();
 SELECT comp();
-   comp
+   comp    
 -----------
  Unchanged
 (1 row)
@@ -267,7 +267,7 @@ SELECT comp();
 ALTER TABLE T ADD COLUMN c2 TIMESTAMP DEFAULT clock_timestamp();
 NOTICE:  rewriting table t for reason 2
 SELECT comp();
-   comp
+   comp    
 -----------
  Rewritten
 (1 row)
@@ -281,12 +281,12 @@ NOTICE:  rewriting table t for reason 2
 SELECT attname, atthasmissing, attmissingval FROM pg_attribute
   WHERE attrelid = 't'::regclass AND attnum > 0
   ORDER BY attnum;
- attname | atthasmissing | attmissingval
+ attname | atthasmissing | attmissingval 
 ---------+---------------+---------------
- pk      | f             |
- c1      | f             |
- c2      | f             |
- c3      | f             |
+ pk      | f             | 
+ c1      | f             | 
+ c2      | f             | 
+ c3      | f             | 
 (4 rows)
 
 DROP TABLE T;
@@ -294,9 +294,9 @@ DROP FUNCTION foolme(timestamptz);
 -- Simple querie
 CREATE TABLE T (pk INT NOT NULL PRIMARY KEY);
 SELECT set('t');
- set
+ set 
 -----
-
+ 
 (1 row)
 
 INSERT INTO T SELECT * FROM generate_series(1, 10) a;
@@ -306,14 +306,14 @@ ALTER TABLE T ADD COLUMN c_text TEXT DEFAULT 'hello';
 INSERT INTO T SELECT b, b - 10, (b + 10)::text FROM generate_series(21, 30) a(b);
 -- WHERE clause
 SELECT c_bigint, c_text FROM T WHERE c_bigint = -1 LIMIT 1;
- c_bigint | c_text
+ c_bigint | c_text 
 ----------+--------
        -1 | hello
 (1 row)
 
 EXPLAIN (VERBOSE TRUE, COSTS FALSE)
 SELECT c_bigint, c_text FROM T WHERE c_bigint = -1 LIMIT 1;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  Limit
    Output: c_bigint, c_text
@@ -323,13 +323,13 @@ SELECT c_bigint, c_text FROM T WHERE c_bigint = -1 LIMIT 1;
 (5 rows)
 
 SELECT c_bigint, c_text FROM T WHERE c_text = 'hello' LIMIT 1;
- c_bigint | c_text
+ c_bigint | c_text 
 ----------+--------
        -1 | hello
 (1 row)
 
 EXPLAIN (VERBOSE TRUE, COSTS FALSE) SELECT c_bigint, c_text FROM T WHERE c_text = 'hello' LIMIT 1;
-                 QUERY PLAN
+                 QUERY PLAN                 
 --------------------------------------------
  Limit
    Output: c_bigint, c_text
@@ -342,7 +342,7 @@ EXPLAIN (VERBOSE TRUE, COSTS FALSE) SELECT c_bigint, c_text FROM T WHERE c_text 
 SELECT COALESCE(c_bigint, pk), COALESCE(c_text, pk::text)
 FROM T
 ORDER BY pk LIMIT 10;
- coalesce | coalesce
+ coalesce | coalesce 
 ----------+----------
        -1 | hello
        -1 | hello
@@ -358,14 +358,14 @@ ORDER BY pk LIMIT 10;
 
 -- Aggregate function
 SELECT SUM(c_bigint), MAX(c_text COLLATE "C" ), MIN(c_text COLLATE "C") FROM T;
- sum |  max  | min
+ sum |  max  | min 
 -----+-------+-----
  200 | hello | 31
 (1 row)
 
 -- ORDER BY
 SELECT * FROM T ORDER BY c_bigint, c_text, pk LIMIT 10;
- pk | c_bigint | c_text
+ pk | c_bigint | c_text 
 ----+----------+--------
   1 |       -1 | hello
   2 |       -1 | hello
@@ -381,7 +381,7 @@ SELECT * FROM T ORDER BY c_bigint, c_text, pk LIMIT 10;
 
 EXPLAIN (VERBOSE TRUE, COSTS FALSE)
 SELECT * FROM T ORDER BY c_bigint, c_text, pk LIMIT 10;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  Limit
    Output: pk, c_bigint, c_text
@@ -394,7 +394,7 @@ SELECT * FROM T ORDER BY c_bigint, c_text, pk LIMIT 10;
 
 -- LIMIT
 SELECT * FROM T WHERE c_bigint > -1 ORDER BY c_bigint, c_text, pk LIMIT 10;
- pk | c_bigint | c_text
+ pk | c_bigint | c_text 
 ----+----------+--------
  11 |        1 | hello
  12 |        2 | hello
@@ -410,7 +410,7 @@ SELECT * FROM T WHERE c_bigint > -1 ORDER BY c_bigint, c_text, pk LIMIT 10;
 
 EXPLAIN (VERBOSE TRUE, COSTS FALSE)
 SELECT * FROM T WHERE c_bigint > -1 ORDER BY c_bigint, c_text, pk LIMIT 10;
-                     QUERY PLAN
+                     QUERY PLAN                     
 ----------------------------------------------------
  Limit
    Output: pk, c_bigint, c_text
@@ -424,7 +424,7 @@ SELECT * FROM T WHERE c_bigint > -1 ORDER BY c_bigint, c_text, pk LIMIT 10;
 
 --  DELETE with RETURNING
 DELETE FROM T WHERE pk BETWEEN 10 AND 20 RETURNING *;
- pk | c_bigint | c_text
+ pk | c_bigint | c_text 
 ----+----------+--------
  10 |       -1 | hello
  11 |        1 | hello
@@ -441,7 +441,7 @@ DELETE FROM T WHERE pk BETWEEN 10 AND 20 RETURNING *;
 
 EXPLAIN (VERBOSE TRUE, COSTS FALSE)
 DELETE FROM T WHERE pk BETWEEN 10 AND 20 RETURNING *;
-                        QUERY PLAN
+                        QUERY PLAN                         
 -----------------------------------------------------------
  Delete on fast_default.t
    Output: pk, c_bigint, c_text
@@ -455,7 +455,7 @@ DELETE FROM T WHERE pk BETWEEN 10 AND 20 RETURNING *;
 -- UPDATE
 UPDATE T SET c_text = '"' || c_text || '"'  WHERE pk < 10;
 SELECT * FROM T WHERE c_text LIKE '"%"' ORDER BY PK;
- pk | c_bigint | c_text
+ pk | c_bigint | c_text  
 ----+----------+---------
   1 |       -1 | "hello"
   2 |       -1 | "hello"
@@ -469,7 +469,7 @@ SELECT * FROM T WHERE c_text LIKE '"%"' ORDER BY PK;
 (9 rows)
 
 SELECT comp();
-   comp
+   comp    
 -----------
  Unchanged
 (1 row)
@@ -478,9 +478,9 @@ DROP TABLE T;
 -- Combine with other DDL
 CREATE TABLE T(pk INT NOT NULL PRIMARY KEY);
 SELECT set('t');
- set
+ set 
 -----
-
+ 
 (1 row)
 
 INSERT INTO T VALUES (1), (2);
@@ -492,7 +492,7 @@ ALTER TABLE T ALTER COLUMN c_text SET DEFAULT 'world',
               ALTER COLUMN c_int  SET DEFAULT 1;
 INSERT INTO T VALUES (7), (8);
 SELECT * FROM T ORDER BY pk;
- pk | c_int | c_text
+ pk | c_int | c_text 
 ----+-------+--------
   1 |    -1 | Hello
   2 |    -1 | Hello
@@ -507,7 +507,7 @@ SELECT * FROM T ORDER BY pk;
 -- Add an index
 CREATE INDEX i ON T(c_int, c_text);
 SELECT c_text FROM T WHERE c_int = -1;
- c_text
+ c_text 
 --------
  Hello
  Hello
@@ -518,7 +518,7 @@ SELECT c_text FROM T WHERE c_int = -1;
 (6 rows)
 
 SELECT comp();
-   comp
+   comp    
 -----------
  Unchanged
 (1 row)
@@ -533,7 +533,7 @@ SELECT a,
           OVER (PARTITION BY a,b,c ORDER BY b)
        AS z
 FROM t1;
- a | z
+ a | z 
 ---+---
  1 | 0
  1 | 0
@@ -583,7 +583,7 @@ ALTER TABLE t ADD COLUMN x int NOT NULL DEFAULT 4;
 ALTER TABLE t ADD COLUMN y int NOT NULL DEFAULT 5;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 | 3 | 4 | 5
 (1 row)
@@ -591,7 +591,7 @@ SELECT * FROM t;
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":3,"x":4,"y":5}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 | 3 | 4 | 2
 (1 row)
@@ -604,15 +604,15 @@ ALTER TABLE t ADD COLUMN x int NOT NULL DEFAULT 4;
 ALTER TABLE t ADD COLUMN y int;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
-  1 | 1 | 2 | 3 | 4 |
+  1 | 1 | 2 | 3 | 4 |  
 (1 row)
 
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":3,"x":4,"y":null}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 | 3 | 4 | 2
 (1 row)
@@ -625,7 +625,7 @@ ALTER TABLE t ADD COLUMN x int;
 ALTER TABLE t ADD COLUMN y int NOT NULL DEFAULT 5;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 | 3 |   | 5
 (1 row)
@@ -633,7 +633,7 @@ SELECT * FROM t;
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":3,"x":null,"y":5}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 | 3 |   | 2
 (1 row)
@@ -646,15 +646,15 @@ ALTER TABLE t ADD COLUMN x int;
 ALTER TABLE t ADD COLUMN y int;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
-  1 | 1 | 2 | 3 |   |
+  1 | 1 | 2 | 3 |   |  
 (1 row)
 
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":3,"x":null,"y":null}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 | 3 |   | 2
 (1 row)
@@ -668,7 +668,7 @@ ALTER TABLE t ADD COLUMN x int NOT NULL DEFAULT 4;
 ALTER TABLE t ADD COLUMN y int NOT NULL DEFAULT 5;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 |   | 4 | 5
 (1 row)
@@ -676,7 +676,7 @@ SELECT * FROM t;
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":null,"x":4,"y":5}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 |   | 4 | 2
 (1 row)
@@ -689,15 +689,15 @@ ALTER TABLE t ADD COLUMN x int NOT NULL DEFAULT 4;
 ALTER TABLE t ADD COLUMN y int;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
-  1 | 1 | 2 |   | 4 |
+  1 | 1 | 2 |   | 4 |  
 (1 row)
 
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":null,"x":4,"y":null}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 |   | 4 | 2
 (1 row)
@@ -710,7 +710,7 @@ ALTER TABLE t ADD COLUMN x int;
 ALTER TABLE t ADD COLUMN y int NOT NULL DEFAULT 5;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 |   |   | 5
 (1 row)
@@ -718,7 +718,7 @@ SELECT * FROM t;
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":null,"x":null,"y":5}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 |   |   | 2
 (1 row)
@@ -731,15 +731,15 @@ ALTER TABLE t ADD COLUMN x int;
 ALTER TABLE t ADD COLUMN y int;
 CREATE TRIGGER a BEFORE UPDATE ON t FOR EACH ROW EXECUTE PROCEDURE test_trigger();
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
-  1 | 1 | 2 |   |   |
+  1 | 1 | 2 |   |   |  
 (1 row)
 
 UPDATE t SET y = 2;
 NOTICE:  old tuple: {"id":1,"a":1,"b":2,"c":null,"x":null,"y":null}
 SELECT * FROM t;
- id | a | b | c | x | y
+ id | a | b | c | x | y 
 ----+---+---+---+---+---
   1 | 1 | 2 |   |   | 2
 (1 row)
@@ -759,7 +759,7 @@ INSERT INTO vtype VALUES (1);
 ALTER TABLE vtype ADD COLUMN b DOUBLE PRECISION DEFAULT 0.2;
 ALTER TABLE vtype ADD COLUMN c BOOLEAN DEFAULT true;
 SELECT * FROM vtype;
- a |  b  | c
+ a |  b  | c 
 ---+-----+---
  1 | 0.2 | t
 (1 row)
@@ -769,7 +769,7 @@ ALTER TABLE vtype
       ALTER c TYPE text USING c::text;
 NOTICE:  rewriting table vtype for reason 4
 SELECT * FROM vtype;
- a |  b  |  c
+ a |  b  |  c   
 ---+-----+------
  1 | 0.2 | true
 (1 row)
@@ -782,7 +782,7 @@ ALTER TABLE vtype2 ALTER COLUMN b SET DEFAULT 'yyy';
 INSERT INTO vtype2 VALUES (2);
 ALTER TABLE vtype2 ALTER COLUMN b TYPE varchar(20) USING b::varchar(20);
 SELECT * FROM vtype2;
- a |  b
+ a |  b  
 ---+-----
  1 | xxx
  2 | yyy
@@ -802,16 +802,16 @@ UPDATE t SET a = NULL;
 -- verify that index and non-index scans show the same result
 SET LOCAL enable_seqscan = true;
 SELECT * FROM t WHERE a IS NULL;
- a
+ a 
 ---
-
+  
 (1 row)
 
 SET LOCAL enable_seqscan = false;
 SELECT * FROM t WHERE a IS NULL;
- a
+ a 
 ---
-
+  
 (1 row)
 
 ROLLBACK;
@@ -826,7 +826,7 @@ SELECT count(*)
   FROM pg_attribute
   WHERE attrelid = 'ft1'::regclass AND
     (attmissingval IS NOT NULL OR atthasmissing);
- count
+ count 
 -------
      0
 (1 row)
@@ -854,7 +854,8 @@ create table has_fast_default(f1 int);
 insert into has_fast_default values(1);
 alter table has_fast_default add column f2 int default 42;
 table has_fast_default;
- f1 | f2
+ f1 | f2 
 ----+----
   1 | 42
 (1 row)
+

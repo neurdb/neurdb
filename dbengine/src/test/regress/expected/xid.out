@@ -8,7 +8,7 @@ select '010'::xid,
 	   '42'::xid8,
 	   '0xffffffffffffffff'::xid8,
 	   '-1'::xid8;
- xid | xid |    xid     |    xid     | xid8 | xid8 |         xid8         |         xid8
+ xid | xid |    xid     |    xid     | xid8 | xid8 |         xid8         |         xid8         
 -----+-----+------------+------------+------+------+----------------------+----------------------
    8 |  42 | 4294967295 | 4294967295 |    8 |   42 | 18446744073709551615 | 18446744073709551615
 (1 row)
@@ -32,75 +32,75 @@ LINE 1: select 'asdf'::xid8;
                ^
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('42', 'xid');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('asdf', 'xid');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('0xffffffffff', 'xid');
-                      message                      | detail | hint | sql_error_code
+                      message                      | detail | hint | sql_error_code 
 ---------------------------------------------------+--------+------+----------------
  value "0xffffffffff" is out of range for type xid |        |      | 22003
 (1 row)
 
 SELECT pg_input_is_valid('42', 'xid8');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('asdf', 'xid8');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('0xffffffffffffffffffff', 'xid8');
-                           message                            | detail | hint | sql_error_code
+                           message                            | detail | hint | sql_error_code 
 --------------------------------------------------------------+--------+------+----------------
  value "0xffffffffffffffffffff" is out of range for type xid8 |        |      | 22003
 (1 row)
 
 -- equality
 select '1'::xid = '1'::xid;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select '1'::xid != '1'::xid;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 select '1'::xid8 = '1'::xid8;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select '1'::xid8 != '1'::xid8;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
 
 -- conversion
 select '1'::xid = '1'::xid8::xid;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 select '1'::xid != '1'::xid8::xid;
- ?column?
+ ?column? 
 ----------
  f
 (1 row)
@@ -128,32 +128,32 @@ LINE 1: select '1'::xid >= '2'::xid;
 HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
 -- we want them for xid8 though
 select '1'::xid8 < '2'::xid8, '2'::xid8 < '2'::xid8, '2'::xid8 < '1'::xid8;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
  t        | f        | f
 (1 row)
 
 select '1'::xid8 <= '2'::xid8, '2'::xid8 <= '2'::xid8, '2'::xid8 <= '1'::xid8;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
  t        | t        | f
 (1 row)
 
 select '1'::xid8 > '2'::xid8, '2'::xid8 > '2'::xid8, '2'::xid8 > '1'::xid8;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
  f        | f        | t
 (1 row)
 
 select '1'::xid8 >= '2'::xid8, '2'::xid8 >= '2'::xid8, '2'::xid8 >= '1'::xid8;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
  f        | t        | t
 (1 row)
 
 -- we also have a 3way compare for btrees
 select xid8cmp('1', '2'), xid8cmp('2', '2'), xid8cmp('2', '1');
- xid8cmp | xid8cmp | xid8cmp
+ xid8cmp | xid8cmp | xid8cmp 
 ---------+---------+---------
       -1 |       0 |       1
 (1 row)
@@ -162,7 +162,7 @@ select xid8cmp('1', '2'), xid8cmp('2', '2'), xid8cmp('2', '1');
 create table xid8_t1 (x xid8);
 insert into xid8_t1 values ('0'), ('010'), ('42'), ('0xffffffffffffffff'), ('-1');
 select min(x), max(x) from xid8_t1;
- min |         max
+ min |         max          
 -----+----------------------
    0 | 18446744073709551615
 (1 row)
@@ -176,19 +176,19 @@ drop table xid8_t1;
 -- time (the relevant functions share C code)
 -- i/o
 select '12:13:'::pg_snapshot;
- pg_snapshot
+ pg_snapshot 
 -------------
  12:13:
 (1 row)
 
 select '12:18:14,16'::pg_snapshot;
- pg_snapshot
+ pg_snapshot 
 -------------
  12:18:14,16
 (1 row)
 
 select '12:16:14,14'::pg_snapshot;
- pg_snapshot
+ pg_snapshot 
 -------------
  12:16:14
 (1 row)
@@ -212,31 +212,31 @@ LINE 1: select '12:16:14,13'::pg_snapshot;
                ^
 -- also try it with non-error-throwing API
 select pg_input_is_valid('12:13:', 'pg_snapshot');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
 
 select pg_input_is_valid('31:12:', 'pg_snapshot');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 select * from pg_input_error_info('31:12:', 'pg_snapshot');
-                       message                       | detail | hint | sql_error_code
+                       message                       | detail | hint | sql_error_code 
 -----------------------------------------------------+--------+------+----------------
  invalid input syntax for type pg_snapshot: "31:12:" |        |      | 22P02
 (1 row)
 
 select pg_input_is_valid('12:16:14,13', 'pg_snapshot');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 select * from pg_input_error_info('12:16:14,13', 'pg_snapshot');
-                         message                          | detail | hint | sql_error_code
+                         message                          | detail | hint | sql_error_code 
 ----------------------------------------------------------+--------+------+----------------
  invalid input syntax for type pg_snapshot: "12:16:14,13" |        |      | 22P02
 (1 row)
@@ -250,7 +250,7 @@ insert into snapshot_test values (2, '12:20:13,15,18');
 insert into snapshot_test values (3, '100001:100009:100005,100007,100008');
 insert into snapshot_test values (4, '100:150:101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131');
 select snap from snapshot_test order by nr;
-                                                                snap
+                                                                snap                                                                 
 -------------------------------------------------------------------------------------------------------------------------------------
  12:13:
  12:20:13,15,18
@@ -262,7 +262,7 @@ select  pg_snapshot_xmin(snap),
 	pg_snapshot_xmax(snap),
 	pg_snapshot_xip(snap)
 from snapshot_test order by nr;
- pg_snapshot_xmin | pg_snapshot_xmax | pg_snapshot_xip
+ pg_snapshot_xmin | pg_snapshot_xmax | pg_snapshot_xip 
 ------------------+------------------+-----------------
                12 |               20 |              13
                12 |               20 |              15
@@ -306,7 +306,7 @@ from snapshot_test order by nr;
 select id, pg_visible_in_snapshot(id::text::xid8, snap)
 from snapshot_test, generate_series(11, 21) id
 where nr = 2;
- id | pg_visible_in_snapshot
+ id | pg_visible_in_snapshot 
 ----+------------------------
  11 | t
  12 | t
@@ -325,7 +325,7 @@ where nr = 2;
 select id, pg_visible_in_snapshot(id::text::xid8, snap)
 from snapshot_test, generate_series(90, 160) id
 where nr = 4;
- id  | pg_visible_in_snapshot
+ id  | pg_visible_in_snapshot 
 -----+------------------------
   90 | t
   91 | t
@@ -402,40 +402,40 @@ where nr = 4;
 
 -- test current values also
 select pg_current_xact_id() >= pg_snapshot_xmin(pg_current_snapshot());
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 -- we can't assume current is always less than xmax, however
 select pg_visible_in_snapshot(pg_current_xact_id(), pg_current_snapshot());
- pg_visible_in_snapshot
+ pg_visible_in_snapshot 
 ------------------------
  f
 (1 row)
 
 -- test 64bitness
 select pg_snapshot '1000100010001000:1000100010001100:1000100010001012,1000100010001013';
-                             pg_snapshot
+                             pg_snapshot                             
 ---------------------------------------------------------------------
  1000100010001000:1000100010001100:1000100010001012,1000100010001013
 (1 row)
 
 select pg_visible_in_snapshot('1000100010001012', '1000100010001000:1000100010001100:1000100010001012,1000100010001013');
- pg_visible_in_snapshot
+ pg_visible_in_snapshot 
 ------------------------
  f
 (1 row)
 
 select pg_visible_in_snapshot('1000100010001015', '1000100010001000:1000100010001100:1000100010001012,1000100010001013');
- pg_visible_in_snapshot
+ pg_visible_in_snapshot 
 ------------------------
  t
 (1 row)
 
 -- test 64bit overflow
 SELECT pg_snapshot '1:9223372036854775807:3';
-       pg_snapshot
+       pg_snapshot       
 -------------------------
  1:9223372036854775807:3
 (1 row)
@@ -447,14 +447,14 @@ LINE 1: SELECT pg_snapshot '1:9223372036854775808:3';
 -- test pg_current_xact_id_if_assigned
 BEGIN;
 SELECT pg_current_xact_id_if_assigned() IS NULL;
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
 
 SELECT pg_current_xact_id() \gset
 SELECT pg_current_xact_id_if_assigned() IS NOT DISTINCT FROM xid8 :'pg_current_xact_id';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -470,39 +470,39 @@ ROLLBACK;
 BEGIN;
 SELECT pg_current_xact_id() AS inprogress \gset
 SELECT pg_xact_status(:committed::text::xid8) AS committed;
- committed
+ committed 
 -----------
  committed
 (1 row)
 
 SELECT pg_xact_status(:rolledback::text::xid8) AS rolledback;
- rolledback
+ rolledback 
 ------------
  aborted
 (1 row)
 
 SELECT pg_xact_status(:inprogress::text::xid8) AS inprogress;
- inprogress
+ inprogress  
 -------------
  in progress
 (1 row)
 
 SELECT pg_xact_status('1'::xid8); -- BootstrapTransactionId is always committed
- pg_xact_status
+ pg_xact_status 
 ----------------
  committed
 (1 row)
 
 SELECT pg_xact_status('2'::xid8); -- FrozenTransactionId is always committed
- pg_xact_status
+ pg_xact_status 
 ----------------
  committed
 (1 row)
 
 SELECT pg_xact_status('3'::xid8); -- in regress testing FirstNormalTransactionId will always be behind oldestXmin
- pg_xact_status
+ pg_xact_status 
 ----------------
-
+ 
 (1 row)
 
 COMMIT;
@@ -522,9 +522,9 @@ END;
 $$;
 SELECT test_future_xid_status((:inprogress + 10000)::text::xid8);
 NOTICE:  Got expected error for xid in the future
- test_future_xid_status
+ test_future_xid_status 
 ------------------------
-
+ 
 (1 row)
 
 ROLLBACK;

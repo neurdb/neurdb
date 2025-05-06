@@ -4,7 +4,7 @@ starting permutation: s1a s2a s3a s1b s2b s3b
 step s1a: SELECT * FROM foo FOR UPDATE;
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s2a: SELECT * FROM foo FOR UPDATE; <waiting ...>
@@ -14,7 +14,7 @@ step s1b: COMMIT;
 step s2a: <... completed>
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s2b: COMMIT;

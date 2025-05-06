@@ -48,7 +48,7 @@ INSERT INTO attmp (a, b, c, d, e, f, g,    i,    k, l, m, n, p, q, r, s, t,
 	'(0,2,4.1,4.1,3.1,3.1)', '(4.1,4.1,3.1,3.1)',
 	'epoch', '01:00:10', '{1.0,2.0,3.0,4.0}', '{1.0,2.0,3.0,4.0}', '{1,2,3,4}');
 SELECT * FROM attmp;
- initial | a |  b   |  c   |  d  |  e  | f |           g           | i |   k    |   l   |  m  |        n        | p |     q     |           r           |              s              |          t          |            v             |        w         |     x     |     y     |     z
+ initial | a |  b   |  c   |  d  |  e  | f |           g           | i |   k    |   l   |  m  |        n        | p |     q     |           r           |              s              |          t          |            v             |        w         |     x     |     y     |     z     
 ---------+---+------+------+-----+-----+---+-----------------------+---+--------+-------+-----+-----------------+---+-----------+-----------------------+-----------------------------+---------------------+--------------------------+------------------+-----------+-----------+-----------
          | 4 | name | text | 4.1 | 4.1 | 2 | ((4.1,4.1),(3.1,3.1)) | c | 314159 | (1,1) | 512 | 1 2 3 4 5 6 7 8 | t | (1.1,1.1) | [(4.1,4.1),(3.1,3.1)] | ((0,2),(4.1,4.1),(3.1,3.1)) | (4.1,4.1),(3.1,3.1) | Thu Jan 01 00:00:00 1970 | @ 1 hour 10 secs | {1,2,3,4} | {1,2,3,4} | {1,2,3,4}
 (1 row)
@@ -90,7 +90,7 @@ INSERT INTO attmp (a, b, c, d, e, f, g,    i,   k, l, m, n, p, q, r, s, t,
 	'(0,2,4.1,4.1,3.1,3.1)', '(4.1,4.1,3.1,3.1)',
 	'epoch', '01:00:10', '{1.0,2.0,3.0,4.0}', '{1.0,2.0,3.0,4.0}', '{1,2,3,4}');
 SELECT * FROM attmp;
- initial | a |  b   |  c   |  d  |  e  | f |           g           | i |   k    |   l   |  m  |        n        | p |     q     |           r           |              s              |          t          |            v             |        w         |     x     |     y     |     z
+ initial | a |  b   |  c   |  d  |  e  | f |           g           | i |   k    |   l   |  m  |        n        | p |     q     |           r           |              s              |          t          |            v             |        w         |     x     |     y     |     z     
 ---------+---+------+------+-----+-----+---+-----------------------+---+--------+-------+-----+-----------------+---+-----------+-----------------------+-----------------------------+---------------------+--------------------------+------------------+-----------+-----------+-----------
          | 4 | name | text | 4.1 | 4.1 | 2 | ((4.1,4.1),(3.1,3.1)) | c | 314159 | (1,1) | 512 | 1 2 3 4 5 6 7 8 | t | (1.1,1.1) | [(4.1,4.1),(3.1,3.1)] | ((0,2),(4.1,4.1),(3.1,3.1)) | (4.1,4.1),(3.1,3.1) | Thu Jan 01 00:00:00 1970 | @ 1 hour 10 secs | {1,2,3,4} | {1,2,3,4} | {1,2,3,4}
 (1 row)
@@ -106,11 +106,11 @@ HINT:  Alter statistics on table column instead.
 ALTER INDEX attmp_idx ALTER COLUMN 2 SET STATISTICS 1000;
 \d+ attmp_idx
                         Index "public.attmp_idx"
- Column |       Type       | Key? | Definition | Storage | Stats target
+ Column |       Type       | Key? | Definition | Storage | Stats target 
 --------+------------------+------+------------+---------+--------------
- a      | integer          | yes  | a          | plain   |
+ a      | integer          | yes  | a          | plain   | 
  expr   | double precision | yes  | (d + e)    | plain   | 1000
- b      | cstring          | yes  | b          | plain   |
+ b      | cstring          | yes  | b          | plain   | 
 btree, for table "public.attmp"
 
 ALTER INDEX attmp_idx ALTER COLUMN 3 SET STATISTICS 1000;
@@ -127,12 +127,12 @@ CREATE TABLE attmp (regtable int);
 CREATE TEMP TABLE attmp (attmptable int);
 ALTER TABLE attmp RENAME TO attmp_new;
 SELECT * FROM attmp;
- regtable
+ regtable 
 ----------
 (0 rows)
 
 SELECT * FROM attmp_new;
- attmptable
+ attmptable 
 ------------
 (0 rows)
 
@@ -142,12 +142,12 @@ ERROR:  relation "attmp" does not exist
 LINE 1: SELECT * FROM attmp;
                       ^
 SELECT * FROM attmp_new;
- attmptable
+ attmptable 
 ------------
 (0 rows)
 
 SELECT * FROM attmp_new2;
- regtable
+ regtable 
 ----------
 (0 rows)
 
@@ -178,26 +178,26 @@ DROP TABLE part_at2tmp;
 CREATE TABLE attmp_array (id int);
 CREATE TABLE attmp_array2 (id int);
 SELECT typname FROM pg_type WHERE oid = 'attmp_array[]'::regtype;
-   typname
+   typname    
 --------------
  _attmp_array
 (1 row)
 
 SELECT typname FROM pg_type WHERE oid = 'attmp_array2[]'::regtype;
-    typname
+    typname    
 ---------------
  _attmp_array2
 (1 row)
 
 ALTER TABLE attmp_array2 RENAME TO _attmp_array;
 SELECT typname FROM pg_type WHERE oid = 'attmp_array[]'::regtype;
-    typname
+    typname    
 ---------------
  __attmp_array
 (1 row)
 
 SELECT typname FROM pg_type WHERE oid = '_attmp_array[]'::regtype;
-     typname
+     typname     
 -----------------
  __attmp_array_1
 (1 row)
@@ -207,14 +207,14 @@ DROP TABLE attmp_array;
 -- renaming to table's own array type's name is an interesting corner case
 CREATE TABLE attmp_array (id int);
 SELECT typname FROM pg_type WHERE oid = 'attmp_array[]'::regtype;
-   typname
+   typname    
 --------------
  _attmp_array
 (1 row)
 
 ALTER TABLE attmp_array RENAME TO _attmp_array;
 SELECT typname FROM pg_type WHERE oid = '_attmp_array[]'::regtype;
-    typname
+    typname    
 ---------------
  __attmp_array
 (1 row)
@@ -244,7 +244,7 @@ SELECT relation::regclass, mode FROM pg_locks
 WHERE pid = pg_backend_pid() AND locktype = 'relation'
   AND relation::regclass::text LIKE 'alter\_idx%'
 ORDER BY relation::regclass::text COLLATE "C";
-            relation            |        mode
+            relation            |        mode         
 --------------------------------+---------------------
  alter_idx_rename_test_2        | AccessExclusiveLock
  alter_idx_rename_test_parted_2 | AccessExclusiveLock
@@ -258,7 +258,7 @@ SELECT relation::regclass, mode FROM pg_locks
 WHERE pid = pg_backend_pid() AND locktype = 'relation'
   AND relation::regclass::text LIKE 'alter\_idx%'
 ORDER BY relation::regclass::text COLLATE "C";
-              relation              |           mode
+              relation              |           mode           
 ------------------------------------+--------------------------
  alter_idx_rename_test_idx_2        | ShareUpdateExclusiveLock
  alter_idx_rename_test_parted_idx_2 | ShareUpdateExclusiveLock
@@ -272,7 +272,7 @@ SELECT relation::regclass, mode FROM pg_locks
 WHERE pid = pg_backend_pid() AND locktype = 'relation'
   AND relation::regclass::text LIKE 'alter\_idx%'
 ORDER BY relation::regclass::text COLLATE "C";
-              relation              |        mode
+              relation              |        mode         
 ------------------------------------+---------------------
  alter_idx_rename_test_idx_3        | AccessExclusiveLock
  alter_idx_rename_test_parted_idx_3 | AccessExclusiveLock
@@ -292,7 +292,7 @@ set enable_seqscan to off;
 set enable_bitmapscan to off;
 -- 5 values, sorted
 SELECT unique1 FROM tenk1 WHERE unique1 < 5;
- unique1
+ unique1 
 ---------
        0
        1
@@ -329,11 +329,11 @@ ALTER TABLE onek DROP CONSTRAINT onek_unique1_constraint_foo;
 CREATE TABLE constraint_rename_test (a int CONSTRAINT con1 CHECK (a > 0), b int, c int);
 \d constraint_rename_test
        Table "public.constraint_rename_test"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
 Check constraints:
     "con1" CHECK (a > 0)
 
@@ -342,12 +342,12 @@ NOTICE:  merging column "a" with inherited definition
 NOTICE:  merging constraint "con1" with inherited definition
 \d constraint_rename_test2
       Table "public.constraint_rename_test2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | integer |           |          |
- d      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
+ d      | integer |           |          | 
 Check constraints:
     "con1" CHECK (a > 0)
 Inherits: constraint_rename_test
@@ -359,23 +359,23 @@ ERROR:  inherited constraint "con1" must be renamed in child tables too
 ALTER TABLE constraint_rename_test RENAME CONSTRAINT con1 TO con1foo; -- ok
 \d constraint_rename_test
        Table "public.constraint_rename_test"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
 Check constraints:
     "con1foo" CHECK (a > 0)
 Number of child tables: 1 (Use \d+ to list them.)
 
 \d constraint_rename_test2
       Table "public.constraint_rename_test2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | integer |           |          |
- d      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
+ d      | integer |           |          | 
 Check constraints:
     "con1foo" CHECK (a > 0)
 Inherits: constraint_rename_test
@@ -385,11 +385,11 @@ ALTER TABLE ONLY constraint_rename_test RENAME CONSTRAINT con2 TO con2foo; -- ok
 ALTER TABLE constraint_rename_test RENAME CONSTRAINT con2foo TO con2bar; -- ok
 \d constraint_rename_test
        Table "public.constraint_rename_test"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
 Check constraints:
     "con1foo" CHECK (a > 0)
     "con2bar" CHECK (b > 0) NO INHERIT
@@ -397,12 +397,12 @@ Number of child tables: 1 (Use \d+ to list them.)
 
 \d constraint_rename_test2
       Table "public.constraint_rename_test2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | integer |           |          |
- d      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
+ d      | integer |           |          | 
 Check constraints:
     "con1foo" CHECK (a > 0)
 Inherits: constraint_rename_test
@@ -411,11 +411,11 @@ ALTER TABLE constraint_rename_test ADD CONSTRAINT con3 PRIMARY KEY (a);
 ALTER TABLE constraint_rename_test RENAME CONSTRAINT con3 TO con3foo; -- ok
 \d constraint_rename_test
        Table "public.constraint_rename_test"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
- b      | integer |           |          |
- c      | integer |           |          |
+ a      | integer |           | not null | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
 Indexes:
     "con3foo" PRIMARY KEY, btree (a)
 Check constraints:
@@ -425,12 +425,12 @@ Number of child tables: 1 (Use \d+ to list them.)
 
 \d constraint_rename_test2
       Table "public.constraint_rename_test2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
- b      | integer |           |          |
- c      | integer |           |          |
- d      | integer |           |          |
+ a      | integer |           | not null | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
+ d      | integer |           |          | 
 Check constraints:
     "con1foo" CHECK (a > 0)
 Inherits: constraint_rename_test
@@ -453,9 +453,9 @@ CREATE TABLE like_constraint_rename_cache
   (LIKE constraint_rename_cache INCLUDING ALL);
 \d like_constraint_rename_cache
     Table "public.like_constraint_rename_cache"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
+ a      | integer |           | not null | 
 Indexes:
     "like_constraint_rename_cache_pkey" PRIMARY KEY, btree (a)
 Check constraints:
@@ -514,7 +514,7 @@ ALTER TABLE attmp3 VALIDATE CONSTRAINT b_greater_than_ten; -- succeeds
 ALTER TABLE attmp3 VALIDATE CONSTRAINT b_greater_than_ten; -- succeeds
 -- Test inherited NOT VALID CHECK constraints
 select * from attmp3;
- a | b
+ a | b  
 ---+----
  1 | 20
 (1 row)
@@ -550,7 +550,7 @@ delete from only parent_noinh_convalid;
 -- ok (parent itself contains no violating rows)
 alter table parent_noinh_convalid validate constraint check_a_is_2;
 select convalidated from pg_constraint where conrelid = 'parent_noinh_convalid'::regclass and conname = 'check_a_is_2';
- convalidated
+ convalidated 
 --------------
  t
 (1 row)
@@ -574,9 +574,9 @@ create table nv_parent (d date, check (false) no inherit not valid);
 -- not valid constraint added at creation time should automatically become valid
 \d nv_parent
             Table "public.nv_parent"
- Column | Type | Collation | Nullable | Default
+ Column | Type | Collation | Nullable | Default 
 --------+------+-----------+----------+---------
- d      | date |           |          |
+ d      | date |           |          | 
 Check constraints:
     "nv_parent_check" CHECK (false) NO INHERIT
 
@@ -585,7 +585,7 @@ create table nv_child_2011 () inherits (nv_parent);
 alter table nv_child_2010 add check (d between '2010-01-01'::date and '2010-12-31'::date) not valid;
 alter table nv_child_2011 add check (d between '2011-01-01'::date and '2011-12-31'::date) not valid;
 explain (costs off) select * from nv_parent where d between '2011-08-01' and '2011-08-31';
-                                QUERY PLAN
+                                QUERY PLAN                                 
 ---------------------------------------------------------------------------
  Append
    ->  Seq Scan on nv_parent nv_parent_1
@@ -598,7 +598,7 @@ explain (costs off) select * from nv_parent where d between '2011-08-01' and '20
 
 create table nv_child_2009 (check (d between '2009-01-01'::date and '2009-12-31'::date)) inherits (nv_parent);
 explain (costs off) select * from nv_parent where d between '2011-08-01'::date and '2011-08-31'::date;
-                                QUERY PLAN
+                                QUERY PLAN                                 
 ---------------------------------------------------------------------------
  Append
    ->  Seq Scan on nv_parent nv_parent_1
@@ -610,7 +610,7 @@ explain (costs off) select * from nv_parent where d between '2011-08-01'::date a
 (7 rows)
 
 explain (costs off) select * from nv_parent where d between '2009-08-01'::date and '2009-08-31'::date;
-                                QUERY PLAN
+                                QUERY PLAN                                 
 ---------------------------------------------------------------------------
  Append
    ->  Seq Scan on nv_parent nv_parent_1
@@ -626,7 +626,7 @@ explain (costs off) select * from nv_parent where d between '2009-08-01'::date a
 -- after validation, the constraint should be used
 alter table nv_child_2011 VALIDATE CONSTRAINT nv_child_2011_d_check;
 explain (costs off) select * from nv_parent where d between '2009-08-01'::date and '2009-08-31'::date;
-                                QUERY PLAN
+                                QUERY PLAN                                 
 ---------------------------------------------------------------------------
  Append
    ->  Seq Scan on nv_parent nv_parent_1
@@ -641,9 +641,9 @@ explain (costs off) select * from nv_parent where d between '2009-08-01'::date a
 alter table nv_parent add check (d between '2001-01-01'::date and '2099-12-31'::date) not valid;
 \d nv_child_2009
           Table "public.nv_child_2009"
- Column | Type | Collation | Nullable | Default
+ Column | Type | Collation | Nullable | Default 
 --------+------+-----------+----------+---------
- d      | date |           |          |
+ d      | date |           |          | 
 Check constraints:
     "nv_child_2009_d_check" CHECK (d >= '01-01-2009'::date AND d <= '12-31-2009'::date)
     "nv_parent_d_check" CHECK (d >= '01-01-2001'::date AND d <= '12-31-2099'::date) NOT VALID
@@ -748,7 +748,7 @@ SELECT conname, tgfoid::regproc, tgtype, tgdeferrable, tginitdeferred
 FROM pg_trigger JOIN pg_constraint con ON con.oid = tgconstraint
 WHERE tgrelid = 'pktable'::regclass
 ORDER BY 1,2,3;
- conname |         tgfoid         | tgtype | tgdeferrable | tginitdeferred
+ conname |         tgfoid         | tgtype | tgdeferrable | tginitdeferred 
 ---------+------------------------+--------+--------------+----------------
  fkdd    | "RI_FKey_cascade_del"  |      9 | f            | f
  fkdd    | "RI_FKey_noaction_upd" |     17 | t            | t
@@ -768,7 +768,7 @@ SELECT conname, tgfoid::regproc, tgtype, tgdeferrable, tginitdeferred
 FROM pg_trigger JOIN pg_constraint con ON con.oid = tgconstraint
 WHERE tgrelid = 'fktable'::regclass
 ORDER BY 1,2,3;
- conname |       tgfoid        | tgtype | tgdeferrable | tginitdeferred
+ conname |       tgfoid        | tgtype | tgdeferrable | tginitdeferred 
 ---------+---------------------+--------+--------------+----------------
  fkdd    | "RI_FKey_check_ins" |      5 | t            | t
  fkdd    | "RI_FKey_check_upd" |     17 | t            | t
@@ -860,7 +860,7 @@ ERROR:  relation "atacc2" is not a parent of relation "atacc3"
 -- make sure it really isn't a child
 insert into atacc3 (test2) values (3);
 select test2 from atacc2;
- test2
+ test2 
 -------
 (0 rows)
 
@@ -893,7 +893,7 @@ ERROR:  circular inheritance not allowed
 DETAIL:  "atacc2" is already a child of "atacc2".
 -- test that we really are a child now (should see 4 not 3 and cascade should go through)
 select test2 from atacc2;
- test2
+ test2 
 -------
      4
 (1 row)
@@ -1224,11 +1224,11 @@ alter table def_test alter column c1 set default 10;
 alter table def_test alter column c2 set default 'new_default';
 insert into def_test default values;
 select * from def_test;
- c1 |       c2
+ c1 |       c2        
 ----+-----------------
   5 | initial_default
     | initial_default
-    |
+    | 
  10 | new_default
 (4 rows)
 
@@ -1252,14 +1252,14 @@ insert into def_view_test default values;
 alter table def_view_test alter column c2 set default 'view_default';
 insert into def_view_test default values;
 select * from def_view_test;
- c1 |       c2
+ c1 |       c2        
 ----+-----------------
   5 | initial_default
     | initial_default
-    |
+    | 
  10 | new_default
-    |
- 45 |
+    | 
+ 45 | 
  45 | view_default
 (7 rows)
 
@@ -1281,7 +1281,7 @@ alter table atacc1 drop a;
 ERROR:  column "a" of relation "atacc1" does not exist
 -- SELECTs
 select * from atacc1;
- b | c | d
+ b | c | d 
 ---+---+---
  2 | 3 | 4
 (1 row)
@@ -1303,7 +1303,7 @@ ERROR:  column "........pg.dropped.1........" does not exist
 LINE 1: select * from atacc1 group by "........pg.dropped.1........"...
                                       ^
 select atacc1.* from atacc1;
- b | c | d
+ b | c | d 
 ---+---+---
  2 | 3 | 4
 (1 row)
@@ -1317,7 +1317,7 @@ ERROR:  column atacc1.a does not exist
 LINE 1: select atacc1.a from atacc1;
                ^
 select b,c,d from atacc1;
- b | c | d
+ b | c | d 
 ---+---+---
  2 | 3 | 4
 (1 row)
@@ -1432,7 +1432,7 @@ ERROR:  cannot drop system column "xmin"
 -- try creating a view and altering that, should fail
 create view myview as select * from atacc1;
 select * from myview;
- b | c | d
+ b | c | d 
 ---+---+---
 (0 rows)
 
@@ -1511,7 +1511,7 @@ ERROR:  column "........pg.dropped.1........" does not exist
 insert into atacc1 values (21, 22, 23);
 create table attest1 as select * from atacc1;
 select * from attest1;
- b  | c  | d
+ b  | c  | d  
 ----+----+----
  21 | 22 | 23
 (1 row)
@@ -1519,7 +1519,7 @@ select * from attest1;
 drop table attest1;
 select * into attest2 from atacc1;
 select * from attest2;
- b  | c  | d
+ b  | c  | d  
 ----+----+----
  21 | 22 | 23
 (1 row)
@@ -1555,28 +1555,28 @@ alter table parent drop a;
 create table child (d varchar(255)) inherits (parent);
 insert into child values (12, 13, 'testing');
 select * from parent;
- b  | c
+ b  | c  
 ----+----
   2 |  3
  12 | 13
 (2 rows)
 
 select * from child;
- b  | c  |    d
+ b  | c  |    d    
 ----+----+---------
  12 | 13 | testing
 (1 row)
 
 alter table parent drop c;
 select * from parent;
- b
+ b  
 ----
   2
  12
 (2 rows)
 
 select * from child;
- b  |    d
+ b  |    d    
 ----+---------
  12 | testing
 (1 row)
@@ -1618,14 +1618,14 @@ copy attest from stdin;
 ERROR:  extra data after last expected column
 CONTEXT:  COPY attest, line 1: "10	11	12"
 select * from attest;
- b | c
+ b | c 
 ---+---
  2 | 3
 (1 row)
 
 copy attest from stdin;
 select * from attest;
- b  | c
+ b  | c  
 ----+----
   2 |  3
  21 | 22
@@ -1637,7 +1637,7 @@ copy attest("........pg.dropped.1........") from stdin;
 ERROR:  column "........pg.dropped.1........" of relation "attest" does not exist
 copy attest(b,c) from stdin;
 select * from attest;
- b  | c
+ b  | c  
 ----+----
   2 |  3
  21 | 22
@@ -1692,7 +1692,7 @@ ERROR:  cannot drop inherited column "f1"
 alter table p1 drop column f1;
 -- c1.f1 is still there, but no longer inherited
 select f1 from c1;
- f1
+ f1 
 ----
 (0 rows)
 
@@ -1748,7 +1748,7 @@ select relname, attname, attinhcount, attislocal
 from pg_class join pg_attribute on (pg_class.oid = pg_attribute.attrelid)
 where relname in ('p1','p2','c1','gc1') and attnum > 0 and not attisdropped
 order by relname, attnum;
- relname | attname | attinhcount | attislocal
+ relname | attname | attinhcount | attislocal 
 ---------+---------+-------------+------------
  c1      | id      |           1 | f
  c1      | name    |           2 | f
@@ -1791,7 +1791,7 @@ select relname, attname, attinhcount, attislocal
 from pg_class join pg_attribute on (pg_class.oid = pg_attribute.attrelid)
 where relname in ('p1','p2','c1','gc1') and attnum > 0 and not attisdropped
 order by relname, attnum;
- relname | attname | attinhcount | attislocal
+ relname | attname | attinhcount | attislocal 
 ---------+---------+-------------+------------
  c1      | id      |           1 | f
  c1      | id2     |           1 | f
@@ -1817,7 +1817,7 @@ select attrelid::regclass, attname, attinhcount, attislocal
 from pg_attribute
 where attnum > 0 and attrelid::regclass in ('depth0', 'depth1', 'depth2')
 order by attrelid::regclass::text, attnum;
- attrelid | attname | attinhcount | attislocal
+ attrelid | attname | attinhcount | attislocal 
 ----------+---------+-------------+------------
  depth0   | c       |           0 | t
  depth1   | c       |           1 | t
@@ -1836,7 +1836,7 @@ ERROR:  new row for relation "c1" violates check constraint "p1_a1_check"
 DETAIL:  Failing row contains (11, xyz, 33, 0).
 insert into c1 values(11,'xyz',33,22);
 select * from p1;
- f1 | a1 | f2
+ f1 | a1 | f2  
 ----+----+-----
   1 |  2 | abc
  11 | 22 | xyz
@@ -1844,7 +1844,7 @@ select * from p1;
 
 update p1 set a1 = a1 + 1, f2 = upper(f2);
 select * from p1;
- f1 | a1 | f2
+ f1 | a1 | f2  
 ----+----+-----
   1 |  3 | ABC
  11 | 23 | XYZ
@@ -1858,7 +1858,7 @@ create domain mytype as text;
 create temp table foo (f1 text, f2 mytype, f3 text);
 insert into foo values('bb','cc','dd');
 select * from foo;
- f1 | f2 | f3
+ f1 | f2 | f3 
 ----+----+----
  bb | cc | dd
 (1 row)
@@ -1866,14 +1866,14 @@ select * from foo;
 drop domain mytype cascade;
 NOTICE:  drop cascades to column f2 of table foo
 select * from foo;
- f1 | f3
+ f1 | f3 
 ----+----
  bb | dd
 (1 row)
 
 insert into foo values('qq','rr');
 select * from foo;
- f1 | f3
+ f1 | f3 
 ----+----
  bb | dd
  qq | rr
@@ -1881,14 +1881,14 @@ select * from foo;
 
 update foo set f3 = 'zz';
 select * from foo;
- f1 | f3
+ f1 | f3 
 ----+----
  bb | zz
  qq | zz
 (2 rows)
 
 select f3,max(f1) from foo group by f3;
- f3 | max
+ f3 | max 
 ----+-----
  zz | qq
 (1 row)
@@ -1903,7 +1903,7 @@ create table anothertab (atcol1 serial8, atcol2 boolean,
 insert into anothertab (atcol1, atcol2) values (default, true);
 insert into anothertab (atcol1, atcol2) values (default, false);
 select * from anothertab;
- atcol1 | atcol2
+ atcol1 | atcol2 
 --------+--------
       1 | t
       2 | f
@@ -1917,7 +1917,7 @@ ERROR:  result of USING clause for column "atcol1" cannot be cast automatically 
 HINT:  You might need to add an explicit cast.
 alter table anothertab alter column atcol1 type integer;
 select * from anothertab;
- atcol1 | atcol2
+ atcol1 | atcol2 
 --------+--------
       1 | t
       2 | f
@@ -1928,11 +1928,11 @@ ERROR:  new row for relation "anothertab" violates check constraint "anothertab_
 DETAIL:  Failing row contains (45, null).
 insert into anothertab (atcol1, atcol2) values (default, null);
 select * from anothertab;
- atcol1 | atcol2
+ atcol1 | atcol2 
 --------+--------
       1 | t
       2 | f
-      3 |
+      3 | 
 (3 rows)
 
 alter table anothertab alter column atcol2 type text
@@ -1940,7 +1940,7 @@ alter table anothertab alter column atcol2 type text
                  when atcol2 is false then 'IT WAS FALSE'
                  else 'IT WAS NULL!' end;
 select * from anothertab;
- atcol1 |    atcol2
+ atcol1 |    atcol2    
 --------+--------------
       1 | IT WAS TRUE
       2 | IT WAS FALSE
@@ -1963,7 +1963,7 @@ NOTICE:  constraint "anothertab_chk" of relation "anothertab" does not exist, sk
 alter table anothertab alter column atcol1 type boolean
         using case when atcol1 % 2 = 0 then true else false end;
 select * from anothertab;
- atcol1 |    atcol2
+ atcol1 |    atcol2    
 --------+--------------
  f      | IT WAS TRUE
  t      | IT WAS FALSE
@@ -1986,13 +1986,13 @@ create index on anothertab(f2,f3);
 create unique index on anothertab(f4);
 \d anothertab
              Table "public.anothertab"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- f1     | integer |           | not null |
- f2     | integer |           |          |
- f3     | integer |           |          |
- f4     | integer |           |          |
- f5     | integer |           |          |
+ f1     | integer |           | not null | 
+ f2     | integer |           |          | 
+ f3     | integer |           |          | 
+ f4     | integer |           |          | 
+ f5     | integer |           |          | 
 Indexes:
     "anothertab_pkey" PRIMARY KEY, btree (f1)
     "anothertab_f1_f4_key" UNIQUE CONSTRAINT, btree (f1, f4)
@@ -2011,13 +2011,13 @@ alter table anothertab
 alter table anothertab alter column f5 type bigint;
 \d anothertab
             Table "public.anothertab"
- Column |  Type  | Collation | Nullable | Default
+ Column |  Type  | Collation | Nullable | Default 
 --------+--------+-----------+----------+---------
- f1     | bigint |           | not null |
- f2     | bigint |           |          |
- f3     | bigint |           |          |
- f4     | bigint |           |          |
- f5     | bigint |           |          |
+ f1     | bigint |           | not null | 
+ f2     | bigint |           |          | 
+ f3     | bigint |           |          | 
+ f4     | bigint |           |          | 
+ f5     | bigint |           |          | 
 Indexes:
     "anothertab_pkey" PRIMARY KEY, btree (f1)
     "anothertab_f1_f4_key" UNIQUE CONSTRAINT, btree (f1, f4)
@@ -2035,7 +2035,7 @@ insert into another values(1, 'one', 'uno');
 insert into another values(2, 'two', 'due');
 insert into another values(3, 'three', 'tre');
 select * from another;
- f1 |  f2   | f3
+ f1 |  f2   | f3  
 ----+-------+-----
   1 | one   | uno
   2 | two   | due
@@ -2047,7 +2047,7 @@ alter table another
   alter f2 type bigint using f1 * 10,
   drop column f3;
 select * from another;
-         f1         | f2
+         f1         | f2 
 --------------------+----
  one and uno more   | 10
  two and due more   | 20
@@ -2089,10 +2089,10 @@ create index on at_partitioned (b);
 create index on at_partitioned (a);
 \d at_part_1
              Table "public.at_part_1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | text    |           |          |
+ a      | integer |           |          | 
+ b      | text    |           |          | 
 Partition of: at_partitioned FOR VALUES FROM (0) TO (1000)
 Indexes:
     "at_part_1_a_idx" btree (a)
@@ -2100,18 +2100,18 @@ Indexes:
 
 \d at_part_2
              Table "public.at_part_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- b      | text    |           |          |
- a      | integer |           |          |
+ b      | text    |           |          | 
+ a      | integer |           |          | 
 
 alter table at_partitioned attach partition at_part_2 for values from (1000) to (2000);
 \d at_part_2
              Table "public.at_part_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- b      | text    |           |          |
- a      | integer |           |          |
+ b      | text    |           |          | 
+ a      | integer |           |          | 
 Partition of: at_partitioned FOR VALUES FROM (1000) TO (2000)
 Indexes:
     "at_part_2_a_idx" btree (a)
@@ -2120,10 +2120,10 @@ Indexes:
 alter table at_partitioned alter column b type numeric using b::numeric;
 \d at_part_1
              Table "public.at_part_1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | numeric |           |          |
+ a      | integer |           |          | 
+ b      | numeric |           |          | 
 Partition of: at_partitioned FOR VALUES FROM (0) TO (1000)
 Indexes:
     "at_part_1_a_idx" btree (a)
@@ -2131,10 +2131,10 @@ Indexes:
 
 \d at_part_2
              Table "public.at_part_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- b      | numeric |           |          |
- a      | integer |           |          |
+ b      | numeric |           |          | 
+ a      | integer |           |          | 
 Partition of: at_partitioned FOR VALUES FROM (1000) TO (2000)
 Indexes:
     "at_part_2_a_idx" btree (a)
@@ -2172,12 +2172,12 @@ select relname,
   from pg_class c left join old_oids using (relname)
   where relname like 'at_partitioned%'
   order by relname;
-           relname            | orig_oid | storage |     desc
+           relname            | orig_oid | storage |     desc      
 ------------------------------+----------+---------+---------------
- at_partitioned               | t        | none    |
- at_partitioned_0             | t        | own     |
+ at_partitioned               | t        | none    | 
+ at_partitioned_0             | t        | own     | 
  at_partitioned_0_id_name_key | t        | own     | child 0 index
- at_partitioned_1             | t        | own     |
+ at_partitioned_1             | t        | own     | 
  at_partitioned_1_id_name_key | t        | own     | child 1 index
  at_partitioned_id_name_key   | t        | none    | parent index
 (6 rows)
@@ -2185,7 +2185,7 @@ select relname,
 select conname, obj_description(oid, 'pg_constraint') as desc
   from pg_constraint where conname like 'at_partitioned%'
   order by conname;
-           conname            |        desc
+           conname            |        desc        
 ------------------------------+--------------------
  at_partitioned_0_id_name_key | child 0 constraint
  at_partitioned_1_id_name_key | child 1 constraint
@@ -2206,12 +2206,12 @@ select relname,
   from pg_class c left join old_oids using (relname)
   where relname like 'at_partitioned%'
   order by relname;
-           relname            | orig_oid | storage |     desc
+           relname            | orig_oid | storage |     desc     
 ------------------------------+----------+---------+--------------
- at_partitioned               | t        | none    |
- at_partitioned_0             | t        | own     |
+ at_partitioned               | t        | none    | 
+ at_partitioned_0             | t        | own     | 
  at_partitioned_0_id_name_key | f        | own     | parent index
- at_partitioned_1             | t        | own     |
+ at_partitioned_1             | t        | own     | 
  at_partitioned_1_id_name_key | f        | own     | parent index
  at_partitioned_id_name_key   | f        | none    | parent index
 (6 rows)
@@ -2219,10 +2219,10 @@ select relname,
 select conname, obj_description(oid, 'pg_constraint') as desc
   from pg_constraint where conname like 'at_partitioned%'
   order by conname;
-           conname            |       desc
+           conname            |       desc        
 ------------------------------+-------------------
- at_partitioned_0_id_name_key |
- at_partitioned_1_id_name_key |
+ at_partitioned_0_id_name_key | 
+ at_partitioned_1_id_name_key | 
  at_partitioned_id_name_key   | parent constraint
 (3 rows)
 
@@ -2247,7 +2247,7 @@ ERROR:  composite type recur1 cannot be made a member of itself
 create table test_storage (a text, c text storage plain);
 select reltoastrelid <> 0 as has_toast_table
   from pg_class where oid = 'test_storage'::regclass;
- has_toast_table
+ has_toast_table 
 -----------------
  t
 (1 row)
@@ -2257,7 +2257,7 @@ alter table test_storage alter a set storage plain;
 alter table test_storage add b int default random()::int;
 select reltoastrelid <> 0 as has_toast_table
   from pg_class where oid = 'test_storage'::regclass;
- has_toast_table
+ has_toast_table 
 -----------------
  f
 (1 row)
@@ -2265,7 +2265,7 @@ select reltoastrelid <> 0 as has_toast_table
 alter table test_storage alter a set storage default; -- re-add TOAST table
 select reltoastrelid <> 0 as has_toast_table
   from pg_class where oid = 'test_storage'::regclass;
- has_toast_table
+ has_toast_table 
 -----------------
  t
 (1 row)
@@ -2278,20 +2278,20 @@ create index test_storage_idx on test_storage (b, a);
 alter table test_storage alter column a set storage external;
 \d+ test_storage
                                      Table "public.test_storage"
- Column |  Type   | Collation | Nullable |      Default      | Storage  | Stats target | Description
+ Column |  Type   | Collation | Nullable |      Default      | Storage  | Stats target | Description 
 --------+---------+-----------+----------+-------------------+----------+--------------+-------------
- a      | text    |           |          |                   | external |              |
- c      | text    |           |          |                   | plain    |              |
- b      | integer |           |          | random()::integer | plain    |              |
+ a      | text    |           |          |                   | external |              | 
+ c      | text    |           |          |                   | plain    |              | 
+ b      | integer |           |          | random()::integer | plain    |              | 
 Indexes:
     "test_storage_idx" btree (b, a)
 
 \d+ test_storage_idx
                 Index "public.test_storage_idx"
- Column |  Type   | Key? | Definition | Storage  | Stats target
+ Column |  Type   | Key? | Definition | Storage  | Stats target 
 --------+---------+------+------------+----------+--------------
- b      | integer | yes  | b          | plain    |
- a      | text    | yes  | a          | external |
+ b      | integer | yes  | b          | plain    | 
+ a      | text    | yes  | a          | external | 
 btree, for table "public.test_storage"
 
 -- ALTER COLUMN TYPE with a check constraint and a child table (bug #13779)
@@ -2299,20 +2299,20 @@ CREATE TABLE test_inh_check (a float check (a > 10.2), b float);
 CREATE TABLE test_inh_check_child() INHERITS(test_inh_check);
 \d test_inh_check
                Table "public.test_inh_check"
- Column |       Type       | Collation | Nullable | Default
+ Column |       Type       | Collation | Nullable | Default 
 --------+------------------+-----------+----------+---------
- a      | double precision |           |          |
- b      | double precision |           |          |
+ a      | double precision |           |          | 
+ b      | double precision |           |          | 
 Check constraints:
     "test_inh_check_a_check" CHECK (a > 10.2::double precision)
 Number of child tables: 1 (Use \d+ to list them.)
 
 \d test_inh_check_child
             Table "public.test_inh_check_child"
- Column |       Type       | Collation | Nullable | Default
+ Column |       Type       | Collation | Nullable | Default 
 --------+------------------+-----------+----------+---------
- a      | double precision |           |          |
- b      | double precision |           |          |
+ a      | double precision |           |          | 
+ b      | double precision |           |          | 
 Check constraints:
     "test_inh_check_a_check" CHECK (a > 10.2::double precision)
 Inherits: test_inh_check
@@ -2321,7 +2321,7 @@ select relname, conname, coninhcount, conislocal, connoinherit
   from pg_constraint c, pg_class r
   where relname like 'test_inh_check%' and c.conrelid = r.oid
   order by 1, 2;
-       relname        |        conname         | coninhcount | conislocal | connoinherit
+       relname        |        conname         | coninhcount | conislocal | connoinherit 
 ----------------------+------------------------+-------------+------------+--------------
  test_inh_check       | test_inh_check_a_check |           0 | t          | f
  test_inh_check_child | test_inh_check_a_check |           1 | f          | f
@@ -2330,20 +2330,20 @@ select relname, conname, coninhcount, conislocal, connoinherit
 ALTER TABLE test_inh_check ALTER COLUMN a TYPE numeric;
 \d test_inh_check
                Table "public.test_inh_check"
- Column |       Type       | Collation | Nullable | Default
+ Column |       Type       | Collation | Nullable | Default 
 --------+------------------+-----------+----------+---------
- a      | numeric          |           |          |
- b      | double precision |           |          |
+ a      | numeric          |           |          | 
+ b      | double precision |           |          | 
 Check constraints:
     "test_inh_check_a_check" CHECK (a::double precision > 10.2::double precision)
 Number of child tables: 1 (Use \d+ to list them.)
 
 \d test_inh_check_child
             Table "public.test_inh_check_child"
- Column |       Type       | Collation | Nullable | Default
+ Column |       Type       | Collation | Nullable | Default 
 --------+------------------+-----------+----------+---------
- a      | numeric          |           |          |
- b      | double precision |           |          |
+ a      | numeric          |           |          | 
+ b      | double precision |           |          | 
 Check constraints:
     "test_inh_check_a_check" CHECK (a::double precision > 10.2::double precision)
 Inherits: test_inh_check
@@ -2352,7 +2352,7 @@ select relname, conname, coninhcount, conislocal, connoinherit
   from pg_constraint c, pg_class r
   where relname like 'test_inh_check%' and c.conrelid = r.oid
   order by 1, 2;
-       relname        |        conname         | coninhcount | conislocal | connoinherit
+       relname        |        conname         | coninhcount | conislocal | connoinherit 
 ----------------------+------------------------+-------------+------------+--------------
  test_inh_check       | test_inh_check_a_check |           0 | t          | f
  test_inh_check_child | test_inh_check_a_check |           1 | f          | f
@@ -2366,10 +2366,10 @@ ALTER TABLE test_inh_check ADD CONSTRAINT bmerged CHECK (b > 1);
 NOTICE:  merging constraint "bmerged" with inherited definition
 \d test_inh_check
                Table "public.test_inh_check"
- Column |       Type       | Collation | Nullable | Default
+ Column |       Type       | Collation | Nullable | Default 
 --------+------------------+-----------+----------+---------
- a      | numeric          |           |          |
- b      | double precision |           |          |
+ a      | numeric          |           |          | 
+ b      | double precision |           |          | 
 Check constraints:
     "bmerged" CHECK (b > 1::double precision)
     "bnoinherit" CHECK (b > 100::double precision) NO INHERIT
@@ -2378,10 +2378,10 @@ Number of child tables: 1 (Use \d+ to list them.)
 
 \d test_inh_check_child
             Table "public.test_inh_check_child"
- Column |       Type       | Collation | Nullable | Default
+ Column |       Type       | Collation | Nullable | Default 
 --------+------------------+-----------+----------+---------
- a      | numeric          |           |          |
- b      | double precision |           |          |
+ a      | numeric          |           |          | 
+ b      | double precision |           |          | 
 Check constraints:
     "blocal" CHECK (b < 1000::double precision)
     "bmerged" CHECK (b > 1::double precision)
@@ -2392,7 +2392,7 @@ select relname, conname, coninhcount, conislocal, connoinherit
   from pg_constraint c, pg_class r
   where relname like 'test_inh_check%' and c.conrelid = r.oid
   order by 1, 2;
-       relname        |        conname         | coninhcount | conislocal | connoinherit
+       relname        |        conname         | coninhcount | conislocal | connoinherit 
 ----------------------+------------------------+-------------+------------+--------------
  test_inh_check       | bmerged                |           0 | t          | f
  test_inh_check       | bnoinherit             |           0 | t          | t
@@ -2406,10 +2406,10 @@ ALTER TABLE test_inh_check ALTER COLUMN b TYPE numeric;
 NOTICE:  merging constraint "bmerged" with inherited definition
 \d test_inh_check
            Table "public.test_inh_check"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | numeric |           |          |
- b      | numeric |           |          |
+ a      | numeric |           |          | 
+ b      | numeric |           |          | 
 Check constraints:
     "bmerged" CHECK (b::double precision > 1::double precision)
     "bnoinherit" CHECK (b::double precision > 100::double precision) NO INHERIT
@@ -2418,10 +2418,10 @@ Number of child tables: 1 (Use \d+ to list them.)
 
 \d test_inh_check_child
         Table "public.test_inh_check_child"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | numeric |           |          |
- b      | numeric |           |          |
+ a      | numeric |           |          | 
+ b      | numeric |           |          | 
 Check constraints:
     "blocal" CHECK (b::double precision < 1000::double precision)
     "bmerged" CHECK (b::double precision > 1::double precision)
@@ -2432,7 +2432,7 @@ select relname, conname, coninhcount, conislocal, connoinherit
   from pg_constraint c, pg_class r
   where relname like 'test_inh_check%' and c.conrelid = r.oid
   order by 1, 2;
-       relname        |        conname         | coninhcount | conislocal | connoinherit
+       relname        |        conname         | coninhcount | conislocal | connoinherit 
 ----------------------+------------------------+-------------+------------+--------------
  test_inh_check       | bmerged                |           0 | t          | f
  test_inh_check       | bnoinherit             |           0 | t          | t
@@ -2473,10 +2473,10 @@ ANALYZE check_fk_presence_2;
 ROLLBACK;
 \d check_fk_presence_2
         Table "public.check_fk_presence_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- id     | integer |           |          |
- t      | text    |           |          |
+ id     | integer |           |          | 
+ t      | text    |           |          | 
 Foreign-key constraints:
     "check_fk_presence_2_id_fkey" FOREIGN KEY (id) REFERENCES check_fk_presence_1(id)
 
@@ -2488,10 +2488,10 @@ create view at_view_1 as select * from at_base_table bt;
 create view at_view_2 as select *, to_json(v1) as j from at_view_1 v1;
 \d+ at_view_1
                           View "public.at_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- id     | integer |           |          |         | plain    |
- stuff  | text    |           |          |         | extended |
+ id     | integer |           |          |         | plain    | 
+ stuff  | text    |           |          |         | extended | 
 View definition:
  SELECT id,
     stuff
@@ -2499,11 +2499,11 @@ View definition:
 
 \d+ at_view_2
                           View "public.at_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- id     | integer |           |          |         | plain    |
- stuff  | text    |           |          |         | extended |
- j      | json    |           |          |         | extended |
+ id     | integer |           |          |         | plain    | 
+ stuff  | text    |           |          |         | extended | 
+ j      | json    |           |          |         | extended | 
 View definition:
  SELECT id,
     stuff,
@@ -2511,14 +2511,14 @@ View definition:
    FROM at_view_1 v1;
 
 explain (verbose, costs off) select * from at_view_2;
-                        QUERY PLAN
+                        QUERY PLAN                        
 ----------------------------------------------------------
  Seq Scan on public.at_base_table bt
    Output: bt.id, bt.stuff, to_json(ROW(bt.id, bt.stuff))
 (2 rows)
 
 select * from at_view_2;
- id | stuff  |             j
+ id | stuff  |             j              
 ----+--------+----------------------------
  23 | skidoo | {"id":23,"stuff":"skidoo"}
 (1 row)
@@ -2526,11 +2526,11 @@ select * from at_view_2;
 create or replace view at_view_1 as select *, 2+2 as more from at_base_table bt;
 \d+ at_view_1
                           View "public.at_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- id     | integer |           |          |         | plain    |
- stuff  | text    |           |          |         | extended |
- more   | integer |           |          |         | plain    |
+ id     | integer |           |          |         | plain    | 
+ stuff  | text    |           |          |         | extended | 
+ more   | integer |           |          |         | plain    | 
 View definition:
  SELECT id,
     stuff,
@@ -2539,11 +2539,11 @@ View definition:
 
 \d+ at_view_2
                           View "public.at_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- id     | integer |           |          |         | plain    |
- stuff  | text    |           |          |         | extended |
- j      | json    |           |          |         | extended |
+ id     | integer |           |          |         | plain    | 
+ stuff  | text    |           |          |         | extended | 
+ j      | json    |           |          |         | extended | 
 View definition:
  SELECT id,
     stuff,
@@ -2551,14 +2551,14 @@ View definition:
    FROM at_view_1 v1;
 
 explain (verbose, costs off) select * from at_view_2;
-                         QUERY PLAN
+                         QUERY PLAN                          
 -------------------------------------------------------------
  Seq Scan on public.at_base_table bt
    Output: bt.id, bt.stuff, to_json(ROW(bt.id, bt.stuff, 4))
 (2 rows)
 
 select * from at_view_2;
- id | stuff  |                  j
+ id | stuff  |                  j                  
 ----+--------+-------------------------------------
  23 | skidoo | {"id":23,"stuff":"skidoo","more":4}
 (1 row)
@@ -2578,7 +2578,7 @@ create rule v1_upd_rule as on update to v1
   do also insert into log values (new.*);
 update v2 set q1 = q1 + 1 where q1 = 123;
 select * from t1;
-        q1        |        q2
+        q1        |        q2         
 ------------------+-------------------
  4567890123456789 |               123
  4567890123456789 |  4567890123456789
@@ -2588,7 +2588,7 @@ select * from t1;
 (5 rows)
 
 select * from log;
- q1  |        q2
+ q1  |        q2        
 -----+------------------
  124 |              456
  124 | 4567890123456789
@@ -2621,7 +2621,7 @@ SELECT check_ddl_rewrite('rewrite_test', $$
       ADD COLUMN empty1 text,
       ADD COLUMN notempty1_rewrite serial;
 $$);
- check_ddl_rewrite
+ check_ddl_rewrite 
 -------------------
  t
 (1 row)
@@ -2631,7 +2631,7 @@ SELECT check_ddl_rewrite('rewrite_test', $$
         ADD COLUMN notempty2_rewrite serial,
         ADD COLUMN empty2 text;
 $$);
- check_ddl_rewrite
+ check_ddl_rewrite 
 -------------------
  t
 (1 row)
@@ -2642,7 +2642,7 @@ SELECT check_ddl_rewrite('rewrite_test', $$
         ADD COLUMN empty3 text,
         ADD COLUMN notempty3_norewrite int default 42;
 $$);
- check_ddl_rewrite
+ check_ddl_rewrite 
 -------------------
  f
 (1 row)
@@ -2652,7 +2652,7 @@ SELECT check_ddl_rewrite('rewrite_test', $$
         ADD COLUMN notempty4_norewrite int default 42,
         ADD COLUMN empty4 text;
 $$);
- check_ddl_rewrite
+ check_ddl_rewrite 
 -------------------
  f
 (1 row)
@@ -2664,7 +2664,7 @@ SELECT check_ddl_rewrite('rewrite_test', $$
         ADD COLUMN notempty5_norewrite int default 42,
         ADD COLUMN notempty5_rewrite serial;
 $$);
- check_ddl_rewrite
+ check_ddl_rewrite 
 -------------------
  t
 (1 row)
@@ -2675,7 +2675,7 @@ SELECT check_ddl_rewrite('rewrite_test', $$
         ADD COLUMN empty6 text,
         ADD COLUMN notempty6_norewrite int default 42;
 $$);
- check_ddl_rewrite
+ check_ddl_rewrite 
 -------------------
  t
 (1 row)
@@ -2718,7 +2718,7 @@ create table alterlock2 (f3 int primary key, f1 int);
 insert into alterlock2 values (1, 1);
 begin; alter table alterlock alter column f2 set statistics 150;
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
 (1 row)
@@ -2726,7 +2726,7 @@ select * from my_locks order by 1;
 rollback;
 begin; alter table alterlock cluster on alterlock_pkey;
 select * from my_locks order by 1;
-    relname     |       max_lockmode
+    relname     |       max_lockmode       
 ----------------+--------------------------
  alterlock      | ShareUpdateExclusiveLock
  alterlock_pkey | ShareUpdateExclusiveLock
@@ -2735,7 +2735,7 @@ select * from my_locks order by 1;
 commit;
 begin; alter table alterlock set without cluster;
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
 (1 row)
@@ -2743,7 +2743,7 @@ select * from my_locks order by 1;
 commit;
 begin; alter table alterlock set (fillfactor = 100);
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
  pg_toast  | ShareUpdateExclusiveLock
@@ -2752,7 +2752,7 @@ select * from my_locks order by 1;
 commit;
 begin; alter table alterlock reset (fillfactor);
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
  pg_toast  | ShareUpdateExclusiveLock
@@ -2761,7 +2761,7 @@ select * from my_locks order by 1;
 commit;
 begin; alter table alterlock set (toast.autovacuum_enabled = off);
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
  pg_toast  | ShareUpdateExclusiveLock
@@ -2770,7 +2770,7 @@ select * from my_locks order by 1;
 commit;
 begin; alter table alterlock set (autovacuum_enabled = off);
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
  pg_toast  | ShareUpdateExclusiveLock
@@ -2779,7 +2779,7 @@ select * from my_locks order by 1;
 commit;
 begin; alter table alterlock alter column f2 set (n_distinct = 1);
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
 (1 row)
@@ -2788,7 +2788,7 @@ rollback;
 -- test that mixing options with different lock levels works as expected
 begin; alter table alterlock set (autovacuum_enabled = off, fillfactor = 80);
 select * from my_locks order by 1;
-  relname  |       max_lockmode
+  relname  |       max_lockmode       
 -----------+--------------------------
  alterlock | ShareUpdateExclusiveLock
  pg_toast  | ShareUpdateExclusiveLock
@@ -2797,7 +2797,7 @@ select * from my_locks order by 1;
 commit;
 begin; alter table alterlock alter column f2 set storage extended;
 select * from my_locks order by 1;
-  relname  |    max_lockmode
+  relname  |    max_lockmode     
 -----------+---------------------
  alterlock | AccessExclusiveLock
 (1 row)
@@ -2805,7 +2805,7 @@ select * from my_locks order by 1;
 rollback;
 begin; alter table alterlock alter column f2 set default 'x';
 select * from my_locks order by 1;
-  relname  |    max_lockmode
+  relname  |    max_lockmode     
 -----------+---------------------
  alterlock | AccessExclusiveLock
 (1 row)
@@ -2818,7 +2818,7 @@ create trigger ttdummy
 	execute procedure
 	ttdummy (1, 1);
 select * from my_locks order by 1;
-  relname  |     max_lockmode
+  relname  |     max_lockmode      
 -----------+-----------------------
  alterlock | ShareRowExclusiveLock
 (1 row)
@@ -2826,13 +2826,13 @@ select * from my_locks order by 1;
 rollback;
 begin;
 select * from my_locks order by 1;
- relname | max_lockmode
+ relname | max_lockmode 
 ---------+--------------
 (0 rows)
 
 alter table alterlock2 add foreign key (f1) references alterlock (f1);
 select * from my_locks order by 1;
-     relname     |     max_lockmode
+     relname     |     max_lockmode      
 -----------------+-----------------------
  alterlock       | ShareRowExclusiveLock
  alterlock2      | ShareRowExclusiveLock
@@ -2845,7 +2845,7 @@ begin;
 alter table alterlock2
 add constraint alterlock2nv foreign key (f1) references alterlock (f1) NOT VALID;
 select * from my_locks order by 1;
-  relname   |     max_lockmode
+  relname   |     max_lockmode      
 ------------+-----------------------
  alterlock  | ShareRowExclusiveLock
  alterlock2 | ShareRowExclusiveLock
@@ -2855,7 +2855,7 @@ commit;
 begin;
 alter table alterlock2 validate constraint alterlock2nv;
 select * from my_locks order by 1;
-     relname     |       max_lockmode
+     relname     |       max_lockmode       
 -----------------+--------------------------
  alterlock       | RowShareLock
  alterlock2      | ShareUpdateExclusiveLock
@@ -2885,7 +2885,7 @@ alter view my_locks reset (autovacuum_enabled);
 begin;
 alter view my_locks set (security_barrier=off);
 select * from my_locks order by 1;
- relname  |    max_lockmode
+ relname  |    max_lockmode     
 ----------+---------------------
  my_locks | AccessExclusiveLock
 (1 row)
@@ -2898,7 +2898,7 @@ rollback;
 begin;
 alter table my_locks set (security_barrier=off);
 select * from my_locks order by 1;
- relname  |    max_lockmode
+ relname  |    max_lockmode     
 ----------+---------------------
  my_locks | AccessExclusiveLock
 (1 row)
@@ -2917,14 +2917,14 @@ create function test_strict(text) returns text as
     'select coalesce($1, ''got passed a null'');'
     language sql returns null on null input;
 select test_strict(NULL);
- test_strict
+ test_strict 
 -------------
-
+ 
 (1 row)
 
 alter function test_strict(text) called on null input;
 select test_strict(NULL);
-    test_strict
+    test_strict    
 -------------------
  got passed a null
 (1 row)
@@ -2933,16 +2933,16 @@ create function non_strict(text) returns text as
     'select coalesce($1, ''got passed a null'');'
     language sql called on null input;
 select non_strict(NULL);
-    non_strict
+    non_strict     
 -------------------
  got passed a null
 (1 row)
 
 alter function non_strict(text) returns null on null input;
 select non_strict(NULL);
- non_strict
+ non_strict 
 ------------
-
+ 
 (1 row)
 
 --
@@ -2988,7 +2988,7 @@ drop schema alter1;
 insert into alter2.t1(f2) values(13);
 insert into alter2.t1(f2) values(14);
 select * from alter2.t1;
- f1 | f2
+ f1 | f2 
 ----+----
   1 | 11
   2 | 12
@@ -2997,7 +2997,7 @@ select * from alter2.t1;
 (4 rows)
 
 select * from alter2.v1;
- f1 | f2
+ f1 | f2 
 ----+----
   1 | 11
   2 | 12
@@ -3006,7 +3006,7 @@ select * from alter2.v1;
 (4 rows)
 
 select alter2.plus1(41);
- plus1
+ plus1 
 -------
     42
 (1 row)
@@ -3033,44 +3033,44 @@ drop cascades to text search dictionary alter2.dict
 CREATE TYPE test_type AS (a int);
 \d test_type
          Composite type "public.test_type"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 
 ALTER TYPE nosuchtype ADD ATTRIBUTE b text; -- fails
 ERROR:  relation "nosuchtype" does not exist
 ALTER TYPE test_type ADD ATTRIBUTE b text;
 \d test_type
          Composite type "public.test_type"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | text    |           |          |
+ a      | integer |           |          | 
+ b      | text    |           |          | 
 
 ALTER TYPE test_type ADD ATTRIBUTE b text; -- fails
 ERROR:  column "b" of relation "test_type" already exists
 ALTER TYPE test_type ALTER ATTRIBUTE b SET DATA TYPE varchar;
 \d test_type
               Composite type "public.test_type"
- Column |       Type        | Collation | Nullable | Default
+ Column |       Type        | Collation | Nullable | Default 
 --------+-------------------+-----------+----------+---------
- a      | integer           |           |          |
- b      | character varying |           |          |
+ a      | integer           |           |          | 
+ b      | character varying |           |          | 
 
 ALTER TYPE test_type ALTER ATTRIBUTE b SET DATA TYPE integer;
 \d test_type
          Composite type "public.test_type"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 
 ALTER TYPE test_type DROP ATTRIBUTE b;
 \d test_type
          Composite type "public.test_type"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 
 ALTER TYPE test_type DROP ATTRIBUTE c; -- fails
 ERROR:  column "c" of relation "test_type" does not exist
@@ -3079,18 +3079,18 @@ NOTICE:  column "c" of relation "test_type" does not exist, skipping
 ALTER TYPE test_type DROP ATTRIBUTE a, ADD ATTRIBUTE d boolean;
 \d test_type
          Composite type "public.test_type"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- d      | boolean |           |          |
+ d      | boolean |           |          | 
 
 ALTER TYPE test_type RENAME ATTRIBUTE a TO aa;
 ERROR:  column "a" does not exist
 ALTER TYPE test_type RENAME ATTRIBUTE d TO dd;
 \d test_type
          Composite type "public.test_type"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- dd     | boolean |           |          |
+ dd     | boolean |           |          | 
 
 DROP TYPE test_type;
 CREATE TYPE test_type1 AS (a int, b text);
@@ -3109,17 +3109,17 @@ CREATE TABLE test_tbl2 OF test_type2;
 CREATE TABLE test_tbl2_subclass () INHERITS (test_tbl2);
 \d test_type2
         Composite type "public.test_type2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | text    |           |          |
+ a      | integer |           |          | 
+ b      | text    |           |          | 
 
 \d test_tbl2
              Table "public.test_tbl2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | text    |           |          |
+ a      | integer |           |          | 
+ b      | text    |           |          | 
 Number of child tables: 1 (Use \d+ to list them.)
 Typed table of type: test_type2
 
@@ -3129,19 +3129,19 @@ HINT:  Use ALTER ... CASCADE to alter the typed tables too.
 ALTER TYPE test_type2 ADD ATTRIBUTE c text CASCADE;
 \d test_type2
         Composite type "public.test_type2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | text    |           |          |
- c      | text    |           |          |
+ a      | integer |           |          | 
+ b      | text    |           |          | 
+ c      | text    |           |          | 
 
 \d test_tbl2
              Table "public.test_tbl2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | text    |           |          |
- c      | text    |           |          |
+ a      | integer |           |          | 
+ b      | text    |           |          | 
+ c      | text    |           |          | 
 Number of child tables: 1 (Use \d+ to list them.)
 Typed table of type: test_type2
 
@@ -3151,19 +3151,19 @@ HINT:  Use ALTER ... CASCADE to alter the typed tables too.
 ALTER TYPE test_type2 ALTER ATTRIBUTE b TYPE varchar CASCADE;
 \d test_type2
              Composite type "public.test_type2"
- Column |       Type        | Collation | Nullable | Default
+ Column |       Type        | Collation | Nullable | Default 
 --------+-------------------+-----------+----------+---------
- a      | integer           |           |          |
- b      | character varying |           |          |
- c      | text              |           |          |
+ a      | integer           |           |          | 
+ b      | character varying |           |          | 
+ c      | text              |           |          | 
 
 \d test_tbl2
                   Table "public.test_tbl2"
- Column |       Type        | Collation | Nullable | Default
+ Column |       Type        | Collation | Nullable | Default 
 --------+-------------------+-----------+----------+---------
- a      | integer           |           |          |
- b      | character varying |           |          |
- c      | text              |           |          |
+ a      | integer           |           |          | 
+ b      | character varying |           |          | 
+ c      | text              |           |          | 
 Number of child tables: 1 (Use \d+ to list them.)
 Typed table of type: test_type2
 
@@ -3173,17 +3173,17 @@ HINT:  Use ALTER ... CASCADE to alter the typed tables too.
 ALTER TYPE test_type2 DROP ATTRIBUTE b CASCADE;
 \d test_type2
         Composite type "public.test_type2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- c      | text    |           |          |
+ a      | integer |           |          | 
+ c      | text    |           |          | 
 
 \d test_tbl2
              Table "public.test_tbl2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- c      | text    |           |          |
+ a      | integer |           |          | 
+ c      | text    |           |          | 
 Number of child tables: 1 (Use \d+ to list them.)
 Typed table of type: test_type2
 
@@ -3193,26 +3193,26 @@ HINT:  Use ALTER ... CASCADE to alter the typed tables too.
 ALTER TYPE test_type2 RENAME ATTRIBUTE a TO aa CASCADE;
 \d test_type2
         Composite type "public.test_type2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- aa     | integer |           |          |
- c      | text    |           |          |
+ aa     | integer |           |          | 
+ c      | text    |           |          | 
 
 \d test_tbl2
              Table "public.test_tbl2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- aa     | integer |           |          |
- c      | text    |           |          |
+ aa     | integer |           |          | 
+ c      | text    |           |          | 
 Number of child tables: 1 (Use \d+ to list them.)
 Typed table of type: test_type2
 
 \d test_tbl2_subclass
          Table "public.test_tbl2_subclass"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- aa     | integer |           |          |
- c      | text    |           |          |
+ aa     | integer |           |          | 
+ c      | text    |           |          | 
 Inherits: test_tbl2
 
 DROP TABLE test_tbl2_subclass, test_tbl2;
@@ -3227,10 +3227,10 @@ ALTER TYPE test_typex DROP ATTRIBUTE a CASCADE;
 NOTICE:  drop cascades to constraint test_tblx_y_check on table test_tblx
 \d test_tblx
                Table "public.test_tblx"
- Column |    Type    | Collation | Nullable | Default
+ Column |    Type    | Collation | Nullable | Default 
 --------+------------+-----------+----------+---------
- x      | integer    |           |          |
- y      | test_typex |           |          |
+ x      | integer    |           |          | 
+ y      | test_typex |           |          | 
 
 DROP TABLE test_tblx;
 DROP TYPE test_typex;
@@ -3275,10 +3275,10 @@ ALTER TABLE tt7 OF tt_t1;			-- reassign an already-typed table
 ALTER TABLE tt7 NOT OF;
 \d tt7
                    Table "public.tt7"
- Column |     Type     | Collation | Nullable | Default
+ Column |     Type     | Collation | Nullable | Default 
 --------+--------------+-----------+----------+---------
- x      | integer      |           |          |
- y      | numeric(8,2) |           |          |
+ x      | integer      |           |          | 
+ y      | numeric(8,2) |           |          | 
 
 -- make sure we can drop a constraint on the parent but it remains on the child
 CREATE TABLE test_drop_constr_parent (c text CHECK (c IS NOT NULL));
@@ -3315,9 +3315,9 @@ ALTER TABLE IF EXISTS tt8 RENAME COLUMN f TO f1;
 ALTER TABLE IF EXISTS tt8 SET SCHEMA alter2;
 \d alter2.tt8
                 Table "alter2.tt8"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
  f1     | integer |           | not null | 0
 Indexes:
     "xxx" PRIMARY KEY, btree (f1)
@@ -3347,9 +3347,9 @@ ALTER TABLE tt9 ADD CONSTRAINT tt9_c_key2 CHECK(c > 6);
 ALTER TABLE tt9 ADD UNIQUE(c);  -- picks nonconflicting name
 \d tt9
                 Table "public.tt9"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c      | integer |           |          |
+ c      | integer |           |          | 
 Indexes:
     "tt9_c_key" UNIQUE CONSTRAINT, btree (c)
     "tt9_c_key1" UNIQUE CONSTRAINT, btree (c)
@@ -3374,20 +3374,20 @@ COMMENT ON CONSTRAINT comment_test_positive_col_check ON comment_test IS 'CHECK 
 COMMENT ON CONSTRAINT comment_test_pk ON comment_test IS 'PRIMARY KEY constraint of comment_test';
 COMMENT ON INDEX comment_test_pk IS 'Index backing the PRIMARY KEY of comment_test';
 SELECT col_description('comment_test'::regclass, 1) as comment;
-           comment
+           comment           
 -----------------------------
  Column 'id' on comment_test
 (1 row)
 
 SELECT indexrelid::regclass::text as index, obj_description(indexrelid, 'pg_class') as comment FROM pg_index where indrelid = 'comment_test'::regclass ORDER BY 1, 2;
-       index        |                    comment
+       index        |                    comment                    
 --------------------+-----------------------------------------------
  comment_test_index | Simple index on comment_test
  comment_test_pk    | Index backing the PRIMARY KEY of comment_test
 (2 rows)
 
 SELECT conname as constraint, obj_description(oid, 'pg_constraint') as comment FROM pg_constraint where conrelid = 'comment_test'::regclass ORDER BY 1, 2;
-           constraint            |                    comment
+           constraint            |                    comment                    
 ---------------------------------+-----------------------------------------------
  comment_test_pk                 | PRIMARY KEY constraint of comment_test
  comment_test_positive_col_check | CHECK constraint on comment_test.positive_col
@@ -3405,20 +3405,20 @@ ALTER TABLE comment_test ALTER COLUMN positive_col SET DATA TYPE int;
 ALTER TABLE comment_test ALTER COLUMN positive_col SET DATA TYPE bigint;
 -- Check that the comments are intact.
 SELECT col_description('comment_test'::regclass, 1) as comment;
-           comment
+           comment           
 -----------------------------
  Column 'id' on comment_test
 (1 row)
 
 SELECT indexrelid::regclass::text as index, obj_description(indexrelid, 'pg_class') as comment FROM pg_index where indrelid = 'comment_test'::regclass ORDER BY 1, 2;
-       index        |                    comment
+       index        |                    comment                    
 --------------------+-----------------------------------------------
  comment_test_index | Simple index on comment_test
  comment_test_pk    | Index backing the PRIMARY KEY of comment_test
 (2 rows)
 
 SELECT conname as constraint, obj_description(oid, 'pg_constraint') as comment FROM pg_constraint where conrelid = 'comment_test'::regclass ORDER BY 1, 2;
-           constraint            |                    comment
+           constraint            |                    comment                    
 ---------------------------------+-----------------------------------------------
  comment_test_pk                 | PRIMARY KEY constraint of comment_test
  comment_test_positive_col_check | CHECK constraint on comment_test.positive_col
@@ -3440,19 +3440,19 @@ ERROR:  foreign key constraint "comment_test_child_fk" cannot be implemented
 DETAIL:  Key columns "id" and "id" are of incompatible types: text and integer.
 -- Comments should be intact
 SELECT col_description('comment_test_child'::regclass, 1) as comment;
-              comment
+              comment              
 -----------------------------------
  Column 'id' on comment_test_child
 (1 row)
 
 SELECT indexrelid::regclass::text as index, obj_description(indexrelid, 'pg_class') as comment FROM pg_index where indrelid = 'comment_test_child'::regclass ORDER BY 1, 2;
-         index         |                       comment
+         index         |                       comment                       
 -----------------------+-----------------------------------------------------
  comment_test_child_fk | Index backing the FOREIGN KEY of comment_test_child
 (1 row)
 
 SELECT conname as constraint, obj_description(oid, 'pg_constraint') as comment FROM pg_constraint where conrelid = 'comment_test_child'::regclass ORDER BY 1, 2;
-      constraint       |                   comment
+      constraint       |                   comment                    
 -----------------------+----------------------------------------------
  comment_test_child_fk | FOREIGN KEY constraint of comment_test_child
 (1 row)
@@ -3470,14 +3470,14 @@ FROM pg_class,
 WHERE relkind IN ('r', 'i', 'S', 't', 'm') AND mapped_oid IS DISTINCT FROM oid;
 SELECT m.* FROM filenode_mapping m LEFT JOIN pg_class c ON c.oid = m.oid
 WHERE c.oid IS NOT NULL OR m.mapped_oid IS NOT NULL;
- oid | mapped_oid | reltablespace | relfilenode | relname
+ oid | mapped_oid | reltablespace | relfilenode | relname 
 -----+------------+---------------+-------------+---------
 (0 rows)
 
 -- Checks on creating and manipulation of user defined relations in
 -- pg_catalog.
 SHOW allow_system_table_mods;
- allow_system_table_mods
+ allow_system_table_mods 
 -------------------------
  off
 (1 row)
@@ -3511,7 +3511,7 @@ SELECT r.relname || ' toast table', t.relkind, t.relpersistence FROM pg_class r 
 UNION ALL
 SELECT r.relname || ' toast index', ri.relkind, ri.relpersistence FROM pg_class r join pg_class t ON t.oid = r.reltoastrelid JOIN pg_index i ON i.indrelid = t.oid JOIN pg_class ri ON ri.oid = i.indexrelid WHERE r.relname ~ '^unlogged1'
 ORDER BY relname;
-        relname        | relkind | relpersistence
+        relname        | relkind | relpersistence 
 -----------------------+---------+----------------
  unlogged1             | r       | u
  unlogged1 toast index | i       | u
@@ -3533,7 +3533,7 @@ SELECT r.relname || ' toast table', t.relkind, t.relpersistence FROM pg_class r 
 UNION ALL
 SELECT r.relname || ' toast index', ri.relkind, ri.relpersistence FROM pg_class r join pg_class t ON t.oid = r.reltoastrelid JOIN pg_index i ON i.indrelid = t.oid JOIN pg_class ri ON ri.oid = i.indexrelid WHERE r.relname ~ '^unlogged1'
 ORDER BY relname;
-        relname        | relkind | relpersistence
+        relname        | relkind | relpersistence 
 -----------------------+---------+----------------
  unlogged1             | r       | p
  unlogged1 toast index | i       | p
@@ -3555,7 +3555,7 @@ SELECT r.relname || ' toast table', t.relkind, t.relpersistence FROM pg_class r 
 UNION ALL
 SELECT r.relname ||' toast index', ri.relkind, ri.relpersistence FROM pg_class r join pg_class t ON t.oid = r.reltoastrelid JOIN pg_index i ON i.indrelid = t.oid JOIN pg_class ri ON ri.oid = i.indexrelid WHERE r.relname ~ '^logged1'
 ORDER BY relname;
-       relname       | relkind | relpersistence
+       relname       | relkind | relpersistence 
 ---------------------+---------+----------------
  logged1             | r       | p
  logged1 toast index | i       | p
@@ -3578,7 +3578,7 @@ SELECT r.relname || ' toast table', t.relkind, t.relpersistence FROM pg_class r 
 UNION ALL
 SELECT r.relname || ' toast index', ri.relkind, ri.relpersistence FROM pg_class r join pg_class t ON t.oid = r.reltoastrelid JOIN pg_index i ON i.indrelid = t.oid JOIN pg_class ri ON ri.oid = i.indexrelid WHERE r.relname ~ '^logged1'
 ORDER BY relname;
-       relname       | relkind | relpersistence
+       relname       | relkind | relpersistence 
 ---------------------+---------+----------------
  logged1             | r       | u
  logged1 toast index | i       | u
@@ -3595,18 +3595,18 @@ DROP TABLE logged1;
 CREATE TABLE test_add_column(c1 integer);
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
+ c1     | integer |           |          | 
 
 ALTER TABLE test_add_column
 	ADD COLUMN c2 integer;
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
 
 ALTER TABLE test_add_column
 	ADD COLUMN c2 integer; -- fail because c2 already exists
@@ -3616,10 +3616,10 @@ ALTER TABLE ONLY test_add_column
 ERROR:  column "c2" of relation "test_add_column" already exists
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
 
 ALTER TABLE test_add_column
 	ADD COLUMN IF NOT EXISTS c2 integer; -- skipping because c2 already exists
@@ -3629,10 +3629,10 @@ ALTER TABLE ONLY test_add_column
 NOTICE:  column "c2" of relation "test_add_column" already exists, skipping
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
 
 ALTER TABLE test_add_column
 	ADD COLUMN c2 integer, -- fail because c2 already exists
@@ -3640,10 +3640,10 @@ ALTER TABLE test_add_column
 ERROR:  column "c2" of relation "test_add_column" already exists
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
 
 ALTER TABLE test_add_column
 	ADD COLUMN IF NOT EXISTS c2 integer, -- skipping because c2 already exists
@@ -3651,11 +3651,11 @@ ALTER TABLE test_add_column
 NOTICE:  column "c2" of relation "test_add_column" already exists, skipping
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
- c3     | integer |           | not null |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
+ c3     | integer |           | not null | 
 Indexes:
     "test_add_column_pkey" PRIMARY KEY, btree (c3)
 
@@ -3666,11 +3666,11 @@ NOTICE:  column "c2" of relation "test_add_column" already exists, skipping
 NOTICE:  column "c3" of relation "test_add_column" already exists, skipping
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
- c3     | integer |           | not null |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
+ c3     | integer |           | not null | 
 Indexes:
     "test_add_column_pkey" PRIMARY KEY, btree (c3)
 
@@ -3682,12 +3682,12 @@ NOTICE:  column "c2" of relation "test_add_column" already exists, skipping
 NOTICE:  column "c3" of relation "test_add_column" already exists, skipping
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
- c3     | integer |           | not null |
- c4     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
+ c3     | integer |           | not null | 
+ c4     | integer |           |          | 
 Indexes:
     "test_add_column_pkey" PRIMARY KEY, btree (c3)
 Foreign-key constraints:
@@ -3700,12 +3700,12 @@ ALTER TABLE test_add_column
 NOTICE:  column "c4" of relation "test_add_column" already exists, skipping
 \d test_add_column
           Table "public.test_add_column"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- c1     | integer |           |          |
- c2     | integer |           |          |
- c3     | integer |           | not null |
- c4     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
+ c3     | integer |           | not null | 
+ c4     | integer |           |          | 
 Indexes:
     "test_add_column_pkey" PRIMARY KEY, btree (c3)
 Foreign-key constraints:
@@ -3717,12 +3717,12 @@ ALTER TABLE test_add_column
 	ADD COLUMN IF NOT EXISTS c5 SERIAL CHECK (c5 > 8);
 \d test_add_column
                             Table "public.test_add_column"
- Column |  Type   | Collation | Nullable |                   Default
+ Column |  Type   | Collation | Nullable |                   Default                   
 --------+---------+-----------+----------+---------------------------------------------
- c1     | integer |           |          |
- c2     | integer |           |          |
- c3     | integer |           | not null |
- c4     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
+ c3     | integer |           | not null | 
+ c4     | integer |           |          | 
  c5     | integer |           | not null | nextval('test_add_column_c5_seq'::regclass)
 Indexes:
     "test_add_column_pkey" PRIMARY KEY, btree (c3)
@@ -3738,12 +3738,12 @@ ALTER TABLE test_add_column
 NOTICE:  column "c5" of relation "test_add_column" already exists, skipping
 \d test_add_column*
                             Table "public.test_add_column"
- Column |  Type   | Collation | Nullable |                   Default
+ Column |  Type   | Collation | Nullable |                   Default                   
 --------+---------+-----------+----------+---------------------------------------------
- c1     | integer |           |          |
- c2     | integer |           |          |
- c3     | integer |           | not null |
- c4     | integer |           |          |
+ c1     | integer |           |          | 
+ c2     | integer |           |          | 
+ c3     | integer |           | not null | 
+ c4     | integer |           |          | 
  c5     | integer |           | not null | nextval('test_add_column_c5_seq'::regclass)
 Indexes:
     "test_add_column_pkey" PRIMARY KEY, btree (c3)
@@ -3755,13 +3755,13 @@ Referenced by:
     TABLE "test_add_column" CONSTRAINT "test_add_column_c4_fkey" FOREIGN KEY (c4) REFERENCES test_add_column(c3)
 
                Sequence "public.test_add_column_c5_seq"
-  Type   | Start | Minimum |  Maximum   | Increment | Cycles? | Cache
+  Type   | Start | Minimum |  Maximum   | Increment | Cycles? | Cache 
 ---------+-------+---------+------------+-----------+---------+-------
  integer |     1 |       1 | 2147483647 |         1 | no      |     1
 Owned by: public.test_add_column.c5
 
  Index "public.test_add_column_pkey"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  c3     | integer | yes  | c3
 primary key, btree, for table "public.test_add_column"
@@ -3777,9 +3777,9 @@ ALTER TABLE ataddindex
   ALTER f1 TYPE BIGINT;
 \d ataddindex
             Table "public.ataddindex"
- Column |  Type  | Collation | Nullable | Default
+ Column |  Type  | Collation | Nullable | Default 
 --------+--------+-----------+----------+---------
- f1     | bigint |           | not null |
+ f1     | bigint |           | not null | 
 Indexes:
     "ataddindexi0" PRIMARY KEY, btree (f1)
 
@@ -3791,9 +3791,9 @@ ALTER TABLE ataddindex
   ADD EXCLUDE ((f1 LIKE 'a') WITH =);
 \d ataddindex
            Table "public.ataddindex"
- Column | Type | Collation | Nullable | Default
+ Column | Type | Collation | Nullable | Default 
 --------+------+-----------+----------+---------
- f1     | text |           |          |
+ f1     | text |           |          | 
 Indexes:
     "ataddindex_expr_excl" EXCLUDE USING btree ((f1 ~~ 'a'::text) WITH =)
 
@@ -3804,10 +3804,10 @@ ALTER TABLE ataddindex
   ADD FOREIGN KEY (ref_id) REFERENCES ataddindex;
 \d ataddindex
              Table "public.ataddindex"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- id     | integer |           | not null |
- ref_id | integer |           |          |
+ id     | integer |           | not null | 
+ ref_id | integer |           |          | 
 Indexes:
     "ataddindex_pkey" PRIMARY KEY, btree (id)
 Foreign-key constraints:
@@ -3822,10 +3822,10 @@ ALTER TABLE ataddindex
   ADD FOREIGN KEY (ref_id) REFERENCES ataddindex (id);
 \d ataddindex
              Table "public.ataddindex"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- id     | integer |           |          |
- ref_id | integer |           |          |
+ id     | integer |           |          | 
+ ref_id | integer |           |          | 
 Indexes:
     "ataddindex_id_key" UNIQUE CONSTRAINT, btree (id)
 Foreign-key constraints:
@@ -3975,14 +3975,14 @@ CREATE TABLE part_1 (
 ALTER TABLE list_parted ATTACH PARTITION part_1 FOR VALUES IN (1);
 -- attislocal and conislocal are always false for merged attributes and constraints respectively.
 SELECT attislocal, attinhcount FROM pg_attribute WHERE attrelid = 'part_1'::regclass AND attnum > 0;
- attislocal | attinhcount
+ attislocal | attinhcount 
 ------------+-------------
  f          |           1
  f          |           1
 (2 rows)
 
 SELECT conislocal, coninhcount FROM pg_constraint WHERE conrelid = 'part_1'::regclass AND conname = 'check_a';
- conislocal | coninhcount
+ conislocal | coninhcount 
 ------------+-------------
  f          |           1
 (1 row)
@@ -4135,9 +4135,9 @@ ALTER TABLE list_parted2 DETACH PARTITION part_7;
 ALTER TABLE part_7 DROP CONSTRAINT check_a; -- thusly, scan won't be skipped
 INSERT INTO part_7 (a, b) VALUES (8, null), (9, 'a');
 SELECT tableoid::regclass, a, b FROM part_7 order by a;
-   tableoid    | a | b
+   tableoid    | a | b 
 ---------------+---+---
- part_7_a_null | 8 |
+ part_7_a_null | 8 | 
  part_7_a_null | 9 | a
 (2 rows)
 
@@ -4260,14 +4260,14 @@ DROP TABLE not_a_part;
 -- attislocal/conislocal is set to true
 ALTER TABLE list_parted2 DETACH PARTITION part_3_4;
 SELECT attinhcount, attislocal FROM pg_attribute WHERE attrelid = 'part_3_4'::regclass AND attnum > 0;
- attinhcount | attislocal
+ attinhcount | attislocal 
 -------------+------------
            0 | t
            0 | t
 (2 rows)
 
 SELECT coninhcount, conislocal FROM pg_constraint WHERE conrelid = 'part_3_4'::regclass AND conname = 'check_a';
- coninhcount | conislocal
+ coninhcount | conislocal 
 -------------+------------
            0 | t
 (1 row)
@@ -4281,7 +4281,7 @@ CREATE TABLE part_rp PARTITION OF range_parted2 FOR VALUES FROM (0) to (100);
 ALTER TABLE range_parted2 DETACH PARTITION part_rp;
 DROP TABLE range_parted2;
 SELECT * from part_rp;
- a
+ a 
 ---
 (0 rows)
 
@@ -4308,18 +4308,18 @@ DROP TABLE part_rpd;
 ALTER TABLE range_parted2 DETACH PARTITION part_rp CONCURRENTLY;
 \d+ range_parted2
                          Partitioned table "public.range_parted2"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- a      | integer |           |          |         | plain   |              |
+ a      | integer |           |          |         | plain   |              | 
 Partition key: RANGE (a)
 Number of partitions: 0
 
 -- constraint should be created
 \d part_rp
               Table "public.part_rp"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Check constraints:
     "part_rp_a_check" CHECK (a IS NOT NULL AND a >= 0 AND a < 100)
 
@@ -4328,9 +4328,9 @@ ALTER TABLE range_parted2 DETACH PARTITION part_rp100 CONCURRENTLY;
 -- redundant constraint should not be created
 \d part_rp100
              Table "public.part_rp100"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Check constraints:
     "part_rp100_a_check" CHECK (a >= 123 AND a < 133 AND a IS NOT NULL)
 
@@ -4402,7 +4402,7 @@ ERROR:  cannot alter column "b" because it is part of the partition key of relat
 -- dropping non-partition key columns should be allowed on the parent table.
 ALTER TABLE list_parted DROP COLUMN b;
 SELECT * FROM list_parted;
- a
+ a 
 ---
 (0 rows)
 
@@ -4426,7 +4426,7 @@ where attname = 'a'
    or attrelid = 'p1'::regclass
    or attrelid = 'p11'::regclass)
 order by attrelid::regclass::text;
- attrelid | attname | attnum
+ attrelid | attname | attnum 
 ----------+---------+--------
  p        | a       |      1
  p1       | a       |      2
@@ -4536,7 +4536,7 @@ alter table bar2 add column b integer not null default 1;
 alter table bar1 attach partition bar2 default;
 -- this works:
 select * from bar1;
- a | b
+ a | b 
 ---+---
  1 | 1
 (1 row)
@@ -4585,7 +4585,7 @@ alter table alttype_cluster cluster on alttype_cluster_ind;
 select indexrelid::regclass, indisclustered from pg_index
   where indrelid = 'alttype_cluster'::regclass
   order by indexrelid::regclass::text;
-      indexrelid      | indisclustered
+      indexrelid      | indisclustered 
 ----------------------+----------------
  alttype_cluster_ind  | t
  alttype_cluster_pkey | f
@@ -4595,7 +4595,7 @@ alter table alttype_cluster alter a type bigint;
 select indexrelid::regclass, indisclustered from pg_index
   where indrelid = 'alttype_cluster'::regclass
   order by indexrelid::regclass::text;
-      indexrelid      | indisclustered
+      indexrelid      | indisclustered 
 ----------------------+----------------
  alttype_cluster_ind  | t
  alttype_cluster_pkey | f
@@ -4606,7 +4606,7 @@ alter table alttype_cluster cluster on alttype_cluster_pkey;
 select indexrelid::regclass, indisclustered from pg_index
   where indrelid = 'alttype_cluster'::regclass
   order by indexrelid::regclass::text;
-      indexrelid      | indisclustered
+      indexrelid      | indisclustered 
 ----------------------+----------------
  alttype_cluster_ind  | f
  alttype_cluster_pkey | t
@@ -4616,7 +4616,7 @@ alter table alttype_cluster alter a type int;
 select indexrelid::regclass, indisclustered from pg_index
   where indrelid = 'alttype_cluster'::regclass
   order by indexrelid::regclass::text;
-      indexrelid      | indisclustered
+      indexrelid      | indisclustered 
 ----------------------+----------------
  alttype_cluster_ind  | f
  alttype_cluster_pkey | t
@@ -4653,9 +4653,9 @@ reset client_min_messages;
 alter table alter1.t1 set schema alter2;
 \d+ alter2.t1
                                     Table "alter2.t1"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- a      | integer |           |          |         | plain   |              |
+ a      | integer |           |          |         | plain   |              | 
 Publications:
     "pub1"
 

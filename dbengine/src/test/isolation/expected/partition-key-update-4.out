@@ -9,7 +9,7 @@ step s2c: COMMIT;
 step s1u: <... completed>
 step s1c: COMMIT;
 step s1s: SELECT tableoid::regclass, * FROM foo ORDER BY a;
-tableoid|a|b
+tableoid|a|b                  
 --------+-+-------------------
 foo2    |2|ABC update2 update1
 (1 row)
@@ -24,13 +24,13 @@ step s2c: COMMIT;
 step s1ut: <... completed>
 step s1c: COMMIT;
 step s1st: SELECT tableoid::regclass, * FROM footrg ORDER BY a;
-tableoid|a|b
+tableoid|a|b                  
 --------+-+-------------------
 footrg2 |2|ABC update2 update1
 (1 row)
 
 step s1stl: SELECT * FROM triglog ORDER BY a;
-a|b
+a|b                  
 -+-------------------
 1|ABC update2 trigger
 (1 row)
@@ -45,7 +45,7 @@ step s2c: COMMIT;
 step s1u: <... completed>
 step s1c: COMMIT;
 step s1s: SELECT tableoid::regclass, * FROM foo ORDER BY a;
-tableoid|a|b
+tableoid|a|b  
 --------+-+---
 foo1    |1|EFG
 (1 row)
@@ -60,7 +60,7 @@ step s2c: COMMIT;
 step s1ut: <... completed>
 step s1c: COMMIT;
 step s1st: SELECT tableoid::regclass, * FROM footrg ORDER BY a;
-tableoid|a|b
+tableoid|a|b  
 --------+-+---
 footrg1 |1|EFG
 (1 row)
@@ -69,3 +69,4 @@ step s1stl: SELECT * FROM triglog ORDER BY a;
 a|b
 -+-
 (0 rows)
+

@@ -5,14 +5,14 @@ create table idxpart (a int, b int, c text) partition by range (a);
 -- It will be set after the first partition is created.
 create index idxpart_idx on idxpart (a);
 select relhassubclass from pg_class where relname = 'idxpart_idx';
- relhassubclass
+ relhassubclass 
 ----------------
  f
 (1 row)
 
 -- Check that partitioned indexes are present in pg_indexes.
 select indexdef from pg_indexes where indexname like 'idxpart_idx%';
-                            indexdef
+                            indexdef                             
 -----------------------------------------------------------------
  CREATE INDEX idxpart_idx ON ONLY public.idxpart USING btree (a)
 (1 row)
@@ -26,7 +26,7 @@ create table idxpart21 partition of idxpart2 for values from (0) to (100);
 -- index is created only on the parent.
 create index idxpart_idx on only idxpart(a);
 select relhassubclass from pg_class where relname = 'idxpart_idx';
- relhassubclass
+ relhassubclass 
 ----------------
  f
 (1 row)
@@ -37,16 +37,16 @@ select relname, relkind, relhassubclass, inhparent::regclass
     from pg_class left join pg_index ix on (indexrelid = oid)
 	left join pg_inherits on (ix.indexrelid = inhrelid)
 	where relname like 'idxpart%' order by relname;
-     relname     | relkind | relhassubclass |   inhparent
+     relname     | relkind | relhassubclass |   inhparent    
 -----------------+---------+----------------+----------------
- idxpart         | p       | t              |
- idxpart1        | r       | f              |
+ idxpart         | p       | t              | 
+ idxpart1        | r       | f              | 
  idxpart1_a_idx  | i       | f              | idxpart_a_idx
- idxpart2        | p       | t              |
- idxpart21       | r       | f              |
+ idxpart2        | p       | t              | 
+ idxpart21       | r       | f              | 
  idxpart21_a_idx | i       | f              | idxpart2_a_idx
  idxpart2_a_idx  | I       | t              | idxpart_a_idx
- idxpart_a_idx   | I       | t              |
+ idxpart_a_idx   | I       | t              | 
 (8 rows)
 
 drop table idxpart;
@@ -62,7 +62,7 @@ CREATE TABLE idxpart (col1 INT) PARTITION BY RANGE (col1);
 CREATE INDEX ON idxpart (col1);
 CREATE TABLE idxpart_two (col2 INT);
 SELECT col2 FROM idxpart_two fk LEFT OUTER JOIN idxpart pk ON (col1 = col2);
- col2
+ col2 
 ------
 (0 rows)
 
@@ -83,20 +83,20 @@ create index idxparti2 on idxpart (b, c);
 create table idxpart1 (like idxpart);
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | text    |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | text    |           |          | 
 
 alter table idxpart attach partition idxpart1 for values from (0) to (10);
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | text    |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | text    |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (10)
 Indexes:
     "idxpart1_a_idx" btree (a)
@@ -104,20 +104,20 @@ Indexes:
 
 \d+ idxpart1_a_idx
                  Index "public.idxpart1_a_idx"
- Column |  Type   | Key? | Definition | Storage | Stats target
+ Column |  Type   | Key? | Definition | Storage | Stats target 
 --------+---------+------+------------+---------+--------------
- a      | integer | yes  | a          | plain   |
-Partition of: idxparti
+ a      | integer | yes  | a          | plain   | 
+Partition of: idxparti 
 No partition constraint
 btree, for table "public.idxpart1"
 
 \d+ idxpart1_b_c_idx
                 Index "public.idxpart1_b_c_idx"
- Column |  Type   | Key? | Definition | Storage  | Stats target
+ Column |  Type   | Key? | Definition | Storage  | Stats target 
 --------+---------+------+------------+----------+--------------
- b      | integer | yes  | b          | plain    |
- c      | text    | yes  | c          | extended |
-Partition of: idxparti2
+ b      | integer | yes  | b          | plain    | 
+ c      | text    | yes  | c          | extended | 
+Partition of: idxparti2 
 No partition constraint
 btree, for table "public.idxpart1"
 
@@ -130,10 +130,10 @@ alter index idxpart_c attach partition idxpart1_c;
 select relname, relpartbound from pg_class
   where relname in ('idxpart_c', 'idxpart1_c')
   order by relname;
-  relname   | relpartbound
+  relname   | relpartbound 
 ------------+--------------
- idxpart1_c |
- idxpart_c  |
+ idxpart1_c | 
+ idxpart_c  | 
 (2 rows)
 
 alter table idxpart_c detach partition idxpart1_c;
@@ -147,10 +147,10 @@ create index on idxpart1 (a, b);
 create index on idxpart (a, b);
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (0, 0) TO (10, 10)
 Indexes:
     "idxpart1_a_b_idx" btree (a, b)
@@ -159,12 +159,12 @@ select relname, relkind, relhassubclass, inhparent::regclass
     from pg_class left join pg_index ix on (indexrelid = oid)
 	left join pg_inherits on (ix.indexrelid = inhrelid)
 	where relname like 'idxpart%' order by relname;
-     relname      | relkind | relhassubclass |    inhparent
+     relname      | relkind | relhassubclass |    inhparent    
 ------------------+---------+----------------+-----------------
- idxpart          | p       | t              |
- idxpart1         | r       | f              |
+ idxpart          | p       | t              | 
+ idxpart1         | r       | f              | 
  idxpart1_a_b_idx | i       | f              | idxpart_a_b_idx
- idxpart_a_b_idx  | I       | t              |
+ idxpart_a_b_idx  | I       | t              | 
 (4 rows)
 
 drop table idxpart;
@@ -180,7 +180,7 @@ ERROR:  cannot drop partitioned index "idxpart_a_idx" concurrently
 drop index idxpart_a_idx;	-- both indexes go away
 select relname, relkind from pg_class
   where relname like 'idxpart%' order by relname;
- relname  | relkind
+ relname  | relkind 
 ----------+---------
  idxpart  | p
  idxpart1 | r
@@ -190,7 +190,7 @@ create index on idxpart (a);
 drop table idxpart1;		-- the index on partition goes away too
 select relname, relkind from pg_class
   where relname like 'idxpart%' order by relname;
-    relname    | relkind
+    relname    | relkind 
 ---------------+---------
  idxpart       | p
  idxpart_a_idx | I
@@ -209,7 +209,7 @@ HINT:  You can drop index idxpart_temp_a_idx instead.
 drop index concurrently idxpart_temp_a_idx;
 select relname, relkind from pg_class
   where relname like 'idxpart_temp%' order by relname;
-   relname    | relkind
+   relname    | relkind 
 --------------+---------
  idxpart_temp | p
 (1 row)
@@ -253,7 +253,7 @@ drop table idxpart;
 -- make sure everything's gone
 select indexrelid::regclass, indrelid::regclass
   from pg_index where indexrelid::regclass::text like 'idxpart%';
- indexrelid | indrelid
+ indexrelid | indrelid 
 ------------+----------
 (0 rows)
 
@@ -268,10 +268,10 @@ create index on idxpart (a);
 alter table idxpart attach partition idxpart1 for values from (0) to (1000);
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (1000)
 Indexes:
     "idxpart1_a_a1_idx" btree (a, a)
@@ -297,18 +297,18 @@ create index on idxpart (a);
 -- does not; also, idxpart22 is not attached.
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (100)
 Indexes:
     "idxpart1_a_idx" btree (a)
 
 \d idxpart2
         Partitioned table "public.idxpart2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (100) TO (1000)
 Partition key: RANGE (a)
 Indexes:
@@ -317,21 +317,21 @@ Number of partitions: 2 (Use \d+ to list them.)
 
 \d idxpart21
              Table "public.idxpart21"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: idxpart2 FOR VALUES FROM (100) TO (200)
 
 select indexrelid::regclass, indrelid::regclass, inhparent::regclass
   from pg_index idx left join pg_inherits inh on (idx.indexrelid = inh.inhrelid)
 where indexrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
-   indexrelid    | indrelid  |   inhparent
+   indexrelid    | indrelid  |   inhparent   
 -----------------+-----------+---------------
  idxpart1_a_idx  | idxpart1  | idxpart_a_idx
- idxpart22_a_idx | idxpart22 |
+ idxpart22_a_idx | idxpart22 | 
  idxpart2_a_idx  | idxpart2  | idxpart_a_idx
- idxpart_a_idx   | idxpart   |
+ idxpart_a_idx   | idxpart   | 
 (4 rows)
 
 alter index idxpart2_a_idx attach partition idxpart22_a_idx;
@@ -339,21 +339,21 @@ select indexrelid::regclass, indrelid::regclass, inhparent::regclass
   from pg_index idx left join pg_inherits inh on (idx.indexrelid = inh.inhrelid)
 where indexrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
-   indexrelid    | indrelid  |   inhparent
+   indexrelid    | indrelid  |   inhparent    
 -----------------+-----------+----------------
  idxpart1_a_idx  | idxpart1  | idxpart_a_idx
  idxpart22_a_idx | idxpart22 | idxpart2_a_idx
  idxpart2_a_idx  | idxpart2  | idxpart_a_idx
- idxpart_a_idx   | idxpart   |
+ idxpart_a_idx   | idxpart   | 
 (4 rows)
 
 -- attaching idxpart22 is not enough to set idxpart22_a_idx valid ...
 alter index idxpart2_a_idx attach partition idxpart22_a_idx;
 \d idxpart2
         Partitioned table "public.idxpart2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (100) TO (1000)
 Partition key: RANGE (a)
 Indexes:
@@ -365,9 +365,9 @@ create index on idxpart21 (a);
 alter index idxpart2_a_idx attach partition idxpart21_a_idx;
 \d idxpart2
         Partitioned table "public.idxpart2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (100) TO (1000)
 Partition key: RANGE (a)
 Indexes:
@@ -384,12 +384,12 @@ create index idxparti2 on idxpart (b, c);
 create table idxpart1 (like idxpart including indexes);
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | text    |           |          |
- d      | boolean |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | text    |           |          | 
+ d      | boolean |           |          | 
 Indexes:
     "idxpart1_a_idx" btree (a)
     "idxpart1_b_c_idx" btree (b, c)
@@ -398,25 +398,25 @@ select relname, relkind, inhparent::regclass
     from pg_class left join pg_index ix on (indexrelid = oid)
 	left join pg_inherits on (ix.indexrelid = inhrelid)
 	where relname like 'idxpart%' order by relname;
-     relname      | relkind | inhparent
+     relname      | relkind | inhparent 
 ------------------+---------+-----------
- idxpart          | p       |
- idxpart1         | r       |
- idxpart1_a_idx   | i       |
- idxpart1_b_c_idx | i       |
- idxparti         | I       |
- idxparti2        | I       |
+ idxpart          | p       | 
+ idxpart1         | r       | 
+ idxpart1_a_idx   | i       | 
+ idxpart1_b_c_idx | i       | 
+ idxparti         | I       | 
+ idxparti2        | I       | 
 (6 rows)
 
 alter table idxpart attach partition idxpart1 for values from (0) to (10);
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | text    |           |          |
- d      | boolean |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | text    |           |          | 
+ d      | boolean |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (10)
 Indexes:
     "idxpart1_a_idx" btree (a)
@@ -426,26 +426,26 @@ select relname, relkind, inhparent::regclass
     from pg_class left join pg_index ix on (indexrelid = oid)
 	left join pg_inherits on (ix.indexrelid = inhrelid)
 	where relname like 'idxpart%' order by relname;
-     relname      | relkind | inhparent
+     relname      | relkind | inhparent 
 ------------------+---------+-----------
- idxpart          | p       |
- idxpart1         | r       |
+ idxpart          | p       | 
+ idxpart1         | r       | 
  idxpart1_a_idx   | i       | idxparti
  idxpart1_b_c_idx | i       | idxparti2
- idxparti         | I       |
- idxparti2        | I       |
+ idxparti         | I       | 
+ idxparti2        | I       | 
 (6 rows)
 
 -- While here, also check matching when creating an index after the fact.
 create index on idxpart1 ((a+b)) where d = true;
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | text    |           |          |
- d      | boolean |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | text    |           |          | 
+ d      | boolean |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (10)
 Indexes:
     "idxpart1_a_idx" btree (a)
@@ -456,26 +456,26 @@ select relname, relkind, inhparent::regclass
     from pg_class left join pg_index ix on (indexrelid = oid)
 	left join pg_inherits on (ix.indexrelid = inhrelid)
 	where relname like 'idxpart%' order by relname;
-      relname      | relkind | inhparent
+      relname      | relkind | inhparent 
 -------------------+---------+-----------
- idxpart           | p       |
- idxpart1          | r       |
+ idxpart           | p       | 
+ idxpart1          | r       | 
  idxpart1_a_idx    | i       | idxparti
  idxpart1_b_c_idx  | i       | idxparti2
- idxpart1_expr_idx | i       |
- idxparti          | I       |
- idxparti2         | I       |
+ idxpart1_expr_idx | i       | 
+ idxparti          | I       | 
+ idxparti2         | I       | 
 (7 rows)
 
 create index idxparti3 on idxpart ((a+b)) where d = true;
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | text    |           |          |
- d      | boolean |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | text    |           |          | 
+ d      | boolean |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (10)
 Indexes:
     "idxpart1_a_idx" btree (a)
@@ -486,16 +486,16 @@ select relname, relkind, inhparent::regclass
     from pg_class left join pg_index ix on (indexrelid = oid)
 	left join pg_inherits on (ix.indexrelid = inhrelid)
 	where relname like 'idxpart%' order by relname;
-      relname      | relkind | inhparent
+      relname      | relkind | inhparent 
 -------------------+---------+-----------
- idxpart           | p       |
- idxpart1          | r       |
+ idxpart           | p       | 
+ idxpart1          | r       | 
  idxpart1_a_idx    | i       | idxparti
  idxpart1_b_c_idx  | i       | idxparti2
  idxpart1_expr_idx | i       | idxparti3
- idxparti          | I       |
- idxparti2         | I       |
- idxparti3         | I       |
+ idxparti          | I       | 
+ idxparti2         | I       | 
+ idxparti3         | I       | 
 (8 rows)
 
 drop table idxpart;
@@ -511,7 +511,7 @@ create index on only idxpart (a);
 -- this results in two invalid indexes:
 select relname, indisvalid from pg_class join pg_index on indexrelid = oid
    where relname like 'idxpart%' order by relname;
-    relname     | indisvalid
+    relname     | indisvalid 
 ----------------+------------
  idxpart1_a_idx | f
  idxpart_a_idx  | f
@@ -521,7 +521,7 @@ select relname, indisvalid from pg_class join pg_index on indexrelid = oid
 alter index idxpart_a_idx attach partition idxpart1_a_idx;
 select relname, indisvalid from pg_class join pg_index on indexrelid = oid
    where relname like 'idxpart%' order by relname;
-    relname     | indisvalid
+    relname     | indisvalid 
 ----------------+------------
  idxpart1_a_idx | f
  idxpart_a_idx  | f
@@ -533,7 +533,7 @@ create index on idxpart11 (a);
 alter index idxpart1_a_idx attach partition idxpart11_a_idx;
 select relname, indisvalid from pg_class join pg_index on indexrelid = oid
    where relname like 'idxpart%' order by relname;
-     relname     | indisvalid
+     relname     | indisvalid 
 -----------------+------------
  idxpart11_a_idx | t
  idxpart1_a_idx  | t
@@ -551,7 +551,7 @@ alter table idxpart attach partition idxpart1 for values from (0000) to (1000);
 alter table idxpart attach partition idxpart2 for values from (1000) to (2000);
 create table idxpart3 partition of idxpart for values from (2000) to (3000);
 select relname, relkind from pg_class where relname like 'idxpart%' order by relname;
-    relname     | relkind
+    relname     | relkind 
 ----------------+---------
  idxpart        | p
  idxpart1       | r
@@ -571,7 +571,7 @@ drop index idxpart1_a_idx;
 drop index idxpart2_a_idx;
 drop index idxpart3_a_idx;
 select relname, relkind from pg_class where relname like 'idxpart%' order by relname;
-    relname    | relkind
+    relname    | relkind 
 ---------------+---------
  idxpart       | p
  idxpart1      | r
@@ -582,7 +582,7 @@ select relname, relkind from pg_class where relname like 'idxpart%' order by rel
 
 drop table idxpart, idxpart1, idxpart2, idxpart3;
 select relname, relkind from pg_class where relname like 'idxpart%' order by relname;
- relname | relkind
+ relname | relkind 
 ---------+---------
 (0 rows)
 
@@ -596,7 +596,7 @@ alter table idxpart attach partition idxpart2 for values from (1000) to (2000);
 create table idxpart3 partition of idxpart for values from (2000) to (3000);
 -- b) after detaching, dropping the index on parent does not remove the others
 select relname, relkind from pg_class where relname like 'idxpart%' order by relname;
-    relname     | relkind
+    relname     | relkind 
 ----------------+---------
  idxpart        | p
  idxpart1       | r
@@ -613,7 +613,7 @@ alter table idxpart detach partition idxpart2;
 alter table idxpart detach partition idxpart3;
 drop index idxpart_a_idx;
 select relname, relkind from pg_class where relname like 'idxpart%' order by relname;
-    relname     | relkind
+    relname     | relkind 
 ----------------+---------
  idxpart        | p
  idxpart1       | r
@@ -626,7 +626,7 @@ select relname, relkind from pg_class where relname like 'idxpart%' order by rel
 
 drop table idxpart, idxpart1, idxpart2, idxpart3;
 select relname, relkind from pg_class where relname like 'idxpart%' order by relname;
- relname | relkind
+ relname | relkind 
 ---------+---------
 (0 rows)
 
@@ -637,21 +637,21 @@ create table idxpart2 partition of idxpart for values from (250) to (500);
 alter table idxpart detach partition idxpart2;
 \d idxpart2
               Table "public.idxpart2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
- c      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
+ c      | integer |           |          | 
 Indexes:
     "idxpart2_c_idx" btree (c)
 
 alter table idxpart2 drop column c;
 \d idxpart2
               Table "public.idxpart2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 
 drop table idxpart, idxpart2;
 -- Verify that expression indexes inherit correctly
@@ -667,7 +667,7 @@ select relname as child, inhparent::regclass as parent, pg_get_indexdef as child
   from pg_class join pg_inherits on inhrelid = oid,
   lateral pg_get_indexdef(pg_class.oid)
   where relkind in ('i', 'I') and relname like 'idxpart%' order by relname;
-       child       |      parent      |                                 childdef
+       child       |      parent      |                                 childdef                                  
 -------------------+------------------+---------------------------------------------------------------------------
  idxpart1_expr_idx | idxpart_expr_idx | CREATE INDEX idxpart1_expr_idx ON public.idxpart1 USING btree (((a + b)))
  idxpart2_expr_idx | idxpart_expr_idx | CREATE INDEX idxpart2_expr_idx ON public.idxpart2 USING btree (((a + b)))
@@ -691,7 +691,7 @@ select relname as child, inhparent::regclass as parent, pg_get_indexdef as child
   from pg_class left join pg_inherits on inhrelid = oid,
   lateral pg_get_indexdef(pg_class.oid)
   where relkind in ('i', 'I') and relname like 'idxpart%' order by relname;
-      child      |    parent     |                                    childdef
+      child      |    parent     |                                    childdef                                    
 -----------------+---------------+--------------------------------------------------------------------------------
  idxpart1_a_idx  | idxpart_a_idx | CREATE INDEX idxpart1_a_idx ON public.idxpart1 USING btree (a COLLATE "C")
  idxpart2_a_idx  |               | CREATE INDEX idxpart2_a_idx ON public.idxpart2 USING btree (a COLLATE "POSIX")
@@ -718,7 +718,7 @@ select relname as child, inhparent::regclass as parent, pg_get_indexdef as child
   from pg_class left join pg_inherits on inhrelid = oid,
   lateral pg_get_indexdef(pg_class.oid)
   where relkind in ('i', 'I') and relname like 'idxpart%' order by relname;
-      child      |    parent     |                                      childdef
+      child      |    parent     |                                      childdef                                      
 -----------------+---------------+------------------------------------------------------------------------------------
  idxpart1_a_idx  | idxpart_a_idx | CREATE INDEX idxpart1_a_idx ON public.idxpart1 USING btree (a text_pattern_ops)
  idxpart2_a_idx  |               | CREATE INDEX idxpart2_a_idx ON public.idxpart2 USING btree (a)
@@ -764,7 +764,7 @@ select relname as child, inhparent::regclass as parent, pg_get_indexdef as child
   from pg_class left join pg_inherits on inhrelid = oid,
   lateral pg_get_indexdef(pg_class.oid)
   where relkind in ('i', 'I') and relname like 'idxpart%' order by relname;
-      child      |    parent     |                                        childdef
+      child      |    parent     |                                        childdef                                         
 -----------------+---------------+-----------------------------------------------------------------------------------------
  idxpart1_1_idx  | idxpart_1_idx | CREATE INDEX idxpart1_1_idx ON public.idxpart1 USING btree (b, a)
  idxpart1_1b_idx |               | CREATE INDEX idxpart1_1b_idx ON public.idxpart1 USING btree (b)
@@ -790,7 +790,7 @@ select c.relname, pg_get_indexdef(indexrelid)
   from pg_class c join pg_index i on c.oid = i.indexrelid
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
-     relname      |                           pg_get_indexdef
+     relname      |                           pg_get_indexdef                           
 ------------------+---------------------------------------------------------------------
  idxpart1_a_idx   | CREATE INDEX idxpart1_a_idx ON public.idxpart1 USING btree (a)
  idxpart1_c_b_idx | CREATE INDEX idxpart1_c_b_idx ON public.idxpart1 USING btree (c, b)
@@ -817,7 +817,7 @@ select c.relname, pg_get_indexdef(indexrelid)
   from pg_class c join pg_index i on c.oid = i.indexrelid
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
-      relname      |                               pg_get_indexdef
+      relname      |                               pg_get_indexdef                                
 -------------------+------------------------------------------------------------------------------
  idxpart1_abs_idx  | CREATE INDEX idxpart1_abs_idx ON public.idxpart1 USING btree (abs(b))
  idxpart1_expr_idx | CREATE INDEX idxpart1_expr_idx ON public.idxpart1 USING btree (((b + 1)))
@@ -843,7 +843,7 @@ select c.relname, pg_get_indexdef(indexrelid)
   from pg_class c join pg_index i on c.oid = i.indexrelid
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
-    relname     |                                  pg_get_indexdef
+    relname     |                                  pg_get_indexdef                                   
 ----------------+------------------------------------------------------------------------------------
  idxpart1_a_idx | CREATE INDEX idxpart1_a_idx ON public.idxpart1 USING btree (a) WHERE (b > 1000)
  idxpart2_a_idx | CREATE INDEX idxpart2_a_idx ON public.idxpart2 USING btree (a) WHERE (b > 1000)
@@ -862,9 +862,9 @@ create index on idxpart (col_keep);
 alter table idxpart attach partition idxpart1 for values from (0) to (1000);
 \d idxpart
          Partitioned table "public.idxpart"
-  Column  |  Type   | Collation | Nullable | Default
+  Column  |  Type   | Collation | Nullable | Default 
 ----------+---------+-----------+----------+---------
- col_keep | integer |           |          |
+ col_keep | integer |           |          | 
 Partition key: RANGE (col_keep)
 Indexes:
     "idxpart_col_keep_idx" btree (col_keep)
@@ -872,9 +872,9 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d idxpart1
                Table "public.idxpart1"
-  Column  |  Type   | Collation | Nullable | Default
+  Column  |  Type   | Collation | Nullable | Default 
 ----------+---------+-----------+----------+---------
- col_keep | integer |           |          |
+ col_keep | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (1000)
 Indexes:
     "idxpart1_col_keep_idx" btree (col_keep)
@@ -882,7 +882,7 @@ Indexes:
 select attrelid::regclass, attname, attnum from pg_attribute
   where attrelid::regclass::text like 'idxpart%' and attnum > 0
   order by attrelid::regclass, attnum;
-       attrelid        |           attname            | attnum
+       attrelid        |           attname            | attnum 
 -----------------------+------------------------------+--------
  idxpart1              | ........pg.dropped.1........ |      1
  idxpart1              | ........pg.dropped.2........ |      2
@@ -905,9 +905,9 @@ create index on idxpart (col_keep);
 alter table idxpart attach partition idxpart1 for values from (0) to (1000);
 \d idxpart
          Partitioned table "public.idxpart"
-  Column  |  Type   | Collation | Nullable | Default
+  Column  |  Type   | Collation | Nullable | Default 
 ----------+---------+-----------+----------+---------
- col_keep | integer |           |          |
+ col_keep | integer |           |          | 
 Partition key: RANGE (col_keep)
 Indexes:
     "idxpart_col_keep_idx" btree (col_keep)
@@ -915,9 +915,9 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d idxpart1
                Table "public.idxpart1"
-  Column  |  Type   | Collation | Nullable | Default
+  Column  |  Type   | Collation | Nullable | Default 
 ----------+---------+-----------+----------+---------
- col_keep | integer |           |          |
+ col_keep | integer |           |          | 
 Partition of: idxpart FOR VALUES FROM (0) TO (1000)
 Indexes:
     "idxpart1_col_keep_idx" btree (col_keep)
@@ -925,7 +925,7 @@ Indexes:
 select attrelid::regclass, attname, attnum from pg_attribute
   where attrelid::regclass::text like 'idxpart%' and attnum > 0
   order by attrelid::regclass, attnum;
-       attrelid        |           attname            | attnum
+       attrelid        |           attname            | attnum 
 -----------------------+------------------------------+--------
  idxpart               | ........pg.dropped.1........ |      1
  idxpart               | ........pg.dropped.2........ |      2
@@ -944,10 +944,10 @@ drop table idxpart;
 create table idxpart (a int primary key, b int) partition by range (a);
 \d idxpart
         Partitioned table "public.idxpart"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
- b      | integer |           |          |
+ a      | integer |           | not null | 
+ b      | integer |           |          | 
 Partition key: RANGE (a)
 Indexes:
     "idxpart_pkey" PRIMARY KEY, btree (a)
@@ -962,9 +962,9 @@ create table idxpart (a int) partition by range (a);
 create table idxpart1pk partition of idxpart (a primary key) for values from (0) to (100);
 \d idxpart1pk
              Table "public.idxpart1pk"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
+ a      | integer |           | not null | 
 Partition of: idxpart FOR VALUES FROM (0) TO (100)
 Indexes:
     "idxpart1pk_pkey" PRIMARY KEY, btree (a)
@@ -1006,11 +1006,11 @@ DETAIL:  PRIMARY KEY constraint on table "idxpart" lacks column "b" which is par
 alter table idxpart add primary key (a, b);	-- this works
 \d idxpart
         Partitioned table "public.idxpart"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
- b      | integer |           | not null |
- c      | text    |           |          |
+ a      | integer |           | not null | 
+ b      | integer |           | not null | 
+ c      | text    |           |          | 
 Partition key: RANGE (a, b)
 Indexes:
     "idxpart_pkey" PRIMARY KEY, btree (a, b)
@@ -1019,11 +1019,11 @@ Number of partitions: 0
 create table idxpart1 partition of idxpart for values from (0, 0) to (1000, 1000);
 \d idxpart1
               Table "public.idxpart1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
- b      | integer |           | not null |
- c      | text    |           |          |
+ a      | integer |           | not null | 
+ b      | integer |           | not null | 
+ c      | text    |           |          | 
 Partition of: idxpart FOR VALUES FROM (0, 0) TO (1000, 1000)
 Indexes:
     "idxpart1_pkey" PRIMARY KEY, btree (a, b)
@@ -1037,10 +1037,10 @@ DETAIL:  UNIQUE constraint on table "idxpart" lacks column "b" which is part of 
 alter table idxpart add unique (b, a);		-- this works
 \d idxpart
         Partitioned table "public.idxpart"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition key: RANGE (a, b)
 Indexes:
     "idxpart_b_a_key" UNIQUE CONSTRAINT, btree (b, a)
@@ -1066,7 +1066,7 @@ alter table idxpart attach partition idxpart3 for values from (20, 20) to (30, 3
 select conname, contype, conrelid::regclass, conindid::regclass, conkey
   from pg_constraint where conrelid::regclass::text like 'idxpart%'
   order by conname;
-    conname     | contype | conrelid  |    conindid    | conkey
+    conname     | contype | conrelid  |    conindid    | conkey 
 ----------------+---------+-----------+----------------+--------
  idxpart1_pkey  | p       | idxpart1  | idxpart1_pkey  | {1,2}
  idxpart21_pkey | p       | idxpart21 | idxpart21_pkey | {1,2}
@@ -1100,7 +1100,7 @@ create table idxpart21 partition of idxpart2 for values from (0) to (1000);
 select conname, contype, conrelid::regclass, conindid::regclass, conkey
   from pg_constraint where conrelid::regclass::text like 'idxpart%'
   order by conname;
-    conname     | contype | conrelid  |    conindid    | conkey
+    conname     | contype | conrelid  |    conindid    | conkey 
 ----------------+---------+-----------+----------------+--------
  idxpart21_pkey | p       | idxpart21 | idxpart21_pkey | {1,2}
  idxpart2_pkey  | p       | idxpart2  | idxpart2_pkey  | {1,2}
@@ -1123,7 +1123,7 @@ select indrelid::regclass, indexrelid::regclass, inhparent::regclass, indisvalid
   left join pg_constraint con on (idx.indexrelid = con.conindid)
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
- indrelid |  indexrelid   |  inhparent   | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated
+ indrelid |  indexrelid   |  inhparent   | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated 
 ----------+---------------+--------------+------------+---------------+------------+-------------+--------------+--------------
  idxpart0 | idxpart0_pkey | idxpart_pkey | t          | idxpart0_pkey | f          |           1 | t            | t
  idxpart1 | idxpart1_pkey | idxpart_pkey | t          | idxpart1_pkey | f          |           1 | f            | t
@@ -1147,7 +1147,7 @@ select indrelid::regclass, indexrelid::regclass, inhparent::regclass, indisvalid
   left join pg_constraint con on (idx.indexrelid = con.conindid)
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
- indrelid | indexrelid | inhparent | indisvalid | conname | conislocal | coninhcount | connoinherit | convalidated
+ indrelid | indexrelid | inhparent | indisvalid | conname | conislocal | coninhcount | connoinherit | convalidated 
 ----------+------------+-----------+------------+---------+------------+-------------+--------------+--------------
 (0 rows)
 
@@ -1181,7 +1181,7 @@ select indrelid::regclass, indexrelid::regclass, inhparent::regclass, indisvalid
   left join pg_constraint con on (idx.indexrelid = con.conindid)
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
- indrelid |  indexrelid   | inhparent | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated
+ indrelid |  indexrelid   | inhparent | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated 
 ----------+---------------+-----------+------------+---------------+------------+-------------+--------------+--------------
  idxpart0 | idxpart0_pkey |           | t          | idxpart0_pkey | t          |           0 | t            | t
  idxpart  | idxpart_pkey  |           | f          | idxpart_pkey  | t          |           0 | t            | t
@@ -1194,7 +1194,7 @@ select indrelid::regclass, indexrelid::regclass, inhparent::regclass, indisvalid
   left join pg_constraint con on (idx.indexrelid = con.conindid)
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
- indrelid |  indexrelid   |  inhparent   | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated
+ indrelid |  indexrelid   |  inhparent   | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated 
 ----------+---------------+--------------+------------+---------------+------------+-------------+--------------+--------------
  idxpart0 | idxpart0_pkey | idxpart_pkey | t          | idxpart0_pkey | f          |           1 | t            | t
  idxpart  | idxpart_pkey  |              | t          | idxpart_pkey  | t          |           0 | t            | t
@@ -1229,9 +1229,9 @@ select indrelid::regclass, indexrelid::regclass, inhparent::regclass, indisvalid
   left join pg_constraint con on (idx.indexrelid = con.conindid)
   where indrelid::regclass::text like 'idxpart%'
   order by indexrelid::regclass::text collate "C";
- indrelid |   indexrelid   |  inhparent   | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated
+ indrelid |   indexrelid   |  inhparent   | indisvalid |    conname    | conislocal | coninhcount | connoinherit | convalidated 
 ----------+----------------+--------------+------------+---------------+------------+-------------+--------------+--------------
- idxpart1 | idxpart1_a_idx |              | t          |               |            |             |              |
+ idxpart1 | idxpart1_a_idx |              | t          |               |            |             |              | 
  idxpart1 | idxpart1_pkey  | idxpart_pkey | t          | idxpart1_pkey | f          |           1 | f            | t
  idxpart  | idxpart_pkey   |              | t          | idxpart_pkey  | t          |           0 | t            | t
 (3 rows)
@@ -1269,7 +1269,7 @@ ERROR:  duplicate key value violates unique constraint "idxpart2_a_idx"
 DETAIL:  Key (a)=(572814) already exists.
 insert into idxpart values (857142, 'six');
 select tableoid::regclass, * from idxpart order by a;
- tableoid |   a    |       b
+ tableoid |   a    |       b        
 ----------+--------+----------------
  idxpart1 |      0 | zero
  idxpart1 |     16 | sixteen
@@ -1288,7 +1288,7 @@ create table idxpart1 partition of idxpart for values from (0) to (100000);
 set enable_seqscan to off;
 create index idxpart_brin on idxpart using brin(b);
 explain (costs off) select * from idxpart where b = 'abcd';
-                QUERY PLAN
+                QUERY PLAN                 
 -------------------------------------------
  Bitmap Heap Scan on idxpart1 idxpart
    Recheck Cond: (b = 'abcd'::text)
@@ -1299,7 +1299,7 @@ explain (costs off) select * from idxpart where b = 'abcd';
 drop index idxpart_brin;
 create index idxpart_spgist on idxpart using spgist(b);
 explain (costs off) select * from idxpart where b = 'abcd';
-                QUERY PLAN
+                QUERY PLAN                 
 -------------------------------------------
  Bitmap Heap Scan on idxpart1 idxpart
    Recheck Cond: (b = 'abcd'::text)
@@ -1310,7 +1310,7 @@ explain (costs off) select * from idxpart where b = 'abcd';
 drop index idxpart_spgist;
 create index idxpart_gin on idxpart using gin(c);
 explain (costs off) select * from idxpart where c @> array[42];
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  Bitmap Heap Scan on idxpart1 idxpart
    Recheck Cond: (c @> '{42}'::integer[])
@@ -1416,10 +1416,10 @@ create index on parted_index_col_drop (b, c);
 alter table parted_index_col_drop drop column c;
 \d parted_index_col_drop
  Partitioned table "public.parted_index_col_drop"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition key: LIST (a)
 Indexes:
     "parted_index_col_drop_b_idx" btree (b)
@@ -1427,10 +1427,10 @@ Number of partitions: 2 (Use \d+ to list them.)
 
 \d parted_index_col_drop1
  Partitioned table "public.parted_index_col_drop1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: parted_index_col_drop FOR VALUES IN (1)
 Partition key: LIST (a)
 Indexes:
@@ -1439,10 +1439,10 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d parted_index_col_drop2
  Partitioned table "public.parted_index_col_drop2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: parted_index_col_drop FOR VALUES IN (2)
 Partition key: LIST (a)
 Indexes:
@@ -1451,10 +1451,10 @@ Number of partitions: 0
 
 \d parted_index_col_drop11
       Table "public.parted_index_col_drop11"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: parted_index_col_drop1 FOR VALUES IN (1)
 Indexes:
     "parted_index_col_drop11_b_idx" btree (b)
@@ -1480,10 +1480,10 @@ select indexrelid::regclass, indisvalid,
        pg_inherits inh on (idx.indexrelid = inh.inhrelid)
   where indexrelid::regclass::text like 'parted_inval%'
   order by indexrelid::regclass::text collate "C";
-         indexrelid         | indisvalid |       indrelid       |        inhparent
+         indexrelid         | indisvalid |       indrelid       |        inhparent         
 ----------------------------+------------+----------------------+--------------------------
- parted_inval_idx           | t          | parted_inval_tab     |
- parted_inval_ixd_1         | f          | parted_inval_tab_1   |
+ parted_inval_idx           | t          | parted_inval_tab     | 
+ parted_inval_ixd_1         | f          | parted_inval_tab_1   | 
  parted_inval_tab_1_1_a_idx | t          | parted_inval_tab_1_1 | parted_inval_tab_1_a_idx
  parted_inval_tab_1_2_a_idx | t          | parted_inval_tab_1_2 | parted_inval_tab_1_a_idx
  parted_inval_tab_1_a_idx   | t          | parted_inval_tab_1   | parted_inval_idx
@@ -1515,9 +1515,9 @@ select indexrelid::regclass, indisvalid,
        pg_inherits inh on (idx.indexrelid = inh.inhrelid)
   where indexrelid::regclass::text like 'parted_isvalid%'
   order by indexrelid::regclass::text collate "C";
-           indexrelid           | indisvalid |       indrelid        |           inhparent
+           indexrelid           | indisvalid |       indrelid        |           inhparent           
 --------------------------------+------------+-----------------------+-------------------------------
- parted_isvalid_idx             | f          | parted_isvalid_tab    |
+ parted_isvalid_idx             | f          | parted_isvalid_tab    | 
  parted_isvalid_idx_11          | f          | parted_isvalid_tab_11 | parted_isvalid_tab_1_expr_idx
  parted_isvalid_tab_12_expr_idx | t          | parted_isvalid_tab_12 | parted_isvalid_tab_1_expr_idx
  parted_isvalid_tab_1_expr_idx  | f          | parted_isvalid_tab_1  | parted_isvalid_idx
@@ -1546,11 +1546,11 @@ select indexrelid::regclass, indisvalid, indisreplident,
        pg_inherits inh on (idx.indexrelid = inh.inhrelid)
   where indexrelid::regclass::text like 'parted_replica%'
   order by indexrelid::regclass::text collate "C";
-      indexrelid       | indisvalid | indisreplident |       indrelid        | inhparent
+      indexrelid       | indisvalid | indisreplident |       indrelid        | inhparent 
 -----------------------+------------+----------------+-----------------------+-----------
- parted_replica_idx    | f          | f              | parted_replica_tab    |
- parted_replica_idx_1  | f          | t              | parted_replica_tab_1  |
- parted_replica_idx_11 | t          | f              | parted_replica_tab_11 |
+ parted_replica_idx    | f          | f              | parted_replica_tab    | 
+ parted_replica_idx_1  | f          | t              | parted_replica_tab_1  | 
+ parted_replica_idx_11 | t          | f              | parted_replica_tab_11 | 
 (3 rows)
 
 -- parted_replica_idx is not valid yet here, because parted_replica_idx_1
@@ -1562,11 +1562,11 @@ select indexrelid::regclass, indisvalid, indisreplident,
        pg_inherits inh on (idx.indexrelid = inh.inhrelid)
   where indexrelid::regclass::text like 'parted_replica%'
   order by indexrelid::regclass::text collate "C";
-      indexrelid       | indisvalid | indisreplident |       indrelid        |     inhparent
+      indexrelid       | indisvalid | indisreplident |       indrelid        |     inhparent      
 -----------------------+------------+----------------+-----------------------+--------------------
- parted_replica_idx    | f          | f              | parted_replica_tab    |
+ parted_replica_idx    | f          | f              | parted_replica_tab    | 
  parted_replica_idx_1  | f          | t              | parted_replica_tab_1  | parted_replica_idx
- parted_replica_idx_11 | t          | f              | parted_replica_tab_11 |
+ parted_replica_idx_11 | t          | f              | parted_replica_tab_11 | 
 (3 rows)
 
 -- parted_replica_idx becomes valid here.
@@ -1580,9 +1580,9 @@ select indexrelid::regclass, indisvalid, indisreplident,
        pg_inherits inh on (idx.indexrelid = inh.inhrelid)
   where indexrelid::regclass::text like 'parted_replica%'
   order by indexrelid::regclass::text collate "C";
-      indexrelid       | indisvalid | indisreplident |       indrelid        |      inhparent
+      indexrelid       | indisvalid | indisreplident |       indrelid        |      inhparent       
 -----------------------+------------+----------------+-----------------------+----------------------
- parted_replica_idx    | t          | f              | parted_replica_tab    |
+ parted_replica_idx    | t          | f              | parted_replica_tab    | 
  parted_replica_idx_1  | t          | t              | parted_replica_tab_1  | parted_replica_idx
  parted_replica_idx_11 | t          | f              | parted_replica_tab_11 | parted_replica_idx_1
 (3 rows)

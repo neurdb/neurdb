@@ -314,9 +314,9 @@ INSERT INTO brintest_bloom SELECT
 	format('%s/%s%s', odd, even, tenthous)::pg_lsn
 FROM tenk1 ORDER BY unique2 LIMIT 5 OFFSET 5;
 SELECT brin_desummarize_range('brinidx_bloom', 0);
- brin_desummarize_range
+ brin_desummarize_range 
 ------------------------
-
+ 
 (1 row)
 
 VACUUM brintest_bloom;  -- force a summarization cycle in brinidx
@@ -328,7 +328,7 @@ ERROR:  "brintest_bloom" is not an index
 SELECT brin_summarize_new_values('tenk1_unique1'); -- error, not a BRIN index
 ERROR:  "tenk1_unique1" is not a BRIN index
 SELECT brin_summarize_new_values('brinidx_bloom'); -- ok, no change expected
- brin_summarize_new_values
+ brin_summarize_new_values 
 ---------------------------
                          0
 (1 row)
@@ -337,21 +337,21 @@ SELECT brin_summarize_new_values('brinidx_bloom'); -- ok, no change expected
 SELECT brin_desummarize_range('brinidx_bloom', -1); -- error, invalid range
 ERROR:  block number out of range: -1
 SELECT brin_desummarize_range('brinidx_bloom', 0);
- brin_desummarize_range
+ brin_desummarize_range 
 ------------------------
-
+ 
 (1 row)
 
 SELECT brin_desummarize_range('brinidx_bloom', 0);
- brin_desummarize_range
+ brin_desummarize_range 
 ------------------------
-
+ 
 (1 row)
 
 SELECT brin_desummarize_range('brinidx_bloom', 100000000);
- brin_desummarize_range
+ brin_desummarize_range 
 ------------------------
-
+ 
 (1 row)
 
 -- Test brin_summarize_range
@@ -371,28 +371,28 @@ END;
 $$;
 -- summarize one range
 SELECT brin_summarize_range('brin_summarize_bloom_idx', 0);
- brin_summarize_range
+ brin_summarize_range 
 ----------------------
                     0
 (1 row)
 
 -- nothing: already summarized
 SELECT brin_summarize_range('brin_summarize_bloom_idx', 1);
- brin_summarize_range
+ brin_summarize_range 
 ----------------------
                     0
 (1 row)
 
 -- summarize one range
 SELECT brin_summarize_range('brin_summarize_bloom_idx', 2);
- brin_summarize_range
+ brin_summarize_range 
 ----------------------
                     1
 (1 row)
 
 -- nothing: page doesn't exist in table
 SELECT brin_summarize_range('brin_summarize_bloom_idx', 4294967295);
- brin_summarize_range
+ brin_summarize_range 
 ----------------------
                     0
 (1 row)
@@ -410,7 +410,7 @@ CREATE INDEX brin_test_bloom_b_idx ON brin_test_bloom USING brin (b) WITH (pages
 VACUUM ANALYZE brin_test_bloom;
 -- Ensure brin index is used when columns are perfectly correlated
 EXPLAIN (COSTS OFF) SELECT * FROM brin_test_bloom WHERE a = 1;
-                    QUERY PLAN
+                    QUERY PLAN                    
 --------------------------------------------------
  Bitmap Heap Scan on brin_test_bloom
    Recheck Cond: (a = 1)
@@ -420,8 +420,9 @@ EXPLAIN (COSTS OFF) SELECT * FROM brin_test_bloom WHERE a = 1;
 
 -- Ensure brin index is not used when values are not correlated
 EXPLAIN (COSTS OFF) SELECT * FROM brin_test_bloom WHERE b = 1;
-         QUERY PLAN
+         QUERY PLAN          
 -----------------------------
  Seq Scan on brin_test_bloom
    Filter: (b = 1)
 (2 rows)
+

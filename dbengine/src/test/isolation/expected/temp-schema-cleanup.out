@@ -1,7 +1,7 @@
 Parsed test spec with 2 sessions
 
 starting permutation: s1_create_temp_objects s1_discard_temp s2_check_schema
-step s1_create_temp_objects:
+step s1_create_temp_objects: 
 
     -- create function large enough to be toasted, to ensure we correctly clean those up, a prior bug
     -- https://postgr.es/m/CAOFAq3BU5Mf2TTvu8D9n_ZOoFAeQswuzk7yziAb7xuw_qyw5gw%40mail.gmail.com
@@ -22,13 +22,13 @@ step s1_create_temp_objects:
 
 exec
 ----
-
+    
 (1 row)
 
-step s1_discard_temp:
+step s1_discard_temp: 
     DISCARD TEMP;
 
-step s2_check_schema:
+step s2_check_schema: 
     SELECT oid::regclass FROM pg_class WHERE relnamespace = (SELECT oid FROM s1_temp_schema);
     SELECT oid::regproc FROM pg_proc WHERE pronamespace = (SELECT oid FROM s1_temp_schema);
     SELECT oid::regproc FROM pg_type WHERE typnamespace = (SELECT oid FROM s1_temp_schema);
@@ -47,18 +47,18 @@ oid
 
 
 starting permutation: s1_advisory s2_advisory s1_create_temp_objects s1_exit s2_check_schema
-step s1_advisory:
+step s1_advisory: 
     SELECT pg_advisory_lock('pg_namespace'::regclass::int8);
 
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step s2_advisory:
+step s2_advisory: 
     SELECT pg_advisory_lock('pg_namespace'::regclass::int8);
  <waiting ...>
-step s1_create_temp_objects:
+step s1_create_temp_objects: 
 
     -- create function large enough to be toasted, to ensure we correctly clean those up, a prior bug
     -- https://postgr.es/m/CAOFAq3BU5Mf2TTvu8D9n_ZOoFAeQswuzk7yziAb7xuw_qyw5gw%40mail.gmail.com
@@ -79,10 +79,10 @@ step s1_create_temp_objects:
 
 exec
 ----
-
+    
 (1 row)
 
-step s1_exit:
+step s1_exit: 
     SELECT pg_terminate_backend(pg_backend_pid());
 
 FATAL:  terminating connection due to administrator command
@@ -93,10 +93,10 @@ server closed the connection unexpectedly
 step s2_advisory: <... completed>
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step s2_check_schema:
+step s2_check_schema: 
     SELECT oid::regclass FROM pg_class WHERE relnamespace = (SELECT oid FROM s1_temp_schema);
     SELECT oid::regproc FROM pg_proc WHERE pronamespace = (SELECT oid FROM s1_temp_schema);
     SELECT oid::regproc FROM pg_type WHERE typnamespace = (SELECT oid FROM s1_temp_schema);
@@ -112,3 +112,4 @@ oid
 oid
 ---
 (0 rows)
+

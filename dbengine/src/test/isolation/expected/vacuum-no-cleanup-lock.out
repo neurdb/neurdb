@@ -1,7 +1,7 @@
 Parsed test spec with 4 sessions
 
 starting permutation: vacuumer_pg_class_stats dml_insert vacuumer_nonaggressive_vacuum vacuumer_pg_class_stats
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -9,13 +9,13 @@ relpages|reltuples
        1|       20
 (1 row)
 
-step dml_insert:
+step dml_insert: 
   INSERT INTO smalltbl SELECT max(id) + 1 FROM smalltbl;
 
-step vacuumer_nonaggressive_vacuum:
+step vacuumer_nonaggressive_vacuum: 
   VACUUM smalltbl;
 
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -25,7 +25,7 @@ relpages|reltuples
 
 
 starting permutation: vacuumer_pg_class_stats dml_insert pinholder_cursor vacuumer_nonaggressive_vacuum vacuumer_pg_class_stats pinholder_commit
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -33,10 +33,10 @@ relpages|reltuples
        1|       20
 (1 row)
 
-step dml_insert:
+step dml_insert: 
   INSERT INTO smalltbl SELECT max(id) + 1 FROM smalltbl;
 
-step pinholder_cursor:
+step pinholder_cursor: 
   BEGIN;
   DECLARE c1 CURSOR FOR SELECT 1 AS dummy FROM smalltbl;
   FETCH NEXT FROM c1;
@@ -46,10 +46,10 @@ dummy
     1
 (1 row)
 
-step vacuumer_nonaggressive_vacuum:
+step vacuumer_nonaggressive_vacuum: 
   VACUUM smalltbl;
 
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -57,12 +57,12 @@ relpages|reltuples
        1|       21
 (1 row)
 
-step pinholder_commit:
+step pinholder_commit: 
   COMMIT;
 
 
 starting permutation: vacuumer_pg_class_stats pinholder_cursor dml_insert dml_delete dml_insert vacuumer_nonaggressive_vacuum vacuumer_pg_class_stats pinholder_commit
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -70,7 +70,7 @@ relpages|reltuples
        1|       20
 (1 row)
 
-step pinholder_cursor:
+step pinholder_cursor: 
   BEGIN;
   DECLARE c1 CURSOR FOR SELECT 1 AS dummy FROM smalltbl;
   FETCH NEXT FROM c1;
@@ -80,19 +80,19 @@ dummy
     1
 (1 row)
 
-step dml_insert:
+step dml_insert: 
   INSERT INTO smalltbl SELECT max(id) + 1 FROM smalltbl;
 
-step dml_delete:
+step dml_delete: 
   DELETE FROM smalltbl WHERE id = (SELECT min(id) FROM smalltbl);
 
-step dml_insert:
+step dml_insert: 
   INSERT INTO smalltbl SELECT max(id) + 1 FROM smalltbl;
 
-step vacuumer_nonaggressive_vacuum:
+step vacuumer_nonaggressive_vacuum: 
   VACUUM smalltbl;
 
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -100,12 +100,12 @@ relpages|reltuples
        1|       21
 (1 row)
 
-step pinholder_commit:
+step pinholder_commit: 
   COMMIT;
 
 
 starting permutation: vacuumer_pg_class_stats dml_insert dml_delete pinholder_cursor dml_insert vacuumer_nonaggressive_vacuum vacuumer_pg_class_stats pinholder_commit
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -113,13 +113,13 @@ relpages|reltuples
        1|       20
 (1 row)
 
-step dml_insert:
+step dml_insert: 
   INSERT INTO smalltbl SELECT max(id) + 1 FROM smalltbl;
 
-step dml_delete:
+step dml_delete: 
   DELETE FROM smalltbl WHERE id = (SELECT min(id) FROM smalltbl);
 
-step pinholder_cursor:
+step pinholder_cursor: 
   BEGIN;
   DECLARE c1 CURSOR FOR SELECT 1 AS dummy FROM smalltbl;
   FETCH NEXT FROM c1;
@@ -129,13 +129,13 @@ dummy
     1
 (1 row)
 
-step dml_insert:
+step dml_insert: 
   INSERT INTO smalltbl SELECT max(id) + 1 FROM smalltbl;
 
-step vacuumer_nonaggressive_vacuum:
+step vacuumer_nonaggressive_vacuum: 
   VACUUM smalltbl;
 
-step vacuumer_pg_class_stats:
+step vacuumer_pg_class_stats: 
   SELECT relpages, reltuples FROM pg_class WHERE oid = 'smalltbl'::regclass;
 
 relpages|reltuples
@@ -143,7 +143,7 @@ relpages|reltuples
        1|       21
 (1 row)
 
-step pinholder_commit:
+step pinholder_commit: 
   COMMIT;
 
 
@@ -162,10 +162,10 @@ id
  3
 (1 row)
 
-step vacuumer_nonaggressive_vacuum:
+step vacuumer_nonaggressive_vacuum: 
   VACUUM smalltbl;
 
-step pinholder_cursor:
+step pinholder_cursor: 
   BEGIN;
   DECLARE c1 CURSOR FOR SELECT 1 AS dummy FROM smalltbl;
   FETCH NEXT FROM c1;
@@ -178,11 +178,12 @@ dummy
 step dml_other_update: UPDATE smalltbl SET t = 'u' WHERE id = 3;
 step dml_commit: COMMIT;
 step dml_other_commit: COMMIT;
-step vacuumer_nonaggressive_vacuum:
+step vacuumer_nonaggressive_vacuum: 
   VACUUM smalltbl;
 
-step pinholder_commit:
+step pinholder_commit: 
   COMMIT;
 
-step vacuumer_nonaggressive_vacuum:
+step vacuumer_nonaggressive_vacuum: 
   VACUUM smalltbl;
+

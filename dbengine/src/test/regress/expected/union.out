@@ -3,34 +3,34 @@
 --
 -- Simple UNION constructs
 SELECT 1 AS two UNION SELECT 2 ORDER BY 1;
- two
+ two 
 -----
    1
    2
 (2 rows)
 
 SELECT 1 AS one UNION SELECT 1 ORDER BY 1;
- one
+ one 
 -----
    1
 (1 row)
 
 SELECT 1 AS two UNION ALL SELECT 2;
- two
+ two 
 -----
    1
    2
 (2 rows)
 
 SELECT 1 AS two UNION ALL SELECT 1;
- two
+ two 
 -----
    1
    1
 (2 rows)
 
 SELECT 1 AS three UNION SELECT 2 UNION SELECT 3 ORDER BY 1;
- three
+ three 
 -------
      1
      2
@@ -38,14 +38,14 @@ SELECT 1 AS three UNION SELECT 2 UNION SELECT 3 ORDER BY 1;
 (3 rows)
 
 SELECT 1 AS two UNION SELECT 2 UNION SELECT 2 ORDER BY 1;
- two
+ two 
 -----
    1
    2
 (2 rows)
 
 SELECT 1 AS three UNION SELECT 2 UNION ALL SELECT 2 ORDER BY 1;
- three
+ three 
 -------
      1
      2
@@ -53,7 +53,7 @@ SELECT 1 AS three UNION SELECT 2 UNION ALL SELECT 2 ORDER BY 1;
 (3 rows)
 
 SELECT 1.1 AS two UNION SELECT 2.2 ORDER BY 1;
- two
+ two 
 -----
  1.1
  2.2
@@ -61,41 +61,41 @@ SELECT 1.1 AS two UNION SELECT 2.2 ORDER BY 1;
 
 -- Mixed types
 SELECT 1.1 AS two UNION SELECT 2 ORDER BY 1;
- two
+ two 
 -----
  1.1
    2
 (2 rows)
 
 SELECT 1 AS two UNION SELECT 2.2 ORDER BY 1;
- two
+ two 
 -----
    1
  2.2
 (2 rows)
 
 SELECT 1 AS one UNION SELECT 1.0::float8 ORDER BY 1;
- one
+ one 
 -----
    1
 (1 row)
 
 SELECT 1.1 AS two UNION ALL SELECT 2 ORDER BY 1;
- two
+ two 
 -----
  1.1
    2
 (2 rows)
 
 SELECT 1.0::float8 AS two UNION ALL SELECT 1 ORDER BY 1;
- two
+ two 
 -----
    1
    1
 (2 rows)
 
 SELECT 1.1 AS three UNION SELECT 2 UNION SELECT 3 ORDER BY 1;
- three
+ three 
 -------
    1.1
      2
@@ -103,14 +103,14 @@ SELECT 1.1 AS three UNION SELECT 2 UNION SELECT 3 ORDER BY 1;
 (3 rows)
 
 SELECT 1.1::float8 AS two UNION SELECT 2 UNION SELECT 2.0::float8 ORDER BY 1;
- two
+ two 
 -----
  1.1
    2
 (2 rows)
 
 SELECT 1.1 AS three UNION SELECT 2 UNION ALL SELECT 2 ORDER BY 1;
- three
+ three 
 -------
    1.1
      2
@@ -118,7 +118,7 @@ SELECT 1.1 AS three UNION SELECT 2 UNION ALL SELECT 2 ORDER BY 1;
 (3 rows)
 
 SELECT 1.1 AS two UNION (SELECT 2 UNION ALL SELECT 2) ORDER BY 1;
- two
+ two 
 -----
  1.1
    2
@@ -131,7 +131,7 @@ SELECT f1 AS five FROM FLOAT8_TBL
 UNION
 SELECT f1 FROM FLOAT8_TBL
 ORDER BY 1;
-         five
+         five          
 -----------------------
  -1.2345678901234e+200
                -1004.3
@@ -143,7 +143,7 @@ ORDER BY 1;
 SELECT f1 AS ten FROM FLOAT8_TBL
 UNION ALL
 SELECT f1 FROM FLOAT8_TBL;
-          ten
+          ten          
 -----------------------
                      0
                 -34.84
@@ -161,7 +161,7 @@ SELECT f1 AS nine FROM FLOAT8_TBL
 UNION
 SELECT f1 FROM INT4_TBL
 ORDER BY 1;
-         nine
+         nine          
 -----------------------
  -1.2345678901234e+200
            -2147483647
@@ -177,7 +177,7 @@ ORDER BY 1;
 SELECT f1 AS ten FROM FLOAT8_TBL
 UNION ALL
 SELECT f1 FROM INT4_TBL;
-          ten
+          ten          
 -----------------------
                      0
                 -34.84
@@ -197,7 +197,7 @@ UNION
 SELECT f1 FROM INT4_TBL
   WHERE f1 BETWEEN 0 AND 1000000
 ORDER BY 1;
-         five
+         five          
 -----------------------
                -1004.3
                 -34.84
@@ -210,10 +210,10 @@ SELECT CAST(f1 AS char(4)) AS three FROM VARCHAR_TBL
 UNION
 SELECT f1 FROM CHAR_TBL
 ORDER BY 1;
- three
+ three 
 -------
- a
- ab
+ a   
+ ab  
  abcd
 (3 rows)
 
@@ -221,7 +221,7 @@ SELECT f1 AS three FROM VARCHAR_TBL
 UNION
 SELECT CAST(f1 AS varchar) FROM CHAR_TBL
 ORDER BY 1;
- three
+ three 
 -------
  a
  ab
@@ -231,7 +231,7 @@ ORDER BY 1;
 SELECT f1 AS eight FROM VARCHAR_TBL
 UNION ALL
 SELECT f1 FROM CHAR_TBL;
- eight
+ eight 
 -------
  a
  ab
@@ -249,7 +249,7 @@ SELECT f1 FROM VARCHAR_TBL
 UNION
 SELECT TRIM(TRAILING FROM f1) FROM CHAR_TBL
 ORDER BY 1;
-       five
+       five        
 -------------------
  a
  ab
@@ -262,14 +262,14 @@ ORDER BY 1;
 -- INTERSECT and EXCEPT
 --
 SELECT q2 FROM int8_tbl INTERSECT SELECT q1 FROM int8_tbl ORDER BY 1;
-        q2
+        q2        
 ------------------
               123
  4567890123456789
 (2 rows)
 
 SELECT q2 FROM int8_tbl INTERSECT ALL SELECT q1 FROM int8_tbl ORDER BY 1;
-        q2
+        q2        
 ------------------
               123
  4567890123456789
@@ -277,21 +277,21 @@ SELECT q2 FROM int8_tbl INTERSECT ALL SELECT q1 FROM int8_tbl ORDER BY 1;
 (3 rows)
 
 SELECT q2 FROM int8_tbl EXCEPT SELECT q1 FROM int8_tbl ORDER BY 1;
-        q2
+        q2         
 -------------------
  -4567890123456789
                456
 (2 rows)
 
 SELECT q2 FROM int8_tbl EXCEPT ALL SELECT q1 FROM int8_tbl ORDER BY 1;
-        q2
+        q2         
 -------------------
  -4567890123456789
                456
 (2 rows)
 
 SELECT q2 FROM int8_tbl EXCEPT ALL SELECT DISTINCT q1 FROM int8_tbl ORDER BY 1;
-        q2
+        q2         
 -------------------
  -4567890123456789
                456
@@ -299,19 +299,19 @@ SELECT q2 FROM int8_tbl EXCEPT ALL SELECT DISTINCT q1 FROM int8_tbl ORDER BY 1;
 (3 rows)
 
 SELECT q1 FROM int8_tbl EXCEPT SELECT q2 FROM int8_tbl ORDER BY 1;
- q1
+ q1 
 ----
 (0 rows)
 
 SELECT q1 FROM int8_tbl EXCEPT ALL SELECT q2 FROM int8_tbl ORDER BY 1;
-        q1
+        q1        
 ------------------
               123
  4567890123456789
 (2 rows)
 
 SELECT q1 FROM int8_tbl EXCEPT ALL SELECT DISTINCT q2 FROM int8_tbl ORDER BY 1;
-        q1
+        q1        
 ------------------
               123
  4567890123456789
@@ -322,25 +322,25 @@ SELECT q1 FROM int8_tbl EXCEPT ALL SELECT q1 FROM int8_tbl FOR NO KEY UPDATE;
 ERROR:  FOR NO KEY UPDATE is not allowed with UNION/INTERSECT/EXCEPT
 -- nested cases
 (SELECT 1,2,3 UNION SELECT 4,5,6) INTERSECT SELECT 4,5,6;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
         4 |        5 |        6
 (1 row)
 
 (SELECT 1,2,3 UNION SELECT 4,5,6 ORDER BY 1,2) INTERSECT SELECT 4,5,6;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
         4 |        5 |        6
 (1 row)
 
 (SELECT 1,2,3 UNION SELECT 4,5,6) EXCEPT SELECT 4,5,6;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
         1 |        2 |        3
 (1 row)
 
 (SELECT 1,2,3 UNION SELECT 4,5,6 ORDER BY 1,2) EXCEPT SELECT 4,5,6;
- ?column? | ?column? | ?column?
+ ?column? | ?column? | ?column? 
 ----------+----------+----------
         1 |        2 |        3
 (1 row)
@@ -350,7 +350,7 @@ set enable_hashagg to on;
 explain (costs off)
 select count(*) from
   ( select unique1 from tenk1 union select fivethous from tenk1 ) ss;
-                           QUERY PLAN
+                           QUERY PLAN                           
 ----------------------------------------------------------------
  Aggregate
    ->  HashAggregate
@@ -362,7 +362,7 @@ select count(*) from
 
 select count(*) from
   ( select unique1 from tenk1 union select fivethous from tenk1 ) ss;
- count
+ count 
 -------
  10000
 (1 row)
@@ -370,7 +370,7 @@ select count(*) from
 explain (costs off)
 select count(*) from
   ( select unique1 from tenk1 intersect select fivethous from tenk1 ) ss;
-                                     QUERY PLAN
+                                     QUERY PLAN                                     
 ------------------------------------------------------------------------------------
  Aggregate
    ->  Subquery Scan on ss
@@ -384,14 +384,14 @@ select count(*) from
 
 select count(*) from
   ( select unique1 from tenk1 intersect select fivethous from tenk1 ) ss;
- count
+ count 
 -------
   5000
 (1 row)
 
 explain (costs off)
 select unique1 from tenk1 except select unique2 from tenk1 where unique2 != 10;
-                               QUERY PLAN
+                               QUERY PLAN                               
 ------------------------------------------------------------------------
  HashSetOp Except
    ->  Append
@@ -403,7 +403,7 @@ select unique1 from tenk1 except select unique2 from tenk1 where unique2 != 10;
 (7 rows)
 
 select unique1 from tenk1 except select unique2 from tenk1 where unique2 != 10;
- unique1
+ unique1 
 ---------
       10
 (1 row)
@@ -412,7 +412,7 @@ set enable_hashagg to off;
 explain (costs off)
 select count(*) from
   ( select unique1 from tenk1 union select fivethous from tenk1 ) ss;
-                              QUERY PLAN
+                              QUERY PLAN                              
 ----------------------------------------------------------------------
  Aggregate
    ->  Unique
@@ -425,7 +425,7 @@ select count(*) from
 
 select count(*) from
   ( select unique1 from tenk1 union select fivethous from tenk1 ) ss;
- count
+ count 
 -------
  10000
 (1 row)
@@ -433,7 +433,7 @@ select count(*) from
 explain (costs off)
 select count(*) from
   ( select unique1 from tenk1 intersect select fivethous from tenk1 ) ss;
-                                        QUERY PLAN
+                                        QUERY PLAN                                        
 ------------------------------------------------------------------------------------------
  Aggregate
    ->  Subquery Scan on ss
@@ -449,14 +449,14 @@ select count(*) from
 
 select count(*) from
   ( select unique1 from tenk1 intersect select fivethous from tenk1 ) ss;
- count
+ count 
 -------
   5000
 (1 row)
 
 explain (costs off)
 select unique1 from tenk1 except select unique2 from tenk1 where unique2 != 10;
-                                  QUERY PLAN
+                                  QUERY PLAN                                  
 ------------------------------------------------------------------------------
  SetOp Except
    ->  Sort
@@ -470,7 +470,7 @@ select unique1 from tenk1 except select unique2 from tenk1 where unique2 != 10;
 (9 rows)
 
 select unique1 from tenk1 except select unique2 from tenk1 where unique2 != 10;
- unique1
+ unique1 
 ---------
       10
 (1 row)
@@ -480,7 +480,7 @@ reset enable_hashagg;
 set enable_hashagg to on;
 explain (costs off)
 select x from (values (100::money), (200::money)) _(x) union select x from (values (100::money), (300::money)) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -493,7 +493,7 @@ select x from (values (100::money), (200::money)) _(x) union select x from (valu
 set enable_hashagg to off;
 explain (costs off)
 select x from (values (100::money), (200::money)) _(x) union select x from (values (100::money), (300::money)) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -508,7 +508,7 @@ reset enable_hashagg;
 set enable_hashagg to on;
 explain (costs off)
 select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (values (array[1, 2]), (array[1, 4])) _(x);
-               QUERY PLAN
+               QUERY PLAN                
 -----------------------------------------
  HashAggregate
    Group Key: "*VALUES*".column1
@@ -518,7 +518,7 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (va
 (5 rows)
 
 select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (values (array[1, 2]), (array[1, 4])) _(x);
-   x
+   x   
 -------
  {1,4}
  {1,2}
@@ -527,7 +527,7 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (va
 
 explain (costs off)
 select x from (values (array[1, 2]), (array[1, 3])) _(x) intersect select x from (values (array[1, 2]), (array[1, 4])) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  HashSetOp Intersect
    ->  Append
@@ -538,14 +538,14 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) intersect select x from
 (6 rows)
 
 select x from (values (array[1, 2]), (array[1, 3])) _(x) intersect select x from (values (array[1, 2]), (array[1, 4])) _(x);
-   x
+   x   
 -------
  {1,2}
 (1 row)
 
 explain (costs off)
 select x from (values (array[1, 2]), (array[1, 3])) _(x) except select x from (values (array[1, 2]), (array[1, 4])) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  HashSetOp Except
    ->  Append
@@ -556,7 +556,7 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) except select x from (v
 (6 rows)
 
 select x from (values (array[1, 2]), (array[1, 3])) _(x) except select x from (values (array[1, 2]), (array[1, 4])) _(x);
-   x
+   x   
 -------
  {1,3}
 (1 row)
@@ -564,7 +564,7 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) except select x from (v
 -- non-hashable type
 explain (costs off)
 select x from (values (array[100::money]), (array[200::money])) _(x) union select x from (values (array[100::money]), (array[300::money])) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -575,7 +575,7 @@ select x from (values (array[100::money]), (array[200::money])) _(x) union selec
 (6 rows)
 
 select x from (values (array[100::money]), (array[200::money])) _(x) union select x from (values (array[100::money]), (array[300::money])) _(x);
-     x
+     x     
 -----------
  {$100.00}
  {$200.00}
@@ -585,7 +585,7 @@ select x from (values (array[100::money]), (array[200::money])) _(x) union selec
 set enable_hashagg to off;
 explain (costs off)
 select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (values (array[1, 2]), (array[1, 4])) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -596,7 +596,7 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (va
 (6 rows)
 
 select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (values (array[1, 2]), (array[1, 4])) _(x);
-   x
+   x   
 -------
  {1,2}
  {1,3}
@@ -605,7 +605,7 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) union select x from (va
 
 explain (costs off)
 select x from (values (array[1, 2]), (array[1, 3])) _(x) intersect select x from (values (array[1, 2]), (array[1, 4])) _(x);
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  SetOp Intersect
    ->  Sort
@@ -618,14 +618,14 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) intersect select x from
 (8 rows)
 
 select x from (values (array[1, 2]), (array[1, 3])) _(x) intersect select x from (values (array[1, 2]), (array[1, 4])) _(x);
-   x
+   x   
 -------
  {1,2}
 (1 row)
 
 explain (costs off)
 select x from (values (array[1, 2]), (array[1, 3])) _(x) except select x from (values (array[1, 2]), (array[1, 4])) _(x);
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  SetOp Except
    ->  Sort
@@ -638,7 +638,7 @@ select x from (values (array[1, 2]), (array[1, 3])) _(x) except select x from (v
 (8 rows)
 
 select x from (values (array[1, 2]), (array[1, 3])) _(x) except select x from (values (array[1, 2]), (array[1, 4])) _(x);
-   x
+   x   
 -------
  {1,3}
 (1 row)
@@ -648,7 +648,7 @@ reset enable_hashagg;
 set enable_hashagg to on;
 explain (costs off)
 select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values (row(1, 2)), (row(1, 4))) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -659,7 +659,7 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values
 (6 rows)
 
 select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values (row(1, 2)), (row(1, 4))) _(x);
-   x
+   x   
 -------
  (1,2)
  (1,3)
@@ -668,7 +668,7 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values
 
 explain (costs off)
 select x from (values (row(1, 2)), (row(1, 3))) _(x) intersect select x from (values (row(1, 2)), (row(1, 4))) _(x);
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  SetOp Intersect
    ->  Sort
@@ -681,14 +681,14 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) intersect select x from (va
 (8 rows)
 
 select x from (values (row(1, 2)), (row(1, 3))) _(x) intersect select x from (values (row(1, 2)), (row(1, 4))) _(x);
-   x
+   x   
 -------
  (1,2)
 (1 row)
 
 explain (costs off)
 select x from (values (row(1, 2)), (row(1, 3))) _(x) except select x from (values (row(1, 2)), (row(1, 4))) _(x);
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  SetOp Except
    ->  Sort
@@ -701,7 +701,7 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) except select x from (value
 (8 rows)
 
 select x from (values (row(1, 2)), (row(1, 3))) _(x) except select x from (values (row(1, 2)), (row(1, 4))) _(x);
-   x
+   x   
 -------
  (1,3)
 (1 row)
@@ -711,7 +711,7 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) except select x from (value
 -- type is hashable.  (Otherwise, this would fail at execution time.)
 explain (costs off)
 select x from (values (row(100::money)), (row(200::money))) _(x) union select x from (values (row(100::money)), (row(300::money))) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -722,7 +722,7 @@ select x from (values (row(100::money)), (row(200::money))) _(x) union select x 
 (6 rows)
 
 select x from (values (row(100::money)), (row(200::money))) _(x) union select x from (values (row(100::money)), (row(300::money))) _(x);
-     x
+     x     
 -----------
  ($100.00)
  ($200.00)
@@ -734,7 +734,7 @@ select x from (values (row(100::money)), (row(200::money))) _(x) union select x 
 create type ct1 as (f1 money);
 explain (costs off)
 select x from (values (row(100::money)::ct1), (row(200::money)::ct1)) _(x) union select x from (values (row(100::money)::ct1), (row(300::money)::ct1)) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -745,7 +745,7 @@ select x from (values (row(100::money)::ct1), (row(200::money)::ct1)) _(x) union
 (6 rows)
 
 select x from (values (row(100::money)::ct1), (row(200::money)::ct1)) _(x) union select x from (values (row(100::money)::ct1), (row(300::money)::ct1)) _(x);
-     x
+     x     
 -----------
  ($100.00)
  ($200.00)
@@ -756,7 +756,7 @@ drop type ct1;
 set enable_hashagg to off;
 explain (costs off)
 select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values (row(1, 2)), (row(1, 4))) _(x);
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Unique
    ->  Sort
@@ -767,7 +767,7 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values
 (6 rows)
 
 select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values (row(1, 2)), (row(1, 4))) _(x);
-   x
+   x   
 -------
  (1,2)
  (1,3)
@@ -776,7 +776,7 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) union select x from (values
 
 explain (costs off)
 select x from (values (row(1, 2)), (row(1, 3))) _(x) intersect select x from (values (row(1, 2)), (row(1, 4))) _(x);
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  SetOp Intersect
    ->  Sort
@@ -789,14 +789,14 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) intersect select x from (va
 (8 rows)
 
 select x from (values (row(1, 2)), (row(1, 3))) _(x) intersect select x from (values (row(1, 2)), (row(1, 4))) _(x);
-   x
+   x   
 -------
  (1,2)
 (1 row)
 
 explain (costs off)
 select x from (values (row(1, 2)), (row(1, 3))) _(x) except select x from (values (row(1, 2)), (row(1, 4))) _(x);
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  SetOp Except
    ->  Sort
@@ -809,7 +809,7 @@ select x from (values (row(1, 2)), (row(1, 3))) _(x) except select x from (value
 (8 rows)
 
 select x from (values (row(1, 2)), (row(1, 3))) _(x) except select x from (values (row(1, 2)), (row(1, 4))) _(x);
-   x
+   x   
 -------
  (1,3)
 (1 row)
@@ -819,13 +819,13 @@ reset enable_hashagg;
 -- Mixed types
 --
 SELECT f1 FROM float8_tbl INTERSECT SELECT f1 FROM int4_tbl ORDER BY 1;
- f1
+ f1 
 ----
   0
 (1 row)
 
 SELECT f1 FROM float8_tbl EXCEPT SELECT f1 FROM int4_tbl ORDER BY 1;
-          f1
+          f1           
 -----------------------
  -1.2345678901234e+200
                -1004.3
@@ -837,7 +837,7 @@ SELECT f1 FROM float8_tbl EXCEPT SELECT f1 FROM int4_tbl ORDER BY 1;
 -- Operator precedence and (((((extra))))) parentheses
 --
 SELECT q1 FROM int8_tbl INTERSECT SELECT q2 FROM int8_tbl UNION ALL SELECT q2 FROM int8_tbl  ORDER BY 1;
-        q1
+        q1         
 -------------------
  -4567890123456789
                123
@@ -849,14 +849,14 @@ SELECT q1 FROM int8_tbl INTERSECT SELECT q2 FROM int8_tbl UNION ALL SELECT q2 FR
 (7 rows)
 
 SELECT q1 FROM int8_tbl INTERSECT (((SELECT q2 FROM int8_tbl UNION ALL SELECT q2 FROM int8_tbl))) ORDER BY 1;
-        q1
+        q1        
 ------------------
               123
  4567890123456789
 (2 rows)
 
 (((SELECT q1 FROM int8_tbl INTERSECT SELECT q2 FROM int8_tbl ORDER BY 1))) UNION ALL SELECT q2 FROM int8_tbl;
-        q1
+        q1         
 -------------------
                123
   4567890123456789
@@ -868,14 +868,14 @@ SELECT q1 FROM int8_tbl INTERSECT (((SELECT q2 FROM int8_tbl UNION ALL SELECT q2
 (7 rows)
 
 SELECT q1 FROM int8_tbl UNION ALL SELECT q2 FROM int8_tbl EXCEPT SELECT q1 FROM int8_tbl ORDER BY 1;
-        q1
+        q1         
 -------------------
  -4567890123456789
                456
 (2 rows)
 
 SELECT q1 FROM int8_tbl UNION ALL (((SELECT q2 FROM int8_tbl EXCEPT SELECT q1 FROM int8_tbl ORDER BY 1)));
-        q1
+        q1         
 -------------------
                123
                123
@@ -887,7 +887,7 @@ SELECT q1 FROM int8_tbl UNION ALL (((SELECT q2 FROM int8_tbl EXCEPT SELECT q1 FR
 (7 rows)
 
 (((SELECT q1 FROM int8_tbl UNION ALL SELECT q2 FROM int8_tbl))) EXCEPT SELECT q1 FROM int8_tbl ORDER BY 1;
-        q1
+        q1         
 -------------------
  -4567890123456789
                456
@@ -899,7 +899,7 @@ SELECT q1 FROM int8_tbl UNION ALL (((SELECT q2 FROM int8_tbl EXCEPT SELECT q1 FR
 -- In this syntax, ORDER BY/LIMIT apply to the result of the EXCEPT
 SELECT q1,q2 FROM int8_tbl EXCEPT SELECT q2,q1 FROM int8_tbl
 ORDER BY q2,q1;
-        q1        |        q2
+        q1        |        q2         
 ------------------+-------------------
  4567890123456789 | -4567890123456789
               123 |               456
@@ -913,7 +913,7 @@ LINE 1: ... int8_tbl EXCEPT SELECT q2 FROM int8_tbl ORDER BY q2 LIMIT 1...
 DETAIL:  There is a column named "q2" in table "*SELECT* 2", but it cannot be referenced from this part of the query.
 -- But this should work:
 SELECT q1 FROM int8_tbl EXCEPT (((SELECT q2 FROM int8_tbl ORDER BY q2 LIMIT 1))) ORDER BY 1;
-        q1
+        q1        
 ------------------
               123
  4567890123456789
@@ -923,7 +923,7 @@ SELECT q1 FROM int8_tbl EXCEPT (((SELECT q2 FROM int8_tbl ORDER BY q2 LIMIT 1)))
 -- New syntaxes (7.1) permit new tests
 --
 (((((select * from int8_tbl)))));
-        q1        |        q2
+        q1        |        q2         
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -952,7 +952,7 @@ set enable_hashagg = true;
 set enable_sort = false;
 explain (costs off)
 select from generate_series(1,5) union select from generate_series(1,3);
-                           QUERY PLAN
+                           QUERY PLAN                           
 ----------------------------------------------------------------
  HashAggregate
    ->  Append
@@ -962,7 +962,7 @@ select from generate_series(1,5) union select from generate_series(1,3);
 
 explain (costs off)
 select from generate_series(1,5) intersect select from generate_series(1,3);
-                              QUERY PLAN
+                              QUERY PLAN                              
 ----------------------------------------------------------------------
  HashSetOp Intersect
    ->  Append
@@ -1001,7 +1001,7 @@ set enable_hashagg = false;
 set enable_sort = true;
 explain (costs off)
 select from generate_series(1,5) union select from generate_series(1,3);
-                           QUERY PLAN
+                           QUERY PLAN                           
 ----------------------------------------------------------------
  Unique
    ->  Append
@@ -1011,7 +1011,7 @@ select from generate_series(1,5) union select from generate_series(1,3);
 
 explain (costs off)
 select from generate_series(1,5) intersect select from generate_series(1,3);
-                              QUERY PLAN
+                              QUERY PLAN                              
 ----------------------------------------------------------------------
  SetOp Intersect
    ->  Append
@@ -1056,7 +1056,7 @@ SELECT a.f1 FROM (SELECT 'test' AS f1 FROM varchar_tbl) a
 UNION
 SELECT b.f1 FROM (SELECT f1 FROM varchar_tbl) b
 ORDER BY 1;
-  f1
+  f1  
 ------
  a
  ab
@@ -1087,7 +1087,7 @@ explain (costs off)
   UNION ALL
   SELECT * FROM t2) t
  WHERE ab = 'ab';
-                 QUERY PLAN
+                 QUERY PLAN                  
 ---------------------------------------------
  Append
    ->  Index Scan using t1_ab_idx on t1
@@ -1102,7 +1102,7 @@ explain (costs off)
   UNION
   SELECT * FROM t2) t
  WHERE ab = 'ab';
-                    QUERY PLAN
+                    QUERY PLAN                     
 ---------------------------------------------------
  HashAggregate
    Group Key: ((t1.a || t1.b))
@@ -1131,7 +1131,7 @@ explain (costs off)
    UNION ALL
    SELECT ab FROM t2) t
   ORDER BY 1 LIMIT 8;
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  Limit
    ->  Merge Append
@@ -1147,7 +1147,7 @@ explain (costs off)
    UNION ALL
    SELECT ab FROM t2) t
   ORDER BY 1 LIMIT 8;
- ab
+ ab 
 ----
  ab
  ab
@@ -1172,7 +1172,7 @@ select event_id
        union all
        select event_id from other_events) ss
  order by event_id;
-                        QUERY PLAN
+                        QUERY PLAN                        
 ----------------------------------------------------------
  Merge Append
    Sort Key: events.event_id
@@ -1192,7 +1192,7 @@ explain (costs off)
    UNION ALL
    SELECT 2 AS t, * FROM tenk1 b) c
  WHERE t = 2;
-     QUERY PLAN
+     QUERY PLAN      
 ---------------------
  Seq Scan on tenk1 b
 (1 row)
@@ -1205,7 +1205,7 @@ SELECT * FROM
    SELECT 2 AS t, 4 AS x) ss
 WHERE x < 4
 ORDER BY x;
-                    QUERY PLAN
+                    QUERY PLAN                    
 --------------------------------------------------
  Sort
    Sort Key: (2)
@@ -1224,7 +1224,7 @@ SELECT * FROM
    SELECT 2 AS t, 4 AS x) ss
 WHERE x < 4
 ORDER BY x;
- t | x
+ t | x 
 ---+---
  1 | 2
 (1 row)
@@ -1236,7 +1236,7 @@ SELECT * FROM
    SELECT 2 AS t, 4 AS x) ss
 WHERE x < 4
 ORDER BY x;
-                       QUERY PLAN
+                       QUERY PLAN                       
 --------------------------------------------------------
  Sort
    Sort Key: ss.x
@@ -1256,7 +1256,7 @@ SELECT * FROM
    SELECT 2 AS t, 4 AS x) ss
 WHERE x < 4
 ORDER BY x;
- t | x
+ t | x 
 ---+---
  1 | 1
  1 | 2
@@ -1270,7 +1270,7 @@ SELECT * FROM
    SELECT 2 AS t, 4 AS x) ss
 WHERE x > 3
 ORDER BY x;
-                                     QUERY PLAN
+                                     QUERY PLAN                                     
 ------------------------------------------------------------------------------------
  Sort
    Sort Key: ss.x
@@ -1290,7 +1290,7 @@ SELECT * FROM
    SELECT 2 AS t, 4 AS x) ss
 WHERE x > 3
 ORDER BY x;
- t | x
+ t | x 
 ---+---
  2 | 4
 (1 row)
@@ -1303,7 +1303,7 @@ select distinct q1 from
    union all
    select distinct * from int8_tbl i82) ss
 where q2 = q2;
-                        QUERY PLAN
+                        QUERY PLAN                        
 ----------------------------------------------------------
  Unique
    ->  Merge Append
@@ -1327,7 +1327,7 @@ select distinct q1 from
    union all
    select distinct * from int8_tbl i82) ss
 where q2 = q2;
-        q1
+        q1        
 ------------------
               123
  4567890123456789
@@ -1339,7 +1339,7 @@ select distinct q1 from
    union all
    select distinct * from int8_tbl i82) ss
 where -q1 = q2;
-                       QUERY PLAN
+                       QUERY PLAN                       
 --------------------------------------------------------
  Unique
    ->  Merge Append
@@ -1363,7 +1363,7 @@ select distinct q1 from
    union all
    select distinct * from int8_tbl i82) ss
 where -q1 = q2;
-        q1
+        q1        
 ------------------
  4567890123456789
 (1 row)
@@ -1380,7 +1380,7 @@ explain (costs off)
 select * from
   (select * from t3 a union all select * from t3 b) ss
   join int4_tbl on f1 = expensivefunc(x);
-                         QUERY PLAN
+                         QUERY PLAN                         
 ------------------------------------------------------------
  Nested Loop
    ->  Seq Scan on int4_tbl
@@ -1394,7 +1394,7 @@ select * from
 select * from
   (select * from t3 a union all select * from t3 b) ss
   join int4_tbl on f1 = expensivefunc(x);
- x | f1
+ x | f1 
 ---+----
  0 |  0
  0 |  0
@@ -1409,7 +1409,7 @@ select * from
    union all
    select *, 1 as x from int8_tbl b) ss
 where (x = 0) or (q1 >= q2 and q1 <= q2);
-                 QUERY PLAN
+                 QUERY PLAN                  
 ---------------------------------------------
  Append
    ->  Seq Scan on int8_tbl a
@@ -1422,7 +1422,7 @@ select * from
    union all
    select *, 1 as x from int8_tbl b) ss
 where (x = 0) or (q1 >= q2 and q1 <= q2);
-        q1        |        q2         | x
+        q1        |        q2         | x 
 ------------------+-------------------+---
               123 |               456 | 0
               123 |  4567890123456789 | 0
@@ -1431,3 +1431,4 @@ where (x = 0) or (q1 >= q2 and q1 <= q2);
  4567890123456789 | -4567890123456789 | 0
  4567890123456789 |  4567890123456789 | 1
 (6 rows)
+

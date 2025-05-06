@@ -13,35 +13,35 @@ CREATE TABLE upsert_test (
 INSERT INTO update_test VALUES (5, 10, 'foo');
 INSERT INTO update_test(b, a) VALUES (15, 10);
 SELECT * FROM update_test;
- a  | b  |  c
+ a  | b  |  c  
 ----+----+-----
   5 | 10 | foo
- 10 | 15 |
+ 10 | 15 | 
 (2 rows)
 
 UPDATE update_test SET a = DEFAULT, b = DEFAULT;
 SELECT * FROM update_test;
- a  | b |  c
+ a  | b |  c  
 ----+---+-----
  10 |   | foo
- 10 |   |
+ 10 |   | 
 (2 rows)
 
 -- aliases for the UPDATE target table
 UPDATE update_test AS t SET b = 10 WHERE t.a = 10;
 SELECT * FROM update_test;
- a  | b  |  c
+ a  | b  |  c  
 ----+----+-----
  10 | 10 | foo
- 10 | 10 |
+ 10 | 10 | 
 (2 rows)
 
 UPDATE update_test t SET b = t.b + 10 WHERE t.a = 10;
 SELECT * FROM update_test;
- a  | b  |  c
+ a  | b  |  c  
 ----+----+-----
  10 | 20 | foo
- 10 | 20 |
+ 10 | 20 | 
 (2 rows)
 
 --
@@ -50,10 +50,10 @@ SELECT * FROM update_test;
 UPDATE update_test SET a=v.i FROM (VALUES(100, 20)) AS v(i, j)
   WHERE update_test.b = v.j;
 SELECT * FROM update_test;
-  a  | b  |  c
+  a  | b  |  c  
 -----+----+-----
  100 | 20 | foo
- 100 | 20 |
+ 100 | 20 | 
 (2 rows)
 
 -- fail, wrong data type:
@@ -68,30 +68,30 @@ HINT:  You will need to rewrite or cast the expression.
 --
 INSERT INTO update_test SELECT a,b+1,c FROM update_test;
 SELECT * FROM update_test;
-  a  | b  |  c
+  a  | b  |  c  
 -----+----+-----
  100 | 20 | foo
- 100 | 20 |
+ 100 | 20 | 
  100 | 21 | foo
- 100 | 21 |
+ 100 | 21 | 
 (4 rows)
 
 UPDATE update_test SET (c,b,a) = ('bugle', b+11, DEFAULT) WHERE c = 'foo';
 SELECT * FROM update_test;
-  a  | b  |   c
+  a  | b  |   c   
 -----+----+-------
- 100 | 20 |
- 100 | 21 |
+ 100 | 20 | 
+ 100 | 21 | 
   10 | 31 | bugle
   10 | 32 | bugle
 (4 rows)
 
 UPDATE update_test SET (c,b) = ('car', a+b), a = a + 1 WHERE a = 10;
 SELECT * FROM update_test;
-  a  | b  |  c
+  a  | b  |  c  
 -----+----+-----
- 100 | 20 |
- 100 | 21 |
+ 100 | 20 | 
+ 100 | 21 | 
   11 | 41 | car
   11 | 42 | car
 (4 rows)
@@ -104,12 +104,12 @@ UPDATE update_test
   SET (b,a) = (select a,b from update_test where b = 41 and c = 'car')
   WHERE a = 100 AND b = 20;
 SELECT * FROM update_test;
-  a  | b  |  c
+  a  | b  |  c  
 -----+----+-----
- 100 | 21 |
+ 100 | 21 | 
   11 | 41 | car
   11 | 42 | car
-  41 | 11 |
+  41 | 11 | 
 (4 rows)
 
 -- correlated sub-select:
@@ -117,12 +117,12 @@ UPDATE update_test o
   SET (b,a) = (select a+1,b from update_test i
                where i.a=o.a and i.b=o.b and i.c is not distinct from o.c);
 SELECT * FROM update_test;
- a  |  b  |  c
+ a  |  b  |  c  
 ----+-----+-----
- 21 | 101 |
+ 21 | 101 | 
  41 |  12 | car
  42 |  12 | car
- 11 |  42 |
+ 11 |  42 | 
 (4 rows)
 
 -- fail, multiple rows supplied:
@@ -132,12 +132,12 @@ ERROR:  more than one row returned by a subquery used as an expression
 UPDATE update_test SET (b,a) = (select a+1,b from update_test where a = 1000)
   WHERE a = 11;
 SELECT * FROM update_test;
- a  |  b  |  c
+ a  |  b  |  c  
 ----+-----+-----
- 21 | 101 |
+ 21 | 101 | 
  41 |  12 | car
  42 |  12 | car
-    |     |
+    |     | 
 (4 rows)
 
 -- *-expansion should work in this context:
@@ -159,10 +159,10 @@ HINT:  Perhaps you meant to reference the table alias "t".
 -- Make sure that we can update to a TOASTed value.
 UPDATE update_test SET c = repeat('x', 10000) WHERE c = 'car';
 SELECT a, b, char_length(c) FROM update_test;
- a  |  b  | char_length
+ a  |  b  | char_length 
 ----+-----+-------------
-    |     |
- 21 | 100 |
+    |     |            
+ 21 | 100 |            
  41 |  12 |       10000
  42 |  12 |       10000
 (4 rows)
@@ -172,7 +172,7 @@ EXPLAIN (VERBOSE, COSTS OFF)
 UPDATE update_test t
   SET (a, b) = (SELECT b, a FROM update_test s WHERE s.a = t.a)
   WHERE CURRENT_USER = SESSION_USER;
-                         QUERY PLAN
+                         QUERY PLAN                          
 -------------------------------------------------------------
  Update on public.update_test t
    ->  Result
@@ -190,10 +190,10 @@ UPDATE update_test t
   SET (a, b) = (SELECT b, a FROM update_test s WHERE s.a = t.a)
   WHERE CURRENT_USER = SESSION_USER;
 SELECT a, b, char_length(c) FROM update_test;
-  a  | b  | char_length
+  a  | b  | char_length 
 -----+----+-------------
-     |    |
- 100 | 21 |
+     |    |            
+ 100 | 21 |            
   12 | 41 |       10000
   12 | 42 |       10000
 (4 rows)
@@ -204,7 +204,7 @@ INSERT INTO upsert_test VALUES(1, 'Boo'), (3, 'Zoo');
 WITH aaa AS (SELECT 1 AS a, 'Foo' AS b) INSERT INTO upsert_test
   VALUES (1, 'Bar') ON CONFLICT(a)
   DO UPDATE SET (b, a) = (SELECT b, a FROM aaa) RETURNING *;
- a |  b
+ a |  b  
 ---+-----
  1 | Foo
 (1 row)
@@ -213,7 +213,7 @@ WITH aaa AS (SELECT 1 AS a, 'Foo' AS b) INSERT INTO upsert_test
 INSERT INTO upsert_test VALUES (1, 'Baz'), (3, 'Zaz') ON CONFLICT(a)
   DO UPDATE SET (b, a) = (SELECT b || ', Correlated', a from upsert_test i WHERE i.a = upsert_test.a)
   RETURNING *;
- a |        b
+ a |        b        
 ---+-----------------
  1 | Foo, Correlated
  3 | Zoo, Correlated
@@ -223,7 +223,7 @@ INSERT INTO upsert_test VALUES (1, 'Baz'), (3, 'Zaz') ON CONFLICT(a)
 INSERT INTO upsert_test VALUES (1, 'Bat'), (3, 'Zot') ON CONFLICT(a)
   DO UPDATE SET (b, a) = (SELECT b || ', Excluded', a from upsert_test i WHERE i.a = excluded.a)
   RETURNING *;
- a |             b
+ a |             b             
 ---+---------------------------
  1 | Foo, Correlated, Excluded
  3 | Zoo, Correlated, Excluded
@@ -235,7 +235,7 @@ INSERT INTO upsert_test VALUES (1, 'Bat'), (3, 'Zot') ON CONFLICT(a)
 INSERT INTO upsert_test VALUES (2, 'Beeble') ON CONFLICT(a)
   DO UPDATE SET (b, a) = (SELECT b || ', Excluded', a from upsert_test i WHERE i.a = excluded.a)
   RETURNING tableoid::regclass, xmin = pg_current_xact_id()::xid AS xmin_correct, xmax = 0 AS xmax_correct;
-  tableoid   | xmin_correct | xmax_correct
+  tableoid   | xmin_correct | xmax_correct 
 -------------+--------------+--------------
  upsert_test | t            | t
 (1 row)
@@ -245,7 +245,7 @@ INSERT INTO upsert_test VALUES (2, 'Beeble') ON CONFLICT(a)
 INSERT INTO upsert_test VALUES (2, 'Brox') ON CONFLICT(a)
   DO UPDATE SET (b, a) = (SELECT b || ', Excluded', a from upsert_test i WHERE i.a = excluded.a)
   RETURNING tableoid::regclass, xmin = pg_current_xact_id()::xid AS xmin_correct, xmax = pg_current_xact_id()::xid AS xmax_correct;
-  tableoid   | xmin_correct | xmax_correct
+  tableoid   | xmin_correct | xmax_correct 
 -------------+--------------+--------------
  upsert_test | t            | t
 (1 row)
@@ -265,7 +265,7 @@ INSERT INTO upsert_test VALUES(1, 'Boo'), (2, 'Zoo');
 WITH aaa AS (SELECT 1 AS a, 'Foo' AS b) INSERT INTO upsert_test
   VALUES (1, 'Bar') ON CONFLICT(a)
   DO UPDATE SET (b, a) = (SELECT b, a FROM aaa) RETURNING *;
- a |  b
+ a |  b  
 ---+-----
  1 | Foo
 (1 row)
@@ -274,7 +274,7 @@ WITH aaa AS (SELECT 1 AS a, 'Foo' AS b) INSERT INTO upsert_test
 WITH aaa AS (SELECT 1 AS ctea, ' Foo' AS cteb) INSERT INTO upsert_test
   VALUES (1, 'Bar'), (2, 'Baz') ON CONFLICT(a)
   DO UPDATE SET (b, a) = (SELECT upsert_test.b||cteb, upsert_test.a FROM aaa) RETURNING *;
- a |    b
+ a |    b    
 ---+---------
  1 | Foo Foo
  2 | Zoo Foo
@@ -327,19 +327,19 @@ ALTER TABLE part_b_10_b_20 ATTACH PARTITION part_c_1_100 FOR VALUES FROM (1) TO 
 \set show_data 'select tableoid::regclass::text COLLATE "C" partname, * from range_parted ORDER BY 1, 2, 3, 4, 5, 6'
 :init_range_parted;
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_c_1_100   | b | 12 |  96 |  1 |
- part_c_1_100   | b | 13 |  97 |  2 |
- part_d_15_20   | b | 15 | 105 | 16 |
- part_d_15_20   | b | 17 | 105 | 19 |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_c_1_100   | b | 12 |  96 |  1 | 
+ part_c_1_100   | b | 13 |  97 |  2 | 
+ part_d_15_20   | b | 15 | 105 | 16 | 
+ part_d_15_20   | b | 17 | 105 | 19 | 
 (6 rows)
 
 -- The order of subplans should be in bound order
 EXPLAIN (costs off) UPDATE range_parted set c = c - 50 WHERE c > 97;
-                      QUERY PLAN
+                      QUERY PLAN                       
 -------------------------------------------------------
  Update on range_parted
    Update on part_a_1_a_10 range_parted_1
@@ -383,7 +383,7 @@ UPDATE range_parted set e = d;
 UPDATE part_c_1_100 set c = c + 20 WHERE c = 98;
 -- ok, row movement
 UPDATE part_b_10_b_20 set c = c + 20 returning c, b, a;
-  c  | b  | a
+  c  | b  | a 
 -----+----+---
  116 | 12 | b
  117 | 13 | b
@@ -392,7 +392,7 @@ UPDATE part_b_10_b_20 set c = c + 20 returning c, b, a;
 (4 rows)
 
 :show_data;
-    partname    | a | b  |  c  | d | e
+    partname    | a | b  |  c  | d | e 
 ----------------+---+----+-----+---+---
  part_a_10_a_20 | a | 10 | 200 | 1 | 1
  part_a_1_a_10  | a |  1 |   1 | 1 | 1
@@ -408,7 +408,7 @@ ERROR:  new row for relation "part_b_10_b_20" violates partition constraint
 DETAIL:  Failing row contains (2, 117, b, 7, 2).
 -- ok, row movement, with subset of rows moved into different partition.
 UPDATE range_parted set b = b - 6 WHERE c > 116 returning a, b + c;
- a | ?column?
+ a | ?column? 
 ---+----------
  a |      204
  b |      124
@@ -417,7 +417,7 @@ UPDATE range_parted set b = b - 6 WHERE c > 116 returning a, b + c;
 (4 rows)
 
 :show_data;
-   partname    | a | b  |  c  | d | e
+   partname    | a | b  |  c  | d | e 
 ---------------+---+----+-----+---+---
  part_a_1_a_10 | a |  1 |   1 | 1 | 1
  part_a_1_a_10 | a |  4 | 200 | 1 | 1
@@ -445,7 +445,7 @@ DETAIL:  Failing row contains (b, 15, 120, 1, 1).
 -- ok, row movement, check option passes
 UPDATE upview set a = 'b', b = 15 WHERE b = 4;
 :show_data;
-   partname    | a | b  |  c  | d | e
+   partname    | a | b  |  c  | d | e 
 ---------------+---+----+-----+---+---
  part_a_1_a_10 | a |  1 |   1 | 1 | 1
  part_b_1_b_10 | b |  7 | 117 | 2 | 2
@@ -460,21 +460,21 @@ DROP VIEW upview;
 -- RETURNING having whole-row vars.
 :init_range_parted;
 UPDATE range_parted set c = 95 WHERE a = 'b' and b > 10 and c > 100 returning (range_parted), *;
- range_parted  | a | b  | c  | d  | e
+ range_parted  | a | b  | c  | d  | e 
 ---------------+---+----+----+----+---
- (b,15,95,16,) | b | 15 | 95 | 16 |
- (b,17,95,19,) | b | 17 | 95 | 19 |
+ (b,15,95,16,) | b | 15 | 95 | 16 | 
+ (b,17,95,19,) | b | 17 | 95 | 19 | 
 (2 rows)
 
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_c_1_100   | b | 12 |  96 |  1 |
- part_c_1_100   | b | 13 |  97 |  2 |
- part_c_1_100   | b | 15 |  95 | 16 |
- part_c_1_100   | b | 17 |  95 | 19 |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_c_1_100   | b | 12 |  96 |  1 | 
+ part_c_1_100   | b | 13 |  97 |  2 | 
+ part_c_1_100   | b | 15 |  95 | 16 | 
+ part_c_1_100   | b | 17 |  95 | 19 | 
 (6 rows)
 
 -- Transition tables with update row movement
@@ -495,14 +495,14 @@ CREATE TRIGGER trans_updatetrig
 UPDATE range_parted set c = (case when c = 96 then 110 else c + 1 end ) WHERE a = 'b' and b > 10 and c >= 96;
 NOTICE:  trigger = trans_updatetrig, old table = (b,12,96,1,), (b,13,97,2,), (b,15,105,16,), (b,17,105,19,), new table = (b,12,110,1,), (b,13,98,2,), (b,15,106,16,), (b,17,106,19,)
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_c_1_100   | b | 13 |  98 |  2 |
- part_d_15_20   | b | 15 | 106 | 16 |
- part_d_15_20   | b | 17 | 106 | 19 |
- part_d_1_15    | b | 12 | 110 |  1 |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_c_1_100   | b | 13 |  98 |  2 | 
+ part_d_15_20   | b | 15 | 106 | 16 | 
+ part_d_15_20   | b | 17 | 106 | 19 | 
+ part_d_1_15    | b | 12 | 110 |  1 | 
 (6 rows)
 
 :init_range_parted;
@@ -518,14 +518,14 @@ CREATE TRIGGER trans_inserttrig
 UPDATE range_parted set c = c + 50 WHERE a = 'b' and b > 10 and c >= 96;
 NOTICE:  trigger = trans_updatetrig, old table = (b,12,96,1,), (b,13,97,2,), (b,15,105,16,), (b,17,105,19,), new table = (b,12,146,1,), (b,13,147,2,), (b,15,155,16,), (b,17,155,19,)
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_d_15_20   | b | 15 | 155 | 16 |
- part_d_15_20   | b | 17 | 155 | 19 |
- part_d_1_15    | b | 12 | 146 |  1 |
- part_d_1_15    | b | 13 | 147 |  2 |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_d_15_20   | b | 15 | 155 | 16 | 
+ part_d_15_20   | b | 17 | 155 | 19 | 
+ part_d_1_15    | b | 12 | 146 |  1 | 
+ part_d_1_15    | b | 13 | 147 |  2 | 
 (6 rows)
 
 DROP TRIGGER trans_deletetrig ON range_parted;
@@ -553,28 +553,28 @@ CREATE TRIGGER trig_d15_20 BEFORE UPDATE OR INSERT ON part_d_15_20
 UPDATE range_parted set c = (case when c = 96 then 110 else c + 1 end) WHERE a = 'b' and b > 10 and c >= 96;
 NOTICE:  trigger = trans_updatetrig, old table = (b,13,96,1,), (b,14,97,2,), (b,16,105,16,), (b,18,105,19,), new table = (b,15,110,1,), (b,15,98,2,), (b,17,106,16,), (b,19,106,19,)
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_c_1_100   | b | 15 |  98 |  2 |
- part_d_15_20   | b | 17 | 106 | 16 |
- part_d_15_20   | b | 19 | 106 | 19 |
- part_d_1_15    | b | 15 | 110 |  1 |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_c_1_100   | b | 15 |  98 |  2 | 
+ part_d_15_20   | b | 17 | 106 | 16 | 
+ part_d_15_20   | b | 19 | 106 | 19 | 
+ part_d_1_15    | b | 15 | 110 |  1 | 
 (6 rows)
 
 :init_range_parted;
 UPDATE range_parted set c = c + 50 WHERE a = 'b' and b > 10 and c >= 96;
 NOTICE:  trigger = trans_updatetrig, old table = (b,13,96,1,), (b,14,97,2,), (b,16,105,16,), (b,18,105,19,), new table = (b,15,146,1,), (b,16,147,2,), (b,17,155,16,), (b,19,155,19,)
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_d_15_20   | b | 17 | 155 | 16 |
- part_d_15_20   | b | 19 | 155 | 19 |
- part_d_1_15    | b | 15 | 146 |  1 |
- part_d_1_15    | b | 16 | 147 |  2 |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_d_15_20   | b | 17 | 155 | 16 | 
+ part_d_15_20   | b | 19 | 155 | 19 | 
+ part_d_1_15    | b | 15 | 146 |  1 | 
+ part_d_1_15    | b | 16 | 147 |  2 | 
 (6 rows)
 
 -- Case where per-partition tuple conversion map array is allocated, but the
@@ -584,14 +584,14 @@ NOTICE:  trigger = trans_updatetrig, old table = (b,13,96,1,), (b,14,97,2,), (b,
 UPDATE range_parted set b = 15 WHERE b = 1;
 NOTICE:  trigger = trans_updatetrig, old table = (a,1,1,1,), new table = (a,15,1,1,)
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_10_a_20 | a | 15 |   1 |  1 |
- part_c_1_100   | b | 13 |  96 |  1 |
- part_c_1_100   | b | 14 |  97 |  2 |
- part_d_15_20   | b | 16 | 105 | 16 |
- part_d_15_20   | b | 18 | 105 | 19 |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_10_a_20 | a | 15 |   1 |  1 | 
+ part_c_1_100   | b | 13 |  96 |  1 | 
+ part_c_1_100   | b | 14 |  97 |  2 | 
+ part_d_15_20   | b | 16 | 105 | 16 | 
+ part_d_15_20   | b | 18 | 105 | 19 | 
 (6 rows)
 
 DROP TRIGGER trans_updatetrig ON range_parted;
@@ -717,14 +717,14 @@ CREATE TRIGGER d15_insert_trig
 UPDATE range_parted set c = c - 50 WHERE c > 97;
 NOTICE:  trigger = parent_update_trig fired on table range_parted during UPDATE
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 150 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_c_1_100   | b | 12 |  96 |  1 |
- part_c_1_100   | b | 13 |  97 |  2 |
- part_c_1_100   | b | 15 |  55 | 16 |
- part_c_1_100   | b | 17 |  55 | 19 |
+ part_a_10_a_20 | a | 10 | 150 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_c_1_100   | b | 12 |  96 |  1 | 
+ part_c_1_100   | b | 13 |  97 |  2 | 
+ part_c_1_100   | b | 15 |  55 | 16 | 
+ part_c_1_100   | b | 17 |  55 | 19 | 
 (6 rows)
 
 DROP TRIGGER parent_delete_trig ON range_parted;
@@ -744,13 +744,13 @@ DROP TRIGGER d15_insert_trig ON part_d_15_20;
 create table part_def partition of range_parted default;
 \d+ part_def
                                        Table "public.part_def"
- Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+-------------------+-----------+----------+---------+----------+--------------+-------------
- a      | text              |           |          |         | extended |              |
- b      | bigint            |           |          |         | plain    |              |
- c      | numeric           |           |          |         | main     |              |
- d      | integer           |           |          |         | plain    |              |
- e      | character varying |           |          |         | extended |              |
+ a      | text              |           |          |         | extended |              | 
+ b      | bigint            |           |          |         | plain    |              | 
+ c      | numeric           |           |          |         | main     |              | 
+ d      | integer           |           |          |         | plain    |              | 
+ e      | character varying |           |          |         | extended |              | 
 Partition of: range_parted DEFAULT
 Partition constraint: (NOT ((a IS NOT NULL) AND (b IS NOT NULL) AND (((a = 'a'::text) AND (b >= '1'::bigint) AND (b < '10'::bigint)) OR ((a = 'a'::text) AND (b >= '10'::bigint) AND (b < '20'::bigint)) OR ((a = 'b'::text) AND (b >= '1'::bigint) AND (b < '10'::bigint)) OR ((a = 'b'::text) AND (b >= '10'::bigint) AND (b < '20'::bigint)) OR ((a = 'b'::text) AND (b >= '20'::bigint) AND (b < '30'::bigint)))))
 
@@ -762,15 +762,15 @@ update part_def set a = 'a' where a = 'd';
 ERROR:  new row for relation "part_def" violates partition constraint
 DETAIL:  Failing row contains (a, 9, null, null, null).
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_c_1_100   | b | 12 |  96 |  1 |
- part_c_1_100   | b | 13 |  97 |  2 |
- part_d_15_20   | b | 15 | 105 | 16 |
- part_d_15_20   | b | 17 | 105 | 19 |
- part_def       | d |  9 |     |    |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_c_1_100   | b | 12 |  96 |  1 | 
+ part_c_1_100   | b | 13 |  97 |  2 | 
+ part_d_15_20   | b | 15 | 105 | 16 | 
+ part_d_15_20   | b | 17 | 105 | 19 | 
+ part_def       | d |  9 |     |    | 
 (7 rows)
 
 -- Update row movement from non-default to default partition.
@@ -782,15 +782,15 @@ DETAIL:  Failing row contains (ad, 10, 200, 1, null).
 UPDATE range_parted set a = 'ad' WHERE a = 'a';
 UPDATE range_parted set a = 'bd' WHERE a = 'b';
 :show_data;
- partname | a  | b  |  c  | d  | e
+ partname | a  | b  |  c  | d  | e 
 ----------+----+----+-----+----+---
- part_def | ad |  1 |   1 |  1 |
- part_def | ad | 10 | 200 |  1 |
- part_def | bd | 12 |  96 |  1 |
- part_def | bd | 13 |  97 |  2 |
- part_def | bd | 15 | 105 | 16 |
- part_def | bd | 17 | 105 | 19 |
- part_def | d  |  9 |     |    |
+ part_def | ad |  1 |   1 |  1 | 
+ part_def | ad | 10 | 200 |  1 | 
+ part_def | bd | 12 |  96 |  1 | 
+ part_def | bd | 13 |  97 |  2 | 
+ part_def | bd | 15 | 105 | 16 | 
+ part_def | bd | 17 | 105 | 19 | 
+ part_def | d  |  9 |     |    | 
 (7 rows)
 
 -- Update row movement from default to non-default partitions.
@@ -798,15 +798,15 @@ UPDATE range_parted set a = 'bd' WHERE a = 'b';
 UPDATE range_parted set a = 'a' WHERE a = 'ad';
 UPDATE range_parted set a = 'b' WHERE a = 'bd';
 :show_data;
-    partname    | a | b  |  c  | d  | e
+    partname    | a | b  |  c  | d  | e 
 ----------------+---+----+-----+----+---
- part_a_10_a_20 | a | 10 | 200 |  1 |
- part_a_1_a_10  | a |  1 |   1 |  1 |
- part_c_1_100   | b | 12 |  96 |  1 |
- part_c_1_100   | b | 13 |  97 |  2 |
- part_d_15_20   | b | 15 | 105 | 16 |
- part_d_15_20   | b | 17 | 105 | 19 |
- part_def       | d |  9 |     |    |
+ part_a_10_a_20 | a | 10 | 200 |  1 | 
+ part_a_1_a_10  | a |  1 |   1 |  1 | 
+ part_c_1_100   | b | 12 |  96 |  1 | 
+ part_c_1_100   | b | 13 |  97 |  2 | 
+ part_d_15_20   | b | 15 | 105 | 16 | 
+ part_d_15_20   | b | 17 | 105 | 19 | 
+ part_def       | d |  9 |     |    | 
 (7 rows)
 
 -- Cleanup: range_parted no longer needed.
@@ -836,7 +836,7 @@ alter table utrtest attach partition utr1 for values in (1);
 alter table utrtest attach partition utr2 for values in (2);
 insert into utrtest values (1, 'foo')
   returning *, tableoid::regclass, xmin = pg_current_xact_id()::xid as xmin_ok;
- a |  b  | tableoid | xmin_ok
+ a |  b  | tableoid | xmin_ok 
 ---+-----+----------+---------
  1 | foo | utr1     | t
 (1 row)
@@ -846,14 +846,14 @@ insert into utrtest values (2, 'bar')
 ERROR:  cannot retrieve a system column in this context
 insert into utrtest values (2, 'bar')
   returning *, tableoid::regclass;
- a |  b  | tableoid
+ a |  b  | tableoid 
 ---+-----+----------
  2 | bar | utr2
 (1 row)
 
 update utrtest set b = b || b from (values (1), (2)) s(x) where a = s.x
   returning *, tableoid::regclass, xmin = pg_current_xact_id()::xid as xmin_ok;
- a |   b    | x | tableoid | xmin_ok
+ a |   b    | x | tableoid | xmin_ok 
 ---+--------+---+----------+---------
  1 | foofoo | 1 | utr1     | t
  2 | barbar | 2 | utr2     | t
@@ -864,7 +864,7 @@ update utrtest set a = 3 - a from (values (1), (2)) s(x) where a = s.x
 ERROR:  cannot retrieve a system column in this context
 update utrtest set a = 3 - a from (values (1), (2)) s(x) where a = s.x
   returning *, tableoid::regclass;
- a |   b    | x | tableoid
+ a |   b    | x | tableoid 
 ---+--------+---+----------
  2 | foofoo | 1 | utr2
  1 | barbar | 2 | utr1
@@ -872,7 +872,7 @@ update utrtest set a = 3 - a from (values (1), (2)) s(x) where a = s.x
 
 delete from utrtest
   returning *, tableoid::regclass, xmax = pg_current_xact_id()::xid as xmax_ok;
- a |   b    | tableoid | xmax_ok
+ a |   b    | tableoid | xmax_ok 
 ---+--------+----------+---------
  1 | barbar | utr1     | t
  2 | foofoo | utr2     | t
@@ -904,14 +904,14 @@ DETAIL:  Failing row contains (2, 2, 10).
 -- Test update-partition-key, where the unpruned partitions do not have their
 -- partition keys updated.
 SELECT tableoid::regclass::text, * FROM list_parted WHERE a = 2 ORDER BY 1;
-  tableoid  | a | b | c
+  tableoid  | a | b | c  
 ------------+---+---+----
  list_part1 | 2 | 5 | 50
 (1 row)
 
 UPDATE list_parted set b = c + a WHERE a = 2;
 SELECT tableoid::regclass::text, * FROM list_parted WHERE a = 2 ORDER BY 1;
-  tableoid  | a | b  | c
+  tableoid  | a | b  | c  
 ------------+---+----+----
  list_part1 | 2 | 52 | 50
 (1 row)
@@ -925,7 +925,7 @@ END $$ LANGUAGE plpgsql;
 CREATE TRIGGER parted_mod_b before update on sub_part1
    for each row execute procedure func_parted_mod_b();
 SELECT tableoid::regclass::text, * FROM list_parted ORDER BY 1, 2, 3, 4;
-  tableoid  | a | b  | c
+  tableoid  | a | b  | c  
 ------------+---+----+----
  list_part1 | 2 | 52 | 50
  list_part1 | 3 |  6 | 60
@@ -937,7 +937,7 @@ SELECT tableoid::regclass::text, * FROM list_parted ORDER BY 1, 2, 3, 4;
 -- partition-key update, because there is a trigger on sub_part1.
 UPDATE list_parted set c = 70 WHERE b  = 1;
 SELECT tableoid::regclass::text, * FROM list_parted ORDER BY 1, 2, 3, 4;
-  tableoid  | a | b  | c
+  tableoid  | a | b  | c  
 ------------+---+----+----
  list_part1 | 2 | 52 | 50
  list_part1 | 3 |  6 | 60
@@ -958,7 +958,7 @@ CREATE TRIGGER trig_skip_delete before delete on sub_part2
 UPDATE list_parted set b = 1 WHERE c = 70;
 NOTICE:  Trigger: Got OLD row (2,70,1), but returning NULL
 SELECT tableoid::regclass::text, * FROM list_parted ORDER BY 1, 2, 3, 4;
-  tableoid  | a | b  | c
+  tableoid  | a | b  | c  
 ------------+---+----+----
  list_part1 | 2 | 52 | 50
  list_part1 | 3 |  6 | 60
@@ -970,7 +970,7 @@ SELECT tableoid::regclass::text, * FROM list_parted ORDER BY 1, 2, 3, 4;
 DROP TRIGGER trig_skip_delete ON sub_part2;
 UPDATE list_parted set b = 1 WHERE c = 70;
 SELECT tableoid::regclass::text, * FROM list_parted ORDER BY 1, 2, 3, 4;
-  tableoid  | a | b  | c
+  tableoid  | a | b  | c  
 ------------+---+----+----
  list_part1 | 2 | 52 | 50
  list_part1 | 3 |  6 | 60
@@ -986,7 +986,7 @@ CREATE TABLE non_parted (id int);
 INSERT into non_parted VALUES (1), (1), (1), (2), (2), (2), (3), (3), (3);
 UPDATE list_parted t1 set a = 2 FROM non_parted t2 WHERE t1.a = t2.id and a = 1;
 SELECT tableoid::regclass::text, * FROM list_parted ORDER BY 1, 2, 3, 4;
-  tableoid  | a | b  | c
+  tableoid  | a | b  | c  
 ------------+---+----+----
  list_part1 | 2 |  1 | 70
  list_part1 | 2 |  2 | 10
