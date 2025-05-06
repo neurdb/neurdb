@@ -16,7 +16,7 @@ SELECT  ctid, oprcom
 FROM    pg_catalog.pg_operator fk
 WHERE   oprcom != 0 AND
         NOT EXISTS(SELECT 1 FROM pg_catalog.pg_operator pk WHERE pk.oid = fk.oprcom);
- ctid | oprcom
+ ctid | oprcom 
 ------+--------
 (0 rows)
 
@@ -24,7 +24,7 @@ SELECT  ctid, oprnegate
 FROM    pg_catalog.pg_operator fk
 WHERE   oprnegate != 0 AND
         NOT EXISTS(SELECT 1 FROM pg_catalog.pg_operator pk WHERE pk.oid = fk.oprnegate);
- ctid | oprnegate
+ ctid | oprnegate 
 ------+-----------
 (0 rows)
 
@@ -46,7 +46,7 @@ SELECT  ctid, oprcom
 FROM    pg_catalog.pg_operator fk
 WHERE   oprcom != 0 AND
         NOT EXISTS(SELECT 1 FROM pg_catalog.pg_operator pk WHERE pk.oid = fk.oprcom);
- ctid | oprcom
+ ctid | oprcom 
 ------+--------
 (0 rows)
 
@@ -54,7 +54,7 @@ SELECT  ctid, oprnegate
 FROM    pg_catalog.pg_operator fk
 WHERE   oprnegate != 0 AND
         NOT EXISTS(SELECT 1 FROM pg_catalog.pg_operator pk WHERE pk.oid = fk.oprnegate);
- ctid | oprnegate
+ ctid | oprnegate 
 ------+-----------
 (0 rows)
 

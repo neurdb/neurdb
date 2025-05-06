@@ -3,7 +3,7 @@
 --
 -- simple srf
 SELECT generate_series(1, 3);
- generate_series
+ generate_series 
 -----------------
                1
                2
@@ -12,7 +12,7 @@ SELECT generate_series(1, 3);
 
 -- parallel iteration
 SELECT generate_series(1, 3), generate_series(3,5);
- generate_series | generate_series
+ generate_series | generate_series 
 -----------------+-----------------
                1 |               3
                2 |               4
@@ -21,7 +21,7 @@ SELECT generate_series(1, 3), generate_series(3,5);
 
 -- parallel iteration, different number of rows
 SELECT generate_series(1, 2), generate_series(1,4);
- generate_series | generate_series
+ generate_series | generate_series 
 -----------------+-----------------
                1 |               1
                2 |               2
@@ -31,7 +31,7 @@ SELECT generate_series(1, 2), generate_series(1,4);
 
 -- srf, with SRF argument
 SELECT generate_series(1, generate_series(1, 3));
- generate_series
+ generate_series 
 -----------------
                1
                1
@@ -48,7 +48,7 @@ LINE 1: SELECT * FROM generate_series(1, generate_series(1, 3));
                                          ^
 -- srf, with two SRF arguments
 SELECT generate_series(generate_series(1,3), generate_series(2, 4));
- generate_series
+ generate_series 
 -----------------
                1
                2
@@ -61,7 +61,7 @@ SELECT generate_series(generate_series(1,3), generate_series(2, 4));
 -- check proper nesting of SRFs in different expressions
 explain (verbose, costs off)
 SELECT generate_series(1, generate_series(1, 3)), generate_series(2, 4);
-                                   QUERY PLAN
+                                   QUERY PLAN                                   
 --------------------------------------------------------------------------------
  ProjectSet
    Output: generate_series(1, (generate_series(1, 3))), (generate_series(2, 4))
@@ -71,7 +71,7 @@ SELECT generate_series(1, generate_series(1, 3)), generate_series(2, 4);
 (5 rows)
 
 SELECT generate_series(1, generate_series(1, 3)), generate_series(2, 4);
- generate_series | generate_series
+ generate_series | generate_series 
 -----------------+-----------------
                1 |               2
                1 |               3
@@ -86,7 +86,7 @@ INSERT INTO few VALUES(1, 'a', 'foo'),(2, 'a', 'bar'),(3, 'b', 'bar');
 -- SRF with a provably-dummy relation
 explain (verbose, costs off)
 SELECT unnest(ARRAY[1, 2]) FROM few WHERE false;
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  ProjectSet
    Output: unnest('{1,2}'::integer[])
@@ -95,7 +95,7 @@ SELECT unnest(ARRAY[1, 2]) FROM few WHERE false;
 (4 rows)
 
 SELECT unnest(ARRAY[1, 2]) FROM few WHERE false;
- unnest
+ unnest 
 --------
 (0 rows)
 
@@ -103,7 +103,7 @@ SELECT unnest(ARRAY[1, 2]) FROM few WHERE false;
 explain (verbose, costs off)
 SELECT * FROM few f1,
   (SELECT unnest(ARRAY[1,2]) FROM few f2 WHERE false OFFSET 0) ss;
-                   QUERY PLAN
+                   QUERY PLAN                   
 ------------------------------------------------
  Result
    Output: f1.id, f1.dataa, f1.datab, ss.unnest
@@ -112,13 +112,13 @@ SELECT * FROM few f1,
 
 SELECT * FROM few f1,
   (SELECT unnest(ARRAY[1,2]) FROM few f2 WHERE false OFFSET 0) ss;
- id | dataa | datab | unnest
+ id | dataa | datab | unnest 
 ----+-------+-------+--------
 (0 rows)
 
 -- SRF output order of sorting is maintained, if SRF is not referenced
 SELECT few.id, generate_series(1,3) g FROM few ORDER BY id DESC;
- id | g
+ id | g 
 ----+---
   3 | 1
   3 | 2
@@ -133,7 +133,7 @@ SELECT few.id, generate_series(1,3) g FROM few ORDER BY id DESC;
 
 -- but SRFs can be referenced in sort
 SELECT few.id, generate_series(1,3) g FROM few ORDER BY id, g DESC;
- id | g
+ id | g 
 ----+---
   1 | 3
   1 | 2
@@ -147,7 +147,7 @@ SELECT few.id, generate_series(1,3) g FROM few ORDER BY id, g DESC;
 (9 rows)
 
 SELECT few.id, generate_series(1,3) g FROM few ORDER BY id, generate_series(1,3) DESC;
- id | g
+ id | g 
 ----+---
   1 | 3
   1 | 2
@@ -162,7 +162,7 @@ SELECT few.id, generate_series(1,3) g FROM few ORDER BY id, generate_series(1,3)
 
 -- it's weird to have ORDER BYs that increase the number of results
 SELECT few.id FROM few ORDER BY id, generate_series(1,3) DESC;
- id
+ id 
 ----
   1
   1
@@ -178,7 +178,7 @@ SELECT few.id FROM few ORDER BY id, generate_series(1,3) DESC;
 -- SRFs are computed after aggregation
 SET enable_hashagg TO 0; -- stable output order
 SELECT few.dataa, count(*), min(id), max(id), unnest('{1,1,3}'::int[]) FROM few WHERE few.id = 1 GROUP BY few.dataa;
- dataa | count | min | max | unnest
+ dataa | count | min | max | unnest 
 -------+-------+-----+-----+--------
  a     |     1 |   1 |   1 |      1
  a     |     1 |   1 |   1 |      1
@@ -187,14 +187,14 @@ SELECT few.dataa, count(*), min(id), max(id), unnest('{1,1,3}'::int[]) FROM few 
 
 -- unless referenced in GROUP BY clause
 SELECT few.dataa, count(*), min(id), max(id), unnest('{1,1,3}'::int[]) FROM few WHERE few.id = 1 GROUP BY few.dataa, unnest('{1,1,3}'::int[]);
- dataa | count | min | max | unnest
+ dataa | count | min | max | unnest 
 -------+-------+-----+-----+--------
  a     |     2 |   1 |   1 |      1
  a     |     1 |   1 |   1 |      3
 (2 rows)
 
 SELECT few.dataa, count(*), min(id), max(id), unnest('{1,1,3}'::int[]) FROM few WHERE few.id = 1 GROUP BY few.dataa, 5;
- dataa | count | min | max | unnest
+ dataa | count | min | max | unnest 
 -------+-------+-----+-----+--------
  a     |     2 |   1 |   1 |      1
  a     |     1 |   1 |   1 |      3
@@ -203,26 +203,26 @@ SELECT few.dataa, count(*), min(id), max(id), unnest('{1,1,3}'::int[]) FROM few 
 RESET enable_hashagg;
 -- check HAVING works when GROUP BY does [not] reference SRF output
 SELECT dataa, generate_series(1,1), count(*) FROM few GROUP BY 1 HAVING count(*) > 1;
- dataa | generate_series | count
+ dataa | generate_series | count 
 -------+-----------------+-------
  a     |               1 |     2
 (1 row)
 
 SELECT dataa, generate_series(1,1), count(*) FROM few GROUP BY 1, 2 HAVING count(*) > 1;
- dataa | generate_series | count
+ dataa | generate_series | count 
 -------+-----------------+-------
  a     |               1 |     2
 (1 row)
 
 -- it's weird to have GROUP BYs that increase the number of results
 SELECT few.dataa, count(*) FROM few WHERE dataa = 'a' GROUP BY few.dataa ORDER BY 2;
- dataa | count
+ dataa | count 
 -------+-------
  a     |     2
 (1 row)
 
 SELECT few.dataa, count(*) FROM few WHERE dataa = 'a' GROUP BY few.dataa, unnest('{1,1,3}'::int[]) ORDER BY 2;
- dataa | count
+ dataa | count 
 -------+-------
  a     |     2
  a     |     4
@@ -247,14 +247,14 @@ LINE 1: SELECT min(generate_series(1, 3)) FROM few;
 HINT:  You might be able to move the set-returning function into a LATERAL FROM item.
 -- ... unless they're within a sub-select
 SELECT sum((3 = ANY(SELECT generate_series(1,4)))::int);
- sum
+ sum 
 -----
    1
 (1 row)
 
 SELECT sum((3 = ANY(SELECT lag(x) over(order by x)
                     FROM generate_series(1,4) x))::int);
- sum
+ sum 
 -----
    1
 (1 row)
@@ -267,7 +267,7 @@ LINE 1: SELECT min(generate_series(1, 3)) OVER() FROM few;
 HINT:  You might be able to move the set-returning function into a LATERAL FROM item.
 -- SRFs are normally computed after window functions
 SELECT id,lag(id) OVER(), count(*) OVER(), generate_series(1,3) FROM few;
- id | lag | count | generate_series
+ id | lag | count | generate_series 
 ----+-----+-------+-----------------
   1 |     |     3 |               1
   1 |     |     3 |               2
@@ -282,7 +282,7 @@ SELECT id,lag(id) OVER(), count(*) OVER(), generate_series(1,3) FROM few;
 
 -- unless referencing SRFs
 SELECT SUM(count(*)) OVER(PARTITION BY generate_series(1,3) ORDER BY generate_series(1,3)), generate_series(1,3) g FROM few GROUP BY g;
- sum | g
+ sum | g 
 -----+---
    3 | 1
    3 | 2
@@ -291,7 +291,7 @@ SELECT SUM(count(*)) OVER(PARTITION BY generate_series(1,3) ORDER BY generate_se
 
 -- sorting + grouping
 SELECT few.dataa, count(*), min(id), max(id), generate_series(1,3) FROM few GROUP BY few.dataa ORDER BY 5, 1;
- dataa | count | min | max | generate_series
+ dataa | count | min | max | generate_series 
 -------+-------+-----+-----+-----------------
  a     |     2 |   1 |   2 |               1
  b     |     1 |   3 |   3 |               1
@@ -304,7 +304,7 @@ SELECT few.dataa, count(*), min(id), max(id), generate_series(1,3) FROM few GROU
 -- grouping sets are a bit special, they produce NULLs in columns not actually NULL
 set enable_hashagg = false;
 SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(dataa, datab);
- dataa |  b  | g | count
+ dataa |  b  | g | count 
 -------+-----+---+-------
  a     | bar | 1 |     1
  a     | bar | 2 |     1
@@ -325,7 +325,7 @@ SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(d
 (16 rows)
 
 SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(dataa, datab) ORDER BY dataa;
- dataa |  b  | g | count
+ dataa |  b  | g | count 
 -------+-----+---+-------
  a     | bar | 1 |     1
  a     | bar | 2 |     1
@@ -346,7 +346,7 @@ SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(d
 (16 rows)
 
 SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(dataa, datab) ORDER BY g;
- dataa |  b  | g | count
+ dataa |  b  | g | count 
 -------+-----+---+-------
  a     | bar | 1 |     1
  a     | foo | 1 |     1
@@ -367,7 +367,7 @@ SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(d
 (16 rows)
 
 SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(dataa, datab, g);
- dataa |  b  | g | count
+ dataa |  b  | g | count 
 -------+-----+---+-------
  a     | bar | 1 |     1
  a     | bar | 2 |     1
@@ -396,7 +396,7 @@ SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(d
 (24 rows)
 
 SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(dataa, datab, g) ORDER BY dataa;
- dataa |  b  | g | count
+ dataa |  b  | g | count 
 -------+-----+---+-------
  a     | foo |   |     2
  a     |     |   |     4
@@ -425,7 +425,7 @@ SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(d
 (24 rows)
 
 SELECT dataa, datab b, generate_series(1,2) g, count(*) FROM few GROUP BY CUBE(dataa, datab, g) ORDER BY g;
- dataa |  b  | g | count
+ dataa |  b  | g | count 
 -------+-----+---+-------
  a     | bar | 1 |     1
  a     | foo | 1 |     1
@@ -457,7 +457,7 @@ reset enable_hashagg;
 -- case with degenerate ORDER BY
 explain (verbose, costs off)
 select 'foo' as f, generate_series(1,2) as g from few order by 1;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  ProjectSet
    Output: 'foo'::text, generate_series(1, 2)
@@ -466,7 +466,7 @@ select 'foo' as f, generate_series(1,2) as g from few order by 1;
 (4 rows)
 
 select 'foo' as f, generate_series(1,2) as g from few order by 1;
-  f  | g
+  f  | g 
 -----+---
  foo | 1
  foo | 2
@@ -480,7 +480,7 @@ select 'foo' as f, generate_series(1,2) as g from few order by 1;
 CREATE TABLE fewmore AS SELECT generate_series(1,3) AS data;
 INSERT INTO fewmore VALUES(generate_series(4,5));
 SELECT * FROM fewmore;
- data
+ data 
 ------
     1
     2
@@ -506,14 +506,14 @@ LINE 1: VALUES(1, generate_series(1,2));
                   ^
 -- We allow tSRFs that are not at top level
 SELECT int4mul(generate_series(1,2), 10);
- int4mul
+ int4mul 
 ---------
       10
       20
 (2 rows)
 
 SELECT generate_series(1,3) IS DISTINCT FROM 2;
- ?column?
+ ?column? 
 ----------
  t
  f
@@ -531,7 +531,7 @@ LINE 1: SELECT * FROM int4mul(generate_series(1,2), 10);
 -- implicit reference (via implicit ORDER) to all columns
 SELECT DISTINCT ON (a) a, b, generate_series(1,3) g
 FROM (VALUES (3, 2), (3,1), (1,1), (1,4), (5,3), (5,1)) AS t(a, b);
- a | b | g
+ a | b | g 
 ---+---+---
  1 | 1 | 1
  3 | 2 | 1
@@ -542,7 +542,7 @@ FROM (VALUES (3, 2), (3,1), (1,1), (1,4), (5,3), (5,1)) AS t(a, b);
 SELECT DISTINCT ON (a) a, b, generate_series(1,3) g
 FROM (VALUES (3, 2), (3,1), (1,1), (1,4), (5,3), (5,1)) AS t(a, b)
 ORDER BY a, b DESC;
- a | b | g
+ a | b | g 
 ---+---+---
  1 | 4 | 1
  1 | 4 | 2
@@ -559,7 +559,7 @@ ORDER BY a, b DESC;
 SELECT DISTINCT ON (a) a, b, generate_series(1,3) g
 FROM (VALUES (3, 2), (3,1), (1,1), (1,4), (5,3), (5,1)) AS t(a, b)
 ORDER BY a, b DESC, g DESC;
- a | b | g
+ a | b | g 
 ---+---+---
  1 | 4 | 3
  3 | 2 | 3
@@ -570,7 +570,7 @@ ORDER BY a, b DESC, g DESC;
 SELECT DISTINCT ON (a, b, g) a, b, generate_series(1,3) g
 FROM (VALUES (3, 2), (3,1), (1,1), (1,4), (5,3), (5,1)) AS t(a, b)
 ORDER BY a, b DESC, g DESC;
- a | b | g
+ a | b | g 
 ---+---+---
  1 | 4 | 3
  1 | 4 | 2
@@ -595,7 +595,7 @@ ORDER BY a, b DESC, g DESC;
 -- only SRF mentioned in DISTINCT ON
 SELECT DISTINCT ON (g) a, b, generate_series(1,3) g
 FROM (VALUES (3, 2), (3,1), (1,1), (1,4), (5,3), (5,1)) AS t(a, b);
- a | b | g
+ a | b | g 
 ---+---+---
  3 | 2 | 1
  5 | 1 | 2
@@ -604,7 +604,7 @@ FROM (VALUES (3, 2), (3,1), (1,1), (1,4), (5,3), (5,1)) AS t(a, b);
 
 -- LIMIT / OFFSET is evaluated after SRF evaluation
 SELECT a, generate_series(1,2) FROM (VALUES(1),(2),(3)) r(a) LIMIT 2 OFFSET 2;
- a | generate_series
+ a | generate_series 
 ---+-----------------
  2 |               1
  2 |               2
@@ -617,27 +617,27 @@ LINE 1: SELECT 1 LIMIT generate_series(1,3);
                        ^
 -- tSRF in correlated subquery, referencing table outside
 SELECT (SELECT generate_series(1,3) LIMIT 1 OFFSET few.id) FROM few;
- generate_series
+ generate_series 
 -----------------
                2
                3
-
+                
 (3 rows)
 
 -- tSRF in correlated subquery, referencing SRF outside
 SELECT (SELECT generate_series(1,3) LIMIT 1 OFFSET g.i) FROM generate_series(0,3) g(i);
- generate_series
+ generate_series 
 -----------------
                1
                2
                3
-
+                
 (4 rows)
 
 -- Operators can return sets too
 CREATE OPERATOR |@| (PROCEDURE = unnest, RIGHTARG = ANYARRAY);
 SELECT |@|ARRAY[1,2,3];
- ?column?
+ ?column? 
 ----------
         1
         2
@@ -647,7 +647,7 @@ SELECT |@|ARRAY[1,2,3];
 -- Some fun cases involving duplicate SRF calls
 explain (verbose, costs off)
 select generate_series(1,3) as x, generate_series(1,3) + 1 as xp1;
-                            QUERY PLAN
+                            QUERY PLAN                            
 ------------------------------------------------------------------
  Result
    Output: (generate_series(1, 3)), ((generate_series(1, 3)) + 1)
@@ -657,7 +657,7 @@ select generate_series(1,3) as x, generate_series(1,3) + 1 as xp1;
 (5 rows)
 
 select generate_series(1,3) as x, generate_series(1,3) + 1 as xp1;
- x | xp1
+ x | xp1 
 ---+-----
  1 |   2
  2 |   3
@@ -666,7 +666,7 @@ select generate_series(1,3) as x, generate_series(1,3) + 1 as xp1;
 
 explain (verbose, costs off)
 select generate_series(1,3)+1 order by generate_series(1,3);
-                               QUERY PLAN
+                               QUERY PLAN                               
 ------------------------------------------------------------------------
  Sort
    Output: (((generate_series(1, 3)) + 1)), (generate_series(1, 3))
@@ -679,7 +679,7 @@ select generate_series(1,3)+1 order by generate_series(1,3);
 (8 rows)
 
 select generate_series(1,3)+1 order by generate_series(1,3);
- ?column?
+ ?column? 
 ----------
         2
         3
@@ -689,7 +689,7 @@ select generate_series(1,3)+1 order by generate_series(1,3);
 -- Check that SRFs of same nesting level run in lockstep
 explain (verbose, costs off)
 select generate_series(1,3) as x, generate_series(3,6) + 1 as y;
-                            QUERY PLAN
+                            QUERY PLAN                            
 ------------------------------------------------------------------
  Result
    Output: (generate_series(1, 3)), ((generate_series(3, 6)) + 1)
@@ -699,7 +699,7 @@ select generate_series(1,3) as x, generate_series(3,6) + 1 as y;
 (5 rows)
 
 select generate_series(1,3) as x, generate_series(3,6) + 1 as y;
- x | y
+ x | y 
 ---+---
  1 | 4
  2 | 5

@@ -30,7 +30,7 @@ ERROR:  invalid input syntax for type time with time zone: "15:36:39 MSK m2"
 LINE 1: INSERT INTO TIMETZ_TBL VALUES ('15:36:39 MSK m2');
                                        ^
 SELECT f1 AS "Time TZ" FROM TIMETZ_TBL;
-    Time TZ
+    Time TZ     
 ----------------
  00:01:00-07
  01:00:00-07
@@ -47,7 +47,7 @@ SELECT f1 AS "Time TZ" FROM TIMETZ_TBL;
 (12 rows)
 
 SELECT f1 AS "Three" FROM TIMETZ_TBL WHERE f1 < '05:06:07-07';
-    Three
+    Three    
 -------------
  00:01:00-07
  01:00:00-07
@@ -55,7 +55,7 @@ SELECT f1 AS "Three" FROM TIMETZ_TBL WHERE f1 < '05:06:07-07';
 (3 rows)
 
 SELECT f1 AS "Seven" FROM TIMETZ_TBL WHERE f1 > '05:06:07-07';
-     Seven
+     Seven      
 ----------------
  07:07:00-08
  08:08:00-04
@@ -69,12 +69,12 @@ SELECT f1 AS "Seven" FROM TIMETZ_TBL WHERE f1 > '05:06:07-07';
 (9 rows)
 
 SELECT f1 AS "None" FROM TIMETZ_TBL WHERE f1 < '00:00-07';
- None
+ None 
 ------
 (0 rows)
 
 SELECT f1 AS "Ten" FROM TIMETZ_TBL WHERE f1 >= '00:00-07';
-      Ten
+      Ten       
 ----------------
  00:01:00-07
  01:00:00-07
@@ -92,25 +92,25 @@ SELECT f1 AS "Ten" FROM TIMETZ_TBL WHERE f1 >= '00:00-07';
 
 -- Check edge cases
 SELECT '23:59:59.999999 PDT'::timetz;
-       timetz
+       timetz       
 --------------------
  23:59:59.999999-07
 (1 row)
 
 SELECT '23:59:59.9999999 PDT'::timetz;  -- rounds up
-   timetz
+   timetz    
 -------------
  24:00:00-07
 (1 row)
 
 SELECT '23:59:60 PDT'::timetz;  -- rounds up
-   timetz
+   timetz    
 -------------
  24:00:00-07
 (1 row)
 
 SELECT '24:00:00 PDT'::timetz;  -- allowed
-   timetz
+   timetz    
 -------------
  24:00:00-07
 (1 row)
@@ -133,31 +133,31 @@ LINE 1: SELECT '25:00:00 PDT'::timetz;
                ^
 -- Test non-error-throwing API
 SELECT pg_input_is_valid('12:00:00 PDT', 'timetz');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('25:00:00 PDT', 'timetz');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT pg_input_is_valid('15:36:39 America/New_York', 'timetz');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('25:00:00 PDT', 'timetz');
-                      message                       | detail | hint | sql_error_code
+                      message                       | detail | hint | sql_error_code 
 ----------------------------------------------------+--------+------+----------------
  date/time field value out of range: "25:00:00 PDT" |        |      | 22008
 (1 row)
 
 SELECT * FROM pg_input_error_info('15:36:39 America/New_York', 'timetz');
-                                    message                                     | detail | hint | sql_error_code
+                                    message                                     | detail | hint | sql_error_code 
 --------------------------------------------------------------------------------+--------+------+----------------
  invalid input syntax for type time with time zone: "15:36:39 America/New_York" |        |      | 22007
 (1 row)
@@ -179,31 +179,31 @@ HINT:  No operator matches the given name and argument types. You might need to 
 -- test EXTRACT
 --
 SELECT EXTRACT(MICROSECOND FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
- extract
+ extract  
 ----------
  25575401
 (1 row)
 
 SELECT EXTRACT(MILLISECOND FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
-  extract
+  extract  
 -----------
  25575.401
 (1 row)
 
 SELECT EXTRACT(SECOND      FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
-  extract
+  extract  
 -----------
  25.575401
 (1 row)
 
 SELECT EXTRACT(MINUTE      FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
- extract
+ extract 
 ---------
       30
 (1 row)
 
 SELECT EXTRACT(HOUR        FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
- extract
+ extract 
 ---------
       13
 (1 row)
@@ -213,25 +213,25 @@ ERROR:  unit "day" not supported for type time with time zone
 SELECT EXTRACT(FORTNIGHT   FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');  -- error
 ERROR:  unit "fortnight" not recognized for type time with time zone
 SELECT EXTRACT(TIMEZONE    FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04:30');
- extract
+ extract 
 ---------
   -16200
 (1 row)
 
 SELECT EXTRACT(TIMEZONE_HOUR   FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04:30');
- extract
+ extract 
 ---------
       -4
 (1 row)
 
 SELECT EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04:30');
- extract
+ extract 
 ---------
      -30
 (1 row)
 
 SELECT EXTRACT(EPOCH       FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
-   extract
+   extract    
 --------------
  63025.575401
 (1 row)
@@ -239,25 +239,25 @@ SELECT EXTRACT(EPOCH       FROM TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-
 -- date_part implementation is mostly the same as extract, so only
 -- test a few cases for additional coverage.
 SELECT date_part('microsecond', TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
- date_part
+ date_part 
 -----------
   25575401
 (1 row)
 
 SELECT date_part('millisecond', TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
- date_part
+ date_part 
 -----------
  25575.401
 (1 row)
 
 SELECT date_part('second',      TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
- date_part
+ date_part 
 -----------
  25.575401
 (1 row)
 
 SELECT date_part('epoch',       TIME WITH TIME ZONE '2020-05-26 13:30:25.575401-04');
-  date_part
+  date_part   
 --------------
  63025.575401
 (1 row)
@@ -274,7 +274,7 @@ CREATE VIEW timetz_local_view AS
   FROM TIMETZ_TBL
   ORDER BY f1;
 SELECT pg_get_viewdef('timetz_local_view', true);
-                            pg_get_viewdef
+                            pg_get_viewdef                             
 -----------------------------------------------------------------------
   SELECT f1 AS dat,                                                   +
      (f1 AT TIME ZONE current_setting('TimeZone'::text)) AS dat_at_tz,+
@@ -284,7 +284,7 @@ SELECT pg_get_viewdef('timetz_local_view', true);
 (1 row)
 
 TABLE timetz_local_view;
-      dat       |   dat_at_tz    |   dat_at_int
+      dat       |   dat_at_tz    |   dat_at_int   
 ----------------+----------------+----------------
  00:01:00-07    | 07:01:00+00    | 07:01:00+00
  01:00:00-07    | 08:00:00+00    | 08:00:00+00
@@ -305,7 +305,7 @@ SELECT f1 AS dat,
        f1 AT TIME ZONE INTERVAL '-10:00' AS dat_at_int
   FROM TIMETZ_TBL
   ORDER BY f1;
-      dat       |   dat_at_tz    |   dat_at_int
+      dat       |   dat_at_tz    |   dat_at_int   
 ----------------+----------------+----------------
  00:01:00-07    | 21:01:00-10    | 21:01:00-10
  01:00:00-07    | 22:00:00-10    | 22:00:00-10

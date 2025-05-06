@@ -5,19 +5,20 @@ CREATE EXTENSION test_lfind;
 -- internal sanity tests fail.
 --
 SELECT test_lfind8();
- test_lfind8
+ test_lfind8 
 -------------
-
+ 
 (1 row)
 
 SELECT test_lfind8_le();
- test_lfind8_le
+ test_lfind8_le 
 ----------------
-
+ 
 (1 row)
 
 SELECT test_lfind32();
- test_lfind32
+ test_lfind32 
 --------------
-
+ 
 (1 row)
+

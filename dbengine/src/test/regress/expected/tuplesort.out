@@ -32,7 +32,7 @@ INSERT INTO abbrev_abort_uuids (abort_increasing, abort_decreasing, noabort_incr
 ----
 -- plain sort triggering abbreviated abort
 SELECT abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort_increasing OFFSET 20000 - 4;
-           abort_increasing           |           abort_decreasing
+           abort_increasing           |           abort_decreasing           
 --------------------------------------+--------------------------------------
  00000000-0000-0000-0000-000000019992 | 00000000-0000-0000-0000-000000000008
  00000000-0000-0000-0000-000000019993 | 00000000-0000-0000-0000-000000000007
@@ -46,13 +46,13 @@ SELECT abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort
  00000000-0000-0000-0000-000000019999 | 00000000-0000-0000-0000-000000000001
  00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
  00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
-                                      |
-                                      |
-                                      |
+                                      | 
+                                      | 
+                                      | 
 (15 rows)
 
 SELECT abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort_decreasing NULLS FIRST OFFSET 20000 - 4;
-           abort_increasing           |           abort_decreasing
+           abort_increasing           |           abort_decreasing           
 --------------------------------------+--------------------------------------
  00000000-0000-0000-0000-000000000011 | 00000000-0000-0000-0000-000000019989
  00000000-0000-0000-0000-000000000010 | 00000000-0000-0000-0000-000000019990
@@ -73,7 +73,7 @@ SELECT abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort
 
 -- plain sort not triggering abbreviated abort
 SELECT noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_increasing OFFSET 20000 - 4;
-          noabort_increasing          |          noabort_decreasing
+          noabort_increasing          |          noabort_decreasing          
 --------------------------------------+--------------------------------------
  00009997-0000-0000-0000-000000009997 | 00010003-0000-0000-0000-000000010003
  00009998-0000-0000-0000-000000009998 | 00010002-0000-0000-0000-000000010002
@@ -87,13 +87,13 @@ SELECT noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY n
  00010006-0000-0000-0000-000000010006 | 00009994-0000-0000-0000-000000009994
  00010007-0000-0000-0000-000000010007 | 00009993-0000-0000-0000-000000009993
  00010008-0000-0000-0000-000000010008 | 00009992-0000-0000-0000-000000009992
-                                      |
-                                      |
-                                      |
+                                      | 
+                                      | 
+                                      | 
 (15 rows)
 
 SELECT noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_decreasing NULLS FIRST OFFSET 20000 - 4;
-          noabort_increasing          |          noabort_decreasing
+          noabort_increasing          |          noabort_decreasing          
 --------------------------------------+--------------------------------------
  00010006-0000-0000-0000-000000010006 | 00009994-0000-0000-0000-000000009994
  00010005-0000-0000-0000-000000010005 | 00009995-0000-0000-0000-000000009995
@@ -114,7 +114,7 @@ SELECT noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY n
 
 -- bounded sort (disables abbreviated keys)
 SELECT abort_increasing, noabort_increasing FROM abbrev_abort_uuids ORDER BY abort_increasing LIMIT 5;
-           abort_increasing           |          noabort_increasing
+           abort_increasing           |          noabort_increasing          
 --------------------------------------+--------------------------------------
  00000000-0000-0000-0000-000000000000 | 00000000-0000-0000-0000-000000000000
  00000000-0000-0000-0000-000000000001 | 00000001-0000-0000-0000-000000000001
@@ -124,11 +124,11 @@ SELECT abort_increasing, noabort_increasing FROM abbrev_abort_uuids ORDER BY abo
 (5 rows)
 
 SELECT abort_increasing, noabort_increasing FROM abbrev_abort_uuids ORDER BY noabort_increasing NULLS FIRST LIMIT 5;
-           abort_increasing           |          noabort_increasing
+           abort_increasing           |          noabort_increasing          
 --------------------------------------+--------------------------------------
-                                      |
-                                      |
-                                      |
+                                      | 
+                                      | 
+                                      | 
  00000000-0000-0000-0000-000000000000 | 00000000-0000-0000-0000-000000000000
  00000000-0000-0000-0000-000000010009 | 00000000-0000-0000-0000-000000010009
 (5 rows)
@@ -142,14 +142,14 @@ CREATE INDEX abbrev_abort_uuids__noabort_decreasing_idx ON abbrev_abort_uuids (n
 -- verify
 EXPLAIN (COSTS OFF)
 SELECT id, noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_increasing LIMIT 5;
-                                       QUERY PLAN
+                                       QUERY PLAN                                        
 -----------------------------------------------------------------------------------------
  Limit
    ->  Index Scan using abbrev_abort_uuids__noabort_increasing_idx on abbrev_abort_uuids
 (2 rows)
 
 SELECT id, noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_increasing LIMIT 5;
-  id   |          noabort_increasing          |          noabort_decreasing
+  id   |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------
      1 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000
  10010 | 00000000-0000-0000-0000-000000010009 | 00009991-0000-0000-0000-000000009991
@@ -160,14 +160,14 @@ SELECT id, noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER 
 
 EXPLAIN (COSTS OFF)
 SELECT id, noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_decreasing LIMIT 5;
-                                       QUERY PLAN
+                                       QUERY PLAN                                        
 -----------------------------------------------------------------------------------------
  Limit
    ->  Index Scan using abbrev_abort_uuids__noabort_decreasing_idx on abbrev_abort_uuids
 (2 rows)
 
 SELECT id, noabort_increasing, noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_decreasing LIMIT 5;
-  id   |          noabort_increasing          |          noabort_decreasing
+  id   |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------
  20001 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
  20010 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
@@ -182,14 +182,14 @@ CREATE INDEX abbrev_abort_uuids__abort_decreasing_idx ON abbrev_abort_uuids (abo
 -- verify
 EXPLAIN (COSTS OFF)
 SELECT id, abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort_increasing LIMIT 5;
-                                      QUERY PLAN
+                                      QUERY PLAN                                       
 ---------------------------------------------------------------------------------------
  Limit
    ->  Index Scan using abbrev_abort_uuids__abort_increasing_idx on abbrev_abort_uuids
 (2 rows)
 
 SELECT id, abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort_increasing LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           
 -------+--------------------------------------+--------------------------------------
      1 | 00000000-0000-0000-0000-000000000000 | 00000000-0000-0000-0000-000000020000
      2 | 00000000-0000-0000-0000-000000000001 | 00000000-0000-0000-0000-000000019999
@@ -200,14 +200,14 @@ SELECT id, abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY a
 
 EXPLAIN (COSTS OFF)
 SELECT id, abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort_decreasing LIMIT 5;
-                                      QUERY PLAN
+                                      QUERY PLAN                                       
 ---------------------------------------------------------------------------------------
  Limit
    ->  Index Scan using abbrev_abort_uuids__abort_decreasing_idx on abbrev_abort_uuids
 (2 rows)
 
 SELECT id, abort_increasing, abort_decreasing FROM abbrev_abort_uuids ORDER BY abort_decreasing LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           
 -------+--------------------------------------+--------------------------------------
  20001 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
  20010 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
@@ -227,7 +227,7 @@ CLUSTER abbrev_abort_uuids USING abbrev_abort_uuids__abort_increasing_idx;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
      1 | 00000000-0000-0000-0000-000000000000 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000
      2 | 00000000-0000-0000-0000-000000000001 | 00000000-0000-0000-0000-000000019999 | 00000001-0000-0000-0000-000000000001 | 00009990-0000-0000-0000-000000019999
@@ -240,11 +240,11 @@ ORDER BY ctid LIMIT 5;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid DESC LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
-     0 |                                      |                                      |                                      |
- 20002 |                                      |                                      |                                      |
- 20003 |                                      |                                      |                                      |
+     0 |                                      |                                      |                                      | 
+ 20002 |                                      |                                      |                                      | 
+ 20003 |                                      |                                      |                                      | 
  20001 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
  20010 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
 (5 rows)
@@ -258,7 +258,7 @@ CLUSTER abbrev_abort_uuids USING abbrev_abort_uuids__abort_decreasing_idx;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
  20010 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
  20001 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
@@ -271,11 +271,11 @@ ORDER BY ctid LIMIT 5;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid DESC LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
-     0 |                                      |                                      |                                      |
- 20002 |                                      |                                      |                                      |
- 20003 |                                      |                                      |                                      |
+     0 |                                      |                                      |                                      | 
+ 20002 |                                      |                                      |                                      | 
+ 20003 |                                      |                                      |                                      | 
      1 | 00000000-0000-0000-0000-000000000000 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000
      2 | 00000000-0000-0000-0000-000000000001 | 00000000-0000-0000-0000-000000019999 | 00000001-0000-0000-0000-000000000001 | 00009990-0000-0000-0000-000000019999
 (5 rows)
@@ -289,7 +289,7 @@ CLUSTER abbrev_abort_uuids USING abbrev_abort_uuids__noabort_increasing_idx;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
      1 | 00000000-0000-0000-0000-000000000000 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000
  10010 | 00000000-0000-0000-0000-000000010009 | 00000000-0000-0000-0000-000000009991 | 00000000-0000-0000-0000-000000010009 | 00009991-0000-0000-0000-000000009991
@@ -302,11 +302,11 @@ ORDER BY ctid LIMIT 5;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid DESC LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
-     0 |                                      |                                      |                                      |
- 20002 |                                      |                                      |                                      |
- 20003 |                                      |                                      |                                      |
+     0 |                                      |                                      |                                      | 
+ 20002 |                                      |                                      |                                      | 
+ 20003 |                                      |                                      |                                      | 
  10009 | 00000000-0000-0000-0000-000000010008 | 00000000-0000-0000-0000-000000009992 | 00010008-0000-0000-0000-000000010008 | 00009992-0000-0000-0000-000000009992
  10008 | 00000000-0000-0000-0000-000000010007 | 00000000-0000-0000-0000-000000009993 | 00010007-0000-0000-0000-000000010007 | 00009993-0000-0000-0000-000000009993
 (5 rows)
@@ -320,7 +320,7 @@ CLUSTER abbrev_abort_uuids USING abbrev_abort_uuids__noabort_decreasing_idx;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
  20010 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
  20001 | 00000000-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000 | 00009991-0000-0000-0000-000000020000 | 00000000-0000-0000-0000-000000000000
@@ -333,11 +333,11 @@ ORDER BY ctid LIMIT 5;
 SELECT id, abort_increasing, abort_decreasing, noabort_increasing, noabort_decreasing
 FROM abbrev_abort_uuids
 ORDER BY ctid DESC LIMIT 5;
-  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing
+  id   |           abort_increasing           |           abort_decreasing           |          noabort_increasing          |          noabort_decreasing          
 -------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------
-     0 |                                      |                                      |                                      |
- 20003 |                                      |                                      |                                      |
- 20002 |                                      |                                      |                                      |
+     0 |                                      |                                      |                                      | 
+ 20003 |                                      |                                      |                                      | 
+ 20002 |                                      |                                      |                                      | 
   9993 | 00000000-0000-0000-0000-000000009992 | 00000000-0000-0000-0000-000000010008 | 00009992-0000-0000-0000-000000009992 | 00010008-0000-0000-0000-000000010008
   9994 | 00000000-0000-0000-0000-000000009993 | 00000000-0000-0000-0000-000000010007 | 00009993-0000-0000-0000-000000009993 | 00010007-0000-0000-0000-000000010007
 (5 rows)
@@ -352,7 +352,7 @@ SET LOCAL enable_indexscan = false;
 -- unfortunately can't show analyze output confirming sort method,
 -- the memory used output wouldn't be stable
 EXPLAIN (COSTS OFF) DECLARE c SCROLL CURSOR FOR SELECT noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_decreasing;
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  Sort
    Sort Key: noabort_decreasing
@@ -362,82 +362,82 @@ EXPLAIN (COSTS OFF) DECLARE c SCROLL CURSOR FOR SELECT noabort_decreasing FROM a
 DECLARE c SCROLL CURSOR FOR SELECT noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_decreasing;
 -- first and second
 FETCH NEXT FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 FETCH NEXT FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 -- scroll beyond beginning
 FETCH BACKWARD FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH NEXT FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 -- scroll beyond end end
 FETCH LAST FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
@@ -449,7 +449,7 @@ SET LOCAL work_mem = '100kB';
 -- unfortunately can't show analyze output confirming sort method,
 -- the memory used output wouldn't be stable
 EXPLAIN (COSTS OFF) DECLARE c SCROLL CURSOR FOR SELECT noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_decreasing;
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  Sort
    Sort Key: noabort_decreasing
@@ -459,82 +459,82 @@ EXPLAIN (COSTS OFF) DECLARE c SCROLL CURSOR FOR SELECT noabort_decreasing FROM a
 DECLARE c SCROLL CURSOR FOR SELECT noabort_decreasing FROM abbrev_abort_uuids ORDER BY noabort_decreasing;
 -- first and second
 FETCH NEXT FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 FETCH NEXT FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 -- scroll beyond beginning
 FETCH BACKWARD FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH NEXT FROM c;
-          noabort_decreasing
+          noabort_decreasing          
 --------------------------------------
  00000000-0000-0000-0000-000000000000
 (1 row)
 
 -- scroll beyond end end
 FETCH LAST FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
 FETCH BACKWARD FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
-
+ 
 (1 row)
 
 FETCH NEXT FROM c;
- noabort_decreasing
+ noabort_decreasing 
 --------------------
 (0 rows)
 
@@ -564,7 +564,7 @@ FROM (
     SELECT * FROM abbrev_abort_uuids
     UNION ALL
     SELECT NULL, NULL, NULL, NULL, NULL) s;
-           array_agg            |                                                                                         array_agg                                                                                          |         array_agg          | percentile_disc | percentile_disc |           percentile_disc            | percentile_disc | rank
+           array_agg            |                                                                                         array_agg                                                                                          |         array_agg          | percentile_disc | percentile_disc |           percentile_disc            | percentile_disc | rank 
 --------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+-----------------+-----------------+--------------------------------------+-----------------+------
  {NULL,20010,20009,20008,20007} | {00000000-0000-0000-0000-000000020000,00000000-0000-0000-0000-000000020000,00000000-0000-0000-0000-000000019999,00000000-0000-0000-0000-000000019998,00000000-0000-0000-0000-000000019997} | {9999,9998,9997,9996,9995} |           19810 |             200 | 00000000-0000-0000-0000-000000016003 | 136             |    2
 (1 row)
@@ -585,7 +585,7 @@ FROM (
     SELECT * FROM abbrev_abort_uuids
     UNION ALL
     SELECT NULL, NULL, NULL, NULL, NULL) s;
-           array_agg            |                                                                                         array_agg                                                                                          |         array_agg          | percentile_disc | percentile_disc |           percentile_disc            | percentile_disc | rank
+           array_agg            |                                                                                         array_agg                                                                                          |         array_agg          | percentile_disc | percentile_disc |           percentile_disc            | percentile_disc | rank 
 --------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+-----------------+-----------------+--------------------------------------+-----------------+------
  {NULL,20010,20009,20008,20007} | {00000000-0000-0000-0000-000000020000,00000000-0000-0000-0000-000000020000,00000000-0000-0000-0000-000000019999,00000000-0000-0000-0000-000000019998,00000000-0000-0000-0000-000000019997} | {9999,9998,9997,9996,9995} |           19810 |             200 | 00000000-0000-0000-0000-000000016003 | 136             |    2
 (1 row)
@@ -614,7 +614,7 @@ SELECT $$
 $$ AS qry \gset
 -- test mark/restore with in-memory sorts
 EXPLAIN (COSTS OFF) :qry;
-                                                                                 QUERY PLAN
+                                                                                 QUERY PLAN                                                                                  
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Limit
    ->  Sort
@@ -636,7 +636,7 @@ EXPLAIN (COSTS OFF) :qry;
 (17 rows)
 
 :qry;
- col12 | count | count | count | count | count
+ col12 | count | count | count | count | count 
 -------+-------+-------+-------+-------+-------
    480 |     5 |     5 |     5 |     5 |    25
    420 |     5 |     5 |     5 |     5 |    25
@@ -653,7 +653,7 @@ EXPLAIN (COSTS OFF) :qry;
 -- test mark/restore with on-disk sorts
 SET LOCAL work_mem = '100kB';
 EXPLAIN (COSTS OFF) :qry;
-                                                                                 QUERY PLAN
+                                                                                 QUERY PLAN                                                                                  
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Limit
    ->  Sort
@@ -675,7 +675,7 @@ EXPLAIN (COSTS OFF) :qry;
 (17 rows)
 
 :qry;
- col12 | count | count | count | count | count
+ col12 | count | count | count | count | count 
 -------+-------+-------+-------+-------+-------
    480 |     5 |     5 |     5 |     5 |    25
    420 |     5 |     5 |     5 |     5 |    25

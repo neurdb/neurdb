@@ -19,7 +19,7 @@ INSERT INTO empsalary VALUES
 ('develop', 8, 6000, '2006-10-01'),
 ('develop', 11, 5200, '2007-08-15');
 SELECT depname, empno, salary, sum(salary) OVER (PARTITION BY depname) FROM empsalary ORDER BY depname, salary;
-  depname  | empno | salary |  sum
+  depname  | empno | salary |  sum  
 -----------+-------+--------+-------
  develop   |     7 |   4200 | 25100
  develop   |     9 |   4500 | 25100
@@ -34,7 +34,7 @@ SELECT depname, empno, salary, sum(salary) OVER (PARTITION BY depname) FROM emps
 (10 rows)
 
 SELECT depname, empno, salary, rank() OVER (PARTITION BY depname ORDER BY salary) FROM empsalary;
-  depname  | empno | salary | rank
+  depname  | empno | salary | rank 
 -----------+-------+--------+------
  develop   |     7 |   4200 |    1
  develop   |     9 |   4500 |    2
@@ -51,7 +51,7 @@ SELECT depname, empno, salary, rank() OVER (PARTITION BY depname ORDER BY salary
 -- with GROUP BY
 SELECT four, ten, SUM(SUM(four)) OVER (PARTITION BY four), AVG(ten) FROM tenk1
 GROUP BY four, ten ORDER BY four, ten;
- four | ten | sum  |          avg
+ four | ten | sum  |          avg           
 ------+-----+------+------------------------
     0 |   0 |    0 | 0.00000000000000000000
     0 |   2 |    0 |     2.0000000000000000
@@ -76,7 +76,7 @@ GROUP BY four, ten ORDER BY four, ten;
 (20 rows)
 
 SELECT depname, empno, salary, sum(salary) OVER w FROM empsalary WINDOW w AS (PARTITION BY depname);
-  depname  | empno | salary |  sum
+  depname  | empno | salary |  sum  
 -----------+-------+--------+-------
  develop   |    11 |   5200 | 25100
  develop   |     7 |   4200 | 25100
@@ -91,7 +91,7 @@ SELECT depname, empno, salary, sum(salary) OVER w FROM empsalary WINDOW w AS (PA
 (10 rows)
 
 SELECT depname, empno, salary, rank() OVER w FROM empsalary WINDOW w AS (PARTITION BY depname ORDER BY salary) ORDER BY rank() OVER w;
-  depname  | empno | salary | rank
+  depname  | empno | salary | rank 
 -----------+-------+--------+------
  develop   |     7 |   4200 |    1
  personnel |     5 |   3500 |    1
@@ -107,7 +107,7 @@ SELECT depname, empno, salary, rank() OVER w FROM empsalary WINDOW w AS (PARTITI
 
 -- empty window specification
 SELECT COUNT(*) OVER () FROM tenk1 WHERE unique2 < 10;
- count
+ count 
 -------
     10
     10
@@ -122,7 +122,7 @@ SELECT COUNT(*) OVER () FROM tenk1 WHERE unique2 < 10;
 (10 rows)
 
 SELECT COUNT(*) OVER w FROM tenk1 WHERE unique2 < 10 WINDOW w AS ();
- count
+ count 
 -------
     10
     10
@@ -138,13 +138,13 @@ SELECT COUNT(*) OVER w FROM tenk1 WHERE unique2 < 10 WINDOW w AS ();
 
 -- no window operation
 SELECT four FROM tenk1 WHERE FALSE WINDOW w AS (PARTITION BY ten);
- four
+ four 
 ------
 (0 rows)
 
 -- cumulative aggregate
 SELECT sum(four) OVER (PARTITION BY ten ORDER BY unique2) AS sum_1, ten, four FROM tenk1 WHERE unique2 < 10;
- sum_1 | ten | four
+ sum_1 | ten | four 
 -------+-----+------
      0 |   0 |    0
      0 |   0 |    0
@@ -159,7 +159,7 @@ SELECT sum(four) OVER (PARTITION BY ten ORDER BY unique2) AS sum_1, ten, four FR
 (10 rows)
 
 SELECT row_number() OVER (ORDER BY unique2) FROM tenk1 WHERE unique2 < 10;
- row_number
+ row_number 
 ------------
           1
           2
@@ -174,7 +174,7 @@ SELECT row_number() OVER (ORDER BY unique2) FROM tenk1 WHERE unique2 < 10;
 (10 rows)
 
 SELECT rank() OVER (PARTITION BY four ORDER BY ten) AS rank_1, ten, four FROM tenk1 WHERE unique2 < 10;
- rank_1 | ten | four
+ rank_1 | ten | four 
 --------+-----+------
       1 |   0 |    0
       1 |   0 |    0
@@ -189,7 +189,7 @@ SELECT rank() OVER (PARTITION BY four ORDER BY ten) AS rank_1, ten, four FROM te
 (10 rows)
 
 SELECT dense_rank() OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- dense_rank | ten | four
+ dense_rank | ten | four 
 ------------+-----+------
           1 |   0 |    0
           1 |   0 |    0
@@ -204,7 +204,7 @@ SELECT dense_rank() OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 
 (10 rows)
 
 SELECT percent_rank() OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
-    percent_rank    | ten | four
+    percent_rank    | ten | four 
 --------------------+-----+------
                   0 |   0 |    0
                   0 |   0 |    0
@@ -219,7 +219,7 @@ SELECT percent_rank() OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk
 (10 rows)
 
 SELECT cume_dist() OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
-     cume_dist      | ten | four
+     cume_dist      | ten | four 
 --------------------+-----+------
  0.6666666666666666 |   0 |    0
  0.6666666666666666 |   0 |    0
@@ -234,7 +234,7 @@ SELECT cume_dist() OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 W
 (10 rows)
 
 SELECT ntile(3) OVER (ORDER BY ten, four), ten, four FROM tenk1 WHERE unique2 < 10;
- ntile | ten | four
+ ntile | ten | four 
 -------+-----+------
      1 |   0 |    0
      1 |   0 |    0
@@ -249,14 +249,14 @@ SELECT ntile(3) OVER (ORDER BY ten, four), ten, four FROM tenk1 WHERE unique2 < 
 (10 rows)
 
 SELECT ntile(NULL) OVER (ORDER BY ten, four), ten, four FROM tenk1 LIMIT 2;
- ntile | ten | four
+ ntile | ten | four 
 -------+-----+------
        |   0 |    0
        |   0 |    0
 (2 rows)
 
 SELECT lag(ten) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- lag | ten | four
+ lag | ten | four 
 -----+-----+------
      |   0 |    0
    0 |   0 |    0
@@ -271,7 +271,7 @@ SELECT lag(ten) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHER
 (10 rows)
 
 SELECT lag(ten, four) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- lag | ten | four
+ lag | ten | four 
 -----+-----+------
    0 |   0 |    0
    0 |   0 |    0
@@ -286,7 +286,7 @@ SELECT lag(ten, four) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk
 (10 rows)
 
 SELECT lag(ten, four, 0) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- lag | ten | four
+ lag | ten | four 
 -----+-----+------
    0 |   0 |    0
    0 |   0 |    0
@@ -301,7 +301,7 @@ SELECT lag(ten, four, 0) OVER (PARTITION BY four ORDER BY ten), ten, four FROM t
 (10 rows)
 
 SELECT lag(ten, four, 0.7) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten;
- lag | ten | four
+ lag | ten | four 
 -----+-----+------
    0 |   0 |    0
    0 |   0 |    0
@@ -316,7 +316,7 @@ SELECT lag(ten, four, 0.7) OVER (PARTITION BY four ORDER BY ten), ten, four FROM
 (10 rows)
 
 SELECT lead(ten) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- lead | ten | four
+ lead | ten | four 
 ------+-----+------
     0 |   0 |    0
     4 |   0 |    0
@@ -331,7 +331,7 @@ SELECT lead(ten) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHE
 (10 rows)
 
 SELECT lead(ten * 2, 1) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- lead | ten | four
+ lead | ten | four 
 ------+-----+------
     0 |   0 |    0
     8 |   0 |    0
@@ -346,7 +346,7 @@ SELECT lead(ten * 2, 1) OVER (PARTITION BY four ORDER BY ten), ten, four FROM te
 (10 rows)
 
 SELECT lead(ten * 2, 1, -1) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- lead | ten | four
+ lead | ten | four 
 ------+-----+------
     0 |   0 |    0
     8 |   0 |    0
@@ -361,7 +361,7 @@ SELECT lead(ten * 2, 1, -1) OVER (PARTITION BY four ORDER BY ten), ten, four FRO
 (10 rows)
 
 SELECT lead(ten * 2, 1, -1.4) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten;
- lead | ten | four
+ lead | ten | four 
 ------+-----+------
     0 |   0 |    0
     8 |   0 |    0
@@ -376,7 +376,7 @@ SELECT lead(ten * 2, 1, -1.4) OVER (PARTITION BY four ORDER BY ten), ten, four F
 (10 rows)
 
 SELECT first_value(ten) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- first_value | ten | four
+ first_value | ten | four 
 -------------+-----+------
            0 |   0 |    0
            0 |   0 |    0
@@ -392,7 +392,7 @@ SELECT first_value(ten) OVER (PARTITION BY four ORDER BY ten), ten, four FROM te
 
 -- last_value returns the last row of the frame, which is CURRENT ROW in ORDER BY window.
 SELECT last_value(four) OVER (ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10;
- last_value | ten | four
+ last_value | ten | four 
 ------------+-----+------
           0 |   0 |    0
           0 |   0 |    2
@@ -409,7 +409,7 @@ SELECT last_value(four) OVER (ORDER BY ten), ten, four FROM tenk1 WHERE unique2 
 SELECT last_value(ten) OVER (PARTITION BY four), ten, four FROM
 	(SELECT * FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten)s
 	ORDER BY four, ten;
- last_value | ten | four
+ last_value | ten | four 
 ------------+-----+------
           4 |   0 |    0
           4 |   0 |    0
@@ -425,7 +425,7 @@ SELECT last_value(ten) OVER (PARTITION BY four), ten, four FROM
 
 SELECT nth_value(ten, four + 1) OVER (PARTITION BY four), ten, four
 	FROM (SELECT * FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten)s;
- nth_value | ten | four
+ nth_value | ten | four 
 -----------+-----+------
          0 |   0 |    0
          0 |   0 |    0
@@ -441,7 +441,7 @@ SELECT nth_value(ten, four + 1) OVER (PARTITION BY four), ten, four
 
 SELECT ten, two, sum(hundred) AS gsum, sum(sum(hundred)) OVER (PARTITION BY two ORDER BY ten) AS wsum
 FROM tenk1 GROUP BY ten, two;
- ten | two | gsum  |  wsum
+ ten | two | gsum  |  wsum  
 -----+-----+-------+--------
    0 |   0 | 45000 |  45000
    2 |   0 | 47000 |  92000
@@ -456,7 +456,7 @@ FROM tenk1 GROUP BY ten, two;
 (10 rows)
 
 SELECT count(*) OVER (PARTITION BY four), four FROM (SELECT * FROM tenk1 WHERE two = 1)s WHERE unique2 < 10;
- count | four
+ count | four 
 -------+------
      4 |    1
      4 |    1
@@ -469,7 +469,7 @@ SELECT count(*) OVER (PARTITION BY four), four FROM (SELECT * FROM tenk1 WHERE t
 SELECT (count(*) OVER (PARTITION BY four ORDER BY ten) +
   sum(hundred) OVER (PARTITION BY four ORDER BY ten))::varchar AS cntsum
   FROM tenk1 WHERE unique2 < 10;
- cntsum
+ cntsum 
 --------
  22
  22
@@ -492,12 +492,12 @@ SELECT * FROM(
     FROM tenk1
 )sub
 WHERE total <> fourcount + twosum;
- total | fourcount | twosum
+ total | fourcount | twosum 
 -------+-----------+--------
 (0 rows)
 
 SELECT avg(four) OVER (PARTITION BY four ORDER BY thousand / 100) FROM tenk1 WHERE unique2 < 10;
-          avg
+          avg           
 ------------------------
  0.00000000000000000000
  0.00000000000000000000
@@ -513,7 +513,7 @@ SELECT avg(four) OVER (PARTITION BY four ORDER BY thousand / 100) FROM tenk1 WHE
 
 SELECT ten, two, sum(hundred) AS gsum, sum(sum(hundred)) OVER win AS wsum
 FROM tenk1 GROUP BY ten, two WINDOW win AS (PARTITION BY two ORDER BY ten);
- ten | two | gsum  |  wsum
+ ten | two | gsum  |  wsum  
 -----+-----+-------+--------
    0 |   0 | 45000 |  45000
    2 |   0 | 47000 |  92000
@@ -532,7 +532,7 @@ SELECT sum(salary),
 	row_number() OVER (ORDER BY depname),
 	sum(sum(salary)) OVER (ORDER BY depname DESC)
 FROM empsalary GROUP BY depname;
-  sum  | row_number |  sum
+  sum  | row_number |  sum  
 -------+------------+-------
  25100 |          1 | 47100
   7400 |          2 | 22000
@@ -542,7 +542,7 @@ FROM empsalary GROUP BY depname;
 -- identical windows with different names
 SELECT sum(salary) OVER w1, count(*) OVER w2
 FROM empsalary WINDOW w1 AS (ORDER BY salary), w2 AS (ORDER BY salary);
-  sum  | count
+  sum  | count 
 -------+-------
   3500 |     1
   7400 |     2
@@ -559,7 +559,7 @@ FROM empsalary WINDOW w1 AS (ORDER BY salary), w2 AS (ORDER BY salary);
 -- subplan
 SELECT lead(ten, (SELECT two FROM tenk1 WHERE s.unique2 = unique2)) OVER (PARTITION BY four ORDER BY ten)
 FROM tenk1 s WHERE unique2 < 10;
- lead
+ lead 
 ------
     0
     0
@@ -567,21 +567,21 @@ FROM tenk1 s WHERE unique2 < 10;
     1
     7
     9
-
+     
     0
     3
-
+     
 (10 rows)
 
 -- empty table
 SELECT count(*) OVER (PARTITION BY four) FROM (SELECT * FROM tenk1 WHERE FALSE)s;
- count
+ count 
 -------
 (0 rows)
 
 -- mixture of agg/wfunc in the same window
 SELECT sum(salary) OVER w, rank() OVER w FROM empsalary WINDOW w AS (PARTITION BY depname ORDER BY salary DESC);
-  sum  | rank
+  sum  | rank 
 -------+------
   6000 |    1
  16400 |    2
@@ -603,7 +603,7 @@ SELECT empno, depname, salary, bonus, depadj, MIN(bonus) OVER (ORDER BY empno), 
 			AVG(salary) OVER (PARTITION BY depname) < salary
 		THEN 200 END AS depadj FROM empsalary
 )s;
- empno |  depname  | salary | bonus | depadj | min  | max
+ empno |  depname  | salary | bonus | depadj | min  | max 
 -------+-----------+--------+-------+--------+------+-----
      1 | sales     |   5000 |  1000 |    200 | 1000 | 200
      2 | personnel |   3900 |  1000 |    200 | 1000 | 200
@@ -619,7 +619,7 @@ SELECT empno, depname, salary, bonus, depadj, MIN(bonus) OVER (ORDER BY empno), 
 
 -- window function over ungrouped agg over empty row set (bug before 9.1)
 SELECT SUM(COUNT(f1)) OVER () FROM int4_tbl WHERE f1=42;
- sum
+ sum 
 -----
    0
 (1 row)
@@ -630,7 +630,7 @@ select ten,
   rank() over (order by sum(unique1) + sum(unique2)) as rank
 from tenk1
 group by ten order by ten;
- ten |   res    | rank
+ ten |   res    | rank 
 -----+----------+------
    0 |  9976146 |    4
    1 | 10114187 |    9
@@ -649,7 +649,7 @@ explain (costs off)
 select first_value(max(x)) over (), y
   from (select unique1 as x, ten+four as y from tenk1) ss
   group by y;
-                 QUERY PLAN
+                 QUERY PLAN                  
 ---------------------------------------------
  WindowAgg
    ->  HashAggregate
@@ -660,7 +660,7 @@ select first_value(max(x)) over (), y
 -- window functions returning pass-by-ref values from different rows
 select x, lag(x, 1) over (order by x), lead(x, 3) over (order by x)
 from (select x::numeric as x from generate_series(1,10) x);
- x  | lag | lead
+ x  | lag | lead 
 ----+-----+------
   1 |     |    4
   2 |   1 |    5
@@ -669,9 +669,9 @@ from (select x::numeric as x from generate_series(1,10) x);
   5 |   4 |    8
   6 |   5 |    9
   7 |   6 |   10
-  8 |   7 |
-  9 |   8 |
- 10 |   9 |
+  8 |   7 |     
+  9 |   8 |     
+ 10 |   9 |     
 (10 rows)
 
 -- test non-default frame specifications
@@ -679,7 +679,7 @@ SELECT four, ten,
 	sum(ten) over (partition by four order by ten),
 	last_value(ten) over (partition by four order by ten)
 FROM (select distinct ten, four from tenk1) ss;
- four | ten | sum | last_value
+ four | ten | sum | last_value 
 ------+-----+-----+------------
     0 |   0 |   0 |          0
     0 |   2 |   2 |          2
@@ -707,7 +707,7 @@ SELECT four, ten,
 	sum(ten) over (partition by four order by ten range between unbounded preceding and current row),
 	last_value(ten) over (partition by four order by ten range between unbounded preceding and current row)
 FROM (select distinct ten, four from tenk1) ss;
- four | ten | sum | last_value
+ four | ten | sum | last_value 
 ------+-----+-----+------------
     0 |   0 |   0 |          0
     0 |   2 |   2 |          2
@@ -735,7 +735,7 @@ SELECT four, ten,
 	sum(ten) over (partition by four order by ten range between unbounded preceding and unbounded following),
 	last_value(ten) over (partition by four order by ten range between unbounded preceding and unbounded following)
 FROM (select distinct ten, four from tenk1) ss;
- four | ten | sum | last_value
+ four | ten | sum | last_value 
 ------+-----+-----+------------
     0 |   0 |  20 |          8
     0 |   2 |  20 |          8
@@ -763,7 +763,7 @@ SELECT four, ten/4 as two,
 	sum(ten/4) over (partition by four order by ten/4 range between unbounded preceding and current row),
 	last_value(ten/4) over (partition by four order by ten/4 range between unbounded preceding and current row)
 FROM (select distinct ten, four from tenk1) ss;
- four | two | sum | last_value
+ four | two | sum | last_value 
 ------+-----+-----+------------
     0 |   0 |   0 |          0
     0 |   0 |   0 |          0
@@ -791,7 +791,7 @@ SELECT four, ten/4 as two,
 	sum(ten/4) over (partition by four order by ten/4 rows between unbounded preceding and current row),
 	last_value(ten/4) over (partition by four order by ten/4 rows between unbounded preceding and current row)
 FROM (select distinct ten, four from tenk1) ss;
- four | two | sum | last_value
+ four | two | sum | last_value 
 ------+-----+-----+------------
     0 |   0 |   0 |          0
     0 |   0 |   0 |          0
@@ -818,7 +818,7 @@ FROM (select distinct ten, four from tenk1) ss;
 SELECT sum(unique1) over (order by four range between current row and unbounded following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   45 |       0 |    0
   45 |       8 |    0
@@ -835,7 +835,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between current row and unbounded following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   45 |       4 |    0
   41 |       2 |    2
@@ -852,7 +852,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between 2 preceding and 2 following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    7 |       4 |    0
   13 |       2 |    2
@@ -869,7 +869,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between 2 preceding and 2 following exclude no others),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    7 |       4 |    0
   13 |       2 |    2
@@ -886,7 +886,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between 2 preceding and 2 following exclude current row),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    3 |       4 |    0
   11 |       2 |    2
@@ -903,7 +903,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between 2 preceding and 2 following exclude group),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       4 |    0
      |       2 |    2
@@ -920,7 +920,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between 2 preceding and 2 following exclude ties),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    4 |       4 |    0
    2 |       2 |    2
@@ -937,7 +937,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT first_value(unique1) over (ORDER BY four rows between current row and 2 following exclude current row),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- first_value | unique1 | four
+ first_value | unique1 | four 
 -------------+---------+------
            8 |       0 |    0
            4 |       8 |    0
@@ -954,7 +954,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT first_value(unique1) over (ORDER BY four rows between current row and 2 following exclude group),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- first_value | unique1 | four
+ first_value | unique1 | four 
 -------------+---------+------
              |       0 |    0
            5 |       8 |    0
@@ -971,7 +971,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT first_value(unique1) over (ORDER BY four rows between current row and 2 following exclude ties),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- first_value | unique1 | four
+ first_value | unique1 | four 
 -------------+---------+------
            0 |       0 |    0
            8 |       8 |    0
@@ -988,7 +988,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT last_value(unique1) over (ORDER BY four rows between current row and 2 following exclude current row),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- last_value | unique1 | four
+ last_value | unique1 | four 
 ------------+---------+------
           4 |       0 |    0
           5 |       8 |    0
@@ -1005,7 +1005,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT last_value(unique1) over (ORDER BY four rows between current row and 2 following exclude group),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- last_value | unique1 | four
+ last_value | unique1 | four 
 ------------+---------+------
             |       0 |    0
           5 |       8 |    0
@@ -1022,7 +1022,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT last_value(unique1) over (ORDER BY four rows between current row and 2 following exclude ties),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- last_value | unique1 | four
+ last_value | unique1 | four 
 ------------+---------+------
           0 |       0 |    0
           5 |       8 |    0
@@ -1039,7 +1039,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between 2 preceding and 1 preceding),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       4 |    0
    4 |       2 |    2
@@ -1056,7 +1056,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between 1 following and 3 following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    9 |       4 |    0
   16 |       2 |    2
@@ -1073,7 +1073,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between unbounded preceding and 1 following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    6 |       4 |    0
    7 |       2 |    2
@@ -1090,7 +1090,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (w range between current row and unbounded following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10 WINDOW w AS (order by four);
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   45 |       0 |    0
   45 |       8 |    0
@@ -1107,7 +1107,7 @@ FROM tenk1 WHERE unique1 < 10 WINDOW w AS (order by four);
 SELECT sum(unique1) over (w range between unbounded preceding and current row exclude current row),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10 WINDOW w AS (order by four);
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   12 |       0 |    0
    4 |       8 |    0
@@ -1124,7 +1124,7 @@ FROM tenk1 WHERE unique1 < 10 WINDOW w AS (order by four);
 SELECT sum(unique1) over (w range between unbounded preceding and current row exclude group),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10 WINDOW w AS (order by four);
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       0 |    0
      |       8 |    0
@@ -1141,7 +1141,7 @@ FROM tenk1 WHERE unique1 < 10 WINDOW w AS (order by four);
 SELECT sum(unique1) over (w range between unbounded preceding and current row exclude ties),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10 WINDOW w AS (order by four);
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    0 |       0 |    0
    8 |       8 |    0
@@ -1160,7 +1160,7 @@ SELECT first_value(unique1) over w,
 	last_value(unique1) over w, unique1, four
 FROM tenk1 WHERE unique1 < 10
 WINDOW w AS (order by four range between current row and unbounded following);
- first_value | nth_2 | last_value | unique1 | four
+ first_value | nth_2 | last_value | unique1 | four 
 -------------+-------+------------+---------+------
            0 |     8 |          7 |       0 |    0
            0 |     8 |          7 |       8 |    0
@@ -1179,7 +1179,7 @@ SELECT sum(unique1) over
 	 rows (SELECT unique1 FROM tenk1 ORDER BY unique1 LIMIT 1) + 1 PRECEDING),
 	unique1
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1
+ sum | unique1 
 -----+---------
    0 |       0
    1 |       1
@@ -1197,7 +1197,7 @@ CREATE TEMP VIEW v_window AS
 	SELECT i, sum(i) over (order by i rows between 1 preceding and 1 following) as sum_rows
 	FROM generate_series(1, 10) i;
 SELECT * FROM v_window;
- i  | sum_rows
+ i  | sum_rows 
 ----+----------
   1 |        3
   2 |        6
@@ -1212,7 +1212,7 @@ SELECT * FROM v_window;
 (10 rows)
 
 SELECT pg_get_viewdef('v_window');
-                                  pg_get_viewdef
+                                  pg_get_viewdef                                   
 -----------------------------------------------------------------------------------
   SELECT i,                                                                       +
      sum(i) OVER (ORDER BY i ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS sum_rows+
@@ -1223,7 +1223,7 @@ CREATE OR REPLACE TEMP VIEW v_window AS
 	SELECT i, sum(i) over (order by i rows between 1 preceding and 1 following
 	exclude current row) as sum_rows FROM generate_series(1, 10) i;
 SELECT * FROM v_window;
- i  | sum_rows
+ i  | sum_rows 
 ----+----------
   1 |        2
   2 |        4
@@ -1238,7 +1238,7 @@ SELECT * FROM v_window;
 (10 rows)
 
 SELECT pg_get_viewdef('v_window');
-                                            pg_get_viewdef
+                                            pg_get_viewdef                                             
 -------------------------------------------------------------------------------------------------------
   SELECT i,                                                                                           +
      sum(i) OVER (ORDER BY i ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING EXCLUDE CURRENT ROW) AS sum_rows+
@@ -1249,7 +1249,7 @@ CREATE OR REPLACE TEMP VIEW v_window AS
 	SELECT i, sum(i) over (order by i rows between 1 preceding and 1 following
 	exclude group) as sum_rows FROM generate_series(1, 10) i;
 SELECT * FROM v_window;
- i  | sum_rows
+ i  | sum_rows 
 ----+----------
   1 |        2
   2 |        4
@@ -1264,7 +1264,7 @@ SELECT * FROM v_window;
 (10 rows)
 
 SELECT pg_get_viewdef('v_window');
-                                         pg_get_viewdef
+                                         pg_get_viewdef                                          
 -------------------------------------------------------------------------------------------------
   SELECT i,                                                                                     +
      sum(i) OVER (ORDER BY i ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING EXCLUDE GROUP) AS sum_rows+
@@ -1275,7 +1275,7 @@ CREATE OR REPLACE TEMP VIEW v_window AS
 	SELECT i, sum(i) over (order by i rows between 1 preceding and 1 following
 	exclude ties) as sum_rows FROM generate_series(1, 10) i;
 SELECT * FROM v_window;
- i  | sum_rows
+ i  | sum_rows 
 ----+----------
   1 |        3
   2 |        6
@@ -1290,7 +1290,7 @@ SELECT * FROM v_window;
 (10 rows)
 
 SELECT pg_get_viewdef('v_window');
-                                         pg_get_viewdef
+                                         pg_get_viewdef                                         
 ------------------------------------------------------------------------------------------------
   SELECT i,                                                                                    +
      sum(i) OVER (ORDER BY i ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING EXCLUDE TIES) AS sum_rows+
@@ -1301,7 +1301,7 @@ CREATE OR REPLACE TEMP VIEW v_window AS
 	SELECT i, sum(i) over (order by i rows between 1 preceding and 1 following
 	exclude no others) as sum_rows FROM generate_series(1, 10) i;
 SELECT * FROM v_window;
- i  | sum_rows
+ i  | sum_rows 
 ----+----------
   1 |        3
   2 |        6
@@ -1316,7 +1316,7 @@ SELECT * FROM v_window;
 (10 rows)
 
 SELECT pg_get_viewdef('v_window');
-                                  pg_get_viewdef
+                                  pg_get_viewdef                                   
 -----------------------------------------------------------------------------------
   SELECT i,                                                                       +
      sum(i) OVER (ORDER BY i ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS sum_rows+
@@ -1326,7 +1326,7 @@ SELECT pg_get_viewdef('v_window');
 CREATE OR REPLACE TEMP VIEW v_window AS
 	SELECT i, sum(i) over (order by i groups between 1 preceding and 1 following) as sum_rows FROM generate_series(1, 10) i;
 SELECT * FROM v_window;
- i  | sum_rows
+ i  | sum_rows 
 ----+----------
   1 |        3
   2 |        6
@@ -1341,7 +1341,7 @@ SELECT * FROM v_window;
 (10 rows)
 
 SELECT pg_get_viewdef('v_window');
-                                   pg_get_viewdef
+                                   pg_get_viewdef                                    
 -------------------------------------------------------------------------------------
   SELECT i,                                                                         +
      sum(i) OVER (ORDER BY i GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS sum_rows+
@@ -1353,7 +1353,7 @@ CREATE TEMP VIEW v_window AS
 	SELECT i, min(i) over (order by i range between '1 day' preceding and '10 days' following) as min_i
   FROM generate_series(now(), now()+'100 days'::interval, '1 hour') i;
 SELECT pg_get_viewdef('v_window');
-                                                    pg_get_viewdef
+                                                    pg_get_viewdef                                                     
 -----------------------------------------------------------------------------------------------------------------------
   SELECT i,                                                                                                           +
      min(i) OVER (ORDER BY i RANGE BETWEEN '@ 1 day'::interval PRECEDING AND '@ 10 days'::interval FOLLOWING) AS min_i+
@@ -1364,7 +1364,7 @@ SELECT pg_get_viewdef('v_window');
 SELECT sum(unique1) over (order by four range between 2::int8 preceding and 1::int2 preceding),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       0 |    0
      |       8 |    0
@@ -1381,7 +1381,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four desc range between 2::int8 preceding and 1::int2 preceding),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       3 |    3
      |       7 |    3
@@ -1398,7 +1398,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four range between 2::int8 preceding and 1::int2 preceding exclude no others),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       0 |    0
      |       8 |    0
@@ -1415,7 +1415,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four range between 2::int8 preceding and 1::int2 preceding exclude current row),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       0 |    0
      |       8 |    0
@@ -1432,7 +1432,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four range between 2::int8 preceding and 1::int2 preceding exclude group),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       0 |    0
      |       8 |    0
@@ -1449,7 +1449,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four range between 2::int8 preceding and 1::int2 preceding exclude ties),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       0 |    0
      |       8 |    0
@@ -1466,7 +1466,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four range between 2::int8 preceding and 6::int2 following exclude ties),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   33 |       0 |    0
   41 |       8 |    0
@@ -1483,7 +1483,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four range between 2::int8 preceding and 6::int2 following exclude group),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   33 |       0 |    0
   33 |       8 |    0
@@ -1500,7 +1500,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (partition by four order by unique1 range between 5::int8 preceding and 6::int2 following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    4 |       0 |    0
   12 |       4 |    0
@@ -1517,7 +1517,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (partition by four order by unique1 range between 5::int8 preceding and 6::int2 following
 	exclude current row),unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    4 |       0 |    0
    8 |       4 |    0
@@ -1533,7 +1533,7 @@ FROM tenk1 WHERE unique1 < 10;
 
 select sum(salary) over (order by enroll_date range between '1 year'::interval preceding and '1 year'::interval following),
 	salary, enroll_date from empsalary;
-  sum  | salary | enroll_date
+  sum  | salary | enroll_date 
 -------+--------+-------------
  34900 |   5000 | 10-01-2006
  34900 |   6000 | 10-01-2006
@@ -1549,7 +1549,7 @@ select sum(salary) over (order by enroll_date range between '1 year'::interval p
 
 select sum(salary) over (order by enroll_date desc range between '1 year'::interval preceding and '1 year'::interval following),
 	salary, enroll_date from empsalary;
-  sum  | salary | enroll_date
+  sum  | salary | enroll_date 
 -------+--------+-------------
  32200 |   4200 | 01-01-2008
  32200 |   4500 | 01-01-2008
@@ -1565,7 +1565,7 @@ select sum(salary) over (order by enroll_date desc range between '1 year'::inter
 
 select sum(salary) over (order by enroll_date desc range between '1 year'::interval following and '1 year'::interval following),
 	salary, enroll_date from empsalary;
- sum | salary | enroll_date
+ sum | salary | enroll_date 
 -----+--------+-------------
      |   4200 | 01-01-2008
      |   4500 | 01-01-2008
@@ -1581,7 +1581,7 @@ select sum(salary) over (order by enroll_date desc range between '1 year'::inter
 
 select sum(salary) over (order by enroll_date range between '1 year'::interval preceding and '1 year'::interval following
 	exclude current row), salary, enroll_date from empsalary;
-  sum  | salary | enroll_date
+  sum  | salary | enroll_date 
 -------+--------+-------------
  29900 |   5000 | 10-01-2006
  28900 |   6000 | 10-01-2006
@@ -1597,7 +1597,7 @@ select sum(salary) over (order by enroll_date range between '1 year'::interval p
 
 select sum(salary) over (order by enroll_date range between '1 year'::interval preceding and '1 year'::interval following
 	exclude group), salary, enroll_date from empsalary;
-  sum  | salary | enroll_date
+  sum  | salary | enroll_date 
 -------+--------+-------------
  23900 |   5000 | 10-01-2006
  23900 |   6000 | 10-01-2006
@@ -1613,7 +1613,7 @@ select sum(salary) over (order by enroll_date range between '1 year'::interval p
 
 select sum(salary) over (order by enroll_date range between '1 year'::interval preceding and '1 year'::interval following
 	exclude ties), salary, enroll_date from empsalary;
-  sum  | salary | enroll_date
+  sum  | salary | enroll_date 
 -------+--------+-------------
  28900 |   5000 | 10-01-2006
  29900 |   6000 | 10-01-2006
@@ -1631,7 +1631,7 @@ select first_value(salary) over(order by salary range between 1000 preceding and
 	lead(salary) over(order by salary range between 1000 preceding and 1000 following),
 	nth_value(salary, 1) over(order by salary range between 1000 preceding and 1000 following),
 	salary from empsalary;
- first_value | lead | nth_value | salary
+ first_value | lead | nth_value | salary 
 -------------+------+-----------+--------
         3500 | 3900 |      3500 |   3500
         3500 | 4200 |      3500 |   3900
@@ -1648,7 +1648,7 @@ select first_value(salary) over(order by salary range between 1000 preceding and
 select last_value(salary) over(order by salary range between 1000 preceding and 1000 following),
 	lag(salary) over(order by salary range between 1000 preceding and 1000 following),
 	salary from empsalary;
- last_value | lag  | salary
+ last_value | lag  | salary 
 ------------+------+--------
        4500 |      |   3500
        4800 | 3500 |   3900
@@ -1668,7 +1668,7 @@ select first_value(salary) over(order by salary range between 1000 following and
 	nth_value(salary, 1) over(order by salary range between 1000 following and 3000 following
 	exclude ties),
 	salary from empsalary;
- first_value | lead | nth_value | salary
+ first_value | lead | nth_value | salary 
 -------------+------+-----------+--------
         4500 | 3900 |      4500 |   3500
         5000 | 4200 |      5000 |   3900
@@ -1686,7 +1686,7 @@ select last_value(salary) over(order by salary range between 1000 following and 
 	exclude group),
 	lag(salary) over(order by salary range between 1000 following and 3000 following exclude group),
 	salary from empsalary;
- last_value | lag  | salary
+ last_value | lag  | salary 
 ------------+------+--------
        6000 |      |   3500
        6000 | 3500 |   3900
@@ -1704,7 +1704,7 @@ select first_value(salary) over(order by enroll_date range between unbounded pre
 	exclude ties),
 	last_value(salary) over(order by enroll_date range between unbounded preceding and '1 year'::interval following),
 	salary, enroll_date from empsalary;
- first_value | last_value | salary | enroll_date
+ first_value | last_value | salary | enroll_date 
 -------------+------------+--------+-------------
         5000 |       5200 |   5000 | 10-01-2006
         6000 |       5200 |   6000 | 10-01-2006
@@ -1723,7 +1723,7 @@ select first_value(salary) over(order by enroll_date range between unbounded pre
 	last_value(salary) over(order by enroll_date range between unbounded preceding and '1 year'::interval following
 	exclude ties),
 	salary, enroll_date from empsalary;
- first_value | last_value | salary | enroll_date
+ first_value | last_value | salary | enroll_date 
 -------------+------------+--------+-------------
         5000 |       5200 |   5000 | 10-01-2006
         6000 |       5200 |   6000 | 10-01-2006
@@ -1742,7 +1742,7 @@ select first_value(salary) over(order by enroll_date range between unbounded pre
 	last_value(salary) over(order by enroll_date range between unbounded preceding and '1 year'::interval following
 	exclude group),
 	salary, enroll_date from empsalary;
- first_value | last_value | salary | enroll_date
+ first_value | last_value | salary | enroll_date 
 -------------+------------+--------+-------------
         3900 |       5200 |   5000 | 10-01-2006
         3900 |       5200 |   6000 | 10-01-2006
@@ -1761,7 +1761,7 @@ select first_value(salary) over(order by enroll_date range between unbounded pre
 	last_value(salary) over(order by enroll_date range between unbounded preceding and '1 year'::interval following
 	exclude current row),
 	salary, enroll_date from empsalary;
- first_value | last_value | salary | enroll_date
+ first_value | last_value | salary | enroll_date 
 -------------+------------+--------+-------------
         6000 |       5200 |   5000 | 10-01-2006
         5000 |       5200 |   6000 | 10-01-2006
@@ -1785,7 +1785,7 @@ from
    union all select null, 43) ss
 window w as
   (order by x asc nulls first range between 2 preceding and 2 following);
- x | y  | first_value | last_value
+ x | y  | first_value | last_value 
 ---+----+-------------+------------
    | 42 |          42 |         43
    | 43 |          42 |         43
@@ -1805,7 +1805,7 @@ from
    union all select null, 43) ss
 window w as
   (order by x asc nulls last range between 2 preceding and 2 following);
- x | y  | first_value | last_value
+ x | y  | first_value | last_value 
 ---+----+-------------+------------
  1 |  1 |           1 |          3
  2 |  2 |           1 |          4
@@ -1825,7 +1825,7 @@ from
    union all select null, 43) ss
 window w as
   (order by x desc nulls first range between 2 preceding and 2 following);
- x | y  | first_value | last_value
+ x | y  | first_value | last_value 
 ---+----+-------------+------------
    | 43 |          43 |         42
    | 42 |          43 |         42
@@ -1845,7 +1845,7 @@ from
    union all select null, 43) ss
 window w as
   (order by x desc nulls last range between 2 preceding and 2 following);
- x | y  | first_value | last_value
+ x | y  | first_value | last_value 
 ---+----+-------------+------------
  5 |  5 |           5 |          3
  4 |  4 |           5 |          2
@@ -1877,7 +1877,7 @@ AS $$
 $$;
 -- These will apply the argument to the window specification inside the function.
 SELECT * FROM unbounded_syntax_test1a(2);
- a  | b | c
+ a  | b | c 
 ----+---+---
   7 | 4 | 0
  13 | 2 | 2
@@ -1892,7 +1892,7 @@ SELECT * FROM unbounded_syntax_test1a(2);
 (10 rows)
 
 SELECT * FROM unbounded_syntax_test1b(2);
- a  | b | c
+ a  | b | c 
 ----+---+---
   7 | 4 | 0
  13 | 2 | 2
@@ -1922,7 +1922,7 @@ AS $$
 $$;
 -- These will not apply the argument but instead treat UNBOUNDED as a keyword.
 SELECT * FROM unbounded_syntax_test2a(2);
- a  | b | c
+ a  | b | c 
 ----+---+---
  45 | 4 | 0
  45 | 2 | 2
@@ -1937,7 +1937,7 @@ SELECT * FROM unbounded_syntax_test2a(2);
 (10 rows)
 
 SELECT * FROM unbounded_syntax_test2b(2);
- a  | b | c
+ a  | b | c 
 ----+---+---
  45 | 4 | 0
  45 | 2 | 2
@@ -1958,7 +1958,7 @@ CREATE FUNCTION unbounded(x int) RETURNS int LANGUAGE SQL IMMUTABLE RETURN x;
 SELECT sum(unique1) over (rows between 1 preceding and 1 following),
        unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    6 |       4 |    0
    7 |       2 |    2
@@ -1975,7 +1975,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (rows between unbounded(1) preceding and unbounded(1) following),
        unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
    6 |       4 |    0
    7 |       2 |    2
@@ -1999,7 +1999,7 @@ DROP FUNCTION unbounded;
 -- Check overflow behavior for various integer sizes
 select x, last_value(x) over (order by x::smallint range between current row and 2147450884 following)
 from generate_series(32764, 32766) x;
-   x   | last_value
+   x   | last_value 
 -------+------------
  32764 |      32766
  32765 |      32766
@@ -2008,7 +2008,7 @@ from generate_series(32764, 32766) x;
 
 select x, last_value(x) over (order by x::smallint desc range between current row and 2147450885 following)
 from generate_series(-32766, -32764) x;
-   x    | last_value
+   x    | last_value 
 --------+------------
  -32764 |     -32766
  -32765 |     -32766
@@ -2017,7 +2017,7 @@ from generate_series(-32766, -32764) x;
 
 select x, last_value(x) over (order by x range between current row and 4 following)
 from generate_series(2147483644, 2147483646) x;
-     x      | last_value
+     x      | last_value 
 ------------+------------
  2147483644 | 2147483646
  2147483645 | 2147483646
@@ -2026,7 +2026,7 @@ from generate_series(2147483644, 2147483646) x;
 
 select x, last_value(x) over (order by x desc range between current row and 5 following)
 from generate_series(-2147483646, -2147483644) x;
-      x      | last_value
+      x      | last_value  
 -------------+-------------
  -2147483644 | -2147483646
  -2147483645 | -2147483646
@@ -2035,7 +2035,7 @@ from generate_series(-2147483646, -2147483644) x;
 
 select x, last_value(x) over (order by x range between current row and 4 following)
 from generate_series(9223372036854775804, 9223372036854775806) x;
-          x          |     last_value
+          x          |     last_value      
 ---------------------+---------------------
  9223372036854775804 | 9223372036854775806
  9223372036854775805 | 9223372036854775806
@@ -2044,7 +2044,7 @@ from generate_series(9223372036854775804, 9223372036854775806) x;
 
 select x, last_value(x) over (order by x desc range between current row and 5 following)
 from generate_series(-9223372036854775806, -9223372036854775804) x;
-          x           |      last_value
+          x           |      last_value      
 ----------------------+----------------------
  -9223372036854775804 | -9223372036854775806
  -9223372036854775805 | -9223372036854775806
@@ -2073,7 +2073,7 @@ select id, f_float4, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float4 range between
              1 preceding and 1 following);
- id | f_float4  | first_value | last_value
+ id | f_float4  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           1 |          1
@@ -2091,7 +2091,7 @@ select id, f_float4, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float4 range between
              1 preceding and 1.1::float4 following);
- id | f_float4  | first_value | last_value
+ id | f_float4  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           1 |          1
@@ -2109,7 +2109,7 @@ select id, f_float4, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float4 range between
              'inf' preceding and 'inf' following);
- id | f_float4  | first_value | last_value
+ id | f_float4  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          8
   1 |        -3 |           0 |          8
@@ -2127,7 +2127,7 @@ select id, f_float4, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float4 range between
              'inf' preceding and 'inf' preceding);
- id | f_float4  | first_value | last_value
+ id | f_float4  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           0 |          0
@@ -2145,7 +2145,7 @@ select id, f_float4, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float4 range between
              'inf' following and 'inf' following);
- id | f_float4  | first_value | last_value
+ id | f_float4  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          8
   1 |        -3 |           8 |          8
@@ -2168,7 +2168,7 @@ select id, f_float8, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float8 range between
              1 preceding and 1 following);
- id | f_float8  | first_value | last_value
+ id | f_float8  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           1 |          1
@@ -2186,7 +2186,7 @@ select id, f_float8, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float8 range between
              1 preceding and 1.1::float8 following);
- id | f_float8  | first_value | last_value
+ id | f_float8  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           1 |          1
@@ -2204,7 +2204,7 @@ select id, f_float8, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float8 range between
              'inf' preceding and 'inf' following);
- id | f_float8  | first_value | last_value
+ id | f_float8  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          8
   1 |        -3 |           0 |          8
@@ -2222,7 +2222,7 @@ select id, f_float8, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float8 range between
              'inf' preceding and 'inf' preceding);
- id | f_float8  | first_value | last_value
+ id | f_float8  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           0 |          0
@@ -2240,7 +2240,7 @@ select id, f_float8, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_float8 range between
              'inf' following and 'inf' following);
- id | f_float8  | first_value | last_value
+ id | f_float8  | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          8
   1 |        -3 |           8 |          8
@@ -2263,7 +2263,7 @@ select id, f_numeric, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_numeric range between
              1 preceding and 1 following);
- id | f_numeric | first_value | last_value
+ id | f_numeric | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           1 |          1
@@ -2281,7 +2281,7 @@ select id, f_numeric, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_numeric range between
              1 preceding and 1.1::numeric following);
- id | f_numeric | first_value | last_value
+ id | f_numeric | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           1 |          1
@@ -2307,7 +2307,7 @@ select id, f_numeric, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_numeric range between
              'inf' preceding and 'inf' following);
- id | f_numeric | first_value | last_value
+ id | f_numeric | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          8
   1 |        -3 |           0 |          8
@@ -2325,7 +2325,7 @@ select id, f_numeric, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_numeric range between
              'inf' preceding and 'inf' preceding);
- id | f_numeric | first_value | last_value
+ id | f_numeric | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          0
   1 |        -3 |           0 |          0
@@ -2343,7 +2343,7 @@ select id, f_numeric, first_value(id) over w, last_value(id) over w
 from numerics
 window w as (order by f_numeric range between
              'inf' following and 'inf' following);
- id | f_numeric | first_value | last_value
+ id | f_numeric | first_value | last_value 
 ----+-----------+-------------+------------
   0 | -Infinity |           0 |          8
   1 |        -3 |           8 |          8
@@ -2386,7 +2386,7 @@ select id, f_time, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_time range between
              '70 min'::interval preceding and '2 hours'::interval following);
- id |  f_time  | first_value | last_value
+ id |  f_time  | first_value | last_value 
 ----+----------+-------------+------------
   1 | 11:00:00 |           1 |          3
   2 | 12:00:00 |           1 |          4
@@ -2404,7 +2404,7 @@ select id, f_time, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_time desc range between
              '70 min' preceding and '2 hours' following);
- id |  f_time  | first_value | last_value
+ id |  f_time  | first_value | last_value 
 ----+----------+-------------+------------
  10 | 20:00:00 |          10 |          8
   9 | 19:00:00 |          10 |          7
@@ -2422,7 +2422,7 @@ select id, f_timetz, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_timetz range between
              '70 min'::interval preceding and '2 hours'::interval following);
- id |  f_timetz   | first_value | last_value
+ id |  f_timetz   | first_value | last_value 
 ----+-------------+-------------+------------
   1 | 11:00:00+01 |           1 |          3
   2 | 12:00:00+01 |           1 |          4
@@ -2440,7 +2440,7 @@ select id, f_timetz, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_timetz desc range between
              '70 min' preceding and '2 hours' following);
- id |  f_timetz   | first_value | last_value
+ id |  f_timetz   | first_value | last_value 
 ----+-------------+-------------+------------
  10 | 20:00:00+01 |          10 |          8
   9 | 19:00:00+01 |          10 |          7
@@ -2458,7 +2458,7 @@ select id, f_interval, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_interval range between
              '1 year'::interval preceding and '1 year'::interval following);
- id | f_interval | first_value | last_value
+ id | f_interval | first_value | last_value 
 ----+------------+-------------+------------
   1 | @ 1 year   |           1 |          2
   2 | @ 2 years  |           1 |          3
@@ -2476,7 +2476,7 @@ select id, f_interval, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_interval desc range between
              '1 year' preceding and '1 year' following);
- id | f_interval | first_value | last_value
+ id | f_interval | first_value | last_value 
 ----+------------+-------------+------------
  10 | @ 10 years |          10 |          9
   9 | @ 9 years  |          10 |          8
@@ -2494,7 +2494,7 @@ select id, f_timestamptz, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_timestamptz range between
              '1 year'::interval preceding and '1 year'::interval following);
- id |        f_timestamptz         | first_value | last_value
+ id |        f_timestamptz         | first_value | last_value 
 ----+------------------------------+-------------+------------
   1 | Thu Oct 19 02:23:54 2000 PDT |           1 |          3
   2 | Fri Oct 19 02:23:54 2001 PDT |           1 |          4
@@ -2512,7 +2512,7 @@ select id, f_timestamptz, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_timestamptz desc range between
              '1 year' preceding and '1 year' following);
- id |        f_timestamptz         | first_value | last_value
+ id |        f_timestamptz         | first_value | last_value 
 ----+------------------------------+-------------+------------
  10 | Sun Oct 19 02:23:54 2008 PDT |          10 |          9
   9 | Fri Oct 19 02:23:54 2007 PDT |          10 |          8
@@ -2530,7 +2530,7 @@ select id, f_timestamp, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_timestamp range between
              '1 year'::interval preceding and '1 year'::interval following);
- id |       f_timestamp        | first_value | last_value
+ id |       f_timestamp        | first_value | last_value 
 ----+--------------------------+-------------+------------
   1 | Thu Oct 19 10:23:54 2000 |           1 |          3
   2 | Fri Oct 19 10:23:54 2001 |           1 |          4
@@ -2548,7 +2548,7 @@ select id, f_timestamp, first_value(id) over w, last_value(id) over w
 from datetimes
 window w as (order by f_timestamp desc range between
              '1 year' preceding and '1 year' following);
- id |       f_timestamp        | first_value | last_value
+ id |       f_timestamp        | first_value | last_value 
 ----+--------------------------+-------------+------------
  10 | Sun Oct 19 10:23:54 2008 |          10 |          9
   9 | Fri Oct 19 10:23:54 2007 |          10 |          8
@@ -2603,7 +2603,7 @@ ERROR:  invalid preceding or following size in window function
 SELECT sum(unique1) over (order by four groups between unbounded preceding and current row),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   12 |       0 |    0
   12 |       8 |    0
@@ -2620,7 +2620,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between unbounded preceding and unbounded following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   45 |       0 |    0
   45 |       8 |    0
@@ -2637,7 +2637,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between current row and unbounded following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   45 |       0 |    0
   45 |       8 |    0
@@ -2654,7 +2654,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 1 preceding and unbounded following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   45 |       0 |    0
   45 |       8 |    0
@@ -2671,7 +2671,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 1 following and unbounded following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   33 |       0 |    0
   33 |       8 |    0
@@ -2688,7 +2688,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between unbounded preceding and 2 following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   35 |       0 |    0
   35 |       8 |    0
@@ -2705,7 +2705,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 2 preceding and 1 preceding),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
      |       0 |    0
      |       8 |    0
@@ -2722,7 +2722,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 2 preceding and 1 following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   27 |       0 |    0
   27 |       8 |    0
@@ -2739,7 +2739,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 0 preceding and 0 following),
 	unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   12 |       0 |    0
   12 |       8 |    0
@@ -2756,7 +2756,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 2 preceding and 1 following
 	exclude current row), unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   27 |       0 |    0
   19 |       8 |    0
@@ -2773,7 +2773,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 2 preceding and 1 following
 	exclude group), unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   15 |       0 |    0
   15 |       8 |    0
@@ -2790,7 +2790,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (order by four groups between 2 preceding and 1 following
 	exclude ties), unique1, four
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four
+ sum | unique1 | four 
 -----+---------+------
   15 |       0 |    0
   23 |       8 |    0
@@ -2807,7 +2807,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (partition by ten
 	order by four groups between 0 preceding and 0 following),unique1, four, ten
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four | ten
+ sum | unique1 | four | ten 
 -----+---------+------+-----
    0 |       0 |    0 |   0
    1 |       1 |    1 |   1
@@ -2824,7 +2824,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (partition by ten
 	order by four groups between 0 preceding and 0 following exclude current row), unique1, four, ten
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four | ten
+ sum | unique1 | four | ten 
 -----+---------+------+-----
      |       0 |    0 |   0
      |       1 |    1 |   1
@@ -2841,7 +2841,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (partition by ten
 	order by four groups between 0 preceding and 0 following exclude group), unique1, four, ten
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four | ten
+ sum | unique1 | four | ten 
 -----+---------+------+-----
      |       0 |    0 |   0
      |       1 |    1 |   1
@@ -2858,7 +2858,7 @@ FROM tenk1 WHERE unique1 < 10;
 SELECT sum(unique1) over (partition by ten
 	order by four groups between 0 preceding and 0 following exclude ties), unique1, four, ten
 FROM tenk1 WHERE unique1 < 10;
- sum | unique1 | four | ten
+ sum | unique1 | four | ten 
 -----+---------+------+-----
    0 |       0 |    0 |   0
    1 |       1 |    1 |   1
@@ -2876,7 +2876,7 @@ select first_value(salary) over(order by enroll_date groups between 1 preceding 
 	lead(salary) over(order by enroll_date groups between 1 preceding and 1 following),
 	nth_value(salary, 1) over(order by enroll_date groups between 1 preceding and 1 following),
 	salary, enroll_date from empsalary;
- first_value | lead | nth_value | salary | enroll_date
+ first_value | lead | nth_value | salary | enroll_date 
 -------------+------+-----------+--------+-------------
         5000 | 6000 |      5000 |   5000 | 10-01-2006
         5000 | 3900 |      5000 |   6000 | 10-01-2006
@@ -2893,7 +2893,7 @@ select first_value(salary) over(order by enroll_date groups between 1 preceding 
 select last_value(salary) over(order by enroll_date groups between 1 preceding and 1 following),
 	lag(salary) over(order by enroll_date groups between 1 preceding and 1 following),
 	salary, enroll_date from empsalary;
- last_value | lag  | salary | enroll_date
+ last_value | lag  | salary | enroll_date 
 ------------+------+--------+-------------
        3900 |      |   5000 | 10-01-2006
        3900 | 5000 |   6000 | 10-01-2006
@@ -2913,7 +2913,7 @@ select first_value(salary) over(order by enroll_date groups between 1 following 
 	nth_value(salary, 1) over(order by enroll_date groups between 1 following and 3 following
 	exclude ties),
 	salary, enroll_date from empsalary;
- first_value | lead | nth_value | salary | enroll_date
+ first_value | lead | nth_value | salary | enroll_date 
 -------------+------+-----------+--------+-------------
         3900 | 6000 |      3900 |   5000 | 10-01-2006
         3900 | 3900 |      3900 |   6000 | 10-01-2006
@@ -2931,7 +2931,7 @@ select last_value(salary) over(order by enroll_date groups between 1 following a
 	exclude group),
 	lag(salary) over(order by enroll_date groups between 1 following and 3 following exclude group),
 	salary, enroll_date from empsalary;
- last_value | lag  | salary | enroll_date
+ last_value | lag  | salary | enroll_date 
 ------------+------+--------+-------------
        4800 |      |   5000 | 10-01-2006
        4800 | 5000 |   6000 | 10-01-2006
@@ -2952,7 +2952,7 @@ WITH cte (x) AS (
 SELECT x, (sum(x) over w)
 FROM cte
 WINDOW w AS (ORDER BY x rows between 1 preceding and 1 following);
- x  | sum
+ x  | sum 
 ----+-----
   1 |   4
   3 |   9
@@ -2980,7 +2980,7 @@ WITH cte (x) AS (
 SELECT x, (sum(x) over w)
 FROM cte
 WINDOW w AS (ORDER BY x range between 1 preceding and 1 following);
- x  | sum
+ x  | sum 
 ----+-----
   1 |   1
   3 |   3
@@ -3008,7 +3008,7 @@ WITH cte (x) AS (
 SELECT x, (sum(x) over w)
 FROM cte
 WINDOW w AS (ORDER BY x groups between 1 preceding and 1 following);
- x  | sum
+ x  | sum 
 ----+-----
   1 |   4
   3 |   9
@@ -3037,7 +3037,7 @@ WITH cte (x) AS (
 SELECT x, (sum(x) over w)
 FROM cte
 WINDOW w AS (ORDER BY x rows between 1 preceding and 1 following);
- x  | sum
+ x  | sum 
 ----+-----
   1 |   2
   1 |   3
@@ -3074,7 +3074,7 @@ WITH cte (x) AS (
 SELECT x, (sum(x) over w)
 FROM cte
 WINDOW w AS (ORDER BY x range between 1 preceding and 1 following);
- x  | sum
+ x  | sum 
 ----+-----
   1 |   3
   1 |   3
@@ -3111,7 +3111,7 @@ WITH cte (x) AS (
 SELECT x, (sum(x) over w)
 FROM cte
 WINDOW w AS (ORDER BY x groups between 1 preceding and 1 following);
- x  | sum
+ x  | sum 
 ----+-----
   1 |   8
   1 |   8
@@ -3143,7 +3143,7 @@ WINDOW w AS (ORDER BY x groups between 1 preceding and 1 following);
 
 -- with UNION
 SELECT count(*) OVER (PARTITION BY four) FROM (SELECT * FROM tenk1 UNION ALL SELECT * FROM tenk2)s LIMIT 0;
- count
+ count 
 -------
 (0 rows)
 
@@ -3160,7 +3160,7 @@ explain (costs off)
 select f1, sum(f1) over (partition by f1 order by f2
                          range between 1 preceding and 1 following)
 from t1 where f1 = f2;
-           QUERY PLAN
+           QUERY PLAN            
 ---------------------------------
  WindowAgg
    ->  Sort
@@ -3172,7 +3172,7 @@ from t1 where f1 = f2;
 select f1, sum(f1) over (partition by f1 order by f2
                          range between 1 preceding and 1 following)
 from t1 where f1 = f2;
- f1 | sum
+ f1 | sum 
 ----+-----
   1 |   1
   2 |   2
@@ -3181,19 +3181,19 @@ from t1 where f1 = f2;
 select f1, sum(f1) over (partition by f1, f1 order by f2
                          range between 2 preceding and 1 preceding)
 from t1 where f1 = f2;
- f1 | sum
+ f1 | sum 
 ----+-----
-  1 |
-  2 |
+  1 |    
+  2 |    
 (2 rows)
 
 select f1, sum(f1) over (partition by f1, f2 order by f2
                          range between 1 following and 2 following)
 from t1 where f1 = f2;
- f1 | sum
+ f1 | sum 
 ----+-----
-  1 |
-  2 |
+  1 |    
+  2 |    
 (2 rows)
 
 select f1, sum(f1) over (partition by f1
@@ -3206,7 +3206,7 @@ explain (costs off)
 select f1, sum(f1) over (partition by f1 order by f2
                          groups between 1 preceding and 1 following)
 from t1 where f1 = f2;
-           QUERY PLAN
+           QUERY PLAN            
 ---------------------------------
  WindowAgg
    ->  Sort
@@ -3218,7 +3218,7 @@ from t1 where f1 = f2;
 select f1, sum(f1) over (partition by f1 order by f2
                          groups between 1 preceding and 1 following)
 from t1 where f1 = f2;
- f1 | sum
+ f1 | sum 
 ----+-----
   1 |   1
   2 |   2
@@ -3227,24 +3227,24 @@ from t1 where f1 = f2;
 select f1, sum(f1) over (partition by f1, f1 order by f2
                          groups between 2 preceding and 1 preceding)
 from t1 where f1 = f2;
- f1 | sum
+ f1 | sum 
 ----+-----
-  1 |
-  2 |
+  1 |    
+  2 |    
 (2 rows)
 
 select f1, sum(f1) over (partition by f1, f2 order by f2
                          groups between 1 following and 2 following)
 from t1 where f1 = f2;
- f1 | sum
+ f1 | sum 
 ----+-----
-  1 |
-  2 |
+  1 |    
+  2 |    
 (2 rows)
 
 -- ordering by a non-integer constant is allowed
 SELECT rank() OVER (ORDER BY length('abc'));
- rank
+ rank 
 ------
     1
 (1 row)
@@ -3305,7 +3305,7 @@ SELECT sum(salary), row_number() OVER (ORDER BY depname), sum(
 ) FILTER (WHERE depname <> 'sales') OVER (ORDER BY depname DESC) AS "filtered_sum",
     depname
 FROM empsalary GROUP BY depname;
-  sum  | row_number | filtered_sum |  depname
+  sum  | row_number | filtered_sum |  depname  
 -------+------------+--------------+-----------
  25100 |          1 |        22600 | develop
   7400 |          2 |         3500 | personnel
@@ -3334,7 +3334,7 @@ SELECT
     cume_dist() OVER (PARTITION BY depname ORDER BY enroll_date RANGE BETWEEN
                       CURRENT ROW AND UNBOUNDED FOLLOWING) cd
 FROM empsalary;
-               QUERY PLAN
+               QUERY PLAN               
 ----------------------------------------
  WindowAgg
    ->  Sort
@@ -3354,7 +3354,7 @@ SELECT
     count(*) OVER (PARTITION BY depname ORDER BY enroll_date RANGE BETWEEN
                    CURRENT ROW AND CURRENT ROW) cnt
 FROM empsalary;
-                                              QUERY PLAN
+                                              QUERY PLAN                                              
 ------------------------------------------------------------------------------------------------------
  WindowAgg
    Output: empno, depname, (row_number() OVER (?)), (rank() OVER (?)), count(*) OVER (?), enroll_date
@@ -3377,7 +3377,7 @@ SELECT
     count(*) OVER (PARTITION BY depname ORDER BY enroll_date RANGE BETWEEN
                    CURRENT ROW AND CURRENT ROW) cnt
 FROM empsalary;
- empno |  depname  | rn | rnk | cnt
+ empno |  depname  | rn | rnk | cnt 
 -------+-----------+----+-----+-----
      8 | develop   |  1 |   1 |   1
     10 | develop   |  2 |   2 |   1
@@ -3400,7 +3400,7 @@ SELECT * FROM
           min(salary) OVER (PARTITION BY depname || 'A', depname) depminsalary
    FROM empsalary) emp
 WHERE depname = 'sales';
-                                QUERY PLAN
+                                QUERY PLAN                                
 --------------------------------------------------------------------------
  Subquery Scan on emp
    ->  WindowAgg
@@ -3419,7 +3419,7 @@ SELECT * FROM
           min(salary) OVER (PARTITION BY depname) depminsalary
    FROM empsalary) emp
 WHERE depname = 'sales';
-                      QUERY PLAN
+                      QUERY PLAN                       
 -------------------------------------------------------
  Subquery Scan on emp
    Filter: ((emp.depname)::text = 'sales'::text)
@@ -3440,7 +3440,7 @@ SELECT * FROM
           row_number() OVER (ORDER BY empno) rn
    FROM empsalary) emp
 WHERE rn < 3;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  WindowAgg
    Run Condition: (row_number() OVER (?) < 3)
@@ -3455,7 +3455,7 @@ SELECT * FROM
           row_number() OVER (ORDER BY empno) rn
    FROM empsalary) emp
 WHERE rn < 3;
- empno | rn
+ empno | rn 
 -------+----
      1 |  1
      2 |  2
@@ -3466,7 +3466,7 @@ SELECT * FROM
           row_number() OVER (ORDER BY empno) rn
    FROM empsalary) emp
 WHERE 3 > rn;
- empno | rn
+ empno | rn 
 -------+----
      1 |  1
      2 |  2
@@ -3477,7 +3477,7 @@ SELECT * FROM
           row_number() OVER (ORDER BY empno) rn
    FROM empsalary) emp
 WHERE 2 >= rn;
- empno | rn
+ empno | rn 
 -------+----
      1 |  1
      2 |  2
@@ -3491,7 +3491,7 @@ SELECT * FROM
           rank() OVER (ORDER BY salary DESC) r
    FROM empsalary) emp
 WHERE r <= 3;
-               QUERY PLAN
+               QUERY PLAN                
 -----------------------------------------
  WindowAgg
    Run Condition: (rank() OVER (?) <= 3)
@@ -3506,7 +3506,7 @@ SELECT * FROM
           rank() OVER (ORDER BY salary DESC) r
    FROM empsalary) emp
 WHERE r <= 3;
- empno | salary | r
+ empno | salary | r 
 -------+--------+---
      8 |   6000 | 1
     10 |   5200 | 2
@@ -3521,7 +3521,7 @@ SELECT * FROM
           dense_rank() OVER (ORDER BY salary DESC) dr
    FROM empsalary) emp
 WHERE dr = 1;
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  Subquery Scan on emp
    Filter: (emp.dr = 1)
@@ -3538,7 +3538,7 @@ SELECT * FROM
           dense_rank() OVER (ORDER BY salary DESC) dr
    FROM empsalary) emp
 WHERE dr = 1;
- empno | salary | dr
+ empno | salary | dr 
 -------+--------+----
      8 |   6000 |  1
 (1 row)
@@ -3551,7 +3551,7 @@ SELECT * FROM
           count(*) OVER (ORDER BY salary DESC) c
    FROM empsalary) emp
 WHERE c <= 3;
-                QUERY PLAN
+                QUERY PLAN                 
 -------------------------------------------
  WindowAgg
    Run Condition: (count(*) OVER (?) <= 3)
@@ -3566,7 +3566,7 @@ SELECT * FROM
           count(*) OVER (ORDER BY salary DESC) c
    FROM empsalary) emp
 WHERE c <= 3;
- empno | salary | c
+ empno | salary | c 
 -------+--------+---
      8 |   6000 | 1
     10 |   5200 | 3
@@ -3580,7 +3580,7 @@ SELECT * FROM
           count(1) OVER (ORDER BY salary DESC) c
    FROM empsalary) emp
 WHERE c <= 3;
-                QUERY PLAN
+                QUERY PLAN                 
 -------------------------------------------
  WindowAgg
    Run Condition: (count(1) OVER (?) <= 3)
@@ -3595,7 +3595,7 @@ SELECT * FROM
           count(1) OVER (ORDER BY salary DESC) c
    FROM empsalary) emp
 WHERE c <= 3;
- empno | salary | c
+ empno | salary | c 
 -------+--------+---
      8 |   6000 | 1
     10 |   5200 | 3
@@ -3609,7 +3609,7 @@ SELECT * FROM
           count(*) OVER (ORDER BY salary DESC ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) c
    FROM empsalary) emp
 WHERE c >= 3;
-                QUERY PLAN
+                QUERY PLAN                 
 -------------------------------------------
  WindowAgg
    Run Condition: (count(*) OVER (?) >= 3)
@@ -3625,7 +3625,7 @@ SELECT * FROM
           count(*) OVER () c
    FROM empsalary) emp
 WHERE 11 <= c;
-                 QUERY PLAN
+                 QUERY PLAN                 
 --------------------------------------------
  WindowAgg
    Run Condition: (11 <= count(*) OVER (?))
@@ -3640,7 +3640,7 @@ SELECT * FROM
           dense_rank() OVER (ORDER BY salary DESC) dr
    FROM empsalary) emp
 WHERE dr = 1;
-                     QUERY PLAN
+                     QUERY PLAN                      
 -----------------------------------------------------
  Subquery Scan on emp
    Filter: (emp.dr = 1)
@@ -3659,7 +3659,7 @@ SELECT * FROM
           row_number() OVER (PARTITION BY depname ORDER BY empno) rn
    FROM empsalary) emp
 WHERE rn < 3;
-                      QUERY PLAN
+                      QUERY PLAN                      
 ------------------------------------------------------
  WindowAgg
    Run Condition: (row_number() OVER (?) < 3)
@@ -3675,7 +3675,7 @@ SELECT * FROM
           row_number() OVER (PARTITION BY depname ORDER BY empno) rn
    FROM empsalary) emp
 WHERE rn < 3;
- empno |  depname  | rn
+ empno |  depname  | rn 
 -------+-----------+----
      7 | develop   |  1
      8 | develop   |  2
@@ -3694,7 +3694,7 @@ SELECT empno, depname FROM
           row_number() OVER (PARTITION BY depname ORDER BY empno) rn
    FROM empsalary) emp
 WHERE rn < 3;
-                         QUERY PLAN
+                         QUERY PLAN                         
 ------------------------------------------------------------
  Subquery Scan on emp
    ->  WindowAgg
@@ -3713,7 +3713,7 @@ SELECT * FROM
           count(1) OVER (PARTITION BY depname ORDER BY salary DESC) c
    FROM empsalary) emp
 WHERE c <= 3;
-                         QUERY PLAN
+                         QUERY PLAN                         
 ------------------------------------------------------------
  WindowAgg
    Run Condition: (count(1) OVER (?) <= 3)
@@ -3730,7 +3730,7 @@ SELECT * FROM
           count(1) OVER (PARTITION BY depname ORDER BY salary DESC) c
    FROM empsalary) emp
 WHERE c <= 3;
- empno |  depname  | salary | c
+ empno |  depname  | salary | c 
 -------+-----------+--------+---
      8 | develop   |   6000 | 1
     10 | develop   |   5200 | 3
@@ -3752,7 +3752,7 @@ SELECT * FROM
           count(1) OVER () c
    FROM empsalary) emp
 WHERE c = 1;
-                QUERY PLAN
+                QUERY PLAN                
 ------------------------------------------
  WindowAgg
    Run Condition: (count(1) OVER (?) = 1)
@@ -3770,7 +3770,7 @@ SELECT * FROM
           ntile(2) OVER (PARTITION BY depname) nt -- w2
    FROM empsalary
 ) e WHERE rn <= 1 AND c1 <= 3 AND nt < 2;
-                                          QUERY PLAN
+                                          QUERY PLAN                                           
 -----------------------------------------------------------------------------------------------
  Subquery Scan on e
    ->  WindowAgg
@@ -3798,7 +3798,7 @@ SELECT * FROM
           ntile(2) OVER (PARTITION BY depname) nt -- w2
    FROM empsalary
 ) e WHERE rn <= 1 AND c1 <= 3 AND nt < 2;
-  depname  | empno | salary | enroll_date | c1 | rn | c2 | c3 | nt
+  depname  | empno | salary | enroll_date | c1 | rn | c2 | c3 | nt 
 -----------+-------+--------+-------------+----+----+----+----+----
  personnel |     5 |   3500 | 12-10-2007  |  2 |  1 |  2 |  2 |  1
  sales     |     3 |   4800 | 08-01-2007  |  3 |  1 |  3 |  3 |  1
@@ -3815,7 +3815,7 @@ SELECT * FROM
           count(*) OVER (ORDER BY salary DESC ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) c
    FROM empsalary) emp
 WHERE c <= 3;
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  Subquery Scan on emp
    Filter: (emp.c <= 3)
@@ -3834,7 +3834,7 @@ SELECT * FROM
           count(*) OVER (ORDER BY salary) c
    FROM empsalary) emp
 WHERE 3 <= c;
-                QUERY PLAN
+                QUERY PLAN                
 ------------------------------------------
  Subquery Scan on emp
    Filter: (3 <= emp.c)
@@ -3853,7 +3853,7 @@ SELECT * FROM
           count(random()) OVER (ORDER BY empno DESC) c
    FROM empsalary) emp
 WHERE c = 1;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  Subquery Scan on emp
    Filter: (emp.c = 1)
@@ -3871,7 +3871,7 @@ SELECT * FROM
           count(empno) OVER (ORDER BY empno DESC) c
    FROM empsalary) emp
 WHERE c = 1;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  Subquery Scan on emp
    Filter: (emp.c = 1)
@@ -3889,7 +3889,7 @@ SELECT * FROM
           ntile(empno::int) OVER (ORDER BY empno DESC) nt
    FROM empsalary) emp
 WHERE nt = 1;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  Subquery Scan on emp
    Filter: (emp.nt = 1)
@@ -3907,7 +3907,7 @@ SELECT * FROM
           count((SELECT 1)) OVER (ORDER BY empno DESC) c
    FROM empsalary) emp
 WHERE c = 1;
-                  QUERY PLAN
+                  QUERY PLAN                  
 ----------------------------------------------
  Subquery Scan on emp
    Filter: (emp.c = 1)
@@ -3927,7 +3927,7 @@ SELECT * FROM
           min(salary) OVER (PARTITION BY depname, empno order by enroll_date) depminsalary
    FROM empsalary) emp
 WHERE depname = 'sales';
-                              QUERY PLAN
+                              QUERY PLAN                              
 ----------------------------------------------------------------------
  Subquery Scan on emp
    ->  WindowAgg
@@ -3948,7 +3948,7 @@ SELECT empno,
        min(salary) OVER (PARTITION BY depname order by enroll_date) depminsalary
 FROM empsalary
 ORDER BY depname, empno;
-                     QUERY PLAN
+                     QUERY PLAN                     
 ----------------------------------------------------
  WindowAgg
    ->  Incremental Sort
@@ -3970,7 +3970,7 @@ SELECT empno,
        min(salary) OVER (PARTITION BY depname order by enroll_date) depminsalary
 FROM empsalary
 ORDER BY depname, enroll_date;
-                  QUERY PLAN
+                  QUERY PLAN                   
 -----------------------------------------------
  WindowAgg
    ->  Incremental Sort
@@ -3994,7 +3994,7 @@ SELECT DISTINCT
        min(salary) OVER (PARTITION BY depname order by enroll_date) depminsalary
 FROM empsalary
 ORDER BY depname, enroll_date;
-                                          QUERY PLAN
+                                          QUERY PLAN                                           
 -----------------------------------------------------------------------------------------------
  Unique
    ->  Incremental Sort
@@ -4021,7 +4021,7 @@ SELECT DISTINCT
        min(salary) OVER (PARTITION BY depname order by enroll_date) depminsalary
 FROM empsalary
 ORDER BY depname, empno;
-                                          QUERY PLAN
+                                          QUERY PLAN                                           
 -----------------------------------------------------------------------------------------------
  Unique
    ->  Incremental Sort
@@ -4044,7 +4044,7 @@ SELECT
   lead(1) OVER (PARTITION BY depname ORDER BY salary, enroll_date),
   lag(1) OVER (PARTITION BY depname ORDER BY salary,enroll_date,empno)
 FROM empsalary;
-                         QUERY PLAN
+                         QUERY PLAN                          
 -------------------------------------------------------------
  WindowAgg
    ->  WindowAgg
@@ -4064,7 +4064,7 @@ SELECT * FROM
           row_number() OVER (PARTITION BY depname ORDER BY enroll_date DESC) AS last_emp
    FROM empsalary) emp
 WHERE first_emp = 1 OR last_emp = 1;
-                                    QUERY PLAN
+                                    QUERY PLAN                                     
 -----------------------------------------------------------------------------------
  Subquery Scan on emp
    Filter: ((emp.first_emp = 1) OR (emp.last_emp = 1))
@@ -4087,7 +4087,7 @@ SELECT * FROM
           row_number() OVER (PARTITION BY depname ORDER BY enroll_date DESC) AS last_emp
    FROM empsalary) emp
 WHERE first_emp = 1 OR last_emp = 1;
-  depname  | empno | salary | enroll_date | first_emp | last_emp
+  depname  | empno | salary | enroll_date | first_emp | last_emp 
 -----------+-------+--------+-------------+-----------+----------
  develop   |     8 |   6000 | 10-01-2006  |         1 |        5
  develop   |     7 |   4200 | 01-01-2008  |         5 |        1
@@ -4104,7 +4104,7 @@ CREATE FUNCTION nth_value_def(val anyelement, n integer = 1) RETURNS anyelement
   LANGUAGE internal WINDOW IMMUTABLE STRICT AS 'window_nth_value';
 SELECT nth_value_def(n := 2, val := ten) OVER (PARTITION BY four), ten, four
   FROM (SELECT * FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten) s;
- nth_value_def | ten | four
+ nth_value_def | ten | four 
 ---------------+-----+------
              0 |   0 |    0
              0 |   0 |    0
@@ -4120,7 +4120,7 @@ SELECT nth_value_def(n := 2, val := ten) OVER (PARTITION BY four), ten, four
 
 SELECT nth_value_def(ten) OVER (PARTITION BY four), ten, four
   FROM (SELECT * FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten) s;
- nth_value_def | ten | four
+ nth_value_def | ten | four 
 ---------------+-----+------
              0 |   0 |    0
              0 |   0 |    0
@@ -4213,7 +4213,7 @@ FROM (VALUES
 ) AS t(p, i, v)
 WINDOW wnd AS (PARTITION BY P ORDER BY i ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)
 ORDER BY p, i;
-   row    |                    nstrict                    |                  nstrict_init                   |  strict   |  strict_init
+   row    |                    nstrict                    |                  nstrict_init                   |  strict   |  strict_init   
 ----------+-----------------------------------------------+-------------------------------------------------+-----------+----------------
  1,1:NULL | +NULL                                         | MI+NULL                                         |           | MI
  1,2:a    | +NULL+'a'                                     | MI+NULL+'a'                                     | a         | MI+'a'
@@ -4247,7 +4247,7 @@ FROM (VALUES
 ) AS t(p, i, f, v)
 WINDOW wnd AS (PARTITION BY p ORDER BY i ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)
 ORDER BY p, i;
-   row    | nstrict_filt | nstrict_init_filt | strict_filt | strict_init_filt
+   row    | nstrict_filt | nstrict_init_filt | strict_filt | strict_init_filt 
 ----------+--------------+-------------------+-------------+------------------
  1,1:NULL | +NULL        | MI+NULL           |             | MI
  1,2:-    | +NULL        | MI+NULL           |             | MI
@@ -4274,7 +4274,7 @@ FROM (VALUES
 ) AS t(i, v)
 WINDOW wnd AS (ORDER BY i ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)
 ORDER BY i;
- row |    inverse    | noinverse
+ row |    inverse    | noinverse 
 -----+---------------+-----------
  1:a | a             | a
  2:b | a+'b'         | a*'b'
@@ -4294,7 +4294,7 @@ FROM (VALUES
 ) AS t(i, v)
 WINDOW wnd AS (ORDER BY i ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)
 ORDER BY i;
- row |    inverse    | noinverse
+ row |    inverse    | noinverse 
 -----+---------------+-----------
  1:a | a             | a
  2:b | a+'b'         | a*'b'
@@ -4311,7 +4311,7 @@ FROM (VALUES
 ) AS t(i, v)
 WINDOW wnd AS (ORDER BY i ROWS BETWEEN CURRENT ROW AND CURRENT ROW)
 ORDER BY i;
- logging_agg_strict
+ logging_agg_strict 
 --------------------
  a
  b
@@ -4352,7 +4352,7 @@ JOIN sum_following ON sum_following.i = vs.i
 WINDOW fwd AS (
 	ORDER BY vs.i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
 );
- eq1 | eq2 | eq3
+ eq1 | eq2 | eq3 
 -----+-----+-----
  t   | t   | t
 (1 row)
@@ -4363,117 +4363,117 @@ WINDOW fwd AS (
 -- test inverse transition functions handle NULLs properly
 SELECT i,AVG(v::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i |        avg
+ i |        avg         
 ---+--------------------
  1 | 1.5000000000000000
  2 | 2.0000000000000000
- 3 |
- 4 |
+ 3 |                   
+ 4 |                   
 (4 rows)
 
 SELECT i,AVG(v::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i |        avg
+ i |        avg         
 ---+--------------------
  1 | 1.5000000000000000
  2 | 2.0000000000000000
- 3 |
- 4 |
+ 3 |                   
+ 4 |                   
 (4 rows)
 
 SELECT i,AVG(v::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i |        avg
+ i |        avg         
 ---+--------------------
  1 | 1.5000000000000000
  2 | 2.0000000000000000
- 3 |
- 4 |
+ 3 |                   
+ 4 |                   
 (4 rows)
 
 SELECT i,AVG(v::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1.5),(2,2.5),(3,NULL),(4,NULL)) t(i,v);
- i |        avg
+ i |        avg         
 ---+--------------------
  1 | 2.0000000000000000
  2 | 2.5000000000000000
- 3 |
- 4 |
+ 3 |                   
+ 4 |                   
 (4 rows)
 
 SELECT i,AVG(v::interval) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,'1 sec'),(2,'2 sec'),(3,NULL),(4,NULL)) t(i,v);
- i |    avg
+ i |    avg     
 ---+------------
  1 | @ 1.5 secs
  2 | @ 2 secs
- 3 |
- 4 |
+ 3 | 
+ 4 | 
 (4 rows)
 
 SELECT i,SUM(v::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i | sum
+ i | sum 
 ---+-----
  1 |   3
  2 |   2
- 3 |
- 4 |
+ 3 |    
+ 4 |    
 (4 rows)
 
 SELECT i,SUM(v::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i | sum
+ i | sum 
 ---+-----
  1 |   3
  2 |   2
- 3 |
- 4 |
+ 3 |    
+ 4 |    
 (4 rows)
 
 SELECT i,SUM(v::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i | sum
+ i | sum 
 ---+-----
  1 |   3
  2 |   2
- 3 |
- 4 |
+ 3 |    
+ 4 |    
 (4 rows)
 
 SELECT i,SUM(v::money) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,'1.10'),(2,'2.20'),(3,NULL),(4,NULL)) t(i,v);
- i |  sum
+ i |  sum  
 ---+-------
  1 | $3.30
  2 | $2.20
- 3 |
- 4 |
+ 3 |      
+ 4 |      
 (4 rows)
 
 SELECT i,SUM(v::interval) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,'1 sec'),(2,'2 sec'),(3,NULL),(4,NULL)) t(i,v);
- i |   sum
+ i |   sum    
 ---+----------
  1 | @ 3 secs
  2 | @ 2 secs
- 3 |
- 4 |
+ 3 | 
+ 4 | 
 (4 rows)
 
 SELECT i,SUM(v::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1.1),(2,2.2),(3,NULL),(4,NULL)) t(i,v);
- i | sum
+ i | sum 
 ---+-----
  1 | 3.3
  2 | 2.2
- 3 |
- 4 |
+ 3 |    
+ 4 |    
 (4 rows)
 
 SELECT SUM(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1.01),(2,2),(3,3)) v(i,n);
- sum
+ sum  
 ------
  6.01
     5
@@ -4482,7 +4482,7 @@ SELECT SUM(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED F
 
 SELECT i,COUNT(v) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i | count
+ i | count 
 ---+-------
  1 |     2
  2 |     1
@@ -4492,7 +4492,7 @@ SELECT i,COUNT(v) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOW
 
 SELECT i,COUNT(*) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i | count
+ i | count 
 ---+-------
  1 |     4
  2 |     3
@@ -4502,7 +4502,7 @@ SELECT i,COUNT(*) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOW
 
 SELECT VAR_POP(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-        var_pop
+        var_pop        
 -----------------------
     21704.000000000000
     13868.750000000000
@@ -4513,7 +4513,7 @@ SELECT VAR_POP(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDE
 
 SELECT VAR_POP(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-        var_pop
+        var_pop        
 -----------------------
     21704.000000000000
     13868.750000000000
@@ -4524,7 +4524,7 @@ SELECT VAR_POP(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED F
 
 SELECT VAR_POP(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-        var_pop
+        var_pop        
 -----------------------
     21704.000000000000
     13868.750000000000
@@ -4535,7 +4535,7 @@ SELECT VAR_POP(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUN
 
 SELECT VAR_POP(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-        var_pop
+        var_pop        
 -----------------------
     21704.000000000000
     13868.750000000000
@@ -4546,95 +4546,95 @@ SELECT VAR_POP(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUND
 
 SELECT VAR_SAMP(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       var_samp
+       var_samp        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT VAR_SAMP(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       var_samp
+       var_samp        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT VAR_SAMP(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       var_samp
+       var_samp        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT VAR_SAMP(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       var_samp
+       var_samp        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT VARIANCE(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       variance
+       variance        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT VARIANCE(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       variance
+       variance        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT VARIANCE(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       variance
+       variance        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT VARIANCE(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       variance
+       variance        
 -----------------------
     27130.000000000000
     18491.666666666667
     16900.000000000000
  8450.0000000000000000
-
+                      
 (5 rows)
 
 SELECT STDDEV_POP(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_pop
+     stddev_pop      
 ---------------------
     147.322774885623
     147.322774885623
@@ -4646,7 +4646,7 @@ SELECT STDDEV_POP(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOU
 
 SELECT STDDEV_POP(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_pop
+     stddev_pop      
 ---------------------
     147.322774885623
     147.322774885623
@@ -4658,7 +4658,7 @@ SELECT STDDEV_POP(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDE
 
 SELECT STDDEV_POP(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_pop
+     stddev_pop      
 ---------------------
     147.322774885623
     147.322774885623
@@ -4670,7 +4670,7 @@ SELECT STDDEV_POP(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNB
 
 SELECT STDDEV_POP(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_pop
+     stddev_pop      
 ---------------------
     147.322774885623
     147.322774885623
@@ -4682,124 +4682,124 @@ SELECT STDDEV_POP(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBO
 
 SELECT STDDEV_SAMP(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_samp
+     stddev_samp     
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 SELECT STDDEV_SAMP(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_samp
+     stddev_samp     
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 SELECT STDDEV_SAMP(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_samp
+     stddev_samp     
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 SELECT STDDEV_SAMP(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(1,NULL),(2,600),(3,470),(4,170),(5,430),(6,300)) r(i,n);
-     stddev_samp
+     stddev_samp     
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 SELECT STDDEV(n::bigint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(0,NULL),(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       stddev
+       stddev        
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 SELECT STDDEV(n::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(0,NULL),(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       stddev
+       stddev        
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 SELECT STDDEV(n::smallint) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(0,NULL),(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       stddev
+       stddev        
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 SELECT STDDEV(n::numeric) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
   FROM (VALUES(0,NULL),(1,600),(2,470),(3,170),(4,430),(5,300)) r(i,n);
-       stddev
+       stddev        
 ---------------------
     164.711869639076
     164.711869639076
     135.984067694222
     130.000000000000
  91.9238815542511782
-
+                    
 (6 rows)
 
 -- test that inverse transition functions work with various frame options
 SELECT i,SUM(v::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND CURRENT ROW)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i | sum
+ i | sum 
 ---+-----
  1 |   1
  2 |   2
- 3 |
- 4 |
+ 3 |    
+ 4 |    
 (4 rows)
 
 SELECT i,SUM(v::int) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
- i | sum
+ i | sum 
 ---+-----
  1 |   3
  2 |   2
- 3 |
- 4 |
+ 3 |    
+ 4 |    
 (4 rows)
 
 SELECT i,SUM(v::int) OVER (ORDER BY i ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
   FROM (VALUES(1,1),(2,2),(3,3),(4,4)) t(i,v);
- i | sum
+ i | sum 
 ---+-----
  1 |   3
  2 |   6
@@ -4811,7 +4811,7 @@ SELECT i,SUM(v::int) OVER (ORDER BY i ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
 SELECT a, b,
        SUM(b) OVER(ORDER BY A ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)
 FROM (VALUES(1,1::numeric),(2,2),(3,'NaN'),(4,3),(5,4)) t(a,b);
- a |  b  | sum
+ a |  b  | sum 
 ---+-----+-----
  1 |   1 |   1
  2 |   2 |   3
@@ -4826,7 +4826,7 @@ FROM (VALUES(1,1::numeric),(2,2),(3,'NaN'),(4,3),(5,4)) t(a,b);
 -- hard about it.
 SELECT to_char(SUM(n::float8) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING),'999999999999999999999D9')
   FROM (VALUES(1,1e20),(2,1)) n(i,n);
-         to_char
+         to_char          
 --------------------------
   100000000000000000000
                       1.0
@@ -4835,7 +4835,7 @@ SELECT to_char(SUM(n::float8) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND 1 FO
 SELECT i, b, bool_and(b) OVER w, bool_or(b) OVER w
   FROM (VALUES (1,true), (2,true), (3,false), (4,false), (5,true)) v(i,b)
   WINDOW w AS (ORDER BY i ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING);
- i | b | bool_and | bool_or
+ i | b | bool_and | bool_or 
 ---+---+----------+---------
  1 | t | t        | t
  2 | t | f        | t
@@ -4850,7 +4850,7 @@ SELECT i, b, bool_and(b) OVER w, bool_or(b) OVER w
 SELECT array_agg(i) OVER w
   FROM generate_series(1,5) i
 WINDOW w AS (ORDER BY i ROWS BETWEEN (('foo' < 'foobar')::integer) PRECEDING AND CURRENT ROW);
- array_agg
+ array_agg 
 -----------
  {1}
  {1,2}
@@ -4867,7 +4867,7 @@ AS $$
     WINDOW w AS (ORDER BY s ROWS BETWEEN CURRENT ROW AND GROUP_SIZE FOLLOWING)
 $$ LANGUAGE SQL STABLE;
 EXPLAIN (costs off) SELECT * FROM pg_temp.f(2);
-                      QUERY PLAN
+                      QUERY PLAN                      
 ------------------------------------------------------
  Subquery Scan on f
    ->  WindowAgg
@@ -4877,7 +4877,7 @@ EXPLAIN (costs off) SELECT * FROM pg_temp.f(2);
 (5 rows)
 
 SELECT * FROM pg_temp.f(2);
-    f
+    f    
 ---------
  {1,2,3}
  {2,3,4}
@@ -4885,3 +4885,4 @@ SELECT * FROM pg_temp.f(2);
  {4,5}
  {5}
 (5 rows)
+

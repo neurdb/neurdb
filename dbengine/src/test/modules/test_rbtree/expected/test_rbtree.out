@@ -5,7 +5,8 @@ CREATE EXTENSION test_rbtree;
 -- internal sanity tests fail.
 --
 SELECT test_rb_tree(10000);
- test_rb_tree
+ test_rb_tree 
 --------------
-
+ 
 (1 row)
+

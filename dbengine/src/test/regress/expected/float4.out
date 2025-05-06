@@ -83,56 +83,56 @@ LINE 1: INSERT INTO FLOAT4_TBL(f1) VALUES ('123            5');
                                            ^
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('34.5', 'float4');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('xyz', 'float4');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT pg_input_is_valid('1e400', 'float4');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('1e400', 'float4');
-                message                | detail | hint | sql_error_code
+                message                | detail | hint | sql_error_code 
 ---------------------------------------+--------+------+----------------
  "1e400" is out of range for type real |        |      | 22003
 (1 row)
 
 -- special inputs
 SELECT 'NaN'::float4;
- float4
+ float4 
 --------
     NaN
 (1 row)
 
 SELECT 'nan'::float4;
- float4
+ float4 
 --------
     NaN
 (1 row)
 
 SELECT '   NAN  '::float4;
- float4
+ float4 
 --------
     NaN
 (1 row)
 
 SELECT 'infinity'::float4;
-  float4
+  float4  
 ----------
  Infinity
 (1 row)
 
 SELECT '          -INFINiTY   '::float4;
-  float4
+  float4   
 -----------
  -Infinity
 (1 row)
@@ -151,43 +151,43 @@ ERROR:  invalid input syntax for type real: " INFINITY    x"
 LINE 1: SELECT ' INFINITY    x'::float4;
                ^
 SELECT 'Infinity'::float4 + 100.0;
- ?column?
+ ?column? 
 ----------
  Infinity
 (1 row)
 
 SELECT 'Infinity'::float4 / 'Infinity'::float4;
- ?column?
+ ?column? 
 ----------
       NaN
 (1 row)
 
 SELECT '42'::float4 / 'Infinity'::float4;
- ?column?
+ ?column? 
 ----------
         0
 (1 row)
 
 SELECT 'nan'::float4 / 'nan'::float4;
- ?column?
+ ?column? 
 ----------
       NaN
 (1 row)
 
 SELECT 'nan'::float4 / '0'::float4;
- ?column?
+ ?column? 
 ----------
       NaN
 (1 row)
 
 SELECT 'nan'::numeric::float4;
- float4
+ float4 
 --------
     NaN
 (1 row)
 
 SELECT * FROM FLOAT4_TBL;
-      f1
+      f1       
 ---------------
              0
         1004.3
@@ -197,7 +197,7 @@ SELECT * FROM FLOAT4_TBL;
 (5 rows)
 
 SELECT f.* FROM FLOAT4_TBL f WHERE f.f1 <> '1004.3';
-      f1
+      f1       
 ---------------
              0
         -34.84
@@ -206,13 +206,13 @@ SELECT f.* FROM FLOAT4_TBL f WHERE f.f1 <> '1004.3';
 (4 rows)
 
 SELECT f.* FROM FLOAT4_TBL f WHERE f.f1 = '1004.3';
-   f1
+   f1   
 --------
  1004.3
 (1 row)
 
 SELECT f.* FROM FLOAT4_TBL f WHERE '1004.3' > f.f1;
-      f1
+      f1       
 ---------------
              0
         -34.84
@@ -220,7 +220,7 @@ SELECT f.* FROM FLOAT4_TBL f WHERE '1004.3' > f.f1;
 (3 rows)
 
 SELECT f.* FROM FLOAT4_TBL f WHERE  f.f1 < '1004.3';
-      f1
+      f1       
 ---------------
              0
         -34.84
@@ -228,7 +228,7 @@ SELECT f.* FROM FLOAT4_TBL f WHERE  f.f1 < '1004.3';
 (3 rows)
 
 SELECT f.* FROM FLOAT4_TBL f WHERE '1004.3' >= f.f1;
-      f1
+      f1       
 ---------------
              0
         1004.3
@@ -237,7 +237,7 @@ SELECT f.* FROM FLOAT4_TBL f WHERE '1004.3' >= f.f1;
 (4 rows)
 
 SELECT f.* FROM FLOAT4_TBL f WHERE  f.f1 <= '1004.3';
-      f1
+      f1       
 ---------------
              0
         1004.3
@@ -247,7 +247,7 @@ SELECT f.* FROM FLOAT4_TBL f WHERE  f.f1 <= '1004.3';
 
 SELECT f.f1, f.f1 * '-10' AS x FROM FLOAT4_TBL f
    WHERE f.f1 > '0.0';
-      f1       |       x
+      f1       |       x        
 ---------------+----------------
         1004.3 |         -10043
  1.2345679e+20 | -1.2345678e+21
@@ -256,7 +256,7 @@ SELECT f.f1, f.f1 * '-10' AS x FROM FLOAT4_TBL f
 
 SELECT f.f1, f.f1 + '-10' AS x FROM FLOAT4_TBL f
    WHERE f.f1 > '0.0';
-      f1       |       x
+      f1       |       x       
 ---------------+---------------
         1004.3 |         994.3
  1.2345679e+20 | 1.2345679e+20
@@ -265,7 +265,7 @@ SELECT f.f1, f.f1 + '-10' AS x FROM FLOAT4_TBL f
 
 SELECT f.f1, f.f1 / '-10' AS x FROM FLOAT4_TBL f
    WHERE f.f1 > '0.0';
-      f1       |       x
+      f1       |       x        
 ---------------+----------------
         1004.3 |        -100.43
  1.2345679e+20 | -1.2345679e+19
@@ -274,7 +274,7 @@ SELECT f.f1, f.f1 / '-10' AS x FROM FLOAT4_TBL f
 
 SELECT f.f1, f.f1 - '-10' AS x FROM FLOAT4_TBL f
    WHERE f.f1 > '0.0';
-      f1       |       x
+      f1       |       x       
 ---------------+---------------
         1004.3 |        1014.3
  1.2345679e+20 | 1.2345679e+20
@@ -285,7 +285,7 @@ SELECT f.f1, f.f1 - '-10' AS x FROM FLOAT4_TBL f
 SELECT f.f1 / '0.0' from FLOAT4_TBL f;
 ERROR:  division by zero
 SELECT * FROM FLOAT4_TBL;
-      f1
+      f1       
 ---------------
              0
         1004.3
@@ -296,7 +296,7 @@ SELECT * FROM FLOAT4_TBL;
 
 -- test the unary float4abs operator
 SELECT f.f1, @f.f1 AS abs_f1 FROM FLOAT4_TBL f;
-      f1       |    abs_f1
+      f1       |    abs_f1     
 ---------------+---------------
              0 |             0
         1004.3 |        1004.3
@@ -309,7 +309,7 @@ UPDATE FLOAT4_TBL
    SET f1 = FLOAT4_TBL.f1 * '-1'
    WHERE FLOAT4_TBL.f1 > '0.0';
 SELECT * FROM FLOAT4_TBL;
-       f1
+       f1       
 ----------------
               0
          -34.84
@@ -320,7 +320,7 @@ SELECT * FROM FLOAT4_TBL;
 
 -- test edge-case coercions to integer
 SELECT '32767.4'::float4::int2;
- int2
+ int2  
 -------
  32767
 (1 row)
@@ -328,7 +328,7 @@ SELECT '32767.4'::float4::int2;
 SELECT '32767.6'::float4::int2;
 ERROR:  smallint out of range
 SELECT '-32768.4'::float4::int2;
-  int2
+  int2  
 --------
  -32768
 (1 row)
@@ -336,7 +336,7 @@ SELECT '-32768.4'::float4::int2;
 SELECT '-32768.6'::float4::int2;
 ERROR:  smallint out of range
 SELECT '2147483520'::float4::int4;
-    int4
+    int4    
 ------------
  2147483520
 (1 row)
@@ -344,7 +344,7 @@ SELECT '2147483520'::float4::int4;
 SELECT '2147483647'::float4::int4;
 ERROR:  integer out of range
 SELECT '-2147483648.5'::float4::int4;
-    int4
+    int4     
 -------------
  -2147483648
 (1 row)
@@ -352,7 +352,7 @@ SELECT '-2147483648.5'::float4::int4;
 SELECT '-2147483900'::float4::int4;
 ERROR:  integer out of range
 SELECT '9223369837831520256'::float4::int8;
-        int8
+        int8         
 ---------------------
  9223369837831520256
 (1 row)
@@ -360,7 +360,7 @@ SELECT '9223369837831520256'::float4::int8;
 SELECT '9223372036854775807'::float4::int8;
 ERROR:  bigint out of range
 SELECT '-9223372036854775808.5'::float4::int8;
-         int8
+         int8         
 ----------------------
  -9223372036854775808
 (1 row)
@@ -371,91 +371,91 @@ ERROR:  bigint out of range
 -- These lists are from Paxson 1991, excluding subnormals and
 -- inputs of over 9 sig. digits.
 SELECT float4send('5e-20'::float4);
- float4send
+ float4send 
 ------------
  \x1f6c1e4a
 (1 row)
 
 SELECT float4send('67e14'::float4);
- float4send
+ float4send 
 ------------
  \x59be6cea
 (1 row)
 
 SELECT float4send('985e15'::float4);
- float4send
+ float4send 
 ------------
  \x5d5ab6c4
 (1 row)
 
 SELECT float4send('55895e-16'::float4);
- float4send
+ float4send 
 ------------
  \x2cc4a9bd
 (1 row)
 
 SELECT float4send('7038531e-32'::float4);
- float4send
+ float4send 
 ------------
  \x15ae43fd
 (1 row)
 
 SELECT float4send('702990899e-20'::float4);
- float4send
+ float4send 
 ------------
  \x2cf757ca
 (1 row)
 
 SELECT float4send('3e-23'::float4);
- float4send
+ float4send 
 ------------
  \x1a111234
 (1 row)
 
 SELECT float4send('57e18'::float4);
- float4send
+ float4send 
 ------------
  \x6045c22c
 (1 row)
 
 SELECT float4send('789e-35'::float4);
- float4send
+ float4send 
 ------------
  \x0a23de70
 (1 row)
 
 SELECT float4send('2539e-18'::float4);
- float4send
+ float4send 
 ------------
  \x2736f449
 (1 row)
 
 SELECT float4send('76173e28'::float4);
- float4send
+ float4send 
 ------------
  \x7616398a
 (1 row)
 
 SELECT float4send('887745e-11'::float4);
- float4send
+ float4send 
 ------------
  \x3714f05c
 (1 row)
 
 SELECT float4send('5382571e-37'::float4);
- float4send
+ float4send 
 ------------
  \x0d2eaca7
 (1 row)
 
 SELECT float4send('82381273e-35'::float4);
- float4send
+ float4send 
 ------------
  \x128289d1
 (1 row)
 
 SELECT float4send('750486563e-38'::float4);
- float4send
+ float4send 
 ------------
  \x0f18377e
 (1 row)
@@ -468,13 +468,13 @@ SELECT float4send('750486563e-38'::float4);
 -- shortest val is          1.1754944000
 -- midpoint to next val is  1.1754944208...
 SELECT float4send('1.17549435e-38'::float4);
- float4send
+ float4send 
 ------------
  \x00800000
 (1 row)
 
 SELECT float4send('1.1754944e-38'::float4);
- float4send
+ float4send 
 ------------
  \x00800000
 (1 row)
@@ -520,7 +520,7 @@ select float4send(flt) as ibits,
   from (select bits::integer::xfloat4::float4 as flt
           from testdata
 	offset 0) s;
-   ibits    |      flt
+   ibits    |      flt      
 ------------+---------------
  \x00000001 |         1e-45
  \x00000002 |         3e-45
@@ -710,7 +710,7 @@ select float4send(flt) as ibits,
   from (select bits::integer::xfloat4::float4 as flt
           from testdata
 	offset 0) s;
-   ibits    |      flt       |     r_flt      |   obits    | correct
+   ibits    |      flt       |     r_flt      |   obits    | correct 
 ------------+----------------+----------------+------------+---------
  \x00000000 |              0 |              0 | \x00000000 | t
  \x00800000 |  1.1754944e-38 |  1.1754944e-38 | \x00800000 | t

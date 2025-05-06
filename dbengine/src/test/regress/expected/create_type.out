@@ -103,7 +103,7 @@ CREATE TYPE text_w_default (
 CREATE TABLE default_test (f1 text_w_default, f2 int42);
 INSERT INTO default_test DEFAULT VALUES;
 SELECT * FROM default_test;
-  f1   | f2
+  f1   | f2 
 -------+----
  zippo | 42
 (1 row)
@@ -158,7 +158,7 @@ CREATE FUNCTION get_default_test() RETURNS SETOF default_test_row AS '
   SELECT * FROM default_test;
 ' LANGUAGE SQL;
 SELECT * FROM get_default_test();
-  f1   | f2
+  f1   | f2 
 -------+----
  zippo | 42
 (1 row)
@@ -215,7 +215,7 @@ LINE 1: CREATE TEMP TABLE mytab (foo widget(42,13,7));
 CREATE TEMP TABLE mytab (foo widget(42,13));
 SELECT format_type(atttypid,atttypmod) FROM pg_attribute
 WHERE attrelid = 'mytab'::regclass AND attnum > 0;
-  format_type
+  format_type  
 ---------------
  widget(42,13)
 (1 row)
@@ -223,7 +223,7 @@ WHERE attrelid = 'mytab'::regclass AND attnum > 0;
 -- might as well exercise the widget type while we're here
 INSERT INTO mytab VALUES ('(1,2,3)'), ('(-44,5.5,12)');
 TABLE mytab;
-     foo
+     foo      
 --------------
  (1,2,3)
  (-44,5.5,12)
@@ -231,27 +231,27 @@ TABLE mytab;
 
 -- and test format_type() a bit more, too
 select format_type('varchar'::regtype, 42);
-      format_type
+      format_type      
 -----------------------
  character varying(38)
 (1 row)
 
 select format_type('bpchar'::regtype, null);
- format_type
+ format_type 
 -------------
  character
 (1 row)
 
 -- this behavior difference is intentional
 select format_type('bpchar'::regtype, -1);
- format_type
+ format_type 
 -------------
  bpchar
 (1 row)
 
 -- Test non-error-throwing APIs using widget, which still throws errors
 SELECT pg_input_is_valid('(1,2,3)', 'widget');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
@@ -259,7 +259,7 @@ SELECT pg_input_is_valid('(1,2,3)', 'widget');
 SELECT pg_input_is_valid('(1,2)', 'widget');  -- hard error expected
 ERROR:  invalid input syntax for type widget: "(1,2)"
 SELECT pg_input_is_valid('{"(1,2,3)"}', 'widget[]');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
@@ -267,7 +267,7 @@ SELECT pg_input_is_valid('{"(1,2,3)"}', 'widget[]');
 SELECT pg_input_is_valid('{"(1,2)"}', 'widget[]');  -- hard error expected
 ERROR:  invalid input syntax for type widget: "(1,2)"
 SELECT pg_input_is_valid('("(1,2,3)")', 'mytab');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
@@ -288,7 +288,7 @@ CREATE OPERATOR <% (
 );
 SELECT point '(1,2)' <% widget '(0,0,3)' AS t,
        point '(1,2)' <% widget '(0,0,1)' AS f;
- t | f
+ t | f 
 ---+---
  t | f
 (1 row)
@@ -303,7 +303,7 @@ INSERT INTO city VALUES
 ('Podunk', '(1,2),(3,4)', '100,127,1000'),
 ('Gotham', '(1000,34),(1100,334)', '123456,127,-1000,6789');
 TABLE city;
-  name  |       location       |        budget
+  name  |       location       |        budget         
 --------+----------------------+-----------------------
  Podunk | (3,4),(1,2)          | 100,127,1000,0
  Gotham | (1100,334),(1000,34) | 123456,127,-1000,6789
@@ -352,7 +352,7 @@ ALTER TYPE myvarchar SET (
 SELECT typinput, typoutput, typreceive, typsend, typmodin, typmodout,
        typanalyze, typsubscript, typstorage
 FROM pg_type WHERE typname = 'myvarchar';
-  typinput   |  typoutput   |  typreceive   |    typsend    |    typmodin     |    typmodout     |  typanalyze   |        typsubscript         | typstorage
+  typinput   |  typoutput   |  typreceive   |    typsend    |    typmodin     |    typmodout     |  typanalyze   |        typsubscript         | typstorage 
 -------------+--------------+---------------+---------------+-----------------+------------------+---------------+-----------------------------+------------
  myvarcharin | myvarcharout | myvarcharrecv | myvarcharsend | varchartypmodin | varchartypmodout | ts_typanalyze | raw_array_subscript_handler | x
 (1 row)
@@ -360,7 +360,7 @@ FROM pg_type WHERE typname = 'myvarchar';
 SELECT typinput, typoutput, typreceive, typsend, typmodin, typmodout,
        typanalyze, typsubscript, typstorage
 FROM pg_type WHERE typname = '_myvarchar';
- typinput | typoutput | typreceive |  typsend   |    typmodin     |    typmodout     |    typanalyze    |      typsubscript       | typstorage
+ typinput | typoutput | typreceive |  typsend   |    typmodin     |    typmodout     |    typanalyze    |      typsubscript       | typstorage 
 ----------+-----------+------------+------------+-----------------+------------------+------------------+-------------------------+------------
  array_in | array_out | array_recv | array_send | varchartypmodin | varchartypmodout | array_typanalyze | array_subscript_handler | x
 (1 row)
@@ -368,7 +368,7 @@ FROM pg_type WHERE typname = '_myvarchar';
 SELECT typinput, typoutput, typreceive, typsend, typmodin, typmodout,
        typanalyze, typsubscript, typstorage
 FROM pg_type WHERE typname = 'myvarchardom';
- typinput  |  typoutput   | typreceive  |    typsend    | typmodin | typmodout |  typanalyze   | typsubscript | typstorage
+ typinput  |  typoutput   | typreceive  |    typsend    | typmodin | typmodout |  typanalyze   | typsubscript | typstorage 
 -----------+--------------+-------------+---------------+----------+-----------+---------------+--------------+------------
  domain_in | myvarcharout | domain_recv | myvarcharsend | -        | -         | ts_typanalyze | -            | x
 (1 row)
@@ -376,7 +376,7 @@ FROM pg_type WHERE typname = 'myvarchardom';
 SELECT typinput, typoutput, typreceive, typsend, typmodin, typmodout,
        typanalyze, typsubscript, typstorage
 FROM pg_type WHERE typname = '_myvarchardom';
- typinput | typoutput | typreceive |  typsend   | typmodin | typmodout |    typanalyze    |      typsubscript       | typstorage
+ typinput | typoutput | typreceive |  typsend   | typmodin | typmodout |    typanalyze    |      typsubscript       | typstorage 
 ----------+-----------+------------+------------+----------+-----------+------------------+-------------------------+------------
  array_in | array_out | array_recv | array_send | -        | -         | array_typanalyze | array_subscript_handler | x
 (1 row)

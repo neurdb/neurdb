@@ -18,7 +18,7 @@ LINE 1: INSERT INTO xmltest VALUES (3, '<wrong');
                                        ^
 DETAIL:  This functionality requires the server to be built with libxml support.
 SELECT * FROM xmltest;
- id | data
+ id | data 
 ----+------
 (0 rows)
 
@@ -83,15 +83,15 @@ LINE 1: SELECT xmlconcat('<?xml version="1.1"?><foo/>', NULL, '<?xml...
                          ^
 DETAIL:  This functionality requires the server to be built with libxml support.
 SELECT xmlconcat(NULL);
- xmlconcat
+ xmlconcat 
 -----------
-
+ 
 (1 row)
 
 SELECT xmlconcat(NULL, NULL);
- xmlconcat
+ xmlconcat 
 -----------
-
+ 
 (1 row)
 
 SELECT xmlelement(name element,
@@ -295,7 +295,7 @@ SELECT xmlroot (
 ERROR:  unsupported XML feature
 DETAIL:  This functionality requires the server to be built with libxml support.
 SELECT xmlserialize(content data as character varying(20)) FROM xmltest;
- xmlserialize
+ xmlserialize 
 --------------
 (0 rows)
 
@@ -388,15 +388,15 @@ LINE 1: SELECT xmlserialize(CONTENT  '  ' AS text INDENT);
 DETAIL:  This functionality requires the server to be built with libxml support.
 -- indent null
 SELECT xmlserialize(DOCUMENT NULL AS text INDENT);
- xmlserialize
+ xmlserialize 
 --------------
-
+ 
 (1 row)
 
 SELECT xmlserialize(CONTENT  NULL AS text INDENT);
- xmlserialize
+ xmlserialize 
 --------------
-
+ 
 (1 row)
 
 -- indent with XML declaration
@@ -469,15 +469,15 @@ LINE 1: SELECT '<>' IS NOT DOCUMENT;
                ^
 DETAIL:  This functionality requires the server to be built with libxml support.
 SELECT xmlagg(data) FROM xmltest;
- xmlagg
+ xmlagg 
 --------
-
+ 
 (1 row)
 
 SELECT xmlagg(data) FROM xmltest WHERE id > 10;
- xmlagg
+ xmlagg 
 --------
-
+ 
 (1 row)
 
 SELECT xmlelement(name employees, xmlagg(xmlelement(name name, name))) FROM emp;
@@ -574,7 +574,7 @@ LINE 1: ...EATE VIEW xmlview9 AS SELECT xmlserialize(content 'good' as ...
 DETAIL:  This functionality requires the server to be built with libxml support.
 SELECT table_name, view_definition FROM information_schema.views
   WHERE table_name LIKE 'xmlview%' ORDER BY 1;
- table_name |                                view_definition
+ table_name |                                view_definition                                 
 ------------+--------------------------------------------------------------------------------
  xmlview1   |  SELECT xmlcomment('test'::text) AS xmlcomment;
  xmlview5   |  SELECT XMLPARSE(CONTENT '<abc>x</abc>'::text STRIP WHITESPACE) AS "xmlparse";
@@ -582,12 +582,12 @@ SELECT table_name, view_definition FROM information_schema.views
 
 -- Text XPath expressions evaluation
 SELECT xpath('/value', data) FROM xmltest;
- xpath
+ xpath 
 -------
 (0 rows)
 
 SELECT xpath(NULL, NULL) IS NULL FROM xmltest;
- ?column?
+ ?column? 
 ----------
 (0 rows)
 
@@ -753,61 +753,61 @@ LINE 1: INSERT INTO xmltest VALUES (7, '<myns:menu xmlns:myns="http:...
                                        ^
 DETAIL:  This functionality requires the server to be built with libxml support.
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beer' PASSING data);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beer' PASSING BY REF data BY REF);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beers' PASSING BY REF data);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xmlexists('/menu/beers/name[text() = ''Molson'']' PASSING BY REF data);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/menu/beer',data);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/menu/beers',data);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/menu/beers/name[text() = ''Molson'']',data);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beer',data,ARRAY[ARRAY['myns','http://myns.com']]);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beers',data,ARRAY[ARRAY['myns','http://myns.com']]);
- count
+ count 
 -------
      0
 (1 row)
 
 SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beers/myns:name[text() = ''Molson'']',data,ARRAY[ARRAY['myns','http://myns.com']]);
- count
+ count 
 -------
      0
 (1 row)
@@ -815,7 +815,7 @@ SELECT COUNT(id) FROM xmltest WHERE xpath_exists('/myns:menu/myns:beers/myns:nam
 CREATE TABLE query ( expr TEXT );
 INSERT INTO query VALUES ('/menu/beers/cost[text() = ''lots'']');
 SELECT COUNT(id) FROM xmltest, query WHERE xmlexists(expr PASSING BY REF data);
- count
+ count 
 -------
      0
 (1 row)
@@ -969,7 +969,7 @@ SELECT  xmltable.*
                                   size float PATH 'SIZE',
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
- id | _id | country_name | country_id | region_id | size | unit | premier_name
+ id | _id | country_name | country_id | region_id | size | unit | premier_name 
 ----+-----+--------------+------------+-----------+------+------+--------------
 (0 rows)
 
@@ -986,7 +986,7 @@ CREATE VIEW xmltableview1 AS SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
 SELECT * FROM xmltableview1;
- id | _id | country_name | country_id | region_id | size | unit | premier_name
+ id | _id | country_name | country_id | region_id | size | unit | premier_name 
 ----+-----+--------------+------------+-----------+------+------+--------------
 (0 rows)
 
@@ -1004,7 +1004,7 @@ CREATE OR REPLACE VIEW public.xmltableview1 AS
            FROM xmldata) x,
     LATERAL XMLTABLE(('/ROWS/ROW'::text) PASSING (x.data) COLUMNS id integer PATH ('@id'::text), _id FOR ORDINALITY, country_name text PATH ('COUNTRY_NAME/text()'::text) NOT NULL, country_id text PATH ('COUNTRY_ID'::text), region_id integer PATH ('REGION_ID'::text), size double precision PATH ('SIZE'::text), unit text PATH ('SIZE/@unit'::text), premier_name text DEFAULT ('not specified'::text) PATH ('PREMIER_NAME'::text))
 EXPLAIN (COSTS OFF) SELECT * FROM xmltableview1;
-               QUERY PLAN
+               QUERY PLAN                
 -----------------------------------------
  Nested Loop
    ->  Seq Scan on xmldata
@@ -1012,7 +1012,7 @@ EXPLAIN (COSTS OFF) SELECT * FROM xmltableview1;
 (3 rows)
 
 EXPLAIN (COSTS OFF, VERBOSE) SELECT * FROM xmltableview1;
-                                                                                                                                                                                                                            QUERY PLAN
+                                                                                                                                                                                                                            QUERY PLAN                                                                                                                                                                                                                            
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable".id, "xmltable"._id, "xmltable".country_name, "xmltable".country_id, "xmltable".region_id, "xmltable".size, "xmltable".unit, "xmltable".premier_name
@@ -1077,42 +1077,42 @@ SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
 EXECUTE pp;
- id | _id | country_name | country_id | region_id | size | unit | premier_name
+ id | _id | country_name | country_id | region_id | size | unit | premier_name 
 ----+-----+--------------+------------+-----------+------+------+--------------
 (0 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS "COUNTRY_NAME" text, "REGION_ID" int);
- COUNTRY_NAME | REGION_ID
+ COUNTRY_NAME | REGION_ID 
 --------------+-----------
 (0 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id FOR ORDINALITY, "COUNTRY_NAME" text, "REGION_ID" int);
- id | COUNTRY_NAME | REGION_ID
+ id | COUNTRY_NAME | REGION_ID 
 ----+--------------+-----------
 (0 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id', "COUNTRY_NAME" text, "REGION_ID" int);
- id | COUNTRY_NAME | REGION_ID
+ id | COUNTRY_NAME | REGION_ID 
 ----+--------------+-----------
 (0 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id');
- id
+ id 
 ----
 (0 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id FOR ORDINALITY);
- id
+ id 
 ----
 (0 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id', "COUNTRY_NAME" text, "REGION_ID" int, rawdata xml PATH '.');
- id | COUNTRY_NAME | REGION_ID | rawdata
+ id | COUNTRY_NAME | REGION_ID | rawdata 
 ----+--------------+-----------+---------
 (0 rows)
 
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS id int PATH '@id', "COUNTRY_NAME" text, "REGION_ID" int, rawdata xml PATH './*');
- id | COUNTRY_NAME | REGION_ID | rawdata
+ id | COUNTRY_NAME | REGION_ID | rawdata 
 ----+--------------+-----------+---------
 (0 rows)
 
@@ -1156,7 +1156,7 @@ SELECT  xmltable.*
                                   size float PATH 'SIZE',
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
-                                                                                                                                                                                                                        QUERY PLAN
+                                                                                                                                                                                                                        QUERY PLAN                                                                                                                                                                                                                         
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable".id, "xmltable"._id, "xmltable".country_name, "xmltable".country_id, "xmltable".region_id, "xmltable".size, "xmltable".unit, "xmltable".premier_name
@@ -1169,13 +1169,13 @@ SELECT  xmltable.*
 
 -- test qual
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS "COUNTRY_NAME" text, "REGION_ID" int) WHERE "COUNTRY_NAME" = 'Japan';
- COUNTRY_NAME | REGION_ID
+ COUNTRY_NAME | REGION_ID 
 --------------+-----------
 (0 rows)
 
 EXPLAIN (VERBOSE, COSTS OFF)
 SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW[COUNTRY_NAME="Japan" or COUNTRY_NAME="India"]' PASSING data COLUMNS "COUNTRY_NAME" text, "REGION_ID" int) WHERE "COUNTRY_NAME" = 'Japan';
-                                                                                    QUERY PLAN
+                                                                                    QUERY PLAN                                                                                    
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable"."COUNTRY_NAME", "xmltable"."REGION_ID"
@@ -1237,7 +1237,7 @@ SELECT  xmltable.*
                                   size float PATH 'SIZE',
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
- id | _id | country_name | country_id | region_id | size | unit | premier_name
+ id | _id | country_name | country_id | region_id | size | unit | premier_name 
 ----+-----+--------------+------------+-----------+------+------+--------------
 (0 rows)
 
@@ -1254,7 +1254,7 @@ SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified')
   WHERE region_id = 2;
- id | _id | country_name | country_id | region_id | size | unit | premier_name
+ id | _id | country_name | country_id | region_id | size | unit | premier_name 
 ----+-----+--------------+------------+-----------+------+------+--------------
 (0 rows)
 
@@ -1272,7 +1272,7 @@ SELECT  xmltable.*
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified')
   WHERE region_id = 2;
-                                                                                                                                                                                                                        QUERY PLAN
+                                                                                                                                                                                                                        QUERY PLAN                                                                                                                                                                                                                         
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Nested Loop
    Output: "xmltable".id, "xmltable"._id, "xmltable".country_name, "xmltable".country_id, "xmltable".region_id, "xmltable".size, "xmltable".unit, "xmltable".premier_name
@@ -1297,7 +1297,7 @@ SELECT  xmltable.*
                                   size float PATH 'SIZE' NOT NULL,
                                   unit text PATH 'SIZE/@unit',
                                   premier_name text PATH 'PREMIER_NAME' DEFAULT 'not specified');
- id | _id | country_name | country_id | region_id | size | unit | premier_name
+ id | _id | country_name | country_id | region_id | size | unit | premier_name 
 ----+-----+--------------+------------+-----------+------+------+--------------
 (0 rows)
 
@@ -1372,17 +1372,17 @@ LINE 1: INSERT INTO xmltest2 VALUES('<d><r><dc>2</dc></r></d>', 'D')...
                                     ^
 DETAIL:  This functionality requires the server to be built with libxml support.
 SELECT xmltable.* FROM xmltest2, LATERAL xmltable('/d/r' PASSING x COLUMNS a int PATH '' || lower(_path) || 'c');
- a
+ a 
 ---
 (0 rows)
 
 SELECT xmltable.* FROM xmltest2, LATERAL xmltable(('/d/r/' || lower(_path) || 'c') PASSING x COLUMNS a int PATH '.');
- a
+ a 
 ---
 (0 rows)
 
 SELECT xmltable.* FROM xmltest2, LATERAL xmltable(('/d/r/' || lower(_path) || 'c') PASSING x COLUMNS a int PATH 'x' DEFAULT ascii(_path) - 54);
- a
+ a 
 ---
 (0 rows)
 

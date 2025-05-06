@@ -12,7 +12,7 @@ SELECT relname, nspname
      AND NOT EXISTS (SELECT 1 FROM pg_index i WHERE indrelid = c.oid
                      AND indkey[0] = a.attnum AND indnatts = 1
                      AND indisunique AND indimmediate);
- relname | nspname
+ relname | nspname 
 ---------+---------
 (0 rows)
 
@@ -21,7 +21,7 @@ SELECT relname, relkind
   FROM pg_class
  WHERE relkind IN ('v', 'c', 'f', 'p', 'I')
        AND relfilenode <> 0;
- relname | relkind
+ relname | relkind 
 ---------+---------
 (0 rows)
 
@@ -50,6 +50,7 @@ SELECT relname, attname, coltypes, get_columns_length(coltypes)
  FROM check_columns
  WHERE get_columns_length(coltypes) % 8 != 0 OR
        'name'::regtype::oid = ANY(coltypes);
- relname | attname | coltypes | get_columns_length
+ relname | attname | coltypes | get_columns_length 
 ---------+---------+----------+--------------------
 (0 rows)
+

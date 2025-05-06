@@ -4,7 +4,7 @@ CREATE TABLE tidscan(id integer);
 INSERT INTO tidscan VALUES (1), (2), (3);
 -- show ctids
 SELECT ctid, * FROM tidscan;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
  (0,2) |  2
@@ -14,28 +14,28 @@ SELECT ctid, * FROM tidscan;
 -- ctid equality - implemented as tidscan
 EXPLAIN (COSTS OFF)
 SELECT ctid, * FROM tidscan WHERE ctid = '(0,1)';
-            QUERY PLAN
+            QUERY PLAN             
 -----------------------------------
  Tid Scan on tidscan
    TID Cond: (ctid = '(0,1)'::tid)
 (2 rows)
 
 SELECT ctid, * FROM tidscan WHERE ctid = '(0,1)';
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
 (1 row)
 
 EXPLAIN (COSTS OFF)
 SELECT ctid, * FROM tidscan WHERE '(0,1)' = ctid;
-            QUERY PLAN
+            QUERY PLAN             
 -----------------------------------
  Tid Scan on tidscan
    TID Cond: ('(0,1)'::tid = ctid)
 (2 rows)
 
 SELECT ctid, * FROM tidscan WHERE '(0,1)' = ctid;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
 (1 row)
@@ -43,14 +43,14 @@ SELECT ctid, * FROM tidscan WHERE '(0,1)' = ctid;
 -- OR'd clauses
 EXPLAIN (COSTS OFF)
 SELECT ctid, * FROM tidscan WHERE ctid = '(0,2)' OR '(0,1)' = ctid;
-                          QUERY PLAN
+                          QUERY PLAN                          
 --------------------------------------------------------------
  Tid Scan on tidscan
    TID Cond: ((ctid = '(0,2)'::tid) OR ('(0,1)'::tid = ctid))
 (2 rows)
 
 SELECT ctid, * FROM tidscan WHERE ctid = '(0,2)' OR '(0,1)' = ctid;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
  (0,2) |  2
@@ -59,14 +59,14 @@ SELECT ctid, * FROM tidscan WHERE ctid = '(0,2)' OR '(0,1)' = ctid;
 -- ctid = ScalarArrayOp - implemented as tidscan
 EXPLAIN (COSTS OFF)
 SELECT ctid, * FROM tidscan WHERE ctid = ANY(ARRAY['(0,1)', '(0,2)']::tid[]);
-                      QUERY PLAN
+                      QUERY PLAN                       
 -------------------------------------------------------
  Tid Scan on tidscan
    TID Cond: (ctid = ANY ('{"(0,1)","(0,2)"}'::tid[]))
 (2 rows)
 
 SELECT ctid, * FROM tidscan WHERE ctid = ANY(ARRAY['(0,1)', '(0,2)']::tid[]);
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
  (0,2) |  2
@@ -75,14 +75,14 @@ SELECT ctid, * FROM tidscan WHERE ctid = ANY(ARRAY['(0,1)', '(0,2)']::tid[]);
 -- ctid != ScalarArrayOp - can't be implemented as tidscan
 EXPLAIN (COSTS OFF)
 SELECT ctid, * FROM tidscan WHERE ctid != ANY(ARRAY['(0,1)', '(0,2)']::tid[]);
-                      QUERY PLAN
+                      QUERY PLAN                      
 ------------------------------------------------------
  Seq Scan on tidscan
    Filter: (ctid <> ANY ('{"(0,1)","(0,2)"}'::tid[]))
 (2 rows)
 
 SELECT ctid, * FROM tidscan WHERE ctid != ANY(ARRAY['(0,1)', '(0,2)']::tid[]);
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
  (0,2) |  2
@@ -93,7 +93,7 @@ SELECT ctid, * FROM tidscan WHERE ctid != ANY(ARRAY['(0,1)', '(0,2)']::tid[]);
 EXPLAIN (COSTS OFF)
 SELECT ctid, * FROM tidscan
 WHERE (id = 3 AND ctid IN ('(0,2)', '(0,3)')) OR (ctid = '(0,1)' AND id = 1);
-                                                  QUERY PLAN
+                                                  QUERY PLAN                                                  
 --------------------------------------------------------------------------------------------------------------
  Tid Scan on tidscan
    TID Cond: ((ctid = ANY ('{"(0,2)","(0,3)"}'::tid[])) OR (ctid = '(0,1)'::tid))
@@ -102,7 +102,7 @@ WHERE (id = 3 AND ctid IN ('(0,2)', '(0,3)')) OR (ctid = '(0,1)' AND id = 1);
 
 SELECT ctid, * FROM tidscan
 WHERE (id = 3 AND ctid IN ('(0,2)', '(0,3)')) OR (ctid = '(0,1)' AND id = 1);
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
  (0,3) |  3
@@ -113,7 +113,7 @@ SET enable_hashjoin TO off;  -- otherwise hash join might win
 EXPLAIN (COSTS OFF)
 SELECT t1.ctid, t1.*, t2.ctid, t2.*
 FROM tidscan t1 JOIN tidscan t2 ON t1.ctid = t2.ctid WHERE t1.id = 1;
-             QUERY PLAN
+             QUERY PLAN             
 ------------------------------------
  Nested Loop
    ->  Seq Scan on tidscan t1
@@ -124,7 +124,7 @@ FROM tidscan t1 JOIN tidscan t2 ON t1.ctid = t2.ctid WHERE t1.id = 1;
 
 SELECT t1.ctid, t1.*, t2.ctid, t2.*
 FROM tidscan t1 JOIN tidscan t2 ON t1.ctid = t2.ctid WHERE t1.id = 1;
- ctid  | id | ctid  | id
+ ctid  | id | ctid  | id 
 -------+----+-------+----
  (0,1) |  1 | (0,1) |  1
 (1 row)
@@ -132,7 +132,7 @@ FROM tidscan t1 JOIN tidscan t2 ON t1.ctid = t2.ctid WHERE t1.id = 1;
 EXPLAIN (COSTS OFF)
 SELECT t1.ctid, t1.*, t2.ctid, t2.*
 FROM tidscan t1 LEFT JOIN tidscan t2 ON t1.ctid = t2.ctid WHERE t1.id = 1;
-             QUERY PLAN
+             QUERY PLAN             
 ------------------------------------
  Nested Loop Left Join
    ->  Seq Scan on tidscan t1
@@ -143,7 +143,7 @@ FROM tidscan t1 LEFT JOIN tidscan t2 ON t1.ctid = t2.ctid WHERE t1.id = 1;
 
 SELECT t1.ctid, t1.*, t2.ctid, t2.*
 FROM tidscan t1 LEFT JOIN tidscan t2 ON t1.ctid = t2.ctid WHERE t1.id = 1;
- ctid  | id | ctid  | id
+ ctid  | id | ctid  | id 
 -------+----+-------+----
  (0,1) |  1 | (0,1) |  1
 (1 row)
@@ -154,20 +154,20 @@ BEGIN;
 DECLARE c CURSOR FOR
 SELECT ctid, * FROM tidscan WHERE ctid = ANY(ARRAY['(0,1)', '(0,2)']::tid[]);
 FETCH ALL FROM c;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
  (0,2) |  2
 (2 rows)
 
 FETCH BACKWARD 1 FROM c;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,2) |  2
 (1 row)
 
 FETCH FIRST FROM c;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
 (1 row)
@@ -177,13 +177,13 @@ ROLLBACK;
 BEGIN;
 DECLARE c CURSOR FOR SELECT ctid, * FROM tidscan;
 FETCH NEXT FROM c; -- skip one row
- ctid  | id
+ ctid  | id 
 -------+----
  (0,1) |  1
 (1 row)
 
 FETCH NEXT FROM c;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,2) |  2
 (1 row)
@@ -191,7 +191,7 @@ FETCH NEXT FROM c;
 -- perform update
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
 UPDATE tidscan SET id = -id WHERE CURRENT OF c RETURNING *;
-                    QUERY PLAN
+                    QUERY PLAN                     
 ---------------------------------------------------
  Update on tidscan (actual rows=1 loops=1)
    ->  Tid Scan on tidscan (actual rows=1 loops=1)
@@ -199,7 +199,7 @@ UPDATE tidscan SET id = -id WHERE CURRENT OF c RETURNING *;
 (3 rows)
 
 FETCH NEXT FROM c;
- ctid  | id
+ ctid  | id 
 -------+----
  (0,3) |  3
 (1 row)
@@ -207,7 +207,7 @@ FETCH NEXT FROM c;
 -- perform update
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
 UPDATE tidscan SET id = -id WHERE CURRENT OF c RETURNING *;
-                    QUERY PLAN
+                    QUERY PLAN                     
 ---------------------------------------------------
  Update on tidscan (actual rows=1 loops=1)
    ->  Tid Scan on tidscan (actual rows=1 loops=1)
@@ -215,7 +215,7 @@ UPDATE tidscan SET id = -id WHERE CURRENT OF c RETURNING *;
 (3 rows)
 
 SELECT * FROM tidscan;
- id
+ id 
 ----
   1
  -2
@@ -224,7 +224,7 @@ SELECT * FROM tidscan;
 
 -- position cursor past any rows
 FETCH NEXT FROM c;
- ctid | id
+ ctid | id 
 ------+----
 (0 rows)
 
@@ -238,7 +238,7 @@ ROLLBACK;
 -- appropriate place for these tests)
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM tenk1 t1 JOIN tenk1 t2 ON t1.ctid = t2.ctid;
-               QUERY PLAN
+               QUERY PLAN               
 ----------------------------------------
  Aggregate
    ->  Hash Join
@@ -249,7 +249,7 @@ SELECT count(*) FROM tenk1 t1 JOIN tenk1 t2 ON t1.ctid = t2.ctid;
 (6 rows)
 
 SELECT count(*) FROM tenk1 t1 JOIN tenk1 t2 ON t1.ctid = t2.ctid;
- count
+ count 
 -------
  10000
 (1 row)
@@ -257,7 +257,7 @@ SELECT count(*) FROM tenk1 t1 JOIN tenk1 t2 ON t1.ctid = t2.ctid;
 SET enable_hashjoin TO off;
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM tenk1 t1 JOIN tenk1 t2 ON t1.ctid = t2.ctid;
-               QUERY PLAN
+               QUERY PLAN                
 -----------------------------------------
  Aggregate
    ->  Merge Join
@@ -271,7 +271,7 @@ SELECT count(*) FROM tenk1 t1 JOIN tenk1 t2 ON t1.ctid = t2.ctid;
 (9 rows)
 
 SELECT count(*) FROM tenk1 t1 JOIN tenk1 t2 ON t1.ctid = t2.ctid;
- count
+ count 
 -------
  10000
 (1 row)
@@ -280,14 +280,14 @@ RESET enable_hashjoin;
 -- check predicate lock on CTID
 BEGIN ISOLATION LEVEL SERIALIZABLE;
 SELECT * FROM tidscan WHERE ctid = '(0,1)';
- id
+ id 
 ----
   1
 (1 row)
 
 -- locktype should be 'tuple'
 SELECT locktype, mode FROM pg_locks WHERE pid = pg_backend_pid() AND mode = 'SIReadLock';
- locktype |    mode
+ locktype |    mode    
 ----------+------------
  tuple    | SIReadLock
 (1 row)

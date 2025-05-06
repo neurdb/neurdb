@@ -2,25 +2,25 @@
 -- COMMENTS
 --
 SELECT 'trailing' AS first; -- trailing single line
-  first
+  first   
 ----------
  trailing
 (1 row)
 
 SELECT /* embedded single line */ 'embedded' AS second;
-  second
+  second  
 ----------
  embedded
 (1 row)
 
 SELECT /* both embedded and trailing single line */ 'both' AS third; -- trailing single line
- third
+ third 
 -------
  both
 (1 row)
 
 SELECT 'before multi-line' AS fourth;
-      fourth
+      fourth       
 -------------------
  before multi-line
 (1 row)
@@ -29,7 +29,7 @@ SELECT 'before multi-line' AS fourth;
  * select 'multi-line';
  */
 SELECT 'after multi-line' AS fifth;
-      fifth
+      fifth       
 ------------------
  after multi-line
 (1 row)
@@ -57,7 +57,7 @@ Hoo boy. Still two deep...
 Now just one deep...
 */
 'deeply nested example' AS sixth;
-         sixth
+         sixth         
 -----------------------
  deeply nested example
 (1 row)
