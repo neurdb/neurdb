@@ -155,7 +155,7 @@ if (defined($ENV{olddump}))
 	my $olddumpfile = $ENV{olddump};
 	die "no dump file found!" unless -e $olddumpfile;
 
-	# Load the dump using the "postgres" database as "regression" does
+	# Load the dump using the "neurdb" database as "regression" does
 	# not exist yet, and we are done here.
 	$oldnode->command_ok([ 'psql', '-X', '-f', $olddumpfile, 'postgres' ],
 		'loaded old dump file');

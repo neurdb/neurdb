@@ -20,13 +20,13 @@ my $db_template = "template1";
 my $db_new = "test_db_1";
 
 # Create table.  It should persist on the template database.
-$node->safe_psql("postgres",
+$node->safe_psql("neurdb",
 	"CREATE DATABASE $db_new STRATEGY WAL_LOG TEMPLATE $db_template;");
 
 $node->safe_psql($db_template, "CREATE TABLE tab_db_after_create_1 (a INT);");
 
 # Flush the changes affecting the template database, then replay them.
-$node->safe_psql("postgres", "CHECKPOINT;");
+$node->safe_psql("neurdb", "CHECKPOINT;");
 
 $node->stop('immediate');
 $node->start;

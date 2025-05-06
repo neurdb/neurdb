@@ -311,7 +311,7 @@ maintainer-clean: distclean
 #
 # Support for code development.
 #
-# Use target "quick" to build "postgres" when you know all the subsystems
+# Use target "quick" to build "neurdb" when you know all the subsystems
 # are up to date.  It saves the time of doing all the submakes.
 .PHONY: quick
 quick: $(OBJS)

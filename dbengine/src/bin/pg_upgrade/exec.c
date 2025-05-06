@@ -394,7 +394,7 @@ check_bin_dir(ClusterInfo *cluster, bool check_versions)
 		report_status(PG_FATAL, "\"%s\" is not a directory",
 					  cluster->bindir);
 
-	check_exec(cluster->bindir, "postgres", check_versions);
+	check_exec(cluster->bindir, "neurdb", check_versions);
 	check_exec(cluster->bindir, "pg_controldata", check_versions);
 	check_exec(cluster->bindir, "pg_ctl", check_versions);
 

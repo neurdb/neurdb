@@ -783,7 +783,7 @@ static void
 set_stack_entry_domain(ErrorData *edata, const char *domain)
 {
 	/* the default text domain is the backend's */
-	edata->domain = domain ? domain : PG_TEXTDOMAIN("postgres");
+	edata->domain = domain ? domain : PG_TEXTDOMAIN("neurdb");
 	/* initialize context_domain the same way (see set_errcontext_domain()) */
 	edata->context_domain = edata->domain;
 }
@@ -1399,7 +1399,7 @@ set_errcontext_domain(const char *domain)
 	CHECK_STACK_DEPTH();
 
 	/* the default text domain is the backend's */
-	edata->context_domain = domain ? domain : PG_TEXTDOMAIN("postgres");
+	edata->context_domain = domain ? domain : PG_TEXTDOMAIN("neurdb");
 
 	return 0;					/* return value does not matter */
 }
@@ -1647,7 +1647,7 @@ format_elog_string(const char *fmt,...)
 	edata = &errdata;
 	MemSet(edata, 0, sizeof(ErrorData));
 	/* the default text domain is the backend's */
-	edata->domain = save_format_domain ? save_format_domain : PG_TEXTDOMAIN("postgres");
+	edata->domain = save_format_domain ? save_format_domain : PG_TEXTDOMAIN("neurdb");
 	/* set the errno to be used to interpret %m */
 	edata->saved_errno = save_format_errnumber;
 
@@ -2329,7 +2329,7 @@ write_syslog(int level, const char *line)
 	/* Open syslog connection if not done yet */
 	if (!openlog_done)
 	{
-		openlog(syslog_ident ? syslog_ident : "postgres",
+		openlog(syslog_ident ? syslog_ident : "neurdb",
 				LOG_PID | LOG_NDELAY | LOG_NOWAIT,
 				syslog_facility);
 		openlog_done = true;

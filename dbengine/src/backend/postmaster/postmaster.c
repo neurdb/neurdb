@@ -1537,7 +1537,7 @@ getInstallationPaths(const char *argv0)
 
 #ifdef EXEC_BACKEND
 	/* Locate executable backend before we change working directory */
-	if (find_other_exec(argv0, "postgres", PG_BACKEND_VERSIONSTR,
+	if (find_other_exec(argv0, "neurdb", PG_BACKEND_VERSIONSTR,
 						postgres_exec_path) < 0)
 		ereport(FATAL,
 				(errmsg("%s: could not locate matching postgres executable",
@@ -4504,7 +4504,7 @@ backend_forkexec(Port *port)
 	char	   *av[4];
 	int			ac = 0;
 
-	av[ac++] = "postgres";
+	av[ac++] = "neurdb";
 	av[ac++] = "--forkbackend";
 	av[ac++] = NULL;			/* filled in by internal_forkexec */
 
@@ -5342,7 +5342,7 @@ StartChildProcess(AuxProcType type)
 		/*
 		 * Set up command-line arguments for subprocess
 		 */
-		av[ac++] = "postgres";
+		av[ac++] = "neurdb";
 		av[ac++] = "--forkaux";
 		av[ac++] = NULL;		/* filled in by postmaster_forkexec */
 
@@ -5675,7 +5675,7 @@ bgworker_forkexec(int shmem_slot)
 
 	snprintf(forkav, MAXPGPATH, "--forkbgworker=%d", shmem_slot);
 
-	av[ac++] = "postgres";
+	av[ac++] = "neurdb";
 	av[ac++] = forkav;
 	av[ac++] = NULL;			/* filled in by postmaster_forkexec */
 	av[ac] = NULL;

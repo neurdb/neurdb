@@ -141,7 +141,7 @@ connectMaintenanceDatabase(ConnParams *cparams,
 		return connectDatabase(cparams, progname, echo, false, false);
 
 	/* Otherwise, try postgres first and then template1. */
-	cparams->dbname = "postgres";
+	cparams->dbname = "neurdb";
 	conn = connectDatabase(cparams, progname, echo, true, false);
 	if (!conn)
 	{

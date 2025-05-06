@@ -33,7 +33,7 @@ $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data start
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop
 
 # (Start in frontend)
-$NEURDBPATH/psql/bin/postgres -D $NEURDBPATH/psql/data -h 0.0.0.0
+$NEURDBPATH/psql/bin/neurdb -D $NEURDBPATH/psql/data -h 0.0.0.0
 ```
 
 
@@ -96,7 +96,7 @@ This happens when you have directory `psql/data` without initializing the databa
 
 ```bash
 # users
-su - postgres
+su - neurdb
 make clean
 
 # stop existing db
@@ -111,7 +111,7 @@ mkdir -p $NEURDBPATH/psql/data
 sudo chown $(whoami) $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/initdb -D $NEURDBPATH/psql/data
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start
-$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
+$NEURDBPATH/psql/bin/psql  -h localhost -U neurdb -d neurdb -p 5432
 
 # restart
 $NEURDBPATH/psql/bin/pg_ctl reload -D $NEURDBPATH/psql/data
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS frappe_test (
 ```
 
 ```bash
-psql -h localhost -U postgres -d postgres -c "\copy frappe_test FROM './frappe.csv' DELIMITER ',' CSV HEADER;"
+psql -h localhost -U neurdb -d neurdb -c "\copy frappe_test FROM './frappe.csv' DELIMITER ',' CSV HEADER;"
 ```
 
 ```sql

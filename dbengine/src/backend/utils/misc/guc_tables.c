@@ -159,7 +159,7 @@ static const struct config_enum_entry server_message_level_options[] = {
 };
 
 static const struct config_enum_entry intervalstyle_options[] = {
-	{"postgres", INTSTYLE_POSTGRES, false},
+	{"neurdb", INTSTYLE_POSTGRES, false},
 	{"postgres_verbose", INTSTYLE_POSTGRES_VERBOSE, false},
 	{"sql_standard", INTSTYLE_SQL_STANDARD, false},
 	{"iso_8601", INTSTYLE_ISO_8601, false},
@@ -4291,7 +4291,7 @@ struct config_string ConfigureNamesString[] =
 			NULL
 		},
 		&syslog_ident_str,
-		"postgres",
+		"neurdb",
 		NULL, assign_syslog_ident, NULL
 	},
 

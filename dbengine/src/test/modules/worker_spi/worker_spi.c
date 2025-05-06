@@ -316,7 +316,7 @@ _PG_init(void)
 							   "Database to connect to.",
 							   NULL,
 							   &worker_spi_database,
-							   "postgres",
+							   "neurdb",
 							   PGC_POSTMASTER,
 							   0,
 							   NULL, NULL, NULL);

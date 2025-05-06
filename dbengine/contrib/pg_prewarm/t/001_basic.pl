@@ -20,30 +20,30 @@ $node->append_conf(
 $node->start;
 
 # setup
-$node->safe_psql("postgres",
+$node->safe_psql("neurdb",
 		"CREATE EXTENSION pg_prewarm;\n"
 	  . "CREATE TABLE test(c1 int);\n"
 	  . "INSERT INTO test SELECT generate_series(1, 100);");
 
 # test read mode
 my $result =
-  $node->safe_psql("postgres", "SELECT pg_prewarm('test', 'read');");
+  $node->safe_psql("neurdb", "SELECT pg_prewarm('test', 'read');");
 like($result, qr/^[1-9][0-9]*$/, 'read mode succeeded');
 
 # test buffer_mode
 $result =
-  $node->safe_psql("postgres", "SELECT pg_prewarm('test', 'buffer');");
+  $node->safe_psql("neurdb", "SELECT pg_prewarm('test', 'buffer');");
 like($result, qr/^[1-9][0-9]*$/, 'buffer mode succeeded');
 
 # prefetch mode might or might not be available
 my ($cmdret, $stdout, $stderr) =
-  $node->psql("postgres", "SELECT pg_prewarm('test', 'prefetch');");
+  $node->psql("neurdb", "SELECT pg_prewarm('test', 'prefetch');");
 ok( (        $stdout =~ qr/^[1-9][0-9]*$/
 		  or $stderr =~ qr/prefetch is not supported by this build/),
 	'prefetch mode succeeded');
 
 # test autoprewarm_dump_now()
-$result = $node->safe_psql("postgres", "SELECT autoprewarm_dump_now();");
+$result = $node->safe_psql("neurdb", "SELECT autoprewarm_dump_now();");
 like($result, qr/^[1-9][0-9]*$/, 'autoprewarm_dump_now succeeded');
 
 # restart, to verify that auto prewarm actually works
