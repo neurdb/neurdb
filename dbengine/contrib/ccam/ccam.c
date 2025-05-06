@@ -8,10 +8,10 @@ PG_MODULE_MAGIC;
 void _PG_init(void);
 void _PG_fini(void);
 
-Datum occam_tableam_handler(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(occam_tableam_handler);
+Datum ccam_tableam_handler(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(ccam_tableam_handler);
 
-static const TableAmRoutine occam_methods = {
+static const TableAmRoutine ccam_methods = {
     .type = T_TableAmRoutine,
     .slot_callbacks = table_slot_callbacks, // reuse heap slot for now
     .scan_begin = NULL,                      // you'll implement this
@@ -23,9 +23,9 @@ static const TableAmRoutine occam_methods = {
 };
 
 Datum
-occam_tableam_handler(PG_FUNCTION_ARGS)
+ccam_tableam_handler(PG_FUNCTION_ARGS)
 {
-    PG_RETURN_POINTER(&occam_methods);
+    PG_RETURN_POINTER(&ccam_methods);
 }
 
 void
