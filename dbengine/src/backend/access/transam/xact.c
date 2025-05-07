@@ -2152,8 +2152,8 @@ StartTransaction(void)
     {
         XactIsoLevel = DefaultXactIsoLevel;
         XactLockStrategy = DefaultXactLockStrategy;
-        if (!IsolationNeedLock())
-            XactIsoLevel = XACT_SERIALIZABLE;
+        // if (!IsolationNeedLock())
+        //     XactIsoLevel = XACT_SERIALIZABLE;
         if (IsolationIsSerializable())
         {
             // In case of SSI, disable locking based methods.
