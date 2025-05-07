@@ -27,7 +27,7 @@ $node->start;
 # required race conditions (see testing further down)...
 
 $node->safe_psql(
-	"postgres", qq(
+	"neurdb", qq(
 CREATE DATABASE regression_invalid;
 UPDATE pg_database SET datconnlimit = -2 WHERE datname = 'regression_invalid';
 ));

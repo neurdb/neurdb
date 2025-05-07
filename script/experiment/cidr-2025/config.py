@@ -4,8 +4,8 @@ import structlog
 from neurdb.logger import configure_logging
 
 DB_CONFIG = {
-    "dbname": "postgres",
-    "user": "postgres",
+    "dbname": "neurdb",
+    "user": "neurdb",
     "host": "127.0.0.1",
     "port": "5432",
 }

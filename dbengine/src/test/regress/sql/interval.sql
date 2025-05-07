@@ -3,7 +3,7 @@
 --
 
 SET DATESTYLE = 'ISO';
-SET IntervalStyle to postgres;
+SET IntervalStyle to neurdb;
 
 -- check acceptance of "time zone style"
 SELECT INTERVAL '01:00' AS "One hour";
@@ -182,7 +182,7 @@ SELECT justify_interval(interval '-2147483648 months 30 days -1440 hrs');
 
 -- test fractional second input, and detection of duplicate units
 SET DATESTYLE = 'ISO';
-SET IntervalStyle TO postgres;
+SET IntervalStyle TO neurdb;
 
 SELECT '1 millisecond'::interval, '1 microsecond'::interval,
        '500 seconds 99 milliseconds 51 microseconds'::interval;
@@ -267,7 +267,7 @@ SELECT  interval '0'                       AS "zero",
         - interval '1 2:03:04'             AS "negative day-time";
 
 -- test input of some not-quite-standard interval values in the sql style
-SET IntervalStyle TO postgres;
+SET IntervalStyle TO neurdb;
 SELECT  interval '+1 -1:00:00',
         interval '-1 +1:00:00',
         interval '+1-2 -3 +4:05:06.789',
@@ -316,7 +316,7 @@ select  interval 'P0Y'                    AS "zero",
         interval 'PT-0.1S'                AS "fractional second";
 
 -- test inputting ISO 8601 4.4.2.2 "Alternative Format"
-SET IntervalStyle to postgres;
+SET IntervalStyle to neurdb;
 select  interval 'P00021015T103020'       AS "ISO8601 Basic Format",
         interval 'P0002-10-15T10:30:20'   AS "ISO8601 Extended Format";
 
@@ -520,7 +520,7 @@ select interval '-9223372036854775808 microseconds ago';
 select interval '-2147483648 months -2147483648 days -9223372036854775808 microseconds ago';
 
 -- test that INT_MIN number is formatted properly
-SET IntervalStyle to postgres;
+SET IntervalStyle to neurdb;
 select interval '-2147483648 months -2147483648 days -9223372036854775808 us';
 SET IntervalStyle to sql_standard;
 select interval '-2147483648 months -2147483648 days -9223372036854775808 us';

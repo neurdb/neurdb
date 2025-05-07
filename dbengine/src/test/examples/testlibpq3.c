@@ -130,7 +130,7 @@ main(int argc, char **argv)
 	if (argc > 1)
 		conninfo = argv[1];
 	else
-		conninfo = "dbname = postgres";
+		conninfo = "dbname = neurdb";
 
 	/* Make a connection to the database */
 	conn = PQconnectdb(conninfo);

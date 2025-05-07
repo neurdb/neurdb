@@ -73,7 +73,7 @@ python3 app.py
 ### Run NeurDB
 Connect to the database:
 ```bash
-$NEURDBPATH/psql/bin/psql  -h localhost -U postgres -d postgres -p 5432
+$NEURDBPATH/psql/bin/psql  -h localhost -U neurdb -d neurdb -p 5432
 ```
 
 Train a model:

@@ -477,7 +477,7 @@ endif
 
 # These are set by the equivalent --xxxdir configure options.  We
 # append "neurdb" to some of them, if the string does not already
-# contain "pgsql" or "postgres", in order to avoid directory clutter.
+# contain "pgsql" or "neurdb", in order to avoid directory clutter.
 
 pkg = 'neurdb'
 

@@ -377,7 +377,7 @@ $node->command_checks_all(
 	2,
 	[$index_missing_relation_fork_re],
 	[
-		qr/pg_amcheck: warning: skipping database "postgres": amcheck is not installed/
+		qr/pg_amcheck: warning: skipping database "neurdb": amcheck is not installed/
 	],
 	'pg_amcheck index s1.t1_btree reports missing main relation fork');
 

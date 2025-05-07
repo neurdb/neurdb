@@ -12,7 +12,7 @@ you keep the Postgres executables themselves.
 3. Edit the org.postgresql.postgres.plist file and adjust its path
 for postgres-wrapper.sh to match what you did in step 2.  Also,
 if you plan to run the Postgres server under some user name other
-than "postgres", adjust the UserName parameter value for that.
+than "neurdb", adjust the UserName parameter value for that.
 
 4. Copy the modified org.postgresql.postgres.plist file into
 /Library/LaunchDaemons/.  You must do this as root:

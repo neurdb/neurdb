@@ -130,7 +130,7 @@ opt_database_name: name				{ $$ = $1; }
 
 db_prefix: ecpg_ident cvariable
 		{
-			if (strcmp($2, "postgresql") != 0 && strcmp($2, "postgres") != 0)
+			if (strcmp($2, "postgresql") != 0 && strcmp($2, "neurdb") != 0)
 				mmerror(PARSE_ERROR, ET_ERROR, "expected \"postgresql\", found \"%s\"", $2);
 
 			if (strcmp($1, "tcp") != 0 && strcmp($1, "unix") != 0)

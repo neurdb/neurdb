@@ -4424,11 +4424,11 @@ sqlda2->sqln = 2; /* number of input variables */
      <literal>sqlvar[]</literal> array.  (This is same array used for
      retrieving column values when the SQLDA is receiving a result
      set.)  In this example, the input parameters
-     are <literal>"postgres"</literal>, having a string type,
+     are <literal>"neurdb"</literal>, having a string type,
      and <literal>1</literal>, having an integer type.
 <programlisting>
 sqlda2->sqlvar[0].sqltype = ECPGt_char;
-sqlda2->sqlvar[0].sqldata = "postgres";
+sqlda2->sqlvar[0].sqldata = "neurdb";
 sqlda2->sqlvar[0].sqllen  = 8;
 
 int intval = 1;
@@ -4517,7 +4517,7 @@ main(void)
     sqlda2->sqln = 2; /* number of input variables */
 
     sqlda2->sqlvar[0].sqltype = ECPGt_char;
-    sqlda2->sqlvar[0].sqldata = "postgres";
+    sqlda2->sqlvar[0].sqldata = "neurdb";
     sqlda2->sqlvar[0].sqllen  = 8;
 
     intval = 1;
@@ -4668,7 +4668,7 @@ main(void)
     sqlda2->sqln = 2; /* a number of input variables */
 
     sqlda2->sqlvar[0].sqltype = ECPGt_char;
-    sqlda2->sqlvar[0].sqldata = "postgres";
+    sqlda2->sqlvar[0].sqldata = "neurdb";
     sqlda2->sqlvar[0].sqllen  = 8;
 
     intval = 1;

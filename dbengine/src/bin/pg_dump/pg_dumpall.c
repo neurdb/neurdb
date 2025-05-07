@@ -457,7 +457,7 @@ main(int argc, char *argv[])
 
 	/*
 	 * If there was a database specified on the command line, use that,
-	 * otherwise try to connect to database "postgres", and failing that
+	 * otherwise try to connect to database "neurdb", and failing that
 	 * "template1".
 	 */
 	if (pgdb)
@@ -470,7 +470,7 @@ main(int argc, char *argv[])
 	}
 	else
 	{
-		conn = connectDatabase("postgres", connstr, pghost, pgport, pguser,
+		conn = connectDatabase("neurdb", connstr, pghost, pgport, pguser,
 							   prompt_password, false);
 		if (!conn)
 			conn = connectDatabase("template1", connstr, pghost, pgport, pguser,
@@ -1359,13 +1359,13 @@ dropDBs(PGconn *conn)
 		char	   *dbname = PQgetvalue(res, i, 0);
 
 		/*
-		 * Skip "postgres" and "template1"; dumpDatabases() will deal with
+		 * Skip "neurdb" and "template1"; dumpDatabases() will deal with
 		 * them specially.  Also, be sure to skip "template0", even if for
 		 * some reason it's not marked !datallowconn.
 		 */
 		if (strcmp(dbname, "template1") != 0 &&
 			strcmp(dbname, "template0") != 0 &&
-			strcmp(dbname, "postgres") != 0)
+			strcmp(dbname, "neurdb") != 0)
 		{
 			fprintf(OPF, "DROP DATABASE %s%s;\n",
 					if_exists ? "IF EXISTS " : "",
@@ -1483,7 +1483,7 @@ dumpDatabases(PGconn *conn)
 	 *
 	 * We arrange for template1 to be processed first, then we process other
 	 * DBs in alphabetical order.  If we just did them all alphabetically, we
-	 * might find ourselves trying to drop the "postgres" database while still
+	 * might find ourselves trying to drop the "neurdb" database while still
 	 * connected to it.  This makes trying to run the restore script while
 	 * connected to "template1" a bad idea, but there's no fixed order that
 	 * doesn't have some failure mode with --clean.
@@ -1519,14 +1519,14 @@ dumpDatabases(PGconn *conn)
 		fprintf(OPF, "--\n-- Database \"%s\" dump\n--\n\n", dbname);
 
 		/*
-		 * We assume that "template1" and "postgres" already exist in the
+		 * We assume that "template1" and "neurdb" already exist in the
 		 * target installation.  dropDBs() won't have removed them, for fear
 		 * of removing the DB the restore script is initially connected to. If
 		 * --clean was specified, tell pg_dump to drop and recreate them;
 		 * otherwise we'll merely restore their contents.  Other databases
 		 * should simply be created.
 		 */
-		if (strcmp(dbname, "template1") == 0 || strcmp(dbname, "postgres") == 0)
+		if (strcmp(dbname, "template1") == 0 || strcmp(dbname, "neurdb") == 0)
 		{
 			if (output_clean)
 				create_opts = "--clean --create";

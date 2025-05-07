@@ -137,7 +137,7 @@ $node->issues_sql_like(
 $node->command_checks_all(
 	[ 'vacuumdb', '--analyze', '--table', 'vacview', 'postgres' ],
 	0,
-	[qr/^.*vacuuming database "postgres"/],
+	[qr/^.*vacuuming database "neurdb"/],
 	[qr/^WARNING.*cannot vacuum non-tables or special system tables/s],
 	'vacuumdb with view');
 $node->command_fails(

@@ -534,7 +534,7 @@
     <term><acronym>PGSQL</acronym></term>
     <listitem>
      <para>
-      <link linkend="postgres"><productname>PostgreSQL</productname></link>
+      <link linkend="neurdb"><productname>PostgreSQL</productname></link>
      </para>
     </listitem>
    </varlistentry>
