@@ -48,7 +48,7 @@ LOCK TABLE lock_view1 IN EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'ExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_view1
@@ -61,7 +61,7 @@ LOCK TABLE lock_view2 IN EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'ExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_tbl1a
@@ -75,7 +75,7 @@ LOCK TABLE lock_view3 IN EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'ExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_tbl1a
@@ -90,7 +90,7 @@ LOCK TABLE lock_view4 IN EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'ExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_tbl1a
@@ -104,7 +104,7 @@ LOCK TABLE lock_view5 IN EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'ExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_tbl1a
@@ -118,7 +118,7 @@ LOCK TABLE lock_view6 IN EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'ExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_view6
@@ -174,7 +174,7 @@ LOCK TABLE lock_view1 IN ACCESS EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'AccessExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_tbl2
@@ -210,7 +210,7 @@ LOCK TABLE lock_view8 IN ACCESS EXCLUSIVE MODE;
 select relname from pg_locks l, pg_class c
  where l.relation = c.oid and relname like '%lock_%' and mode = 'AccessExclusiveLock'
  order by relname;
-  relname
+  relname   
 ------------
  lock_tbl1
  lock_tbl2
@@ -245,7 +245,8 @@ CREATE FUNCTION test_atomic_ops()
     AS :'regresslib'
     LANGUAGE C;
 SELECT test_atomic_ops();
- test_atomic_ops
+ test_atomic_ops 
 -----------------
  t
 (1 row)
+

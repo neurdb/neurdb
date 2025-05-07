@@ -61,7 +61,7 @@ CREATE OR REPLACE VIEW viewtest AS
 CREATE OR REPLACE VIEW viewtest AS
 	SELECT * FROM viewtest_tbl WHERE a > 10;
 SELECT * FROM viewtest;
- a  | b  |  c  |   d
+ a  | b  |  c  |   d   
 ----+----+-----+-------
  15 | 20 | 3.3 | xyzz
  20 | 25 | 4.4 | xyzzy
@@ -70,7 +70,7 @@ SELECT * FROM viewtest;
 CREATE OR REPLACE VIEW viewtest AS
 	SELECT a, b, c, d FROM viewtest_tbl WHERE a > 5 ORDER BY b DESC;
 SELECT * FROM viewtest;
- a  | b  |  c  |   d
+ a  | b  |  c  |   d   
 ----+----+-----+-------
  20 | 25 | 4.4 | xyzzy
  15 | 20 | 3.3 | xyzz
@@ -176,7 +176,7 @@ SELECT relname FROM pg_class
     WHERE relname LIKE 'v_'
     AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'temp_view_test')
     ORDER BY relname;
- relname
+ relname 
 ---------
  v1
  v2
@@ -193,7 +193,7 @@ SELECT relname FROM pg_class
     WHERE relname LIKE 'v%'
     AND relnamespace IN (SELECT oid FROM pg_namespace WHERE nspname LIKE 'pg_temp%')
     ORDER BY relname;
- relname
+ relname  
 ----------
  v10_temp
  v11_temp
@@ -230,7 +230,7 @@ SELECT relname FROM pg_class
     WHERE relname LIKE 'nontemp%'
     AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'testviewschm2')
     ORDER BY relname;
- relname
+ relname  
 ----------
  nontemp1
  nontemp2
@@ -242,7 +242,7 @@ SELECT relname FROM pg_class
     WHERE relname LIKE 'temporal%'
     AND relnamespace IN (SELECT oid FROM pg_namespace WHERE nspname LIKE 'pg_temp%')
     ORDER BY relname;
-  relname
+  relname  
 -----------
  temporal1
  temporal2
@@ -261,7 +261,7 @@ BETWEEN (SELECT d FROM tbl2 WHERE c = 1) AND (SELECT e FROM tbl3 WHERE f = 2)
 AND EXISTS (SELECT g FROM tbl4 LEFT JOIN tbl3 ON tbl4.h = tbl3.f);
 SELECT count(*) FROM pg_class where relname = 'pubview'
 AND relnamespace IN (SELECT OID FROM pg_namespace WHERE nspname = 'testviewschm2');
- count
+ count 
 -------
      1
 (1 row)
@@ -274,7 +274,7 @@ AND NOT EXISTS (SELECT g FROM tbl4 LEFT JOIN tmptbl ON tbl4.h = tmptbl.j);
 NOTICE:  view "mytempview" will be a temporary view
 SELECT count(*) FROM pg_class where relname LIKE 'mytempview'
 And relnamespace IN (SELECT OID FROM pg_namespace WHERE nspname LIKE 'pg_temp%');
- count
+ count 
 -------
      1
 (1 row)
@@ -311,9 +311,9 @@ SELECT relname, relkind, reloptions FROM pg_class
                      'mysecview7'::regclass, 'mysecview8'::regclass,
                      'mysecview9'::regclass)
        ORDER BY relname;
-  relname   | relkind |                   reloptions
+  relname   | relkind |                   reloptions                   
 ------------+---------+------------------------------------------------
- mysecview1 | v       |
+ mysecview1 | v       | 
  mysecview2 | v       | {security_barrier=true}
  mysecview3 | v       | {security_barrier=false}
  mysecview4 | v       | {security_barrier=true}
@@ -342,13 +342,13 @@ SELECT relname, relkind, reloptions FROM pg_class
                      'mysecview7'::regclass, 'mysecview8'::regclass,
                      'mysecview9'::regclass)
        ORDER BY relname;
-  relname   | relkind |                   reloptions
+  relname   | relkind |                   reloptions                   
 ------------+---------+------------------------------------------------
- mysecview1 | v       |
- mysecview2 | v       |
+ mysecview1 | v       | 
+ mysecview2 | v       | 
  mysecview3 | v       | {security_barrier=true}
  mysecview4 | v       | {security_barrier=false}
- mysecview7 | v       |
+ mysecview7 | v       | 
  mysecview8 | v       | {security_invoker=true}
  mysecview9 | v       | {security_invoker=false,security_barrier=true}
 (7 rows)
@@ -359,13 +359,13 @@ CREATE VIEW unspecified_types AS
   SELECT 42 as i, 42.5 as num, 'foo' as u, 'foo'::unknown as u2, null as n;
 \d+ unspecified_types
                    View "testviewschm2.unspecified_types"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- i      | integer |           |          |         | plain    |
- num    | numeric |           |          |         | main     |
- u      | text    |           |          |         | extended |
- u2     | text    |           |          |         | extended |
- n      | text    |           |          |         | extended |
+ i      | integer |           |          |         | plain    | 
+ num    | numeric |           |          |         | main     | 
+ u      | text    |           |          |         | extended | 
+ u2     | text    |           |          |         | extended | 
+ n      | text    |           |          |         | extended | 
 View definition:
  SELECT 42 AS i,
     42.5 AS num,
@@ -374,9 +374,9 @@ View definition:
     NULL::text AS n;
 
 SELECT * FROM unspecified_types;
- i  | num  |  u  | u2  | n
+ i  | num  |  u  | u2  | n 
 ----+------+-----+-----+---
- 42 | 42.5 | foo | foo |
+ 42 | 42.5 | foo | foo | 
 (1 row)
 
 -- This test checks that proper typmods are assigned in a multi-row VALUES
@@ -388,12 +388,12 @@ CREATE VIEW tt1 AS
   ) vv(a,b,c,d);
 \d+ tt1
                                 View "testviewschm2.tt1"
- Column |         Type         | Collation | Nullable | Default | Storage  | Description
+ Column |         Type         | Collation | Nullable | Default | Storage  | Description 
 --------+----------------------+-----------+----------+---------+----------+-------------
- a      | character varying    |           |          |         | extended |
- b      | character varying    |           |          |         | extended |
- c      | numeric              |           |          |         | main     |
- d      | character varying(4) |           |          |         | extended |
+ a      | character varying    |           |          |         | extended | 
+ b      | character varying    |           |          |         | extended | 
+ c      | numeric              |           |          |         | main     | 
+ d      | character varying(4) |           |          |         | extended | 
 View definition:
  SELECT a,
     b,
@@ -402,14 +402,14 @@ View definition:
    FROM ( VALUES ('abc'::character varying(3),'0123456789'::character varying,42,'abcd'::character varying(4)), ('0123456789'::character varying,'abc'::character varying(3),42.12,'abc'::character varying(4))) vv(a, b, c, d);
 
 SELECT * FROM tt1;
-     a      |     b      |   c   |  d
+     a      |     b      |   c   |  d   
 ------------+------------+-------+------
  abc        | 0123456789 |    42 | abcd
  0123456789 | abc        | 42.12 | abc
 (2 rows)
 
 SELECT a::varchar(3) FROM tt1;
-  a
+  a  
 -----
  abc
  012
@@ -434,11 +434,11 @@ CREATE VIEW aliased_view_4 AS
     where exists (select 1 from tt1 where temp_view_test.tt1.y1 = tt1.f1);
 \d+ aliased_view_1
                     View "testviewschm2.aliased_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -450,11 +450,11 @@ View definition:
 
 \d+ aliased_view_2
                     View "testviewschm2.aliased_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -466,11 +466,11 @@ View definition:
 
 \d+ aliased_view_3
                     View "testviewschm2.aliased_view_3"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -482,11 +482,11 @@ View definition:
 
 \d+ aliased_view_4
                     View "testviewschm2.aliased_view_4"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- y1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ y1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT y1,
     f2,
@@ -499,11 +499,11 @@ View definition:
 ALTER TABLE tx1 RENAME TO a1;
 \d+ aliased_view_1
                     View "testviewschm2.aliased_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -515,11 +515,11 @@ View definition:
 
 \d+ aliased_view_2
                     View "testviewschm2.aliased_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -531,11 +531,11 @@ View definition:
 
 \d+ aliased_view_3
                     View "testviewschm2.aliased_view_3"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -547,11 +547,11 @@ View definition:
 
 \d+ aliased_view_4
                     View "testviewschm2.aliased_view_4"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- y1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ y1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT y1,
     f2,
@@ -564,11 +564,11 @@ View definition:
 ALTER TABLE tt1 RENAME TO a2;
 \d+ aliased_view_1
                     View "testviewschm2.aliased_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -580,11 +580,11 @@ View definition:
 
 \d+ aliased_view_2
                     View "testviewschm2.aliased_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -596,11 +596,11 @@ View definition:
 
 \d+ aliased_view_3
                     View "testviewschm2.aliased_view_3"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -612,11 +612,11 @@ View definition:
 
 \d+ aliased_view_4
                     View "testviewschm2.aliased_view_4"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- y1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ y1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT y1,
     f2,
@@ -629,11 +629,11 @@ View definition:
 ALTER TABLE a1 RENAME TO tt1;
 \d+ aliased_view_1
                     View "testviewschm2.aliased_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -645,11 +645,11 @@ View definition:
 
 \d+ aliased_view_2
                     View "testviewschm2.aliased_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -661,11 +661,11 @@ View definition:
 
 \d+ aliased_view_3
                     View "testviewschm2.aliased_view_3"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -677,11 +677,11 @@ View definition:
 
 \d+ aliased_view_4
                     View "testviewschm2.aliased_view_4"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- y1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ y1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT y1,
     f2,
@@ -695,11 +695,11 @@ ALTER TABLE a2 RENAME TO tx1;
 ALTER TABLE tx1 SET SCHEMA temp_view_test;
 \d+ aliased_view_1
                     View "testviewschm2.aliased_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -711,11 +711,11 @@ View definition:
 
 \d+ aliased_view_2
                     View "testviewschm2.aliased_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -727,11 +727,11 @@ View definition:
 
 \d+ aliased_view_3
                     View "testviewschm2.aliased_view_3"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -743,11 +743,11 @@ View definition:
 
 \d+ aliased_view_4
                     View "testviewschm2.aliased_view_4"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- y1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ y1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT y1,
     f2,
@@ -762,11 +762,11 @@ ALTER TABLE temp_view_test.tmp1 SET SCHEMA testviewschm2;
 ALTER TABLE tmp1 RENAME TO tx1;
 \d+ aliased_view_1
                     View "testviewschm2.aliased_view_1"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -778,11 +778,11 @@ View definition:
 
 \d+ aliased_view_2
                     View "testviewschm2.aliased_view_2"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -794,11 +794,11 @@ View definition:
 
 \d+ aliased_view_3
                     View "testviewschm2.aliased_view_3"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- f1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ f1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT f1,
     f2,
@@ -810,11 +810,11 @@ View definition:
 
 \d+ aliased_view_4
                     View "testviewschm2.aliased_view_4"
- Column |  Type   | Collation | Nullable | Default | Storage  | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
 --------+---------+-----------+----------+---------+----------+-------------
- y1     | integer |           |          |         | plain    |
- f2     | integer |           |          |         | plain    |
- f3     | text    |           |          |         | extended |
+ y1     | integer |           |          |         | plain    | 
+ f2     | integer |           |          |         | plain    | 
+ f3     | text    |           |          |         | extended | 
 View definition:
  SELECT y1,
     f2,
@@ -831,16 +831,16 @@ select * from
   (tbl3 cross join tbl4) same;
 \d+ view_of_joins
                     View "testviewschm2.view_of_joins"
- Column |  Type   | Collation | Nullable | Default | Storage | Description
+ Column |  Type   | Collation | Nullable | Default | Storage | Description 
 --------+---------+-----------+----------+---------+---------+-------------
- a      | integer |           |          |         | plain   |
- b      | integer |           |          |         | plain   |
- c      | integer |           |          |         | plain   |
- d      | integer |           |          |         | plain   |
- e      | integer |           |          |         | plain   |
- f      | integer |           |          |         | plain   |
- g      | integer |           |          |         | plain   |
- h      | integer |           |          |         | plain   |
+ a      | integer |           |          |         | plain   | 
+ b      | integer |           |          |         | plain   | 
+ c      | integer |           |          |         | plain   | 
+ d      | integer |           |          |         | plain   | 
+ e      | integer |           |          |         | plain   | 
+ f      | integer |           |          |         | plain   | 
+ g      | integer |           |          |         | plain   | 
+ h      | integer |           |          |         | plain   | 
 View definition:
  SELECT ss.a,
     ss.b,
@@ -865,7 +865,7 @@ create view view_of_joins_2b as select * from tbl1 join tbl1a using (a) as x;
 create view view_of_joins_2c as select * from (tbl1 join tbl1a using (a)) as y;
 create view view_of_joins_2d as select * from (tbl1 join tbl1a using (a) as x) as y;
 select pg_get_viewdef('view_of_joins_2a', true);
-       pg_get_viewdef
+       pg_get_viewdef       
 ----------------------------
   SELECT tbl1.a,           +
      tbl1.b,               +
@@ -875,7 +875,7 @@ select pg_get_viewdef('view_of_joins_2a', true);
 (1 row)
 
 select pg_get_viewdef('view_of_joins_2b', true);
-         pg_get_viewdef
+         pg_get_viewdef          
 ---------------------------------
   SELECT tbl1.a,                +
      tbl1.b,                    +
@@ -885,7 +885,7 @@ select pg_get_viewdef('view_of_joins_2b', true);
 (1 row)
 
 select pg_get_viewdef('view_of_joins_2c', true);
-        pg_get_viewdef
+        pg_get_viewdef         
 -------------------------------
   SELECT y.a,                 +
      y.b,                     +
@@ -895,7 +895,7 @@ select pg_get_viewdef('view_of_joins_2c', true);
 (1 row)
 
 select pg_get_viewdef('view_of_joins_2d', true);
-           pg_get_viewdef
+           pg_get_viewdef           
 ------------------------------------
   SELECT y.a,                      +
      y.b,                          +
@@ -914,7 +914,7 @@ create view v2 as select * from tt2 join tt3 using (b,c) join tt4 using (b);
 create view v2a as select * from (tt2 join tt3 using (b,c) join tt4 using (b)) j;
 create view v3 as select * from tt2 join tt3 using (b,c) full join tt4 using (b);
 select pg_get_viewdef('v1', true);
-       pg_get_viewdef
+       pg_get_viewdef        
 -----------------------------
   SELECT tt2.b,             +
      tt3.c,                 +
@@ -925,7 +925,7 @@ select pg_get_viewdef('v1', true);
 (1 row)
 
 select pg_get_viewdef('v1a', true);
-         pg_get_viewdef
+         pg_get_viewdef         
 --------------------------------
   SELECT j.b,                  +
      j.c,                      +
@@ -936,7 +936,7 @@ select pg_get_viewdef('v1a', true);
 (1 row)
 
 select pg_get_viewdef('v2', true);
-       pg_get_viewdef
+       pg_get_viewdef       
 ----------------------------
   SELECT tt2.b,            +
      tt3.c,                +
@@ -950,7 +950,7 @@ select pg_get_viewdef('v2', true);
 (1 row)
 
 select pg_get_viewdef('v2a', true);
-       pg_get_viewdef
+       pg_get_viewdef        
 -----------------------------
   SELECT j.b,               +
      j.c,                   +
@@ -964,7 +964,7 @@ select pg_get_viewdef('v2a', true);
 (1 row)
 
 select pg_get_viewdef('v3', true);
-        pg_get_viewdef
+        pg_get_viewdef         
 -------------------------------
   SELECT b,                   +
      tt3.c,                   +
@@ -980,7 +980,7 @@ select pg_get_viewdef('v3', true);
 alter table tt2 add column d int;
 alter table tt2 add column e int;
 select pg_get_viewdef('v1', true);
-       pg_get_viewdef
+       pg_get_viewdef        
 -----------------------------
   SELECT tt2.b,             +
      tt3.c,                 +
@@ -991,7 +991,7 @@ select pg_get_viewdef('v1', true);
 (1 row)
 
 select pg_get_viewdef('v1a', true);
-         pg_get_viewdef
+         pg_get_viewdef         
 --------------------------------
   SELECT j.b,                  +
      j.c,                      +
@@ -1002,7 +1002,7 @@ select pg_get_viewdef('v1a', true);
 (1 row)
 
 select pg_get_viewdef('v2', true);
-       pg_get_viewdef
+       pg_get_viewdef       
 ----------------------------
   SELECT tt2.b,            +
      tt3.c,                +
@@ -1016,7 +1016,7 @@ select pg_get_viewdef('v2', true);
 (1 row)
 
 select pg_get_viewdef('v2a', true);
-       pg_get_viewdef
+       pg_get_viewdef        
 -----------------------------
   SELECT j.b,               +
      j.c,                   +
@@ -1030,7 +1030,7 @@ select pg_get_viewdef('v2a', true);
 (1 row)
 
 select pg_get_viewdef('v3', true);
-        pg_get_viewdef
+        pg_get_viewdef         
 -------------------------------
   SELECT b,                   +
      tt3.c,                   +
@@ -1045,7 +1045,7 @@ select pg_get_viewdef('v3', true);
 
 alter table tt3 rename c to d;
 select pg_get_viewdef('v1', true);
-              pg_get_viewdef
+              pg_get_viewdef               
 -------------------------------------------
   SELECT tt2.b,                           +
      tt3.c,                               +
@@ -1056,7 +1056,7 @@ select pg_get_viewdef('v1', true);
 (1 row)
 
 select pg_get_viewdef('v1a', true);
-                pg_get_viewdef
+                pg_get_viewdef                
 ----------------------------------------------
   SELECT j.b,                                +
      j.c,                                    +
@@ -1067,7 +1067,7 @@ select pg_get_viewdef('v1a', true);
 (1 row)
 
 select pg_get_viewdef('v2', true);
-              pg_get_viewdef
+              pg_get_viewdef              
 ------------------------------------------
   SELECT tt2.b,                          +
      tt3.c,                              +
@@ -1081,7 +1081,7 @@ select pg_get_viewdef('v2', true);
 (1 row)
 
 select pg_get_viewdef('v2a', true);
-              pg_get_viewdef
+              pg_get_viewdef              
 ------------------------------------------
   SELECT j.b,                            +
      j.c,                                +
@@ -1095,7 +1095,7 @@ select pg_get_viewdef('v2a', true);
 (1 row)
 
 select pg_get_viewdef('v3', true);
-              pg_get_viewdef
+              pg_get_viewdef              
 ------------------------------------------
   SELECT b,                              +
      tt3.c,                              +
@@ -1111,7 +1111,7 @@ select pg_get_viewdef('v3', true);
 alter table tt3 add column c int;
 alter table tt3 add column e int;
 select pg_get_viewdef('v1', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                   
 ---------------------------------------------------
   SELECT tt2.b,                                   +
      tt3.c,                                       +
@@ -1122,7 +1122,7 @@ select pg_get_viewdef('v1', true);
 (1 row)
 
 select pg_get_viewdef('v1a', true);
-                                  pg_get_viewdef
+                                  pg_get_viewdef                                   
 -----------------------------------------------------------------------------------
   SELECT j.b,                                                                     +
      j.c,                                                                         +
@@ -1133,7 +1133,7 @@ select pg_get_viewdef('v1a', true);
 (1 row)
 
 select pg_get_viewdef('v2', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                  
 --------------------------------------------------
   SELECT tt2.b,                                  +
      tt3.c,                                      +
@@ -1147,7 +1147,7 @@ select pg_get_viewdef('v2', true);
 (1 row)
 
 select pg_get_viewdef('v2a', true);
-                         pg_get_viewdef
+                         pg_get_viewdef                          
 -----------------------------------------------------------------
   SELECT j.b,                                                   +
      j.c,                                                       +
@@ -1161,7 +1161,7 @@ select pg_get_viewdef('v2a', true);
 (1 row)
 
 select pg_get_viewdef('v3', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                  
 --------------------------------------------------
   SELECT b,                                      +
      tt3.c,                                      +
@@ -1176,7 +1176,7 @@ select pg_get_viewdef('v3', true);
 
 alter table tt2 drop column d;
 select pg_get_viewdef('v1', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                   
 ---------------------------------------------------
   SELECT tt2.b,                                   +
      tt3.c,                                       +
@@ -1187,7 +1187,7 @@ select pg_get_viewdef('v1', true);
 (1 row)
 
 select pg_get_viewdef('v1a', true);
-                                 pg_get_viewdef
+                                 pg_get_viewdef                                 
 --------------------------------------------------------------------------------
   SELECT j.b,                                                                  +
      j.c,                                                                      +
@@ -1198,7 +1198,7 @@ select pg_get_viewdef('v1a', true);
 (1 row)
 
 select pg_get_viewdef('v2', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                  
 --------------------------------------------------
   SELECT tt2.b,                                  +
      tt3.c,                                      +
@@ -1212,7 +1212,7 @@ select pg_get_viewdef('v2', true);
 (1 row)
 
 select pg_get_viewdef('v2a', true);
-                        pg_get_viewdef
+                        pg_get_viewdef                        
 --------------------------------------------------------------
   SELECT j.b,                                                +
      j.c,                                                    +
@@ -1226,7 +1226,7 @@ select pg_get_viewdef('v2a', true);
 (1 row)
 
 select pg_get_viewdef('v3', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                  
 --------------------------------------------------
   SELECT b,                                      +
      tt3.c,                                      +
@@ -1243,7 +1243,7 @@ create table tt5 (a int, b int);
 create table tt6 (c int, d int);
 create view vv1 as select * from (tt5 cross join tt6) j(aa,bb,cc,dd);
 select pg_get_viewdef('vv1', true);
-             pg_get_viewdef
+             pg_get_viewdef              
 -----------------------------------------
   SELECT j.aa,                          +
      j.bb,                              +
@@ -1255,7 +1255,7 @@ select pg_get_viewdef('vv1', true);
 
 alter table tt5 add column c int;
 select pg_get_viewdef('vv1', true);
-               pg_get_viewdef
+               pg_get_viewdef               
 --------------------------------------------
   SELECT j.aa,                             +
      j.bb,                                 +
@@ -1267,7 +1267,7 @@ select pg_get_viewdef('vv1', true);
 
 alter table tt5 add column cc int;
 select pg_get_viewdef('vv1', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                  
 --------------------------------------------------
   SELECT j.aa,                                   +
      j.bb,                                       +
@@ -1279,7 +1279,7 @@ select pg_get_viewdef('vv1', true);
 
 alter table tt5 drop column c;
 select pg_get_viewdef('vv1', true);
-                pg_get_viewdef
+                pg_get_viewdef                 
 -----------------------------------------------
   SELECT j.aa,                                +
      j.bb,                                    +
@@ -1292,7 +1292,7 @@ select pg_get_viewdef('vv1', true);
 create view v4 as select * from v1;
 alter view v1 rename column a to x;
 select pg_get_viewdef('v1', true);
-                  pg_get_viewdef
+                  pg_get_viewdef                   
 ---------------------------------------------------
   SELECT tt2.b,                                   +
      tt3.c,                                       +
@@ -1303,7 +1303,7 @@ select pg_get_viewdef('v1', true);
 (1 row)
 
 select pg_get_viewdef('v4', true);
- pg_get_viewdef
+ pg_get_viewdef 
 ----------------
   SELECT b,    +
      c,        +
@@ -1321,7 +1321,7 @@ select * from (values(1,2,3,4,5)) v(a,b,c,d,e)
 union all
 select * from tt7 full join tt8 using (x), tt8 tt8x;
 select pg_get_viewdef('vv2', true);
-                 pg_get_viewdef
+                 pg_get_viewdef                 
 ------------------------------------------------
   SELECT v.a,                                  +
      v.b,                                      +
@@ -1347,7 +1347,7 @@ select * from
   tt7 full join tt8 using (x),
   tt7 tt7x full join tt8 tt8x using (x);
 select pg_get_viewdef('vv3', true);
-                   pg_get_viewdef
+                   pg_get_viewdef                    
 -----------------------------------------------------
   SELECT v.a,                                       +
      v.b,                                           +
@@ -1376,7 +1376,7 @@ select * from
   tt7 full join tt8 using (x),
   tt7 tt7x full join tt8 tt8x using (x) full join tt8 tt8y using (x);
 select pg_get_viewdef('vv4', true);
-                      pg_get_viewdef
+                      pg_get_viewdef                      
 ----------------------------------------------------------
   SELECT v.a,                                            +
      v.b,                                                +
@@ -1406,7 +1406,7 @@ alter table tt7 add column z int;
 alter table tt7 drop column zz;
 alter table tt8 add column z2 int;
 select pg_get_viewdef('vv2', true);
-                 pg_get_viewdef
+                 pg_get_viewdef                 
 ------------------------------------------------
   SELECT v.a,                                  +
      v.b,                                      +
@@ -1426,7 +1426,7 @@ select pg_get_viewdef('vv2', true);
 (1 row)
 
 select pg_get_viewdef('vv3', true);
-                   pg_get_viewdef
+                   pg_get_viewdef                    
 -----------------------------------------------------
   SELECT v.a,                                       +
      v.b,                                           +
@@ -1449,7 +1449,7 @@ select pg_get_viewdef('vv3', true);
 (1 row)
 
 select pg_get_viewdef('vv4', true);
-                      pg_get_viewdef
+                      pg_get_viewdef                      
 ----------------------------------------------------------
   SELECT v.a,                                            +
      v.b,                                                +
@@ -1483,7 +1483,7 @@ select * from (values(now(),2,3,now(),5)) v(a,b,c,d,e)
 union all
 select * from tt7a left join tt8a using (x), tt8a tt8ax;
 select pg_get_viewdef('vv2a', true);
-                     pg_get_viewdef
+                     pg_get_viewdef                     
 --------------------------------------------------------
   SELECT v.a,                                          +
      v.b,                                              +
@@ -1509,7 +1509,7 @@ create table tt9 (x int, xx int, y int);
 create table tt10 (x int, z int);
 create view vv5 as select x,y,z from tt9 join tt10 using(x);
 select pg_get_viewdef('vv5', true);
-      pg_get_viewdef
+      pg_get_viewdef       
 ---------------------------
   SELECT tt9.x,           +
      tt9.y,               +
@@ -1520,7 +1520,7 @@ select pg_get_viewdef('vv5', true);
 
 alter table tt9 drop column xx;
 select pg_get_viewdef('vv5', true);
-      pg_get_viewdef
+      pg_get_viewdef       
 ---------------------------
   SELECT tt9.x,           +
      tt9.y,               +
@@ -1539,7 +1539,7 @@ create table tt13 (z int, q int);
 create view vv6 as select x,y,z,q from
   (tt11 join tt12 using(x)) join tt13 using(z);
 select pg_get_viewdef('vv6', true);
-      pg_get_viewdef
+      pg_get_viewdef       
 ---------------------------
   SELECT tt11.x,          +
      tt11.y,              +
@@ -1552,7 +1552,7 @@ select pg_get_viewdef('vv6', true);
 
 alter table tt11 add column z int;
 select pg_get_viewdef('vv6', true);
-        pg_get_viewdef
+        pg_get_viewdef        
 ------------------------------
   SELECT tt11.x,             +
      tt11.y,                 +
@@ -1583,7 +1583,7 @@ $$
 language plpgsql;
 create view tt14v as select t.* from tt14f() t;
 select pg_get_viewdef('tt14v', true);
-         pg_get_viewdef
+         pg_get_viewdef         
 --------------------------------
   SELECT f1,                   +
      f3,                       +
@@ -1592,7 +1592,7 @@ select pg_get_viewdef('tt14v', true);
 (1 row)
 
 select * from tt14v;
- f1  | f3  | f4
+ f1  | f3  | f4 
 -----+-----+----
  foo | baz | 42
 (1 row)
@@ -1614,7 +1614,7 @@ delete from pg_depend where
 returning pg_describe_object(classid, objid, objsubid) as obj,
           pg_describe_object(refclassid, refobjid, refobjsubid) as ref,
           deptype;
-            obj             |           ref            | deptype
+            obj             |           ref            | deptype 
 ----------------------------+--------------------------+---------
  rule _RETURN on view tt14v | column f3 of table tt14t | n
 (1 row)
@@ -1623,7 +1623,7 @@ returning pg_describe_object(classid, objid, objsubid) as obj,
 alter table tt14t drop column f3;
 -- column f3 is still in the view, sort of ...
 select pg_get_viewdef('tt14v', true);
-        pg_get_viewdef
+        pg_get_viewdef         
 -------------------------------
   SELECT f1,                  +
      "?dropped?column?" AS f3,+
@@ -1633,7 +1633,7 @@ select pg_get_viewdef('tt14v', true);
 
 -- ... and you can even EXPLAIN it ...
 explain (verbose, costs off) select * from tt14v;
-               QUERY PLAN
+               QUERY PLAN               
 ----------------------------------------
  Function Scan on testviewschm2.tt14f t
    Output: t.f1, t.f3, t.f4
@@ -1642,7 +1642,7 @@ explain (verbose, costs off) select * from tt14v;
 
 -- but it will fail at execution
 select f1, f4 from tt14v;
- f1  | f4
+ f1  | f4 
 -----+----
  foo | 42
 (1 row)
@@ -1664,7 +1664,7 @@ delete from pg_depend where
 returning pg_describe_object(classid, objid, objsubid) as obj,
           pg_describe_object(refclassid, refobjid, refobjsubid) as ref,
           deptype;
-            obj             |           ref            | deptype
+            obj             |           ref            | deptype 
 ----------------------------+--------------------------+---------
  rule _RETURN on view tt14v | column f4 of table tt14t | n
 (1 row)
@@ -1673,7 +1673,7 @@ returning pg_describe_object(classid, objid, objsubid) as obj,
 alter table tt14t alter column f4 type integer using f4::integer;
 -- f4 is still in the view ...
 select pg_get_viewdef('tt14v', true);
-         pg_get_viewdef
+         pg_get_viewdef         
 --------------------------------
   SELECT f1,                   +
      f3,                       +
@@ -1683,7 +1683,7 @@ select pg_get_viewdef('tt14v', true);
 
 -- but will fail at execution
 select f1, f3 from tt14v;
- f1  | f3
+ f1  | f3  
 -----+-----
  foo | baz
 (1 row)
@@ -1695,7 +1695,7 @@ rollback;
 drop view tt14v;
 create view tt14v as select t.f1, t.f4 from tt14f() t;
 select pg_get_viewdef('tt14v', true);
-         pg_get_viewdef
+         pg_get_viewdef         
 --------------------------------
   SELECT f1,                   +
      f4                        +
@@ -1703,14 +1703,14 @@ select pg_get_viewdef('tt14v', true);
 (1 row)
 
 select * from tt14v;
- f1  | f4
+ f1  | f4 
 -----+----
  foo | 42
 (1 row)
 
 alter table tt14t drop column f3;  -- ok
 select pg_get_viewdef('tt14v', true);
-       pg_get_viewdef
+       pg_get_viewdef       
 ----------------------------
   SELECT f1,               +
      f4                    +
@@ -1718,7 +1718,7 @@ select pg_get_viewdef('tt14v', true);
 (1 row)
 
 explain (verbose, costs off) select * from tt14v;
-               QUERY PLAN
+               QUERY PLAN               
 ----------------------------------------
  Function Scan on testviewschm2.tt14f t
    Output: t.f1, t.f4
@@ -1726,7 +1726,7 @@ explain (verbose, costs off) select * from tt14v;
 (3 rows)
 
 select * from tt14v;
- f1  | f4
+ f1  | f4 
 -----+----
  foo | 42
 (1 row)
@@ -1735,7 +1735,7 @@ select * from tt14v;
 create type nestedcomposite as (x int8_tbl);
 create view tt15v as select row(i)::nestedcomposite from int8_tbl i;
 select * from tt15v;
-                   row
+                   row                    
 ------------------------------------------
  ("(123,456)")
  ("(123,4567890123456789)")
@@ -1745,14 +1745,14 @@ select * from tt15v;
 (5 rows)
 
 select pg_get_viewdef('tt15v', true);
-                    pg_get_viewdef
+                    pg_get_viewdef                    
 ------------------------------------------------------
   SELECT ROW(i.*::int8_tbl)::nestedcomposite AS "row"+
     FROM int8_tbl i;
 (1 row)
 
 select row(i.*::int8_tbl)::nestedcomposite from int8_tbl i;
-                   row
+                   row                    
 ------------------------------------------
  ("(123,456)")
  ("(123,4567890123456789)")
@@ -1763,7 +1763,7 @@ select row(i.*::int8_tbl)::nestedcomposite from int8_tbl i;
 
 create view tt16v as select * from int8_tbl i, lateral(values(i)) ss;
 select * from tt16v;
-        q1        |        q2         |               column1
+        q1        |        q2         |               column1                
 ------------------+-------------------+--------------------------------------
               123 |               456 | (123,456)
               123 |  4567890123456789 | (123,4567890123456789)
@@ -1773,7 +1773,7 @@ select * from tt16v;
 (5 rows)
 
 select pg_get_viewdef('tt16v', true);
-              pg_get_viewdef
+              pg_get_viewdef               
 -------------------------------------------
   SELECT i.q1,                            +
      i.q2,                                +
@@ -1783,7 +1783,7 @@ select pg_get_viewdef('tt16v', true);
 (1 row)
 
 select * from int8_tbl i, lateral(values(i.*::int8_tbl)) ss;
-        q1        |        q2         |               column1
+        q1        |        q2         |               column1                
 ------------------+-------------------+--------------------------------------
               123 |               456 | (123,456)
               123 |  4567890123456789 | (123,4567890123456789)
@@ -1794,7 +1794,7 @@ select * from int8_tbl i, lateral(values(i.*::int8_tbl)) ss;
 
 create view tt17v as select * from int8_tbl i where i in (values(i));
 select * from tt17v;
-        q1        |        q2
+        q1        |        q2         
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -1804,7 +1804,7 @@ select * from tt17v;
 (5 rows)
 
 select pg_get_viewdef('tt17v', true);
-               pg_get_viewdef
+               pg_get_viewdef                
 ---------------------------------------------
   SELECT q1,                                +
      q2                                     +
@@ -1813,7 +1813,7 @@ select pg_get_viewdef('tt17v', true);
 (1 row)
 
 select * from int8_tbl i where i.* in (values(i.*::int8_tbl));
-        q1        |        q2
+        q1        |        q2         
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -1827,9 +1827,9 @@ create rule updlog as on update to tt15v do also
   insert into tt15v_log values(old, new, row(old,old) < row(new,new));
 \d+ tt15v
                              View "testviewschm2.tt15v"
- Column |      Type       | Collation | Nullable | Default | Storage  | Description
+ Column |      Type       | Collation | Nullable | Default | Storage  | Description 
 --------+-----------------+-----------+----------+---------+----------+-------------
- row    | nestedcomposite |           |          |         | extended |
+ row    | nestedcomposite |           |          |         | extended | 
 View definition:
  SELECT ROW(i.*::int8_tbl)::nestedcomposite AS "row"
    FROM int8_tbl i;
@@ -1846,7 +1846,7 @@ create view tt18v as
 NOTICE:  identifier "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy" will be truncated to "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 NOTICE:  identifier "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxz" will be truncated to "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 select pg_get_viewdef('tt18v', true);
-                                  pg_get_viewdef
+                                  pg_get_viewdef                                   
 -----------------------------------------------------------------------------------
   SELECT xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.q1,      +
      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.q2           +
@@ -1858,7 +1858,7 @@ select pg_get_viewdef('tt18v', true);
 (1 row)
 
 explain (costs off) select * from tt18v;
-                                         QUERY PLAN
+                                         QUERY PLAN                                         
 --------------------------------------------------------------------------------------------
  Append
    ->  Seq Scan on int8_tbl xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -1867,7 +1867,7 @@ explain (costs off) select * from tt18v;
 
 -- check display of ScalarArrayOp with a sub-select
 select 'foo'::text = any(array['abc','def','foo']::text[]);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -1878,7 +1878,7 @@ LINE 1: select 'foo'::text = any((select array['abc','def','foo']::t...
                            ^
 HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
 select 'foo'::text = any((select array['abc','def','foo']::text[])::text[]);
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -1887,7 +1887,7 @@ create view tt19v as
 select 'foo'::text = any(array['abc','def','foo']::text[]) c1,
        'foo'::text = any((select array['abc','def','foo']::text[])::text[]) c2;
 select pg_get_viewdef('tt19v', true);
-                                               pg_get_viewdef
+                                               pg_get_viewdef                                               
 ------------------------------------------------------------------------------------------------------------
   SELECT 'foo'::text = ANY (ARRAY['abc'::text, 'def'::text, 'foo'::text]) AS c1,                           +
      'foo'::text = ANY ((( SELECT ARRAY['abc'::text, 'def'::text, 'foo'::text] AS "array"))::text[]) AS c2;
@@ -1903,7 +1903,7 @@ select * from
   cast(1+2 as int4) as i4,
   cast(1+2 as int8) as i8;
 select pg_get_viewdef('tt20v', true);
-               pg_get_viewdef
+               pg_get_viewdef                
 ---------------------------------------------
   SELECT c.c,                               +
      col.col,                               +
@@ -1975,7 +1975,7 @@ select
   SYSTEM_USER as su,
   (select * from SYSTEM_USER) as su2;
 select pg_get_viewdef('tt201v', true);
-                                        pg_get_viewdef
+                                        pg_get_viewdef                                         
 -----------------------------------------------------------------------------------------------
   SELECT (('12-01-2022'::date + '@ 1 day'::interval) AT TIME ZONE 'UTC'::text) AS atz,        +
      EXTRACT(day FROM now()) AS extr,                                                         +
@@ -2050,7 +2050,7 @@ select pg_get_viewdef('tt201v', true);
 create view tt21v as
 select * from tt5 natural inner join tt6;
 select pg_get_viewdef('tt21v', true);
-    pg_get_viewdef
+    pg_get_viewdef    
 ----------------------
   SELECT tt5.a,      +
      tt5.b,          +
@@ -2064,7 +2064,7 @@ select pg_get_viewdef('tt21v', true);
 create view tt22v as
 select * from tt5 natural left join tt6;
 select pg_get_viewdef('tt22v', true);
-       pg_get_viewdef
+       pg_get_viewdef        
 -----------------------------
   SELECT tt5.a,             +
      tt5.b,                 +
@@ -2081,7 +2081,7 @@ select q1 as other_name1, q2 as other_name2 from int8_tbl
 union
 select 42, 43;
 select pg_get_viewdef('tt23v', true);
-        pg_get_viewdef
+        pg_get_viewdef         
 -------------------------------
   SELECT int8_tbl.q1 AS col_a,+
      int8_tbl.q2 AS col_b     +
@@ -2093,7 +2093,7 @@ select pg_get_viewdef('tt23v', true);
 
 select pg_get_ruledef(oid, true) from pg_rewrite
   where ev_class = 'tt23v'::regclass and ev_type = '1';
-                         pg_get_ruledef
+                         pg_get_ruledef                          
 -----------------------------------------------------------------
  CREATE RULE "_RETURN" AS                                       +
      ON SELECT TO tt23v DO INSTEAD  SELECT int8_tbl.q1 AS col_a,+
@@ -2111,7 +2111,7 @@ select (r).column2 as col_a, (rr).column2 as col_b from
   cte join (select rr from (values(1,7),(3,8)) rr limit 2) ss
   on (r).column1 = (rr).column1;
 select pg_get_viewdef('tt24v', true);
-                       pg_get_viewdef
+                       pg_get_viewdef                       
 ------------------------------------------------------------
   WITH cte AS MATERIALIZED (                               +
           SELECT r.*::record AS r                          +
@@ -2129,7 +2129,7 @@ create view tt25v as
 with cte as materialized (select pg_get_keywords() k)
 select (k).word from cte;
 select pg_get_viewdef('tt25v', true);
-             pg_get_viewdef
+             pg_get_viewdef             
 ----------------------------------------
   WITH cte AS MATERIALIZED (           +
           SELECT pg_get_keywords() AS k+
@@ -2141,7 +2141,7 @@ select pg_get_viewdef('tt25v', true);
 -- also check cases seen only in EXPLAIN
 explain (verbose, costs off)
 select * from tt24v;
-                                        QUERY PLAN
+                                        QUERY PLAN                                        
 ------------------------------------------------------------------------------------------
  Hash Join
    Output: (cte.r).column2, ((ROW("*VALUES*".column1, "*VALUES*".column2))).column2
@@ -2161,7 +2161,7 @@ select * from tt24v;
 
 explain (verbose, costs off)
 select (r).column2 from (select r from (values(1,2),(3,4)) r limit 1) ss;
-                            QUERY PLAN
+                            QUERY PLAN                             
 -------------------------------------------------------------------
  Subquery Scan on ss
    Output: (ss.r).column2
@@ -2186,7 +2186,7 @@ select x + y + z as c1,
        (x,y) <= ANY (values(1,2),(3,4)) as c11
 from (values(1,2,3)) v(x,y,z);
 select pg_get_viewdef('tt26v', true);
-                   pg_get_viewdef
+                   pg_get_viewdef                   
 ----------------------------------------------------
   SELECT x + y + z AS c1,                          +
      x * y + z AS c2,                              +

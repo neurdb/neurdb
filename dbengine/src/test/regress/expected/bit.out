@@ -15,7 +15,7 @@ ERROR:  bit string length 12 does not match type bit(11)
 --INSERT INTO BIT_TABLE VALUES ('X554');
 --INSERT INTO BIT_TABLE VALUES ('X555');
 SELECT * FROM BIT_TABLE;
-      b
+      b      
 -------------
  00000000000
  11011000000
@@ -32,9 +32,9 @@ ERROR:  bit string too long for type bit varying(11)
 --INSERT INTO VARBIT_TABLE VALUES ('X554');
 --INSERT INTO VARBIT_TABLE VALUES ('X555');
 SELECT * FROM VARBIT_TABLE;
-      v
+      v      
 -------------
-
+ 
  0
  010101
  01010101010
@@ -61,7 +61,7 @@ LINE 1: SELECT x'0 ';
 SELECT v, b, (v || b) AS concat
        FROM BIT_TABLE, VARBIT_TABLE
        ORDER BY 3;
-      v      |      b      |         concat
+      v      |      b      |         concat         
 -------------+-------------+------------------------
              | 00000000000 | 00000000000
  0           | 00000000000 | 000000000000
@@ -80,7 +80,7 @@ SELECT v, b, (v || b) AS concat
 -- Length
 SELECT b, length(b) AS lb
        FROM BIT_TABLE;
-      b      | lb
+      b      | lb 
 -------------+----
  00000000000 | 11
  11011000000 | 11
@@ -89,7 +89,7 @@ SELECT b, length(b) AS lb
 
 SELECT v, length(v) AS lv
        FROM VARBIT_TABLE;
-      v      | lv
+      v      | lv 
 -------------+----
              |  0
  0           |  1
@@ -103,7 +103,7 @@ SELECT b,
        SUBSTRING(b FROM 7 FOR 13) AS sub_7_13,
        SUBSTRING(b FROM 6) AS sub_6
        FROM BIT_TABLE;
-      b      | sub_2_4 | sub_7_13 | sub_6
+      b      | sub_2_4 | sub_7_13 | sub_6  
 -------------+---------+----------+--------
  00000000000 | 0000    | 00000    | 000000
  11011000000 | 1011    | 00000    | 000000
@@ -115,23 +115,23 @@ SELECT v,
        SUBSTRING(v FROM 7 FOR 13) AS sub_7_13,
        SUBSTRING(v FROM 6) AS sub_6
        FROM VARBIT_TABLE;
-      v      | sub_2_4 | sub_7_13 | sub_6
+      v      | sub_2_4 | sub_7_13 | sub_6  
 -------------+---------+----------+--------
-             |         |          |
- 0           |         |          |
+             |         |          | 
+ 0           |         |          | 
  010101      | 1010    |          | 1
  01010101010 | 1010    | 01010    | 101010
 (4 rows)
 
 -- test overflow cases
 SELECT SUBSTRING('01010101'::bit(8) FROM 2 FOR 2147483646) AS "1010101";
- 1010101
+ 1010101 
 ---------
  1010101
 (1 row)
 
 SELECT SUBSTRING('01010101'::bit(8) FROM -10 FOR 2147483646) AS "01010101";
- 01010101
+ 01010101 
 ----------
  01010101
 (1 row)
@@ -139,13 +139,13 @@ SELECT SUBSTRING('01010101'::bit(8) FROM -10 FOR 2147483646) AS "01010101";
 SELECT SUBSTRING('01010101'::bit(8) FROM -10 FOR -2147483646) AS "error";
 ERROR:  negative substring length not allowed
 SELECT SUBSTRING('01010101'::varbit FROM 2 FOR 2147483646) AS "1010101";
- 1010101
+ 1010101 
 ---------
  1010101
 (1 row)
 
 SELECT SUBSTRING('01010101'::varbit FROM -10 FOR 2147483646) AS "01010101";
- 01010101
+ 01010101 
 ----------
  01010101
 (1 row)
@@ -158,7 +158,7 @@ CREATE TABLE varbit_table (a BIT VARYING(16), b BIT VARYING(16));
 COPY varbit_table FROM stdin;
 SELECT a, b, ~a AS "~ a", a & b AS "a & b",
        a | b AS "a | b", a # b AS "a # b" FROM varbit_table;
-        a         |        b         |       ~ a        |      a & b       |      a | b       |      a # b
+        a         |        b         |       ~ a        |      a & b       |      a | b       |      a # b       
 ------------------+------------------+------------------+------------------+------------------+------------------
  00001111         | 00010000         | 11110000         | 00000000         | 00011111         | 00011111
  00011111         | 00010001         | 11100000         | 00010001         | 00011111         | 00001110
@@ -174,7 +174,7 @@ SELECT a, b, ~a AS "~ a", a & b AS "a & b",
 
 SELECT a,b,a<b AS "a<b",a<=b AS "a<=b",a=b AS "a=b",
         a>=b AS "a>=b",a>b AS "a>b",a<>b AS "a<>b" FROM varbit_table;
-        a         |        b         | a<b | a<=b | a=b | a>=b | a>b | a<>b
+        a         |        b         | a<b | a<=b | a=b | a>=b | a>b | a<>b 
 ------------------+------------------+-----+------+-----+------+-----+------
  00001111         | 00010000         | t   | t    | f   | f    | f   | t
  00011111         | 00010001         | f   | f    | f   | t    | t   | t
@@ -189,7 +189,7 @@ SELECT a,b,a<b AS "a<b",a<=b AS "a<=b",a=b AS "a=b",
 (10 rows)
 
 SELECT a,a<<4 AS "a<<4",b,b>>2 AS "b>>2" FROM varbit_table;
-        a         |       a<<4       |        b         |       b>>2
+        a         |       a<<4       |        b         |       b>>2       
 ------------------+------------------+------------------+------------------
  00001111         | 11110000         | 00010000         | 00000100
  00011111         | 11110000         | 00010001         | 00000100
@@ -210,7 +210,7 @@ CREATE TABLE bit_table (a BIT(16), b BIT(16));
 COPY bit_table FROM stdin;
 SELECT a,b,~a AS "~ a",a & b AS "a & b",
 	a|b AS "a | b", a # b AS "a # b" FROM bit_table;
-        a         |        b         |       ~ a        |      a & b       |      a | b       |      a # b
+        a         |        b         |       ~ a        |      a & b       |      a | b       |      a # b       
 ------------------+------------------+------------------+------------------+------------------+------------------
  0000111100000000 | 0001000000000000 | 1111000011111111 | 0000000000000000 | 0001111100000000 | 0001111100000000
  0001111100000000 | 0001000100000000 | 1110000011111111 | 0001000100000000 | 0001111100000000 | 0000111000000000
@@ -226,7 +226,7 @@ SELECT a,b,~a AS "~ a",a & b AS "a & b",
 
 SELECT a,b,a<b AS "a<b",a<=b AS "a<=b",a=b AS "a=b",
         a>=b AS "a>=b",a>b AS "a>b",a<>b AS "a<>b" FROM bit_table;
-        a         |        b         | a<b | a<=b | a=b | a>=b | a>b | a<>b
+        a         |        b         | a<b | a<=b | a=b | a>=b | a>b | a<>b 
 ------------------+------------------+-----+------+-----+------+-----+------
  0000111100000000 | 0001000000000000 | t   | t    | f   | f    | f   | t
  0001111100000000 | 0001000100000000 | f   | f    | f   | t    | t   | t
@@ -241,7 +241,7 @@ SELECT a,b,a<b AS "a<b",a<=b AS "a<=b",a=b AS "a=b",
 (10 rows)
 
 SELECT a,a<<4 AS "a<<4",b,b>>2 AS "b>>2" FROM bit_table;
-        a         |       a<<4       |        b         |       b>>2
+        a         |       a<<4       |        b         |       b>>2       
 ------------------+------------------+------------------+------------------
  0000111100000000 | 1111000000000000 | 0001000000000000 | 0000010000000000
  0001111100000000 | 1111000000000000 | 0001000100000000 | 0000010001000000
@@ -265,229 +265,229 @@ select B'0010' # B'011101';
 ERROR:  cannot XOR bit strings of different sizes
 -- More position tests, checking all the boundary cases
 SELECT POSITION(B'1010' IN B'0000101');   -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'1010' IN B'00001010');  -- 5
- position
+ position 
 ----------
         5
 (1 row)
 
 SELECT POSITION(B'1010' IN B'00000101');  -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'1010' IN B'000001010');  -- 6
- position
+ position 
 ----------
         6
 (1 row)
 
 SELECT POSITION(B'' IN B'00001010');  -- 1
- position
+ position 
 ----------
         1
 (1 row)
 
 SELECT POSITION(B'0' IN B'');  -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'' IN B'');  -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'101101' IN B'001011011011011000');  -- 3
- position
+ position 
 ----------
         3
 (1 row)
 
 SELECT POSITION(B'10110110' IN B'001011011011010');  -- 3
- position
+ position 
 ----------
         3
 (1 row)
 
 SELECT POSITION(B'1011011011011' IN B'001011011011011');  -- 3
- position
+ position 
 ----------
         3
 (1 row)
 
 SELECT POSITION(B'1011011011011' IN B'00001011011011011');  -- 5
- position
+ position 
 ----------
         5
 (1 row)
 
 SELECT POSITION(B'11101011' IN B'11101011'); -- 1
- position
+ position 
 ----------
         1
 (1 row)
 
 SELECT POSITION(B'11101011' IN B'011101011'); -- 2
- position
+ position 
 ----------
         2
 (1 row)
 
 SELECT POSITION(B'11101011' IN B'00011101011'); -- 4
- position
+ position 
 ----------
         4
 (1 row)
 
 SELECT POSITION(B'11101011' IN B'0000011101011'); -- 6
- position
+ position 
 ----------
         6
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'111010110'); -- 1
- position
+ position 
 ----------
         1
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'0111010110'); -- 2
- position
+ position 
 ----------
         2
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'000111010110'); -- 4
- position
+ position 
 ----------
         4
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'00000111010110'); -- 6
- position
+ position 
 ----------
         6
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'11101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'011101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'00011101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'0000011101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'111010110'); -- 1
- position
+ position 
 ----------
         1
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'0111010110'); -- 2
- position
+ position 
 ----------
         2
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'000111010110'); -- 4
- position
+ position 
 ----------
         4
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'00000111010110'); -- 6
- position
+ position 
 ----------
         6
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'000001110101111101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'0000001110101111101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'000000001110101111101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'00000000001110101111101011'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'0000011101011111010110'); -- 14
- position
+ position 
 ----------
        14
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'00000011101011111010110'); -- 15
- position
+ position 
 ----------
        15
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'0000000011101011111010110'); -- 17
- position
+ position 
 ----------
        17
 (1 row)
 
 SELECT POSITION(B'111010110' IN B'000000000011101011111010110'); -- 19
- position
+ position 
 ----------
        19
 (1 row)
 
 SELECT POSITION(B'000000000011101011111010110' IN B'000000000011101011111010110'); -- 1
- position
+ position 
 ----------
         1
 (1 row)
 
 SELECT POSITION(B'00000000011101011111010110' IN B'000000000011101011111010110'); -- 2
- position
+ position 
 ----------
         2
 (1 row)
 
 SELECT POSITION(B'0000000000011101011111010110' IN B'000000000011101011111010110'); -- 0
- position
+ position 
 ----------
         0
 (1 row)
@@ -503,7 +503,7 @@ SELECT POSITION(B'1101' IN b),
        POSITION(B'11011' IN b),
        b
        FROM BIT_SHIFT_TABLE ;
- position | position |        b
+ position | position |        b         
 ----------+----------+------------------
         1 |        1 | 1101100000000000
         2 |        2 | 0110110000000000
@@ -525,7 +525,7 @@ SELECT POSITION(B'1101' IN b),
 
 SELECT b, b >> 1 AS bsr, b << 1 AS bsl
        FROM BIT_SHIFT_TABLE ;
-        b         |       bsr        |       bsl
+        b         |       bsr        |       bsl        
 ------------------+------------------+------------------
  1101100000000000 | 0110110000000000 | 1011000000000000
  0110110000000000 | 0011011000000000 | 1101100000000000
@@ -547,7 +547,7 @@ SELECT b, b >> 1 AS bsr, b << 1 AS bsl
 
 SELECT b, b >> 8 AS bsr8, b << 8 AS bsl8
        FROM BIT_SHIFT_TABLE ;
-        b         |       bsr8       |       bsl8
+        b         |       bsr8       |       bsl8       
 ------------------+------------------+------------------
  1101100000000000 | 0000000011011000 | 0000000000000000
  0110110000000000 | 0000000001101100 | 0000000000000000
@@ -569,7 +569,7 @@ SELECT b, b >> 8 AS bsr8, b << 8 AS bsl8
 
 SELECT b::bit(15), b::bit(15) >> 1 AS bsr, b::bit(15) << 1 AS bsl
        FROM BIT_SHIFT_TABLE ;
-        b        |       bsr       |       bsl
+        b        |       bsr       |       bsl       
 -----------------+-----------------+-----------------
  110110000000000 | 011011000000000 | 101100000000000
  011011000000000 | 001101100000000 | 110110000000000
@@ -591,7 +591,7 @@ SELECT b::bit(15), b::bit(15) >> 1 AS bsr, b::bit(15) << 1 AS bsl
 
 SELECT b::bit(15), b::bit(15) >> 8 AS bsr8, b::bit(15) << 8 AS bsl8
        FROM BIT_SHIFT_TABLE ;
-        b        |      bsr8       |      bsl8
+        b        |      bsr8       |      bsl8       
 -----------------+-----------------+-----------------
  110110000000000 | 000000001101100 | 000000000000000
  011011000000000 | 000000000110110 | 000000000000000
@@ -621,7 +621,7 @@ SELECT POSITION(B'1101' IN v),
        POSITION(B'11011' IN v),
        v
        FROM VARBIT_SHIFT_TABLE ;
- position | position |          v
+ position | position |          v           
 ----------+----------+----------------------
         1 |        1 | 11011
         2 |        2 | 011011
@@ -643,7 +643,7 @@ SELECT POSITION(B'1101' IN v),
 
 SELECT v, v >> 1 AS vsr, v << 1 AS vsl
        FROM VARBIT_SHIFT_TABLE ;
-          v           |         vsr          |         vsl
+          v           |         vsr          |         vsl          
 ----------------------+----------------------+----------------------
  11011                | 01101                | 10110
  011011               | 001101               | 110110
@@ -665,7 +665,7 @@ SELECT v, v >> 1 AS vsr, v << 1 AS vsl
 
 SELECT v, v >> 8 AS vsr8, v << 8 AS vsl8
        FROM VARBIT_SHIFT_TABLE ;
-          v           |         vsr8         |         vsl8
+          v           |         vsr8         |         vsl8         
 ----------------------+----------------------+----------------------
  11011                | 00000                | 00000
  011011               | 000000               | 000000
@@ -689,13 +689,13 @@ DROP TABLE BIT_SHIFT_TABLE;
 DROP TABLE VARBIT_SHIFT_TABLE;
 -- Get/Set bit
 SELECT get_bit(B'0101011000100', 10);
- get_bit
+ get_bit 
 ---------
        1
 (1 row)
 
 SELECT set_bit(B'0101011000100100', 15, 1);
-     set_bit
+     set_bit      
 ------------------
  0101011000100101
 (1 row)
@@ -704,38 +704,38 @@ SELECT set_bit(B'0101011000100100', 16, 1);	-- fail
 ERROR:  bit index 16 out of valid range (0..15)
 -- Overlay
 SELECT overlay(B'0101011100' placing '001' from 2 for 3);
-  overlay
+  overlay   
 ------------
  0001011100
 (1 row)
 
 SELECT overlay(B'0101011100' placing '101' from 6);
-  overlay
+  overlay   
 ------------
  0101010100
 (1 row)
 
 SELECT overlay(B'0101011100' placing '001' from 11);
-    overlay
+    overlay    
 ---------------
  0101011100001
 (1 row)
 
 SELECT overlay(B'0101011100' placing '001' from 20);
-    overlay
+    overlay    
 ---------------
  0101011100001
 (1 row)
 
 -- bit_count
 SELECT bit_count(B'0101011100'::bit(10));
- bit_count
+ bit_count 
 -----------
          5
 (1 row)
 
 SELECT bit_count(B'1111111111'::bit(10));
- bit_count
+ bit_count 
 -----------
         10
 (1 row)
@@ -749,7 +749,7 @@ CREATE TABLE bit_defaults(
 );
 \d bit_defaults
                      Table "public.bit_defaults"
- Column |      Type      | Collation | Nullable |       Default
+ Column |      Type      | Collation | Nullable |       Default       
 --------+----------------+-----------+----------+---------------------
  b1     | bit(4)         |           |          | '1001'::"bit"
  b2     | bit(4)         |           |          | '0101'::"bit"
@@ -758,68 +758,69 @@ CREATE TABLE bit_defaults(
 
 INSERT INTO bit_defaults DEFAULT VALUES;
 TABLE bit_defaults;
-  b1  |  b2  |  b3  |  b4
+  b1  |  b2  |  b3  |  b4  
 ------+------+------+------
  1001 | 0101 | 1001 | 0101
 (1 row)
 
 -- test non-error-throwing API for some core types
 SELECT pg_input_is_valid('01010001', 'bit(10)');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('01010001', 'bit(10)');
-                     message                     | detail | hint | sql_error_code
+                     message                     | detail | hint | sql_error_code 
 -------------------------------------------------+--------+------+----------------
  bit string length 8 does not match type bit(10) |        |      | 22026
 (1 row)
 
 SELECT pg_input_is_valid('01010Z01', 'bit(8)');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('01010Z01', 'bit(8)');
-             message             | detail | hint | sql_error_code
+             message             | detail | hint | sql_error_code 
 ---------------------------------+--------+------+----------------
  "Z" is not a valid binary digit |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('x01010Z01', 'bit(32)');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('x01010Z01', 'bit(32)');
-               message                | detail | hint | sql_error_code
+               message                | detail | hint | sql_error_code 
 --------------------------------------+--------+------+----------------
  "Z" is not a valid hexadecimal digit |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('01010Z01', 'varbit');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('01010Z01', 'varbit');
-             message             | detail | hint | sql_error_code
+             message             | detail | hint | sql_error_code 
 ---------------------------------+--------+------+----------------
  "Z" is not a valid binary digit |        |      | 22P02
 (1 row)
 
 SELECT pg_input_is_valid('x01010Z01', 'varbit');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('x01010Z01', 'varbit');
-               message                | detail | hint | sql_error_code
+               message                | detail | hint | sql_error_code 
 --------------------------------------+--------+------+----------------
  "Z" is not a valid hexadecimal digit |        |      | 22P02
 (1 row)
+

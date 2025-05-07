@@ -3,23 +3,23 @@ Parsed test spec with 2 sessions
 starting permutation: lock assign1 vacuum unlock
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
-step lock:
+step lock: 
     SELECT pg_advisory_lock(1);
 
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step assign1:
+step assign1: 
 do $$
   declare
     x text;
@@ -32,15 +32,15 @@ do $$
   end;
 $$;
  <waiting ...>
-step vacuum:
+step vacuum: 
     VACUUM test1;
 
-step unlock:
+step unlock: 
     SELECT pg_advisory_unlock(1);
 
 pg_advisory_unlock
 ------------------
-t
+t                 
 (1 row)
 
 s1: NOTICE:  length(x) = 6000
@@ -49,23 +49,23 @@ step assign1: <... completed>
 starting permutation: lock assign2 vacuum unlock
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
-step lock:
+step lock: 
     SELECT pg_advisory_lock(1);
 
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step assign2:
+step assign2: 
 do $$
   declare
     x text;
@@ -78,15 +78,15 @@ do $$
   end;
 $$;
  <waiting ...>
-step vacuum:
+step vacuum: 
     VACUUM test1;
 
-step unlock:
+step unlock: 
     SELECT pg_advisory_unlock(1);
 
 pg_advisory_unlock
 ------------------
-t
+t                 
 (1 row)
 
 s1: NOTICE:  length(x) = 6000
@@ -95,23 +95,23 @@ step assign2: <... completed>
 starting permutation: lock assign3 vacuum unlock
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
-step lock:
+step lock: 
     SELECT pg_advisory_lock(1);
 
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step assign3:
+step assign3: 
 do $$
   declare
     r record;
@@ -125,15 +125,15 @@ do $$
   end;
 $$;
  <waiting ...>
-step vacuum:
+step vacuum: 
     VACUUM test1;
 
-step unlock:
+step unlock: 
     SELECT pg_advisory_unlock(1);
 
 pg_advisory_unlock
 ------------------
-t
+t                 
 (1 row)
 
 s1: NOTICE:  length(r) = 6004
@@ -142,23 +142,23 @@ step assign3: <... completed>
 starting permutation: lock assign4 vacuum unlock
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
-step lock:
+step lock: 
     SELECT pg_advisory_lock(1);
 
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step assign4:
+step assign4: 
 do $$
   declare
     r test2;
@@ -171,15 +171,15 @@ do $$
   end;
 $$;
  <waiting ...>
-step vacuum:
+step vacuum: 
     VACUUM test1;
 
-step unlock:
+step unlock: 
     SELECT pg_advisory_unlock(1);
 
 pg_advisory_unlock
 ------------------
-t
+t                 
 (1 row)
 
 s1: NOTICE:  length(r) = 6004
@@ -188,23 +188,23 @@ step assign4: <... completed>
 starting permutation: lock assign5 vacuum unlock
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
-step lock:
+step lock: 
     SELECT pg_advisory_lock(1);
 
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step assign5:
+step assign5: 
 do $$
   declare
     r record;
@@ -219,15 +219,15 @@ do $$
   end;
 $$;
  <waiting ...>
-step vacuum:
+step vacuum: 
     VACUUM test1;
 
-step unlock:
+step unlock: 
     SELECT pg_advisory_unlock(1);
 
 pg_advisory_unlock
 ------------------
-t
+t                 
 (1 row)
 
 s1: NOTICE:  length(r) = 6002
@@ -236,23 +236,23 @@ step assign5: <... completed>
 starting permutation: lock assign6 vacuum unlock
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
-step lock:
+step lock: 
     SELECT pg_advisory_lock(1);
 
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step assign6:
+step assign6: 
 do $$
   declare
     r record;
@@ -268,15 +268,15 @@ do $$
   end;
 $$;
  <waiting ...>
-step vacuum:
+step vacuum: 
     VACUUM test1;
 
-step unlock:
+step unlock: 
     SELECT pg_advisory_unlock(1);
 
 pg_advisory_unlock
 ------------------
-t
+t                 
 (1 row)
 
 s1: NOTICE:  length(r) = 6002
@@ -287,18 +287,18 @@ step assign6: <... completed>
 starting permutation: fetch-after-commit
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 pg_advisory_unlock_all
 ----------------------
-
+                      
 (1 row)
 
 s1: NOTICE:  length(t) = 6000
 s1: NOTICE:  length(t) = 9000
 s1: NOTICE:  length(t) = 12000
-step fetch-after-commit:
+step fetch-after-commit: 
 do $$
   declare
     r record;
@@ -313,3 +313,4 @@ do $$
     end loop;
   end;
 $$;
+

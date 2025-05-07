@@ -63,12 +63,12 @@ COPY onek TO :'filename';
 CREATE TEMP TABLE onek_copy (LIKE onek);
 COPY onek_copy FROM :'filename';
 SELECT * FROM onek EXCEPT ALL SELECT * FROM onek_copy;
- unique1 | unique2 | two | four | ten | twenty | hundred | thousand | twothousand | fivethous | tenthous | odd | even | stringu1 | stringu2 | string4
+ unique1 | unique2 | two | four | ten | twenty | hundred | thousand | twothousand | fivethous | tenthous | odd | even | stringu1 | stringu2 | string4 
 ---------+---------+-----+------+-----+--------+---------+----------+-------------+-----------+----------+-----+------+----------+----------+---------
 (0 rows)
 
 SELECT * FROM onek_copy EXCEPT ALL SELECT * FROM onek;
- unique1 | unique2 | two | four | ten | twenty | hundred | thousand | twothousand | fivethous | tenthous | odd | even | stringu1 | stringu2 | string4
+ unique1 | unique2 | two | four | ten | twenty | hundred | thousand | twothousand | fivethous | tenthous | odd | even | stringu1 | stringu2 | string4 
 ---------+---------+-----+------+-----+--------+---------+----------+-------------+-----------+----------+-----+------+----------+----------+---------
 (0 rows)
 
@@ -77,11 +77,11 @@ COPY BINARY stud_emp TO :'filename';
 CREATE TEMP TABLE stud_emp_copy (LIKE stud_emp);
 COPY BINARY stud_emp_copy FROM :'filename';
 SELECT * FROM stud_emp_copy;
- name  | age |  location  | salary | manager | gpa | percent
+ name  | age |  location  | salary | manager | gpa | percent 
 -------+-----+------------+--------+---------+-----+---------
- jeff  |  23 | (8,7.7)    |    600 | sharon  | 3.5 |
- cim   |  30 | (10.5,4.7) |    400 |         | 3.4 |
- linda |  19 | (0.9,6.1)  |    100 |         | 2.9 |
+ jeff  |  23 | (8,7.7)    |    600 | sharon  | 3.5 |        
+ cim   |  30 | (10.5,4.7) |    400 |         | 3.4 |        
+ linda |  19 | (0.9,6.1)  |    100 |         | 2.9 |        
 (3 rows)
 
 --
@@ -163,7 +163,7 @@ CREATE FUNCTION equipment_named_ambiguous_2b(hobby text)
 -- everyone else does nothing.
 --
 SELECT p.name, name(p.hobbies) FROM ONLY person p;
- name  |    name
+ name  |    name     
 -------+-------------
  mike  | posthacking
  joe   | basketball
@@ -174,7 +174,7 @@ SELECT p.name, name(p.hobbies) FROM ONLY person p;
 -- as above, but jeff also does post_hacking.
 --
 SELECT p.name, name(p.hobbies) FROM person* p;
- name  |    name
+ name  |    name     
 -------+-------------
  mike  | posthacking
  joe   | basketball
@@ -188,7 +188,7 @@ SELECT p.name, name(p.hobbies) FROM person* p;
 --
 SELECT DISTINCT hobbies_r.name, name(hobbies_r.equipment) FROM hobbies_r
   ORDER BY 1,2;
-    name     |     name
+    name     |     name      
 -------------+---------------
  basketball  | hightops
  posthacking | advil
@@ -197,7 +197,7 @@ SELECT DISTINCT hobbies_r.name, name(hobbies_r.equipment) FROM hobbies_r
 (4 rows)
 
 SELECT hobbies_r.name, (hobbies_r.equipment).name FROM hobbies_r;
-    name     |     name
+    name     |     name      
 -------------+---------------
  posthacking | advil
  posthacking | peet's coffee
@@ -214,7 +214,7 @@ SELECT hobbies_r.name, (hobbies_r.equipment).name FROM hobbies_r;
 -- everyone else is fine.
 --
 SELECT p.name, name(p.hobbies), name(equipment(p.hobbies)) FROM ONLY person p;
- name  |    name     |     name
+ name  |    name     |     name      
 -------+-------------+---------------
  mike  | posthacking | advil
  mike  | posthacking | peet's coffee
@@ -226,7 +226,7 @@ SELECT p.name, name(p.hobbies), name(equipment(p.hobbies)) FROM ONLY person p;
 -- as above, but jeff needs advil and peet's coffee as well.
 --
 SELECT p.name, name(p.hobbies), name(equipment(p.hobbies)) FROM person* p;
- name  |    name     |     name
+ name  |    name     |     name      
 -------+-------------+---------------
  mike  | posthacking | advil
  mike  | posthacking | peet's coffee
@@ -241,7 +241,7 @@ SELECT p.name, name(p.hobbies), name(equipment(p.hobbies)) FROM person* p;
 -- unflattening is being done correctly.
 --
 SELECT name(equipment(p.hobbies)), p.name, name(p.hobbies) FROM ONLY person p;
-     name      | name  |    name
+     name      | name  |    name     
 ---------------+-------+-------------
  advil         | mike  | posthacking
  peet's coffee | mike  | posthacking
@@ -250,7 +250,7 @@ SELECT name(equipment(p.hobbies)), p.name, name(p.hobbies) FROM ONLY person p;
 (4 rows)
 
 SELECT (p.hobbies).equipment.name, p.name, name(p.hobbies) FROM person* p;
-     name      | name  |    name
+     name      | name  |    name     
 ---------------+-------+-------------
  advil         | mike  | posthacking
  peet's coffee | mike  | posthacking
@@ -261,7 +261,7 @@ SELECT (p.hobbies).equipment.name, p.name, name(p.hobbies) FROM person* p;
 (6 rows)
 
 SELECT (p.hobbies).equipment.name, name(p.hobbies), p.name FROM ONLY person p;
-     name      |    name     | name
+     name      |    name     | name  
 ---------------+-------------+-------
  advil         | posthacking | mike
  peet's coffee | posthacking | mike
@@ -270,7 +270,7 @@ SELECT (p.hobbies).equipment.name, name(p.hobbies), p.name FROM ONLY person p;
 (4 rows)
 
 SELECT name(equipment(p.hobbies)), name(p.hobbies), p.name FROM person* p;
-     name      |    name     | name
+     name      |    name     | name  
 ---------------+-------------+-------
  advil         | posthacking | mike
  peet's coffee | posthacking | mike
@@ -281,49 +281,49 @@ SELECT name(equipment(p.hobbies)), name(p.hobbies), p.name FROM person* p;
 (6 rows)
 
 SELECT name(equipment(hobby_construct(text 'skywalking', text 'mer')));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT name(equipment(hobby_construct_named(text 'skywalking', text 'mer')));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT name(equipment_named(hobby_construct_named(text 'skywalking', text 'mer')));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT name(equipment_named_ambiguous_1a(hobby_construct_named(text 'skywalking', text 'mer')));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT name(equipment_named_ambiguous_1b(hobby_construct_named(text 'skywalking', text 'mer')));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT name(equipment_named_ambiguous_1c(hobby_construct_named(text 'skywalking', text 'mer')));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT name(equipment_named_ambiguous_2a(text 'skywalking'));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT name(equipment_named_ambiguous_2b(text 'skywalking'));
-     name
+     name      
 ---------------
  advil
  peet's coffee
@@ -332,13 +332,13 @@ SELECT name(equipment_named_ambiguous_2b(text 'skywalking'));
 (4 rows)
 
 SELECT hobbies_by_name('basketball');
- hobbies_by_name
+ hobbies_by_name 
 -----------------
  joe
 (1 row)
 
 SELECT name, overpaid(emp.*) FROM emp;
-  name  | overpaid
+  name  | overpaid 
 --------+----------
  sharon | t
  sam    | t
@@ -352,19 +352,19 @@ SELECT name, overpaid(emp.*) FROM emp;
 -- Try a few cases with SQL-spec row constructor expressions
 --
 SELECT * FROM equipment(ROW('skywalking', 'mer'));
- name |   hobby
+ name |   hobby    
 ------+------------
  guts | skywalking
 (1 row)
 
 SELECT name(equipment(ROW('skywalking', 'mer')));
- name
+ name 
 ------
  guts
 (1 row)
 
 SELECT *, name(equipment(h.*)) FROM hobbies_r h;
-    name     | person |     name
+    name     | person |     name      
 -------------+--------+---------------
  posthacking | mike   | advil
  posthacking | mike   | peet's coffee
@@ -376,7 +376,7 @@ SELECT *, name(equipment(h.*)) FROM hobbies_r h;
 (7 rows)
 
 SELECT *, (equipment(CAST((h.*) AS hobbies_r))).name FROM hobbies_r h;
-    name     | person |     name
+    name     | person |     name      
 -------------+--------+---------------
  posthacking | mike   | advil
  posthacking | mike   | peet's coffee

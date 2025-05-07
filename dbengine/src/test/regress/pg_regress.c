@@ -2022,7 +2022,7 @@ create_role(const char *rolename, const _stringlist *granted_dbs)
 static void
 help(void)
 {
-	printf(_("NeurDB regression test driver\n"));
+	printf(_("PostgreSQL regression test driver\n"));
 	printf(_("\n"));
 	printf(_("Usage:\n  %s [OPTION]... [EXTRA-TEST]...\n"), progname);
 	printf(_("\n"));

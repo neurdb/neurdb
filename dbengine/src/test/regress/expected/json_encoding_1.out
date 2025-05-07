@@ -9,7 +9,7 @@ SELECT getdatabaseencoding() NOT IN ('UTF8', 'SQL_ASCII')
 \quit
 \endif
 SELECT getdatabaseencoding();           -- just to label the results files
- getdatabaseencoding
+ getdatabaseencoding 
 ---------------------
  SQL_ASCII
 (1 row)
@@ -35,13 +35,13 @@ LINE 1: SELECT '"\u000g"'::json;
 DETAIL:  "\u" must be followed by four hexadecimal digits.
 CONTEXT:  JSON data, line 1: "\u000g...
 SELECT '"\u0000"'::json;		-- OK, legal escape
-   json
+   json   
 ----------
  "\u0000"
 (1 row)
 
 SELECT '"\uaBcD"'::json;		-- OK, uppercase and lower case both OK
-   json
+   json   
 ----------
  "\uaBcD"
 (1 row)
@@ -69,31 +69,31 @@ DETAIL:  Unicode low surrogate must follow a high surrogate.
 CONTEXT:  JSON data, line 1: { "a":  "\ude04...
 --handling of simple unicode escapes
 select json '{ "a":  "the Copyright \u00a9 sign" }' as correct_in_utf8;
-            correct_in_utf8
+            correct_in_utf8            
 ---------------------------------------
  { "a":  "the Copyright \u00a9 sign" }
 (1 row)
 
 select json '{ "a":  "dollar \u0024 character" }' as correct_everywhere;
-         correct_everywhere
+         correct_everywhere          
 -------------------------------------
  { "a":  "dollar \u0024 character" }
 (1 row)
 
 select json '{ "a":  "dollar \\u0024 character" }' as not_an_escape;
-            not_an_escape
+            not_an_escape             
 --------------------------------------
  { "a":  "dollar \\u0024 character" }
 (1 row)
 
 select json '{ "a":  "null \u0000 escape" }' as not_unescaped;
-         not_unescaped
+         not_unescaped          
 --------------------------------
  { "a":  "null \u0000 escape" }
 (1 row)
 
 select json '{ "a":  "null \\u0000 escape" }' as not_an_escape;
-          not_an_escape
+          not_an_escape          
 ---------------------------------
  { "a":  "null \\u0000 escape" }
 (1 row)
@@ -103,13 +103,13 @@ ERROR:  unsupported Unicode escape sequence
 DETAIL:  Unicode escape value could not be translated to the server's encoding SQL_ASCII.
 CONTEXT:  JSON data, line 1: { "a":  "the Copyright \u00a9...
 select json '{ "a":  "dollar \u0024 character" }' ->> 'a' as correct_everywhere;
- correct_everywhere
+ correct_everywhere 
 --------------------
  dollar $ character
 (1 row)
 
 select json '{ "a":  "dollar \\u0024 character" }' ->> 'a' as not_an_escape;
-      not_an_escape
+      not_an_escape      
 -------------------------
  dollar \u0024 character
 (1 row)
@@ -119,7 +119,7 @@ ERROR:  unsupported Unicode escape sequence
 DETAIL:  \u0000 cannot be converted to text.
 CONTEXT:  JSON data, line 1: { "a":  "null \u0000...
 select json '{ "a":  "null \\u0000 escape" }' ->> 'a' as not_an_escape;
-   not_an_escape
+   not_an_escape    
 --------------------
  null \u0000 escape
 (1 row)
@@ -145,7 +145,7 @@ LINE 1: SELECT '"\u000g"'::jsonb;
 DETAIL:  "\u" must be followed by four hexadecimal digits.
 CONTEXT:  JSON data, line 1: "\u000g...
 SELECT '"\u0045"'::jsonb;		-- OK, legal escape
- jsonb
+ jsonb 
 -------
  "E"
 (1 row)
@@ -203,13 +203,13 @@ LINE 1: SELECT jsonb '{ "a":  "the Copyright \u00a9 sign" }' as corr...
 DETAIL:  Unicode escape value could not be translated to the server's encoding SQL_ASCII.
 CONTEXT:  JSON data, line 1: { "a":  "the Copyright \u00a9...
 SELECT jsonb '{ "a":  "dollar \u0024 character" }' as correct_everywhere;
-     correct_everywhere
+     correct_everywhere      
 -----------------------------
  {"a": "dollar $ character"}
 (1 row)
 
 SELECT jsonb '{ "a":  "dollar \\u0024 character" }' as not_an_escape;
-           not_an_escape
+           not_an_escape           
 -----------------------------------
  {"a": "dollar \\u0024 character"}
 (1 row)
@@ -221,7 +221,7 @@ LINE 1: SELECT jsonb '{ "a":  "null \u0000 escape" }' as fails;
 DETAIL:  \u0000 cannot be converted to text.
 CONTEXT:  JSON data, line 1: { "a":  "null \u0000...
 SELECT jsonb '{ "a":  "null \\u0000 escape" }' as not_an_escape;
-        not_an_escape
+        not_an_escape         
 ------------------------------
  {"a": "null \\u0000 escape"}
 (1 row)
@@ -233,13 +233,13 @@ LINE 1: SELECT jsonb '{ "a":  "the Copyright \u00a9 sign" }' ->> 'a'...
 DETAIL:  Unicode escape value could not be translated to the server's encoding SQL_ASCII.
 CONTEXT:  JSON data, line 1: { "a":  "the Copyright \u00a9...
 SELECT jsonb '{ "a":  "dollar \u0024 character" }' ->> 'a' as correct_everywhere;
- correct_everywhere
+ correct_everywhere 
 --------------------
  dollar $ character
 (1 row)
 
 SELECT jsonb '{ "a":  "dollar \\u0024 character" }' ->> 'a' as not_an_escape;
-      not_an_escape
+      not_an_escape      
 -------------------------
  dollar \u0024 character
 (1 row)
@@ -251,14 +251,15 @@ LINE 1: SELECT jsonb '{ "a":  "null \u0000 escape" }' ->> 'a' as fai...
 DETAIL:  \u0000 cannot be converted to text.
 CONTEXT:  JSON data, line 1: { "a":  "null \u0000...
 SELECT jsonb '{ "a":  "null \\u0000 escape" }' ->> 'a' as not_an_escape;
-   not_an_escape
+   not_an_escape    
 --------------------
  null \u0000 escape
 (1 row)
 
 -- soft error for input-time failure
 select * from pg_input_error_info('{ "a":  "\ud83d\ude04\ud83d\udc36" }', 'jsonb');
-               message               |                                      detail                                      | hint | sql_error_code
+               message               |                                      detail                                      | hint | sql_error_code 
 -------------------------------------+----------------------------------------------------------------------------------+------+----------------
  unsupported Unicode escape sequence | Unicode escape value could not be translated to the server's encoding SQL_ASCII. |      | 22P05
 (1 row)
+

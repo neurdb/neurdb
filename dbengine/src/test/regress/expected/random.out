@@ -13,7 +13,7 @@
 SELECT r, count(*)
 FROM (SELECT random() r FROM generate_series(1, 1000)) ss
 GROUP BY r HAVING count(*) > 1;
- r | count
+ r | count 
 ---+-------
 (0 rows)
 
@@ -24,7 +24,7 @@ SELECT count(*) FILTER (WHERE r < 0 OR r >= 1) AS out_of_range,
        (count(*) FILTER (WHERE r < 0.01)) > 0 AS has_small,
        (count(*) FILTER (WHERE r > 0.99)) > 0 AS has_large
 FROM (SELECT random() r FROM generate_series(1, 2000)) ss;
- out_of_range | has_small | has_large
+ out_of_range | has_small | has_large 
 --------------+-----------+-----------
             0 | t         | t
 (1 row)
@@ -56,7 +56,7 @@ LANGUAGE plpgsql;
 SELECT ks_test_uniform_random() OR
        ks_test_uniform_random() OR
        ks_test_uniform_random() AS uniform;
- uniform
+ uniform 
 ---------
  t
 (1 row)
@@ -66,7 +66,7 @@ SELECT ks_test_uniform_random() OR
 SELECT r, count(*)
 FROM (SELECT random_normal() r FROM generate_series(1, 1000)) ss
 GROUP BY r HAVING count(*) > 1;
- r | count
+ r | count 
 ---+-------
 (0 rows)
 
@@ -75,7 +75,7 @@ GROUP BY r HAVING count(*) > 1;
 SELECT r, count(*)
 FROM (SELECT random_normal(10, 0) r FROM generate_series(1, 100)) ss
 GROUP BY r;
- r  | count
+ r  | count 
 ----+-------
  10 |   100
 (1 row)
@@ -83,7 +83,7 @@ GROUP BY r;
 SELECT r, count(*)
 FROM (SELECT random_normal(-10, 0) r FROM generate_series(1, 100)) ss
 GROUP BY r;
-  r  | count
+  r  | count 
 -----+-------
  -10 |   100
 (1 row)
@@ -115,20 +115,20 @@ LANGUAGE plpgsql;
 SELECT ks_test_normal_random() OR
        ks_test_normal_random() OR
        ks_test_normal_random() AS standard_normal;
- standard_normal
+ standard_normal 
 -----------------
  t
 (1 row)
 
 -- setseed() should produce a reproducible series of random() values.
 SELECT setseed(0.5);
- setseed
+ setseed 
 ---------
-
+ 
 (1 row)
 
 SELECT random() FROM generate_series(1, 10);
-       random
+       random        
 ---------------------
   0.9851677175347999
    0.825301858027981
@@ -147,7 +147,7 @@ SELECT random() FROM generate_series(1, 10);
 -- machines, we have to round off the results a bit to get consistent output.
 SET extra_float_digits = -1;
 SELECT random_normal() FROM generate_series(1, 10);
-   random_normal
+   random_normal   
 -------------------
   0.20853464493838
   0.26453024054096
@@ -162,7 +162,7 @@ SELECT random_normal() FROM generate_series(1, 10);
 (10 rows)
 
 SELECT random_normal(mean => 1, stddev => 0.1) r FROM generate_series(1, 10);
-        r
+        r         
 ------------------
   1.0060597281173
     1.09685453015
@@ -175,3 +175,4 @@ SELECT random_normal(mean => 1, stddev => 0.1) r FROM generate_series(1, 10);
  0.91444120680041
  0.96403105557543
 (10 rows)
+

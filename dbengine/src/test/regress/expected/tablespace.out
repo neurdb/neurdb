@@ -15,7 +15,7 @@ ERROR:  unrecognized parameter "some_nonexistent_parameter"
 CREATE TABLESPACE regress_tblspacewith LOCATION '' WITH (random_page_cost = 3.0); -- ok
 -- check to see the parameter was used
 SELECT spcoptions FROM pg_tablespace WHERE spcname = 'regress_tblspacewith';
-       spcoptions
+       spcoptions       
 ------------------------
  {random_page_cost=3.0}
 (1 row)
@@ -26,7 +26,7 @@ DROP TABLESPACE regress_tblspacewith;
 -- masking the tablespace OID used in the path name.
 SELECT regexp_replace(pg_tablespace_location(oid), '(pg_tblspc)/(\d+)', '\1/NNN')
   FROM pg_tablespace  WHERE spcname = 'regress_tblspace';
- regexp_replace
+ regexp_replace 
 ----------------
  pg_tblspc/NNN
 (1 row)
@@ -83,7 +83,7 @@ ROLLBACK;
 -- no relation moved to the new tablespace
 SELECT c.relname FROM pg_class c, pg_tablespace s
   WHERE c.reltablespace = s.oid AND s.spcname = 'regress_tblspace';
- relname
+ relname 
 ---------
 (0 rows)
 
@@ -103,7 +103,7 @@ REINDEX (TABLESPACE regress_tblspace) TABLE regress_tblspace_test_tbl;
 SELECT c.relname FROM pg_class c, pg_tablespace s
   WHERE c.reltablespace = s.oid AND s.spcname = 'regress_tblspace'
   ORDER BY c.relname;
-            relname
+            relname            
 -------------------------------
  regress_tblspace_test_tbl_idx
 (1 row)
@@ -113,7 +113,7 @@ ALTER TABLE regress_tblspace_test_tbl SET TABLESPACE pg_default;
 SELECT c.relname FROM pg_class c, pg_tablespace s
   WHERE c.reltablespace = s.oid AND s.spcname = 'regress_tblspace'
   ORDER BY c.relname;
-            relname
+            relname            
 -------------------------------
  regress_tblspace_test_tbl_idx
 (1 row)
@@ -123,7 +123,7 @@ ALTER INDEX regress_tblspace_test_tbl_idx SET TABLESPACE pg_default;
 SELECT c.relname FROM pg_class c, pg_tablespace s
   WHERE c.reltablespace = s.oid AND s.spcname = 'regress_tblspace'
   ORDER BY c.relname;
- relname
+ relname 
 ---------
 (0 rows)
 
@@ -131,14 +131,14 @@ REINDEX (TABLESPACE regress_tblspace, CONCURRENTLY) TABLE regress_tblspace_test_
 SELECT c.relname FROM pg_class c, pg_tablespace s
   WHERE c.reltablespace = s.oid AND s.spcname = 'regress_tblspace'
   ORDER BY c.relname;
-            relname
+            relname            
 -------------------------------
  regress_tblspace_test_tbl_idx
 (1 row)
 
 SELECT relfilenode = :main_filenode AS main_same FROM pg_class
   WHERE relname = 'regress_tblspace_test_tbl_idx';
- main_same
+ main_same 
 -----------
  f
 (1 row)
@@ -150,7 +150,7 @@ SELECT relfilenode = :toast_filenode as toast_same FROM pg_class
             pg_index i
        WHERE i.indrelid = c.reltoastrelid AND
              c.relname = 'regress_tblspace_test_tbl');
- toast_same
+ toast_same 
 ------------
  f
 (1 row)
@@ -182,7 +182,7 @@ CREATE INDEX tbspace_reindex_part_index_0_2 ON ONLY tbspace_reindex_part_0_2 (c1
 ALTER INDEX tbspace_reindex_part_index_0 ATTACH PARTITION tbspace_reindex_part_index_0_2;
 SELECT relid, parentrelid, level FROM pg_partition_tree('tbspace_reindex_part_index')
   ORDER BY relid, level;
-             relid              |         parentrelid          | level
+             relid              |         parentrelid          | level 
 --------------------------------+------------------------------+-------
  tbspace_reindex_part_index     |                              |     0
  tbspace_reindex_part_index_0   | tbspace_reindex_part_index   |     1
@@ -207,7 +207,7 @@ SELECT b.relname,
        ELSE 'reltablespace has changed' END AS tbspace
   FROM reindex_temp_before b JOIN pg_class a ON b.relname = a.relname
   ORDER BY 1;
-            relname             |         filenode         |          tbspace
+            relname             |         filenode         |          tbspace           
 --------------------------------+--------------------------+----------------------------
  tbspace_reindex_part_index     | relfilenode is unchanged | reltablespace is unchanged
  tbspace_reindex_part_index_0   | relfilenode is unchanged | reltablespace is unchanged
@@ -223,7 +223,7 @@ CREATE SCHEMA testschema;
 CREATE TABLE testschema.foo (i int) TABLESPACE regress_tblspace;
 SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
     where c.reltablespace = t.oid AND c.relname = 'foo';
- relname |     spcname
+ relname |     spcname      
 ---------+------------------
  foo     | regress_tblspace
 (1 row)
@@ -234,7 +234,7 @@ INSERT INTO testschema.foo VALUES(2);
 CREATE TABLE testschema.asselect TABLESPACE regress_tblspace AS SELECT 1;
 SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
     where c.reltablespace = t.oid AND c.relname = 'asselect';
- relname  |     spcname
+ relname  |     spcname      
 ----------+------------------
  asselect | regress_tblspace
 (1 row)
@@ -244,7 +244,7 @@ CREATE TABLE testschema.asexecute TABLESPACE regress_tblspace
     AS EXECUTE selectsource(2);
 SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
     where c.reltablespace = t.oid AND c.relname = 'asexecute';
-  relname  |     spcname
+  relname  |     spcname      
 -----------+------------------
  asexecute | regress_tblspace
 (1 row)
@@ -253,7 +253,7 @@ SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
 CREATE INDEX foo_idx on testschema.foo(i) TABLESPACE regress_tblspace;
 SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
     where c.reltablespace = t.oid AND c.relname = 'foo_idx';
- relname |     spcname
+ relname |     spcname      
 ---------+------------------
  foo_idx | regress_tblspace
 (1 row)
@@ -261,16 +261,16 @@ SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
 -- check \d output
 \d testschema.foo
               Table "testschema.foo"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- i      | integer |           |          |
+ i      | integer |           |          | 
 Indexes:
     "foo_idx" btree (i), tablespace "regress_tblspace"
 Tablespace: "regress_tblspace"
 
 \d testschema.foo_idx
       Index "testschema.foo_idx"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  i      | integer | yes  | i
 btree, for table "testschema.foo"
@@ -309,15 +309,15 @@ SELECT relname, spcname FROM pg_catalog.pg_class c
     JOIN pg_catalog.pg_namespace n ON (c.relnamespace = n.oid)
     LEFT JOIN pg_catalog.pg_tablespace t ON c.reltablespace = t.oid
     where c.relname LIKE 'part%' AND n.nspname = 'testschema' order by relname;
- relname  |     spcname
+ relname  |     spcname      
 ----------+------------------
- part     |
- part_1   |
+ part     | 
+ part_1   | 
  part_2   | regress_tblspace
  part_3   | regress_tblspace
- part_4   |
+ part_4   | 
  part_56  | regress_tblspace
- part_78  |
+ part_78  | 
  part_910 | regress_tblspace
 (8 rows)
 
@@ -330,7 +330,7 @@ CREATE INDEX part_a_idx ON testschema.part (a) TABLESPACE regress_tblspace;
 CREATE TABLE testschema.part2 PARTITION OF testschema.part FOR VALUES IN (2);
 SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
     where c.reltablespace = t.oid AND c.relname LIKE 'part%_idx' ORDER BY relname;
-   relname   |     spcname
+   relname   |     spcname      
 -------------+------------------
  part1_a_idx | regress_tblspace
  part2_a_idx | regress_tblspace
@@ -339,9 +339,9 @@ SELECT relname, spcname FROM pg_catalog.pg_tablespace t, pg_catalog.pg_class c
 
 \d testschema.part
         Partitioned table "testschema.part"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition key: LIST (a)
 Indexes:
     "part_a_idx" btree (a), tablespace "regress_tblspace"
@@ -349,9 +349,9 @@ Number of partitions: 2 (Use \d+ to list them.)
 
 \d+ testschema.part
                            Partitioned table "testschema.part"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- a      | integer |           |          |         | plain   |              |
+ a      | integer |           |          |         | plain   |              | 
 Partition key: LIST (a)
 Indexes:
     "part_a_idx" btree (a), tablespace "regress_tblspace"
@@ -360,18 +360,18 @@ Partitions: testschema.part1 FOR VALUES IN (1),
 
 \d testschema.part1
              Table "testschema.part1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: testschema.part FOR VALUES IN (1)
 Indexes:
     "part1_a_idx" btree (a), tablespace "regress_tblspace"
 
 \d+ testschema.part1
                                  Table "testschema.part1"
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 --------+---------+-----------+----------+---------+---------+--------------+-------------
- a      | integer |           |          |         | plain   |              |
+ a      | integer |           |          |         | plain   |              | 
 Partition of: testschema.part FOR VALUES IN (1)
 Partition constraint: ((a IS NOT NULL) AND (a = 1))
 Indexes:
@@ -379,7 +379,7 @@ Indexes:
 
 \d testschema.part_a_idx
 Partitioned index "testschema.part_a_idx"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  a      | integer | yes  | a
 btree, for table "testschema.part"
@@ -388,9 +388,9 @@ Tablespace: "regress_tblspace"
 
 \d+ testschema.part_a_idx
            Partitioned index "testschema.part_a_idx"
- Column |  Type   | Key? | Definition | Storage | Stats target
+ Column |  Type   | Key? | Definition | Storage | Stats target 
 --------+---------+------+------------+---------+--------------
- a      | integer | yes  | a          | plain   |
+ a      | integer | yes  | a          | plain   | 
 btree, for table "testschema.part"
 Partitions: testschema.part1_a_idx,
             testschema.part2_a_idx
@@ -420,14 +420,14 @@ ALTER TABLE testschema.test_default_tab ADD CONSTRAINT test_index3 PRIMARY KEY (
 ALTER TABLE testschema.test_default_tab ADD CONSTRAINT test_index4 UNIQUE (id) USING INDEX TABLESPACE regress_tblspace;
 \d testschema.test_index1
    Index "testschema.test_index1"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index2
    Index "testschema.test_index2"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 btree, for table "testschema.test_default_tab"
@@ -435,14 +435,14 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
    Index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index4
    Index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab"
@@ -454,14 +454,14 @@ SET default_tablespace TO regress_tblspace;
 ALTER TABLE testschema.test_default_tab ALTER id TYPE bigint;
 \d testschema.test_index1
    Index "testschema.test_index1"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index2
    Index "testschema.test_index2"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 btree, for table "testschema.test_default_tab"
@@ -469,21 +469,21 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
    Index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index4
    Index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab"
 Tablespace: "regress_tblspace"
 
 SELECT * FROM testschema.test_default_tab;
- id
+ id 
 ----
   1
 (1 row)
@@ -492,14 +492,14 @@ SELECT * FROM testschema.test_default_tab;
 ALTER TABLE testschema.test_default_tab ALTER id TYPE int;
 \d testschema.test_index1
     Index "testschema.test_index1"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index2
     Index "testschema.test_index2"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 btree, for table "testschema.test_default_tab"
@@ -507,21 +507,21 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
     Index "testschema.test_index3"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 primary key, btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index4
     Index "testschema.test_index4"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 unique, btree, for table "testschema.test_default_tab"
 Tablespace: "regress_tblspace"
 
 SELECT * FROM testschema.test_default_tab;
- id
+ id 
 ----
   1
 (1 row)
@@ -532,14 +532,14 @@ SET default_tablespace TO '';
 ALTER TABLE testschema.test_default_tab ALTER id TYPE int;
 \d testschema.test_index1
     Index "testschema.test_index1"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index2
     Index "testschema.test_index2"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 btree, for table "testschema.test_default_tab"
@@ -547,14 +547,14 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
     Index "testschema.test_index3"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 primary key, btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index4
     Index "testschema.test_index4"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 unique, btree, for table "testschema.test_default_tab"
@@ -564,14 +564,14 @@ Tablespace: "regress_tblspace"
 ALTER TABLE testschema.test_default_tab ALTER id TYPE bigint;
 \d testschema.test_index1
    Index "testschema.test_index1"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index2
    Index "testschema.test_index2"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 btree, for table "testschema.test_default_tab"
@@ -579,14 +579,14 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
    Index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab"
 
 \d testschema.test_index4
    Index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab"
@@ -606,7 +606,7 @@ ALTER TABLE testschema.test_default_tab_p ADD CONSTRAINT test_index3 PRIMARY KEY
 ALTER TABLE testschema.test_default_tab_p ADD CONSTRAINT test_index4 UNIQUE (id) USING INDEX TABLESPACE regress_tblspace;
 \d testschema.test_index1
 Partitioned index "testschema.test_index1"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  val    | bigint | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -614,7 +614,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index2
 Partitioned index "testschema.test_index2"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  val    | bigint | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -623,7 +623,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
 Partitioned index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab_p"
@@ -631,7 +631,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index4
 Partitioned index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab_p"
@@ -644,7 +644,7 @@ SET default_tablespace TO regress_tblspace;
 ALTER TABLE testschema.test_default_tab_p ALTER val TYPE bigint;
 \d testschema.test_index1
 Partitioned index "testschema.test_index1"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  val    | bigint | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -652,7 +652,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index2
 Partitioned index "testschema.test_index2"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  val    | bigint | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -661,7 +661,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
 Partitioned index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab_p"
@@ -669,7 +669,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index4
 Partitioned index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab_p"
@@ -677,16 +677,16 @@ Number of partitions: 1 (Use \d+ to list them.)
 Tablespace: "regress_tblspace"
 
 SELECT * FROM testschema.test_default_tab_p;
- id | val
+ id | val 
 ----+-----
-  1 |
+  1 |    
 (1 row)
 
 -- tablespace should not change even if there is an index rewrite
 ALTER TABLE testschema.test_default_tab_p ALTER val TYPE int;
 \d testschema.test_index1
 Partitioned index "testschema.test_index1"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  val    | integer | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -694,7 +694,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index2
 Partitioned index "testschema.test_index2"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  val    | integer | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -703,7 +703,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
 Partitioned index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab_p"
@@ -711,7 +711,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index4
 Partitioned index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab_p"
@@ -719,9 +719,9 @@ Number of partitions: 1 (Use \d+ to list them.)
 Tablespace: "regress_tblspace"
 
 SELECT * FROM testschema.test_default_tab_p;
- id | val
+ id | val 
 ----+-----
-  1 |
+  1 |    
 (1 row)
 
 -- now use the default tablespace for default_tablespace
@@ -730,7 +730,7 @@ SET default_tablespace TO '';
 ALTER TABLE testschema.test_default_tab_p ALTER val TYPE int;
 \d testschema.test_index1
 Partitioned index "testschema.test_index1"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  val    | integer | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -738,7 +738,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index2
 Partitioned index "testschema.test_index2"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  val    | integer | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -747,7 +747,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
 Partitioned index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab_p"
@@ -755,7 +755,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index4
 Partitioned index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab_p"
@@ -766,7 +766,7 @@ Tablespace: "regress_tblspace"
 ALTER TABLE testschema.test_default_tab_p ALTER val TYPE bigint;
 \d testschema.test_index1
 Partitioned index "testschema.test_index1"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  val    | bigint | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -774,7 +774,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index2
 Partitioned index "testschema.test_index2"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  val    | bigint | yes  | val
 btree, for table "testschema.test_default_tab_p"
@@ -783,7 +783,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_index3
 Partitioned index "testschema.test_index3"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 primary key, btree, for table "testschema.test_default_tab_p"
@@ -791,7 +791,7 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d testschema.test_index4
 Partitioned index "testschema.test_index4"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  id     | bigint | yes  | id
 unique, btree, for table "testschema.test_default_tab_p"
@@ -808,7 +808,7 @@ SET default_tablespace TO '';
 ALTER TABLE testschema.test_tab ADD CONSTRAINT test_tab_pkey PRIMARY KEY (id);
 \d testschema.test_tab_unique
   Index "testschema.test_tab_unique"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 unique, btree, for table "testschema.test_tab"
@@ -816,13 +816,13 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_tab_pkey
    Index "testschema.test_tab_pkey"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  id     | integer | yes  | id
 primary key, btree, for table "testschema.test_tab"
 
 SELECT * FROM testschema.test_tab;
- id
+ id 
 ----
   1
 (1 row)
@@ -838,7 +838,7 @@ SET default_tablespace TO '';
 CREATE INDEX test_tab_b_idx ON testschema.test_tab (b);
 \d testschema.test_tab_unique
   Index "testschema.test_tab_unique"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  a      | integer | yes  | a
 unique, btree, for table "testschema.test_tab"
@@ -846,7 +846,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_tab_a_idx
   Index "testschema.test_tab_a_idx"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  a      | integer | yes  | a
 btree, for table "testschema.test_tab"
@@ -854,7 +854,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_tab_b_idx
   Index "testschema.test_tab_b_idx"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  b      | integer | yes  | b
 btree, for table "testschema.test_tab"
@@ -862,7 +862,7 @@ btree, for table "testschema.test_tab"
 ALTER TABLE testschema.test_tab ALTER b TYPE bigint, ADD UNIQUE (c);
 \d testschema.test_tab_unique
   Index "testschema.test_tab_unique"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  a      | integer | yes  | a
 unique, btree, for table "testschema.test_tab"
@@ -870,7 +870,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_tab_a_idx
   Index "testschema.test_tab_a_idx"
- Column |  Type   | Key? | Definition
+ Column |  Type   | Key? | Definition 
 --------+---------+------+------------
  a      | integer | yes  | a
 btree, for table "testschema.test_tab"
@@ -878,7 +878,7 @@ Tablespace: "regress_tblspace"
 
 \d testschema.test_tab_b_idx
   Index "testschema.test_tab_b_idx"
- Column |  Type  | Key? | Definition
+ Column |  Type  | Key? | Definition 
 --------+--------+------+------------
  b      | bigint | yes  | b
 btree, for table "testschema.test_tab"
@@ -898,7 +898,7 @@ INSERT INTO testschema.atable VALUES(1);	-- fail (checks index)
 ERROR:  duplicate key value violates unique constraint "anindex"
 DETAIL:  Key (column1)=(1) already exists.
 SELECT COUNT(*) FROM testschema.atable;		-- checks heap
- count
+ count 
 -------
      3
 (1 row)
@@ -908,7 +908,7 @@ CREATE MATERIALIZED VIEW testschema.amv AS SELECT * FROM testschema.atable;
 ALTER MATERIALIZED VIEW testschema.amv SET TABLESPACE regress_tblspace;
 REFRESH MATERIALIZED VIEW testschema.amv;
 SELECT COUNT(*) FROM testschema.amv;
- count
+ count 
 -------
      3
 (1 row)
