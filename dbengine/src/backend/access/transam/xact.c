@@ -2009,16 +2009,12 @@ AtSubCleanup_Memory(void)
 void
 AdjustTransaction()
 {
-    TransactionState s;
     TBlockState tb;
 
-    s = &TopTransactionStateData;
-    CurrentTransactionState = s;
-    tb = s->blockState;
+    tb = (&TopTransactionStateData)->blockState;
 
     if (tb != TBLOCK_INPROGRESS && tb != TBLOCK_PARALLEL_INPROGRESS)
         return;
-    CurTransactionContext = s->curTransactionContext;
 
     Assert((!IsolationIsSerializable() && !IsolationNeedLock()) || IsolationLearnCC()
            || XactLockStrategy == DefaultXactLockStrategy || IsolationIsSerializable());
