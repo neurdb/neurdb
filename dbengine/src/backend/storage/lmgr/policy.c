@@ -122,7 +122,7 @@ void refresh_lock_strategy()
     Assert(state >= 0 && state < STATE_SPACE);
     MyProc->rank = Policy->rank[state];
     LockTimeout =  (int) Policy->timeout[state];
-    XactLockStrategy = LOCK_RW;
+    XactLockStrategy = LOCK_RWL;
     XactIsoLevel = XACT_READ_COMMITTED;
 
     Assert((!IsolationIsSerializable() && !IsolationNeedLock()) || IsolationLearnCC()

@@ -16,4 +16,4 @@
 # Third-party libraries
 socket.io-client-cpp/
 
-/code/neurdb-dev/aiengine/runtime/onhup.out
+/code/neurdb-dev/aiengine/runtime/nohup.out
