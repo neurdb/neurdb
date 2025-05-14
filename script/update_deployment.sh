@@ -19,6 +19,7 @@ NR_DBENGINE_PATH=$NEURDBPATH/dbengine
 NR_AIENGINE_PATH=$NEURDBPATH/aiengine
 NR_API_PATH=$NEURDBPATH/api
 NR_KERNEL_PATH=$NR_DBENGINE_PATH/nr_kernel
+NR_CONF_FILE="$NR_DBDATA_PATH/postgresql.conf"
 
 # Stop DB if running
 if [ -d "$NR_DBDATA_PATH" ]; then
@@ -45,7 +46,8 @@ mkdir -p $NR_DBDATA_PATH
 $NR_PSQL_PATH/bin/initdb -D $NR_DBDATA_PATH
 
 # Re-append kernel extension
-echo "shared_preload_libraries = 'nr_ext'" >> $NR_DBDATA_PATH/postgresql.conf
+echo "shared_preload_libraries = 'nr_ext'" >> $NR_CONF_FILE
+echo "log_min_messages = debug1" >> $NR_CONF_FILE
 
 # Start DB
 $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l logfile start
