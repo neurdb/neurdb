@@ -7,13 +7,15 @@
 #include "commands/vacuum.h"
 #include "utils/builtins.h"
 #include "executor/tuptable.h"
-#include "utils/elog.h"  // Needed for elog(WARNING/ERROR/...)
+#include "utils/elog.h"
+
+#define CCAM_INFO() elog(INFO, "[CCAM] calling function %s", __func__)
 
 PG_MODULE_MAGIC;
 
 // ccam_make_virtual_slot helper function that creates an in-memory tuple.
-static TupleTableSlot* ccam_make_virtual_slot(TupleDesc tupdesc, Datum *values,
-                                       bool *isnull) {
+static TupleTableSlot *ccam_make_virtual_slot(TupleDesc tupdesc, Datum *values,
+                                              bool *isnull) {
     TupleTableSlot *slot;
     slot = MakeSingleTupleTableSlot(tupdesc, &TTSOpsVirtual);
     for (int i = 0; i < tupdesc->natts; i++) {
@@ -24,10 +26,20 @@ static TupleTableSlot* ccam_make_virtual_slot(TupleDesc tupdesc, Datum *values,
     return slot;
 }
 
+/* ------------------------------------------------------------------------
+ * Slot related callbacks
+ * ------------------------------------------------------------------------
+ */
+
 static const TupleTableSlotOps *ccam_slot_callbacks(Relation relation) {
-    elog(DEBUG1, "[CCAM] ccam_slot_callbacks called");
+    CCAM_INFO();
     return &TTSOpsHeapTuple;  // only use ccam for heap tuples.
 }
+
+/* ------------------------------------------------------------------------
+ * Table scan related callbacks
+ * ------------------------------------------------------------------------
+ */
 
 static TableScanDesc ccam_beginscan(Relation relation, Snapshot snapshot,
                                     int nkeys, struct ScanKeyData *key,
@@ -35,45 +47,47 @@ static TableScanDesc ccam_beginscan(Relation relation, Snapshot snapshot,
                                     uint32 flags) {
     TableScanDesc sscan = (TableScanDesc)palloc0(sizeof(TableScanDescData));
 
-    elog(DEBUG1, "[CCAM] ccam_beginscan called");
+    CCAM_INFO();
     sscan->rs_rd = relation;
     sscan->rs_snapshot = snapshot;
-    sscan->rs_nkeys = 0;
-    sscan->rs_key = NULL;
+    sscan->rs_nkeys = nkeys;
+    sscan->rs_key = key;
+    sscan->rs_parallel = parallel_scan;
+    sscan->rs_flags = flags;
     return (TableScanDesc)sscan;
 }
 
 static void ccam_rescan(TableScanDesc sscan, struct ScanKeyData *key,
                         bool set_params, bool allow_strat, bool allow_sync,
                         bool allow_pagemode) {
-    elog(DEBUG1, "[CCAM] ccam_rescan called");
+    CCAM_INFO();
 }
 
 static void ccam_endscan(TableScanDesc sscan) {
-    elog(DEBUG1, "[CCAM] ccam_endscan called");
+    CCAM_INFO();
     pfree(sscan);
 }
 
 static bool ccam_getnextslot(TableScanDesc sscan, ScanDirection direction,
                              TupleTableSlot *slot) {
     static bool returned = false;
-	TupleDesc desc;
-	TupleTableSlot *filled;
-	Datum values[2];
-	bool isnull[2];
+    TupleDesc desc;
+    TupleTableSlot *filled;
+    Datum values[2];
+    bool isnull[2];
 
-    elog(DEBUG1, "[CCAM] ccam_getnextslot called");
-	ExecClearTuple(slot);
-	if (returned) return false;
+    CCAM_INFO();
+    ExecClearTuple(slot);
+    if (returned) return false;
 
     returned = true;
     desc = slot->tts_tupleDescriptor;
 
     // TODO phx: implement the KV scan logic here.
     values[0] = Int32GetDatum(1);
-	isnull[0] = false;
+    isnull[0] = false;
     values[1] = CStringGetTextDatum("hello ccam");
-	isnull[1] = false;
+    isnull[1] = false;
 
     filled = ccam_make_virtual_slot(desc, values, isnull);
     ExecCopySlot(slot, filled);
@@ -81,56 +95,62 @@ static bool ccam_getnextslot(TableScanDesc sscan, ScanDirection direction,
     return true;
 }
 
+/* ------------------------------------------------------------------------
+ * Index scan related callbacks
+ * ------------------------------------------------------------------------
+ */
+
 static IndexFetchTableData *ccam_index_fetch_begin(Relation rel) {
-    elog(DEBUG1, "[CCAM] ccam_index_fetch_begin called");
+    CCAM_INFO();
     return NULL;
 }
 
-static void ccam_index_fetch_reset(IndexFetchTableData *scan) {
-    elog(DEBUG1, "[CCAM] ccam_index_fetch_reset called");
-}
+static void ccam_index_fetch_reset(IndexFetchTableData *scan) { CCAM_INFO(); }
 
-static void ccam_index_fetch_end(IndexFetchTableData *scan) {
-    elog(DEBUG1, "[CCAM] ccam_index_fetch_end called");
-}
+static void ccam_index_fetch_end(IndexFetchTableData *scan) { CCAM_INFO(); }
 
 static bool ccam_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
                                    Snapshot snapshot, TupleTableSlot *slot,
                                    bool *call_again, bool *all_dead) {
-    elog(DEBUG1, "[CCAM] ccam_index_fetch_tuple called");
+    CCAM_INFO();
     return false;
 }
+
+/* ------------------------------------------------------------------------
+ * Callbacks for manipulations of physical tuples.
+ * ------------------------------------------------------------------------
+ */
 
 static void ccam_tuple_insert(Relation relation, TupleTableSlot *slot,
                               CommandId cid, int options,
                               BulkInsertState bistate) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_insert called");
+    CCAM_INFO();
 }
 
 static void ccam_tuple_insert_speculative(Relation relation,
                                           TupleTableSlot *slot, CommandId cid,
                                           int options, BulkInsertState bistate,
                                           uint32 specToken) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_insert_speculative called");
+    CCAM_INFO();
 }
 
 static void ccam_tuple_complete_speculative(Relation relation,
                                             TupleTableSlot *slot,
                                             uint32 specToken, bool succeeded) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_complete_speculative called");
+    CCAM_INFO();
 }
 
 static void ccam_multi_insert(Relation relation, TupleTableSlot **slots,
                               int ntuples, CommandId cid, int options,
                               BulkInsertState bistate) {
-    elog(DEBUG1, "[CCAM] ccam_multi_insert called");
+    CCAM_INFO();
 }
 
 static TM_Result ccam_tuple_delete(Relation relation, ItemPointer tid,
                                    CommandId cid, Snapshot snapshot,
                                    Snapshot crosscheck, bool wait,
                                    TM_FailureData *tmfd, bool changingPart) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_delete called");
+    CCAM_INFO();
     return TM_Ok;
 }
 
@@ -140,7 +160,7 @@ static TM_Result ccam_tuple_update(Relation relation, ItemPointer otid,
                                    bool wait, TM_FailureData *tmfd,
                                    LockTupleMode *lockmode,
                                    TU_UpdateIndexes *update_indexes) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_update called");
+    CCAM_INFO();
     return TM_Ok;
 }
 
@@ -149,52 +169,66 @@ static TM_Result ccam_tuple_lock(Relation relation, ItemPointer tid,
                                  CommandId cid, LockTupleMode mode,
                                  LockWaitPolicy wait_policy, uint8 flags,
                                  TM_FailureData *tmfd) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_lock called");
+    CCAM_INFO();
     return TM_Ok;
 }
 
+static void ccam_finish_bulk_insert(Relation relation, int options) {
+    CCAM_INFO();
+}
+
+/* ------------------------------------------------------------------------
+ * Callbacks for non-modifying operations on individual tuples.
+ * ------------------------------------------------------------------------
+ */
+
 static bool ccam_fetch_row_version(Relation relation, ItemPointer tid,
                                    Snapshot snapshot, TupleTableSlot *slot) {
-    elog(DEBUG1, "[CCAM] ccam_fetch_row_version called");
+    CCAM_INFO();
     return false;
 }
 
 static void ccam_get_latest_tid(TableScanDesc sscan, ItemPointer tid) {
-    elog(DEBUG1, "[CCAM] ccam_get_latest_tid called");
+    CCAM_INFO();
 }
 
 static bool ccam_tuple_tid_valid(TableScanDesc scan, ItemPointer tid) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_tid_valid called");
+    CCAM_INFO();
     return false;
 }
 
 static bool ccam_tuple_satisfies_snapshot(Relation rel, TupleTableSlot *slot,
                                           Snapshot snapshot) {
-    elog(DEBUG1, "[CCAM] ccam_tuple_satisfies_snapshot called");
+    CCAM_INFO();
     return false;
 }
 
 static TransactionId ccam_index_delete_tuples(Relation rel,
                                               TM_IndexDeleteOp *delstate) {
-    elog(DEBUG1, "[CCAM] ccam_index_delete_tuples called");
+    CCAM_INFO();
     return InvalidTransactionId;
 }
+
+/* ------------------------------------------------------------------------
+ * DDL related callbacks.
+ * ------------------------------------------------------------------------
+ */
 
 static void ccam_relation_set_new_filelocator(Relation rel,
                                               const RelFileLocator *newrlocator,
                                               char persistence,
                                               TransactionId *freezeXid,
                                               MultiXactId *minmulti) {
-    elog(DEBUG1, "[CCAM] ccam_relation_set_new_filelocator called");
+    CCAM_INFO();
 }
 
 static void ccam_relation_nontransactional_truncate(Relation rel) {
-    elog(DEBUG1, "[CCAM] ccam_relation_nontransactional_truncate called");
+    CCAM_INFO();
 }
 
 static void ccam_relation_copy_data(Relation rel,
                                     const RelFileLocator *newrlocator) {
-    elog(DEBUG1, "[CCAM] ccam_relation_copy_data called");
+    CCAM_INFO();
 }
 
 static void ccam_relation_copy_for_cluster(
@@ -202,18 +236,18 @@ static void ccam_relation_copy_for_cluster(
     TransactionId OldestXmin, TransactionId *xid_cutoff,
     MultiXactId *multi_cutoff, double *num_tuples, double *tups_vacuumed,
     double *tups_recently_dead) {
-    elog(DEBUG1, "[CCAM] ccam_relation_copy_for_cluster called");
+    CCAM_INFO();
 }
 
 static void ccam_vacuum_rel(Relation rel, VacuumParams *params,
                             BufferAccessStrategy bstrategy) {
-    elog(DEBUG1, "[CCAM] ccam_vacuum_rel called");
+    CCAM_INFO();
 }
 
 static bool ccam_scan_analyze_next_block(TableScanDesc scan,
                                          BlockNumber blockno,
                                          BufferAccessStrategy bstrategy) {
-    elog(DEBUG1, "[CCAM] ccam_scan_analyze_next_block called");
+    CCAM_INFO();
     return false;
 }
 
@@ -221,7 +255,7 @@ static bool ccam_scan_analyze_next_tuple(TableScanDesc scan,
                                          TransactionId OldestXmin,
                                          double *liverows, double *deadrows,
                                          TupleTableSlot *slot) {
-    elog(DEBUG1, "[CCAM] ccam_scan_analyze_next_tuple called");
+    CCAM_INFO();
     return false;
 }
 
@@ -230,7 +264,7 @@ static double ccam_index_build_range_scan(
     bool allow_sync, bool anyvisible, bool progress, BlockNumber start_blockno,
     BlockNumber numblocks, IndexBuildCallback callback, void *callback_state,
     TableScanDesc scan) {
-    elog(DEBUG1, "[CCAM] ccam_index_build_range_scan called");
+    CCAM_INFO();
     return 0;
 }
 
@@ -238,41 +272,74 @@ static void ccam_index_validate_scan(Relation heapRelation,
                                      Relation indexRelation,
                                      IndexInfo *indexInfo, Snapshot snapshot,
                                      ValidateIndexState *state) {
-    elog(DEBUG1, "[CCAM] ccam_index_validate_scan called");
+    CCAM_INFO();
 }
 
+/* ------------------------------------------------------------------------
+ * Miscellaneous callbacks
+ * ------------------------------------------------------------------------
+ */
+
 static bool ccam_relation_needs_toast_table(Relation rel) {
-    elog(DEBUG1, "[CCAM] ccam_relation_needs_toast_table called");
+    CCAM_INFO();
     return false;
 }
 
 static Oid ccam_relation_toast_am(Relation rel) {
-    elog(DEBUG1, "[CCAM] ccam_relation_toast_am called");
+    CCAM_INFO();
     return InvalidOid;
 }
 
 static void ccam_fetch_toast_slice(Relation toastrel, Oid valueid,
                                    int32 attrsize, int32 sliceoffset,
                                    int32 slicelength, struct varlena *result) {
-    elog(DEBUG1, "[CCAM] ccam_fetch_toast_slice called");
+    CCAM_INFO();
 }
+
+/* ------------------------------------------------------------------------
+ * Planner callbacks
+ * ------------------------------------------------------------------------
+ */
 
 static void ccam_estimate_rel_size(Relation rel, int32 *attr_widths,
                                    BlockNumber *pages, double *tuples,
                                    double *allvisfrac) {
-    elog(DEBUG1, "[CCAM] ccam_estimate_rel_size called");
+    CCAM_INFO();
+    /* no data available */
+    if (attr_widths) *attr_widths = 0;
+    if (pages) *pages = 0;
+    if (tuples) *tuples = 0;
+    if (allvisfrac) *allvisfrac = 0;
+}
+
+/* ------------------------------------------------------------------------
+ * Exector callbacks
+ * ------------------------------------------------------------------------
+ */
+
+static bool ccam_scan_bitmap_next_block(TableScanDesc scan,
+                                        TBMIterateResult *tbmres) {
+    CCAM_INFO();
+    return false;
+}
+
+static bool ccam_scan_bitmap_next_tuple(TableScanDesc scan,
+                                        TBMIterateResult *tbmres,
+                                        TupleTableSlot *slot) {
+    CCAM_INFO();
+    return false;
 }
 
 static bool ccam_scan_sample_next_block(TableScanDesc scan,
                                         SampleScanState *scanstate) {
-    elog(DEBUG1, "[CCAM] ccam_scan_sample_next_block called");
+    CCAM_INFO();
     return false;
 }
 
 static bool ccam_scan_sample_next_tuple(TableScanDesc scan,
                                         SampleScanState *scanstate,
                                         TupleTableSlot *slot) {
-    elog(DEBUG1, "[CCAM] ccam_scan_sample_next_tuple called");
+    CCAM_INFO();
     return false;
 }
 
@@ -293,6 +360,7 @@ static const TableAmRoutine ccam_methods = {
     .index_fetch_reset = ccam_index_fetch_reset,
     .index_fetch_end = ccam_index_fetch_end,
     .index_fetch_tuple = ccam_index_fetch_tuple,
+    .finish_bulk_insert = ccam_finish_bulk_insert,
     .tuple_insert = ccam_tuple_insert,
     .tuple_insert_speculative = ccam_tuple_insert_speculative,
     .tuple_complete_speculative = ccam_tuple_complete_speculative,
@@ -321,7 +389,9 @@ static const TableAmRoutine ccam_methods = {
     .relation_fetch_toast_slice = ccam_fetch_toast_slice,
     .relation_estimate_size = ccam_estimate_rel_size,
     .scan_sample_next_block = ccam_scan_sample_next_block,
-    .scan_sample_next_tuple = ccam_scan_sample_next_tuple};
+    .scan_sample_next_tuple = ccam_scan_sample_next_tuple,
+    .scan_bitmap_next_block = ccam_scan_bitmap_next_block,
+    .scan_bitmap_next_tuple = ccam_scan_bitmap_next_tuple};
 
 Datum ccam_tableam_handler(PG_FUNCTION_ARGS) {
     PG_RETURN_POINTER(&ccam_methods);
