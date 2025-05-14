@@ -46,3 +46,65 @@ Traceback (most recent call last):
   File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 273, in _create_sockets
     sock.bind(binding)
 OSError: [Errno 98] Address already in use
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 308, in <module>
+    sys.exit(main())
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 304, in main
+    return run(config)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/run.py", line 39, in run
+    sockets = config.create_sockets()
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 206, in create_sockets
+    insecure_sockets = self._create_sockets(self.bind)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 273, in _create_sockets
+    sock.bind(binding)
+OSError: [Errno 98] Address already in use
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 308, in <module>
+    sys.exit(main())
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 304, in main
+    return run(config)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/run.py", line 39, in run
+    sockets = config.create_sockets()
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 206, in create_sockets
+    insecure_sockets = self._create_sockets(self.bind)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 273, in _create_sockets
+    sock.bind(binding)
+OSError: [Errno 98] Address already in use
+[2m2025-05-13 09:00:57[0m [[33m[1mwarning  [0m] [1mSet logging level             [0m [[0m[1m[34mneurdb_api[0m][0m
+[2m2025-05-13 09:00:57[0m [[33m[1mwarning  [0m] [1mSet logging level             [0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2m2025-05-13 09:00:57[0m [[32m[1minfo     [0m] [1mNamespace(base_dir='./', model_repo='./', db_name='neurdb', db_user='neurdb', db_host='localhost', db_port='5432', db_password='123', server_port='8090', data_loader_worker=1, nfield=-1, nfeat=-1, nemb=10, nattn_head=4, alpha=0.2, h=8, mlp_nlayer=2, mlp_nhid=32, dropout=0.5, ensemble=True, dnn_nlayer=3, dnn_nhid=256, epoch=1, lr=0.001, report_freq=10, patience=5, eval_freq=100, state_dict_path='', run_model='in_database')[0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2m2025-05-13 09:00:57[0m [[32m[1minfo     [0m] [1mRegistered hook: neurdb_on_start from armnet[0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2m2025-05-13 09:00:57[0m [[32m[1minfo     [0m] [1mregistering model             [0m [[0m[1m[34mneurdb_algserver[0m][0m [36mmodel_name[0m=[35marmnet[0m
+[2m2025-05-13 09:00:57[0m [[32m[1minfo     [0m] [1mbefore_serving_func           [0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2025-05-13 09:00:57 +0000] [876031] [INFO] Running on http://0.0.0.0:8090 (CTRL + C to quit)
+[2m2025-05-13 12:57:02[0m [[33m[1mwarning  [0m] [1mSet logging level             [0m [[0m[1m[34mneurdb_api[0m][0m
+[2m2025-05-13 12:57:02[0m [[33m[1mwarning  [0m] [1mSet logging level             [0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2m2025-05-13 12:57:02[0m [[32m[1minfo     [0m] [1mNamespace(base_dir='./', model_repo='./', db_name='neurdb', db_user='neurdb', db_host='localhost', db_port='5432', db_password='123', server_port='8090', data_loader_worker=1, nfield=-1, nfeat=-1, nemb=10, nattn_head=4, alpha=0.2, h=8, mlp_nlayer=2, mlp_nhid=32, dropout=0.5, ensemble=True, dnn_nlayer=3, dnn_nhid=256, epoch=1, lr=0.001, report_freq=10, patience=5, eval_freq=100, state_dict_path='', run_model='in_database')[0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2m2025-05-13 12:57:02[0m [[32m[1minfo     [0m] [1mRegistered hook: neurdb_on_start from armnet[0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2m2025-05-13 12:57:02[0m [[32m[1minfo     [0m] [1mregistering model             [0m [[0m[1m[34mneurdb_algserver[0m][0m [36mmodel_name[0m=[35marmnet[0m
+[2m2025-05-13 12:57:02[0m [[32m[1minfo     [0m] [1mbefore_serving_func           [0m [[0m[1m[34mneurdb_algserver[0m][0m
+[2025-05-13 12:57:02 +0000] [894643] [INFO] Running on http://0.0.0.0:8090 (CTRL + C to quit)
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 308, in <module>
+    sys.exit(main())
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/__main__.py", line 304, in main
+    return run(config)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/run.py", line 39, in run
+    sockets = config.create_sockets()
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 206, in create_sockets
+    insecure_sockets = self._create_sockets(self.bind)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/hypercorn/config.py", line 273, in _create_sockets
+    sock.bind(binding)
+OSError: [Errno 98] Address already in use

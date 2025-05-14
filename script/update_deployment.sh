@@ -27,12 +27,18 @@ fi
 
 # Clean previous database data
 rm -rf $NR_DBDATA_PATH
+rm ${NR_DBENGINE_PATH}/logfile || true
 
 # Rebuild PostgreSQL
 cd $NR_DBENGINE_PATH
 make clean
+./configure \
+  --prefix="$NR_PSQL_PATH" \
+  --enable-cassert \
+  --enable-debug \
+  CFLAGS="-ggdb -Og -g3 -fno-omit-frame-pointer"
 make -j
-make install
+sudo make install
 
 # Re-init DB
 mkdir -p $NR_DBDATA_PATH
@@ -68,8 +74,9 @@ sudo make install
 
 # Start AI service
 cd $NR_AIENGINE_PATH/runtime
+pkill -f "python -m hypercorn server:app -c app_config.toml" 2>/dev/null || true
 export NR_LOG_LEVEL=INFO
 nohup python -m hypercorn server:app -c app_config.toml &
-echo "Python server restarted."
+echo "Hypercorn restarted (PID $!)."
 
 tail -f /dev/null
