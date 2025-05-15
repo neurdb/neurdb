@@ -1,11 +1,11 @@
-MODULE_big = ccam
-OBJS = ccam.o
+MODULE_big = nram
+OBJS = nram.o
 
 NEURDBPATH=/code/neurdb-dev
 
-EXTENSION = ccam
-DATA = ccam--1.0.sql
-PGFILEDESC = "ccam - CCaaLF custom table access method"
+EXTENSION = nram
+DATA = nram--1.0.sql
+PGFILEDESC = "nram - CCaaLF custom table access method"
 
 REGRESS =
 
