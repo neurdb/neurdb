@@ -24,6 +24,12 @@ rm $NEURDBPATH/logfile || true
 # Clean the psql folder (only for debugging purposes)
 # rm -rf $NR_PSQL_PATH   || true
 
+# Install external lib.
+git clone https://github.com/facebook/rocksdb.git
+cd rocksdb
+make shared_lib -j
+sudo make install-shared
+
 # Create psql folder
 mkdir -p $NR_PSQL_PATH
 
