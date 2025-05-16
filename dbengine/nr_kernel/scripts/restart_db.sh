@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Navigate to the nr_kernel directory
-cd /code/neurdb-dev/dbengine/nrext/nr_kernel || {
+cd /code/neurdb-dev/dbengine/nr_kernel || {
     echo "Failed to navigate to nr_kernel directory"
     exit 1
 }
