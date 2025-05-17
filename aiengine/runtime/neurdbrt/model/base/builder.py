@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
 import numpy as np
 from neurdbrt.dataloader.stream_libsvm_dataset import StreamingDataSet
@@ -11,10 +11,14 @@ class BuilderBase(ABC):
     """
     Abstract base class for model builders.
     Any subclass must implement the train_model and evaluate_model methods.
+    
+    Args:
+        args (argparse.Namespace): The arguments for the model. Will be set to `self._args`.
     """
 
-    def __init__(self):
+    def __init__(self, args):
         self._model: nn.Module = None
+        self._args = args
 
     @property
     def model(self) -> nn.Module:

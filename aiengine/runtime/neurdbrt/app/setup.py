@@ -24,10 +24,6 @@ class Setup:
         self._args = args
         self._db = db
 
-    # def _load_dataset(self) -> bytes:
-    #     with open(self._dataset_file_path, "rb") as f:
-    #         return f.read()
-
     async def train(
         self, epoch: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
     ) -> Tuple[int, Error]:
