@@ -50,6 +50,11 @@ register_hooks()
 exec_hooks_on_start()
 
 
+def inject_task_args():
+    # TODO: receive from DB engine
+    current_app.config["config_args"].noutput = 2
+
+
 @quart_app.before_serving
 async def before_serving_func():
     logger.info("before_serving_func")
@@ -159,6 +164,8 @@ async def on_train(data: dict):
         logger.error(f"Execution flag failed: {exe_info}")
         return
 
+    inject_task_args()
+
     asyncio.create_task(
         train_task(
             setup=Setup(
@@ -224,6 +231,8 @@ async def on_inference(data: dict):
         logger.error(f"Execution flag failed: {exe_info}")
         return
 
+    inject_task_args()
+
     asyncio.create_task(
         inference_task(
             setup=Setup(
@@ -275,6 +284,8 @@ async def on_finetune(data: dict):
     if not exe_flag:
         logger.error(f"Execution flag failed: {exe_info}")
         return
+
+    inject_task_args()
 
     asyncio.create_task(
         finetune_task(
