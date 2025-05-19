@@ -1,7 +1,10 @@
 #include "interface.h"
 
+#include <nodes/pg_list.h>
 #include <utils/builtins.h>
 #include <utils/array.h>
+#include <utils/memutils.h>
+#include <utils/hsearch.h>
 #include <executor/spi.h>
 #include <math.h>
 
@@ -66,6 +69,67 @@ static void _clean_up_common(NrWebsocket *ws, char *table_name,
 }
 
 /**
+ * The last class id map. This is a temporary solution to allow inference to 
+ * get the class id map.
+ */
+static HTAB *last_class_id_map = NULL;
+static List *last_id_class_map = NULL;
+
+/**
+ * @brief Make a map from class names to class id. 
+ * 
+ * TODO: store the map in the database
+ * @param table_name name of the target table
+ * @param label_col_name name of the label column in the target table
+ * @param class_id_map (out) the map from class names to class id, using HTAB
+ * @param id_class_map (out) the map from class id to class names, using List
+ * @return 
+ */
+static void make_class_id_map(const char *table_name, const char *label_col_name, 
+                              HTAB **class_id_map, List **id_class_map) {
+  StringInfoData query;
+  initStringInfo(&query);
+
+  appendStringInfo(&query, "SELECT DISTINCT %s FROM %s ORDER BY %s ASC", 
+                   label_col_name, table_name, label_col_name);
+
+  SPI_execute(query.data, true, 0);
+
+  HASHCTL		ctl;
+  memset(&ctl, 0, sizeof(ctl));
+  ctl.keysize = sizeof(char *);
+  ctl.entrysize = sizeof(int);
+
+  HTAB *cimap = hash_create("neurdb class id map", 1024, &ctl, HASH_ELEM | HASH_STRINGS);
+  List *icmap = NIL; 
+
+  int num_class = 0;
+  bool found = 0;
+
+  MemoryContext oldcxt;
+
+  if (SPI_processed > 0) {
+    num_class = SPI_processed;
+
+    for (int i = 0; i < SPI_processed; i++) {
+      char *label = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
+
+      int *id = hash_search(cimap, (void *) label, HASH_ENTER, &found);
+      if (!found) {
+        *id = i;
+      }
+
+      oldcxt = MemoryContextSwitchTo(TopMemoryContext);
+      icmap = lappend(icmap, makeString(label));
+      MemoryContextSwitchTo(oldcxt);
+    }
+  }
+
+  *class_id_map = cimap;
+  *id_class_map = icmap;
+}
+
+/**
  * Preprocess the input data for model inference. It contains the following
  * steps:
  * 1. Extract the input data from the table
@@ -96,6 +160,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   int n_batches = PG_GETARG_INT32(4);                       // batch number
   int nfeat = PG_GETARG_INT32(5);  // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
+  PredictType type = PG_GETARG_INT32(7);
 
   int n_features;
   char **feature_names =
@@ -103,11 +168,29 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 
   NrWebsocket *ws = _connect_to_ai_engine();
 
+  SPI_connect();
+
+  int n_class = -1;
+
+  if (type == PREDICT_CLASS) {
+    if (last_class_id_map == NULL) {
+      elog(ERROR, "last_class_id_map is NULL. Currently, inference is not "
+                  "supported if training is not done within the same session. "
+                  "Please train the model in this session first.");
+    }
+    n_class = hash_get_num_entries(last_class_id_map);
+
+    elog(DEBUG1, "n_class: %d", n_class);
+    for (int i = 0; i < n_class; i++) {
+      elog(DEBUG1, "class %d: %s", i, ((String *) list_nth(last_id_class_map, i))->sval);
+    }
+  }
+
   // init dataset
   InferenceTaskSpec *inference_task_spec = malloc(sizeof(InferenceTaskSpec));
   init_inference_task_spec(inference_task_spec, model_name, batch_size,
                            n_batches, "metrics", 80, nfeat, n_features,
-                           model_id);
+                           n_class, model_id);
   nws_send_task(ws, T_INFERENCE, table_name, inference_task_spec);
   free_inference_task_spec(inference_task_spec);
 
@@ -116,6 +199,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   initStringInfo(&query);
   resetStringInfo(&query);
 
+  // create the cursor for inference data
   char *cursor_name = "nr_inference_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ", cursor_name);
   appendStringInfo(&query, "SELECT ");
@@ -128,8 +212,6 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   }
   appendStringInfo(&query, " FROM %s", table_name);
 
-  // create the cursor for training data
-  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);
@@ -207,6 +289,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   int nfeat = PG_GETARG_INT32(5);      // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
   char *target = text_to_cstring(PG_GETARG_TEXT_P(7));  // target column
+  PredictType type = PG_GETARG_INT32(8);
 
   int n_features;
   char **feature_names =
@@ -217,13 +300,31 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   int n_batches_train, n_batches_evaluate, n_batches_test;
   _get_n_batches_train_eval_test(n_batches, &n_batches_train,
                                  &n_batches_evaluate, &n_batches_test);
+  
+  SPI_connect();
+
+  int n_class = -1;
+
+  if (type == PREDICT_CLASS) {
+    if (last_class_id_map != NULL) {
+      hash_destroy(last_class_id_map);
+      list_free_deep(last_id_class_map);
+    }
+    make_class_id_map(table_name, target, &last_class_id_map, &last_id_class_map);
+    n_class = hash_get_num_entries(last_class_id_map);
+
+    elog(DEBUG1, "n_class: %d", n_class);
+    for (int i = 0; i < n_class; i++) {
+      elog(DEBUG1, "class %d: %s", i, ((String *) list_nth(last_id_class_map, i))->sval);
+    }
+  }
 
   // init dataset
   TrainTaskSpec *train_task_spec = malloc(sizeof(TrainTaskSpec));
   init_train_task_spec(
       train_task_spec, model_name, batch_size, epoch, n_batches_train,
       n_batches_evaluate, n_batches_test, 0.001, "optimizer", "loss", "metrics",
-      80, char_array2str(feature_names, n_features), target, nfeat, n_features);
+      80, char_array2str(feature_names, n_features), target, nfeat, n_features, n_class);
   nws_send_task(ws, T_TRAIN, table_name, train_task_spec);
   free_train_task_spec(train_task_spec);
 
@@ -232,6 +333,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   initStringInfo(&query);
   resetStringInfo(&query);
 
+  // create the cursor for inference data
   char *cursor_name = "nr_train_cursor";
   appendStringInfo(&query, "DECLARE %s SCROLL CURSOR FOR ",
                    cursor_name);  // SCROLL is necessrary for rewind
@@ -245,8 +347,6 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   }
   appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
-  // create the cursor for training data
-  SPI_connect();
   SPI_execute(query.data, false, 0);
 
   resetStringInfo(&query);

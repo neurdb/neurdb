@@ -30,6 +30,8 @@ typedef struct {
   char *target;
   int nFeat;
   int nField;
+
+  int nclass;
 } TrainTaskSpec;
 
 typedef struct {
@@ -42,6 +44,8 @@ typedef struct {
   int nFeat;
   int nField;
   int modelId;
+
+  int nclass;
 } InferenceTaskSpec;
 
 typedef struct {
@@ -67,11 +71,11 @@ void init_train_task_spec(TrainTaskSpec *task, const char *architecture,
                           int n_batch_eval, int n_batch_test,
                           double learning_rate, const char *optimizer,
                           const char *loss, const char *metrics, int cacheSize,
-                          char *features, char *target, int nFeat, int nField);
+                          char *features, char *target, int nFeat, int nField, int nclass);
 
 void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
                               int batch_size, int n_batch, const char *metrics,
-                              int cacheSize, int nFeat, int nField,
+                              int cacheSize, int nFeat, int nField, int nclass,
                               int modelId);
 
 void init_finetune_task_spec(FinetuneTaskSpec *task, const char *model_name,

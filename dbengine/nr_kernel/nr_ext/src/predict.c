@@ -22,13 +22,13 @@ char	   *modelLookupFuncName = "nr_model_lookup";
 #define MODEL_LOOKUP_PARAMS_ARRAY_SIZE 3
 Oid			modelLookupArgTypes[MODEL_LOOKUP_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTARRAYOID, TEXTOID};
 
-#define TRAINING_PARAMS_ARRAY_SIZE 8
+#define TRAINING_PARAMS_ARRAY_SIZE 9
 char	   *trainingFuncName = "nr_train";
-Oid			trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID};
+Oid			trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
 
-#define INFERENCE_PARAMS_ARRAY_SIZE 7
+#define INFERENCE_PARAMS_ARRAY_SIZE 8
 char	   *inferenceFuncName = "nr_inference";
-Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID};
+Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, INT4OID};
 
 
 static List *
@@ -204,7 +204,8 @@ get_column_names(const char *schema_name, const char *table_name, const char *ex
 * needs to be revamped to be more general.
 */
 void
-exec_udf(const char *model,
+exec_udf(PredictType type, 
+		 const char *model,
 		 const char *table,
 		 const char *trainColumns,
 		 const char *targetColumn,
@@ -287,7 +288,8 @@ exec_udf(const char *model,
 		LOCAL_FCINFO(trainingFCInfo, FUNC_MAX_ARGS);
 		Datum		trainingResult;
 
-		Oid			trainingFuncOid = LookupFuncName(list_make1(makeString(trainingFuncName)), 8, trainingArgTypes, false);
+		Oid			trainingFuncOid = LookupFuncName(list_make1(makeString(trainingFuncName)), 
+													 TRAINING_PARAMS_ARRAY_SIZE, trainingArgTypes, false);
 
 		if (!OidIsValid(trainingFuncOid))
 		{
@@ -299,7 +301,7 @@ exec_udf(const char *model,
 		ArrayType  *trainColumnArray = construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
 
 		fmgr_info(trainingFuncOid, &trainingFmgrInfo);
-		InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, 8, InvalidOid, NULL, NULL);
+		InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, TRAINING_PARAMS_ARRAY_SIZE, InvalidOid, NULL, NULL);
 
 		trainingFCInfo->args[0].value = CStringGetTextDatum(model);
 		trainingFCInfo->args[1].value = CStringGetTextDatum(table);
@@ -309,6 +311,7 @@ exec_udf(const char *model,
 		trainingFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
 		trainingFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
 		trainingFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
+		trainingFCInfo->args[8].value = Int32GetDatum(type);
 
 		set_false_to_all_params(trainingFCInfo->args, TRAINING_PARAMS_ARRAY_SIZE);
 
@@ -333,7 +336,8 @@ exec_udf(const char *model,
 	LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS);
 	Datum		inferenceResult;
 
-	Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 7, inferenceArgTypes, false);
+	Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 
+												  INFERENCE_PARAMS_ARRAY_SIZE, inferenceArgTypes, false);
 
 	if (!OidIsValid(inferenceFuncOid))
 	{
@@ -342,7 +346,7 @@ exec_udf(const char *model,
 	}
 
 	fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
-	InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, 7, InvalidOid, NULL, NULL);
+	InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, INFERENCE_PARAMS_ARRAY_SIZE, InvalidOid, NULL, NULL);
 
 	inferenceFCInfo->args[0].value = CStringGetTextDatum(model);
 	inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
@@ -351,6 +355,7 @@ exec_udf(const char *model,
 	inferenceFCInfo->args[4].value = Int32GetDatum(NrTaskNumBatches);
 	inferenceFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
 	inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
+	inferenceFCInfo->args[7].value = Int32GetDatum(type);
 
 	set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
 
@@ -388,11 +393,11 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	initStringInfo(&targetColumn);
 	initStringInfo(&trainOnColumns);
 
-	if (stmt->kind == PREDICT_CLASS)
-	{
-		elog(ERROR, "PREDICT CLASS OF is not implemented");
-		return InvalidObjectAddress;
-	}
+	// if (stmt->kind == PREDICT_CLASS)
+	// {
+	// 	elog(ERROR, "PREDICT CLASS OF is not implemented");
+	// 	return InvalidObjectAddress;
+	// }
 
 	/*
 	 * Extract the column names from targetList and combine them into a single
@@ -477,7 +482,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	}
 
 	/* Execute the UDF with extracted columns, table name, and where clause */
-	exec_udf(modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause, dest);
+	exec_udf(stmt->kind, modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause, dest);
 
 	return InvalidObjectAddress;
 }
