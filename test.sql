@@ -1,6 +1,0 @@
-DROP EXTENSION IF EXISTS ccam CASCADE;
-CREATE EXTENSION ccam;
-CREATE TABLE x(a INT, b text) USING ccam;
-
-SELECT * from x;
-SELECT run_nram_tests();

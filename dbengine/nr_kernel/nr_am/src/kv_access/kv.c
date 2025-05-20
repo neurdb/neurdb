@@ -7,13 +7,20 @@ void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs,
     char *pos = tkey->data;
 
     for (int i = 0; i < tkey->nkeys; i++) {
-        int attnum = key_attrs[i];
+        int attnum = key_attrs[i] - 1;
         Form_pg_attribute attr = TupleDescAttr(desc, attnum);
-        Size len = datumGetSize(PointerGetDatum(pos), attr->attbyval, attr->attlen);
-        values[i] = PointerGetDatum(palloc(len));
-        memcpy(DatumGetPointer(values[i]), pos, len);
-
-        pos += len;
+        if (attr->attbyval) {
+            Datum val = 0;
+            memcpy(&val, pos, attr->attlen);
+            values[i] = val;
+        } else {
+            Size len = datumGetSize(PointerGetDatum(pos), attr->attbyval, attr->attlen);
+            char *copy = palloc(len);
+            memcpy(copy, pos, len);
+            values[i] = PointerGetDatum(copy);
+        }
+        pos += attr->attbyval ? attr->attlen
+                              : datumGetSize(PointerGetDatum(pos), attr->attbyval, attr->attlen);
     }
 }
 
@@ -26,26 +33,44 @@ NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
     NRAMKey tkey;
     char *pos;
 
+    // Collect key values and compute lengths
     for (int i = 0; i < nkeys; i++) {
-        int attnum = key_attrs[i];
+        int attnum = key_attrs[i] - 1;  // key_attrs is 1-based
         bool isnull_i;
         Datum d = heap_getattr(tuple, attnum + 1, tupdesc, &isnull_i);
         Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum);
 
+        if (isnull_i)
+            elog(ERROR, "Primary key attribute %d is NULL", key_attrs[i]);
+
         values[i] = d;
         isnull[i] = isnull_i;
-        if (isnull_i) elog(ERROR, "Primary key attribute %d is NULL", attnum);
-
         lens[i] = datumGetSize(d, attr->attbyval, attr->attlen);
         total_size += lens[i];
+
+        NRAM_TEST_INFO("Counting attr %d, len=%zu", key_attrs[i], lens[i]);
     }
 
+    // Allocate and fill the key structure
     tkey = palloc0(total_size);
     tkey->nkeys = nkeys;
+    tkey->length = total_size - sizeof(NRAMKeyData);
 
-    pos = tkey->data;
+    pos = (char*) tkey + sizeof(NRAMKeyData);
     for (int i = 0; i < nkeys; i++) {
-        memcpy(pos, DatumGetPointer(values[i]), lens[i]);
+        Form_pg_attribute attr = TupleDescAttr(tupdesc, key_attrs[i] - 1);
+        NRAM_TEST_INFO("Serializing attr %d, len=%zu, offset=%ld",
+                       key_attrs[i], lens[i], pos - (char *)tkey->data);
+
+        if (attr->attbyval) {
+            memcpy(pos, &values[i], attr->attlen);  // safe for int, float, etc.
+        } else {
+            void *src = DatumGetPointer(values[i]);
+            if (!src)
+                elog(ERROR, "NULL by-ref pointer in key serialization for attr %d", key_attrs[i]);
+            memcpy(pos, src, lens[i]);
+        }
+
         pos += lens[i];
     }
 
@@ -70,13 +95,11 @@ NRAMValue serialize_nram_tuple_to_value(HeapTuple tuple, TupleDesc tupdesc) {
         if (isnull[i])
             field_lens[i] = 0;
         else
-            field_lens[i] =
-                datumGetSize(values[i], attr->attbyval, attr->attlen);
-
+            field_lens[i] = datumGetSize(values[i], attr->attbyval, attr->attlen);
         total_size += sizeof(NRAMValueFieldData) + field_lens[i];
     }
 
-    val = palloc0(total_size);
+    val = (NRAMValueData*) palloc0(total_size);
     val->nfields = tupdesc->natts;
 
     pos = val->data;
@@ -85,9 +108,24 @@ NRAMValue serialize_nram_tuple_to_value(HeapTuple tuple, TupleDesc tupdesc) {
         field->attnum = i;
         field->type_oid = TupleDescAttr(tupdesc, i)->atttypid;
         field->len = field_lens[i];
+        Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
 
-        if (field_lens[i] > 0)
-            memcpy(field->data, DatumGetPointer(values[i]), field_lens[i]);
+        NRAM_TEST_INFO("Serializing attr %d, len=%u, offset=%ld", field->attnum, field->len, pos - (char *)val->data);
+        if ((pos + sizeof(NRAMValueFieldData) + field_lens[i]) > ((char *)val + total_size)) {
+            elog(ERROR, "WRITE OUT OF BOUNDS at field %d! Trying to write beyond total_size=%zu", i, total_size);
+        }
+
+        if (field_lens[i] > 0) {
+            char *field_data = (char *)field + sizeof(NRAMValueFieldData);
+            if (attr->attbyval) {
+                memcpy(field_data, &values[i], sizeof(Datum));
+            } else {
+                void *src = DatumGetPointer(values[i]);
+                if (!src)
+                    elog(ERROR, "NULL Datum pointer for attr %d", i);
+                memcpy(field_data, src, field_lens[i]);
+            }
+        }
 
         pos += sizeof(NRAMValueFieldData) + field_lens[i];
     }
@@ -102,17 +140,23 @@ HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc) {
     char *pos = val->data;
     for (int i = 0; i < val->nfields; i++) {
         NRAMValueFieldData *field = (NRAMValueFieldData *)pos;
-        int attidx = field->attnum - 1;
+        int attidx = field->attnum;
         Form_pg_attribute attr = TupleDescAttr(tupdesc, attidx);
-        isnull[i] = (field->len == 0);
+
+        isnull[attidx] = (field->len == 0);
+        NRAM_TEST_INFO("Deserialized attr %d (attidx %d), len=%u, isnull=%d", 
+             field->attnum, attidx, field->len, isnull[attidx]);
 
         if (!isnull[attidx]) {
+            char *field_data = (char *)field + sizeof(NRAMValueFieldData);
+
             if (attr->attbyval) {
-                Assert(field->len == attr->attlen);
-                memcpy(&values[attidx], field->data, field->len);
+                if (field->len != attr->attlen)
+                    elog(ERROR, "Mismatch byvalue type: field->len=%d vs att->attlen=%d (attbyval=%d)", field->len, attr->attlen, attr->attbyval);
+                memcpy(&values[attidx], field_data, field->len);
             } else {
                 char *dataptr = palloc(field->len);
-                memcpy(dataptr, field->data, field->len);
+                memcpy(dataptr, field_data, field->len);
                 values[attidx] = PointerGetDatum(dataptr);
             }
         }
