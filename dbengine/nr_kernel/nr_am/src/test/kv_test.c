@@ -1,6 +1,7 @@
 #include "postgres.h"
 #include "kv_access/kv.h"
 #include "test/kv_test.h"
+#include "utils/builtins.h"
 
 void run_kv_serialization_test();
 
@@ -21,22 +22,21 @@ void run_kv_serialization_test() {
     
     NRAMKey key;
     NRAMValue encoded_value;
-    int key_attrs[] = {0};
+    int key_attrs[] = {1};
 
     bool decoded_isnull[2];
     bool isnull[2] = {false, false};
 
 
-    elog(INFO, "Running nram tuple serialization/deserialization test...");
+    NRAM_TEST_INFO("-------- Start --------");
 
     // Build a synthetic tuple descriptor: (id int, val text)
     desc = CreateTemplateTupleDesc(2);
     TupleDescInitEntry(desc, (AttrNumber) 1, "id", INT4OID, -1, 0);
     TupleDescInitEntry(desc, (AttrNumber) 2, "val", TEXTOID, -1, 0);
-
-    // Create test tuple: (id=42, val="hello")
     values[0] = Int32GetDatum(42);
-    values[1] = CStringGetDatum("hello");
+    values[1] = CStringGetTextDatum("hello");
+    BlessTupleDesc(desc);
     tuple = heap_form_tuple(desc, values, isnull);
 
     // Serialize to value
@@ -47,16 +47,22 @@ void run_kv_serialization_test() {
     heap_deform_tuple(decoded_tuple, desc, decoded_values, decoded_isnull);
 
     if (DatumGetInt32(decoded_values[0]) != 42 ||
-        strcmp(DatumGetCString(decoded_values[1]), "hello") != 0)
-        elog(ERROR, "Value encode/decode failed");
+        strcmp(TextDatumGetCString(decoded_values[1]), "hello") != 0)
+        elog(ERROR, "Value encode/decode failed, (%d, %s) != (42, hello)", 
+            DatumGetInt32(decoded_values[0]), TextDatumGetCString(decoded_values[1]));
+   else
+        NRAM_TEST_INFO("NRAMValue encode/decode works correctly!");
 
     // Serialize key with id as key
     key = nram_key_serialize_from_tuple(tuple, desc, key_attrs, 1);
+    NRAM_TEST_INFO("Serialized.");
 
     nram_key_deserialize(key, desc, key_attrs, &deserialized_key_val);
 
     if (DatumGetInt32(deserialized_key_val) != 42)
-        elog(ERROR, "Key encode/decode failed");
-
-    elog(INFO, "Test passed: encode/decode for key and value work correctly.");
+        elog(ERROR, "Key encode/decode failed, %d != 42", DatumGetInt32(deserialized_key_val));
+    else
+        NRAM_TEST_INFO("NRAMKey encode/decode works correctly!");
+    
+    NRAM_TEST_INFO("-------- End --------");
 }

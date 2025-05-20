@@ -17,7 +17,8 @@
 #include "executor/tuptable.h"
 
 #define ROCKSDB_PATH "pg_rocksdb"
-
+#define NRAM_TEST_INFO(fmt, ...) \
+    elog(INFO, "[NRAM %s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 
 typedef struct NRAMKeyData {
     int16 nkeys;
@@ -37,12 +38,12 @@ typedef struct NRAMValueFieldData {
     int16 attnum;       // Attribute number
     Oid type_oid;       // Type OID
     uint32 len;         // Length of data (0 if NULL)
-    char data[];        // Actual data or empty if NULL
+    char data[FLEXIBLE_ARRAY_MEMBER];        // Actual data or empty if NULL
 } NRAMValueFieldData;
 
 typedef struct NRAMValueData {
     int16 nfields;
-    char data[];  // Consecutive NRAMValueFieldData blocks
+    char data[FLEXIBLE_ARRAY_MEMBER];  // Consecutive NRAMValueFieldData blocks
 } NRAMValueData;
 
 typedef NRAMValueData *NRAMValue;

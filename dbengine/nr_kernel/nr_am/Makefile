@@ -23,6 +23,13 @@ PG_CONFIG = ${NEURDBPATH}/psql/bin/pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
+.PHONY: debug test
 
 debug:
 	$(MAKE) -f Makefile PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" SHLIB_LINK="$(SHLIB_LINK)" CFLAGS="-g -O0 -Wall"
+
+test:
+	make clean
+	make -j
+	sudo make install
+	psql neurdb -f ./test/test.sql

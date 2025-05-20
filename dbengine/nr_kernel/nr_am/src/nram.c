@@ -415,7 +415,6 @@ Datum nram_tableam_handler(PG_FUNCTION_ARGS) {
 PG_FUNCTION_INFO_V1(run_nram_tests);
 
 Datum run_nram_tests(PG_FUNCTION_ARGS) {
-    elog(INFO, "run_nram_tests() called successfully!");
     run_kv_serialization_test();
     PG_RETURN_VOID();
 }
