@@ -14,7 +14,7 @@
  * Create rocksdb initialization options.
  * ------------------------------------------------------------------------
  */
-static rocksdb_options_t *
+rocksdb_options_t *
 rocksengine_config_options(void) {
     rocksdb_options_t *rocksdb_options = rocksdb_options_create();
     // add configuration options here
@@ -32,9 +32,8 @@ rocksengine_open() {
     rocksdb_options_t *rocksdb_options = rocksengine_config_options();
     char *error = NULL;
     rocksdb_t *rocksdb = rocksdb_open(rocksdb_options, ROCKSDB_PATH, &error);
-    if (error != NULL) {
+    if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: open operation failed, %s", error)));
-    }
     RocksEngine *rocks_engine = malloc(sizeof(*rocks_engine));
     rocks_engine->rocksdb = rocksdb;
     rocks_engine->rocksdb_options = rocksdb_options;
@@ -96,12 +95,13 @@ rocksengine_create_iterator(KVEngine *engine, bool isforward) {
  * Get the value of the given key from the RocksDB engine.
  * ------------------------------------------------------------------------
  */
-TValue
-rocksengine_get(KVEngine *engine, TKey tkey) {
+NRAMValue
+rocksengine_get(KVEngine *engine, NRAMKey tkey) {
     RocksEngine *rocks_engine = (RocksEngine *) engine;
     rocksdb_readoptions_t *rocksdb_readoptions = rocksdb_readoptions_create();
     Size value_lenth;
     Size key_length;
+    NRAMValue tvalue;
     char *key = tkey_serialize(tkey, &key_length);
     char *error = NULL;
     char *value = rocksdb_get(
@@ -112,10 +112,9 @@ rocksengine_get(KVEngine *engine, TKey tkey) {
         &value_lenth,
         &error
     );
-    if (error != NULL) {
+    if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: get operation failed, %s", error)));
-    }
-    TValue tvalue = tvalue_deserialize(value, value_lenth);
+    tvalue = tvalue_deserialize(value, value_lenth);
     rocksdb_readoptions_destroy(rocksdb_readoptions);
     free(value);
     return tvalue;
@@ -127,7 +126,7 @@ rocksengine_get(KVEngine *engine, TKey tkey) {
  * ------------------------------------------------------------------------
  */
 void
-rocksengine_put(KVEngine *engine, TKey tkey, TValue tvalue) {
+rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
     RocksEngine *rocks_engine = (RocksEngine *) engine;
     rocksdb_writeoptions_t *rocksdb_writeoptions = rocksdb_writeoptions_create();
     Size serialized_length;
@@ -144,9 +143,8 @@ rocksengine_put(KVEngine *engine, TKey tkey, TValue tvalue) {
         serialized_length,
         &error
     );
-    if (error != NULL) {
+    if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
-    }
     rocksdb_writeoptions_destroy(rocksdb_writeoptions);
     free(serialized_value);
 }
@@ -157,7 +155,7 @@ rocksengine_put(KVEngine *engine, TKey tkey, TValue tvalue) {
  * ------------------------------------------------------------------------
  */
 void
-rocksengine_delete(KVEngine *engine, TKey tkey) {
+rocksengine_delete(KVEngine *engine, NRAMKey tkey) {
     RocksEngine *rocks_engine = (RocksEngine *) engine;
     rocksdb_writeoptions_t *rocksdb_writeoptions = rocksdb_writeoptions_create();
     Size key_length;
@@ -170,9 +168,8 @@ rocksengine_delete(KVEngine *engine, TKey tkey) {
         key_length,
         &error
     );
-    if (error != NULL) {
+    if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: delete operation failed, %s", error)));
-    }
     rocksdb_writeoptions_destroy(rocksdb_writeoptions);
 }
 
@@ -196,7 +193,7 @@ rocksengine_iterator_destroy(KVEngineIterator *iterator) {
  * ------------------------------------------------------------------------
  */
 void
-rocksengine_iterator_seek(KVEngineIterator *iterator, TKey tkey) {
+rocksengine_iterator_seek(KVEngineIterator *iterator, NRAMKey tkey) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *) iterator;
     Size key_length;
     char *key = tkey_serialize(tkey, &key_length);
@@ -213,7 +210,7 @@ rocksengine_iterator_seek(KVEngineIterator *iterator, TKey tkey) {
  * ------------------------------------------------------------------------
  */
 void
-rocksengine_iterator_seek_for_prev(KVEngineIterator *iterator, TKey tkey) {
+rocksengine_iterator_seek_for_prev(KVEngineIterator *iterator, NRAMKey tkey) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *) iterator;
     Size key_length;
     char *key = tkey_serialize(tkey, &key_length);
@@ -263,7 +260,7 @@ rocksengine_iterator_prev(KVEngineIterator *iterator) {
  * ------------------------------------------------------------------------
  */
 void
-rocksengine_iterator_get(KVEngineIterator *iterator, TKey *tkey, TValue *tvalue) {
+rocksengine_iterator_get(KVEngineIterator *iterator, NRAMKey *tkey, NRAMValue *tvalue) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *) iterator;
     Size key_length;
     Size value_length;
@@ -278,15 +275,16 @@ rocksengine_iterator_get(KVEngineIterator *iterator, TKey *tkey, TValue *tvalue)
  * Get the minimum key from the RocksDB engine.
  * ------------------------------------------------------------------------
  */
-TKey
+NRAMKey
 rocksengine_get_min_key(KVEngine *engine) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *) rocksengine_create_iterator(engine, true);
+    NRAMKey tkey;
+    NRAMValue tvalue;
+
     if (!rocksengine_iterator_is_valid((KVEngineIterator *) rocks_it)) {
         return NULL;
     }
     rocksdb_iter_seek_to_first(rocks_it->rocksdb_iterator);
-    TKey tkey;
-    TValue tvalue;
     rocksengine_iterator_get((KVEngineIterator *) rocks_it, &tkey, &tvalue);
     rocksengine_iterator_destroy((KVEngineIterator *) rocks_it);
     return tkey;
@@ -297,15 +295,16 @@ rocksengine_get_min_key(KVEngine *engine) {
  * Get the maximum key from the RocksDB engine.
  * ------------------------------------------------------------------------
  */
-TKey
+NRAMKey
 rocksengine_get_max_key(KVEngine *engine) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *) rocksengine_create_iterator(engine, false);
-    if (!rocksengine_iterator_is_valid((KVEngineIterator *) rocks_it)) {
+    NRAMKey tkey;
+    NRAMValue tvalue;
+
+    if (!rocksengine_iterator_is_valid((KVEngineIterator *) rocks_it))
         return NULL;
-    }
+        
     rocksdb_iter_seek_to_last(rocks_it->rocksdb_iterator);
-    TKey tkey;
-    TValue tvalue;
     rocksengine_iterator_get((KVEngineIterator *) rocks_it, &tkey, &tvalue);
     rocksengine_iterator_destroy((KVEngineIterator *) rocks_it);
     return tkey;

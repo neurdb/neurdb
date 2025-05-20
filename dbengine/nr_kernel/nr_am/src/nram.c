@@ -8,23 +8,15 @@
 #include "utils/builtins.h"
 #include "executor/tuptable.h"
 #include "utils/elog.h"
+#include "kv_access/kv.h"
+#include "kv_storage/rocksengine.h"
+#include "test/kv_test.h"
 
 #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
 PG_MODULE_MAGIC;
 
-// nram_make_virtual_slot helper function that creates an in-memory tuple.
-static TupleTableSlot *nram_make_virtual_slot(TupleDesc tupdesc, Datum *values,
-                                              bool *isnull) {
-    TupleTableSlot *slot;
-    slot = MakeSingleTupleTableSlot(tupdesc, &TTSOpsVirtual);
-    for (int i = 0; i < tupdesc->natts; i++) {
-        slot->tts_values[i] = values[i];
-        slot->tts_isnull[i] = isnull[i];
-    }
-    ExecStoreVirtualTuple(slot);
-    return slot;
-}
+static RocksEngine *nram_engine = NULL;
 
 /* ------------------------------------------------------------------------
  * Slot related callbacks
@@ -41,20 +33,32 @@ static const TupleTableSlotOps *nram_slot_callbacks(Relation relation) {
  * ------------------------------------------------------------------------
  */
 
+//  /* ----------------
+//  *		initscan - scan code common to heap_beginscan and heap_rescan
+//  * ----------------
+//  */
+// static void
+// initscan(KVScanDesc scan, ScanKey key, bool keep_startblock)
+// {
+//     if (scan->rs_base.rs_flags & SO_TYPE_SEQSCAN)
+// 		pgstat_count_heap_scan(scan->rs_base.rs_rd);
+// }
+
+
 static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     int nkeys, struct ScanKeyData *key,
                                     ParallelTableScanDesc parallel_scan,
                                     uint32 flags) {
-    TableScanDesc sscan = (TableScanDesc)palloc0(sizeof(TableScanDescData));
+    KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
 
     NRAM_INFO();
-    sscan->rs_rd = relation;
-    sscan->rs_snapshot = snapshot;
-    sscan->rs_nkeys = nkeys;
-    sscan->rs_key = key;
-    sscan->rs_parallel = parallel_scan;
-    sscan->rs_flags = flags;
-    return (TableScanDesc)sscan;
+    RelationIncrementReferenceCount(relation);
+	scan->rs_base.rs_rd = relation;
+    scan->engine_iterator = rocksengine_create_iterator(&nram_engine->engine, true);
+   
+    rocksengine_iterator_seek(scan->engine_iterator, rocksengine_get_min_key(&nram_engine->engine));
+
+    return (TableScanDesc) scan;
 }
 
 static void nram_rescan(TableScanDesc sscan, struct ScanKeyData *key,
@@ -70,28 +74,28 @@ static void nram_endscan(TableScanDesc sscan) {
 
 static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
                              TupleTableSlot *slot) {
-    static bool returned = false;
-    TupleDesc desc;
-    TupleTableSlot *filled;
-    Datum values[2];
-    bool isnull[2];
+    NRAMKey tkey;
+    NRAMValue tvalue;
+    HeapTuple tuple;
+    KVScanDesc scan;
+    KVEngineIterator *it;
 
     NRAM_INFO();
     ExecClearTuple(slot);
-    if (returned) return false;
+    scan = (KVScanDesc) sscan;
+    it = scan->engine_iterator;
 
-    returned = true;
-    desc = slot->tts_tupleDescriptor;
+    if (!rocksengine_iterator_is_valid(it))
+        return false;
 
-    // TODO phx: implement the KV scan logic here.
-    values[0] = Int32GetDatum(1);
-    isnull[0] = false;
-    values[1] = CStringGetTextDatum("hello nram");
-    isnull[1] = false;
+    rocksengine_iterator_get(it, &tkey, &tvalue);
+    tuple = deserialize_nram_value_to_tuple(tvalue, sscan->rs_rd->rd_att);
+    ExecStoreHeapTuple(tuple, slot, false);
 
-    filled = nram_make_virtual_slot(desc, values, isnull);
-    ExecCopySlot(slot, filled);
-    ExecDropSingleTupleTableSlot(filled);
+    if (ScanDirectionIsForward(direction))
+        rocksengine_iterator_next(it);
+    else
+        rocksengine_iterator_prev(it);
     return true;
 }
 
@@ -125,6 +129,7 @@ static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
                               CommandId cid, int options,
                               BulkInsertState bistate) {
     NRAM_INFO();
+    // Datum val;
 }
 
 static void nram_tuple_insert_speculative(Relation relation,
@@ -394,5 +399,24 @@ static const TableAmRoutine nram_methods = {
     .scan_bitmap_next_tuple = nram_scan_bitmap_next_tuple};
 
 Datum nram_tableam_handler(PG_FUNCTION_ARGS) {
+    if (nram_engine == NULL) {
+        nram_engine = rocksengine_open();
+    }
     PG_RETURN_POINTER(&nram_methods);
 }
+
+
+/* ------------------------------------------------------------------------
+ * Unit tests
+ * ------------------------------------------------------------------------
+ */
+
+
+PG_FUNCTION_INFO_V1(run_nram_tests);
+
+Datum run_nram_tests(PG_FUNCTION_ARGS) {
+    elog(INFO, "run_nram_tests() called successfully!");
+    run_kv_serialization_test();
+    PG_RETURN_VOID();
+}
+
