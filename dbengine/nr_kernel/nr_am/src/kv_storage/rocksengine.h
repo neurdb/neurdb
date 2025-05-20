@@ -7,8 +7,8 @@
 #ifndef ROCKSENGINE_H
 #define ROCKSENGINE_H
 
-#include "kv_storage/kvengine.h"
 #include "rocksdb/c.h"
+#include "kv_access/kv.h"
 
 
 typedef struct RocksEngine {
@@ -30,21 +30,21 @@ RocksEngine* rocksengine_open();
 void rocksengine_destroy(KVEngine *engine);
 KVEngineIterator *rocksengine_create_iterator(KVEngine *engine, bool isforward);
 
-void rocksengine_put(KVEngine *engine, TKey tkey, TValue tvalue);
-void rocksengine_delete(KVEngine *engine, TKey tkey);
-TValue rocksengine_get(KVEngine *engine, TKey tkey);
+void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue);
+void rocksengine_delete(KVEngine *engine, NRAMKey tkey);
+NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey);
 
 /* Utility functions */
-TKey rocksengine_get_min_key(KVEngine *engine);
-TKey rocksengine_get_max_key(KVEngine *engine);
+NRAMKey rocksengine_get_min_key(KVEngine *engine);
+NRAMKey rocksengine_get_max_key(KVEngine *engine);
 
 /* RocksDB iterator */
 void rocksengine_iterator_destroy(KVEngineIterator *iterator);
-void rocksengine_iterator_seek(KVEngineIterator *iterator, TKey tkey);
-void rocksengine_iterator_seek_for_prev(KVEngineIterator *iterator, TKey tkey);
+void rocksengine_iterator_seek(KVEngineIterator *iterator, NRAMKey tkey);
+void rocksengine_iterator_seek_for_prev(KVEngineIterator *iterator, NRAMKey tkey);
 bool rocksengine_iterator_is_valid(KVEngineIterator *iterator);
 void rocksengine_iterator_next(KVEngineIterator *iterator);
 void rocksengine_iterator_prev(KVEngineIterator *iterator);
-void rocksengine_iterator_get(KVEngineIterator *iterator, TKey *tkey, TValue *tvalue);
+void rocksengine_iterator_get(KVEngineIterator *iterator, NRAMKey *tkey, NRAMValue *tvalue);
 
 #endif //ROCKSENGINE_H

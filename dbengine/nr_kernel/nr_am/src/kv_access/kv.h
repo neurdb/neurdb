@@ -3,8 +3,8 @@
  * NeurDB key-value struct definitions.
  *
  * The structure of the key-value store is as follows:
- * TKey -> TValue
- * TValue - [TValueFieldData TValueFieldData ... ]
+ * NRAMKey -> NRAMValue
+ * NRAMValue - [NRAMValueFieldData NRAMValueFieldData ... ]
  *
  * ------------------------------------------------------------------------
  */
@@ -16,58 +16,75 @@
 #include "access/relscan.h"
 #include "executor/tuptable.h"
 
-
-/* TODO: move Macros to guc.c after testing */
-#define MAX_KV_CACHE_SIZE 200
 #define ROCKSDB_PATH "pg_rocksdb"
 
-/* ------------------------------------------------------------------------
- * TKeyData
- *
- * T(uple)KeyData is used to represent the key of a key-value tuple.
- * i.e. the primary key of a relation.
- * ------------------------------------------------------------------------
- */
-typedef struct TKeyData {
-    Oid rel_id;
+
+typedef struct NRAMKeyData {
+    int16 nkeys;
     Size length;
-    char *pk_serialized;
-} TKeyData;
+    char data[];
+} NRAMKeyData;
 
-typedef TKeyData *TKey;
+typedef NRAMKeyData *NRAMKey;
 
-char *tkey_serialize(TKey key, Size *length);
-TKey tkey_deserialize(char *data, Size length);
-TKey tkey_generate_from_slot(Relation relation, TupleTableSlot *slot);
-void tkey_free(TKey key);
+NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc, int *key_attrs, int nkeys);
+void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs, Datum *values);
+char *tkey_serialize(NRAMKey tkey, Size *out_len);
+NRAMKey tkey_deserialize(char *buf, Size len);
+
+
+typedef struct NRAMValueFieldData {
+    int16 attnum;       // Attribute number
+    Oid type_oid;       // Type OID
+    uint32 len;         // Length of data (0 if NULL)
+    char data[];        // Actual data or empty if NULL
+} NRAMValueFieldData;
+
+typedef struct NRAMValueData {
+    int16 nfields;
+    char data[];  // Consecutive NRAMValueFieldData blocks
+} NRAMValueData;
+
+typedef NRAMValueData *NRAMValue;
+
+NRAMValue serialize_nram_tuple_to_value(HeapTuple tuple, TupleDesc tupdesc);
+HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc);
+char *tvalue_serialize(NRAMValue tvalue, Size *out_len);
+NRAMValue tvalue_deserialize(char *buf, Size len);
 
 
 /* ------------------------------------------------------------------------
- * TValueData
+ * KVEngineIterator
  *
- * T(uple)ValueData is used to represent the value of a key-value tuple.
+ * KVEngineIterator is an interface for iterating over key-value pairs in a
+ * KV store. It is a subcomponent of the KVEngine interface.
  * ------------------------------------------------------------------------
  */
-typedef struct TValueFieldData {
-    int16 att_num;      /* sequence number of attribute in the tuple, starting at 0 */
-    Oid att_typeid;     /* type of the attribute */
-    bool is_null;       /* is the attribute NULL? */
-    Size length;        /* length of the data */
-    char *data;         /* variable data area */
-} TValueFieldData;
+typedef struct KVEngineIterator {
+    void (*destroy)(struct KVEngineIterator *);                 /* destroy the iterator */
+    void (*seek)(struct KVEngineIterator *, NRAMKey);              /* move to the first entry with key >= given key */
+    bool (*is_valid)(struct KVEngineIterator *);                /* check if the iterator is valid */
+    void (*next)(struct KVEngineIterator *);                    /* move to the next entry */
+    void (*get)(struct KVEngineIterator *, NRAMKey *, NRAMValue *);   /* get the current key and value */
+} KVEngineIterator;
 
-typedef struct TValueData {
-    int16 nfields;              /* number of fields */
-    TValueFieldData *fields;    /* array of fields */
-} TValueData;
+/* ------------------------------------------------------------------------
+ * KVEngine
+ *
+ * KVEngine is an interface for a key-value store.
+ * ------------------------------------------------------------------------
+ */
+typedef struct KVEngine {
+    void (*destroy)(struct KVEngine *);
+    KVEngineIterator *(*create_iterator)(struct KVEngine *, bool isforward);
+    NRAMValue (*get)(struct KVEngine *, NRAMKey);
+    void (*put)(struct KVEngine *, NRAMKey, NRAMValue);
+    void (*delete)(struct KVEngine *, NRAMKey);
 
-typedef TValueData *TValue;
-
-Datum tvalue_get_field(TValue tvalue, int16 att_num);
-char *tvalue_serialize(TValue value, Size *length);
-TValue tvalue_deserialize(char *data, Size length);
-TValue tvalue_generate_from_slot(Relation relation, TupleTableSlot *slot);
-void tvalue_free(TValue value);
+    /* utility functions */
+    NRAMKey (*get_min_key)(struct KVEngine *);
+    NRAMKey (*get_max_key)(struct KVEngine *);
+} KVEngine;
 
 /*
  * ----------------------------------------------------------------
@@ -78,15 +95,10 @@ void tvalue_free(TValue value);
  */
 typedef struct KVScanDescData {
     TableScanDescData rs_base;
-    int rs_ckv;                                /* current kv pair index in the cache */
-    int rs_nkv;                                /* number of kv pairs in the cache */
-    TKey start_key;                            /* start key of the scan */
-    TKey next_key;                             /* next key of the scan */
-    TKey end_key;                              /* end key of the scan */
-    TKey cached_keys[MAX_KV_CACHE_SIZE];       /* cached keys */
-    TValue cached_values[MAX_KV_CACHE_SIZE];   /* cached values */
+    KVEngineIterator* engine_iterator;
 } KVScanDescData;
 
 typedef KVScanDescData *KVScanDesc;
+
 
 #endif //KV_H
