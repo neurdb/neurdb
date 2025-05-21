@@ -18,7 +18,7 @@
 
 #define ROCKSDB_PATH "pg_rocksdb"
 #define NRAM_TEST_INFO(fmt, ...) \
-    elog(INFO, "[NRAM %s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+    elog(INFO, "[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 
 typedef struct NRAMKeyData {
     int16 nkeys;
@@ -48,7 +48,7 @@ typedef struct NRAMValueData {
 
 typedef NRAMValueData *NRAMValue;
 
-NRAMValue serialize_nram_tuple_to_value(HeapTuple tuple, TupleDesc tupdesc);
+NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc);
 HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc);
 char *tvalue_serialize(NRAMValue tvalue, Size *out_len);
 NRAMValue tvalue_deserialize(char *buf, Size len);

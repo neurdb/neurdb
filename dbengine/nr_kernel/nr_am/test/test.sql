@@ -1,10 +1,8 @@
-DROP EXTENSION IF EXISTS ccam CASCADE;
-CREATE EXTENSION ccam;
-CREATE TABLE x(a INT, b text) USING ccam;
+CREATE EXTENSION nram;
+CREATE TABLE x(a INT, b text) USING nram;
 
 SELECT * from x;
 
-DROP FUNCTION IF EXISTS run_nram_tests();
 CREATE OR REPLACE FUNCTION run_nram_tests()
 RETURNS void
 AS 'nram', 'run_nram_tests'

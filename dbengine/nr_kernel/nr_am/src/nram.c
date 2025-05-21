@@ -11,12 +11,78 @@
 #include "kv_access/kv.h"
 #include "kv_storage/rocksengine.h"
 #include "test/kv_test.h"
+#include "nram.h"
+#include "utils/rel.h"
+#include "utils/syscache.h"
 
 #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
 PG_MODULE_MAGIC;
 
-static RocksEngine *nram_engine = NULL;
+/* ------------------------------------------------------------------------
+ * Helper functions.
+ * ------------------------------------------------------------------------
+ */
+
+List* nram_get_primary_key_attrs(Relation rel) {
+    NRAM_INFO();
+
+    List *index_list = RelationGetIndexList(rel);
+    ListCell *lc;
+    List *key_attrs = NIL;
+
+    foreach (lc, index_list) {
+        Oid index_oid = lfirst_oid(lc);
+        HeapTuple index_tuple =
+            SearchSysCache1(INDEXRELID, ObjectIdGetDatum(index_oid));
+        if (!HeapTupleIsValid(index_tuple))
+            elog(ERROR, "cache lookup failed for index %u", index_oid);
+
+        Form_pg_index index_form = (Form_pg_index)GETSTRUCT(index_tuple);
+
+        if (index_form->indisprimary) {
+            for (int i = 0; i < index_form->indnatts; i++)
+                key_attrs = lappend_int(key_attrs, index_form->indkey.values[i]);
+            ReleaseSysCache(index_tuple);
+            break;
+        }
+
+        ReleaseSysCache(index_tuple);
+    }
+
+    list_free(index_list);
+
+    if (key_attrs->length == 0)
+        elog(ERROR, "no primary key found for relation \"%s\"",
+             RelationGetRelationName(rel));
+    return key_attrs;
+}
+
+static NRAMState *get_nram_state(Relation rel) {
+    NRAM_INFO();
+    NRAMState *state;
+
+    if (rel->rd_amcache != NULL) return (NRAMState *)rel->rd_amcache;
+
+    state = palloc(sizeof(NRAMState));
+
+    // Open RocksDB engine (e.g., globally or per-table instance)
+    state->engine = rocksengine_open();
+
+    // Collect key attributes (e.g., from primary key)
+    // PostgreSQL Indexes are tightly coupled to HeapAM, thus we temporarily
+    // check the system catalog for primary keys.
+    List *indexatts = nram_get_primary_key_attrs(rel);
+    state->nkeys = list_length(indexatts);
+    state->key_attrs = palloc(sizeof(int) * state->nkeys);
+
+    int i = 0;
+    ListCell *lc;
+    foreach (lc, indexatts) state->key_attrs[i++] = lfirst_int(lc);
+
+    rel->rd_amcache = (void *)state;
+    return (NRAMState *)rel->rd_amcache;
+}
 
 /* ------------------------------------------------------------------------
  * Slot related callbacks
@@ -44,21 +110,22 @@ static const TupleTableSlotOps *nram_slot_callbacks(Relation relation) {
 // 		pgstat_count_heap_scan(scan->rs_base.rs_rd);
 // }
 
-
 static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     int nkeys, struct ScanKeyData *key,
                                     ParallelTableScanDesc parallel_scan,
                                     uint32 flags) {
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
+    NRAMState *state = get_nram_state(relation);
 
     NRAM_INFO();
     RelationIncrementReferenceCount(relation);
-	scan->rs_base.rs_rd = relation;
-    scan->engine_iterator = rocksengine_create_iterator(&nram_engine->engine, true);
-   
-    rocksengine_iterator_seek(scan->engine_iterator, rocksengine_get_min_key(&nram_engine->engine));
+    scan->rs_base.rs_rd = relation;
+    scan->engine_iterator = rocksengine_create_iterator(&state->engine, true);
 
-    return (TableScanDesc) scan;
+    rocksengine_iterator_seek(scan->engine_iterator,
+                              rocksengine_get_min_key(&state->engine));
+
+    return (TableScanDesc)scan;
 }
 
 static void nram_rescan(TableScanDesc sscan, struct ScanKeyData *key,
@@ -82,11 +149,10 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
 
     NRAM_INFO();
     ExecClearTuple(slot);
-    scan = (KVScanDesc) sscan;
+    scan = (KVScanDesc)sscan;
     it = scan->engine_iterator;
 
-    if (!rocksengine_iterator_is_valid(it))
-        return false;
+    if (!rocksengine_iterator_is_valid(it)) return false;
 
     rocksengine_iterator_get(it, &tkey, &tvalue);
     tuple = deserialize_nram_value_to_tuple(tvalue, sscan->rs_rd->rd_att);
@@ -125,11 +191,48 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
  * ------------------------------------------------------------------------
  */
 
+void nram_insert(Relation relation, HeapTuple tup, CommandId cid, int options,
+                 BulkInsertState bistate) {
+    NRAM_INFO();
+
+    // Extract table AM private data
+    NRAMState *nram_state = get_nram_state(relation);
+    // Get tuple descriptor and key info
+    TupleDesc tupdesc = RelationGetDescr(relation);
+
+    // Assume key_attrs and nkeys are part of your NRAMState
+    int *key_attrs = nram_state->key_attrs;
+    int nkeys = nram_state->nkeys;
+
+    // Serialize key and value from tuple
+    NRAMKey tkey =
+        nram_key_serialize_from_tuple(tup, tupdesc, key_attrs, nkeys);
+    NRAMValue tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
+
+    // Insert into RocksDB
+    rocksengine_put(nram_state->engine, tkey, tvalue);
+
+    // Cleanup memory if necessary
+    pfree(tkey);    // if allocated via palloc or similar
+    pfree(tvalue);  // if allocated via palloc or similar
+}
+
 static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
                               CommandId cid, int options,
                               BulkInsertState bistate) {
     NRAM_INFO();
-    // Datum val;
+    bool shouldFree = true;
+    HeapTuple tuple = ExecFetchSlotHeapTuple(slot, true, &shouldFree);
+
+    /* Update the tuple with table oid */
+    slot->tts_tableOid = RelationGetRelid(relation);
+    tuple->t_tableOid = slot->tts_tableOid;
+
+    /* Perform the insertion, and copy the resulting ItemPointer */
+    nram_insert(relation, tuple, cid, options, bistate);
+    ItemPointerCopy(&tuple->t_self, &slot->tts_tid);
+
+    if (shouldFree) pfree(tuple);
 }
 
 static void nram_tuple_insert_speculative(Relation relation,
@@ -399,18 +502,13 @@ static const TableAmRoutine nram_methods = {
     .scan_bitmap_next_tuple = nram_scan_bitmap_next_tuple};
 
 Datum nram_tableam_handler(PG_FUNCTION_ARGS) {
-    if (nram_engine == NULL) {
-        nram_engine = rocksengine_open();
-    }
     PG_RETURN_POINTER(&nram_methods);
 }
-
 
 /* ------------------------------------------------------------------------
  * Unit tests
  * ------------------------------------------------------------------------
  */
-
 
 PG_FUNCTION_INFO_V1(run_nram_tests);
 
@@ -418,4 +516,3 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_serialization_test();
     PG_RETURN_VOID();
 }
-

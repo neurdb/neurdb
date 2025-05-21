@@ -77,7 +77,7 @@ NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
     return tkey;
 }
 
-NRAMValue serialize_nram_tuple_to_value(HeapTuple tuple, TupleDesc tupdesc) {
+NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
     Datum *values = palloc(sizeof(Datum) * tupdesc->natts);
     bool *isnull = palloc(sizeof(bool) * tupdesc->natts);
     NRAMValue val;

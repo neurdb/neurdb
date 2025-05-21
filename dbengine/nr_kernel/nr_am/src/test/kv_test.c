@@ -40,7 +40,7 @@ void run_kv_serialization_test() {
     tuple = heap_form_tuple(desc, values, isnull);
 
     // Serialize to value
-    encoded_value = serialize_nram_tuple_to_value(tuple, desc);
+    encoded_value = nram_value_serialize_from_tuple(tuple, desc);
     decoded_tuple = deserialize_nram_value_to_tuple(encoded_value, desc);
 
     // Extract back and compare
