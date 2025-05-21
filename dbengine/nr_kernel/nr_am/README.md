@@ -1,25 +1,32 @@
-1. Build the TAM.
+# NRAM Table Access Method
+
+## 1. Build the NRAM TAM
 
 ```bash
 make clean
 make
 sudo make install
+````
+
+To run unit tests:
+
+```bash
+make test
 ```
 
-2. Load the NRAM.
+> **Note:** This extension depends on **RocksDB version 10.3.0**.
 
+---
+
+## 2. Load the NRAM Extension in PostgreSQL
 
 ```sql
-CREATE OR REPLACE FUNCTION nram_tableam_handler(internal)
-RETURNS table_am_handler
-AS 'nram', 'nram_tableam_handler'
-LANGUAGE C STRICT;
-
-
-CREATE ACCESS METHOD nram TYPE TABLE HANDLER nram_tableam_handler;
+CREATE EXTENSION nram;
 ```
 
-2. Verify that the handler function has been successfully loaded.
+---
+
+## 3. Verify That the Handler Function Is Loaded
 
 ```sql
 SELECT * FROM pg_proc WHERE proname = 'nram_tableam_handler';
