@@ -3,7 +3,7 @@
 #include "test/kv_test.h"
 #include "utils/builtins.h"
 
-void run_kv_serialization_test();
+void run_kv_serialization_test(void);
 
 /*
  * This test:
@@ -12,7 +12,7 @@ void run_kv_serialization_test();
  * 3. Deserializes them back
  * 4. Compares results
  */
-void run_kv_serialization_test() {
+void run_kv_serialization_test(void) {
     TupleDesc desc;
     HeapTuple tuple, decoded_tuple;
     

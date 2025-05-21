@@ -1,5 +1,5 @@
 CREATE EXTENSION nram;
-CREATE TABLE x(a INT, b text) USING nram;
+CREATE TABLE x(a INT, b text, c text, PRIMARY KEY (a, b)) USING nram;
 
 SELECT * from x;
 

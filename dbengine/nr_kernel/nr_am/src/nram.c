@@ -24,12 +24,20 @@ PG_MODULE_MAGIC;
  * ------------------------------------------------------------------------
  */
 
-List* nram_get_primary_key_attrs(Relation rel) {
+List *nram_get_primary_key_attrs(Relation rel) {
     NRAM_INFO();
 
     List *index_list = RelationGetIndexList(rel);
     ListCell *lc;
     List *key_attrs = NIL;
+    if (index_list == NIL) {
+        // In Postgres, the tuple id is changed on every update,
+        // making it an inefficient primary key for rocksdb. We currently
+        // enforce all tables using nram to indicate their primary keys.
+        elog(ERROR, "Primary key must be created for NRAM table \"%s\"",
+             RelationGetRelationName(rel));
+        return NIL;
+    }
 
     foreach (lc, index_list) {
         Oid index_oid = lfirst_oid(lc);
@@ -41,8 +49,12 @@ List* nram_get_primary_key_attrs(Relation rel) {
         Form_pg_index index_form = (Form_pg_index)GETSTRUCT(index_tuple);
 
         if (index_form->indisprimary) {
-            for (int i = 0; i < index_form->indnatts; i++)
-                key_attrs = lappend_int(key_attrs, index_form->indkey.values[i]);
+            // NRAM_TEST_INFO("Embedding %d primary keys",
+            // index_form->indnkeyatts);
+            for (int i = 0; i < index_form->indnkeyatts; i++)
+                // NRAM_TEST_INFO("Got %d", index_form->indkey.values[i]);
+                key_attrs =
+                    lappend_int(key_attrs, index_form->indkey.values[i]);
             ReleaseSysCache(index_tuple);
             break;
         }
@@ -67,7 +79,7 @@ static NRAMState *get_nram_state(Relation rel) {
     state = palloc(sizeof(NRAMState));
 
     // Open RocksDB engine (e.g., globally or per-table instance)
-    state->engine = rocksengine_open();
+    state->engine = (KVEngine *) rocksengine_open();
 
     // Collect key attributes (e.g., from primary key)
     // PostgreSQL Indexes are tightly coupled to HeapAM, thus we temporarily
@@ -121,6 +133,7 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     RelationIncrementReferenceCount(relation);
     scan->rs_base.rs_rd = relation;
     scan->engine_iterator = rocksengine_create_iterator(&state->engine, true);
+    NRAM_INFO();
 
     rocksengine_iterator_seek(scan->engine_iterator,
                               rocksengine_get_min_key(&state->engine));
