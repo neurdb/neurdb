@@ -33,6 +33,5 @@ test:
 	make clean
 	make -j
 	sudo make install
-	bash ../scripts/restart_db.sh
 	psql neurdb -f ./test/clean.sql
 	psql neurdb -f ./test/test.sql

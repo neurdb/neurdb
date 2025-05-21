@@ -1,2 +1,2 @@
 
-extern void run_kv_serialization_test();
+extern void run_kv_serialization_test(void);
