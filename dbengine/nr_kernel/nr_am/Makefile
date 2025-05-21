@@ -1,5 +1,6 @@
 NEURDBPATH=/code/neurdb-dev
 EXTPATH = /code/neurdb-dev/dbengine/nr_kernel/nr_am
+ENGINEPATH = /code/neurdb-dev/dbengine/
 MODULE_big = nram
 OBJS = \
 	${EXTPATH}/src/nram.o \
@@ -32,4 +33,6 @@ test:
 	make clean
 	make -j
 	sudo make install
+	bash ../scripts/restart_db.sh
+	psql neurdb -f ./test/clean.sql
 	psql neurdb -f ./test/test.sql
