@@ -20,12 +20,15 @@ void run_kv_serialization_test(void) {
     Datum decoded_values[2];
     Datum deserialized_key_val;
     
-    NRAMKey key;
-    NRAMValue encoded_value;
+    NRAMKey key, key_copy;
+    NRAMValue encoded_value, value_copy;
     int key_attrs[] = {1};
 
     bool decoded_isnull[2];
     bool isnull[2] = {false, false};
+
+    char *key_buf, *value_buf;
+    Size key_len, value_len;
 
 
     NRAM_TEST_INFO("-------- Start --------");
@@ -55,14 +58,39 @@ void run_kv_serialization_test(void) {
 
     // Serialize key with id as key
     key = nram_key_serialize_from_tuple(tuple, desc, key_attrs, 1);
-    NRAM_TEST_INFO("Serialized.");
-
     nram_key_deserialize(key, desc, key_attrs, &deserialized_key_val);
 
     if (DatumGetInt32(deserialized_key_val) != 42)
         elog(ERROR, "Key encode/decode failed, %d != 42", DatumGetInt32(deserialized_key_val));
     else
         NRAM_TEST_INFO("NRAMKey encode/decode works correctly!");
+
+    // Key/value buf tests.
+    key_buf = tkey_serialize(key, &key_len);
+    key_copy = tkey_deserialize(key_buf, key_len);
+    if (key_copy->nkeys != 1 || key_copy->length != key->length ||
+        memcmp(key_copy->data, key->data, key->length) != 0)
+        elog(ERROR, "tkey_serialize/deserialized failed!");
+    else
+        NRAM_TEST_INFO("tkey_serialize/deserialized works correctly!");
+    
+    pfree(key_buf);
+    pfree(key_copy);
+
+
+    value_buf = tvalue_serialize(encoded_value, &value_len);
+    value_copy = tvalue_deserialize(value_buf, value_len);
+
+    if (value_copy->nfields != encoded_value->nfields ||
+        memcmp(value_copy->data, encoded_value->data,
+               value_len - offsetof(NRAMValueData, data)) != 0)
+        elog(ERROR, "tvalue_serialize/deserialized failed!");
+    else
+        NRAM_TEST_INFO("tvalue_serialize/deserialized works correctly!");
+
+    pfree(value_buf);
+    pfree(value_copy);
+
     
     NRAM_TEST_INFO("-------- End --------");
 }

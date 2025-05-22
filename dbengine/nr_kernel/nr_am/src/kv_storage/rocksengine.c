@@ -29,8 +29,6 @@ RocksEngine *rocksengine_open() {
     RocksEngine *rocks_engine = palloc(sizeof(RocksEngine));
     rocks_engine->rocksdb = rocksdb;
     rocks_engine->rocksdb_options = rocksdb_options;
-    NRAM_TEST_INFO("rocks_engine = %p", rocks_engine);
-    NRAM_TEST_INFO("rocks_engine->rocksdb = %p", rocks_engine->rocksdb);
 
     /* Initialize the KVEngine */
     rocks_engine->engine.create_iterator = rocksengine_create_iterator;
@@ -66,17 +64,11 @@ KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
     RocksEngine *rocks_engine = (RocksEngine *)engine;
     RocksEngineIterator *rocks_it = palloc(sizeof(RocksEngineIterator));
 
-    NRAM_TEST_INFO("S1");
     rocks_it->rocksdb_readoptions = rocksdb_readoptions_create();
-    NRAM_TEST_INFO("S2");
     if (rocks_engine->rocksdb == NULL)
         elog(ERROR, "[NRAM] rocks_engine->rocksdb is NULL!");
-    NRAM_TEST_INFO("rocks_engine = %p", rocks_engine);
-    NRAM_TEST_INFO("rocks_engine->rocksdb = %p", rocks_engine->rocksdb);
-    NRAM_TEST_INFO("readoptions = %p", rocks_it->rocksdb_readoptions);
     rocks_it->rocksdb_iterator = rocksdb_create_iterator(
         rocks_engine->rocksdb, rocks_it->rocksdb_readoptions);
-    NRAM_TEST_INFO("S3");
 
     /* Initialize the KVEngineIterator */
     KVEngineIterator *kv_it = (KVEngineIterator *)rocks_it;
@@ -123,19 +115,21 @@ NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey) {
  */
 void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
     RocksEngine *rocks_engine = (RocksEngine *)engine;
-    rocksdb_writeoptions_t *rocksdb_writeoptions =
-        rocksdb_writeoptions_create();
-    Size serialized_length;
-    char *serialized_value = tvalue_serialize(tvalue, &serialized_length);
-    Size key_length;
+    rocksdb_writeoptions_t *rocksdb_writeoptions = rocksdb_writeoptions_create();
+    Size serialized_length, key_length;
     char *key = tkey_serialize(tkey, &key_length);
+    char *serialized_value = tvalue_serialize(tvalue, &serialized_length);
     char *error = NULL;
+
     rocksdb_put(rocks_engine->rocksdb, rocksdb_writeoptions, key, key_length,
                 serialized_value, serialized_length, &error);
+                
     if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
+
     rocksdb_writeoptions_destroy(rocksdb_writeoptions);
     pfree(serialized_value);
+    pfree(key);
 }
 
 /* ------------------------------------------------------------------------
@@ -255,6 +249,7 @@ NRAMKey rocksengine_get_min_key(KVEngine *engine) {
     NRAMValue tvalue;
 
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it)) {
+        elog(WARNING, "The rocksengine iterator is invalid. Please check if the table is empty.");
         return NULL;
     }
     rocksdb_iter_seek_to_first(rocks_it->rocksdb_iterator);

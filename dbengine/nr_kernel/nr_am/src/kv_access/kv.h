@@ -23,6 +23,7 @@
 typedef struct NRAMKeyData {
     int16 nkeys;
     Size length;
+    Oid tableOid;
     char data[];
 } NRAMKeyData;
 
