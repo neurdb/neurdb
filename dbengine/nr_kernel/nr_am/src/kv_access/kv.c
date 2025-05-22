@@ -4,7 +4,7 @@
 
 void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs,
                           Datum *values) {
-    char *pos = tkey->data;
+    char *pos = (char*) tkey + sizeof(NRAMKeyData);
 
     for (int i = 0; i < tkey->nkeys; i++) {
         int attnum = key_attrs[i] - 1;
@@ -48,19 +48,20 @@ NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
         lens[i] = datumGetSize(d, attr->attbyval, attr->attlen);
         total_size += lens[i];
 
-        NRAM_TEST_INFO("Counting attr %d, len=%zu", key_attrs[i], lens[i]);
+        // NRAM_TEST_INFO("Counting attr %d, len=%zu", key_attrs[i], lens[i]);
     }
 
     // Allocate and fill the key structure
     tkey = palloc0(total_size);
+    tkey->tableOid = tuple->t_tableOid;
     tkey->nkeys = nkeys;
     tkey->length = total_size - sizeof(NRAMKeyData);
 
     pos = (char*) tkey + sizeof(NRAMKeyData);
     for (int i = 0; i < nkeys; i++) {
         Form_pg_attribute attr = TupleDescAttr(tupdesc, key_attrs[i] - 1);
-        NRAM_TEST_INFO("Serializing attr %d, len=%zu, offset=%ld",
-                       key_attrs[i], lens[i], pos - (char *)tkey->data);
+        // NRAM_TEST_INFO("Serializing attr %d, len=%zu, offset=%ld",
+        //                key_attrs[i], lens[i], pos - (char *)tkey->data);
 
         if (attr->attbyval) {
             memcpy(pos, &values[i], attr->attlen);  // safe for int, float, etc.
@@ -110,7 +111,7 @@ NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
         field->len = field_lens[i];
         Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
 
-        NRAM_TEST_INFO("Serializing attr %d, len=%u, offset=%ld", field->attnum, field->len, pos - (char *)val->data);
+        // NRAM_TEST_INFO("Serializing attr %d, len=%u, offset=%ld", field->attnum, field->len, pos - (char *)val->data);
         if ((pos + sizeof(NRAMValueFieldData) + field_lens[i]) > ((char *)val + total_size)) {
             elog(ERROR, "WRITE OUT OF BOUNDS at field %d! Trying to write beyond total_size=%zu", i, total_size);
         }
@@ -144,8 +145,8 @@ HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc) {
         Form_pg_attribute attr = TupleDescAttr(tupdesc, attidx);
 
         isnull[attidx] = (field->len == 0);
-        NRAM_TEST_INFO("Deserialized attr %d (attidx %d), len=%u, isnull=%d", 
-             field->attnum, attidx, field->len, isnull[attidx]);
+        // NRAM_TEST_INFO("Deserialized attr %d (attidx %d), len=%u, isnull=%d", 
+        //      field->attnum, attidx, field->len, isnull[attidx]);
 
         if (!isnull[attidx]) {
             char *field_data = (char *)field + sizeof(NRAMValueFieldData);
@@ -178,7 +179,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
         ptr += field_size;
     }
 
-    buf = malloc(total_len);
+    buf = palloc(total_len);
     memcpy(buf, &tvalue->nfields, sizeof(int16));
 
     ptr = tvalue->data;
@@ -198,7 +199,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
 
 NRAMValue tvalue_deserialize(char *buf, Size len) {
     int16 nfields;
-    NRAMValue tvalue = (NRAMValue) malloc(len);
+    NRAMValue tvalue = (NRAMValue) palloc(len);
 
     memcpy(&nfields, buf, sizeof(int16));
     memcpy(tvalue, buf, len);  // includes both nfields and all field data
@@ -206,10 +207,14 @@ NRAMValue tvalue_deserialize(char *buf, Size len) {
 }
 
 
+// Layout [Oid tableOid][int16 nkeys][Size length][data...]
 char *tkey_serialize(NRAMKey tkey, Size *out_len) {
-    *out_len = sizeof(int16) + sizeof(Size) + tkey->length;
-    char *buf = malloc(*out_len);
+    *out_len = sizeof(Oid) + sizeof(int16) + sizeof(Size) + tkey->length;
+    char *buf = palloc(*out_len);
     char *ptr = buf;
+
+    memcpy(ptr, &tkey->tableOid, sizeof(Oid));
+    ptr += sizeof(Oid);
 
     memcpy(ptr, &tkey->nkeys, sizeof(int16));
     ptr += sizeof(int16);
@@ -226,11 +231,15 @@ NRAMKey tkey_deserialize(char *buf, Size len) {
     char *ptr = buf;
     int16 nkeys;
     Size datalen;
+    Oid tableOid;
     NRAMKey tkey;
     
-    if (len < sizeof(int16) + sizeof(Size)) {
+    if (len < sizeof(Oid) + sizeof(int16) + sizeof(Size)) {
         elog(ERROR, "tkey_deserialize: input buffer too short");
     }
+
+    memcpy(&tableOid, ptr, sizeof(Oid));
+    ptr += sizeof(Oid);
 
     memcpy(&nkeys, ptr, sizeof(int16));
     ptr += sizeof(int16);
@@ -238,11 +247,12 @@ NRAMKey tkey_deserialize(char *buf, Size len) {
     memcpy(&datalen, ptr, sizeof(Size));
     ptr += sizeof(Size);
 
-    if (len < sizeof(int16) + sizeof(Size) + datalen) {
+    if (len < sizeof(Oid) + sizeof(int16) + sizeof(Size) + datalen) {
         elog(ERROR, "tkey_deserialize: inconsistent data length");
     }
 
-    tkey = (NRAMKey) malloc(sizeof(NRAMKeyData) + datalen);
+    tkey = (NRAMKey) palloc(sizeof(NRAMKeyData) + datalen);
+    tkey->tableOid = tableOid;
     tkey->nkeys = nkeys;
     tkey->length = datalen;
     memcpy(tkey->data, ptr, datalen);

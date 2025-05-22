@@ -14,6 +14,7 @@
 #include "nram.h"
 #include "utils/rel.h"
 #include "utils/syscache.h"
+#include "utils/memutils.h"
 
 #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
@@ -23,6 +24,21 @@ PG_MODULE_MAGIC;
  * Helper functions.
  * ------------------------------------------------------------------------
  */
+
+static KVEngine *current_session_engine = NULL;
+
+void nram_shutdown_session(void) {
+    NRAM_INFO();
+    if (current_session_engine) {
+        current_session_engine->destroy(current_session_engine);
+        current_session_engine = NULL;
+    }
+}
+
+void _PG_fini(void) {
+    nram_shutdown_session();
+}
+
 
 List *nram_get_primary_key_attrs(Relation rel) {
     NRAM_INFO();
@@ -71,29 +87,33 @@ List *nram_get_primary_key_attrs(Relation rel) {
 }
 
 static NRAMState *get_nram_state(Relation rel) {
-    NRAM_INFO();
-    NRAMState *state;
+    NRAMState *state = (NRAMState *) rel->rd_amcache;
 
-    if (rel->rd_amcache != NULL) return (NRAMState *)rel->rd_amcache;
+    if (state && IS_VALID_NRAM_STATE(state))
+        return state;
 
+    elog(INFO, "[NRAM] state missing or invalid in %s", CurrentMemoryContext->name);
+
+    MemoryContext oldctx = MemoryContextSwitchTo(CacheMemoryContext);
     state = palloc(sizeof(NRAMState));
+    state->magic = NRAM_STATE_MAGIC;
 
-    // Open RocksDB engine (e.g., globally or per-table instance)
-    state->engine = (KVEngine *) rocksengine_open();
+    if (!current_session_engine)
+        current_session_engine = (KVEngine *) rocksengine_open();
 
-    // Collect key attributes (e.g., from primary key)
-    // PostgreSQL Indexes are tightly coupled to HeapAM, thus we temporarily
-    // check the system catalog for primary keys.
+    state->engine = current_session_engine;
+
     List *indexatts = nram_get_primary_key_attrs(rel);
     state->nkeys = list_length(indexatts);
     state->key_attrs = palloc(sizeof(int) * state->nkeys);
-
     int i = 0;
     ListCell *lc;
-    foreach (lc, indexatts) state->key_attrs[i++] = lfirst_int(lc);
+    foreach (lc, indexatts)
+        state->key_attrs[i++] = lfirst_int(lc);
 
-    rel->rd_amcache = (void *)state;
-    return (NRAMState *)rel->rd_amcache;
+    rel->rd_amcache = (void *) state;
+    MemoryContextSwitchTo(oldctx);
+    return state;
 }
 
 /* ------------------------------------------------------------------------
@@ -103,6 +123,7 @@ static NRAMState *get_nram_state(Relation rel) {
 
 static const TupleTableSlotOps *nram_slot_callbacks(Relation relation) {
     NRAM_INFO();
+    get_nram_state(relation);
     return &TTSOpsHeapTuple;  // only use nram for heap tuples.
 }
 
@@ -111,32 +132,28 @@ static const TupleTableSlotOps *nram_slot_callbacks(Relation relation) {
  * ------------------------------------------------------------------------
  */
 
-//  /* ----------------
-//  *		initscan - scan code common to heap_beginscan and heap_rescan
-//  * ----------------
-//  */
-// static void
-// initscan(KVScanDesc scan, ScanKey key, bool keep_startblock)
-// {
-//     if (scan->rs_base.rs_flags & SO_TYPE_SEQSCAN)
-// 		pgstat_count_heap_scan(scan->rs_base.rs_rd);
-// }
-
 static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     int nkeys, struct ScanKeyData *key,
                                     ParallelTableScanDesc parallel_scan,
                                     uint32 flags) {
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
     NRAMState *state = get_nram_state(relation);
+    // TODO: consider table inside min key setting.
+    NRAMKey min_key = rocksengine_get_min_key(state->engine);
 
     NRAM_INFO();
     RelationIncrementReferenceCount(relation);
     scan->rs_base.rs_rd = relation;
-    scan->engine_iterator = rocksengine_create_iterator(&state->engine, true);
-    NRAM_INFO();
-
-    rocksengine_iterator_seek(scan->engine_iterator,
-                              rocksengine_get_min_key(&state->engine));
+    scan->engine_iterator = rocksengine_create_iterator(state->engine, true);
+    scan->rs_base.rs_snapshot = snapshot;
+    scan->rs_base.rs_nkeys = nkeys;
+    scan->rs_base.rs_key = key;
+    
+    if (min_key != NULL) {
+        // In case the table is not empty, seek the iterator starting point.
+        rocksengine_iterator_seek(scan->engine_iterator, min_key);
+        pfree(min_key);
+    }
 
     return (TableScanDesc)scan;
 }
@@ -149,6 +166,7 @@ static void nram_rescan(TableScanDesc sscan, struct ScanKeyData *key,
 
 static void nram_endscan(TableScanDesc sscan) {
     NRAM_INFO();
+    RelationDecrementReferenceCount(sscan->rs_rd);
     pfree(sscan);
 }
 
@@ -213,21 +231,20 @@ void nram_insert(Relation relation, HeapTuple tup, CommandId cid, int options,
     // Get tuple descriptor and key info
     TupleDesc tupdesc = RelationGetDescr(relation);
 
-    // Assume key_attrs and nkeys are part of your NRAMState
-    int *key_attrs = nram_state->key_attrs;
-    int nkeys = nram_state->nkeys;
-
     // Serialize key and value from tuple
     NRAMKey tkey =
-        nram_key_serialize_from_tuple(tup, tupdesc, key_attrs, nkeys);
+        nram_key_serialize_from_tuple(tup, tupdesc, nram_state->key_attrs, nram_state->nkeys);
     NRAMValue tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
     // Insert into RocksDB
     rocksengine_put(nram_state->engine, tkey, tvalue);
+    NRAM_TEST_INFO("The key has been put into rocksdb!");
 
     // Cleanup memory if necessary
-    pfree(tkey);    // if allocated via palloc or similar
-    pfree(tvalue);  // if allocated via palloc or similar
+    pfree(tkey);
+    pfree(tvalue);
+
+    ASSERT_VALID_NRAM_STATE(nram_state);
 }
 
 static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
@@ -243,9 +260,12 @@ static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
 
     /* Perform the insertion, and copy the resulting ItemPointer */
     nram_insert(relation, tuple, cid, options, bistate);
+    ItemPointerSet(&tuple->t_self, 0, 1);  // block = 0, offset = 1 for invalid block/offsets.
     ItemPointerCopy(&tuple->t_self, &slot->tts_tid);
 
-    if (shouldFree) pfree(tuple);
+    if (shouldFree) {
+        heap_freetuple(tuple);
+    }
 }
 
 static void nram_tuple_insert_speculative(Relation relation,
