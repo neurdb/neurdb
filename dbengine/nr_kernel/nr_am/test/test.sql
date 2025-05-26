@@ -10,6 +10,6 @@ CREATE TABLE x(a INT, b text, c text, PRIMARY KEY (a, b)) USING nram;
 INSERT INTO x VALUES (1, 'k1', 'v1');
 SELECT * from x;
 
--- SELECT * from x;
--- INSERT INTO x VALUES (2, 'k2', 'v2');
+-- -- SELECT * from x;
+-- -- INSERT INTO x VALUES (2, 'k2', 'v2');
 

@@ -7,6 +7,7 @@
 
 #include "rocksdb/c.h"
 #include "kv_storage/rocksengine.h"
+#include "utils/memutils.h"
 
 rocksdb_options_t *rocksengine_config_options(void) {
     rocksdb_options_t *rocksdb_options = rocksdb_options_create();
@@ -21,12 +22,13 @@ rocksdb_options_t *rocksengine_config_options(void) {
  */
 RocksEngine *rocksengine_open() {
     char *error = NULL;
+    RocksEngine *rocks_engine;
     rocksdb_options_t *rocksdb_options = rocksengine_config_options();
     rocksdb_t *rocksdb = rocksdb_open(rocksdb_options, ROCKSDB_PATH, &error);
     if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: open operation failed, %s", error)));
 
-    RocksEngine *rocks_engine = palloc(sizeof(RocksEngine));
+    rocks_engine = palloc(sizeof(RocksEngine));
     rocks_engine->rocksdb = rocksdb;
     rocks_engine->rocksdb_options = rocksdb_options;
 
@@ -62,26 +64,27 @@ void rocksengine_destroy(KVEngine *engine) {
 KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
                                               bool isforward) {
     RocksEngine *rocks_engine = (RocksEngine *)engine;
-    RocksEngineIterator *rocks_it = palloc(sizeof(RocksEngineIterator));
+    RocksEngineIterator *rocks_it = palloc0(sizeof(RocksEngineIterator));
+    KVEngineIterator *kv_it;
 
-    rocks_it->rocksdb_readoptions = rocksdb_readoptions_create();
     if (rocks_engine->rocksdb == NULL)
         elog(ERROR, "[NRAM] rocks_engine->rocksdb is NULL!");
-    rocks_it->rocksdb_iterator = rocksdb_create_iterator(
-        rocks_engine->rocksdb, rocks_it->rocksdb_readoptions);
+
+    rocks_it->rocksdb_readoptions = rocksdb_readoptions_create();
+    rocks_it->rocksdb_iterator = rocksdb_create_iterator(rocks_engine->rocksdb, rocks_it->rocksdb_readoptions);
+    if (rocks_it->rocksdb_iterator == NULL) {
+        rocksdb_readoptions_destroy(rocks_it->rocksdb_readoptions);
+        pfree(rocks_it);
+        elog(ERROR, "[NRAM] Failed to create RocksDB iterator.");
+    }
 
     /* Initialize the KVEngineIterator */
-    KVEngineIterator *kv_it = (KVEngineIterator *)rocks_it;
+    kv_it = (KVEngineIterator *)rocks_it;
     kv_it->destroy = rocksengine_iterator_destroy;
     kv_it->is_valid = rocksengine_iterator_is_valid;
     kv_it->get = rocksengine_iterator_get;
-    if (isforward) {
-        kv_it->next = rocksengine_iterator_next;
-        kv_it->seek = rocksengine_iterator_seek;
-    } else {
-        kv_it->next = rocksengine_iterator_prev;
-        kv_it->seek = rocksengine_iterator_seek_for_prev;
-    }
+    kv_it->next = isforward? rocksengine_iterator_next: rocksengine_iterator_prev;
+    kv_it->seek = isforward? rocksengine_iterator_seek: rocksengine_iterator_seek_for_prev;
     return kv_it;
 }
 
@@ -126,6 +129,9 @@ void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
                 
     if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
+    else
+        NRAM_TEST_INFO("The key has been put into rocksdb! The key content is %s\n", 
+        stringify_buff(key, key_length));
 
     rocksdb_writeoptions_destroy(rocksdb_writeoptions);
     pfree(serialized_value);
@@ -233,6 +239,7 @@ void rocksengine_iterator_get(KVEngineIterator *iterator, NRAMKey *tkey,
         (char *)rocksdb_iter_key(rocks_it->rocksdb_iterator, &key_length);
     char *value =
         (char *)rocksdb_iter_value(rocks_it->rocksdb_iterator, &value_length);
+    NRAM_TEST_INFO("The fetched key is %s\n", stringify_buff(key, key_length));
     *tkey = tkey_deserialize(key, key_length);
     *tvalue = tvalue_deserialize(value, value_length);
 }
@@ -248,11 +255,13 @@ NRAMKey rocksengine_get_min_key(KVEngine *engine) {
     NRAMKey tkey;
     NRAMValue tvalue;
 
+    rocksdb_iter_seek_to_first(rocks_it->rocksdb_iterator);
+
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it)) {
-        elog(WARNING, "The rocksengine iterator is invalid. Please check if the table is empty.");
+        elog(WARNING, "The rocksengine iterator is invalid. WTF Please check if the table is empty.");
+        rocksengine_iterator_destroy((KVEngineIterator *)rocks_it);
         return NULL;
     }
-    rocksdb_iter_seek_to_first(rocks_it->rocksdb_iterator);
     rocksengine_iterator_get((KVEngineIterator *)rocks_it, &tkey, &tvalue);
     rocksengine_iterator_destroy((KVEngineIterator *)rocks_it);
     return tkey;

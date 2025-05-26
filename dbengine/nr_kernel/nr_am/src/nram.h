@@ -5,6 +5,7 @@
 #include "kv_storage/rocksengine.h"
 #include "test/kv_test.h"
 
+
 #define NRAM_STATE_MAGIC 0x4E52414D  // 'NRAM'
 #define ASSERT_VALID_NRAM_STATE(ptr)                                            \
         if ((ptr) == NULL || (ptr)->magic != NRAM_STATE_MAGIC)                 \
@@ -17,6 +18,9 @@ typedef struct NRAMState {
     int nkeys;              // Number of primary key attributes
     int *key_attrs;         // Array of key attribute numbers
 } NRAMState;
+
+void nram_shutdown_session(void);
+List *nram_get_primary_key_attrs(Relation rel);
 
 
 #endif //NRAM_H
