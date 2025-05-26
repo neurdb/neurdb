@@ -1,3 +1,7 @@
+#include "nram.h"
+#include "utils/rel.h"
+#include "utils/syscache.h"
+#include "utils/memutils.h"
 #include "postgres.h"
 #include "fmgr.h"
 #include "access/tableam.h"
@@ -8,13 +12,7 @@
 #include "utils/builtins.h"
 #include "executor/tuptable.h"
 #include "utils/elog.h"
-#include "kv_access/kv.h"
-#include "kv_storage/rocksengine.h"
 #include "test/kv_test.h"
-#include "nram.h"
-#include "utils/rel.h"
-#include "utils/syscache.h"
-#include "utils/memutils.h"
 
 #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
@@ -41,11 +39,12 @@ void _PG_fini(void) {
 
 
 List *nram_get_primary_key_attrs(Relation rel) {
-    NRAM_INFO();
-
     List *index_list = RelationGetIndexList(rel);
     ListCell *lc;
     List *key_attrs = NIL;
+
+    NRAM_INFO();
+
     if (index_list == NIL) {
         // In Postgres, the tuple id is changed on every update,
         // making it an inefficient primary key for rocksdb. We currently
@@ -59,10 +58,11 @@ List *nram_get_primary_key_attrs(Relation rel) {
         Oid index_oid = lfirst_oid(lc);
         HeapTuple index_tuple =
             SearchSysCache1(INDEXRELID, ObjectIdGetDatum(index_oid));
+        Form_pg_index index_form;
         if (!HeapTupleIsValid(index_tuple))
             elog(ERROR, "cache lookup failed for index %u", index_oid);
 
-        Form_pg_index index_form = (Form_pg_index)GETSTRUCT(index_tuple);
+        index_form = (Form_pg_index)GETSTRUCT(index_tuple);
 
         if (index_form->indisprimary) {
             // NRAM_TEST_INFO("Embedding %d primary keys",
@@ -88,26 +88,31 @@ List *nram_get_primary_key_attrs(Relation rel) {
 
 static NRAMState *get_nram_state(Relation rel) {
     NRAMState *state = (NRAMState *) rel->rd_amcache;
+    MemoryContext oldctx;
+    List *indexatts;
+    int i = 0;
+    ListCell *lc;
 
     if (state && IS_VALID_NRAM_STATE(state))
         return state;
 
     elog(INFO, "[NRAM] state missing or invalid in %s", CurrentMemoryContext->name);
 
-    MemoryContext oldctx = MemoryContextSwitchTo(CacheMemoryContext);
+    oldctx = MemoryContextSwitchTo(CacheMemoryContext);
     state = palloc(sizeof(NRAMState));
     state->magic = NRAM_STATE_MAGIC;
 
-    if (!current_session_engine)
+    if (!current_session_engine) {
+        MemoryContextSwitchTo(TopMemoryContext);
         current_session_engine = (KVEngine *) rocksengine_open();
+        MemoryContextSwitchTo(CacheMemoryContext);
+    }
 
     state->engine = current_session_engine;
 
-    List *indexatts = nram_get_primary_key_attrs(rel);
+    indexatts = nram_get_primary_key_attrs(rel);
     state->nkeys = list_length(indexatts);
     state->key_attrs = palloc(sizeof(int) * state->nkeys);
-    int i = 0;
-    ListCell *lc;
     foreach (lc, indexatts)
         state->key_attrs[i++] = lfirst_int(lc);
 
@@ -140,7 +145,7 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     NRAMState *state = get_nram_state(relation);
     // TODO: consider table inside min key setting.
     NRAMKey min_key = rocksengine_get_min_key(state->engine);
-
+    MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
     NRAM_INFO();
     RelationIncrementReferenceCount(relation);
     scan->rs_base.rs_rd = relation;
@@ -151,10 +156,12 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     
     if (min_key != NULL) {
         // In case the table is not empty, seek the iterator starting point.
+        NRAM_TEST_INFO("The min key is %s \n", stringify_nram_key(min_key, relation->rd_att, state->key_attrs));
         rocksengine_iterator_seek(scan->engine_iterator, min_key);
         pfree(min_key);
     }
 
+    MemoryContextSwitchTo(oldctx);
     return (TableScanDesc)scan;
 }
 
@@ -170,29 +177,34 @@ static void nram_endscan(TableScanDesc sscan) {
     pfree(sscan);
 }
 
-static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
+static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
                              TupleTableSlot *slot) {
     NRAMKey tkey;
     NRAMValue tvalue;
     HeapTuple tuple;
-    KVScanDesc scan;
+    KVScanDesc sscan;
     KVEngineIterator *it;
+    NRAMState *nram_state;
+    MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
 
     NRAM_INFO();
     ExecClearTuple(slot);
-    scan = (KVScanDesc)sscan;
-    it = scan->engine_iterator;
+    sscan = (KVScanDesc)scan;
+    it = sscan->engine_iterator;
+    nram_state = get_nram_state(sscan->rs_base.rs_rd);
 
-    if (!rocksengine_iterator_is_valid(it)) return false;
+    if (!it->is_valid(it)) {
+        MemoryContextSwitchTo(oldctx);
+        return false;
+    }
 
-    rocksengine_iterator_get(it, &tkey, &tvalue);
-    tuple = deserialize_nram_value_to_tuple(tvalue, sscan->rs_rd->rd_att);
+    it->get(it, &tkey, &tvalue);
+    NRAM_TEST_INFO("The fetched key is %s \n", stringify_nram_key(tkey, sscan->rs_base.rs_rd->rd_att, nram_state->key_attrs));
+    tuple = deserialize_nram_value_to_tuple(tvalue, sscan->rs_base.rs_rd->rd_att);
     ExecStoreHeapTuple(tuple, slot, false);
 
-    if (ScanDirectionIsForward(direction))
-        rocksengine_iterator_next(it);
-    else
-        rocksengine_iterator_prev(it);
+    it->next(it);
+    MemoryContextSwitchTo(oldctx);
     return true;
 }
 
@@ -222,24 +234,25 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
  * ------------------------------------------------------------------------
  */
 
-void nram_insert(Relation relation, HeapTuple tup, CommandId cid, int options,
+static void nram_insert(Relation relation, HeapTuple tup, CommandId cid, int options,
                  BulkInsertState bistate) {
+    NRAMState *nram_state;
+    TupleDesc tupdesc;
+    NRAMKey tkey;
+    NRAMValue tvalue;
     NRAM_INFO();
 
-    // Extract table AM private data
-    NRAMState *nram_state = get_nram_state(relation);
-    // Get tuple descriptor and key info
-    TupleDesc tupdesc = RelationGetDescr(relation);
+    nram_state = get_nram_state(relation);
+    tupdesc = RelationGetDescr(relation);
 
     // Serialize key and value from tuple
-    NRAMKey tkey =
-        nram_key_serialize_from_tuple(tup, tupdesc, nram_state->key_attrs, nram_state->nkeys);
-    NRAMValue tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
+    tkey = nram_key_serialize_from_tuple(tup, tupdesc, nram_state->key_attrs, nram_state->nkeys);
+    tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
+    NRAM_TEST_INFO("The insert key is %s \n", stringify_nram_key(tkey, relation->rd_att, nram_state->key_attrs));
     // Insert into RocksDB
     rocksengine_put(nram_state->engine, tkey, tvalue);
-    NRAM_TEST_INFO("The key has been put into rocksdb!");
-
+    
     // Cleanup memory if necessary
     pfree(tkey);
     pfree(tvalue);
@@ -250,9 +263,9 @@ void nram_insert(Relation relation, HeapTuple tup, CommandId cid, int options,
 static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
                               CommandId cid, int options,
                               BulkInsertState bistate) {
-    NRAM_INFO();
     bool shouldFree = true;
     HeapTuple tuple = ExecFetchSlotHeapTuple(slot, true, &shouldFree);
+    NRAM_INFO();
 
     /* Update the tuple with table oid */
     slot->tts_tableOid = RelationGetRelid(relation);

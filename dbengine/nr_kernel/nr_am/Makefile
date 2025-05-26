@@ -30,8 +30,10 @@ debug:
 	$(MAKE) -f Makefile PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" SHLIB_LINK="$(SHLIB_LINK)" CFLAGS="-g -O0 -Wall"
 
 test:
+	rm -rf ${NEURDBPATH}/psql/data/pg_rocksdb/
 	make clean
 	make -j
 	sudo make install
 	psql neurdb -f ./test/clean.sql
 	psql neurdb -f ./test/test.sql
+   

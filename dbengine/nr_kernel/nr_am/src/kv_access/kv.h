@@ -29,8 +29,10 @@ typedef struct NRAMKeyData {
 
 typedef NRAMKeyData *NRAMKey;
 
+char *stringify_nram_key(NRAMKey key, TupleDesc desc, int *key_attrs);
 NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc, int *key_attrs, int nkeys);
 void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs, Datum *values);
+char *stringify_buff(char *buf, int len);
 char *tkey_serialize(NRAMKey tkey, Size *out_len);
 NRAMKey tkey_deserialize(char *buf, Size len);
 

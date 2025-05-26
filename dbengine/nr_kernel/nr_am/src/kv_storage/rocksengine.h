@@ -25,8 +25,8 @@ typedef struct RocksEngineIterator {
 } RocksEngineIterator;
 
 /* RocksDB engine */
+RocksEngine* rocksengine_open(void);
 rocksdb_options_t* rocksengine_config_options(void);
-RocksEngine* rocksengine_open();
 void rocksengine_destroy(KVEngine *engine);
 KVEngineIterator *rocksengine_create_iterator(KVEngine *engine, bool isforward);
 
