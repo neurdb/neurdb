@@ -158,7 +158,7 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     
     if (scan->min_key != NULL) {
         // In case the table is not empty, seek the iterator starting point.
-        NRAM_TEST_INFO("The min key is %s \n", stringify_nram_key(scan->min_key, relation->rd_att, state->key_attrs));
+        // NRAM_TEST_INFO("The min key is %s \n", stringify_nram_key(scan->min_key, relation->rd_att, state->key_attrs));
         rocksengine_iterator_seek(scan->engine_iterator, scan->min_key);
     }
 
