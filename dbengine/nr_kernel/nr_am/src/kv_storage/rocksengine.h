@@ -10,6 +10,7 @@
 #include "rocksdb/c.h"
 #include "kv_access/kv.h"
 
+#define NRAM_TABLE_KEY_LENGTH 4
 
 typedef struct RocksEngine {
     KVEngine engine;
@@ -35,10 +36,11 @@ void rocksengine_delete(KVEngine *engine, NRAMKey tkey);
 NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey);
 
 /* Utility functions */
-NRAMKey rocksengine_get_min_key(KVEngine *engine);
-NRAMKey rocksengine_get_max_key(KVEngine *engine);
+NRAMKey rocksengine_get_min_key(KVEngine *engine, Oid table_id);
+NRAMKey rocksengine_get_max_key(KVEngine *engine, Oid table_id);
 
 /* RocksDB iterator */
+void rocksengine_fetch_table_key(Oid table_id, char** min_key, char** max_key);
 void rocksengine_iterator_destroy(KVEngineIterator *iterator);
 void rocksengine_iterator_seek(KVEngineIterator *iterator, NRAMKey tkey);
 void rocksengine_iterator_seek_for_prev(KVEngineIterator *iterator, NRAMKey tkey);

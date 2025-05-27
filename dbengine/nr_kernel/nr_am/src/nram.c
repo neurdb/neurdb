@@ -144,21 +144,22 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
     NRAMState *state = get_nram_state(relation);
     // TODO: consider table inside min key setting.
-    NRAMKey min_key = rocksengine_get_min_key(state->engine);
     MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
     NRAM_INFO();
     RelationIncrementReferenceCount(relation);
+    scan->min_key = rocksengine_get_min_key(state->engine, relation->rd_id);
+    scan->max_key = rocksengine_get_max_key(state->engine, relation->rd_id);
+
     scan->rs_base.rs_rd = relation;
     scan->engine_iterator = rocksengine_create_iterator(state->engine, true);
     scan->rs_base.rs_snapshot = snapshot;
     scan->rs_base.rs_nkeys = nkeys;
     scan->rs_base.rs_key = key;
     
-    if (min_key != NULL) {
+    if (scan->min_key != NULL) {
         // In case the table is not empty, seek the iterator starting point.
-        NRAM_TEST_INFO("The min key is %s \n", stringify_nram_key(min_key, relation->rd_att, state->key_attrs));
-        rocksengine_iterator_seek(scan->engine_iterator, min_key);
-        pfree(min_key);
+        NRAM_TEST_INFO("The min key is %s \n", stringify_nram_key(scan->min_key, relation->rd_att, state->key_attrs));
+        rocksengine_iterator_seek(scan->engine_iterator, scan->min_key);
     }
 
     MemoryContextSwitchTo(oldctx);
@@ -172,9 +173,13 @@ static void nram_rescan(TableScanDesc sscan, struct ScanKeyData *key,
 }
 
 static void nram_endscan(TableScanDesc sscan) {
+    KVScanDesc scan = (KVScanDesc)sscan;
     NRAM_INFO();
     RelationDecrementReferenceCount(sscan->rs_rd);
-    pfree(sscan);
+    pfree(scan->min_key);
+    pfree(scan->max_key);
+    rocksengine_iterator_destroy(scan->engine_iterator);
+    pfree(scan);
 }
 
 static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
@@ -184,14 +189,15 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     HeapTuple tuple;
     KVScanDesc sscan;
     KVEngineIterator *it;
-    NRAMState *nram_state;
     MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
 
     NRAM_INFO();
     ExecClearTuple(slot);
     sscan = (KVScanDesc)scan;
     it = sscan->engine_iterator;
-    nram_state = get_nram_state(sscan->rs_base.rs_rd);
+    if (direction != ForwardScanDirection)
+        elog(WARNING, "[NRAM]: currently we only support forward scan direction. Got %d", direction);
+
 
     if (!it->is_valid(it)) {
         MemoryContextSwitchTo(oldctx);
@@ -199,7 +205,13 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     }
 
     it->get(it, &tkey, &tvalue);
-    NRAM_TEST_INFO("The fetched key is %s \n", stringify_nram_key(tkey, sscan->rs_base.rs_rd->rd_att, nram_state->key_attrs));
+    if (tkey->tableOid != scan->rs_rd->rd_id) {
+        // The end of table. Currently, we only support forward scan.
+        Assert(tkey->tableOid > scan->rs_rd->rd_id);
+        MemoryContextSwitchTo(oldctx);
+        return false;
+    }
+    // NRAM_TEST_INFO("The fetched key is %s \n", stringify_nram_key(tkey, sscan->rs_base.rs_rd->rd_att, nram_state->key_attrs));
     tuple = deserialize_nram_value_to_tuple(tvalue, sscan->rs_base.rs_rd->rd_att);
     ExecStoreHeapTuple(tuple, slot, false);
 
@@ -249,7 +261,7 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid, int opt
     tkey = nram_key_serialize_from_tuple(tup, tupdesc, nram_state->key_attrs, nram_state->nkeys);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
-    NRAM_TEST_INFO("The insert key is %s \n", stringify_nram_key(tkey, relation->rd_att, nram_state->key_attrs));
+    // NRAM_TEST_INFO("The insert key is %s \n", stringify_nram_key(tkey, relation->rd_att, nram_state->key_attrs));
     // Insert into RocksDB
     rocksengine_put(nram_state->engine, tkey, tvalue);
     
