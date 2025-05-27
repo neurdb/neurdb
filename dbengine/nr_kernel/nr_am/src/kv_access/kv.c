@@ -108,8 +108,6 @@ NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
     for (int i = 0; i < nkeys; i++) {
         Form_pg_attribute attr = TupleDescAttr(tupdesc, key_attrs[i] - 1);
         datumSerialize(values[i], isnull[i], attr->attbyval, attr->attlen, &pos);
-        NRAM_TEST_INFO("Serializing attr %d, len=%zu, offset=%ld",
-                       key_attrs[i], lens[i], pos - (char *)tkey - sizeof(NRAMKeyData));
     }
 
     if (pos - (char*)tkey != total_size)
