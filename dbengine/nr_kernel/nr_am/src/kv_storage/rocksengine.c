@@ -15,6 +15,20 @@ rocksdb_options_t *rocksengine_config_options(void) {
     return rocksdb_options;
 }
 
+
+/* ------------------------------------------------------------------------
+ * rocksengine_fetch_table_key
+ * The table range is [min_key, max_key).
+ * ------------------------------------------------------------------------
+ */
+void rocksengine_fetch_table_key(Oid table_id, char** min_key, char** max_key) {
+    *min_key = palloc(NRAM_TABLE_KEY_LENGTH);
+    memcpy(*min_key, &table_id, NRAM_TABLE_KEY_LENGTH);
+    *max_key = palloc(NRAM_TABLE_KEY_LENGTH);
+    table_id += 1;
+    memcpy(*max_key, &table_id, NRAM_TABLE_KEY_LENGTH);
+}
+
 /* ------------------------------------------------------------------------
  * rocksengine_open
  * Open a RocksDB instance.
@@ -129,9 +143,6 @@ void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
                 
     if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
-    else
-        NRAM_TEST_INFO("The key has been put into rocksdb! The key content is %s\n", 
-        stringify_buff(key, key_length));
 
     rocksdb_writeoptions_destroy(rocksdb_writeoptions);
     pfree(serialized_value);
@@ -239,7 +250,6 @@ void rocksengine_iterator_get(KVEngineIterator *iterator, NRAMKey *tkey,
         (char *)rocksdb_iter_key(rocks_it->rocksdb_iterator, &key_length);
     char *value =
         (char *)rocksdb_iter_value(rocks_it->rocksdb_iterator, &value_length);
-    NRAM_TEST_INFO("The fetched key is %s\n", stringify_buff(key, key_length));
     *tkey = tkey_deserialize(key, key_length);
     *tvalue = tvalue_deserialize(value, value_length);
 }
@@ -249,13 +259,15 @@ void rocksengine_iterator_get(KVEngineIterator *iterator, NRAMKey *tkey,
  * Get the minimum key from the RocksDB engine.
  * ------------------------------------------------------------------------
  */
-NRAMKey rocksengine_get_min_key(KVEngine *engine) {
+NRAMKey rocksengine_get_min_key(KVEngine *engine, Oid table_id) {
     RocksEngineIterator *rocks_it =
         (RocksEngineIterator *)rocksengine_create_iterator(engine, true);
     NRAMKey tkey;
     NRAMValue tvalue;
+    char* min_key, *max_key;
 
-    rocksdb_iter_seek_to_first(rocks_it->rocksdb_iterator);
+    rocksengine_fetch_table_key(table_id, &min_key, &max_key);
+    rocksdb_iter_seek(rocks_it->rocksdb_iterator, min_key, NRAM_TABLE_KEY_LENGTH);
 
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it)) {
         elog(WARNING, "The rocksengine iterator is invalid. WTF Please check if the table is empty.");
@@ -272,16 +284,19 @@ NRAMKey rocksengine_get_min_key(KVEngine *engine) {
  * Get the maximum key from the RocksDB engine.
  * ------------------------------------------------------------------------
  */
-NRAMKey rocksengine_get_max_key(KVEngine *engine) {
+NRAMKey rocksengine_get_max_key(KVEngine *engine, Oid table_id) {
     RocksEngineIterator *rocks_it =
         (RocksEngineIterator *)rocksengine_create_iterator(engine, false);
     NRAMKey tkey;
     NRAMValue tvalue;
+    char* min_key, *max_key;
+
+    rocksengine_fetch_table_key(table_id, &min_key, &max_key);
+    rocksdb_iter_seek_for_prev(rocks_it->rocksdb_iterator, max_key, NRAM_TABLE_KEY_LENGTH);
 
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it))
         return NULL;
 
-    rocksdb_iter_seek_to_last(rocks_it->rocksdb_iterator);
     rocksengine_iterator_get((KVEngineIterator *)rocks_it, &tkey, &tvalue);
     rocksengine_iterator_destroy((KVEngineIterator *)rocks_it);
     return tkey;

@@ -31,7 +31,7 @@ typedef NRAMKeyData *NRAMKey;
 
 char *stringify_nram_key(NRAMKey key, TupleDesc desc, int *key_attrs);
 NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc, int *key_attrs, int nkeys);
-void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs, Datum *values);
+void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs, Datum *values, bool *is_null);
 char *stringify_buff(char *buf, int len);
 char *tkey_serialize(NRAMKey tkey, Size *out_len);
 NRAMKey tkey_deserialize(char *buf, Size len);
@@ -86,8 +86,8 @@ typedef struct KVEngine {
     void (*delete)(struct KVEngine *, NRAMKey);
 
     /* utility functions */
-    NRAMKey (*get_min_key)(struct KVEngine *);
-    NRAMKey (*get_max_key)(struct KVEngine *);
+    NRAMKey (*get_min_key)(struct KVEngine *, Oid table_id);
+    NRAMKey (*get_max_key)(struct KVEngine *, Oid table_id);
 } KVEngine;
 
 /*
@@ -100,6 +100,8 @@ typedef struct KVEngine {
 typedef struct KVScanDescData {
     TableScanDescData rs_base;
     KVEngineIterator* engine_iterator;
+    NRAMKey min_key;
+    NRAMKey max_key;
 } KVScanDescData;
 
 typedef KVScanDescData *KVScanDesc;

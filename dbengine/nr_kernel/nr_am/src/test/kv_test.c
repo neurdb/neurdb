@@ -59,7 +59,7 @@ void run_kv_serialization_test(void) {
 
     // Serialize key with id as key
     key = nram_key_serialize_from_tuple(tuple, desc, key_attrs, nkey_attrs);
-    nram_key_deserialize(key, desc, key_attrs, deserialized_key_val);
+    nram_key_deserialize(key, desc, key_attrs, deserialized_key_val, decoded_isnull);
 
     if (DatumGetInt32(deserialized_key_val[0]) != 42 || 
     strcmp(TextDatumGetCString(deserialized_key_val[1]), "hello") != 0)
