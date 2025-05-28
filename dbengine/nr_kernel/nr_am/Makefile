@@ -4,8 +4,9 @@ ENGINEPATH = /code/neurdb-dev/dbengine/
 MODULE_big = nram
 OBJS = \
 	${EXTPATH}/src/nram.o \
-	${EXTPATH}/src/kv_access/kv.o \
-	${EXTPATH}/src/kv_storage/rocksengine.o \
+	${EXTPATH}/src/nram_access/kv.o \
+	${EXTPATH}/src/nram_xact/xact.o \
+	${EXTPATH}/src/nram_storage/rocksengine.o \
 	${EXTPATH}/src/test/kv_test.o
 
 
@@ -35,5 +36,6 @@ test:
 	make -j
 	sudo make install
 	psql neurdb -f ./test/clean.sql
-	psql neurdb -f ./test/test.sql
-   
+	psql neurdb -f ./test/init.sql
+	psql neurdb -f ./test/table_scan.sql
+	psql neurdb -f ./test/xact_basic.sql

@@ -8,7 +8,7 @@
 #define ROCKSENGINE_H
 
 #include "rocksdb/c.h"
-#include "kv_access/kv.h"
+#include "nram_access/kv.h"
 
 #define NRAM_TABLE_KEY_LENGTH 4
 

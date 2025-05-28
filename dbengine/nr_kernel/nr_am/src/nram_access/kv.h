@@ -18,7 +18,9 @@
 
 #define ROCKSDB_PATH "pg_rocksdb"
 #define NRAM_TEST_INFO(fmt, ...) \
-    elog(INFO, "[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+    elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
+
 
 typedef struct NRAMKeyData {
     int16 nkeys;
