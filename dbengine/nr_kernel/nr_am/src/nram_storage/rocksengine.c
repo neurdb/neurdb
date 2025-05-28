@@ -6,7 +6,7 @@
  */
 
 #include "rocksdb/c.h"
-#include "kv_storage/rocksengine.h"
+#include "nram_storage/rocksengine.h"
 #include "utils/memutils.h"
 
 rocksdb_options_t *rocksengine_config_options(void) {
@@ -270,7 +270,6 @@ NRAMKey rocksengine_get_min_key(KVEngine *engine, Oid table_id) {
     rocksdb_iter_seek(rocks_it->rocksdb_iterator, min_key, NRAM_TABLE_KEY_LENGTH);
 
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it)) {
-        elog(WARNING, "The rocksengine iterator is invalid. WTF Please check if the table is empty.");
         rocksengine_iterator_destroy((KVEngineIterator *)rocks_it);
         return NULL;
     }

@@ -95,7 +95,6 @@ NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
         isnull[i] = isnull_i;
         lens[i] = datumEstimateSpace(values[i], isnull[i], attr->attbyval, attr->attlen);
         total_size += lens[i];
-        // NRAM_TEST_INFO("Counting attr %d, len=%zu", key_attrs[i], lens[i]);
     }
 
     // Allocate and fill the key structure

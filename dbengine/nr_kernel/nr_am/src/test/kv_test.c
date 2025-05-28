@@ -1,4 +1,4 @@
-#include "kv_access/kv.h"
+#include "nram_access/kv.h"
 #include "test/kv_test.h"
 #include "access/htup_details.h"
 #include "utils/builtins.h"

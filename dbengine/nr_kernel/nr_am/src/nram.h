@@ -1,8 +1,9 @@
 #ifndef NRAM_H
 #define NRAM_H
 
-#include "kv_access/kv.h"
-#include "kv_storage/rocksengine.h"
+#include "nram_access/kv.h"
+#include "nram_storage/rocksengine.h"
+#include "nram_xact/xact.h"
 #include "test/kv_test.h"
 
 
@@ -11,6 +12,7 @@
         if ((ptr) == NULL || (ptr)->magic != NRAM_STATE_MAGIC)                 \
             elog(ERROR, "[NRAM] Invalid or corrupted NRAMState pointer: %p", (void *)(ptr));
 #define IS_VALID_NRAM_STATE(ptr) ((ptr) != NULL && (ptr)->magic == NRAM_STATE_MAGIC)
+#define NRAM_XACT_BEGIN_BLOCK refresh_nram_xact()
 
 typedef struct NRAMState {
     uint32 magic;           // DEBUG bits for nram state, check memory corruptions.
