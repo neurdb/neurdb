@@ -75,9 +75,7 @@ void run_kv_serialization_test(void) {
     pfree(key_copy);
 
 
-    NRAM_TEST_INFO("debug");
     value_buf = tvalue_serialize(encoded_value, &value_len);
-    NRAM_TEST_INFO("debug");
     value_copy = tvalue_deserialize(value_buf, value_len);
 
     if (value_copy->nfields != encoded_value->nfields || 

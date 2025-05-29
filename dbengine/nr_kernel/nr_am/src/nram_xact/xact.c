@@ -93,7 +93,7 @@ void add_read_set(NRAMXactState state, NRAMKey key, TimestampTz version) {
     opt->key = key;
     opt->version = version;
     opt->type = XACT_OP_READ;
-    opt->value = NIL;
+    opt->value = NULL;
     state->read_set = lappend(state->read_set, opt);
 }
 
