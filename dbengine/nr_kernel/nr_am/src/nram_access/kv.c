@@ -178,7 +178,7 @@ HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc) {
 char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
     char *ptr = (char *)tvalue + offsetof(NRAMValueData, data);
     char *buf, *write_ptr;
-    Size data_len = 0;
+    Size data_len = 0, total_len;
 
     for (int i = 0; i < tvalue->nfields; i++) {
         NRAMValueFieldData *f = (NRAMValueFieldData *)ptr;
@@ -187,7 +187,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
         ptr += field_size;
     }
 
-    Size total_len = sizeof(TransactionId) + sizeof(int16) + data_len;
+    total_len = sizeof(TransactionId) + sizeof(int16) + data_len;
 
     buf = palloc(total_len);
     write_ptr = buf;
@@ -215,6 +215,9 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
 NRAMValue tvalue_deserialize(char *buf, Size len) {
     TransactionId tid;
     int16 nfields;
+    char *ptr;
+    Size data_len, total_len;
+    NRAMValue tvalue;
 
     // Read header
     memcpy(&tid, buf, sizeof(TransactionId));
@@ -223,14 +226,14 @@ NRAMValue tvalue_deserialize(char *buf, Size len) {
     memcpy(&nfields, buf, sizeof(int16));
     buf += sizeof(int16);
 
-    Size data_len = len - sizeof(TransactionId) - sizeof(int16);
-    Size total_len = offsetof(NRAMValueData, data) + data_len;
+    data_len = len - sizeof(TransactionId) - sizeof(int16);
+    total_len = offsetof(NRAMValueData, data) + data_len;
 
-    NRAMValue tvalue = (NRAMValue)palloc(total_len);
+    tvalue = (NRAMValue)palloc(total_len);
     tvalue->tid = tid;
     tvalue->nfields = nfields;
 
-    char *ptr = (char *)tvalue + offsetof(NRAMValueData, data);
+    ptr = (char *)tvalue + offsetof(NRAMValueData, data);
     memcpy(ptr, buf, data_len);
 
     return tvalue;
