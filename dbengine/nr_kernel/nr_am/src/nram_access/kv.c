@@ -7,7 +7,7 @@
 
 
 char *stringify_nram_key(NRAMKey key, TupleDesc desc, int *key_attrs) {
-    char *pos = (char *)key + sizeof(NRAMKeyData);
+    char *pos = (char *)key + offsetof(NRAMKeyData, data);
     char *end = pos + key->length;
     StringInfoData buf;
     bool *is_null = NULL;
@@ -62,14 +62,14 @@ char *stringify_buff(char *buf, int len) {
 
 void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs,
                           Datum *values, bool *is_null) {
-    char *pos = (char *)tkey + sizeof(NRAMKeyData);
+    char *pos = (char *)tkey + offsetof(NRAMKeyData, data);
 
     for (int i = 0; i < tkey->nkeys; i++) values[i] = datumRestore(&pos, &is_null[i]);
 
-    if (pos - (char *)tkey - sizeof(NRAMKeyData) != tkey->length)
+    if (pos - (char *)tkey - offsetof(NRAMKeyData, data) != tkey->length)
         elog(ERROR, "[nram_key_deserialize]: miss alignment the offset is expected: %zu, real: %d",
                 tkey->length,
-                (int)(pos - (char *)tkey - sizeof(NRAMKeyData)));
+                (int)(pos - (char *)tkey - offsetof(NRAMKeyData, data)));
 }
 
 NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
@@ -77,7 +77,7 @@ NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
     Datum *values = palloc(sizeof(Datum) * nkeys);
     bool *isnull = palloc(sizeof(bool) * nkeys);
     Size *lens = palloc(sizeof(Size) * nkeys);
-    Size total_size = sizeof(NRAMKeyData);
+    Size total_size = offsetof(NRAMKeyData, data);
     NRAMKey tkey;
     char *pos;
 
@@ -101,9 +101,9 @@ NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
     tkey = palloc(total_size);
     tkey->tableOid = tuple->t_tableOid;
     tkey->nkeys = nkeys;
-    tkey->length = total_size - sizeof(NRAMKeyData);
+    tkey->length = total_size - offsetof(NRAMKeyData, data);
 
-    pos = (char *)tkey + sizeof(NRAMKeyData);
+    pos = (char *)tkey + offsetof(NRAMKeyData, data);
     for (int i = 0; i < nkeys; i++) {
         Form_pg_attribute attr = TupleDescAttr(tupdesc, key_attrs[i] - 1);
         datumSerialize(values[i], isnull[i], attr->attbyval, attr->attlen, &pos);
@@ -127,19 +127,20 @@ NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
     heap_deform_tuple(tuple, tupdesc, values, isnull);
 
     // Estimate space needed
-    total_size = sizeof(NRAMValueData);
+    total_size = offsetof(NRAMValueData, data);
     lens = palloc(sizeof(Size) * tupdesc->natts);
 
     for (int i = 0; i < tupdesc->natts; i++) {
         Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
         lens[i] = datumEstimateSpace(values[i], isnull[i], attr->attbyval, attr->attlen);
-        total_size += lens[i] + sizeof(NRAMValueFieldData);
+        total_size += lens[i] + offsetof(NRAMValueFieldData, data);
     }
 
     val = (NRAMValueData *)palloc0(total_size);
     val->nfields = tupdesc->natts;
+    val->tid = GetTopTransactionId();
 
-    pos = (char*)val + sizeof(NRAMValueData);
+    pos = (char*)val + offsetof(NRAMValueData, data);
     for (int i = 0; i < tupdesc->natts; i++) {
         NRAMValueFieldData *field = (NRAMValueFieldData *)pos;
         Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
@@ -148,7 +149,7 @@ NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
         field->type_oid = TupleDescAttr(tupdesc, i)->atttypid;
         field->len = lens[i];
 
-        pos += sizeof(NRAMValueFieldData);
+        pos += offsetof(NRAMValueFieldData, data);
         datumSerialize(values[i], isnull[i], attr->attbyval, attr->attlen, &pos);
     }
 
@@ -165,9 +166,9 @@ HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc) {
     Datum *values = palloc0(sizeof(Datum) * val->nfields);
     bool *is_null = palloc0(sizeof(bool) * val->nfields);
 
-    char *pos = (char*)val + sizeof(NRAMValueData);
+    char *pos = (char*)val + offsetof(NRAMValueData, data);
     for (int i = 0; i < val->nfields; i++) {
-        pos += sizeof(NRAMValueFieldData);
+        pos += offsetof(NRAMValueFieldData, data);
         values[i] = datumRestore(&pos, &is_null[i]);
     }
 
@@ -175,38 +176,63 @@ HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc) {
 }
 
 char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
-    char *ptr = (char*)tvalue + sizeof(NRAMValueData), *buf, *write_ptr;
-    Size total_len = sizeof(int16);  // nfields
+    char *ptr = (char *)tvalue + offsetof(NRAMValueData, data);
+    char *buf, *write_ptr;
+    Size data_len = 0;
+
     for (int i = 0; i < tvalue->nfields; i++) {
         NRAMValueFieldData *f = (NRAMValueFieldData *)ptr;
-        Size field_size = sizeof(NRAMValueFieldData) + f->len;
-        total_len += field_size;
+        Size field_size = offsetof(NRAMValueFieldData, data) + f->len;
+        data_len += field_size;
         ptr += field_size;
     }
 
-    buf = palloc(total_len);
-    memcpy(buf, &tvalue->nfields, sizeof(int16));
+    Size total_len = sizeof(TransactionId) + sizeof(int16) + data_len;
 
-    ptr = (char*)tvalue + sizeof(NRAMValueData);
-    write_ptr = buf + sizeof(int16);
+    buf = palloc(total_len);
+    write_ptr = buf;
+
+    memcpy(write_ptr, &tvalue->tid, sizeof(TransactionId));
+    write_ptr += sizeof(TransactionId);
+
+    memcpy(write_ptr, &tvalue->nfields, sizeof(int16));
+    write_ptr += sizeof(int16);
+
+    ptr = (char *)tvalue + offsetof(NRAMValueData, data);
     for (int i = 0; i < tvalue->nfields; i++) {
         NRAMValueFieldData *f = (NRAMValueFieldData *)ptr;
-        Size field_size = sizeof(NRAMValueFieldData) + f->len;
+        Size field_size = offsetof(NRAMValueFieldData, data) + f->len;
         memcpy(write_ptr, f, field_size);
         ptr += field_size;
         write_ptr += field_size;
     }
 
+    Assert(write_ptr == buf + total_len);  // safety check
     *out_len = total_len;
     return buf;
 }
 
 NRAMValue tvalue_deserialize(char *buf, Size len) {
+    TransactionId tid;
     int16 nfields;
-    NRAMValue tvalue = (NRAMValue)palloc(len);
+
+    // Read header
+    memcpy(&tid, buf, sizeof(TransactionId));
+    buf += sizeof(TransactionId);
 
     memcpy(&nfields, buf, sizeof(int16));
-    memcpy(tvalue, buf, len);  // includes both nfields and all field data
+    buf += sizeof(int16);
+
+    Size data_len = len - sizeof(TransactionId) - sizeof(int16);
+    Size total_len = offsetof(NRAMValueData, data) + data_len;
+
+    NRAMValue tvalue = (NRAMValue)palloc(total_len);
+    tvalue->tid = tid;
+    tvalue->nfields = nfields;
+
+    char *ptr = (char *)tvalue + offsetof(NRAMValueData, data);
+    memcpy(ptr, buf, data_len);
+
     return tvalue;
 }
 
@@ -227,7 +253,7 @@ char *tkey_serialize(NRAMKey tkey, Size *out_len) {
     memcpy(ptr, &tkey->length, sizeof(Size));
     ptr += sizeof(Size);
 
-    memcpy(ptr, (char*)tkey + sizeof(NRAMKeyData), tkey->length);
+    memcpy(ptr, (char*)tkey + offsetof(NRAMKeyData, data), tkey->length);
     return buf;
 }
 
@@ -256,10 +282,10 @@ NRAMKey tkey_deserialize(char *buf, Size len) {
             len, sizeof(Oid) + sizeof(int16) + sizeof(Size) + datalen);
     }
 
-    tkey = (NRAMKey)palloc(sizeof(NRAMKeyData) + datalen);
+    tkey = (NRAMKey)palloc(offsetof(NRAMKeyData, data) + datalen);
     tkey->tableOid = tableOid;
     tkey->nkeys = nkeys;
     tkey->length = datalen;
-    memcpy((char*)tkey + sizeof(NRAMKeyData), ptr, datalen);
+    memcpy((char*)tkey + offsetof(NRAMKeyData, data), ptr, datalen);
     return tkey;
 }

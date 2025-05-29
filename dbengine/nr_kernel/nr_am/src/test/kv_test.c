@@ -75,13 +75,17 @@ void run_kv_serialization_test(void) {
     pfree(key_copy);
 
 
+    NRAM_TEST_INFO("debug");
     value_buf = tvalue_serialize(encoded_value, &value_len);
+    NRAM_TEST_INFO("debug");
     value_copy = tvalue_deserialize(value_buf, value_len);
 
-    if (value_copy->nfields != encoded_value->nfields ||
-        memcmp(value_copy->data, encoded_value->data,
-               value_len - offsetof(NRAMValueData, data)) != 0)
-        elog(ERROR, "tvalue_serialize/deserialized failed!");
+    if (value_copy->nfields != encoded_value->nfields || 
+        value_copy->tid != encoded_value->tid ||
+        memcmp(value_copy->data, encoded_value->data, value_len - offsetof(NRAMValueData, data)) != 0)
+            elog(ERROR, "tvalue_serialize/deserialized failed!\nExp: %d,%u,%s\nGot: %d,%u,%s",
+                encoded_value->nfields, encoded_value->tid, stringify_buff(encoded_value->data, value_len - offsetof(NRAMValueData, data)), 
+                value_copy->nfields, value_copy->tid, stringify_buff(value_copy->data, value_len - offsetof(NRAMValueData, data)));
 
     pfree(value_buf);
     pfree(value_copy);

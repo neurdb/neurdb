@@ -15,6 +15,7 @@
 #include "postgres.h"
 #include "access/relscan.h"
 #include "executor/tuptable.h"
+#include "access/xact.h"
 
 #define ROCKSDB_PATH "pg_rocksdb"
 #define NRAM_TEST_INFO(fmt, ...) \
@@ -47,6 +48,7 @@ typedef struct NRAMValueFieldData {
 } NRAMValueFieldData;
 
 typedef struct NRAMValueData {
+    TransactionId tid;    // The transaction that has created this data version.   
     int16 nfields;
     char data[FLEXIBLE_ARRAY_MEMBER];  // Consecutive NRAMValueFieldData blocks
 } NRAMValueData;

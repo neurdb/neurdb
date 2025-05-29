@@ -1,5 +1,6 @@
 #include "nram_xact/xact.h"
 #include "utils/memutils.h"
+#include "nram_storage/rocksengine.h"
 
 /* ------------------------------------------------------------------------
  * Transaction related codes.
@@ -10,7 +11,7 @@ static bool xact_hook_registered = false;
 static NRAMXactState current_nram_xact = NULL;
 
 void refresh_nram_xact(void) {
-    TransactionId tid = GetTopTransactionIdIfAny();
+    TransactionId tid = GetTopTransactionId();
     if (current_nram_xact == NULL || current_nram_xact->tid != tid)
         current_nram_xact = NewNRAMXactState(tid);
 }
@@ -79,9 +80,47 @@ NRAMXactState NewNRAMXactState(TransactionId tid) {
     res->tid = tid;
     // res->begin_ts = GetCurrentTransactionStartTimestamp();
     res->validated = false;
-    res->read_set = NULL;
-    res->write_set = NULL;
+    res->read_set = NIL;
+    res->write_set = NIL;
 
     MemoryContextSwitchTo(oldCtx);
     return res;
+}
+
+
+void add_read_set(NRAMXactState state, NRAMKey key, TimestampTz version) {
+    NRAMXactOpt opt = palloc(sizeof(NRAMXactOptData));
+    opt->key = key;
+    opt->version = version;
+    opt->type = XACT_OP_READ;
+    opt->value = NIL;
+    state->read_set = lappend(state->read_set, opt);
+}
+
+void add_write_set(NRAMXactState state, NRAMKey key, NRAMValue value) {
+    NRAMXactOpt opt = palloc(sizeof(NRAMXactOptData));
+    opt->key = key;
+    opt->version = state->tid;
+    opt->value = value;
+    opt->type = XACT_OP_WRITE;
+
+    state->write_set = lappend(state->write_set, opt);
+}
+
+bool validate_read_set(KVEngine* engine, NRAMXactState state) {
+    ListCell *cell;
+    foreach(cell, state->read_set) {
+        NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
+        NRAMValue cur_val = rocksengine_get(engine, opt->key);
+
+        // Example logic: check value still exists (or matches stored snapshot if you have it)
+        if (cur_val == NULL) {
+            NRAM_TEST_INFO("validation failed: key vanished");
+            return false;
+        }
+
+        // Optional: if you stored value snapshot in opt->value during read, compare here
+        // if (!nram_value_equal(cur_val, opt->value)) return false;
+    }
+    return true;
 }

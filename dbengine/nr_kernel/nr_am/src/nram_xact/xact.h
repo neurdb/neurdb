@@ -10,10 +10,19 @@
 #include "postgres.h"
 #include "nram_access/kv.h"
 #include "access/xact.h"
+#include "nodes/pg_list.h"
 
+typedef enum XactOpType {
+    XACT_OP_READ,
+    XACT_OP_WRITE,
+    XACT_OP_DELETE,
+    XACT_OP_INSERT,
+    XACT_OP_SCAN
+} XactOpType;
 
 typedef struct NRAMXactOptData {
-    // CmdType type;
+    XactOpType type;
+    TimestampTz version;
     NRAMKey *key;
     NRAMValue *value;
 } NRAMXactOptData;
@@ -26,8 +35,9 @@ typedef struct NRAMXactStateData {
     TimestampTz begin_ts;
     // rocksdb_snapshot_t *snapshot;
 
-    NRAMXactOpt *read_set;     // key hash -> version or just existence
-    NRAMXactOpt *write_set;    // key hash -> new value or pending write
+    List *read_set;     // key hash -> version or just existence
+    List *write_set;
+    // All updates are bufferred, and only flushed during transaction commit.
 } NRAMXactStateData;
 
 typedef NRAMXactStateData *NRAMXactState;
