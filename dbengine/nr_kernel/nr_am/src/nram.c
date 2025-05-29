@@ -21,8 +21,6 @@ PG_MODULE_MAGIC;
  * ------------------------------------------------------------------------
  */
 
-static KVEngine *current_session_engine = NULL;
-
 void nram_shutdown_session(void) {
     NRAM_INFO();
     if (current_session_engine) {
@@ -90,14 +88,7 @@ static NRAMState *get_nram_state(Relation rel) {
     oldctx = MemoryContextSwitchTo(CacheMemoryContext);
     state = palloc(sizeof(NRAMState));
     state->magic = NRAM_STATE_MAGIC;
-
-    if (!current_session_engine) {
-        MemoryContextSwitchTo(TopMemoryContext);
-        current_session_engine = (KVEngine *)rocksengine_open();
-        MemoryContextSwitchTo(CacheMemoryContext);
-    }
-
-    state->engine = current_session_engine;
+    state->engine = GetCurrentEngine();
 
     indexatts = nram_get_primary_key_attrs(rel);
     state->nkeys = list_length(indexatts);
@@ -200,6 +191,7 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     }
 
     it->get(it, &tkey, &tvalue);
+    add_read_set(GetCurrentNRAMXact(), tkey, tvalue->tid);
     if (tkey->tableOid != scan->rs_rd->rd_id) {
         // The end of table. Currently, we only support forward scan.
         Assert(tkey->tableOid > scan->rs_rd->rd_id);
@@ -260,6 +252,7 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
                                          nram_state->nkeys);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
+    add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
     rocksengine_put(nram_state->engine, tkey, tvalue);
 
     // Cleanup memory if necessary

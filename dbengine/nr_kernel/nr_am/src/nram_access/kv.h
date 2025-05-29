@@ -94,6 +94,9 @@ typedef struct KVEngine {
     NRAMKey (*get_max_key)(struct KVEngine *, Oid table_id);
 } KVEngine;
 
+extern KVEngine *current_session_engine;
+extern KVEngine *GetCurrentEngine(void);
+
 /*
  * ----------------------------------------------------------------
  * KVScanDescData
