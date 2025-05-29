@@ -4,6 +4,19 @@
 #include "utils/builtins.h"
 #include "utils/lsyscache.h"
 #include "funcapi.h"
+#include "nram_storage/rocksengine.h"
+
+KVEngine *current_session_engine = NULL;
+
+
+KVEngine* GetCurrentEngine(void) {
+    if (!current_session_engine) {
+        MemoryContextSwitchTo(TopMemoryContext);
+        current_session_engine = (KVEngine *)rocksengine_open();
+        MemoryContextSwitchTo(CacheMemoryContext);
+    }
+    return current_session_engine;
+}
 
 
 char *stringify_nram_key(NRAMKey key, TupleDesc desc, int *key_attrs) {

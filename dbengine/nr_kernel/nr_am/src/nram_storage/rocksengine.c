@@ -121,7 +121,7 @@ NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey) {
         ereport(ERROR, (errmsg("RocksDB: get operation failed, %s", error)));
     tvalue = tvalue_deserialize(value, value_lenth);
     rocksdb_readoptions_destroy(rocksdb_readoptions);
-    pfree(value);
+    free(value);
     return tvalue;
 }
 
@@ -177,7 +177,6 @@ void rocksengine_iterator_destroy(KVEngineIterator *iterator) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *)iterator;
     rocksdb_readoptions_destroy(rocks_it->rocksdb_readoptions);
     rocksdb_iter_destroy(rocks_it->rocksdb_iterator);
-    pfree(rocks_it);
     rocks_it = NULL;
 }
 
