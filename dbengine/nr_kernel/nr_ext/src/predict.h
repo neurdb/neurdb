@@ -2,7 +2,7 @@
 #define PREDICT_H
 
 #include "catalog/objectaddress.h"
-#include "neurdb.h"
+#include "neurdb/guc.h"
 #include "nodes/parsenodes.h"
 #include "parser/parse_node.h"
 #include "tcop/dest.h"

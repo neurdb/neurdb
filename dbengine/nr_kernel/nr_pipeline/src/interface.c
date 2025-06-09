@@ -7,6 +7,7 @@
 #include <utils/hsearch.h>
 #include <executor/spi.h>
 #include <math.h>
+#include <neurdb/predict.h>
 
 #include "labeling/encode.h"
 #include "utils/metric/time_metric.h"
@@ -69,39 +70,41 @@ static void _clean_up_common(NrWebsocket *ws, char *table_name,
 }
 
 /**
- * The last class id map. This is a temporary solution to allow inference to 
+ * The last class id map. This is a temporary solution to allow inference to
  * get the class id map.
  */
 static HTAB *last_class_id_map = NULL;
 static List *last_id_class_map = NULL;
 
 /**
- * @brief Make a map from class names to class id. 
- * 
+ * @brief Make a map from class names to class id.
+ *
  * TODO: store the map in the database
  * @param table_name name of the target table
  * @param label_col_name name of the label column in the target table
  * @param class_id_map (out) the map from class names to class id, using HTAB
  * @param id_class_map (out) the map from class id to class names, using List
- * @return 
+ * @return
  */
-static void make_class_id_map(const char *table_name, const char *label_col_name, 
-                              HTAB **class_id_map, List **id_class_map) {
+static void make_class_id_map(const char *table_name,
+                              const char *label_col_name, HTAB **class_id_map,
+                              List **id_class_map) {
   StringInfoData query;
   initStringInfo(&query);
 
-  appendStringInfo(&query, "SELECT DISTINCT %s FROM %s ORDER BY %s ASC", 
+  appendStringInfo(&query, "SELECT DISTINCT %s FROM %s ORDER BY %s ASC",
                    label_col_name, table_name, label_col_name);
 
   SPI_execute(query.data, true, 0);
 
-  HASHCTL		ctl;
+  HASHCTL ctl;
   memset(&ctl, 0, sizeof(ctl));
   ctl.keysize = sizeof(char *);
   ctl.entrysize = sizeof(int);
 
-  HTAB *cimap = hash_create("neurdb class id map", 1024, &ctl, HASH_ELEM | HASH_STRINGS);
-  List *icmap = NIL; 
+  HTAB *cimap =
+      hash_create("neurdb class id map", 1024, &ctl, HASH_ELEM | HASH_STRINGS);
+  List *icmap = NIL;
 
   int num_class = 0;
   bool found = 0;
@@ -112,15 +115,16 @@ static void make_class_id_map(const char *table_name, const char *label_col_name
     num_class = SPI_processed;
 
     for (int i = 0; i < SPI_processed; i++) {
-      char *label = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
+      char *label =
+          SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
 
-      int *id = hash_search(cimap, (void *) label, HASH_ENTER, &found);
+      int *id = hash_search(cimap, (void *)label, HASH_ENTER, &found);
       if (!found) {
         *id = i;
       }
 
       oldcxt = MemoryContextSwitchTo(TopMemoryContext);
-      icmap = lappend(icmap, makeString(label));
+      icmap = lappend(icmap, makeString(pstrdup(label)));
       MemoryContextSwitchTo(oldcxt);
     }
   }
@@ -174,23 +178,32 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 
   if (type == PREDICT_CLASS) {
     if (last_class_id_map == NULL) {
-      elog(ERROR, "last_class_id_map is NULL. Currently, inference is not "
-                  "supported if training is not done within the same session. "
-                  "Please train the model in this session first.");
+      elog(ERROR,
+           "last_class_id_map is NULL. Currently, inference is not "
+           "supported if training is not done within the same session. "
+           "Please train the model in this session first.");
     }
     n_class = hash_get_num_entries(last_class_id_map);
-
     elog(DEBUG1, "n_class: %d", n_class);
+
+    if (n_class != 2) {
+      elog(ERROR,
+           "only binary classification is supported for now. The label column "
+           "has %d classes",
+           n_class);
+    }
+
     for (int i = 0; i < n_class; i++) {
-      elog(DEBUG1, "class %d: %s", i, ((String *) list_nth(last_id_class_map, i))->sval);
+      elog(DEBUG1, "class %d: %s", i,
+           ((String *)list_nth(last_id_class_map, i))->sval);
     }
   }
 
   // init dataset
   InferenceTaskSpec *inference_task_spec = malloc(sizeof(InferenceTaskSpec));
   init_inference_task_spec(inference_task_spec, model_name, batch_size,
-                           n_batches, "metrics", 80, nfeat, n_features,
-                           n_class, model_id);
+                           n_batches, "metrics", 80, nfeat, n_features, n_class,
+                           model_id);
   nws_send_task(ws, T_INFERENCE, table_name, inference_task_spec);
   free_inference_task_spec(inference_task_spec);
 
@@ -262,7 +275,13 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   char *presult = pstrdup(ws->result);
   free(ws->result);
 
-  PG_RETURN_CSTRING(presult);
+  NeurDBInferenceResult *result = palloc(sizeof(NeurDBInferenceResult));
+  // TODO: infer the type of the result
+  result->typeoid = TEXTOID;
+  result->result = presult;
+  result->id_class_map = last_id_class_map;
+
+  PG_RETURN_POINTER(result);
 }
 
 /**
@@ -300,7 +319,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
   int n_batches_train, n_batches_evaluate, n_batches_test;
   _get_n_batches_train_eval_test(n_batches, &n_batches_train,
                                  &n_batches_evaluate, &n_batches_test);
-  
+
   SPI_connect();
 
   int n_class = -1;
@@ -310,21 +329,24 @@ Datum nr_train(PG_FUNCTION_ARGS) {
       hash_destroy(last_class_id_map);
       list_free_deep(last_id_class_map);
     }
-    make_class_id_map(table_name, target, &last_class_id_map, &last_id_class_map);
+    make_class_id_map(table_name, target, &last_class_id_map,
+                      &last_id_class_map);
     n_class = hash_get_num_entries(last_class_id_map);
 
     elog(DEBUG1, "n_class: %d", n_class);
     for (int i = 0; i < n_class; i++) {
-      elog(DEBUG1, "class %d: %s", i, ((String *) list_nth(last_id_class_map, i))->sval);
+      elog(DEBUG1, "class %d: %s", i,
+           ((String *)list_nth(last_id_class_map, i))->sval);
     }
   }
 
   // init dataset
   TrainTaskSpec *train_task_spec = malloc(sizeof(TrainTaskSpec));
-  init_train_task_spec(
-      train_task_spec, model_name, batch_size, epoch, n_batches_train,
-      n_batches_evaluate, n_batches_test, 0.001, "optimizer", "loss", "metrics",
-      80, char_array2str(feature_names, n_features), target, nfeat, n_features, n_class);
+  init_train_task_spec(train_task_spec, model_name, batch_size, epoch,
+                       n_batches_train, n_batches_evaluate, n_batches_test,
+                       0.001, "optimizer", "loss", "metrics", 80,
+                       char_array2str(feature_names, n_features), target, nfeat,
+                       n_features, n_class);
   nws_send_task(ws, T_TRAIN, table_name, train_task_spec);
   free_train_task_spec(train_task_spec);
 

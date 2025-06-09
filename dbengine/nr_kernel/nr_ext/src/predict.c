@@ -12,6 +12,7 @@
 #include "fmgr.h"
 #include "utils/builtins.h"
 #include "utils/array.h"
+#include "neurdb/predict.h"
 #include "nodes/primnodes.h"
 #include "nodes/makefuncs.h"
 
@@ -55,12 +56,17 @@ set_false_to_all_params(NullableDatum *args, int size)
 }
 
 void
-parseDoubles(const char *str, void (*callback) (TupOutputState *, double), TupOutputState *tstate)
+parseDoubles(const NeurDBInferenceResult * result,
+			 void (*callback) (TupOutputState *, double, List *, bool),
+			 TupOutputState *tstate,
+			 bool enable_debug)
 {
 	char		buffer[64];
 
 	/* Buffer to accumulate characters */
 	int			bufIndex = 0;
+
+	const char *str = result->result;
 
 	while (*str)
 	{
@@ -76,7 +82,7 @@ parseDoubles(const char *str, void (*callback) (TupOutputState *, double), TupOu
 
 				/* Convert to double */
 				/* printf("Found double: %f\n", value); */
-				callback(tstate, value);
+				callback(tstate, value, result->id_class_map, enable_debug);
 
 				/* Reset buffer index */
 				bufIndex = 0;
@@ -101,12 +107,12 @@ parseDoubles(const char *str, void (*callback) (TupOutputState *, double), TupOu
 		double		value = atof(buffer);
 
 		/* printf("Found double: %f\n", value); */
-		callback(tstate, value);
+		callback(tstate, value, result->id_class_map, enable_debug);
 	}
 }
 
 void
-insert_float8_to_tup_output(TupOutputState *tstate, float8 value)
+insert_float8_to_tup_output(TupOutputState *tstate, float8 value, List *id_class_map, bool enable_debug)
 {
 	Datum		values[1];
 	bool		nulls[1] = {0};
@@ -115,29 +121,67 @@ insert_float8_to_tup_output(TupOutputState *tstate, float8 value)
 	do_tup_output(tstate, values, nulls);
 }
 
+void
+insert_cstring_to_tup_output(TupOutputState *tstate, float8 value, List *id_class_map, bool enable_debug)
+{
+	Datum		values[2];
+	bool		nulls[2] = {0, 0};
+
+	String *str_value = NULL;
+
+	/* TODO: support multiclass classification */
+	if (value > 0)
+	{
+		values[0] = CStringGetTextDatum(strVal(list_nth(id_class_map, 1)));
+	}
+	else
+	{
+		values[0] = CStringGetTextDatum(strVal(list_nth(id_class_map, 0)));
+	}
+
+	if (enable_debug)
+	{
+		values[1] = Float8GetDatum(value);
+	}
+
+	do_tup_output(tstate, values, nulls);
+}
+
+
 static void
-return_table(DestReceiver *dest, const char *result_string)
+return_table(DestReceiver *dest, const NeurDBInferenceResult * result)
 {
 	TupOutputState *tstate;
 	TupleDesc	tupdesc;
 	ListCell   *lc;
 
-	tupdesc = CreateTemplateTupleDesc(1);
-	TupleDescInitEntry(tupdesc, (AttrNumber) 1, "result", FLOAT8OID, -1, 0);
+	if (result->typeoid == FLOAT8OID)
+	{
+		tupdesc = CreateTemplateTupleDesc(1);
+		TupleDescInitEntry(tupdesc, (AttrNumber) 1, "result", result->typeoid, -1, 0);
 
-	/*
-	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 2, "dummy2", TEXTOID,
-	 * -1, 0);
-	 */
+		tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
 
-	/*
-	 * TupleDescInitBuiltinEntry(tupdesc, (AttrNumber) 3, "dummy3", INT8OID,
-	 * -1, 0);
-	 */
+		parseDoubles(result, &insert_float8_to_tup_output, tstate, false);
+	}
+	else if (result->typeoid == TEXTOID)
+	{
+		tupdesc = CreateTemplateTupleDesc(2);
+		TupleDescInitEntry(tupdesc, (AttrNumber) 1, "result", result->typeoid, -1, 0);
+		TupleDescInitEntry(tupdesc, (AttrNumber) 2, "_dbg_value", FLOAT8OID, -1, 0);
 
-	tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
-	parseDoubles(result_string, &insert_float8_to_tup_output, tstate);
+
+		tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
+
+		parseDoubles(result, &insert_cstring_to_tup_output, tstate, true);
+	}
+	else
+	{
+		elog(ERROR, "Unsupported data type");
+	}
+
 	end_tup_output(tstate);
+
 }
 
 char	  **
@@ -204,7 +248,7 @@ get_column_names(const char *schema_name, const char *table_name, const char *ex
 * needs to be revamped to be more general.
 */
 void
-exec_udf(PredictType type, 
+exec_udf(PredictType type,
 		 const char *model,
 		 const char *table,
 		 const char *trainColumns,
@@ -288,7 +332,7 @@ exec_udf(PredictType type,
 		LOCAL_FCINFO(trainingFCInfo, FUNC_MAX_ARGS);
 		Datum		trainingResult;
 
-		Oid			trainingFuncOid = LookupFuncName(list_make1(makeString(trainingFuncName)), 
+		Oid			trainingFuncOid = LookupFuncName(list_make1(makeString(trainingFuncName)),
 													 TRAINING_PARAMS_ARRAY_SIZE, trainingArgTypes, false);
 
 		if (!OidIsValid(trainingFuncOid))
@@ -336,7 +380,7 @@ exec_udf(PredictType type,
 	LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS);
 	Datum		inferenceResult;
 
-	Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)), 
+	Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)),
 												  INFERENCE_PARAMS_ARRAY_SIZE, inferenceArgTypes, false);
 
 	if (!OidIsValid(inferenceFuncOid))
@@ -362,10 +406,9 @@ exec_udf(PredictType type,
 	inferenceResult = FunctionCallInvoke(inferenceFCInfo);
 	if (!inferenceFCInfo->isnull)
 	{
-		char	   *resultCString = DatumGetCString(inferenceResult);
+		NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(inferenceResult);
 
-		/* elog(DEBUG2, "Inference result: %s", resultCString); */
-		return_table(dest, resultCString);
+		return_table(dest, result);
 	}
 	else
 	{
@@ -393,11 +436,11 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	initStringInfo(&targetColumn);
 	initStringInfo(&trainOnColumns);
 
-	// if (stmt->kind == PREDICT_CLASS)
-	// {
-	// 	elog(ERROR, "PREDICT CLASS OF is not implemented");
-	// 	return InvalidObjectAddress;
-	// }
+	/* if (stmt->kind == PREDICT_CLASS) */
+	/* { */
+	/* elog(ERROR, "PREDICT CLASS OF is not implemented"); */
+	/* return InvalidObjectAddress; */
+	/* } */
 
 	/*
 	 * Extract the column names from targetList and combine them into a single
