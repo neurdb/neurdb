@@ -11,7 +11,7 @@ class BuilderBase(ABC):
     """
     Abstract base class for model builders.
     Any subclass must implement the train_model and evaluate_model methods.
-    
+
     Args:
         args (argparse.Namespace): The arguments for the model. Will be set to `self._args`.
     """
