@@ -1,6 +1,6 @@
 #include "postgres.h"
 
-#include "neurdb.h"
+#include "neurdb/guc.h"
 
 /**
  * Configurable parameters
