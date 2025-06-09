@@ -46,7 +46,7 @@
 #include "libpq/auth.h"
 #include "libpq/libpq.h"
 #include "libpq/scram.h"
-#include "neurdb.h"
+#include "neurdb/guc.h"
 #include "nodes/queryjumble.h"
 #include "optimizer/cost.h"
 #include "optimizer/geqo.h"

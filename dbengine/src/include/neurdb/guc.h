@@ -1,5 +1,5 @@
-#ifndef NEURDB_H
-#define NEURDB_H
+#ifndef NR_GUC_H
+#define NR_GUC_H
 
 #include "postgres.h"
 
