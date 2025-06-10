@@ -73,7 +73,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                 KVEngine* engine = GetCurrentEngine();
                 ListCell *cell;
                 // foreach(cell, current_nram_xact->write_set) {
-                //     NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);                    
+                //     NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
 	            //     // SET_LOCKTAG_NRAM_OPT(tag, opt->key);
                 //     LockAcquire(&tag, ExclusiveLock, true, false);
                 // }
@@ -140,7 +140,7 @@ NRAMXactState NewNRAMXactState(TransactionId xact_id) {
 
     oldCtx = MemoryContextSwitchTo(TopTransactionContext);
     res = palloc(sizeof(NRAMXactStateData));
-    
+
     res->xact_id = xact_id;
     // res->begin_ts = GetCurrentTransactionStartTimestamp();
     res->validated = false;

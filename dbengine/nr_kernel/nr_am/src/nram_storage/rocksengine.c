@@ -140,7 +140,7 @@ void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
 
     rocksdb_put(rocks_engine->rocksdb, rocksdb_writeoptions, key, key_length,
                 serialized_value, serialized_length, &error);
-                
+
     if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
 

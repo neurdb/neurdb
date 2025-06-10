@@ -18,10 +18,10 @@
  * @field plan - the SPI plan
  */
 typedef struct SpiConnection {
-  bool connected;
-  bool prepared;
-  bool returned;
-  SPIPlanPtr plan;
+    bool connected;
+    bool prepared;
+    bool returned;
+    SPIPlanPtr plan;
 } SpiConnection;
 
 /**
