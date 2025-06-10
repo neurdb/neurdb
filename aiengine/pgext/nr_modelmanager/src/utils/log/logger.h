@@ -15,9 +15,9 @@
  * @field duration - the duration of the log record in milliseconds
  */
 typedef struct {
-  struct timespec start;
-  struct timespec end;
-  double duration;  // in milliseconds
+    struct timespec start;
+    struct timespec end;
+    double duration;  // in milliseconds
 } Timer;
 
 /**
@@ -26,8 +26,8 @@ typedef struct {
  * @field timer - the timer for the log message
  */
 typedef struct {
-  char *message;
-  Timer timer;
+    char *message;
+    Timer timer;
 } LogRecord;
 
 /**
@@ -37,9 +37,9 @@ typedef struct {
  * @field capacity - the capacity of the log records
  */
 typedef struct {
-  LogRecord *records;
-  int size;
-  int capacity;
+    LogRecord *records;
+    int size;
+    int capacity;
 } Logger;
 
 // ******** Logger APIs ********

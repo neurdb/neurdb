@@ -17,11 +17,11 @@ void run_kv_serialization_test(void);
 void run_kv_serialization_test(void) {
     TupleDesc desc;
     HeapTuple tuple, decoded_tuple;
-    
+
     Datum values[2];
     Datum decoded_values[2];
     uint64_t key_value;
-    
+
     NRAMKey key, key_copy;
     NRAMValue encoded_value, value_copy;
     // int key_attrs[] = {1, 2};
@@ -55,7 +55,7 @@ void run_kv_serialization_test(void) {
 
     if (DatumGetInt32(decoded_values[0]) != 42 ||
         strcmp(TextDatumGetCString(decoded_values[1]), "hello") != 0)
-        elog(ERROR, "Value encode/decode failed, (%d, %s) != (42, hello)", 
+        elog(ERROR, "Value encode/decode failed, (%d, %s) != (42, hello)",
             DatumGetInt32(decoded_values[0]), TextDatumGetCString(decoded_values[1]));
 
     // Serialize key with id as key
@@ -70,7 +70,7 @@ void run_kv_serialization_test(void) {
     key_copy = tkey_deserialize(key_buf, key_len);
     if (key_copy->tableOid != 0 || key_copy->tid != key_value)
         elog(ERROR, "tkey_serialize/deserialized failed!");
-    
+
     pfree(key_buf);
     pfree(key_copy);
 
@@ -78,13 +78,13 @@ void run_kv_serialization_test(void) {
     value_buf = tvalue_serialize(encoded_value, &value_len);
     value_copy = tvalue_deserialize(value_buf, value_len);
 
-    if (value_copy->nfields != encoded_value->nfields || 
+    if (value_copy->nfields != encoded_value->nfields ||
         value_copy->xact_id != encoded_value->xact_id ||
         memcmp(value_copy->data, encoded_value->data, value_len - offsetof(NRAMValueData, data)) != 0)
             elog(ERROR, "tvalue_serialize/deserialized failed!\nExp: %d,%u,%s\nGot: %d,%u,%s",
-                encoded_value->nfields, encoded_value->xact_id, stringify_buff(encoded_value->data, value_len - offsetof(NRAMValueData, data)), 
+                encoded_value->nfields, encoded_value->xact_id, stringify_buff(encoded_value->data, value_len - offsetof(NRAMValueData, data)),
                 value_copy->nfields, value_copy->xact_id, stringify_buff(value_copy->data, value_len - offsetof(NRAMValueData, data)));
 
     pfree(value_buf);
-    pfree(value_copy);    
+    pfree(value_copy);
 }

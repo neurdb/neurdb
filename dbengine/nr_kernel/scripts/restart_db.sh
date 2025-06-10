@@ -16,4 +16,3 @@ $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data -l logfile start || {
     echo "Failed to start the NEURDB PostgreSQL server"
     exit 1
 }
-

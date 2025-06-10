@@ -48,7 +48,7 @@ typedef struct NRAMValueFieldData {
 } NRAMValueFieldData;
 
 typedef struct NRAMValueData {
-    TransactionId xact_id;    // The transaction that has created this data version.   
+    TransactionId xact_id;    // The transaction that has created this data version.
     int16 nfields;
     char data[FLEXIBLE_ARRAY_MEMBER];  // Consecutive NRAMValueFieldData blocks
 } NRAMValueData;

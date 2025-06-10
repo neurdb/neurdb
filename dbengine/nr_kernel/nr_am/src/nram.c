@@ -103,7 +103,7 @@ static void nram_endscan(TableScanDesc sscan) {
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
     RelationDecrementReferenceCount(sscan->rs_rd);
-    
+
     if (scan->min_key)
         pfree(scan->min_key);
     if (scan->max_key)
