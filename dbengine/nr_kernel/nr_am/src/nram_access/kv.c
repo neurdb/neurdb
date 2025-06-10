@@ -3,8 +3,51 @@
 #include "fmgr.h"
 #include "utils/builtins.h"
 #include "utils/lsyscache.h"
+#include "utils/timestamp.h"
 #include "funcapi.h"
 #include "nram_storage/rocksengine.h"
+#include "miscadmin.h"
+
+
+/* ------------------------------------------------------------------------
+ * NRAM tid key generator APIs.
+ * ------------------------------------------------------------------------
+ */
+
+static pg_atomic_uint64 local_tid_seq;
+
+void nram_init_tid(void) {
+    pg_atomic_init_u64(&local_tid_seq, 0);
+}
+
+// The logical tid format is [auto inc counter] [process id]
+static uint64_t nram_generate_logical_tid(void) {
+    uint32 counter = (uint32)(pg_atomic_fetch_add_u64(&local_tid_seq, 1) & 0xFFFFFFFF);
+    uint16 pid_part = (uint16)(MyProcPid & 0xFFFF);
+    return ((uint64_t)counter << 16) | pid_part;
+}
+
+static void nram_encode_tid(uint64_t logical_tid, ItemPointer tid) {
+    BlockNumber block = (logical_tid >> 16) & 0xFFFFFFFF;
+    OffsetNumber offset = logical_tid & 0xFFFF;
+    Assert(offset != InvalidOffsetNumber);
+    ItemPointerSet(tid, block, offset);
+}
+
+uint64_t nram_decode_tid(const ItemPointer tid) {
+    return ((uint64_t)BlockIdGetBlockNumber(&tid->ip_blkid) << 16) | tid->ip_posid;
+}
+
+void nram_generate_tid(ItemPointer tid) {
+    uint64_t logical_tid = nram_generate_logical_tid();
+    nram_encode_tid(logical_tid, tid);
+}
+
+
+/* ------------------------------------------------------------------------
+ * NRAM per session rocksdb engine APIs.
+ * ------------------------------------------------------------------------
+ */
 
 KVEngine *current_session_engine = NULL;
 
@@ -18,46 +61,11 @@ KVEngine* GetCurrentEngine(void) {
     return current_session_engine;
 }
 
-
-char *stringify_nram_key(NRAMKey key, TupleDesc desc, int *key_attrs) {
-    char *pos = (char *)key + offsetof(NRAMKeyData, data);
-    char *end = pos + key->length;
-    StringInfoData buf;
-    bool *is_null = NULL;
-
-    initStringInfo(&buf);
-    appendStringInfo(&buf,
-                     "[NRAMKey] nkeys = %d, length = %zu, tableOid = %u, ",
-                     key->nkeys, key->length, key->tableOid);
-    is_null = palloc(key->nkeys * sizeof(bool));
-
-    for (int i = 0; i < key->nkeys; i++) {
-        int attnum = key_attrs[i] - 1;
-        Form_pg_attribute attr = TupleDescAttr(desc, attnum);
-        Datum val = datumRestore(&pos, &is_null[i]);
-        Oid typoutput;
-        char *value_str;
-        bool typIsVarlena;
-
-
-        if (is_null[i]) {
-            appendStringInfo(&buf, "  {Key[%d] (attnum=%d, type=%u): NIL} ", i,
-                            attnum + 1, attr->atttypid);
-        } else {
-            getTypeOutputInfo(attr->atttypid, &typoutput, &typIsVarlena);
-            value_str = OidOutputFunctionCall(typoutput, val);
-            appendStringInfo(&buf, "  {Key[%d] (attnum=%d, type=%u): %s} ", i,
-                            attnum + 1, attr->atttypid, value_str);
-        }
-    }
-
-    pfree(is_null);
-    if (pos != end)
-        elog(ERROR,
-                "Buffer overflow: miss alignment the offset is %d\nThe current string is %s",
-                (int)(pos-end), buf.data);
-
-    return buf.data;
+NRAMKey nram_key_from_tid(Oid tableOid, ItemPointer tid) {
+    NRAMKey tkey = palloc0(sizeof(NRAMKeyData));
+    tkey->tableOid = tableOid;
+    tkey->tid = nram_decode_tid(tid);
+    return tkey;
 }
 
 char *stringify_buff(char *buf, int len) {
@@ -71,63 +79,6 @@ char *stringify_buff(char *buf, int len) {
     }
 
     return out.data;
-}
-
-void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs,
-                          Datum *values, bool *is_null) {
-    char *pos = (char *)tkey + offsetof(NRAMKeyData, data);
-
-    for (int i = 0; i < tkey->nkeys; i++) values[i] = datumRestore(&pos, &is_null[i]);
-
-    if (pos - (char *)tkey - offsetof(NRAMKeyData, data) != tkey->length)
-        elog(ERROR, "[nram_key_deserialize]: miss alignment the offset is expected: %zu, real: %d",
-                tkey->length,
-                (int)(pos - (char *)tkey - offsetof(NRAMKeyData, data)));
-}
-
-NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc,
-                                      int *key_attrs, int nkeys) {
-    Datum *values = palloc(sizeof(Datum) * nkeys);
-    bool *isnull = palloc(sizeof(bool) * nkeys);
-    Size *lens = palloc(sizeof(Size) * nkeys);
-    Size total_size = offsetof(NRAMKeyData, data);
-    NRAMKey tkey;
-    char *pos;
-
-    // Collect key values and compute lengths
-    for (int i = 0; i < nkeys; i++) {
-        int attnum = key_attrs[i] - 1;  // key_attrs is 1-based
-        bool isnull_i;
-        Datum d = heap_getattr(tuple, attnum + 1, tupdesc, &isnull_i);
-        Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum);
-
-        if (isnull_i)
-            elog(ERROR, "Primary key attribute %d is NULL", key_attrs[i]);
-
-        values[i] = d;
-        isnull[i] = isnull_i;
-        lens[i] = datumEstimateSpace(values[i], isnull[i], attr->attbyval, attr->attlen);
-        total_size += lens[i];
-    }
-
-    // Allocate and fill the key structure
-    tkey = palloc(total_size);
-    tkey->tableOid = tuple->t_tableOid;
-    tkey->nkeys = nkeys;
-    tkey->length = total_size - offsetof(NRAMKeyData, data);
-
-    pos = (char *)tkey + offsetof(NRAMKeyData, data);
-    for (int i = 0; i < nkeys; i++) {
-        Form_pg_attribute attr = TupleDescAttr(tupdesc, key_attrs[i] - 1);
-        datumSerialize(values[i], isnull[i], attr->attbyval, attr->attlen, &pos);
-    }
-
-    if (pos - (char*)tkey != total_size)
-        elog(ERROR, "[nram_key_serialize_from_tuple]: wrong key serialization length mismatch: expected %zu: real %d",
-            total_size,
-            (int)(pos - (char*)tkey));
-
-    return tkey;
 }
 
 NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
@@ -151,7 +102,7 @@ NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
 
     val = (NRAMValueData *)palloc0(total_size);
     val->nfields = tupdesc->natts;
-    val->tid = GetTopTransactionId();
+    val->xact_id = GetTopTransactionId();
 
     pos = (char*)val + offsetof(NRAMValueData, data);
     for (int i = 0; i < tupdesc->natts; i++) {
@@ -205,7 +156,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
     buf = palloc(total_len);
     write_ptr = buf;
 
-    memcpy(write_ptr, &tvalue->tid, sizeof(TransactionId));
+    memcpy(write_ptr, &tvalue->xact_id, sizeof(TransactionId));
     write_ptr += sizeof(TransactionId);
 
     memcpy(write_ptr, &tvalue->nfields, sizeof(int16));
@@ -226,14 +177,14 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
 }
 
 NRAMValue tvalue_deserialize(char *buf, Size len) {
-    TransactionId tid;
+    TransactionId xact_id;
     int16 nfields;
     char *ptr;
     Size data_len, total_len;
     NRAMValue tvalue;
 
     // Read header
-    memcpy(&tid, buf, sizeof(TransactionId));
+    memcpy(&xact_id, buf, sizeof(TransactionId));
     buf += sizeof(TransactionId);
 
     memcpy(&nfields, buf, sizeof(int16));
@@ -243,7 +194,7 @@ NRAMValue tvalue_deserialize(char *buf, Size len) {
     total_len = offsetof(NRAMValueData, data) + data_len;
 
     tvalue = (NRAMValue)palloc(total_len);
-    tvalue->tid = tid;
+    tvalue->xact_id = xact_id;
     tvalue->nfields = nfields;
 
     ptr = (char *)tvalue + offsetof(NRAMValueData, data);
@@ -252,56 +203,31 @@ NRAMValue tvalue_deserialize(char *buf, Size len) {
     return tvalue;
 }
 
-// Layout [Oid tableOid][int16 nkeys][Size length][data...]
+// Layout [Oid tableOid][data...]
 char *tkey_serialize(NRAMKey tkey, Size *out_len) {
     char *buf, *ptr;
 
-    *out_len = sizeof(Oid) + sizeof(int16) + sizeof(Size) + tkey->length;
+    *out_len = sizeof(Oid) + sizeof(uint64_t);
     buf = palloc0(*out_len);
     ptr = buf;
-
     memcpy(ptr, &tkey->tableOid, sizeof(Oid));
     ptr += sizeof(Oid);
-
-    memcpy(ptr, &tkey->nkeys, sizeof(int16));
-    ptr += sizeof(int16);
-
-    memcpy(ptr, &tkey->length, sizeof(Size));
-    ptr += sizeof(Size);
-
-    memcpy(ptr, (char*)tkey + offsetof(NRAMKeyData, data), tkey->length);
+    memcpy(ptr, &tkey->tid, sizeof(uint64_t));
+    ptr += sizeof(uint64_t);
     return buf;
 }
 
 NRAMKey tkey_deserialize(char *buf, Size len) {
     char *ptr = buf;
-    int16 nkeys;
-    Size datalen;
-    Oid tableOid;
-    NRAMKey tkey;
+    NRAMKey tkey = palloc0(sizeof(NRAMKeyData));
 
-    if (len < sizeof(Oid) + sizeof(int16) + sizeof(Size)) {
-        elog(ERROR, "tkey_deserialize: input buffer too short");
+    if (len != sizeof(Oid) + sizeof(uint64_t)) {
+        elog(ERROR, "tkey_deserialize: input buffer invalid length");
     }
 
-    memcpy(&tableOid, ptr, sizeof(Oid));
+    memcpy(&tkey->tableOid, ptr, sizeof(Oid));
     ptr += sizeof(Oid);
-
-    memcpy(&nkeys, ptr, sizeof(int16));
-    ptr += sizeof(int16);
-
-    memcpy(&datalen, ptr, sizeof(Size));
-    ptr += sizeof(Size);
-
-    if (len < sizeof(Oid) + sizeof(int16) + sizeof(Size) + datalen) {
-        elog(ERROR, "tkey_deserialize: inconsistent data length: expected %zu, got %zu",
-            len, sizeof(Oid) + sizeof(int16) + sizeof(Size) + datalen);
-    }
-
-    tkey = (NRAMKey)palloc(offsetof(NRAMKeyData, data) + datalen);
-    tkey->tableOid = tableOid;
-    tkey->nkeys = nkeys;
-    tkey->length = datalen;
-    memcpy((char*)tkey + offsetof(NRAMKeyData, data), ptr, datalen);
+    memcpy(&tkey->tid, ptr, sizeof(uint64_t));
+    ptr += sizeof(uint64_t);
     return tkey;
 }

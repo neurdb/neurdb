@@ -1,6 +1,7 @@
 #include "nram_xact/xact.h"
 #include "utils/memutils.h"
 #include "nram_storage/rocksengine.h"
+#include "storage/lock.h"
 
 /* ------------------------------------------------------------------------
  * Transaction related codes.
@@ -22,14 +23,34 @@ const char* XactEventString[] = {
 };
 
 void refresh_nram_xact(void) {
-    TransactionId tid = GetTopTransactionId();
-    if (current_nram_xact == NULL || current_nram_xact->tid != tid)
-        current_nram_xact = NewNRAMXactState(tid);
+    TransactionId xact_id = GetTopTransactionId();
+    if (current_nram_xact == NULL || current_nram_xact->xact_id != xact_id)
+        current_nram_xact = NewNRAMXactState(xact_id);
 }
 
 NRAMXactState GetCurrentNRAMXact(void) {
     refresh_nram_xact();
     return current_nram_xact;
+}
+
+static void clear_nram_xact() {
+    if (current_nram_xact == NULL) {
+        elog(WARNING, "The NRAM transaction has been cleaned before.");
+    } else {
+        ListCell *cell;
+        foreach(cell, current_nram_xact->read_set) {
+            NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
+            pfree(opt);
+        }
+        list_free(current_nram_xact->read_set);
+        foreach(cell, current_nram_xact->write_set) {
+            NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
+            pfree(opt);
+        }
+        list_free(current_nram_xact->write_set);
+        pfree(current_nram_xact);
+        current_nram_xact = NULL;
+    }
 }
 
 static void nram_xact_callback(XactEvent event, void *arg) {
@@ -46,12 +67,31 @@ static void nram_xact_callback(XactEvent event, void *arg) {
             if (current_nram_xact->validated) {
                 elog(ERROR,
                     "The transaction %u has already been validated before.",
-                    current_nram_xact->tid);
+                    current_nram_xact->xact_id);
             } else {
-                if (!validate_read_set(GetCurrentEngine(), GetCurrentNRAMXact()))
-                    elog(ERROR,
-                        "The transaction %u gets aborted during read set validation.",
-                        current_nram_xact->tid);
+                // LOCKTAG		tag;
+                KVEngine* engine = GetCurrentEngine();
+                ListCell *cell;
+                // foreach(cell, current_nram_xact->write_set) {
+                //     NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);                    
+	            //     // SET_LOCKTAG_NRAM_OPT(tag, opt->key);
+                //     LockAcquire(&tag, ExclusiveLock, true, false);
+                // }
+
+                foreach(cell, current_nram_xact->read_set) {
+                    NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
+                    NRAMValue cur_val = rocksengine_get(engine, opt->key);
+
+                    if (cur_val == NULL) {
+                        elog(ERROR, "transaction validation failed: key vanished");
+                        return;
+                    }
+                    if (cur_val->xact_id != opt->xact_id)
+                        elog(ERROR,
+                            "The transaction %u gets aborted during read set validation.",
+                            current_nram_xact->xact_id);
+                }
+
                 NRAM_TEST_INFO("The validation has been passed");
                 current_nram_xact->validated = true;
             }
@@ -60,12 +100,14 @@ static void nram_xact_callback(XactEvent event, void *arg) {
 
         case XACT_EVENT_ABORT:
             NRAM_TEST_INFO("the transaction %u is aborted",
-                           current_nram_xact->tid);
+                           current_nram_xact->xact_id);
+            clear_nram_xact();
             break;
 
         case XACT_EVENT_COMMIT:
             NRAM_TEST_INFO("the transaction %u is committed",
-                           current_nram_xact->tid);
+                           current_nram_xact->xact_id);
+            clear_nram_xact();
             break;
 
         default:
@@ -90,16 +132,16 @@ void nram_unregister_xact_hook(void) {
 }
 
 
-NRAMXactState NewNRAMXactState(TransactionId tid) {
+NRAMXactState NewNRAMXactState(TransactionId xact_id) {
     MemoryContext oldCtx;
     NRAMXactState res = NULL;
-    if (tid == InvalidTransactionId)
+    if (xact_id == InvalidTransactionId)
         return res;
 
     oldCtx = MemoryContextSwitchTo(TopTransactionContext);
     res = palloc(sizeof(NRAMXactStateData));
     
-    res->tid = tid;
+    res->xact_id = xact_id;
     // res->begin_ts = GetCurrentTransactionStartTimestamp();
     res->validated = false;
     res->read_set = NIL;
@@ -110,10 +152,11 @@ NRAMXactState NewNRAMXactState(TransactionId tid) {
 }
 
 
-void add_read_set(NRAMXactState state, NRAMKey key, TransactionId tid) {
+void add_read_set(NRAMXactState state, NRAMKey key, TransactionId xact_id) {
     NRAMXactOpt opt = palloc(sizeof(NRAMXactOptData));
+    NRAM_INFO();
     opt->key = key;
-    opt->tid = tid;
+    opt->xact_id = xact_id;
     opt->type = XACT_OP_READ;
     opt->value = NULL;
     state->read_set = lappend(state->read_set, opt);
@@ -122,7 +165,7 @@ void add_read_set(NRAMXactState state, NRAMKey key, TransactionId tid) {
 void add_write_set(NRAMXactState state, NRAMKey key, NRAMValue value) {
     NRAMXactOpt opt = palloc(sizeof(NRAMXactOptData));
     opt->key = key;
-    opt->tid = state->tid;
+    opt->xact_id = state->xact_id;
     opt->value = value;
     opt->type = XACT_OP_WRITE;
 
@@ -131,18 +174,17 @@ void add_write_set(NRAMXactState state, NRAMKey key, NRAMValue value) {
 
 bool validate_read_set(KVEngine* engine, NRAMXactState state) {
     ListCell *cell;
-    NRAM_INFO();
+
     foreach(cell, state->read_set) {
         NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
         NRAMValue cur_val = rocksengine_get(engine, opt->key);
 
-        NRAM_INFO();
         if (cur_val == NULL) {
             NRAM_TEST_INFO("validation failed: key vanished");
             return false;
         }
 
-        if (cur_val->tid != opt->tid)
+        if (cur_val->xact_id != opt->xact_id)
             return false;
     }
     return true;

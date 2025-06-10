@@ -21,24 +21,24 @@
 #define NRAM_TEST_INFO(fmt, ...) \
     elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
+#define NRAM_KEY_LENGTH (sizeof(Oid) + sizeof(uint64_t))
 
+extern void nram_init_tid(void);
+extern void nram_generate_tid(ItemPointer tid);
+extern uint64_t nram_decode_tid(const ItemPointer tid);
 
 typedef struct NRAMKeyData {
-    int16 nkeys;
-    Size length;
     Oid tableOid;
-    char data[];
+    uint64_t tid;
 } NRAMKeyData;
+
 
 typedef NRAMKeyData *NRAMKey;
 
-char *stringify_nram_key(NRAMKey key, TupleDesc desc, int *key_attrs);
-NRAMKey nram_key_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc, int *key_attrs, int nkeys);
-void nram_key_deserialize(NRAMKey tkey, TupleDesc desc, int *key_attrs, Datum *values, bool *is_null);
 char *stringify_buff(char *buf, int len);
 char *tkey_serialize(NRAMKey tkey, Size *out_len);
 NRAMKey tkey_deserialize(char *buf, Size len);
-
+NRAMKey nram_key_from_tid(Oid tableOid, ItemPointer tid);
 
 typedef struct NRAMValueFieldData {
     int16 attnum;       // Attribute number
@@ -48,7 +48,7 @@ typedef struct NRAMValueFieldData {
 } NRAMValueFieldData;
 
 typedef struct NRAMValueData {
-    TransactionId tid;    // The transaction that has created this data version.   
+    TransactionId xact_id;    // The transaction that has created this data version.   
     int16 nfields;
     char data[FLEXIBLE_ARRAY_MEMBER];  // Consecutive NRAMValueFieldData blocks
 } NRAMValueData;

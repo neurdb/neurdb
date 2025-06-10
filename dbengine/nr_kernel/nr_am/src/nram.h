@@ -17,8 +17,6 @@
 typedef struct NRAMState {
     uint32 magic;           // DEBUG bits for nram state, check memory corruptions.
     KVEngine *engine;       // Pointer to the RocksDB backend
-    int nkeys;              // Number of primary key attributes
-    int *key_attrs;         // Array of key attribute numbers
 } NRAMState;
 
 void nram_shutdown_session(void);

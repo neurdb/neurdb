@@ -29,58 +29,9 @@ void nram_shutdown_session(void) {
     }
 }
 
-List *nram_get_primary_key_attrs(Relation rel) {
-    List *index_list = RelationGetIndexList(rel);
-    ListCell *lc;
-    List *key_attrs = NIL;
-
-    NRAM_INFO();
-
-    if (index_list == NIL) {
-        // In Postgres, the tuple id is changed on every update,
-        // making it an inefficient primary key for rocksdb. We currently
-        // enforce all tables using nram to indicate their primary keys.
-        elog(ERROR, "Primary key must be created for NRAM table \"%s\"",
-             RelationGetRelationName(rel));
-        return NIL;
-    }
-
-    foreach (lc, index_list) {
-        Oid index_oid = lfirst_oid(lc);
-        HeapTuple index_tuple =
-            SearchSysCache1(INDEXRELID, ObjectIdGetDatum(index_oid));
-        Form_pg_index index_form;
-        if (!HeapTupleIsValid(index_tuple))
-            elog(ERROR, "cache lookup failed for index %u", index_oid);
-
-        index_form = (Form_pg_index)GETSTRUCT(index_tuple);
-
-        if (index_form->indisprimary) {
-            for (int i = 0; i < index_form->indnkeyatts; i++)
-                key_attrs =
-                    lappend_int(key_attrs, index_form->indkey.values[i]);
-            ReleaseSysCache(index_tuple);
-            break;
-        }
-
-        ReleaseSysCache(index_tuple);
-    }
-
-    list_free(index_list);
-
-    if (key_attrs->length == 0)
-        elog(ERROR, "no primary key found for relation \"%s\"",
-             RelationGetRelationName(rel));
-    return key_attrs;
-}
-
 static NRAMState *get_nram_state(Relation rel) {
     NRAMState *state = (NRAMState *)rel->rd_amcache;
     MemoryContext oldctx;
-    List *indexatts;
-    int i = 0;
-    ListCell *lc;
-
     if (state && IS_VALID_NRAM_STATE(state)) return state;
 
     NRAM_TEST_INFO("refreshing the nram state");
@@ -89,11 +40,6 @@ static NRAMState *get_nram_state(Relation rel) {
     state = palloc(sizeof(NRAMState));
     state->magic = NRAM_STATE_MAGIC;
     state->engine = GetCurrentEngine();
-
-    indexatts = nram_get_primary_key_attrs(rel);
-    state->nkeys = list_length(indexatts);
-    state->key_attrs = palloc(sizeof(int) * state->nkeys);
-    foreach (lc, indexatts) state->key_attrs[i++] = lfirst_int(lc);
 
     rel->rd_amcache = (void *)state;
     MemoryContextSwitchTo(oldctx);
@@ -191,7 +137,7 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     }
 
     it->get(it, &tkey, &tvalue);
-    add_read_set(GetCurrentNRAMXact(), tkey, tvalue->tid);
+    add_read_set(GetCurrentNRAMXact(), tkey, tvalue->xact_id);
     if (tkey->tableOid != scan->rs_rd->rd_id) {
         // The end of table. Currently, we only support forward scan.
         Assert(tkey->tableOid > scan->rs_rd->rd_id);
@@ -235,8 +181,9 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
  * ------------------------------------------------------------------------
  */
 
+// PHX: consider how to do the vaccum here.
 static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
-                        int options, BulkInsertState bistate) {
+                        int options, BulkInsertState bistate, ItemPointer tid) {
     NRAMState *nram_state;
     TupleDesc tupdesc;
     NRAMKey tkey;
@@ -246,14 +193,17 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
 
     nram_state = get_nram_state(relation);
     tupdesc = RelationGetDescr(relation);
+    nram_generate_tid(tid);
+    NRAM_TEST_INFO("nram tid generated as %lu", nram_decode_tid(tid));
 
     // Serialize key and value from tuple
-    tkey = nram_key_serialize_from_tuple(tup, tupdesc, nram_state->key_attrs,
-                                         nram_state->nkeys);
+    tkey = nram_key_from_tid(tup->t_tableOid, tid);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
-    add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
     rocksengine_put(nram_state->engine, tkey, tvalue);
+    // TODO: 1. check for read own write (read set maintain, write set fetch).
+    // 2. check for write set deduplication.
+    // add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
 
     // Cleanup memory if necessary
     pfree(tkey);
@@ -267,6 +217,8 @@ static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
                               BulkInsertState bistate) {
     bool shouldFree = true;
     HeapTuple tuple = ExecFetchSlotHeapTuple(slot, true, &shouldFree);
+    ItemPointerData tid;
+
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
 
@@ -274,11 +226,14 @@ static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
     slot->tts_tableOid = RelationGetRelid(relation);
     tuple->t_tableOid = slot->tts_tableOid;
 
-    /* Perform the insertion, and copy the resulting ItemPointer */
-    nram_insert(relation, tuple, cid, options, bistate);
-    ItemPointerSet(&tuple->t_self, 0,
-                   1);  // block = 0, offset = 1 for invalid block/offsets.
-    ItemPointerCopy(&tuple->t_self, &slot->tts_tid);
+    /* Perform the insertion, and copy the unique resulting ItemPointer tid */
+    nram_insert(relation, tuple, cid, options, bistate, &tid);
+    NRAM_TEST_INFO("insert finish");
+    Assert(ItemPointerIsValid(&tid));
+    Assert(tuple != NULL);
+    Assert(slot != NULL);
+    tuple->t_self = tid;
+    slot->tts_tid = tid;
 
     if (shouldFree) {
         heap_freetuple(tuple);
@@ -567,7 +522,10 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     PG_RETURN_VOID();
 }
 
-void _PG_init(void) { nram_register_xact_hook(); }
+void _PG_init(void) {
+    nram_init_tid();
+    nram_register_xact_hook();
+}
 
 void _PG_fini(void) {
     nram_shutdown_session();
