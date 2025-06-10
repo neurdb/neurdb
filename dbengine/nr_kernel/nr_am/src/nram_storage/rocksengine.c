@@ -189,7 +189,7 @@ void rocksengine_iterator_seek(KVEngineIterator *iterator, NRAMKey tkey) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *)iterator;
     Size key_length;
     char *key = tkey_serialize(tkey, &key_length);
-    rocksdb_iter_seek(rocks_it->rocksdb_iterator, key, tkey->length);
+    rocksdb_iter_seek(rocks_it->rocksdb_iterator, key, key_length);
 }
 
 /* ------------------------------------------------------------------------
@@ -202,7 +202,7 @@ void rocksengine_iterator_seek_for_prev(KVEngineIterator *iterator,
     RocksEngineIterator *rocks_it = (RocksEngineIterator *)iterator;
     Size key_length;
     char *key = tkey_serialize(tkey, &key_length);
-    rocksdb_iter_seek_for_prev(rocks_it->rocksdb_iterator, key, tkey->length);
+    rocksdb_iter_seek_for_prev(rocks_it->rocksdb_iterator, key, key_length);
 }
 
 /* ------------------------------------------------------------------------

@@ -20,18 +20,19 @@ void run_kv_serialization_test(void) {
     
     Datum values[2];
     Datum decoded_values[2];
-    Datum deserialized_key_val[2];
+    uint64_t key_value;
     
     NRAMKey key, key_copy;
     NRAMValue encoded_value, value_copy;
-    int key_attrs[] = {1, 2};
-    const int nkey_attrs = 2;
+    // int key_attrs[] = {1, 2};
+    // const int nkey_attrs = 2;
 
     bool decoded_isnull[3];
     bool isnull[3] = {false, false, false};
 
     char *key_buf, *value_buf;
     Size key_len, value_len;
+    ItemPointerData tid;
 
     // Build a synthetic tuple descriptor: (id int, val text)
     desc = CreateTemplateTupleDesc(3);
@@ -58,17 +59,16 @@ void run_kv_serialization_test(void) {
             DatumGetInt32(decoded_values[0]), TextDatumGetCString(decoded_values[1]));
 
     // Serialize key with id as key
-    key = nram_key_serialize_from_tuple(tuple, desc, key_attrs, nkey_attrs);
-    nram_key_deserialize(key, desc, key_attrs, deserialized_key_val, decoded_isnull);
+    nram_generate_tid(&tid);
+    key = nram_key_from_tid(tuple->t_tableOid, &tid);
+    key_value = nram_decode_tid(&tid);
 
-    if (DatumGetInt32(deserialized_key_val[0]) != 42 || 
-    strcmp(TextDatumGetCString(deserialized_key_val[1]), "hello") != 0)
-        elog(ERROR, "Key encode/decode failed, %d != 42", DatumGetInt32(deserialized_key_val[0]));
-    // Key/value buf tests.
+    if (key_value != key->tid)
+        elog(ERROR, "Key encode/decode failed, %lu != %lu", key_value, key->tid);
+
     key_buf = tkey_serialize(key, &key_len);
     key_copy = tkey_deserialize(key_buf, key_len);
-    if (key_copy->nkeys != nkey_attrs || key_copy->length != key->length ||
-        memcmp(key_copy->data, key->data, key->length) != 0)
+    if (key_copy->tableOid != 0 || key_copy->tid != key_value)
         elog(ERROR, "tkey_serialize/deserialized failed!");
     
     pfree(key_buf);
@@ -79,15 +79,12 @@ void run_kv_serialization_test(void) {
     value_copy = tvalue_deserialize(value_buf, value_len);
 
     if (value_copy->nfields != encoded_value->nfields || 
-        value_copy->tid != encoded_value->tid ||
+        value_copy->xact_id != encoded_value->xact_id ||
         memcmp(value_copy->data, encoded_value->data, value_len - offsetof(NRAMValueData, data)) != 0)
             elog(ERROR, "tvalue_serialize/deserialized failed!\nExp: %d,%u,%s\nGot: %d,%u,%s",
-                encoded_value->nfields, encoded_value->tid, stringify_buff(encoded_value->data, value_len - offsetof(NRAMValueData, data)), 
-                value_copy->nfields, value_copy->tid, stringify_buff(value_copy->data, value_len - offsetof(NRAMValueData, data)));
+                encoded_value->nfields, encoded_value->xact_id, stringify_buff(encoded_value->data, value_len - offsetof(NRAMValueData, data)), 
+                value_copy->nfields, value_copy->xact_id, stringify_buff(value_copy->data, value_len - offsetof(NRAMValueData, data)));
 
     pfree(value_buf);
-    pfree(value_copy);
-
-    
-    NRAM_TEST_INFO("run_kv_serialization_test PASS.");
+    pfree(value_copy);    
 }
