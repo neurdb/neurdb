@@ -32,7 +32,6 @@ typedef struct NRAMKeyData {
     uint64_t tid;
 } NRAMKeyData;
 
-
 typedef NRAMKeyData *NRAMKey;
 
 char *stringify_buff(char *buf, int len);
@@ -113,5 +112,9 @@ typedef struct KVScanDescData {
 
 typedef KVScanDescData *KVScanDesc;
 
+typedef struct IndexFetchKVData {
+    IndexFetchTableData xs_base;   /* base structure */
+    KVEngine *xs_engine;           /* the KV engine */
+} IndexFetchKVData;
 
 #endif //KV_H
