@@ -158,22 +158,58 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
  * ------------------------------------------------------------------------
  */
 
-static IndexFetchTableData *nram_index_fetch_begin(Relation rel) {
+static IndexFetchTableData *nram_index_fetch_begin(Relation relation) {
+    IndexFetchKVData *kvscan;
+    NRAMState *nram_state;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
-    return NULL;
+    kvscan = palloc0(sizeof(IndexFetchKVData));
+    nram_state = get_nram_state(relation);
+    kvscan->xs_base.rel = relation;
+    kvscan->xs_engine = nram_state->engine;
+    return (IndexFetchTableData *)kvscan;
 }
 
-static void nram_index_fetch_reset(IndexFetchTableData *scan) { NRAM_INFO(); }
+static void nram_index_fetch_reset(IndexFetchTableData *scan) {
+    NRAM_INFO();
+}
 
-static void nram_index_fetch_end(IndexFetchTableData *scan) { NRAM_INFO(); }
+static void nram_index_fetch_end(IndexFetchTableData *scan) {
+    NRAM_INFO();
+    NRAM_XACT_BEGIN_BLOCK;
+    IndexFetchKVData *kvscan = (IndexFetchKVData *)scan;
+    nram_index_fetch_reset(scan);
+    pfree(kvscan);
+}
 
 static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
                                    Snapshot snapshot, TupleTableSlot *slot,
                                    bool *call_again, bool *all_dead) {
+    IndexFetchKVData *kvscan;
+    NRAMKey tkey;
+    NRAMValue tvalue;
+    HeapTuple tuple;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
-    return false;
+
+    kvscan = (IndexFetchKVData *)scan;
+    tkey = nram_key_from_tid(kvscan->xs_base.rel->rd_id, tid);
+    tvalue = rocksengine_get(kvscan->xs_engine, tkey);
+    if (tvalue == NULL) {
+        pfree(tkey);
+        return false;
+    }
+
+    tuple = deserialize_nram_value_to_tuple(
+        tvalue,
+        kvscan->xs_base.rel->rd_att
+    );
+
+    ExecClearTuple(slot);
+    ExecStoreHeapTuple(tuple, slot, false);
+    *call_again = false;
+    *all_dead = false;
+    return true;
 }
 
 /* ------------------------------------------------------------------------

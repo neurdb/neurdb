@@ -39,3 +39,4 @@ test:
 	psql neurdb -f ./test/init.sql
 	psql neurdb -f ./test/table_scan.sql
 	psql neurdb -f ./test/xact_basic.sql
+	psql neurdb -f ./test/index_scan.sql
