@@ -7,14 +7,14 @@ CREATE TABLE y(a INT, b text, PRIMARY KEY (a)) USING nram;
 -- Test insert and table scan.
 INSERT INTO x VALUES (1, 'k1', 'v1');
 SELECT * from x;
- a | b  | c  
+ a | b  | c
 ---+----+----
  1 | k1 | v1
 (1 row)
 
 INSERT INTO x VALUES (2, 'k2', 'v2');
 SELECT * from x;
- a | b  | c  
+ a | b  | c
 ---+----+----
  1 | k1 | v1
  2 | k2 | v2
@@ -24,14 +24,14 @@ SELECT * from x;
 INSERT INTO y VALUES (1, 'z1');
 INSERT INTO y VALUES (2, 'z2');
 SELECT * from x;
- a | b  | c  
+ a | b  | c
 ---+----+----
  1 | k1 | v1
  2 | k2 | v2
 (2 rows)
 
 SELECT * from y;
- a | b  
+ a | b
 ---+----
  1 | z1
  2 | z2
