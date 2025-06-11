@@ -138,7 +138,7 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     it->get(it, &tkey, &tvalue);
     if (!read_own_write(GetCurrentNRAMXact(), tkey, &tvalue))
         add_read_set(GetCurrentNRAMXact(), tkey, tvalue->xact_id);
-    
+
     if (tkey->tableOid != scan->rs_rd->rd_id) {
         // The end of table. Currently, we only support forward scan.
         Assert(tkey->tableOid > scan->rs_rd->rd_id);
