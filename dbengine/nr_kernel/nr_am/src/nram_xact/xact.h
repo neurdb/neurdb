@@ -47,8 +47,11 @@ extern void refresh_nram_xact(void);
 extern void nram_register_xact_hook(void);
 extern void nram_unregister_xact_hook(void);
 extern NRAMXactState NewNRAMXactState(TransactionId xact_id);
+extern NRAMXactOpt find_read_set(NRAMXactState state, NRAMKey key);
+extern NRAMXactOpt find_write_set(NRAMXactState state, NRAMKey key);
 extern void add_read_set(NRAMXactState state, NRAMKey key, TransactionId xact_id);
 extern void add_write_set(NRAMXactState state, NRAMKey key, NRAMValue value);
+extern bool read_own_write(NRAMXactState state, const NRAMKey key, NRAMValue *value);
 extern bool validate_read_set(KVEngine* engine, NRAMXactState state);
 extern NRAMXactState GetCurrentNRAMXact(void);
 

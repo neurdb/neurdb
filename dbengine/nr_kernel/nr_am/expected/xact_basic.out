@@ -1,0 +1,17 @@
+BEGIN;
+CREATE TABLE x(a INT, b text, c text, PRIMARY KEY (a, b)) USING nram;
+-- Test insert and table scan.
+SELECT * from x;
+ a | b | c 
+---+---+---
+(0 rows)
+
+INSERT INTO x VALUES (1, 'k1', 'v1');
+SELECT * from x;
+ a | b  | c  
+---+----+----
+ 1 | k1 | v1
+(1 row)
+
+DROP TABLE x;
+COMMIT;
