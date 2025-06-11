@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS x;
+DROP TABLE IF EXISTS y;
+
 CREATE TABLE x(a INT, b text, c text, PRIMARY KEY (a, b)) USING nram;
 CREATE TABLE y(a INT, b text, PRIMARY KEY (a)) USING nram;
 

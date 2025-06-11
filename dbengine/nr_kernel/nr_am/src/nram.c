@@ -33,7 +33,6 @@ static NRAMState *get_nram_state(Relation rel) {
     NRAMState *state = (NRAMState *)rel->rd_amcache;
     MemoryContext oldctx;
     if (state && IS_VALID_NRAM_STATE(state)) return state;
-
     NRAM_TEST_INFO("refreshing the nram state");
 
     oldctx = MemoryContextSwitchTo(CacheMemoryContext);
@@ -137,18 +136,28 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     }
 
     it->get(it, &tkey, &tvalue);
-    add_read_set(GetCurrentNRAMXact(), tkey, tvalue->xact_id);
+    if (!read_own_write(GetCurrentNRAMXact(), tkey, &tvalue))
+        add_read_set(GetCurrentNRAMXact(), tkey, tvalue->xact_id);
+    
     if (tkey->tableOid != scan->rs_rd->rd_id) {
         // The end of table. Currently, we only support forward scan.
         Assert(tkey->tableOid > scan->rs_rd->rd_id);
+        pfree(tkey);
+        pfree(tvalue);
         MemoryContextSwitchTo(oldctx);
         return false;
     }
     tuple =
         deserialize_nram_value_to_tuple(tvalue, sscan->rs_base.rs_rd->rd_att);
-    ExecStoreHeapTuple(tuple, slot, false);
+    ExecStoreHeapTuple(tuple, slot, true);
 
     it->next(it);
+
+    pfree(tkey);
+    pfree(tvalue);
+    // NRAM_INFO();
+    // heap_freetuple(tuple);
+
     MemoryContextSwitchTo(oldctx);
     return true;
 }
@@ -237,11 +246,9 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
     rocksengine_put(nram_state->engine, tkey, tvalue);
-    // TODO: 1. check for read own write (read set maintain, write set fetch).
-    // 2. check for write set deduplication.
-    // add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
+    add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
 
-    // Cleanup memory if necessary
+    // Cleanup memory if necessary.
     pfree(tkey);
     pfree(tvalue);
 
@@ -264,7 +271,6 @@ static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
 
     /* Perform the insertion, and copy the unique resulting ItemPointer tid */
     nram_insert(relation, tuple, cid, options, bistate, &tid);
-    NRAM_TEST_INFO("insert finish");
     Assert(ItemPointerIsValid(&tid));
     Assert(tuple != NULL);
     Assert(slot != NULL);
@@ -555,6 +561,7 @@ PG_FUNCTION_INFO_V1(run_nram_tests);
 
 Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_serialization_test();
+    run_kv_copy_test();
     PG_RETURN_VOID();
 }
 

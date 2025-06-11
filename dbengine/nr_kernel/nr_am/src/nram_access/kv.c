@@ -97,7 +97,7 @@ NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
     for (int i = 0; i < tupdesc->natts; i++) {
         Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
         lens[i] = datumEstimateSpace(values[i], isnull[i], attr->attbyval, attr->attlen);
-        total_size += lens[i] + offsetof(NRAMValueFieldData, data);
+        total_size += lens[i] + sizeof(NRAMValueFieldData);
     }
 
     val = (NRAMValueData *)palloc0(total_size);
@@ -113,7 +113,7 @@ NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
         field->type_oid = TupleDescAttr(tupdesc, i)->atttypid;
         field->len = lens[i];
 
-        pos += offsetof(NRAMValueFieldData, data);
+        pos += sizeof(NRAMValueFieldData);
         datumSerialize(values[i], isnull[i], attr->attbyval, attr->attlen, &pos);
     }
 
@@ -132,7 +132,7 @@ HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc) {
 
     char *pos = (char*)val + offsetof(NRAMValueData, data);
     for (int i = 0; i < val->nfields; i++) {
-        pos += offsetof(NRAMValueFieldData, data);
+        pos += sizeof(NRAMValueFieldData);
         values[i] = datumRestore(&pos, &is_null[i]);
     }
 
@@ -146,7 +146,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
 
     for (int i = 0; i < tvalue->nfields; i++) {
         NRAMValueFieldData *f = (NRAMValueFieldData *)ptr;
-        Size field_size = offsetof(NRAMValueFieldData, data) + f->len;
+        Size field_size = sizeof(NRAMValueFieldData) + f->len;
         data_len += field_size;
         ptr += field_size;
     }
@@ -165,7 +165,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
     ptr = (char *)tvalue + offsetof(NRAMValueData, data);
     for (int i = 0; i < tvalue->nfields; i++) {
         NRAMValueFieldData *f = (NRAMValueFieldData *)ptr;
-        Size field_size = offsetof(NRAMValueFieldData, data) + f->len;
+        Size field_size = sizeof(NRAMValueFieldData) + f->len;
         memcpy(write_ptr, f, field_size);
         ptr += field_size;
         write_ptr += field_size;
@@ -230,4 +230,38 @@ NRAMKey tkey_deserialize(char *buf, Size len) {
     memcpy(&tkey->tid, ptr, sizeof(uint64_t));
     ptr += sizeof(uint64_t);
     return tkey;
+}
+
+
+NRAMKey copy_nram_key(NRAMKey src) {
+    NRAMKey dst = palloc(sizeof(NRAMKeyData));
+    dst->tableOid = src->tableOid;
+    dst->tid = src->tid;
+    return dst;
+}
+
+NRAMValue copy_nram_value(NRAMValue src) {
+    Size total_len = offsetof(NRAMValueData, data);
+    char *src_ptr = (char *)src + offsetof(NRAMValueData, data);
+    int16 nfields = src->nfields;
+    NRAMValue dst;
+
+    // First pass to compute total length
+    for (int i = 0; i < nfields; i++) {
+        NRAMValueFieldData *field = (NRAMValueFieldData *)src_ptr;
+        Size field_size = sizeof(NRAMValueFieldData) + field->len;
+        total_len += field_size;
+        src_ptr += field_size;
+    }
+
+    // Allocate and copy
+    dst = (NRAMValue)palloc(total_len);
+    dst->xact_id = src->xact_id;
+    dst->nfields = src->nfields;
+
+    memcpy((char *)dst + offsetof(NRAMValueData, data),
+           (char *)src + offsetof(NRAMValueData, data),
+           total_len - offsetof(NRAMValueData, data));
+
+    return dst;
 }
