@@ -16,21 +16,12 @@ FROM generate_series(1, 50) AS i;
 SET enable_seqscan = OFF;
 
 -- Test equality scan on primary key.
-EXPLAIN (ANALYZE, VERBOSE, COSTS OFF, TIMING OFF)
-SELECT * FROM xs WHERE id = 42;
-
 SELECT * FROM xs WHERE id = 42;
 
 -- Test equality scan on secondary index.
-EXPLAIN (ANALYZE, VERBOSE, COSTS OFF, TIMING OFF)
-SELECT * FROM xs WHERE tag = 'tag3';
-
 SELECT * FROM xs WHERE tag = 'tag3';
 
 -- Test range scan on primary key.
-EXPLAIN (ANALYZE, VERBOSE, COSTS OFF, TIMING OFF)
-SELECT * FROM xs WHERE id > 45;
-
 SELECT * FROM xs WHERE id > 45;
 
 -- Cleanup.

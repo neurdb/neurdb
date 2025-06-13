@@ -184,9 +184,10 @@ static void nram_index_fetch_reset(IndexFetchTableData *scan) {
 }
 
 static void nram_index_fetch_end(IndexFetchTableData *scan) {
+    IndexFetchKVData *kvscan;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
-    IndexFetchKVData *kvscan = (IndexFetchKVData *)scan;
+    kvscan = (IndexFetchKVData *)scan;
     nram_index_fetch_reset(scan);
     pfree(kvscan);
 }
@@ -203,10 +204,13 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
 
     kvscan = (IndexFetchKVData *)scan;
     tkey = nram_key_from_tid(kvscan->xs_base.rel->rd_id, tid);
-    tvalue = rocksengine_get(kvscan->xs_engine, tkey);
-    if (tvalue == NULL) {
-        pfree(tkey);
-        return false;
+    if (!read_own_write(GetCurrentNRAMXact(), tkey, &tvalue)) {
+        tvalue = rocksengine_get(kvscan->xs_engine, tkey);
+        if (tvalue == NULL) {
+            pfree(tkey);
+            return false;
+        }
+        add_read_set(GetCurrentNRAMXact(), tkey, tvalue->xact_id);
     }
 
     tuple = deserialize_nram_value_to_tuple(
@@ -215,9 +219,12 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
     );
 
     ExecClearTuple(slot);
-    ExecStoreHeapTuple(tuple, slot, false);
+    ExecStoreHeapTuple(tuple, slot, true);
     *call_again = false;
     *all_dead = false;
+
+    pfree(tkey);
+    pfree(tvalue);
     return true;
 }
 
