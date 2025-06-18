@@ -14,14 +14,14 @@ FROM generate_series(1, 50) AS i;
 SET enable_seqscan = OFF;
 -- Test equality scan on primary key.
 SELECT * FROM xs WHERE id = 42;
- id | tag  |  val
+ id | tag  |  val  
 ----+------+-------
  42 | tag2 | val42
 (1 row)
 
 -- Test equality scan on secondary index.
 SELECT * FROM xs WHERE tag = 'tag3';
- id | tag  |  val
+ id | tag  |  val  
 ----+------+-------
   3 | tag3 | val3
  13 | tag3 | val13
@@ -32,7 +32,7 @@ SELECT * FROM xs WHERE tag = 'tag3';
 
 -- Test range scan on primary key.
 SELECT * FROM xs WHERE id > 45;
- id | tag  |  val
+ id | tag  |  val  
 ----+------+-------
  46 | tag6 | val46
  47 | tag7 | val47

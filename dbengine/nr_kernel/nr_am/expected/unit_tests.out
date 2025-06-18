@@ -1,7 +1,8 @@
 SELECT run_nram_tests();
 INFO:  Serialization test pass!
 INFO:  Copy test pass!
- run_nram_tests
+ run_nram_tests 
 ----------------
-
+ 
 (1 row)
+
