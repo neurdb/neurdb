@@ -19,16 +19,16 @@
 
 #define ROCKSDB_PATH "pg_rocksdb"
 // PHX: use the following two debug macros when debugging the code.
-// #define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
-// #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
+#define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
-#define NRAM_TEST_INFO(fmt, ...)
-#define NRAM_INFO()
+// #define NRAM_TEST_INFO(fmt, ...)
+// #define NRAM_INFO()
 
 
 #define NRAM_KEY_LENGTH (sizeof(Oid) + sizeof(uint64_t))
 
-extern void nram_init_tid(void);
+extern void nram_init(void);
 extern void nram_generate_tid(ItemPointer tid);
 extern uint64_t nram_decode_tid(const ItemPointer tid);
 
@@ -100,7 +100,6 @@ typedef struct KVEngine {
     NRAMKey (*get_max_key)(struct KVEngine *, Oid table_id);
 } KVEngine;
 
-extern KVEngine *current_session_engine;
 extern KVEngine *GetCurrentEngine(void);
 
 /*
