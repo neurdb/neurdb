@@ -1,0 +1,12 @@
+Parsed test spec with 2 sessions
+
+starting permutation: s1_update s2_read1 s1_commit s2_commit
+step s1_update: UPDATE rc_test SET val = 'updated' WHERE id = 1;
+step s2_read1: SELECT * FROM rc_test WHERE id = 1;
+id|val     
+--+--------
+ 1|original
+(1 row)
+
+step s1_commit: COMMIT;
+step s2_commit: COMMIT;

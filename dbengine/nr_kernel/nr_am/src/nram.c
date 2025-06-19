@@ -13,6 +13,9 @@
 #include "utils/builtins.h"
 #include "executor/tuptable.h"
 #include "utils/elog.h"
+#include "storage/ipc.h"
+#include "storage/lwlock.h"
+#include "storage/shmem.h"
 
 PG_MODULE_MAGIC;
 
@@ -22,11 +25,11 @@ PG_MODULE_MAGIC;
  */
 
 void nram_shutdown_session(void) {
+    KVEngine* engine = GetCurrentEngine();
     NRAM_INFO();
-    if (current_session_engine) {
-        current_session_engine->destroy(current_session_engine);
-        current_session_engine = NULL;
-    }
+    NRAM_TEST_INFO("Closing rocksengine??");
+    engine->destroy(engine);
+    engine = NULL;
 }
 
 static NRAMState *get_nram_state(Relation rel) {
@@ -573,7 +576,7 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
 }
 
 void _PG_init(void) {
-    nram_init_tid();
+    nram_init();
     nram_register_xact_hook();
 }
 

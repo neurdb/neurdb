@@ -203,18 +203,22 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                     LockAcquire(&tag, ExclusiveLock, false, true);
                 }
 
-                NRAM_TEST_INFO("The validation is processing, validating read values.");
-                foreach(cell, current_nram_xact->read_set) {
-                    NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
-                    NRAMValue cur_val = rocksengine_get(engine, opt->key);
-                    if (cur_val == NULL) {
-                        elog(ERROR, "transaction validation failed: key vanished");
-                        return;
+                if (IsolationIsSerializable()) {
+                    // Validate the read operations for serializable isolation level.
+                    NRAM_TEST_INFO("The validation is processing, validating read values.");
+                    foreach(cell, current_nram_xact->read_set) {
+                        NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
+                        NRAMValue cur_val = rocksengine_get(engine, opt->key);
+                        if (cur_val == NULL) {
+                            elog(ERROR, "transaction validation failed: key vanished");
+                            return;
+                        }
+                        if (cur_val->xact_id != opt->xact_id)
+                            elog(ERROR,
+                                "The transaction %u gets aborted during read set validation.",
+                                current_nram_xact->xact_id);
                     }
-                    if (cur_val->xact_id != opt->xact_id)
-                        elog(ERROR,
-                            "The transaction %u gets aborted during read set validation.",
-                            current_nram_xact->xact_id);
+
                 }
 
                 NRAM_TEST_INFO("Post-validation release write locks.");

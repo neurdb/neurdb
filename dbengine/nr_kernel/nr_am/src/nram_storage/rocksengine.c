@@ -36,7 +36,7 @@ void rocksengine_fetch_table_key(Oid table_id, char** min_key, char** max_key) {
  */
 RocksEngine *rocksengine_open() {
     char *error = NULL;
-    RocksEngine *rocks_engine;
+    RocksEngine *rocks_engine = NULL;
     rocksdb_options_t *rocksdb_options = rocksengine_config_options();
     rocksdb_t *rocksdb = rocksdb_open(rocksdb_options, ROCKSDB_PATH, &error);
     if (error != NULL)
