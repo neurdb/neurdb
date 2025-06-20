@@ -46,7 +46,7 @@ mkdir -p $NR_DBDATA_PATH
 $NR_PSQL_PATH/bin/initdb -D $NR_DBDATA_PATH
 
 # Re-append kernel extension
-echo "shared_preload_libraries = 'nr_ext'" >> $NR_CONF_FILE
+echo "shared_preload_libraries = 'nr_ext, nram'" >> $NR_CONF_FILE
 echo "log_min_messages = debug1" >> $NR_CONF_FILE
 
 # Start DB

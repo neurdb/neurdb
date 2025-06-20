@@ -14,7 +14,7 @@ Then, set the kernel object to preloaded in `postgresql.conf`:
 
 ```ini
 # in postgresql.conf
-shared_preload_libraries = 'nr_ext'
+shared_preload_libraries = 'nr_ext, nram'
 ```
 
 After starting the PostgreSQL, create extensions via

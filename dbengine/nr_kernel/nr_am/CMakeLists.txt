@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(nr_ext C CXX)
+project(nram C CXX)
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
@@ -23,11 +23,11 @@ include_directories(
 
 # Add library
 FILE(GLOB_RECURSE SOURCES src/*.c src/*.cpp src/*.h src/*.hpp)
-add_library(nr_am SHARED ${SOURCES})
-target_link_libraries(nr_am ${PostgreSQL_LIBRARIES})
+add_library(nram SHARED ${SOURCES})
+target_link_libraries(nram ${PostgreSQL_LIBRARIES})
 
 # Install
 install(
-    TARGETS nr_am
+    TARGETS nram
     LIBRARY DESTINATION ${PostgreSQL_LIBDIR}
 )

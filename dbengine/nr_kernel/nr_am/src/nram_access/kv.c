@@ -7,10 +7,6 @@
 #include "funcapi.h"
 #include "nram_storage/rocksengine.h"
 #include "miscadmin.h"
-#include "storage/ipc.h"
-#include "storage/lwlock.h"
-#include "storage/shmem.h"
-#include "miscadmin.h"
 
 
 /* ------------------------------------------------------------------------
@@ -54,40 +50,38 @@ void nram_generate_tid(ItemPointer tid) {
  */
 
 static KVEngine *shared_engine = NULL;
-static shmem_startup_hook_type prev_shmem_startup_hook = NULL;
+shmem_startup_hook_type prev_shmem_startup_hook = NULL;
 
-static void nram_shmem_startup(void) {
+void nram_shmem_startup(void) {
     bool found;
-    KVEngine **ptr;
+    RocksEngine *ptr;
+    NRAM_INFO();
 
     if (prev_shmem_startup_hook)
         prev_shmem_startup_hook();
 
 
     LWLockAcquire(AddinShmemInitLock, LW_EXCLUSIVE);
-    ptr = (KVEngine **) ShmemInitStruct("nram_shared_engine", sizeof(KVEngine *), &found);
+    ptr = (RocksEngine *) ShmemInitStruct("nram_shared_engine", sizeof(RocksEngine), &found);
 
     if (!found) {
         // First time: open the engine, and storage inside the shared memory.
-        *ptr = (KVEngine *)rocksengine_open();  // open RocksDB with shared-friendly config
-        elog(LOG, "NRAM RocksDB engine initialized in shared memory");
+        rocksengine_open_in_place(ptr);
+        NRAM_TEST_INFO("RocksDB engine initialized in shared memory");
     }
 
-    shared_engine = *ptr;
+    shared_engine = (KVEngine*)ptr;
     LWLockRelease(AddinShmemInitLock);
 }
 
 void nram_init(void) {
-    prev_shmem_startup_hook = shmem_startup_hook;
-    shmem_startup_hook = nram_shmem_startup;
-    elog(LOG, "NRAM extension loaded via shared_preload_libraries");
-
     nram_init_tid();
 }
 
 
 KVEngine* GetCurrentEngine(void) {
     Assert(shared_engine != NULL);
+    Assert(CHECK_ROCKS_ENGINE_MAGIC((RocksEngine*)shared_engine));
     return shared_engine;
 }
 

@@ -34,19 +34,34 @@ void rocksengine_fetch_table_key(Oid table_id, char** min_key, char** max_key) {
  * Open a RocksDB instance.
  * ------------------------------------------------------------------------
  */
-RocksEngine *rocksengine_open() {
+RocksEngine *rocksengine_open(void) {
     char *error = NULL;
     RocksEngine *rocks_engine = NULL;
     rocksdb_options_t *rocksdb_options = rocksengine_config_options();
-    rocksdb_t *rocksdb = rocksdb_open(rocksdb_options, ROCKSDB_PATH, &error);
-    if (error != NULL)
-        ereport(ERROR, (errmsg("RocksDB: open operation failed, %s", error)));
+    rocksdb_t *rocksdb = NULL;
 
+    /* First attempt */
+    rocksdb = rocksdb_open(rocksdb_options, ROCKSDB_PATH, &error);
+
+    /* Check if LOCK file is stale and try recovery */
+    if (error && strstr(error, "lock hold by current process")) {
+        NRAM_TEST_INFO("need manual restart");
+        elog(ERROR, "RocksDB unrecoverable lock detected, manual restart needed");
+    }
+
+    /* Final check */
+    if (error != NULL) {
+        ereport(ERROR,
+                (errmsg("RocksDB: open operation failed, %s", error)));
+    }
+
+    /* Success: initialize RocksEngine */
     rocks_engine = palloc(sizeof(RocksEngine));
+    SET_ROCKS_ENGINE_MAGIC(rocks_engine);
     rocks_engine->rocksdb = rocksdb;
     rocks_engine->rocksdb_options = rocksdb_options;
 
-    /* Initialize the KVEngine */
+    /* Initialize KVEngine interface */
     rocks_engine->engine.create_iterator = rocksengine_create_iterator;
     rocks_engine->engine.get = rocksengine_get;
     rocks_engine->engine.put = rocksengine_put;
@@ -54,8 +69,42 @@ RocksEngine *rocksengine_open() {
     rocks_engine->engine.destroy = rocksengine_destroy;
     rocks_engine->engine.get_min_key = rocksengine_get_min_key;
     rocks_engine->engine.get_max_key = rocksengine_get_max_key;
+
     return rocks_engine;
 }
+
+void rocksengine_open_in_place(RocksEngine* dst) {
+    char *error = NULL;
+    memset(dst, 0, sizeof(RocksEngine));
+    dst->magic = ROCKS_ENGINE_MAGIC;
+    dst->rocksdb_options = rocksengine_config_options();
+    /* First attempt */
+    dst->rocksdb = rocksdb_open(dst->rocksdb_options, ROCKSDB_PATH, &error);
+    /* Check if LOCK file is stale and try recovery */
+    if (error && strstr(error, "lock hold by current process")) {
+        NRAM_TEST_INFO("need manual restart");
+        elog(ERROR, "RocksDB unrecoverable lock detected, manual restart needed");
+    }
+
+    /* Final check */
+    if (error != NULL) {
+        ereport(ERROR,
+                (errmsg("RocksDB: open operation failed, %s", error)));
+    }
+
+    /* Success: initialize RocksEngine */
+    SET_ROCKS_ENGINE_MAGIC(dst);
+
+    /* Initialize KVEngine interface */
+    dst->engine.create_iterator = rocksengine_create_iterator;
+    dst->engine.get = rocksengine_get;
+    dst->engine.put = rocksengine_put;
+    dst->engine.delete = rocksengine_delete;
+    dst->engine.destroy = rocksengine_destroy;
+    dst->engine.get_min_key = rocksengine_get_min_key;
+    dst->engine.get_max_key = rocksengine_get_max_key;
+}
+
 
 /* ------------------------------------------------------------------------
  * kvengine_destroy
@@ -138,8 +187,12 @@ void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
     char *serialized_value = tvalue_serialize(tvalue, &serialized_length);
     char *error = NULL;
 
+    NRAM_INFO();
+
     rocksdb_put(rocks_engine->rocksdb, rocksdb_writeoptions, key, key_length,
                 serialized_value, serialized_length, &error);
+
+    NRAM_INFO();
 
     if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
