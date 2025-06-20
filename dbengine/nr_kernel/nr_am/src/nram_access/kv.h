@@ -16,14 +16,18 @@
 #include "access/relscan.h"
 #include "executor/tuptable.h"
 #include "access/xact.h"
+#include "storage/ipc.h"
+#include "storage/lwlock.h"
+#include "storage/shmem.h"
+#include "miscadmin.h"
 
 #define ROCKSDB_PATH "pg_rocksdb"
 // PHX: use the following two debug macros when debugging the code.
-#define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
-#define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
+// #define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+// #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
-// #define NRAM_TEST_INFO(fmt, ...)
-// #define NRAM_INFO()
+#define NRAM_TEST_INFO(fmt, ...)
+#define NRAM_INFO()
 
 
 #define NRAM_KEY_LENGTH (sizeof(Oid) + sizeof(uint64_t))
@@ -31,6 +35,8 @@
 extern void nram_init(void);
 extern void nram_generate_tid(ItemPointer tid);
 extern uint64_t nram_decode_tid(const ItemPointer tid);
+extern shmem_startup_hook_type prev_shmem_startup_hook;
+extern void nram_shmem_startup(void);
 
 typedef struct NRAMKeyData {
     Oid tableOid;

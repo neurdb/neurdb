@@ -12,11 +12,18 @@
 
 #define NRAM_TABLE_KEY_LENGTH 4
 
+#define ROCKS_ENGINE_MAGIC 0xCAFEBABE
+
 typedef struct RocksEngine {
+    uint32_t magic; // memory checking bit.
     KVEngine engine;
     rocksdb_t *rocksdb;
     rocksdb_options_t *rocksdb_options;
 } RocksEngine;
+
+#define SET_ROCKS_ENGINE_MAGIC(ptr)   ((ptr)->magic = ROCKS_ENGINE_MAGIC)
+#define CHECK_ROCKS_ENGINE_MAGIC(ptr) ((ptr) != NULL && (ptr)->magic == ROCKS_ENGINE_MAGIC)
+#define INVALIDATE_ROCKS_ENGINE_MAGIC(ptr) ((ptr)->magic = 0xDEADBEEF)
 
 typedef struct RocksEngineIterator {
     KVEngineIterator iterator;
@@ -27,6 +34,7 @@ typedef struct RocksEngineIterator {
 
 /* RocksDB engine */
 RocksEngine* rocksengine_open(void);
+void rocksengine_open_in_place(RocksEngine* dst);
 rocksdb_options_t* rocksengine_config_options(void);
 void rocksengine_destroy(KVEngine *engine);
 KVEngineIterator *rocksengine_create_iterator(KVEngine *engine, bool isforward);

@@ -8,7 +8,7 @@ cd /code/neurdb-dev/dbengine/nr_kernel || {
 
 # Stop the NEURDB PostgreSQL server
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop || {
-    echo "Failed to stop the NEURDB PostgreSQL server (already started)"
+    echo "Failed to stop the NEURDB PostgreSQL server (already stopped)"
 }
 
 # Start the NEURDB PostgreSQL server

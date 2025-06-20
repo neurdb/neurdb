@@ -26,26 +26,8 @@ PG_MODULE_MAGIC;
 
 void nram_shutdown_session(void) {
     KVEngine* engine = GetCurrentEngine();
-    NRAM_INFO();
-    NRAM_TEST_INFO("Closing rocksengine??");
     engine->destroy(engine);
     engine = NULL;
-}
-
-static NRAMState *get_nram_state(Relation rel) {
-    NRAMState *state = (NRAMState *)rel->rd_amcache;
-    MemoryContext oldctx;
-    if (state && IS_VALID_NRAM_STATE(state)) return state;
-    NRAM_TEST_INFO("refreshing the nram state");
-
-    oldctx = MemoryContextSwitchTo(CacheMemoryContext);
-    state = palloc(sizeof(NRAMState));
-    state->magic = NRAM_STATE_MAGIC;
-    state->engine = GetCurrentEngine();
-
-    rel->rd_amcache = (void *)state;
-    MemoryContextSwitchTo(oldctx);
-    return state;
 }
 
 /* ------------------------------------------------------------------------
@@ -56,7 +38,6 @@ static NRAMState *get_nram_state(Relation rel) {
 static const TupleTableSlotOps *nram_slot_callbacks(Relation relation) {
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
-    get_nram_state(relation);
     return &TTSOpsHeapTuple;  // only use nram for heap tuples.
 }
 
@@ -70,17 +51,17 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     ParallelTableScanDesc parallel_scan,
                                     uint32 flags) {
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
-    NRAMState *state = get_nram_state(relation);
+    KVEngine *engine = GetCurrentEngine();
     // TODO: consider table inside min key setting.
     MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
     RelationIncrementReferenceCount(relation);
-    scan->min_key = rocksengine_get_min_key(state->engine, relation->rd_id);
-    scan->max_key = rocksengine_get_max_key(state->engine, relation->rd_id);
+    scan->min_key = rocksengine_get_min_key(engine, relation->rd_id);
+    scan->max_key = rocksengine_get_max_key(engine, relation->rd_id);
 
     scan->rs_base.rs_rd = relation;
-    scan->engine_iterator = rocksengine_create_iterator(state->engine, true);
+    scan->engine_iterator = rocksengine_create_iterator(engine, true);
     scan->rs_base.rs_snapshot = snapshot;
     scan->rs_base.rs_nkeys = nkeys;
     scan->rs_base.rs_key = key;
@@ -172,13 +153,11 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
 
 static IndexFetchTableData *nram_index_fetch_begin(Relation relation) {
     IndexFetchKVData *kvscan;
-    NRAMState *nram_state;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
     kvscan = palloc0(sizeof(IndexFetchKVData));
-    nram_state = get_nram_state(relation);
     kvscan->xs_base.rel = relation;
-    kvscan->xs_engine = nram_state->engine;
+    kvscan->xs_engine = GetCurrentEngine();
     return (IndexFetchTableData *)kvscan;
 }
 
@@ -239,14 +218,12 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
 // PHX: consider how to do the vaccum here.
 static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
                         int options, BulkInsertState bistate, ItemPointer tid) {
-    NRAMState *nram_state;
     TupleDesc tupdesc;
     NRAMKey tkey;
     NRAMValue tvalue;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
 
-    nram_state = get_nram_state(relation);
     tupdesc = RelationGetDescr(relation);
     nram_generate_tid(tid);
     NRAM_TEST_INFO("nram tid generated as %lu", nram_decode_tid(tid));
@@ -255,14 +232,14 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     tkey = nram_key_from_tid(tup->t_tableOid, tid);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
-    rocksengine_put(nram_state->engine, tkey, tvalue);
+    rocksengine_put(GetCurrentEngine(), tkey, tvalue);
     add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
+    NRAM_TEST_INFO("finished add write set");
 
     // Cleanup memory if necessary.
     pfree(tkey);
     pfree(tvalue);
 
-    ASSERT_VALID_NRAM_STATE(nram_state);
 }
 
 static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
@@ -576,6 +553,8 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
 }
 
 void _PG_init(void) {
+    prev_shmem_startup_hook = shmem_startup_hook;
+    shmem_startup_hook = nram_shmem_startup;
     nram_init();
     nram_register_xact_hook();
 }
@@ -583,4 +562,5 @@ void _PG_init(void) {
 void _PG_fini(void) {
     nram_shutdown_session();
     nram_unregister_xact_hook();
+    shmem_startup_hook = prev_shmem_startup_hook;
 }

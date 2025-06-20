@@ -19,10 +19,10 @@ PGFILEDESC = "nram - CCaaLF custom table access method"
 PG_CPPFLAGS += -I/usr/local/include -I./src/
 SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
-# REGRESS = clean init unit_tests table_scan xact_basic index_scan
+REGRESS = clean init unit_tests table_scan xact_basic index_scan
 
 # ISOLATION = read_committed repeatable_read
-ISOLATION = read_committed
+# ISOLATION = read_committed
 ISOLATION_OPTS = --temp-config $(top_srcdir)/src/test/regress/postgresql.conf
 ISOLATIONDIR = $(srcdir)/isolation
 ISOLATION_EXPECTED = $(ISOLATIONDIR)
@@ -40,11 +40,13 @@ debug:
 	$(MAKE) -f Makefile PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" SHLIB_LINK="$(SHLIB_LINK)" CFLAGS="-g -O0 -Wall"
 
 test:
-	rm -rf ${NEURDBPATH}/psql/data/pg_rocksdb/
+	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
+	rm -rf ../logfile
 	make clean
 	make -j
 	sudo make install
-	psql -d neurdb -f ./sql/clean.sql
-	psql -d neurdb -f ./sql/init.sql
-	psql -d neurdb -f ./sql/table_scan.sql
-	# make installcheck
+	bash ../scripts/restart_db.sh
+	# psql -d neurdb -f ./sql/clean.sql
+	# psql -d neurdb -f ./sql/init.sql
+	# psql -d neurdb -f ./sql/table_scan.sql
+	make installcheck
