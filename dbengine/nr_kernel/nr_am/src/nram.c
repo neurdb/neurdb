@@ -61,10 +61,11 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     scan->max_key = rocksengine_get_max_key(engine, relation->rd_id);
 
     scan->rs_base.rs_rd = relation;
-    scan->engine_iterator = rocksengine_create_iterator(engine, true);
     scan->rs_base.rs_snapshot = snapshot;
     scan->rs_base.rs_nkeys = nkeys;
     scan->rs_base.rs_key = key;
+
+    scan->engine_iterator = rocksengine_create_iterator(engine, true);
 
     if (scan->min_key != NULL) {
         // In case the table is not empty, seek the iterator starting point.
@@ -95,6 +96,8 @@ static void nram_endscan(TableScanDesc sscan) {
     pfree(scan);
 }
 
+// TODO: the get next here could cause conflict on the index!
+// TODO: filter out those uncommitted records.
 static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
                              TupleTableSlot *slot) {
     NRAMKey tkey;
@@ -103,6 +106,7 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     KVScanDesc sscan;
     KVEngineIterator *it;
     MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
+    NRAMXactState xact = GetCurrentNRAMXact();
 
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
@@ -120,12 +124,14 @@ static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
     }
 
     it->get(it, &tkey, &tvalue);
-    if (!read_own_write(GetCurrentNRAMXact(), tkey, &tvalue))
-        add_read_set(GetCurrentNRAMXact(), tkey, tvalue->xact_id);
+    if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
+        add_read_set(xact, tkey, tvalue);
+    }
 
     if (tkey->tableOid != scan->rs_rd->rd_id) {
         // The end of table. Currently, we only support forward scan.
-        Assert(tkey->tableOid > scan->rs_rd->rd_id);
+        // Not that depending on the machine, big/small endian.
+        // The tkey->tableOid could be smaller than scan->rs_rd->rd_id. This is expected.
         pfree(tkey);
         pfree(tvalue);
         MemoryContextSwitchTo(oldctx);
@@ -181,18 +187,19 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
     NRAMKey tkey;
     NRAMValue tvalue;
     HeapTuple tuple;
+    NRAMXactState xact = GetCurrentNRAMXact();
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
 
     kvscan = (IndexFetchKVData *)scan;
     tkey = nram_key_from_tid(kvscan->xs_base.rel->rd_id, tid);
-    if (!read_own_write(GetCurrentNRAMXact(), tkey, &tvalue)) {
+    if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
         tvalue = rocksengine_get(kvscan->xs_engine, tkey);
         if (tvalue == NULL) {
             pfree(tkey);
             return false;
         }
-        add_read_set(GetCurrentNRAMXact(), tkey, tvalue->xact_id);
+        add_read_set(xact, tkey, tvalue);
     }
 
     tuple = deserialize_nram_value_to_tuple(
@@ -234,7 +241,7 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
 
     rocksengine_put(GetCurrentEngine(), tkey, tvalue);
     add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
-    NRAM_TEST_INFO("finished add write set");
+    NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
 
     // Cleanup memory if necessary.
     pfree(tkey);

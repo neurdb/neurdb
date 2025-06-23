@@ -76,6 +76,7 @@ RocksEngine *rocksengine_open(void) {
 void rocksengine_open_in_place(RocksEngine* dst) {
     char *error = NULL;
     memset(dst, 0, sizeof(RocksEngine));
+    NRAM_TEST_INFO("Opening rocksengine !!!!! in place.");
     dst->magic = ROCKS_ENGINE_MAGIC;
     dst->rocksdb_options = rocksengine_config_options();
     /* First attempt */
@@ -157,6 +158,7 @@ KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
  * ------------------------------------------------------------------------
  */
 NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey) {
+    NRAM_INFO();
     RocksEngine *rocks_engine = (RocksEngine *)engine;
     rocksdb_readoptions_t *rocksdb_readoptions = rocksdb_readoptions_create();
     Size value_lenth;
@@ -180,19 +182,17 @@ NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey) {
  * ------------------------------------------------------------------------
  */
 void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
+    NRAM_INFO();
     RocksEngine *rocks_engine = (RocksEngine *)engine;
     rocksdb_writeoptions_t *rocksdb_writeoptions = rocksdb_writeoptions_create();
+    rocksdb_writeoptions_set_sync(rocksdb_writeoptions, 1);
     Size serialized_length, key_length;
     char *key = tkey_serialize(tkey, &key_length);
     char *serialized_value = tvalue_serialize(tvalue, &serialized_length);
     char *error = NULL;
 
-    NRAM_INFO();
-
     rocksdb_put(rocks_engine->rocksdb, rocksdb_writeoptions, key, key_length,
                 serialized_value, serialized_length, &error);
-
-    NRAM_INFO();
 
     if (error != NULL)
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));

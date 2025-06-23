@@ -1,7 +1,0 @@
-SET client_min_messages TO WARNING;
-DROP TABLE IF EXISTS x;
-DROP TABLE IF EXISTS accounts;
-DROP EXTENSION IF EXISTS nram CASCADE;
-DROP ACCESS METHOD IF EXISTS nram;
-DROP FUNCTION IF EXISTS nram_tableam_handler(internal);
-DROP FUNCTION IF EXISTS run_nram_tests();
