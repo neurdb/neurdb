@@ -15,10 +15,10 @@
 #define ROCKS_ENGINE_MAGIC 0xCAFEBABE
 
 typedef struct RocksEngine {
-    uint32_t magic; // memory checking bit.
     KVEngine engine;
     rocksdb_t *rocksdb;
     rocksdb_options_t *rocksdb_options;
+    uint32_t magic; // memory checking bit.
 } RocksEngine;
 
 #define SET_ROCKS_ENGINE_MAGIC(ptr)   ((ptr)->magic = ROCKS_ENGINE_MAGIC)
@@ -29,7 +29,7 @@ typedef struct RocksEngineIterator {
     KVEngineIterator iterator;
     rocksdb_iterator_t *rocksdb_iterator;
     rocksdb_readoptions_t *rocksdb_readoptions;
-    // rocksdb_snapshot_t *rocksdb_snapshot;    TODO (?): add snapshot if needed
+    const rocksdb_snapshot_t *rocksdb_snapshot;
 } RocksEngineIterator;
 
 /* RocksDB engine */
@@ -49,7 +49,7 @@ NRAMKey rocksengine_get_max_key(KVEngine *engine, Oid table_id);
 
 /* RocksDB iterator */
 void rocksengine_fetch_table_key(Oid table_id, char** min_key, char** max_key);
-void rocksengine_iterator_destroy(KVEngineIterator *iterator);
+void rocksengine_iterator_destroy(KVEngine *engine, KVEngineIterator *iterator);
 void rocksengine_iterator_seek(KVEngineIterator *iterator, NRAMKey tkey);
 void rocksengine_iterator_seek_for_prev(KVEngineIterator *iterator, NRAMKey tkey);
 bool rocksengine_iterator_is_valid(KVEngineIterator *iterator);

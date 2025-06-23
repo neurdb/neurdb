@@ -39,6 +39,7 @@ RocksEngine *rocksengine_open(void) {
     RocksEngine *rocks_engine = NULL;
     rocksdb_options_t *rocksdb_options = rocksengine_config_options();
     rocksdb_t *rocksdb = NULL;
+    NRAM_INFO();
 
     /* First attempt */
     rocksdb = rocksdb_open(rocksdb_options, ROCKSDB_PATH, &error);
@@ -75,9 +76,9 @@ RocksEngine *rocksengine_open(void) {
 
 void rocksengine_open_in_place(RocksEngine* dst) {
     char *error = NULL;
-    memset(dst, 0, sizeof(RocksEngine));
-    NRAM_TEST_INFO("Opening rocksengine !!!!! in place.");
-    dst->magic = ROCKS_ENGINE_MAGIC;
+    NRAM_INFO();
+    // memset(dst, 0, sizeof(RocksEngine));
+    dst->magic = 0;
     dst->rocksdb_options = rocksengine_config_options();
     /* First attempt */
     dst->rocksdb = rocksdb_open(dst->rocksdb_options, ROCKSDB_PATH, &error);
@@ -93,9 +94,6 @@ void rocksengine_open_in_place(RocksEngine* dst) {
                 (errmsg("RocksDB: open operation failed, %s", error)));
     }
 
-    /* Success: initialize RocksEngine */
-    SET_ROCKS_ENGINE_MAGIC(dst);
-
     /* Initialize KVEngine interface */
     dst->engine.create_iterator = rocksengine_create_iterator;
     dst->engine.get = rocksengine_get;
@@ -104,6 +102,9 @@ void rocksengine_open_in_place(RocksEngine* dst) {
     dst->engine.destroy = rocksengine_destroy;
     dst->engine.get_min_key = rocksengine_get_min_key;
     dst->engine.get_max_key = rocksengine_get_max_key;
+
+    /* Success: initialize RocksEngine */
+    SET_ROCKS_ENGINE_MAGIC(dst);
 }
 
 
@@ -135,7 +136,11 @@ KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
         elog(ERROR, "[NRAM] rocks_engine->rocksdb is NULL!");
 
     rocks_it->rocksdb_readoptions = rocksdb_readoptions_create();
-    rocks_it->rocksdb_iterator = rocksdb_create_iterator(rocks_engine->rocksdb, rocks_it->rocksdb_readoptions);
+    rocks_it->rocksdb_snapshot = rocksdb_create_snapshot(rocks_engine->rocksdb);
+    rocksdb_readoptions_set_snapshot(rocks_it->rocksdb_readoptions, 
+        rocks_it->rocksdb_snapshot);
+    rocks_it->rocksdb_iterator = rocksdb_create_iterator(rocks_engine->rocksdb, 
+        rocks_it->rocksdb_readoptions);
     if (rocks_it->rocksdb_iterator == NULL) {
         rocksdb_readoptions_destroy(rocks_it->rocksdb_readoptions);
         pfree(rocks_it);
@@ -144,7 +149,6 @@ KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
 
     /* Initialize the KVEngineIterator */
     kv_it = (KVEngineIterator *)rocks_it;
-    kv_it->destroy = rocksengine_iterator_destroy;
     kv_it->is_valid = rocksengine_iterator_is_valid;
     kv_it->get = rocksengine_iterator_get;
     kv_it->next = isforward? rocksengine_iterator_next: rocksengine_iterator_prev;
@@ -185,7 +189,7 @@ void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
     NRAM_INFO();
     RocksEngine *rocks_engine = (RocksEngine *)engine;
     rocksdb_writeoptions_t *rocksdb_writeoptions = rocksdb_writeoptions_create();
-    rocksdb_writeoptions_set_sync(rocksdb_writeoptions, 1);
+    // rocksdb_writeoptions_set_sync(rocksdb_writeoptions, 1);
     Size serialized_length, key_length;
     char *key = tkey_serialize(tkey, &key_length);
     char *serialized_value = tvalue_serialize(tvalue, &serialized_length);
@@ -226,8 +230,10 @@ void rocksengine_delete(KVEngine *engine, NRAMKey tkey) {
  * Destroy the RocksDB engine iterator.
  * ------------------------------------------------------------------------
  */
-void rocksengine_iterator_destroy(KVEngineIterator *iterator) {
+void rocksengine_iterator_destroy(KVEngine* engine, KVEngineIterator *iterator) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *)iterator;
+    RocksEngine *rocks_engine = (RocksEngine *)engine;
+    rocksdb_release_snapshot(rocks_engine->rocksdb, rocks_it->rocksdb_snapshot);
     rocksdb_readoptions_destroy(rocks_it->rocksdb_readoptions);
     rocksdb_iter_destroy(rocks_it->rocksdb_iterator);
     rocks_it = NULL;
@@ -322,11 +328,11 @@ NRAMKey rocksengine_get_min_key(KVEngine *engine, Oid table_id) {
     rocksdb_iter_seek(rocks_it->rocksdb_iterator, min_key, NRAM_TABLE_KEY_LENGTH);
 
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it)) {
-        rocksengine_iterator_destroy((KVEngineIterator *)rocks_it);
+        rocksengine_iterator_destroy(engine, (KVEngineIterator *)rocks_it);
         return NULL;
     }
     rocksengine_iterator_get((KVEngineIterator *)rocks_it, &tkey, &tvalue);
-    rocksengine_iterator_destroy((KVEngineIterator *)rocks_it);
+    rocksengine_iterator_destroy(engine, (KVEngineIterator *)rocks_it);
     return tkey;
 }
 
@@ -349,6 +355,6 @@ NRAMKey rocksengine_get_max_key(KVEngine *engine, Oid table_id) {
         return NULL;
 
     rocksengine_iterator_get((KVEngineIterator *)rocks_it, &tkey, &tvalue);
-    rocksengine_iterator_destroy((KVEngineIterator *)rocks_it);
+    rocksengine_iterator_destroy(engine, (KVEngineIterator *)rocks_it);
     return tkey;
 }

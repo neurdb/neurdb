@@ -92,7 +92,7 @@ static void nram_endscan(TableScanDesc sscan) {
         pfree(scan->min_key);
     if (scan->max_key)
         pfree(scan->max_key);
-    rocksengine_iterator_destroy(scan->engine_iterator);
+    rocksengine_iterator_destroy(GetCurrentEngine(), scan->engine_iterator);
     pfree(scan);
 }
 

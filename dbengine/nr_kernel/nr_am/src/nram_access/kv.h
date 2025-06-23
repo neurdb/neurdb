@@ -23,11 +23,11 @@
 
 #define ROCKSDB_PATH "pg_rocksdb"
 // PHX: use the following two debug macros when debugging the code.
-// #define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
-// #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
+#define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
-#define NRAM_TEST_INFO(fmt, ...)
-#define NRAM_INFO()
+// #define NRAM_TEST_INFO(fmt, ...)
+// #define NRAM_INFO()
 
 
 #define NRAM_KEY_LENGTH (sizeof(Oid) + sizeof(uint64_t))
@@ -81,7 +81,6 @@ extern NRAMValue copy_nram_value(NRAMValue src);
  * ------------------------------------------------------------------------
  */
 typedef struct KVEngineIterator {
-    void (*destroy)(struct KVEngineIterator *);                 /* destroy the iterator */
     void (*seek)(struct KVEngineIterator *, NRAMKey);              /* move to the first entry with key >= given key */
     bool (*is_valid)(struct KVEngineIterator *);                /* check if the iterator is valid */
     void (*next)(struct KVEngineIterator *);                    /* move to the next entry */
