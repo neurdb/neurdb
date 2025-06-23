@@ -197,6 +197,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                     current_nram_xact->xact_id);
             } else {
                 KVEngine* engine = GetCurrentEngine();
+                // RocksEngine* rocks_engine = (RocksEngine*) engine;
                 ListCell *cell;
                 LOCKTAG tag;
 
@@ -233,7 +234,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
 	                SET_LOCKTAG_ADVISORY(tag, opt->key->tableOid, opt->key->tid, 0, 0);
                     LockRelease(&tag, ExclusiveLock, false);
                 }
-
+                // TODO: flush to WAL here.
                 NRAM_TEST_INFO("Validation succeed.");
             }
             break;
