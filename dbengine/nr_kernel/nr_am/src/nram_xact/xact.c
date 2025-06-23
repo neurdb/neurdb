@@ -65,12 +65,14 @@ static inline void clear_nram_xact() {
         foreach(cell, current_nram_xact->read_set) {
             NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
             pfree(opt->key);
+            pfree(opt->value);
             pfree(opt);
         }
         list_free(current_nram_xact->read_set);
         foreach(cell, current_nram_xact->write_set) {
             NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
             pfree(opt->key);
+            pfree(opt->value);
             pfree(opt);
         }
         list_free(current_nram_xact->write_set);
@@ -127,7 +129,7 @@ NRAMXactOpt find_read_set(NRAMXactState state, NRAMKey key) {
     return NULL;
 }
 
-void add_read_set(NRAMXactState state, NRAMKey key, TransactionId value_xact_id) {
+void add_read_set(NRAMXactState state, NRAMKey key, NRAMValue value) {
     MemoryContext oldCtx = MemoryContextSwitchTo(TopTransactionContext);
     NRAMXactOpt opt;
 
@@ -135,9 +137,9 @@ void add_read_set(NRAMXactState state, NRAMKey key, TransactionId value_xact_id)
     Assert(find_write_set(state, key) == NULL);
     opt = palloc(sizeof(NRAMXactOptData));
     opt->key = copy_nram_key(key);
-    opt->xact_id = value_xact_id;
+    opt->xact_id = value->xact_id;
+    opt->value = copy_nram_value(value);
     opt->type = XACT_OP_READ;
-    opt->value = NULL;
     state->read_set = lappend(state->read_set, opt);
     MemoryContextSwitchTo(oldCtx);
 }
@@ -163,17 +165,20 @@ void add_write_set(NRAMXactState state, NRAMKey key, NRAMValue value) {
 }
 
 bool read_own_write(NRAMXactState state, const NRAMKey key, NRAMValue *value) {
-    // MemoryContext oldCtx = MemoryContextSwitchTo(TopTransactionContext);
     NRAMXactOpt tmp = find_write_set(state, key);
-    if (tmp == NULL) {
-        // MemoryContextSwitchTo(oldCtx);
+    if (tmp == NULL)
         return false;
-    }
     *value = copy_nram_value(tmp->value);
-    // MemoryContextSwitchTo(oldCtx);
     return true;
 }
 
+bool read_own_read(NRAMXactState state, const NRAMKey key, NRAMValue *value) {
+    NRAMXactOpt tmp = find_read_set(state, key);
+    if (tmp == NULL)
+        return false;
+    *value = copy_nram_value(tmp->value);
+    return true;
+}
 
 static void nram_xact_callback(XactEvent event, void *arg) {
     MemoryContext oldCtx;

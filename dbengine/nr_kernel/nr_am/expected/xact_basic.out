@@ -13,5 +13,21 @@ SELECT * from x;
  1 | k1 | v1
 (1 row)
 
+COMMIT;
+BEGIN;
+SELECT * from x;
+ a | b  | c  
+---+----+----
+ 1 | k1 | v1
+(1 row)
+
+INSERT INTO x VALUES (2, 'k2', 'v2');
+SELECT * from x;
+ a | b  | c  
+---+----+----
+ 1 | k1 | v1
+ 2 | k2 | v2
+(2 rows)
+
 DROP TABLE x;
 COMMIT;

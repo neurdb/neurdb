@@ -10,7 +10,7 @@
 #include "rocksdb/c.h"
 #include "nram_access/kv.h"
 
-#define NRAM_TABLE_KEY_LENGTH 4
+#define NRAM_TABLE_KEY_LENGTH (sizeof(Oid))
 
 #define ROCKS_ENGINE_MAGIC 0xCAFEBABE
 
