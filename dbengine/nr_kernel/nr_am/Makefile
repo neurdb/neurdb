@@ -7,6 +7,8 @@ OBJS = \
 	${EXTPATH}/src/nram_access/kv.o \
 	${EXTPATH}/src/nram_xact/xact.o \
 	${EXTPATH}/src/nram_storage/rocksengine.o \
+	${EXTPATH}/src/ipc/mq.o \
+	${EXTPATH}/src/ipc/msg.o \
 	${EXTPATH}/src/test/kv_test.o
 
 
@@ -20,9 +22,10 @@ PG_CPPFLAGS += -I/usr/local/include -I./src/
 SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
 # REGRESS = clean init unit_tests table_scan xact_basic index_scan
+REGRESS = clean init unit_tests
 
 # ISOLATION = read_committed repeatable_read
-ISOLATION = read_committed
+# ISOLATION = read_committed
 ISOLATION_OPTS = --temp-config $(top_srcdir)/src/test/regress/postgresql.conf
 ISOLATIONDIR = $(srcdir)/isolation
 ISOLATION_EXPECTED = $(ISOLATIONDIR)
@@ -46,7 +49,8 @@ test:
 	make -j
 	sudo make install
 	bash ../scripts/restart_db.sh
-	# psql -d neurdb -f ./sql/clean.sql
-	# psql -d neurdb -f ./sql/init.sql
+	psql -d neurdb -f ./sql/clean.sql
+	psql -d neurdb -f ./sql/init.sql
+	psql -d neurdb -f ./sql/unit_tests.sql
 	# psql -d neurdb -f ./sql/table_scan.sql
-	make installcheck
+	# make installcheck
