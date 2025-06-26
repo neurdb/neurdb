@@ -58,7 +58,6 @@ RocksEngine *rocksengine_open(void) {
 
     /* Success: initialize RocksEngine */
     rocks_engine = palloc(sizeof(RocksEngine));
-    SET_ROCKS_ENGINE_MAGIC(rocks_engine);
     rocks_engine->rocksdb = rocksdb;
     rocks_engine->rocksdb_options = rocksdb_options;
 
@@ -70,6 +69,7 @@ RocksEngine *rocksengine_open(void) {
     rocks_engine->engine.destroy = rocksengine_destroy;
     rocks_engine->engine.get_min_key = rocksengine_get_min_key;
     rocks_engine->engine.get_max_key = rocksengine_get_max_key;
+    SET_ROCKS_ENGINE_MAGIC(rocks_engine);
 
     return rocks_engine;
 }
@@ -162,7 +162,6 @@ KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
  * ------------------------------------------------------------------------
  */
 NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey) {
-    NRAM_INFO();
     RocksEngine *rocks_engine = (RocksEngine *)engine;
     rocksdb_readoptions_t *rocksdb_readoptions = rocksdb_readoptions_create();
     Size value_lenth;
@@ -186,10 +185,8 @@ NRAMValue rocksengine_get(KVEngine *engine, NRAMKey tkey) {
  * ------------------------------------------------------------------------
  */
 void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
-    NRAM_INFO();
     RocksEngine *rocks_engine = (RocksEngine *)engine;
     rocksdb_writeoptions_t *rocksdb_writeoptions = rocksdb_writeoptions_create();
-    // rocksdb_writeoptions_set_sync(rocksdb_writeoptions, 1);
     Size serialized_length, key_length;
     char *key = tkey_serialize(tkey, &key_length);
     char *serialized_value = tvalue_serialize(tvalue, &serialized_length);

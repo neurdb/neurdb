@@ -18,7 +18,7 @@ typedef struct RocksEngine {
     KVEngine engine;
     rocksdb_t *rocksdb;
     rocksdb_options_t *rocksdb_options;
-    uint32_t magic; // memory checking bit.
+    uint32_t magic;
 } RocksEngine;
 
 #define SET_ROCKS_ENGINE_MAGIC(ptr)   ((ptr)->magic = ROCKS_ENGINE_MAGIC)

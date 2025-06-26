@@ -35,8 +35,8 @@
 extern void nram_init(void);
 extern void nram_generate_tid(ItemPointer tid);
 extern uint64_t nram_decode_tid(const ItemPointer tid);
-extern shmem_startup_hook_type prev_shmem_startup_hook;
-extern void nram_shmem_startup(void);
+// extern shmem_startup_hook_type prev_shmem_startup_hook;
+// extern void nram_shmem_startup(void);
 
 typedef struct NRAMKeyData {
     Oid tableOid;
@@ -106,6 +106,23 @@ typedef struct KVEngine {
 } KVEngine;
 
 extern KVEngine *GetCurrentEngine(void);
+
+/*
+ * The scan state is for maintaining state for a scan, either for a
+ * SELECT or UPDATE or DELETE.
+ */
+typedef struct TableReadState {
+    uint64 operationId;
+    NRAMKey key;
+    bool hasNext;  /* whether a next batch from RangeQuery or ReadBatch*/
+
+    bool done;
+    char* buf;     /* data returned by RangeQuery or ReadBatch */
+    size_t bufLen; /* no next batch if it is 0 */
+    char* next;    /* pointer to the next data entry during scan */
+
+    bool execExplainOnly;
+} TableReadState;
 
 /*
  * ----------------------------------------------------------------

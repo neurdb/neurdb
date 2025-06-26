@@ -27,7 +27,6 @@ PG_MODULE_MAGIC;
 void nram_shutdown_session(void) {
     KVEngine* engine = GetCurrentEngine();
     engine->destroy(engine);
-    engine = NULL;
 }
 
 /* ------------------------------------------------------------------------
@@ -46,33 +45,38 @@ static const TupleTableSlotOps *nram_slot_callbacks(Relation relation) {
  * ------------------------------------------------------------------------
  */
 
+// static uint64 operationId = 0;  /* a SQL might cause multiple scans */
+
 static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     int nkeys, struct ScanKeyData *key,
                                     ParallelTableScanDesc parallel_scan,
                                     uint32 flags) {
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
-    KVEngine *engine = GetCurrentEngine();
-    // TODO: consider table inside min key setting.
-    MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
-    RelationIncrementReferenceCount(relation);
-    scan->min_key = rocksengine_get_min_key(engine, relation->rd_id);
-    scan->max_key = rocksengine_get_max_key(engine, relation->rd_id);
 
+    // scan->read_state = palloc0(sizeof(TableReadState));
+    // scan->read_state->execExplainOnly = flags & EXEC_FLAG_EXPLAIN_ONLY? true: false;
+    // scan->read_state->operationId = 0;
+    // scan->read_state->done = false;
+    // scan->read_state->key = NULL;
+    
+    RelationIncrementReferenceCount(relation);
     scan->rs_base.rs_rd = relation;
     scan->rs_base.rs_snapshot = snapshot;
     scan->rs_base.rs_nkeys = nkeys;
     scan->rs_base.rs_key = key;
 
-    scan->engine_iterator = rocksengine_create_iterator(engine, true);
 
-    if (scan->min_key != NULL) {
-        // In case the table is not empty, seek the iterator starting point.
-        rocksengine_iterator_seek(scan->engine_iterator, scan->min_key);
-    }
-
-    MemoryContextSwitchTo(oldctx);
+    // TODO: send the args to the remote server.
+    // ReadBatchArgs args;
+    // args.buf = &readState->buf;
+    // args.bufLen = &readState->bufLen;
+    // args.opid = ++operationId;
+    // readState->hasNext = KVReadBatchRequest(relationId, &args);
+    // rocksengine_get();    
+    // scan->read_state->next = scan->read_state->buf;
+    // scan->read_state->operationId = operationId;
     return (TableScanDesc)scan;
 }
 
@@ -222,7 +226,6 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
  * ------------------------------------------------------------------------
  */
 
-// PHX: consider how to do the vaccum here.
 static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
                         int options, BulkInsertState bistate, ItemPointer tid) {
     TupleDesc tupdesc;
@@ -258,6 +261,8 @@ static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
 
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
+
+    slot_getallattrs(slot);
 
     /* Update the tuple with table oid */
     slot->tts_tableOid = RelationGetRelid(relation);
@@ -556,12 +561,15 @@ PG_FUNCTION_INFO_V1(run_nram_tests);
 Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_serialization_test();
     run_kv_copy_test();
+    run_kv_channel_basic_test();
+    run_kv_channel_sequential_test();
+    run_kv_channel_multiprocess_test();
     PG_RETURN_VOID();
 }
 
 void _PG_init(void) {
-    prev_shmem_startup_hook = shmem_startup_hook;
-    shmem_startup_hook = nram_shmem_startup;
+    // prev_shmem_startup_hook = shmem_startup_hook;
+    // shmem_startup_hook = nram_shmem_startup;
     nram_init();
     nram_register_xact_hook();
 }
@@ -569,5 +577,5 @@ void _PG_init(void) {
 void _PG_fini(void) {
     nram_shutdown_session();
     nram_unregister_xact_hook();
-    shmem_startup_hook = prev_shmem_startup_hook;
+    // shmem_startup_hook = prev_shmem_startup_hook;
 }
