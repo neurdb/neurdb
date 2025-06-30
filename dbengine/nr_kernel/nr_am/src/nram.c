@@ -564,6 +564,7 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_channel_basic_test();
     run_kv_channel_sequential_test();
     run_kv_channel_multiprocess_test();
+    run_kv_channel_msg_basic_test();
     PG_RETURN_VOID();
 }
 
