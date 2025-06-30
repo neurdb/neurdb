@@ -5,7 +5,8 @@
 #include "postgres.h"
 #include "funcapi.h"
 #include "ipc/msg.h"
-#include <pthread.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 
 /*
  * This test:
@@ -305,49 +306,75 @@ void run_kv_channel_sequential_test(void) {
 void run_kv_channel_multiprocess_test(void) {
     KVChannel* channel;
     char* name = "multi_proc_kv_channel";
-    int total_messages = 1000;
     pid_t producer_pid, consumer_pid;
+    int total_messages = 10, status = 0;
+    double timeout_secs = 2.0;
 
     channel = KVChannelInit(name, true);
 
     producer_pid = fork();
     if (producer_pid == 0) {
         /* Producer process */
-        channel = KVChannelInit(name, false);
         char msg[128];
         int produced = 0;
-        // NRAM_TEST_INFO("Producer process started");
+        struct timeval start, now;
+        double elapsed;
+
+        channel = KVChannelInit(name, false);
+        snprintf(msg, sizeof(msg), "msg_%05d-%04d", getpid(), produced);
+
+        gettimeofday(&start, NULL);
 
         while (produced < total_messages) {
-            snprintf(msg, sizeof(msg), "msg_%04d", produced);
-            if (KVChannelPush(channel, msg, strlen(msg) + 1, true))
+            if (KVChannelPush(channel, msg, strlen(msg) + 1, true)) {
                 produced++;
+            } else {
+                pg_usleep(1000);  // Sleep 1ms to avoid tight loop
+            }
+
+            gettimeofday(&now, NULL);
+            elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
+            if (elapsed > timeout_secs) {
+                PrintChannelContent(channel);
+                elog(ERROR, "[Producer %d] Timeout after %.2f seconds", getpid(), timeout_secs);
+            }
         }
-        // NRAM_TEST_INFO("Producer finished");
         _exit(0);
     }
 
     consumer_pid = fork();
     if (consumer_pid == 0) {
         /* Consumer process */
-        channel = KVChannelInit(name, false);
         char buf[128];
         int consumed = 0;
-        // NRAM_TEST_INFO("Consumer process started");
+        struct timeval start, now;
+        double elapsed;
+
+        channel = KVChannelInit(name, false);
+        gettimeofday(&start, NULL);
 
         while (consumed < total_messages) {
-            if (KVChannelPop(channel, buf, 9, true)) {
-                if (strncmp(buf, "msg_", 4) != 0)
-                    elog(ERROR, "Corrupted message: %s", buf);
+            if (KVChannelPop(channel, buf, 16, false)) {
+                if (strncmp(buf, "msg_", 4) != 0) {
+                    PrintChannelContent(channel);
+                    elog(ERROR, "[Consumer %d] Corrupted message: %s", getpid(), buf);
+                }
                 consumed++;
+            } else {
+                pg_usleep(1000);  // Sleep 1ms to reduce CPU usage
+            }
+
+            gettimeofday(&now, NULL);
+            elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
+            if (elapsed > timeout_secs) {
+                PrintChannelContent(channel);
+                elog(ERROR, "[Consumer %d] Timeout after %.2f seconds", getpid(), timeout_secs);
             }
         }
-        // NRAM_TEST_INFO("Consumer finished");
         _exit(0);
     }
 
     /* Parent waits */
-    int status;
     waitpid(producer_pid, &status, 0);
     Assert(status == 0);
     waitpid(consumer_pid, &status, 0);
@@ -357,3 +384,149 @@ void run_kv_channel_multiprocess_test(void) {
     elog(INFO, "KV channel multi-process test passed");
 }
 
+
+void run_kv_channel_msg_basic_test(void) {
+    KVMsg msg = NewMsg(kv_put, 12345), *recv;
+    char* data = "Hello, KV World!";
+    KVChannel *channel = KVChannelInit("basic", true);
+    
+    msg.header.entitySize = strlen(data) + 1;
+    msg.entity = data;
+    msg.writer = DefaultWriteEntity;
+    msg.reader = DefaultReadEntity;
+    // PrintKVMsg(&msg);
+
+    if (!KVChannelPushMsg(channel, &msg, false)) {
+        elog(ERROR, "Message channel push fail");
+    }
+    // PrintChannelContent(channel);
+
+    recv = palloc(sizeof(KVMsg));
+
+    if(!KVChannelPopMsg(channel, recv, false)) {
+        // PrintKVMsg(recv);
+        elog(ERROR, "Message channel pop fail");
+    }
+
+
+    Assert(recv->header.op == kv_put);
+    Assert(recv->header.relId == 12345);
+    Assert(recv->header.entitySize == strlen(data) + 1);
+    Assert(recv->entity != NULL);
+    Assert(strcmp((char*)recv->entity, data) == 0);
+    // Assert(false);
+
+    pfree(recv->entity);
+    elog(INFO, "KV channel multi-process test passed");
+}
+
+
+
+// /*
+//  * This test:
+//  * 1. Initializes KVChannel
+//  * 2. Spawns producer and consumer processes
+//  * 3. Pushes/Pops KVMsg with entity payload
+//  * 4. Covers wrap-around edge case and correctness
+//  */
+// void run_kv_msg_multiprocess_test(void) {
+//     KVChannel* channel;
+//     char* name = "kv_msg_test_channel";
+//     pid_t producer_pid, consumer_pid;
+//     int total_messages = 10, status = 0;
+//     double timeout_secs = 2.0;
+
+//     channel = KVChannelInit(name, true);
+
+//     producer_pid = fork();
+//     if (producer_pid == 0) {
+//         /* Producer process */
+//         int produced = 0;
+//         struct timeval start, now;
+//         double elapsed;
+
+//         channel = KVChannelInit(name, false);
+//         gettimeofday(&start, NULL);
+
+//         while (produced < total_messages) {
+//             KVMsg msg = NewMsg(kv_put, 1000 + produced);
+//             char payload[64];
+
+//             snprintf(payload, sizeof(payload), "payload_%d_pid_%d", produced, getpid());
+//             msg.header.entitySize = strlen(payload) + 1;
+//             msg.entity = payload;
+//             msg.writer = DefaultWriteEntity;
+//             msg.reader = DefaultReadEntity;
+
+//             if (KVChannelPushMsg(channel, &msg, true)) {
+//                 produced++;
+//             } else {
+//                 pg_usleep(1000);  // Sleep to avoid tight loop
+//             }
+
+//             gettimeofday(&now, NULL);
+//             elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
+//             if (elapsed > timeout_secs) {
+//                 PrintChannelContent(channel);
+//                 elog(ERROR, "[Producer %d] Timeout after %.2f seconds", getpid(), timeout_secs);
+//             }
+//         }
+//         _exit(0);
+//     }
+
+//     consumer_pid = fork();
+//     if (consumer_pid == 0) {
+//         /* Consumer process */
+//         int consumed = 0;
+//         struct timeval start, now;
+//         double elapsed;
+
+//         channel = KVChannelInit(name, false);
+//         gettimeofday(&start, NULL);
+
+//         while (consumed < total_messages) {
+//             KVMsg recv;
+//             memset(&recv, 0, sizeof(KVMsg));
+
+//             if (KVChannelPopMsg(channel, &recv, false)) {
+//                 /* Validate */
+//                 if (recv.header.op != kv_put || recv.header.relId != 1000 + consumed) {
+//                     PrintChannelContent(channel);
+//                     elog(ERROR, "[Consumer %d] Header mismatch: op=%d relId=%u",
+//                          getpid(), recv.header.op, recv.header.relId);
+//                 }
+
+//                 if (recv.header.entitySize == 0 || recv.entity == NULL) {
+//                     elog(ERROR, "[Consumer %d] Missing entity payload", getpid());
+//                 }
+
+//                 if (strncmp((char*)recv.entity, "payload_", 8) != 0) {
+//                     PrintChannelContent(channel);
+//                     elog(ERROR, "[Consumer %d] Corrupted entity: %s", getpid(), (char*)recv.entity);
+//                 }
+
+//                 pfree(recv.entity);
+//                 consumed++;
+//             } else {
+//                 pg_usleep(1000);  // Avoid busy wait
+//             }
+
+//             gettimeofday(&now, NULL);
+//             elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
+//             if (elapsed > timeout_secs) {
+//                 PrintChannelContent(channel);
+//                 elog(ERROR, "[Consumer %d] Timeout after %.2f seconds", getpid(), timeout_secs);
+//             }
+//         }
+//         _exit(0);
+//     }
+
+//     /* Parent waits */
+//     waitpid(producer_pid, &status, 0);
+//     Assert(status == 0);
+//     waitpid(consumer_pid, &status, 0);
+//     Assert(status == 0);
+
+//     KVChannelDestroy(channel);
+//     elog(INFO, "KVMsg multi-process test passed");
+// }

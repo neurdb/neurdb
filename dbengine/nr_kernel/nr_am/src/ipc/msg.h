@@ -31,12 +31,14 @@ extern KVChannel* KVChannelInit(const char* name, bool create);
 extern void KVChannelDestroy(KVChannel* channel);
 extern bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block);
 extern bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block);
+extern void PrintChannelContent(KVChannel* channel);
 
 /* ------------------------------------------------------------------------
  * IPC messages.
  * ------------------------------------------------------------------------
  */
 
+ #define MSG_SIZE 1024
 
 /* Operation codes for KV messages */
 typedef enum KVOp {
@@ -90,6 +92,9 @@ typedef struct KVMsg {
 /* Message constructors */
 extern KVMsg NewStatusMsg(KVMsgStatus status, uint32 channel_id);
 extern KVMsg NewMsg(KVOp op, Oid rel_id);
+extern bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block);
+extern bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block);
+extern void PrintKVMsg(const KVMsg* msg);
 
 /* Default entity handlers */
 extern void DefaultWriteEntity(KVChannel* channel, uint64* offset, void* entity, uint64 size);
