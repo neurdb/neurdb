@@ -1,8 +1,8 @@
 # using postmaster on Unix socket, default port
-ok 1         - clean                                       5 ms
-ok 2         - init                                       18 ms
-ok 3         - unit_tests                                 19 ms
-not ok 4     - table_scan                                155 ms
+ok 1         - clean                                      18 ms
+ok 2         - init                                       13 ms
+ok 3         - unit_tests                                 32 ms
+not ok 4     - table_scan                                158 ms
 # (test process exited with exit code 2)
 not ok 5     - xact_basic                                  7 ms
 # (test process exited with exit code 2)

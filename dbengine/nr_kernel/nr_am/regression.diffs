@@ -1,6 +1,6 @@
 diff -U3 /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/table_scan.out /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/table_scan.out
 --- /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/table_scan.out	2025-06-18 08:18:04.309753561 +0000
-+++ /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/table_scan.out	2025-06-30 08:55:07.131448979 +0000
++++ /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/table_scan.out	2025-07-01 07:08:44.242336466 +0000
 @@ -3,40 +3,37 @@
  DROP TABLE IF EXISTS y;
  NOTICE:  table "y" does not exist, skipping
@@ -19,17 +19,17 @@ diff -U3 /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/table_scan.out /code
 +INFO:  [NRAM] calling function nram_slot_callbacks
 +INFO:  [NRAM] calling function nram_tuple_insert
 +INFO:  [NRAM] calling function nram_insert
-+INFO:  [NRAM] [nram_insert:239] nram tid generated as 42430
++INFO:  [NRAM] [nram_insert:239] nram tid generated as 12240
 +INFO:  [NRAM] calling function rocksengine_open
 +INFO:  [NRAM] [find_write_set:110] write_set=(nil) length=0
-+INFO:  [NRAM] [find_write_set:110] write_set=0x55b9997e45e8 length=1
-+INFO:  [NRAM] [nram_insert:247] ADD! key = <16411:42430>
++INFO:  [NRAM] [find_write_set:110] write_set=0x55b3680595e8 length=1
++INFO:  [NRAM] [nram_insert:247] ADD! key = <40987:12240>
 +INFO:  [NRAM] [nram_xact_callback:189] The callback is triggered on event PRE_COMMIT
 +INFO:  [NRAM] [nram_xact_callback:205] Pre-validation add write locks.
 +INFO:  [NRAM] [nram_xact_callback:230] Post-validation release write locks.
 +INFO:  [NRAM] [nram_xact_callback:238] Validation succeed.
 +INFO:  [NRAM] [nram_xact_callback:189] The callback is triggered on event COMMIT
-+INFO:  [NRAM] [nram_xact_callback:250] the transaction 766 is committed
++INFO:  [NRAM] [nram_xact_callback:250] the transaction 793 is committed
  SELECT * from x;
 - a | b  | c  
 ----+----+----
@@ -74,7 +74,7 @@ diff -U3 /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/table_scan.out /code
 +connection to server was lost
 diff -U3 /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/xact_basic.out /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/xact_basic.out
 --- /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/xact_basic.out	2025-06-23 04:53:24.172411320 +0000
-+++ /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/xact_basic.out	2025-06-30 08:55:07.139448997 +0000
++++ /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/xact_basic.out	2025-07-01 07:08:44.250336486 +0000
 @@ -1,33 +1 @@
 -BEGIN;
 -CREATE TABLE x(a INT, b text, c text, PRIMARY KEY (a, b)) USING nram;
@@ -112,7 +112,7 @@ diff -U3 /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/xact_basic.out /code
 +psql: error: connection to server on socket "/tmp/.s.PGSQL.5432" failed: FATAL:  the database system is in recovery mode
 diff -U3 /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/index_scan.out /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/index_scan.out
 --- /code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/index_scan.out	2025-06-18 08:18:30.397830919 +0000
-+++ /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/index_scan.out	2025-06-30 08:55:07.143449006 +0000
++++ /code/neurdb-dev/dbengine/nr_kernel/nr_am/results/index_scan.out	2025-07-01 07:08:44.254336496 +0000
 @@ -1,46 +1 @@
 -DROP TABLE IF EXISTS xs CASCADE;
 -NOTICE:  table "xs" does not exist, skipping
