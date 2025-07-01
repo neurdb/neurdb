@@ -7,9 +7,11 @@ OBJS = \
 	${EXTPATH}/src/nram_access/kv.o \
 	${EXTPATH}/src/nram_xact/xact.o \
 	${EXTPATH}/src/nram_storage/rocksengine.o \
-	${EXTPATH}/src/ipc/mq.o \
+	${EXTPATH}/src/nram_storage/rocks_service.o \
+	${EXTPATH}/src/nram_storage/thread.o \
 	${EXTPATH}/src/ipc/msg.o \
-	${EXTPATH}/src/test/kv_test.o
+	${EXTPATH}/src/test/kv_test.o \
+	${EXTPATH}/src/test/channel_test.o
 
 
 
@@ -21,8 +23,8 @@ PGFILEDESC = "nram - CCaaLF custom table access method"
 PG_CPPFLAGS += -I/usr/local/include -I./src/
 SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
-REGRESS = clean init unit_tests table_scan xact_basic index_scan
-# REGRESS = clean init unit_tests
+# REGRESS = clean init unit_tests table_scan xact_basic index_scan
+REGRESS = clean init unit_tests
 
 # ISOLATION = read_committed repeatable_read
 # ISOLATION = read_committed
@@ -42,28 +44,29 @@ PG_CONFIG = ${NEURDBPATH}/psql/bin/pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
-.PHONY: debug test rocks_server clean_rocks_server
+.PHONY: debug test # rocks_server clean_rocks_server
 
 debug:
 	$(MAKE) -f Makefile PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" SHLIB_LINK="$(SHLIB_LINK)" CFLAGS="-g -O0 -Wall"
 
-rocks_server: $(ROCKSDB_SERVER_BIN)
+# rocks_server: $(ROCKSDB_SERVER_BIN)
 
-$(ROCKSDB_SERVER_BIN): $(ROCKSDB_SERVER_SRC)
-	gcc -o $@ $< -I$(ROCKSDB_INC_PATH) -L$(ROCKSDB_LIB_PATH) -lrocksdb -Wl,-rpath,$(ROCKSDB_LIB_PATH)
+# $(ROCKSDB_SERVER_BIN): $(ROCKSDB_SERVER_SRC)
+# 	gcc -o $@ $< -I$(ROCKSDB_INC_PATH) -L$(ROCKSDB_LIB_PATH) -lrocksdb -Wl,-rpath,$(ROCKSDB_LIB_PATH)
 
-clean_rocks_server:
-	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
-	rm -rf $(ROCKSDB_SERVER_BIN)
+# clean_rocks_server:
+# 	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
+# 	rm -rf $(ROCKSDB_SERVER_BIN)
+#  clean_rocks_server rocks_server
 
-test: clean_rocks_server rocks_server
+test:
 	rm -rf ../logfile
 	$(ROCKSDB_SERVER_BIN) & sleep 1  # Give server time to start
 	make clean
 	make debug -j
 	sudo make install
 	bash ../scripts/restart_db.sh
-	# psql -d neurdb -f ./sql/clean.sql
-	# psql -d neurdb -f ./sql/init.sql
-	# psql -d neurdb -f ./sql/unit_tests.sql
-	make installcheck
+	psql -d neurdb -f ./sql/clean.sql
+	psql -d neurdb -f ./sql/init.sql
+	psql -d neurdb -f ./sql/unit_tests.sql
+	# make installcheck

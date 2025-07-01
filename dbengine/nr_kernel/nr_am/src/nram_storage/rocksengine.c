@@ -22,9 +22,9 @@ rocksdb_options_t *rocksengine_config_options(void) {
  * ------------------------------------------------------------------------
  */
 void rocksengine_fetch_table_key(Oid table_id, char** min_key, char** max_key) {
-    *min_key = palloc(NRAM_TABLE_KEY_LENGTH);
+    *min_key = malloc(NRAM_TABLE_KEY_LENGTH);
     memcpy(*min_key, &table_id, NRAM_TABLE_KEY_LENGTH);
-    *max_key = palloc(NRAM_TABLE_KEY_LENGTH);
+    *max_key = malloc(NRAM_TABLE_KEY_LENGTH);
     table_id += 1;
     memcpy(*max_key, &table_id, NRAM_TABLE_KEY_LENGTH);
 }
@@ -57,7 +57,7 @@ RocksEngine *rocksengine_open(void) {
     }
 
     /* Success: initialize RocksEngine */
-    rocks_engine = palloc(sizeof(RocksEngine));
+    rocks_engine = malloc(sizeof(RocksEngine));
     rocks_engine->rocksdb = rocksdb;
     rocks_engine->rocksdb_options = rocksdb_options;
 
@@ -117,7 +117,7 @@ void rocksengine_destroy(KVEngine *engine) {
     RocksEngine *rocks_engine = (RocksEngine *)engine;
     rocksdb_options_destroy(rocks_engine->rocksdb_options);
     rocksdb_close(rocks_engine->rocksdb);
-    pfree(rocks_engine);
+    free(rocks_engine);
     rocks_engine = NULL;
 }
 
@@ -129,7 +129,7 @@ void rocksengine_destroy(KVEngine *engine) {
 KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
                                               bool isforward) {
     RocksEngine *rocks_engine = (RocksEngine *)engine;
-    RocksEngineIterator *rocks_it = palloc0(sizeof(RocksEngineIterator));
+    RocksEngineIterator *rocks_it = malloc(sizeof(RocksEngineIterator));
     KVEngineIterator *kv_it;
 
     if (rocks_engine->rocksdb == NULL)
@@ -143,7 +143,7 @@ KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
         rocks_it->rocksdb_readoptions);
     if (rocks_it->rocksdb_iterator == NULL) {
         rocksdb_readoptions_destroy(rocks_it->rocksdb_readoptions);
-        pfree(rocks_it);
+        free(rocks_it);
         elog(ERROR, "[NRAM] Failed to create RocksDB iterator.");
     }
 
@@ -199,8 +199,8 @@ void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
 
     rocksdb_writeoptions_destroy(rocksdb_writeoptions);
-    pfree(serialized_value);
-    pfree(key);
+    free(serialized_value);
+    free(key);
 }
 
 /* ------------------------------------------------------------------------

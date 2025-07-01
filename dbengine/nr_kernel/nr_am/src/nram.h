@@ -5,6 +5,7 @@
 #include "nram_storage/rocksengine.h"
 #include "nram_xact/xact.h"
 #include "test/kv_test.h"
+#include "test/channel_test.h"
 
 #define NRAM_XACT_BEGIN_BLOCK refresh_nram_xact()
 

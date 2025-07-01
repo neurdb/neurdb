@@ -6,7 +6,7 @@
 #include "storage/condition_variable.h"
 
 /* ------------------------------------------------------------------------
- * IPC message communication channels.
+ * IPC message communication channels inside postgres shared memory.
  * ------------------------------------------------------------------------
  */
 
