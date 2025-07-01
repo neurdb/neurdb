@@ -17,17 +17,17 @@ INSERT INTO x VALUES (1, 'k1', 'v1');
 INFO:  [NRAM] calling function nram_slot_callbacks
 INFO:  [NRAM] calling function nram_tuple_insert
 INFO:  [NRAM] calling function nram_insert
-INFO:  [NRAM] [nram_insert:239] nram tid generated as 42430
+INFO:  [NRAM] [nram_insert:239] nram tid generated as 12240
 INFO:  [NRAM] calling function rocksengine_open
 INFO:  [NRAM] [find_write_set:110] write_set=(nil) length=0
-INFO:  [NRAM] [find_write_set:110] write_set=0x55b9997e45e8 length=1
-INFO:  [NRAM] [nram_insert:247] ADD! key = <16411:42430>
+INFO:  [NRAM] [find_write_set:110] write_set=0x55b3680595e8 length=1
+INFO:  [NRAM] [nram_insert:247] ADD! key = <40987:12240>
 INFO:  [NRAM] [nram_xact_callback:189] The callback is triggered on event PRE_COMMIT
 INFO:  [NRAM] [nram_xact_callback:205] Pre-validation add write locks.
 INFO:  [NRAM] [nram_xact_callback:230] Post-validation release write locks.
 INFO:  [NRAM] [nram_xact_callback:238] Validation succeed.
 INFO:  [NRAM] [nram_xact_callback:189] The callback is triggered on event COMMIT
-INFO:  [NRAM] [nram_xact_callback:250] the transaction 766 is committed
+INFO:  [NRAM] [nram_xact_callback:250] the transaction 793 is committed
 SELECT * from x;
 INFO:  [NRAM] calling function nram_estimate_rel_size
 INFO:  [NRAM] calling function nram_slot_callbacks
