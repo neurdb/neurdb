@@ -23,8 +23,11 @@ KVChannel* KVChannelInit(const char* name, bool create) {
     return chan;
 }
 
-void KVChannelDestroy(KVChannel* channel) {
-    pfree(channel);
+void KVChannelDestroy(KVChannel* chan) {
+    if (chan == NULL)
+        return;
+
+    pfree(chan);  // Free local memory
 }
 
 void PrintChannelContent(KVChannel* channel) {

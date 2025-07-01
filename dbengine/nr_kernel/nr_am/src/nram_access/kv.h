@@ -20,17 +20,7 @@
 #include "storage/lwlock.h"
 #include "storage/shmem.h"
 #include "miscadmin.h"
-
-#define ROCKSDB_PATH "pg_rocksdb"
-// PHX: use the following two debug macros when debugging the code.
-#define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
-#define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
-
-// #define NRAM_TEST_INFO(fmt, ...)
-// #define NRAM_INFO()
-
-
-#define NRAM_KEY_LENGTH (sizeof(Oid) + sizeof(uint64_t))
+#include "nram_utils/config.h"
 
 extern void nram_init(void);
 extern void nram_generate_tid(ItemPointer tid);
