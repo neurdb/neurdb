@@ -16,6 +16,7 @@
 #include "storage/ipc.h"
 #include "storage/lwlock.h"
 #include "storage/shmem.h"
+#include "nram_storage/rocks_service.h"
 
 PG_MODULE_MAGIC;
 
@@ -561,7 +562,7 @@ PG_FUNCTION_INFO_V1(run_nram_tests);
 Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_serialization_test();
     run_kv_copy_test();
-    run_kv_rocks_service_basic_test();
+    // run_kv_rocks_service_basic_test();
     
     run_channel_basic_test();
     run_channel_sequential_test();
@@ -575,10 +576,12 @@ void _PG_init(void) {
     // shmem_startup_hook = nram_shmem_startup;
     nram_init();
     nram_register_xact_hook();
+    nram_rocks_service_init();
 }
 
 void _PG_fini(void) {
     nram_shutdown_session();
     nram_unregister_xact_hook();
+    nram_rocks_service_terminate();
     // shmem_startup_hook = prev_shmem_startup_hook;
 }

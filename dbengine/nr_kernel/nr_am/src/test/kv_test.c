@@ -4,10 +4,12 @@
 #include "utils/builtins.h"
 #include "postgres.h"
 #include "funcapi.h"
+#include "postmaster/bgworker.h"
 #include "ipc/msg.h"
 #include <sys/time.h>
 #include <sys/wait.h>
 #include "nram_storage/rocks_service.h"
+#include "miscadmin.h"
 
 /*
  * This test:
@@ -172,17 +174,10 @@ void run_kv_rocks_service_basic_test(void) {
     Size key_len, val_len, total_len;
     KVMsg *put_msg, *get_msg, *resp_msg;
     NRAMValue val_out;
-    pid_t service_pid;
+    bool ok;    
 
-    // 1. Start Rocks service
-    service_pid = fork();
-    if (service_pid == 0) {
-        run_rocks(4);
-        _exit(0);
-    }
-    pg_usleep(1000000);  // Sleep 1s to wait for service
-
-    channel = KVChannelInit("rocks_service_channel", false);
+    channel = KVChannelInit(ROCKSDB_CHANNEL, false);
+    NRAM_TEST_INFO("channel should been started in the backend, current proc (%d)", MyProcPid);
 
     // 2. Construct PUT message with key + value
     key = palloc0(sizeof(NRAMKeyData));
@@ -213,12 +208,23 @@ void run_kv_rocks_service_basic_test(void) {
     memcpy((char *)put_msg->entity + sizeof(Size), serialized_key, key_len);
     memcpy((char *)put_msg->entity + sizeof(Size) + key_len, serialized_value, val_len);
 
+    PrintKVMsg(put_msg);
+    PrintChannelContent(channel);
+    ok = KVChannelPushMsg(channel, put_msg, false);
+    Assert(ok);
+    PrintChannelContent(channel);
+
     resp_chan = KVChannelInit("kv_resp_9999", true);
-    KVChannelPushMsg(channel, put_msg, true);
+    PrintChannelContent(resp_chan);
+
+    pg_usleep(100000);  // Sleep 100ms to wait for response.
 
     resp_msg = palloc0(sizeof(KVMsg));
-    if (!KVChannelPopMsg(resp_chan, resp_msg, true) || resp_msg->header.status != kv_status_ok)
+    if (!KVChannelPopMsg(resp_chan, resp_msg, true) || resp_msg->header.status != kv_status_ok) {
+        PrintChannelContent(channel);
+        PrintChannelContent(resp_chan);
         elog(ERROR, "Rocks service PUT failed");
+    }
     elog(INFO, "Rocks service PUT successful");
 
     // 3. Construct GET message and validate value
@@ -228,7 +234,10 @@ void run_kv_rocks_service_basic_test(void) {
     get_msg->header.entitySize = key_len;
     get_msg->entity = serialized_key;
 
-    KVChannelPushMsg(channel, get_msg, true);
+    ok = KVChannelPushMsg(channel, get_msg, true);
+    Assert(ok);
+
+    pg_usleep(100000);  // Sleep 100ms to wait for response.
 
     if (!KVChannelPopMsg(resp_chan, resp_msg, true) || resp_msg->header.status != kv_status_ok)
         elog(ERROR, "Rocks service GET failed");
@@ -246,17 +255,10 @@ void run_kv_rocks_service_basic_test(void) {
     pfree(put_msg->entity); pfree(put_msg);
     pfree(get_msg);
     pfree(resp_msg->entity); pfree(resp_msg);
-    pfree(key); pfree(value); pfree(val_out);
+    pfree(key);
+    pfree(value);
+    pfree(val_out);
     KVChannelDestroy(resp_chan);
-    KVChannelDestroy(channel);
-
-    // Graceful shutdown
-    KVMsg close_msg;
-    memset(&close_msg, 0, sizeof(KVMsg));
-    close_msg.header.op = kv_close;
-    KVChannelPushMsg(channel, &close_msg, true);
-
-    waitpid(service_pid, NULL, 0);
 
     elog(INFO, "Rocks service basic test passed!");
 }

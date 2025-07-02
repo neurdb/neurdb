@@ -2,20 +2,26 @@
 #include "utils/memutils.h"
 #include "utils/wait_event.h"
 #include "nram_access/kv.h"
+#include "portability/instr_time.h"
 
 KVChannel* KVChannelInit(const char* name, bool create) {
     bool found;
     KVChannel* chan;
-    KVChannelShared* shared = (KVChannelShared*) ShmemInitStruct(name, sizeof(KVChannelShared), &found);
+    KVChannelShared* shared = (KVChannelShared*)ShmemInitStruct(
+        name, sizeof(KVChannelShared), &found);
+    NRAM_INFO();
 
     if (create && !found) {
         memset(shared, 0, sizeof(KVChannelShared));
         LWLockInitialize(&shared->lock, LWLockNewTrancheId());
         ConditionVariableInit(&shared->cv);
-    } else if (!found) 
+    } else if (!found) {
         elog(ERROR, "[NRAM] shared memory segment %s not found", name);
+    } else if (create)
+        elog(ERROR, "[NRAM] shared memory segment %s has been created before",
+             name);
 
-    chan = (KVChannel*) MemoryContextAlloc(TopMemoryContext, sizeof(KVChannel));
+    chan = (KVChannel*)MemoryContextAlloc(TopMemoryContext, sizeof(KVChannel));
     strlcpy(chan->name, name, NAMEDATALEN);
     chan->is_creator = create;
     chan->shared = shared;
@@ -24,8 +30,7 @@ KVChannel* KVChannelInit(const char* name, bool create) {
 }
 
 void KVChannelDestroy(KVChannel* chan) {
-    if (chan == NULL)
-        return;
+    if (chan == NULL) return;
 
     pfree(chan);  // Free local memory
 }
@@ -35,12 +40,14 @@ void PrintChannelContent(KVChannel* channel) {
     uint64 used, pos;
 
     LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
-    used = (channel->shared->tail + KV_CHANNEL_BUFSIZE - channel->shared->head) % KV_CHANNEL_BUFSIZE;
+    used =
+        (channel->shared->tail + KV_CHANNEL_BUFSIZE - channel->shared->head) %
+        KV_CHANNEL_BUFSIZE;
     pos = channel->shared->head;
 
     NRAM_TEST_INFO("[Channel Dump] (proc %d) head=%lu tail=%lu used=%lu",
-        getpid(),
-        channel->shared->head, channel->shared->tail, used);
+                   MyProcPid, channel->shared->head, channel->shared->tail,
+                   used);
 
     for (uint64 i = 0; i < used && i < KV_CHANNEL_BUFSIZE; i++) {
         uint64 real_pos = (pos + i) % KV_CHANNEL_BUFSIZE;
@@ -49,48 +56,57 @@ void PrintChannelContent(KVChannel* channel) {
         if (c >= 32 && c <= 126)  // printable
             buf[i] = c;
         else
-            buf[i] = '#'; // unprintable to #.
+            buf[i] = '#';  // unprintable to #.
     }
 
     buf[used] = '\0';
-    NRAM_TEST_INFO("[Channel Dump] (proc %d) content=\"%s\"",
-        getpid(),
-        buf);
+    NRAM_TEST_INFO("[Channel Dump] (proc %d) content=\"%s\"", MyProcPid, buf);
     LWLockRelease(&channel->shared->lock);
 }
 
-
 bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
     uint64 used, space, pos, end, part;
-    if (len > KV_CHANNEL_BUFSIZE)
-        elog(ERROR, "KVChannel: message too large");
+    instr_time start_time, cur_time;
+    long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
+    long cur_timeout = timeout_ms;
+
+    if (len > KV_CHANNEL_BUFSIZE) elog(ERROR, "KVChannel: message too large");
+
+    if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
 
     for (;;) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
-        used = (channel->shared->tail + KV_CHANNEL_BUFSIZE - channel->shared->head) % KV_CHANNEL_BUFSIZE;
+        used = (channel->shared->tail + KV_CHANNEL_BUFSIZE -
+                channel->shared->head) %
+               KV_CHANNEL_BUFSIZE;
         space = KV_CHANNEL_BUFSIZE - used - 1;
-        
 
         if (len <= space) {
-            // NRAM_TEST_INFO("[Push] head=%lu tail=%lu used=%lu space=%lu len=%lu",
-            //             channel->shared->head, channel->shared->tail, used, space, len);
+            NRAM_TEST_INFO(
+                "[Push] head=%lu tail=%lu used=%lu space=%lu len=%lu",
+                channel->shared->head, channel->shared->tail, used, space, len);
+
             pos = channel->shared->tail;
             end = (pos + len) % KV_CHANNEL_BUFSIZE;
 
             if (pos + len <= KV_CHANNEL_BUFSIZE) {
-                // NRAM_TEST_INFO("[Push] case 1: pos=%lu end=%lu", pos, end);
+                NRAM_TEST_INFO("[Push] case 1: pos=%lu end=%lu", pos, end);
                 memcpy(channel->shared->buffer + pos, data, len);
             } else {
                 part = KV_CHANNEL_BUFSIZE - pos;
-                // NRAM_TEST_INFO("[Push] case 2: pos=%lu part=%lu end=%lu", pos, part, end);
+                NRAM_TEST_INFO("[Push] case 2: pos=%lu part=%lu end=%lu", pos,
+                               part, end);
                 memcpy(channel->shared->buffer + pos, data, part);
                 memcpy(channel->shared->buffer, (char*)data + part, len - part);
             }
 
             channel->shared->tail = end;
-            // NRAM_TEST_INFO("[Push] Updated head=%lu", channel->shared->head);
+            NRAM_TEST_INFO("[Push] Updated head=%lu", channel->shared->head);
+
             ConditionVariableBroadcast(&channel->shared->cv);
+            NRAM_TEST_INFO("[Push] Broadcast complete");
+
             LWLockRelease(&channel->shared->lock);
             return true;
         }
@@ -100,15 +116,35 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
             return false;
         }
 
+        if (timeout_ms > 0) {
+            INSTR_TIME_SET_CURRENT(cur_time);
+            INSTR_TIME_SUBTRACT(cur_time, start_time);
+            cur_timeout = timeout_ms - (long)INSTR_TIME_GET_MILLISEC(cur_time);
+
+            if (cur_timeout <= 0) {
+                LWLockRelease(&channel->shared->lock);
+                elog(ERROR, "KVChannelPush encounters timeout");
+                return false;
+            }
+        } else
+            cur_timeout = -1;  // Infinite block allowed
+
         ConditionVariablePrepareToSleep(&channel->shared->cv);
         LWLockRelease(&channel->shared->lock);
-        ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
+
+        if (cur_timeout > 0)
+            ConditionVariableTimedSleep(&channel->shared->cv,
+                                        WAIT_EVENT_KV_CHANNEL, cur_timeout);
+        else
+            ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
     }
 }
 
 static bool UnsafeKVChannelPop(KVChannel* channel, void* out, Size len) {
     uint64 used, pos, end, part;
-    used = (channel->shared->tail + KV_CHANNEL_BUFSIZE - channel->shared->head) % KV_CHANNEL_BUFSIZE;
+    used =
+        (channel->shared->tail + KV_CHANNEL_BUFSIZE - channel->shared->head) %
+        KV_CHANNEL_BUFSIZE;
     if (len <= used) {
         pos = channel->shared->head;
         end = (pos + len) % KV_CHANNEL_BUFSIZE;
@@ -127,8 +163,15 @@ static bool UnsafeKVChannelPop(KVChannel* channel, void* out, Size len) {
     }
 }
 
-
 bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
+    instr_time start_time, cur_time;
+    long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
+    long cur_timeout = timeout_ms;
+
+    if (len > KV_CHANNEL_BUFSIZE) elog(ERROR, "KVChannel: pop too much");
+
+    if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
+
     for (;;) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
@@ -143,12 +186,31 @@ bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
             return false;
         }
 
+        /* Timeout management */
+        if (timeout_ms > 0) {
+            INSTR_TIME_SET_CURRENT(cur_time);
+            INSTR_TIME_SUBTRACT(cur_time, start_time);
+            cur_timeout = timeout_ms - (long)INSTR_TIME_GET_MILLISEC(cur_time);
+
+            if (cur_timeout <= 0) {
+                LWLockRelease(&channel->shared->lock);
+                elog(ERROR, "KVChannelPop encounters timeout");
+                return false;
+            }
+        } else
+            cur_timeout = -1;  // No timeout, block indefinitely
+
+        /* Sleep with precise remaining time */
         ConditionVariablePrepareToSleep(&channel->shared->cv);
         LWLockRelease(&channel->shared->lock);
-        ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
+
+        if (cur_timeout > 0)
+            ConditionVariableTimedSleep(&channel->shared->cv,
+                                        WAIT_EVENT_KV_CHANNEL, cur_timeout);
+        else
+            ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
     }
 }
-
 
 KVMsg NewStatusMsg(KVMsgStatus status, uint32 channel_id) {
     KVMsg msg;
@@ -166,7 +228,8 @@ KVMsg NewMsg(KVOp op, Oid rel_id) {
     return msg;
 }
 
-void DefaultWriteEntity(KVChannel* channel, uint64* offset, void* entity, uint64 size) {
+void DefaultWriteEntity(KVChannel* channel, uint64* offset, void* entity,
+                        uint64 size) {
     char* buf = channel->shared->buffer;
     uint64 buf_size = KV_CHANNEL_BUFSIZE;
     uint64 pos = *offset;
@@ -174,8 +237,7 @@ void DefaultWriteEntity(KVChannel* channel, uint64* offset, void* entity, uint64
 
     Assert(pos >= 0 && pos < buf_size);
 
-    if (size == 0)
-        return;
+    if (size == 0) return;
 
     if (size <= remaining) {
         memcpy(buf + pos, entity, size);
@@ -184,11 +246,11 @@ void DefaultWriteEntity(KVChannel* channel, uint64* offset, void* entity, uint64
         memcpy(buf, (char*)entity + remaining, size - remaining);
     }
 
-    *offset = (pos + size) % buf_size;    
+    *offset = (pos + size) % buf_size;
 }
 
-
-void DefaultReadEntity(KVChannel* channel, uint64* offset, void* entity, uint64 size) {
+void DefaultReadEntity(KVChannel* channel, uint64* offset, void* entity,
+                       uint64 size) {
     char* buf = channel->shared->buffer;
     uint64 buf_size = KV_CHANNEL_BUFSIZE;
     uint64 pos = *offset;
@@ -196,8 +258,7 @@ void DefaultReadEntity(KVChannel* channel, uint64* offset, void* entity, uint64 
 
     Assert(pos >= 0 && pos < buf_size);
 
-    if (size == 0)
-        return;
+    if (size == 0) return;
 
     if (size <= remaining) {
         memcpy(entity, buf + pos, size);
@@ -215,46 +276,92 @@ void PrintKVMsg(const KVMsg* msg) {
 
     /* Decode operation */
     switch (msg->header.op) {
-        case kv_none: op_str = "NONE"; break;
-        case kv_open: op_str = "OPEN"; break;
-        case kv_close: op_str = "CLOSE"; break;
-        case kv_count: op_str = "COUNT"; break;
-        case kv_put: op_str = "PUT"; break;
-        case kv_get: op_str = "GET"; break;
-        case kv_delete: op_str = "DELETE"; break;
-        case kv_load: op_str = "LOAD"; break;
-        case kv_batch_read: op_str = "BATCH_READ"; break;
-        case kv_cursor_delete: op_str = "CURSOR_DELETE"; break;
-        case kv_start: op_str = "START"; break;
-        case kv_stop: op_str = "STOP"; break;
-        default: op_str = "UNKNOWN_OP"; break;
+        case kv_none:
+            op_str = "NONE";
+            break;
+        case kv_open:
+            op_str = "OPEN";
+            break;
+        case kv_close:
+            op_str = "CLOSE";
+            break;
+        case kv_count:
+            op_str = "COUNT";
+            break;
+        case kv_put:
+            op_str = "PUT";
+            break;
+        case kv_get:
+            op_str = "GET";
+            break;
+        case kv_delete:
+            op_str = "DELETE";
+            break;
+        case kv_load:
+            op_str = "LOAD";
+            break;
+        case kv_batch_read:
+            op_str = "BATCH_READ";
+            break;
+        case kv_cursor_delete:
+            op_str = "CURSOR_DELETE";
+            break;
+        case kv_start:
+            op_str = "START";
+            break;
+        case kv_stop:
+            op_str = "STOP";
+            break;
+        default:
+            op_str = "UNKNOWN_OP";
+            break;
     }
 
     /* Decode status */
     switch (msg->header.status) {
-        case kv_status_none: status_str = "NONE"; break;
-        case kv_status_ok: status_str = "OK"; break;
-        case kv_status_error: status_str = "ERROR"; break;
-        case kv_status_failed: status_str = "FAILED"; break;
-        default: status_str = "UNKNOWN_STATUS"; break;
+        case kv_status_none:
+            status_str = "NONE";
+            break;
+        case kv_status_ok:
+            status_str = "OK";
+            break;
+        case kv_status_error:
+            status_str = "ERROR";
+            break;
+        case kv_status_failed:
+            status_str = "FAILED";
+            break;
+        default:
+            status_str = "UNKNOWN_STATUS";
+            break;
     }
 
     /* Print header */
     elog(INFO, "KVMsg: op=%s relId=%u status=%s respChannel=%u entitySize=%lu",
-         op_str, msg->header.relId, status_str, msg->header.respChannel, msg->header.entitySize);
+         op_str, msg->header.relId, status_str, msg->header.respChannel,
+         msg->header.entitySize);
 
     /* Print entity if applicable */
     if (msg->entity != NULL && msg->header.entitySize > 0) {
         char preview[256];
         uint64 max_print = msg->header.entitySize;
 
-        if (max_print >= sizeof(preview))
-            max_print = sizeof(preview) - 1;
+        if (max_print >= sizeof(preview)) max_print = sizeof(preview) - 1;
 
         memcpy(preview, msg->entity, max_print);
+
+        for (uint64 i = 0; i < max_print; ++i) {
+            char c = preview[i];
+            if (c >= 32 && c <= 126)  // Printable ASCII range
+                preview[i] = c;
+            else
+                preview[i] = '#';
+        }
+
         preview[max_print] = '\0';
 
-        elog(INFO, "KVMsg entity preview: \"%s\" (truncated if larger)", preview);
+        elog(INFO, "KVMsg entity preview: \"%s\" (truncated if larger)",
+             preview);
     } else {
         elog(INFO, "KVMsg entity: NULL");
     }
@@ -268,7 +375,8 @@ bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block) {
     uint64 offset = 0;
 
     if (total_size > MSG_SIZE) {
-        elog(ERROR, "KVChannelPushMsg: total message too large (%lu bytes)", total_size);
+        elog(ERROR, "KVChannelPushMsg: total message too large (%lu bytes)",
+             total_size);
         return false;
     }
 
@@ -284,23 +392,56 @@ bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block) {
 }
 
 bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
+    instr_time start_time, cur_time;
+    long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
+    long cur_timeout = timeout_ms;
+
+    if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
+
     for (;;) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
+
         if (UnsafeKVChannelPop(channel, &msg->header, sizeof(KVMsgHeader))) {
             msg->entity = palloc(msg->header.entitySize);
-            if (!UnsafeKVChannelPop(channel, msg->entity, msg->header.entitySize)) {
-                elog(ERROR, "Corrupted message: the remaining message is smaller than entitySize %lu", 
-                    msg->header.entitySize);
+
+            if (!UnsafeKVChannelPop(channel, msg->entity,
+                                    msg->header.entitySize)) {
+                elog(ERROR,
+                     "Corrupted message: the remaining message is smaller than "
+                     "entitySize %lu",
+                     msg->header.entitySize);
             }
+
+            LWLockRelease(&channel->shared->lock);
             return true;
         }
+
         if (!block) {
             LWLockRelease(&channel->shared->lock);
             return false;
         }
 
+        /* Timeout logic */
+        if (timeout_ms > 0) {
+            INSTR_TIME_SET_CURRENT(cur_time);
+            INSTR_TIME_SUBTRACT(cur_time, start_time);
+            cur_timeout = timeout_ms - (long)INSTR_TIME_GET_MILLISEC(cur_time);
+
+            if (cur_timeout <= 0) {
+                LWLockRelease(&channel->shared->lock);
+                elog(ERROR, "KVChannelPopMsg encounters timeout");
+                return false;
+            }
+        } else
+            cur_timeout = -1;  // No timeout, infinite block
+
         ConditionVariablePrepareToSleep(&channel->shared->cv);
         LWLockRelease(&channel->shared->lock);
-        ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
+
+        if (cur_timeout > 0)
+            ConditionVariableTimedSleep(&channel->shared->cv,
+                                        WAIT_EVENT_KV_CHANNEL, cur_timeout);
+        else
+            ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
     }
 }
