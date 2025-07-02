@@ -47,7 +47,9 @@ include $(PGXS)
 .PHONY: debug test # rocks_server clean_rocks_server
 
 debug:
-	$(MAKE) -f Makefile PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" SHLIB_LINK="$(SHLIB_LINK)" CFLAGS="-g -O0 -Wall"
+	$(MAKE) PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" \
+	        SHLIB_LINK="$(SHLIB_LINK)" \
+	        CFLAGS="-g -O0 -Wall"
 
 # rocks_server: $(ROCKSDB_SERVER_BIN)
 
