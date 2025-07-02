@@ -252,9 +252,11 @@ void run_kv_rocks_service_basic_test(void) {
     // 4. Clean up
     pfree(serialized_key);
     pfree(serialized_value);
-    pfree(put_msg->entity); pfree(put_msg);
+    pfree(put_msg->entity);
+    pfree(put_msg);
     pfree(get_msg);
-    pfree(resp_msg->entity); pfree(resp_msg);
+    pfree(resp_msg->entity);
+    pfree(resp_msg);
     pfree(key);
     pfree(value);
     pfree(val_out);
