@@ -571,9 +571,19 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     PG_RETURN_VOID();
 }
 
+shmem_request_hook_type prev_shmem_request_hook = NULL;
+
+static void nram_shmem_request(void) {
+    NRAM_INFO();
+    if (prev_shmem_request_hook)
+        prev_shmem_request_hook();
+
+    RequestAddinShmemSpace(sizeof(KVChannelShared) * (MAX_PROC_COUNT+1));
+}
+
 void _PG_init(void) {
-    // prev_shmem_startup_hook = shmem_startup_hook;
-    // shmem_startup_hook = nram_shmem_startup;
+    prev_shmem_request_hook = shmem_request_hook;
+    shmem_request_hook = nram_shmem_request;
     nram_init();
     nram_register_xact_hook();
     nram_rocks_service_init();
@@ -583,5 +593,5 @@ void _PG_fini(void) {
     nram_shutdown_session();
     nram_unregister_xact_hook();
     nram_rocks_service_terminate();
-    // shmem_startup_hook = prev_shmem_startup_hook;
+    shmem_request_hook = prev_shmem_request_hook;
 }

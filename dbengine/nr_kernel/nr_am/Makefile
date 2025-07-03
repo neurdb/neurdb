@@ -11,7 +11,8 @@ OBJS = \
 	${EXTPATH}/src/nram_storage/thread.o \
 	${EXTPATH}/src/ipc/msg.o \
 	${EXTPATH}/src/test/kv_test.o \
-	${EXTPATH}/src/test/channel_test.o
+	${EXTPATH}/src/test/channel_test.o \
+	${EXTPATH}/src/nram_utils/config.o
 
 
 

@@ -50,29 +50,6 @@ void nram_generate_tid(ItemPointer tid) {
  */
 
 static KVEngine *shared_engine = NULL;
-// shmem_startup_hook_type prev_shmem_startup_hook = NULL;
-
-// void nram_shmem_startup(void) {
-//     bool found;
-//     RocksEngine *ptr;
-//     NRAM_INFO();
-
-//     if (prev_shmem_startup_hook)
-//         prev_shmem_startup_hook();
-
-
-//     LWLockAcquire(AddinShmemInitLock, LW_EXCLUSIVE);
-//     ptr = (RocksEngine *) ShmemInitStruct("nram_shared_engine", sizeof(RocksEngine), &found);
-
-//     if (!found) {
-//         // First time: open the engine, and storage inside the shared memory.
-//         rocksengine_open_in_place(ptr);
-//         NRAM_TEST_INFO("RocksDB engine initialized in shared memory");
-//     }
-
-//     shared_engine = (KVEngine*)ptr;
-//     LWLockRelease(AddinShmemInitLock);
-// }
 
 void nram_init(void) {
     nram_init_tid();

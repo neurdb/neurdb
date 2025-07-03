@@ -177,7 +177,6 @@ void run_kv_rocks_service_basic_test(void) {
     bool ok;    
 
     channel = KVChannelInit(ROCKSDB_CHANNEL, false);
-    NRAM_TEST_INFO("channel should been started in the backend, current proc (%d)", MyProcPid);
 
     // 2. Construct PUT message with key + value
     key = palloc0(sizeof(NRAMKeyData));
@@ -209,13 +208,11 @@ void run_kv_rocks_service_basic_test(void) {
     memcpy((char *)put_msg->entity + sizeof(Size) + key_len, serialized_value, val_len);
 
     PrintKVMsg(put_msg);
-    PrintChannelContent(channel);
     ok = KVChannelPushMsg(channel, put_msg, false);
     Assert(ok);
     PrintChannelContent(channel);
 
     resp_chan = KVChannelInit("kv_resp_9999", true);
-    PrintChannelContent(resp_chan);
 
     pg_usleep(100000);  // Sleep 100ms to wait for response.
 
