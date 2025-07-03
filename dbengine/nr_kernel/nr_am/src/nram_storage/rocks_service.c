@@ -3,6 +3,7 @@
 #include "miscadmin.h"
 #include "postmaster/bgworker.h"
 #include "storage/pmsignal.h"
+#include "storage/latch.h"
 
 RocksEngine *GlobalRocksEngine = NULL;
 static BackgroundWorker worker;
@@ -19,7 +20,7 @@ void run_rocks(int num_threads) {
     GlobalRocksEngine = rocksengine_open();
     rocks_service_running = true;
 
-    while (rocks_service_running && PostmasterIsAlive()) {
+    while (rocks_service_running) {
         KVMsg *msg = (KVMsg *)malloc(sizeof(KVMsg));
         bool ok = KVChannelPopMsg(channel, msg, true);
         if (!ok) {
@@ -63,7 +64,7 @@ void run_rocks_no_thread(void) {
     GlobalRocksEngine = rocksengine_open();
     rocks_service_running = true;
 
-    while (rocks_service_running && PostmasterIsAlive()) {
+    while (rocks_service_running) {
         KVMsg *msg = (KVMsg *)malloc(sizeof(KVMsg));
         bool ok = KVChannelPopMsg(channel, msg, true);
         if (!ok) {
@@ -93,14 +94,6 @@ void run_rocks_no_thread(void) {
 
     NRAM_TEST_INFO("[Rocks] Service terminated (pid=%d)", MyProcPid);
     proc_exit(0);
-}
-
-static void terminate_rocks(SIGNAL_ARGS) {
-    int save_errno = errno;
-    rocks_service_running = false;
-    if (channel)
-        ConditionVariableBroadcast(&channel->shared->cv);
-    errno = save_errno;
 }
 
 
@@ -223,6 +216,19 @@ KVMsg *handle_kv_put(KVMsg *msg) {
 
     return resp;
 }
+
+
+static void terminate_rocks(SIGNAL_ARGS) {
+    int save_errno = errno;
+    elog(LOG, "[NRAM] terminate_rocks called, broadcasting CV, setting latch");
+    rocks_service_running = false;
+    if (channel) {
+        ConditionVariableBroadcast(&channel->shared->cv);
+        SetLatch(MyLatch);
+    }
+    errno = save_errno;
+}
+
 
 PGDLLEXPORT void rocks_service_main(Datum arg) {
     uint32_t nthread = DatumGetUInt32(arg);

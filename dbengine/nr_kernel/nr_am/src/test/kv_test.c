@@ -208,7 +208,7 @@ void run_kv_rocks_service_basic_test(void) {
     memcpy((char *)put_msg->entity + sizeof(Size) + key_len, serialized_value, val_len);
 
     PrintKVMsg(put_msg);
-    ok = KVChannelPushMsg(channel, put_msg, false);
+    ok = KVChannelPushMsg(channel, put_msg, true);
     Assert(ok);
     PrintChannelContent(channel);
 
