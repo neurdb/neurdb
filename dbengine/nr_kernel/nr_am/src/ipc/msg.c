@@ -74,6 +74,7 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
     if (len > KV_CHANNEL_BUFSIZE) elog(ERROR, "KVChannel: message too large");
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
+    NRAM_INFO();
 
     while (rocks_service_running) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
@@ -141,6 +142,7 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
                                         WAIT_EVENT_KV_CHANNEL, cur_timeout);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
+        ConditionVariableCancelSleep();
     }
 
     return false;
@@ -218,6 +220,7 @@ bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
                                         WAIT_EVENT_KV_CHANNEL, cur_timeout);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
+        ConditionVariableCancelSleep();
     }
 
     return false;
@@ -458,6 +461,7 @@ bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
                                         WAIT_EVENT_KV_CHANNEL, cur_timeout);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
+        ConditionVariableCancelSleep();
     }
 
     return false;
