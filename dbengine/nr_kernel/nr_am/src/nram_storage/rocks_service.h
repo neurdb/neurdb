@@ -4,6 +4,7 @@
 #include "nram_storage/rocksengine.h"
 #include "ipc/msg.h"
 #include "nram_utils/config.h"
+#include "postgres.h"
 
 #define ROCKS_RUNNING_BIT 1
 
@@ -17,5 +18,7 @@ KVMsg *handle_kv_put(KVMsg *msg);
   
 void nram_rocks_service_init(void);
 void nram_rocks_service_terminate(void);
+
+PGDLLEXPORT void rocks_service_main(Datum arg);
 
 #endif // ROCKS_SERVICE_H

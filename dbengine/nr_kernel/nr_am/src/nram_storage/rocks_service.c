@@ -1,16 +1,16 @@
 #include "nram_storage/rocks_service.h"
 #include "nram_storage/thread.h"
-#include "postgres.h"
 #include "miscadmin.h"
 #include "postmaster/bgworker.h"
+#include "storage/pmsignal.h"
 
 RocksEngine *GlobalRocksEngine = NULL;
-static volatile sig_atomic_t rocks_service_running = false;
 static BackgroundWorker worker;
+static KVChannel *channel = NULL;
 
 void run_rocks(int num_threads) {
     static ThreadPool pool;
-    KVChannel *channel = KVChannelInit(ROCKSDB_CHANNEL, true);
+    channel = KVChannelInit(ROCKSDB_CHANNEL, true);
 
     NRAM_TEST_INFO("[Rocks] Service started with %d threads (pid=%d)", num_threads, MyProcPid);
     Assert(!rocks_service_running);
@@ -19,9 +19,9 @@ void run_rocks(int num_threads) {
     GlobalRocksEngine = rocksengine_open();
     rocks_service_running = true;
 
-    while (rocks_service_running) {
+    while (rocks_service_running && PostmasterIsAlive()) {
         KVMsg *msg = (KVMsg *)malloc(sizeof(KVMsg));
-        bool ok = KVChannelPopMsg(channel, msg, false);
+        bool ok = KVChannelPopMsg(channel, msg, true);
         if (!ok) {
             free(msg);
             CHECK_FOR_INTERRUPTS();
@@ -55,7 +55,7 @@ void run_rocks(int num_threads) {
 
 void run_rocks_no_thread(void) {
     NRAM_INFO();
-    KVChannel *channel = KVChannelInit(ROCKSDB_CHANNEL, true);
+    channel = KVChannelInit(ROCKSDB_CHANNEL, true);
 
     NRAM_TEST_INFO("[Rocks] Service started (pid=%d)", MyProcPid);
     Assert(!rocks_service_running);
@@ -63,9 +63,9 @@ void run_rocks_no_thread(void) {
     GlobalRocksEngine = rocksengine_open();
     rocks_service_running = true;
 
-    while (rocks_service_running) {
+    while (rocks_service_running && PostmasterIsAlive()) {
         KVMsg *msg = (KVMsg *)malloc(sizeof(KVMsg));
-        bool ok = KVChannelPopMsg(channel, msg, false);
+        bool ok = KVChannelPopMsg(channel, msg, true);
         if (!ok) {
             free(msg);
             CHECK_FOR_INTERRUPTS();
@@ -98,7 +98,8 @@ void run_rocks_no_thread(void) {
 static void terminate_rocks(SIGNAL_ARGS) {
     int save_errno = errno;
     rocks_service_running = false;
-    ConditionVariableCancelSleep();
+    if (channel)
+        ConditionVariableBroadcast(&channel->shared->cv);
     errno = save_errno;
 }
 
@@ -137,6 +138,7 @@ void *process_request(void *arg) {
 
     if (resp != NULL) {
         NRAM_TEST_INFO("[Rocks] Sending response op=%d, size=%lu", resp->header.op, resp->header.entitySize);
+        PrintKVMsg(resp);
         KVChannelPushMsg(resp_chan, resp, true);
 
         if (resp->entity)
@@ -160,10 +162,10 @@ KVMsg *handle_kv_get(KVMsg *msg) {
     NRAMKey key = tkey_deserialize((char *)msg->entity, key_len);
     NRAMValue value = rocksengine_get(&GlobalRocksEngine->engine, key);
 
-    NRAM_TEST_INFO("[Rocks] handle_kv_get, key_len=%lu, tableOid=%u", key_len, key->tableOid);
-
     KVMsg *resp = malloc(sizeof(KVMsg));
     Size val_len;
+
+    NRAM_TEST_INFO("[Rocks] handle_kv_get, key_len=%lu, tableOid=%u", key_len, key->tableOid);
 
     *resp = NewStatusMsg(kv_status_ok, msg->header.respChannel);
     resp->header.op = kv_get;

@@ -247,14 +247,14 @@ void run_channel_msg_basic_test(void) {
     msg.reader = DefaultReadEntity;
     // PrintKVMsg(&msg);
 
-    if (!KVChannelPushMsg(channel, &msg, false)) {
+    if (!KVChannelPushMsg(channel, &msg, true)) {
         elog(ERROR, "Message channel push fail");
     }
     // PrintChannelContent(channel);
 
     recv = palloc(sizeof(KVMsg));
 
-    if(!KVChannelPopMsg(channel, recv, false)) {
+    if(!KVChannelPopMsg(channel, recv, true)) {
         // PrintKVMsg(recv);
         elog(ERROR, "Message channel pop fail");
     }

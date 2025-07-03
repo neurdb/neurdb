@@ -3,6 +3,7 @@
 #include "utils/wait_event.h"
 #include "nram_access/kv.h"
 #include "portability/instr_time.h"
+#include "storage/pmsignal.h"
 
 KVChannel* KVChannelInit(const char* name, bool create) {
     bool found;
@@ -74,7 +75,7 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
 
-    for (;;) {
+    while (rocks_service_running) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
         used = (channel->shared->tail + KV_CHANNEL_BUFSIZE -
@@ -132,12 +133,17 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
         ConditionVariablePrepareToSleep(&channel->shared->cv);
         LWLockRelease(&channel->shared->lock);
 
+        if (!PostmasterIsAlive())
+            proc_exit(1);
+
         if (cur_timeout > 0)
             ConditionVariableTimedSleep(&channel->shared->cv,
                                         WAIT_EVENT_KV_CHANNEL, cur_timeout);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
     }
+
+    return false;
 }
 
 static bool UnsafeKVChannelPop(KVChannel* channel, void* out, Size len) {
@@ -172,7 +178,7 @@ bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
 
-    for (;;) {
+    while (rocks_service_running) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
         if (UnsafeKVChannelPop(channel, out, len)) {
@@ -204,12 +210,17 @@ bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
         ConditionVariablePrepareToSleep(&channel->shared->cv);
         LWLockRelease(&channel->shared->lock);
 
+        if (!PostmasterIsAlive())
+            proc_exit(1);
+
         if (cur_timeout > 0)
             ConditionVariableTimedSleep(&channel->shared->cv,
                                         WAIT_EVENT_KV_CHANNEL, cur_timeout);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
     }
+
+    return false;
 }
 
 KVMsg NewStatusMsg(KVMsgStatus status, uint32 channel_id) {
@@ -395,10 +406,11 @@ bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
     instr_time start_time, cur_time;
     long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
     long cur_timeout = timeout_ms;
+    NRAM_INFO();
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
 
-    for (;;) {
+    while (rocks_service_running) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
         if (UnsafeKVChannelPop(channel, &msg->header, sizeof(KVMsgHeader))) {
@@ -438,10 +450,15 @@ bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
         ConditionVariablePrepareToSleep(&channel->shared->cv);
         LWLockRelease(&channel->shared->lock);
 
+        if (!PostmasterIsAlive())
+            proc_exit(1);
+
         if (cur_timeout > 0)
             ConditionVariableTimedSleep(&channel->shared->cv,
                                         WAIT_EVENT_KV_CHANNEL, cur_timeout);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
     }
+
+    return false;
 }
