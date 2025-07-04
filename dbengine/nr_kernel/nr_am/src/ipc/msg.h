@@ -4,6 +4,10 @@
 #include "postgres.h"
 #include "storage/lock.h"
 #include "storage/condition_variable.h"
+#include <signal.h>
+#include "storage/pmsignal.h"
+#include "storage/latch.h"
+#include "port/atomics.h"
 
 /* ------------------------------------------------------------------------
  * IPC message communication channels inside postgres shared memory.
@@ -11,14 +15,15 @@
  */
 
 
-#define KV_CHANNEL_BUFSIZE 65536
+#define KV_CHANNEL_BUFSIZE 32768
 
 typedef struct KVChannelShared {
+    pg_atomic_uint32 is_running;
     uint64 head;
     uint64 tail;
-    char buffer[KV_CHANNEL_BUFSIZE];
     LWLock lock;
     ConditionVariable cv;
+    char buffer[KV_CHANNEL_BUFSIZE];
 } KVChannelShared;
 
 typedef struct KVChannel {
@@ -32,6 +37,7 @@ extern void KVChannelDestroy(KVChannel* channel);
 extern bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block);
 extern bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block);
 extern void PrintChannelContent(KVChannel* channel);
+extern void TerminateChannel(KVChannel* channel);
 
 /* ------------------------------------------------------------------------
  * IPC messages.
@@ -90,10 +96,10 @@ typedef struct KVMsg {
 } KVMsg;
 
 /* Message constructors */
-extern KVMsg NewStatusMsg(KVMsgStatus status, uint32 channel_id);
-extern KVMsg NewMsg(KVOp op, Oid rel_id);
+extern KVMsg* NewMsg(KVOp op, Oid rel_id, KVMsgStatus status, uint32 channel_id);
+extern KVMsg* NewEmptyMsg();
 extern bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block);
-extern bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block);
+extern KVMsg* KVChannelPopMsg(KVChannel* channel, bool block);
 extern void PrintKVMsg(const KVMsg* msg);
 
 /* Default entity handlers */

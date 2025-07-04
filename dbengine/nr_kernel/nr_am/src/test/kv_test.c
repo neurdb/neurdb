@@ -177,6 +177,7 @@ void run_kv_rocks_service_basic_test(void) {
     bool ok;    
 
     channel = KVChannelInit(ROCKSDB_CHANNEL, false);
+    resp_chan = KVChannelInit("kv_resp_9999", true);
 
     // 2. Construct PUT message with key + value
     key = palloc0(sizeof(NRAMKeyData));
@@ -197,63 +198,60 @@ void run_kv_rocks_service_basic_test(void) {
     serialized_value = tvalue_serialize(value, &val_len);
     total_len = key_len + val_len + sizeof(Size);
 
-    put_msg = palloc0(sizeof(KVMsg));
-    put_msg->header.op = kv_put;
+    put_msg = NewMsg(kv_put, 1234, kv_status_none, 9999);
     put_msg->header.entitySize = total_len;
-    put_msg->header.respChannel = 9999;
     put_msg->entity = palloc(total_len);
 
     memcpy(put_msg->entity, &key_len, sizeof(Size));
     memcpy((char *)put_msg->entity + sizeof(Size), serialized_key, key_len);
     memcpy((char *)put_msg->entity + sizeof(Size) + key_len, serialized_value, val_len);
 
-    PrintKVMsg(put_msg);
     ok = KVChannelPushMsg(channel, put_msg, true);
     Assert(ok);
-    PrintChannelContent(channel);
 
-    resp_chan = KVChannelInit("kv_resp_9999", true);
-
-    pg_usleep(100000);  // Sleep 100ms to wait for response.
-
-    resp_msg = palloc0(sizeof(KVMsg));
-    if (!KVChannelPopMsg(resp_chan, resp_msg, true) || resp_msg->header.status != kv_status_ok) {
+    resp_msg = KVChannelPopMsg(resp_chan, true);
+    if (resp_msg == NULL || resp_msg->header.status != kv_status_ok) {
+        PrintKVMsg(resp_msg);
         PrintChannelContent(channel);
         PrintChannelContent(resp_chan);
         elog(ERROR, "Rocks service PUT failed");
     }
-    elog(INFO, "Rocks service PUT successful");
 
     // 3. Construct GET message and validate value
-    get_msg = palloc0(sizeof(KVMsg));
-    get_msg->header.op = kv_get;
-    get_msg->header.respChannel = 9999;
+    get_msg = NewMsg(kv_get, 1234, kv_status_none, 9999);
     get_msg->header.entitySize = key_len;
     get_msg->entity = serialized_key;
 
     ok = KVChannelPushMsg(channel, get_msg, true);
     Assert(ok);
 
-    pg_usleep(100000);  // Sleep 100ms to wait for response.
+    resp_msg = KVChannelPopMsg(resp_chan, true);
 
-    if (!KVChannelPopMsg(resp_chan, resp_msg, true) || resp_msg->header.status != kv_status_ok)
+    if (!resp_msg || resp_msg->header.status != kv_status_ok) {
+        PrintKVMsg(resp_msg);
+        PrintChannelContent(resp_chan);
+        PrintChannelContent(channel);
         elog(ERROR, "Rocks service GET failed");
+    }
 
+    // PrintKVMsg(resp_msg);
+    Assert(resp_msg->header.entitySize == val_len);
     val_out = tvalue_deserialize((char *)resp_msg->entity, resp_msg->header.entitySize);
+    Assert(val_out->xact_id == value->xact_id);
+    Assert(val_out->nfields == value->nfields);
 
-    if (memcmp(val_out->data, "ABCDEFG", 7) != 0)
-        elog(ERROR, "Value mismatch, expected 'ABCDEFG'");
-
-    elog(INFO, "Rocks service GET successful, value matches");
+    if (memcmp(val_out->data, value->data, 7) != 0)
+        elog(ERROR, "Value mismatch, expected 'ABCDEFG' got '%s'", val_out->data);
 
     // 4. Clean up
-    pfree(serialized_key);
-    pfree(serialized_value);
     pfree(put_msg->entity);
     pfree(put_msg);
     pfree(get_msg);
     pfree(resp_msg->entity);
     pfree(resp_msg);
+
+    pfree(serialized_key);
+    pfree(serialized_value);
     pfree(key);
     pfree(value);
     pfree(val_out);

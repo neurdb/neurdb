@@ -10,12 +10,13 @@ KVChannel* KVChannelInit(const char* name, bool create) {
     KVChannel* chan;
     KVChannelShared* shared = (KVChannelShared*)ShmemInitStruct(
         name, sizeof(KVChannelShared), &found);
-    NRAM_INFO();
+    NRAM_TEST_INFO("Initializing channel %s from proc %d", name, MyProcPid);
 
     if (create && !found) {
         memset(shared, 0, sizeof(KVChannelShared));
         LWLockInitialize(&shared->lock, LWLockNewTrancheId());
         ConditionVariableInit(&shared->cv);
+        pg_atomic_init_u32(&shared->is_running, 1);
     } else if (!found) {
         elog(ERROR, "[NRAM] shared memory segment %s not found", name);
     } else if (create)
@@ -32,7 +33,7 @@ KVChannel* KVChannelInit(const char* name, bool create) {
 
 void KVChannelDestroy(KVChannel* chan) {
     if (chan == NULL) return;
-
+    TerminateChannel(chan);
     pfree(chan);  // Free local memory
 }
 
@@ -46,8 +47,8 @@ void PrintChannelContent(KVChannel* channel) {
         KV_CHANNEL_BUFSIZE;
     pos = channel->shared->head;
 
-    NRAM_TEST_INFO("[Channel Dump] (proc %d) head=%lu tail=%lu used=%lu",
-                   MyProcPid, channel->shared->head, channel->shared->tail,
+    elog(INFO, "[Channel Dump %s] (proc %d) status=%u head=%lu tail=%lu used=%lu",
+                   channel->name, MyProcPid, pg_atomic_read_u32(&channel->shared->is_running), channel->shared->head, channel->shared->tail,
                    used);
 
     for (uint64 i = 0; i < used && i < KV_CHANNEL_BUFSIZE; i++) {
@@ -61,7 +62,7 @@ void PrintChannelContent(KVChannel* channel) {
     }
 
     buf[used] = '\0';
-    NRAM_TEST_INFO("[Channel Dump] (proc %d) content=\"%s\"", MyProcPid, buf);
+    elog(INFO, "[Channel Dump %s] (proc %d) content=\"%s\"", channel->name, MyProcPid, buf);
     LWLockRelease(&channel->shared->lock);
 }
 
@@ -70,13 +71,13 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
     instr_time start_time, cur_time;
     long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
     long cur_timeout = timeout_ms;
+    // NRAM_INFO();
 
     if (len > KV_CHANNEL_BUFSIZE) elog(ERROR, "KVChannel: message too large");
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
-    NRAM_INFO();
 
-    while (rocks_service_running) {
+    while (pg_atomic_read_u32(&channel->shared->is_running)) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
         used = (channel->shared->tail + KV_CHANNEL_BUFSIZE -
@@ -86,8 +87,8 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
 
         if (len <= space) {
             NRAM_TEST_INFO(
-                "[Push] head=%lu tail=%lu used=%lu space=%lu len=%lu",
-                channel->shared->head, channel->shared->tail, used, space, len);
+                "[Push %s] head=%lu tail=%lu used=%lu space=%lu len=%lu",
+                channel->name, channel->shared->head, channel->shared->tail, used, space, len);
 
             pos = channel->shared->tail;
             end = (pos + len) % KV_CHANNEL_BUFSIZE;
@@ -104,11 +105,11 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
             }
 
             channel->shared->tail = end;
-            NRAM_TEST_INFO("[Push] Updated head=%lu", channel->shared->head);
+            NRAM_TEST_INFO(
+                "[Push %s] afterwise head=%lu tail=%lu used=%lu space=%lu len=%lu",
+                channel->name, channel->shared->head, channel->shared->tail, used, space, len);
 
             ConditionVariableBroadcast(&channel->shared->cv);
-            NRAM_TEST_INFO("[Push] Broadcast complete");
-
             LWLockRelease(&channel->shared->lock);
             return true;
         }
@@ -154,6 +155,9 @@ static bool UnsafeKVChannelPop(KVChannel* channel, void* out, Size len) {
         (channel->shared->tail + KV_CHANNEL_BUFSIZE - channel->shared->head) %
         KV_CHANNEL_BUFSIZE;
     if (len <= used) {
+        NRAM_TEST_INFO(
+            "[Pop %s] head=%lu tail=%lu used=%lu space=%lu len=%lu",
+            channel->name, channel->shared->head, channel->shared->tail, used, KV_CHANNEL_BUFSIZE-used, len);
         pos = channel->shared->head;
         end = (pos + len) % KV_CHANNEL_BUFSIZE;
 
@@ -165,6 +169,10 @@ static bool UnsafeKVChannelPop(KVChannel* channel, void* out, Size len) {
             memcpy((char*)out + part, channel->shared->buffer, len - part);
         }
         channel->shared->head = end;
+        used -= len;
+        NRAM_TEST_INFO(
+            "[Pop %s] afterwise: head=%lu tail=%lu used=%lu space=%lu len=%lu",
+            channel->name, channel->shared->head, channel->shared->tail, used, KV_CHANNEL_BUFSIZE-used, len);
         return true;
     } else {
         return false;
@@ -175,12 +183,13 @@ bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
     instr_time start_time, cur_time;
     long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
     long cur_timeout = timeout_ms;
+    // NRAM_INFO();
 
     if (len > KV_CHANNEL_BUFSIZE) elog(ERROR, "KVChannel: pop too much");
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
 
-    while (rocks_service_running) {
+    while (pg_atomic_read_u32(&channel->shared->is_running)) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
         if (UnsafeKVChannelPop(channel, out, len)) {
@@ -226,19 +235,26 @@ bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
     return false;
 }
 
-KVMsg NewStatusMsg(KVMsgStatus status, uint32 channel_id) {
-    KVMsg msg;
-    memset(&msg, 0, sizeof(KVMsg));
-    msg.header.status = status;
-    msg.header.respChannel = channel_id;
+KVMsg* NewMsg(KVOp op, Oid rel_id, KVMsgStatus status, uint32 channel_id) {
+    KVMsg* msg = palloc0(sizeof(KVMsg));
+    msg->header.op = op;
+    msg->header.relId = rel_id;
+    msg->header.status = status;
+    msg->header.respChannel = channel_id;
+
+    msg->entity = NULL;
+    msg->header.entitySize = 0;
+    msg->reader = DefaultReadEntity;
+    msg->writer = DefaultWriteEntity;
     return msg;
 }
 
-KVMsg NewMsg(KVOp op, Oid rel_id) {
-    KVMsg msg;
-    memset(&msg, 0, sizeof(KVMsg));
-    msg.header.op = op;
-    msg.header.relId = rel_id;
+KVMsg* NewEmptyMsg() {
+    KVMsg* msg = palloc0(sizeof(KVMsg));
+    msg->entity = NULL;
+    msg->header.entitySize = 0;
+    msg->reader = DefaultReadEntity;
+    msg->writer = DefaultWriteEntity;
     return msg;
 }
 
@@ -287,6 +303,12 @@ void DefaultReadEntity(KVChannel* channel, uint64* offset, void* entity,
 void PrintKVMsg(const KVMsg* msg) {
     const char* op_str;
     const char* status_str;
+
+    if (msg == NULL) {
+        /* Print msg */
+        elog(INFO, "KVMsg: NULL");
+        return;
+    }
 
     /* Decode operation */
     switch (msg->header.op) {
@@ -405,18 +427,20 @@ bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block) {
     return KVChannelPush(channel, temp, total_size, block);
 }
 
-bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
+KVMsg* KVChannelPopMsg(KVChannel* channel, bool block) {
     instr_time start_time, cur_time;
     long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
     long cur_timeout = timeout_ms;
-    NRAM_INFO();
+    KVMsg* msg = NewEmptyMsg();
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
+    NRAM_TEST_INFO("Calling KVChannelPopMsg from proc %d", MyProcPid);
 
-    while (rocks_service_running) {
+    while (pg_atomic_read_u32(&channel->shared->is_running)) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
 
         if (UnsafeKVChannelPop(channel, &msg->header, sizeof(KVMsgHeader))) {
+            NRAM_TEST_INFO("[Pop] Got header to be reply to %u", msg->header.respChannel);
             msg->entity = palloc(msg->header.entitySize);
 
             if (!UnsafeKVChannelPop(channel, msg->entity,
@@ -428,12 +452,13 @@ bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
             }
 
             LWLockRelease(&channel->shared->lock);
-            return true;
+            return msg;
         }
 
         if (!block) {
             LWLockRelease(&channel->shared->lock);
-            return false;
+            pfree(msg);
+            return NULL;
         }
 
         /* Timeout logic */
@@ -445,7 +470,8 @@ bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
             if (cur_timeout <= 0) {
                 LWLockRelease(&channel->shared->lock);
                 elog(ERROR, "KVChannelPopMsg encounters timeout");
-                return false;
+                pfree(msg);
+                return NULL;
             }
         } else
             cur_timeout = -1;  // No timeout, infinite block
@@ -464,5 +490,14 @@ bool KVChannelPopMsg(KVChannel* channel, KVMsg* msg, bool block) {
         ConditionVariableCancelSleep();
     }
 
-    return false;
+    pfree(msg);
+    return NULL;
+}
+
+
+void TerminateChannel(KVChannel* channel) {
+    NRAM_TEST_INFO("Terminating the channel %s", channel->name);
+    pg_atomic_write_u32(&channel->shared->is_running, 0);
+    ConditionVariableBroadcast(&channel->shared->cv);
+    SetLatch(MyLatch);
 }
