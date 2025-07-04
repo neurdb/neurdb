@@ -64,6 +64,7 @@ debug:
 
 test:
 	rm -rf ../logfile
+	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
 	$(ROCKSDB_SERVER_BIN) & sleep 1  # Give server time to start
 	make clean
 	make debug -j

@@ -2,12 +2,10 @@
 #include "nram_storage/thread.h"
 #include "miscadmin.h"
 #include "postmaster/bgworker.h"
-#include "storage/pmsignal.h"
-#include "storage/latch.h"
 
-RocksEngine *GlobalRocksEngine = NULL;
 static BackgroundWorker worker;
 static KVChannel *channel = NULL;
+static volatile sig_atomic_t rocks_service_running = false;
 
 void run_rocks(int num_threads) {
     static ThreadPool pool;
@@ -17,14 +15,11 @@ void run_rocks(int num_threads) {
     Assert(!rocks_service_running);
 
     threadpool_init(&pool, num_threads);
-    GlobalRocksEngine = rocksengine_open();
     rocks_service_running = true;
 
     while (rocks_service_running) {
-        KVMsg *msg = (KVMsg *)malloc(sizeof(KVMsg));
-        bool ok = KVChannelPopMsg(channel, msg, true);
-        if (!ok) {
-            free(msg);
+        KVMsg* msg = KVChannelPopMsg(channel, true);
+        if (msg == NULL) {
             CHECK_FOR_INTERRUPTS();
             continue;
         }
@@ -34,8 +29,8 @@ void run_rocks(int num_threads) {
 
         if (msg->header.op == kv_close) {
             NRAM_TEST_INFO("[Rocks] Received kv_close, shutting down (pid=%d)", MyProcPid);
-            free(msg->entity);
-            free(msg);
+            pfree(msg->entity);
+            pfree(msg);
             break;
         }
 
@@ -43,12 +38,9 @@ void run_rocks(int num_threads) {
         CHECK_FOR_INTERRUPTS();
     }
 
-    NRAM_TEST_INFO("fin: next step destroy thread pool");
     threadpool_destroy(&pool);
-    NRAM_TEST_INFO("fin: next step destroy channel");
     KVChannelDestroy(channel);
-    NRAM_TEST_INFO("fin: next step destroy engine");
-    rocksengine_destroy(&GlobalRocksEngine->engine);
+    rocksengine_destroy(GetCurrentEngine());
 
     NRAM_TEST_INFO("[Rocks] Service terminated (pid=%d)", MyProcPid);
     proc_exit(0);
@@ -59,16 +51,13 @@ void run_rocks_no_thread(void) {
     channel = KVChannelInit(ROCKSDB_CHANNEL, true);
 
     NRAM_TEST_INFO("[Rocks] Service started (pid=%d)", MyProcPid);
-    Assert(!rocks_service_running);
 
-    GlobalRocksEngine = rocksengine_open();
+    Assert(!rocks_service_running);
     rocks_service_running = true;
 
     while (rocks_service_running) {
-        KVMsg *msg = (KVMsg *)malloc(sizeof(KVMsg));
-        bool ok = KVChannelPopMsg(channel, msg, true);
-        if (!ok) {
-            free(msg);
+        KVMsg *msg = KVChannelPopMsg(channel, true);
+        if (msg == NULL) {
             CHECK_FOR_INTERRUPTS();
             continue;
         }
@@ -78,8 +67,8 @@ void run_rocks_no_thread(void) {
 
         if (msg->header.op == kv_close) {
             NRAM_TEST_INFO("[Rocks] Received kv_close, shutting down (pid=%d)", MyProcPid);
-            free(msg->entity);
-            free(msg);
+            pfree(msg->entity);
+            pfree(msg);
             break;
         }
 
@@ -87,10 +76,8 @@ void run_rocks_no_thread(void) {
         CHECK_FOR_INTERRUPTS();
     }
 
-    NRAM_TEST_INFO("fin: next step destroy channel");
     KVChannelDestroy(channel);
-    NRAM_TEST_INFO("fin: next step destroy engine");
-    rocksengine_destroy(&GlobalRocksEngine->engine);
+    rocksengine_destroy(GetCurrentEngine());
 
     NRAM_TEST_INFO("[Rocks] Service terminated (pid=%d)", MyProcPid);
     proc_exit(0);
@@ -135,48 +122,42 @@ void *process_request(void *arg) {
         KVChannelPushMsg(resp_chan, resp, true);
 
         if (resp->entity)
-            free(resp->entity);
-        free(resp);
+            pfree(resp->entity);
+        pfree(resp);
     }
 
-    if (resp_chan)
-        KVChannelDestroy(resp_chan);
-
     if (msg->entity)
-        free(msg->entity);
-    free(msg);
+        pfree(msg->entity);
+    pfree(msg);
 
     return NULL;
 }
 
 
 KVMsg *handle_kv_get(KVMsg *msg) {
+    NRAM_INFO();
     Size key_len = msg->header.entitySize;
     NRAMKey key = tkey_deserialize((char *)msg->entity, key_len);
-    NRAMValue value = rocksengine_get(&GlobalRocksEngine->engine, key);
-
-    KVMsg *resp = malloc(sizeof(KVMsg));
+    NRAMValue value = rocksengine_get(GetCurrentEngine(), key);
+    KVMsg *resp = NewMsg(kv_get, key->tableOid, kv_status_ok, msg->header.respChannel);
     Size val_len;
 
     NRAM_TEST_INFO("[Rocks] handle_kv_get, key_len=%lu, tableOid=%u", key_len, key->tableOid);
-
-    *resp = NewStatusMsg(kv_status_ok, msg->header.respChannel);
-    resp->header.op = kv_get;
-
     Assert(key_len > 0 && msg->entity != NULL);
     resp->entity = tvalue_serialize(value, &val_len);
     resp->header.entitySize = val_len;
     resp->header.relId = key->tableOid;
 
-    free(key);
+    pfree(key);
     if (value)
-        free(value);
+        pfree(value);
 
     return resp;
 }
 
 
 KVMsg *handle_kv_put(KVMsg *msg) {
+    NRAM_INFO();
     Size total_len = msg->header.entitySize, key_len, value_len;
     char *buf = (char *)msg->entity;
     NRAMKey key;
@@ -204,15 +185,14 @@ KVMsg *handle_kv_put(KVMsg *msg) {
 
     NRAM_TEST_INFO("[Rocks] handle_kv_put, key_len=%lu, val_len=%lu, tableOid=%u", key_len, value_len, key->tableOid);
 
-    rocksengine_put(&GlobalRocksEngine->engine, key, value);
+    rocksengine_put(GetCurrentEngine(), key, value);
 
-    resp = malloc(sizeof(KVMsg));
-    *resp = NewStatusMsg(kv_status_ok, msg->header.respChannel);
+    resp = NewMsg(kv_put, msg->header.relId, kv_status_ok, msg->header.respChannel);
     resp->header.op = kv_put;
     resp->header.relId = key->tableOid;
 
-    free(key);
-    free(value);
+    pfree(key);
+    pfree(value);
 
     return resp;
 }
@@ -222,10 +202,8 @@ static void terminate_rocks(SIGNAL_ARGS) {
     int save_errno = errno;
     elog(LOG, "[NRAM] terminate_rocks called, broadcasting CV, setting latch");
     rocks_service_running = false;
-    if (channel) {
-        ConditionVariableBroadcast(&channel->shared->cv);
-        SetLatch(MyLatch);
-    }
+    if (channel)
+        TerminateChannel(channel);
     errno = save_errno;
 }
 
@@ -268,4 +246,5 @@ void nram_rocks_service_init(void) {
 }
 
 void nram_rocks_service_terminate(void) {
+    terminate_rocks(0);
 }

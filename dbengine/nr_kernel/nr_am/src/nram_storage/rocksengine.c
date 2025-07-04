@@ -199,8 +199,8 @@ void rocksengine_put(KVEngine *engine, NRAMKey tkey, NRAMValue tvalue) {
         ereport(ERROR, (errmsg("RocksDB: put operation failed, %s", error)));
 
     rocksdb_writeoptions_destroy(rocksdb_writeoptions);
-    free(serialized_value);
-    free(key);
+    pfree(serialized_value);
+    pfree(key);
 }
 
 /* ------------------------------------------------------------------------

@@ -560,14 +560,14 @@ Datum nram_tableam_handler(PG_FUNCTION_ARGS) {
 PG_FUNCTION_INFO_V1(run_nram_tests);
 
 Datum run_nram_tests(PG_FUNCTION_ARGS) {
-    // run_kv_serialization_test();
-    // run_kv_copy_test();
+    run_kv_serialization_test();
+    run_kv_copy_test();
     run_kv_rocks_service_basic_test();
-    
-    // run_channel_basic_test();
-    // run_channel_sequential_test();
-    // run_channel_multiprocess_test();
-    // run_channel_msg_basic_test();
+
+    run_channel_basic_test();
+    run_channel_sequential_test();
+    run_channel_multiprocess_test();
+    run_channel_msg_basic_test();
     PG_RETURN_VOID();
 }
 

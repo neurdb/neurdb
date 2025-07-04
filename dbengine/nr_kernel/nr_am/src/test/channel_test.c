@@ -79,6 +79,7 @@ void run_channel_basic_test(void) {
     /*
      * Step 4: Buffer full rejection test
      */
+    Assert(channel->shared->head == channel->shared->tail);
     channel->shared->head = 0;
     channel->shared->tail = KV_CHANNEL_BUFSIZE - 1;  // Leave only 1 byte space
 
@@ -118,6 +119,7 @@ void run_channel_sequential_test(void) {
             snprintf(producer_msg, sizeof(producer_msg), "msg_%04d", produced);
 
             if (!KVChannelPush(channel, producer_msg, strlen(producer_msg) + 1, false)) {
+                NRAM_TEST_INFO("Buffer full!");
                 break;  // Buffer full, stop producing
             }
             produced++;
@@ -127,8 +129,6 @@ void run_channel_sequential_test(void) {
         while (KVChannelPop(channel, consumer_buf, 9, false)) {
             if (strncmp(consumer_buf, "msg_", 4) != 0)
                 elog(ERROR, "Corrupted message during pseudo-concurrency: %s", consumer_buf);
-            // else
-            //     NRAM_TEST_INFO("consumer received message %s", consumer_buf);
 
             consumed++;
         }
@@ -172,13 +172,15 @@ void run_channel_multiprocess_test(void) {
         double elapsed;
 
         channel = KVChannelInit(name, false);
-        snprintf(msg, sizeof(msg), "msg_%05d-%04d", MyProcPid, produced);
 
         gettimeofday(&start, NULL);
 
         while (produced < total_messages) {
+            snprintf(msg, sizeof(msg), "msg_%08d-%05d", MyProcPid, produced);
             if (KVChannelPush(channel, msg, strlen(msg) + 1, true)) {
                 produced++;
+                // elog(INFO, "[Producer %d] Push message %d", MyProcPid, produced);
+                // PrintChannelContent(channel);
             } else {
                 pg_usleep(1000);  // Sleep 1ms to avoid tight loop
             }
@@ -186,8 +188,8 @@ void run_channel_multiprocess_test(void) {
             gettimeofday(&now, NULL);
             elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
             if (elapsed > timeout_secs) {
-                PrintChannelContent(channel);
                 elog(ERROR, "[Producer %d] Timeout after %.2f seconds", MyProcPid, timeout_secs);
+                PrintChannelContent(channel);
             }
         }
         _exit(0);
@@ -205,11 +207,14 @@ void run_channel_multiprocess_test(void) {
         gettimeofday(&start, NULL);
 
         while (consumed < total_messages) {
-            if (KVChannelPop(channel, buf, 16, false)) {
+            if (KVChannelPop(channel, buf, 19, true)) {
                 if (strncmp(buf, "msg_", 4) != 0) {
-                    PrintChannelContent(channel);
                     elog(ERROR, "[Consumer %d] Corrupted message: %s", MyProcPid, buf);
+                    PrintChannelContent(channel);
                 }
+                // else {
+                //     elog(INFO, "[Consumer %d] Got message: %s", MyProcPid, buf);
+                // }
                 consumed++;
             } else {
                 pg_usleep(1000);  // Sleep 1ms to reduce CPU usage
@@ -218,8 +223,8 @@ void run_channel_multiprocess_test(void) {
             gettimeofday(&now, NULL);
             elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
             if (elapsed > timeout_secs) {
-                PrintChannelContent(channel);
                 elog(ERROR, "[Consumer %d] Timeout after %.2f seconds", MyProcPid, timeout_secs);
+                PrintChannelContent(channel);
             }
         }
         _exit(0);
@@ -231,31 +236,32 @@ void run_channel_multiprocess_test(void) {
     waitpid(consumer_pid, &status, 0);
     Assert(status == 0);
 
+    // PrintChannelContent(channel);
+    Assert(channel->shared->head == channel->shared->tail);
+
     KVChannelDestroy(channel);
     elog(INFO, "KV channel multi-process test passed");
 }
 
 
 void run_channel_msg_basic_test(void) {
-    KVMsg msg = NewMsg(kv_put, 12345), *recv;
+    KVMsg* msg = NewMsg(kv_put, 12345, kv_status_ok, 12345), *recv;
     char* data = "Hello, KV World!";
     KVChannel *channel = KVChannelInit("basic", true);
     
-    msg.header.entitySize = strlen(data) + 1;
-    msg.entity = data;
-    msg.writer = DefaultWriteEntity;
-    msg.reader = DefaultReadEntity;
+    msg->header.entitySize = strlen(data) + 1;
+    msg->entity = data;
     // PrintKVMsg(&msg);
 
-    if (!KVChannelPushMsg(channel, &msg, true)) {
+    if (!KVChannelPushMsg(channel, msg, true)) {
         elog(ERROR, "Message channel push fail");
     }
     // PrintChannelContent(channel);
 
-    recv = palloc(sizeof(KVMsg));
+    recv = KVChannelPopMsg(channel, true);
 
-    if(!KVChannelPopMsg(channel, recv, true)) {
-        // PrintKVMsg(recv);
+    if(!recv) {
+        PrintKVMsg(recv);
         elog(ERROR, "Message channel pop fail");
     }
 
