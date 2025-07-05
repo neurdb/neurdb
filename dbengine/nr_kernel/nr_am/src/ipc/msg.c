@@ -249,7 +249,7 @@ KVMsg* NewMsg(KVOp op, Oid rel_id, KVMsgStatus status, uint32 channel_id) {
     return msg;
 }
 
-KVMsg* NewEmptyMsg() {
+KVMsg* NewEmptyMsg(void) {
     KVMsg* msg = palloc0(sizeof(KVMsg));
     msg->entity = NULL;
     msg->header.entitySize = 0;

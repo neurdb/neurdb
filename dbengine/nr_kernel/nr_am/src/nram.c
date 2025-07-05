@@ -563,7 +563,8 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_serialization_test();
     run_kv_copy_test();
     run_kv_rocks_service_basic_test();
-
+    run_kv_rocks_client_get_put_test();
+    
     run_channel_basic_test();
     run_channel_sequential_test();
     run_channel_multiprocess_test();

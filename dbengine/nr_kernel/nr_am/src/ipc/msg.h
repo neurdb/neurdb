@@ -97,7 +97,7 @@ typedef struct KVMsg {
 
 /* Message constructors */
 extern KVMsg* NewMsg(KVOp op, Oid rel_id, KVMsgStatus status, uint32 channel_id);
-extern KVMsg* NewEmptyMsg();
+extern KVMsg* NewEmptyMsg(void);
 extern bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block);
 extern KVMsg* KVChannelPopMsg(KVChannel* channel, bool block);
 extern void PrintKVMsg(const KVMsg* msg);
