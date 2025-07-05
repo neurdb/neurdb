@@ -132,7 +132,6 @@ typedef KVScanDescData *KVScanDesc;
 
 typedef struct IndexFetchKVData {
     IndexFetchTableData xs_base;   /* base structure */
-    KVEngine *xs_engine;           /* the KV engine */
 } IndexFetchKVData;
 
 #endif //KV_H

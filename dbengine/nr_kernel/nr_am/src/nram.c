@@ -17,6 +17,7 @@
 #include "storage/lwlock.h"
 #include "storage/shmem.h"
 #include "nram_storage/rocks_service.h"
+#include "nram_storage/rocks_handler.h"
 
 PG_MODULE_MAGIC;
 
@@ -26,8 +27,7 @@ PG_MODULE_MAGIC;
  */
 
 void nram_shutdown_session(void) {
-    KVEngine* engine = GetCurrentEngine();
-    engine->destroy(engine);
+    CloseRespChannel();
 }
 
 /* ------------------------------------------------------------------------
@@ -97,7 +97,7 @@ static void nram_endscan(TableScanDesc sscan) {
         pfree(scan->min_key);
     if (scan->max_key)
         pfree(scan->max_key);
-    rocksengine_iterator_destroy(GetCurrentEngine(), scan->engine_iterator);
+    // rocksengine_iterator_destroy(GetCurrentEngine(), scan->engine_iterator);
     pfree(scan);
 }
 
@@ -168,7 +168,6 @@ static IndexFetchTableData *nram_index_fetch_begin(Relation relation) {
     NRAM_XACT_BEGIN_BLOCK;
     kvscan = palloc0(sizeof(IndexFetchKVData));
     kvscan->xs_base.rel = relation;
-    kvscan->xs_engine = GetCurrentEngine();
     return (IndexFetchTableData *)kvscan;
 }
 
@@ -199,7 +198,7 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
     kvscan = (IndexFetchKVData *)scan;
     tkey = nram_key_from_tid(kvscan->xs_base.rel->rd_id, tid);
     if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
-        tvalue = rocksengine_get(kvscan->xs_engine, tkey);
+        tvalue = RocksClientGet(tkey);
         if (tvalue == NULL) {
             pfree(tkey);
             return false;
@@ -232,6 +231,7 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     TupleDesc tupdesc;
     NRAMKey tkey;
     NRAMValue tvalue;
+    bool ok;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
 
@@ -243,7 +243,9 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     tkey = nram_key_from_tid(tup->t_tableOid, tid);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
-    rocksengine_put(GetCurrentEngine(), tkey, tvalue);
+    ok = RocksClientPut(tkey, tvalue);
+    if (!ok)
+        elog(WARNING, "NRAM insert failed.");
     add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
     NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
 

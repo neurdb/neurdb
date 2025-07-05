@@ -53,7 +53,7 @@ extern void add_read_set(NRAMXactState state, NRAMKey key, NRAMValue value);
 extern void add_write_set(NRAMXactState state, NRAMKey key, NRAMValue value);
 extern bool read_own_write(NRAMXactState state, const NRAMKey key, NRAMValue *value);
 extern bool read_own_read(NRAMXactState state, const NRAMKey key, NRAMValue *value);
-extern bool validate_read_set(KVEngine* engine, NRAMXactState state);
+extern bool validate_read_set(NRAMXactState state);
 extern NRAMXactState GetCurrentNRAMXact(void);
 
 #endif
