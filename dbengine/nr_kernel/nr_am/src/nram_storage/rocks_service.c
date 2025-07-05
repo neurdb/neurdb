@@ -108,6 +108,9 @@ void *process_request(void *arg) {
         case kv_put:
             resp = handle_kv_put(msg);
             break;
+        case kv_range:
+            resp = handle_kv_range_scan(msg);
+            break;
         case kv_delete:
             NRAM_TEST_INFO("[Rocks] kv_delete not implemented");
             break;
@@ -194,6 +197,81 @@ KVMsg *handle_kv_put(KVMsg *msg) {
 
     return resp;
 }
+
+KVMsg *handle_kv_range_scan(KVMsg *msg) {
+    Size key_len_1, key_len_2;
+    NRAMKey start_key, end_key, *keys;
+    NRAMValue *results;
+    int result_count;
+    char *write_ptr;
+    Size total_len;
+    KVMsg *resp;
+    NRAM_INFO();
+
+    Assert(msg->entity != NULL && msg->header.entitySize > 0);
+
+    /* Deserialize start_key and end_key */
+    memcpy(&key_len_1, msg->entity, sizeof(Size));
+    start_key = tkey_deserialize(msg->entity + sizeof(Size), key_len_1);
+
+    memcpy(&key_len_2, msg->entity + sizeof(Size) + key_len_1, sizeof(Size));
+    end_key = tkey_deserialize(msg->entity + sizeof(Size) + key_len_1 + sizeof(Size), key_len_2);
+
+    NRAM_TEST_INFO("[Rocks] handle_kv_range_scan, [table %u - %lu, table %u - %lu)",
+                   start_key->tableOid, start_key->tid, end_key->tableOid, end_key->tid);
+
+    // Assert(start_key->tableOid == end_key->tableOid);
+
+    /* Query range from RocksDB */
+    rocksengine_range_scan(GetCurrentEngine(), start_key, end_key, &result_count, &keys, &results);
+
+    total_len = sizeof(int);  // result_count
+    for (int i = 0; i < result_count; i++) {
+        Size klen, vlen;
+        char *kbuf = tkey_serialize(keys[i], &klen);
+        char *vbuf = tvalue_serialize(results[i], &vlen);
+        total_len += sizeof(Size) + klen + sizeof(Size) + vlen;
+        pfree(kbuf);
+        pfree(vbuf);
+    }
+
+    resp = NewMsg(kv_range, start_key->tableOid, kv_status_ok, msg->header.respChannel);
+    resp->header.entitySize = total_len;
+    resp->entity = palloc(total_len);
+
+    write_ptr = resp->entity;
+    memcpy(write_ptr, &result_count, sizeof(int));
+    write_ptr += sizeof(int);
+
+    for (int i = 0; i < result_count; i++) {
+        Size klen, vlen;
+        char *kbuf = tkey_serialize(keys[i], &klen);
+        char *vbuf = tvalue_serialize(results[i], &vlen);
+
+        memcpy(write_ptr, &klen, sizeof(Size));
+        write_ptr += sizeof(Size);
+        memcpy(write_ptr, kbuf, klen);
+        write_ptr += klen;
+
+        memcpy(write_ptr, &vlen, sizeof(Size));
+        write_ptr += sizeof(Size);
+        memcpy(write_ptr, vbuf, vlen);
+        write_ptr += vlen;
+
+        pfree(kbuf);
+        pfree(vbuf);
+        pfree(keys[i]);
+        pfree(results[i]);
+    }
+
+    pfree(keys);
+    pfree(results);
+    pfree(start_key);
+    pfree(end_key);
+
+    return resp;
+}
+
 
 
 static void terminate_rocks(SIGNAL_ARGS) {

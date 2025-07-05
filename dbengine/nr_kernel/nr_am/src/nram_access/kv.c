@@ -27,7 +27,7 @@ static uint64_t nram_generate_logical_tid(void) {
     return ((uint64_t)counter << 16) | pid_part;
 }
 
-static void nram_encode_tid(uint64_t logical_tid, ItemPointer tid) {
+void nram_encode_tid(uint64_t logical_tid, ItemPointer tid) {
     BlockNumber block = (logical_tid >> 16) & 0xFFFFFFFF;
     OffsetNumber offset = logical_tid & 0xFFFF;
     Assert(offset != InvalidOffsetNumber);
@@ -181,7 +181,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
     return buf;
 }
 
-NRAMValue tvalue_deserialize(char *buf, Size len) {
+NRAMValue tvalue_deserialize(const char *buf, Size len) {
     TransactionId xact_id;
     int16 nfields;
     char *ptr;
@@ -222,8 +222,8 @@ char *tkey_serialize(NRAMKey tkey, Size *out_len) {
     return buf;
 }
 
-NRAMKey tkey_deserialize(char *buf, Size len) {
-    char *ptr = buf;
+NRAMKey tkey_deserialize(const char *buf, Size len) {
+    char *ptr = (char *)buf;
     NRAMKey tkey = palloc0(sizeof(NRAMKeyData));
 
     if (len != sizeof(Oid) + sizeof(uint64_t)) {

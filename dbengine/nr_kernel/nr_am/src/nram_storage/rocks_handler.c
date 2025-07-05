@@ -27,10 +27,8 @@ static inline KVChannel* GetServerChannel(void) {
 }
 
 void CloseRespChannel(void) {
-    if (RespChannel) {
-        KVChannelDestroy(RespChannel);
-        RespChannel = NULL;
-    }
+    KVChannelDestroy(RespChannel);
+    RespChannel = NULL;
 }
 
 bool RocksClientPut(NRAMKey key, NRAMValue value) {
@@ -105,4 +103,73 @@ NRAMValue RocksClientGet(NRAMKey key) {
     }
 
     return val_out;
+}
+
+
+// Note: the range is fetched from a snapshot!
+bool RocksClientRangeScan(NRAMKey start_key, NRAMKey end_key,
+                          NRAMKey **out_keys, NRAMValue **out_values, int *out_count) {
+    KVChannel *req_chan = GetServerChannel(), *resp_chan = GetRespChannel();
+    Size key_len_1, key_len_2, total_len;
+    char *ptr;
+    KVMsg *msg, *resp;
+    bool ok, success;
+
+    char *serialized_start = tkey_serialize(start_key, &key_len_1);
+    char *serialized_end = tkey_serialize(end_key, &key_len_2);
+
+    total_len = sizeof(Size) + key_len_1 + sizeof(Size) + key_len_2;
+
+    msg = NewMsg(kv_range, start_key->tableOid, kv_status_none, MyProcPid);
+    msg->header.entitySize = total_len;
+    msg->entity = palloc(total_len);
+
+    ptr = msg->entity;
+    memcpy(ptr, &key_len_1, sizeof(Size));
+    ptr += sizeof(Size);
+    memcpy(ptr, serialized_start, key_len_1);
+    ptr += key_len_1;
+    memcpy(ptr, &key_len_2, sizeof(Size));
+    ptr += sizeof(Size);
+    memcpy(ptr, serialized_end, key_len_2);
+
+    ok = KVChannelPushMsg(req_chan, msg, true);
+    Assert(ok);
+
+    resp = KVChannelPopMsg(resp_chan, true);
+    success = resp && resp->header.status == kv_status_ok && resp->header.op == kv_range;
+
+    if (success) {
+        ptr = resp->entity;
+        memcpy(out_count, ptr, sizeof(int));
+        ptr += sizeof(int);
+
+        *out_keys = palloc(sizeof(NRAMKey) * (*out_count));
+        *out_values = palloc(sizeof(NRAMValue) * (*out_count));
+
+        for (int i = 0; i < *out_count; i++) {
+            Size klen, vlen;
+            memcpy(&klen, ptr, sizeof(Size));
+            ptr += sizeof(Size);
+            (*out_keys)[i] = tkey_deserialize(ptr, klen);
+            ptr += klen;
+
+            memcpy(&vlen, ptr, sizeof(Size));
+            ptr += sizeof(Size);
+            (*out_values)[i] = tvalue_deserialize(ptr, vlen);
+            ptr += vlen;
+        }
+    } else {
+        elog(WARNING, "[NRAM] Rocks RANGE_SCAN with keys failed");
+    }
+
+    pfree(serialized_start);
+    pfree(serialized_end);
+    pfree(msg->entity);
+    pfree(msg);
+    if (resp) {
+        if (resp->entity) pfree(resp->entity);
+        pfree(resp);
+    }
+    return success;
 }

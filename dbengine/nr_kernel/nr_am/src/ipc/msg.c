@@ -12,16 +12,16 @@ KVChannel* KVChannelInit(const char* name, bool create) {
         name, sizeof(KVChannelShared), &found);
     NRAM_TEST_INFO("Initializing channel %s from proc %d", name, MyProcPid);
 
-    if (create && !found) {
+    if (create) {
+        // if (found)
+        //     elog(WARNING, "[NRAM] shared memory segment %s has been created before", name);
         memset(shared, 0, sizeof(KVChannelShared));
         LWLockInitialize(&shared->lock, LWLockNewTrancheId());
         ConditionVariableInit(&shared->cv);
         pg_atomic_init_u32(&shared->is_running, 1);
     } else if (!found) {
         elog(ERROR, "[NRAM] shared memory segment %s not found", name);
-    } else if (create)
-        elog(ERROR, "[NRAM] shared memory segment %s has been created before",
-             name);
+    }
 
     chan = (KVChannel*)MemoryContextAlloc(TopMemoryContext, sizeof(KVChannel));
     strlcpy(chan->name, name, NAMEDATALEN);

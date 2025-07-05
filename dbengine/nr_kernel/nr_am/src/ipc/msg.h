@@ -59,7 +59,8 @@ typedef enum KVOp {
     kv_batch_read,
     kv_cursor_delete,
     kv_start,
-    kv_stop
+    kv_stop,
+    kv_range
 } KVOp;
 
 /* Status codes for KV responses */
