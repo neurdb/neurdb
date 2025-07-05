@@ -292,11 +292,11 @@ void run_kv_rocks_client_get_put_test(void) {
     memcpy((char *)field + sizeof(NRAMValueFieldData), "ABCDEFG", 7);
 
     // 3. PUT
-    ok = RocksClientPut(1234, key, value);
+    ok = RocksClientPut(key, value);
     Assert(ok);
 
     // 4. GET
-    val_out = RocksClientGet(1234, key);
+    val_out = RocksClientGet(key);
     Assert(val_out->xact_id == value->xact_id);
     Assert(val_out->nfields == value->nfields);
 

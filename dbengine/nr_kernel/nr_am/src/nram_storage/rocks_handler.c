@@ -33,12 +33,12 @@ void CloseRespChannel(void) {
     }
 }
 
-bool RocksClientPut(uint32 tableOid, NRAMKey key, NRAMValue value) {
+bool RocksClientPut(NRAMKey key, NRAMValue value) {
     KVChannel *req_chan = GetServerChannel(), *resp_chan = GetRespChannel();
     Size key_len, val_len, total_len;
     char *serialized_key = tkey_serialize(key, &key_len);
     char *serialized_val = tvalue_serialize(value, &val_len);
-    KVMsg *msg = NewMsg(kv_put, tableOid, kv_status_none, MyProcPid), *resp;
+    KVMsg *msg = NewMsg(kv_put, key->tableOid, kv_status_none, MyProcPid), *resp;
     bool ok, success;
 
     total_len = key_len + val_len + sizeof(Size);
@@ -73,11 +73,11 @@ bool RocksClientPut(uint32 tableOid, NRAMKey key, NRAMValue value) {
 }
 
 
-NRAMValue RocksClientGet(uint32 tableOid, NRAMKey key) {
+NRAMValue RocksClientGet(NRAMKey key) {
     KVChannel *req_chan = GetServerChannel(), *resp_chan = GetRespChannel();
     Size key_len;
     char *serialized_key = tkey_serialize(key, &key_len);
-    KVMsg *msg = NewMsg(kv_get, tableOid, kv_status_none, MyProcPid), *resp;
+    KVMsg *msg = NewMsg(kv_get, key->tableOid, kv_status_none, MyProcPid), *resp;
     bool ok, success;
     NRAMValue val_out;
 

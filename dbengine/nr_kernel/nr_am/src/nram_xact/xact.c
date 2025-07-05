@@ -1,6 +1,6 @@
 #include "nram_xact/xact.h"
 #include "utils/memutils.h"
-#include "nram_storage/rocksengine.h"
+#include "nram_storage/rocks_handler.h"
 #include "storage/lock.h"
 #include "port.h"
 
@@ -196,8 +196,6 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                     "The transaction %u has already been validated before.",
                     current_nram_xact->xact_id);
             } else {
-                KVEngine* engine = GetCurrentEngine();
-                // RocksEngine* rocks_engine = (RocksEngine*) engine;
                 ListCell *cell;
                 LOCKTAG tag;
 
@@ -214,7 +212,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                     NRAM_TEST_INFO("The validation is processing, validating read values.");
                     foreach(cell, current_nram_xact->read_set) {
                         NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
-                        NRAMValue cur_val = rocksengine_get(engine, opt->key);
+                        NRAMValue cur_val = RocksClientGet(opt->key);
                         if (cur_val == NULL) {
                             elog(ERROR, "transaction validation failed: key vanished");
                             return;
@@ -273,12 +271,12 @@ void nram_unregister_xact_hook(void) {
     }
 }
 
-bool validate_read_set(KVEngine* engine, NRAMXactState state) {
+bool validate_read_set(NRAMXactState state) {
     ListCell *cell;
 
     foreach(cell, state->read_set) {
         NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
-        NRAMValue cur_val = rocksengine_get(engine, opt->key);
+        NRAMValue cur_val = RocksClientGet(opt->key);
 
         if (cur_val == NULL) {
             NRAM_TEST_INFO("validation failed: key vanished");

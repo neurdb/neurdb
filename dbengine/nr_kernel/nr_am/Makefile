@@ -26,7 +26,7 @@ PG_CPPFLAGS += -I/usr/local/include -I./src/
 SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
 # REGRESS = clean init unit_tests table_scan xact_basic index_scan
-REGRESS = clean init unit_tests
+REGRESS = clean init unit_tests index_scan
 
 # ISOLATION = read_committed repeatable_read
 # ISOLATION = read_committed
@@ -71,7 +71,7 @@ test:
 	make debug -j
 	sudo make install
 	bash ../scripts/restart_db.sh
-	psql -d neurdb -f ./sql/clean.sql
-	psql -d neurdb -f ./sql/init.sql
-	psql -d neurdb -f ./sql/unit_tests.sql
-	# make installcheck
+	# psql -d neurdb -f ./sql/clean.sql
+	# psql -d neurdb -f ./sql/init.sql
+	# psql -d neurdb -f ./sql/unit_tests.sql
+	make installcheck
