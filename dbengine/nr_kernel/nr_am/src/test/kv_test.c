@@ -8,8 +8,10 @@
 #include "ipc/msg.h"
 #include <sys/time.h>
 #include <sys/wait.h>
-#include "nram_storage/rocks_service.h"
 #include "miscadmin.h"
+
+#include "nram_storage/rocks_service.h"
+#include "nram_storage/rocks_handler.h"
 
 /*
  * This test:
@@ -258,4 +260,54 @@ void run_kv_rocks_service_basic_test(void) {
     KVChannelDestroy(resp_chan);
 
     elog(INFO, "Rocks service basic test passed!");
+}
+
+
+/*
+ * This test:
+ * 1. Launches RocksDB service in a child process
+ * 2. Sends a PUT request with (key = tableOid:tid), value = ("ABCDEFG")
+ * 3. Sends a GET request to verify stored value
+ * 4. Validates correctness and cleans up
+ */
+void run_kv_rocks_client_get_put_test(void) {
+    NRAMKey key;
+    NRAMValue value, val_out;
+    NRAMValueFieldData *field;
+    bool ok;
+
+    // 2. Construct key and value
+    key = palloc0(sizeof(NRAMKeyData));
+    key->tableOid = 1234;
+    key->tid = 1;
+
+    value = palloc0(sizeof(NRAMValueData) + sizeof(NRAMValueFieldData) + 7);
+    value->xact_id = 1;
+    value->nfields = 1;
+
+    field = (NRAMValueFieldData *)value->data;
+    field->attnum = 1;
+    field->type_oid = TEXTOID;
+    field->len = 7;
+    memcpy((char *)field + sizeof(NRAMValueFieldData), "ABCDEFG", 7);
+
+    // 3. PUT
+    ok = RocksClientPut(1234, key, value);
+    Assert(ok);
+
+    // 4. GET
+    val_out = RocksClientGet(1234, key);
+    Assert(val_out->xact_id == value->xact_id);
+    Assert(val_out->nfields == value->nfields);
+
+    if (memcmp(val_out->data, value->data, 7) != 0)
+        elog(ERROR, "Value mismatch, expected 'ABCDEFG' got '%s'", val_out->data);
+
+    // 5. Cleanup
+    pfree(key);
+    pfree(value);
+    pfree(val_out);
+    CloseRespChannel();
+
+    elog(INFO, "Rocks service client GET PUT test passed!");
 }

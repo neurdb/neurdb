@@ -135,7 +135,6 @@ void *process_request(void *arg) {
 
 
 KVMsg *handle_kv_get(KVMsg *msg) {
-    NRAM_INFO();
     Size key_len = msg->header.entitySize;
     NRAMKey key = tkey_deserialize((char *)msg->entity, key_len);
     NRAMValue value = rocksengine_get(GetCurrentEngine(), key);
@@ -157,7 +156,6 @@ KVMsg *handle_kv_get(KVMsg *msg) {
 
 
 KVMsg *handle_kv_put(KVMsg *msg) {
-    NRAM_INFO();
     Size total_len = msg->header.entitySize, key_len, value_len;
     char *buf = (char *)msg->entity;
     NRAMKey key;

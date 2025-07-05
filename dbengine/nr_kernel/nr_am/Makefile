@@ -9,6 +9,7 @@ OBJS = \
 	${EXTPATH}/src/nram_storage/rocksengine.o \
 	${EXTPATH}/src/nram_storage/rocks_service.o \
 	${EXTPATH}/src/nram_storage/thread.o \
+	${EXTPATH}/src/nram_storage/rocks_handler.o \
 	${EXTPATH}/src/ipc/msg.o \
 	${EXTPATH}/src/test/kv_test.o \
 	${EXTPATH}/src/test/channel_test.o \
