@@ -15,7 +15,8 @@ void *process_request(void *arg);
 
 KVMsg *handle_kv_get(KVMsg *msg);
 KVMsg *handle_kv_put(KVMsg *msg);
-  
+KVMsg *handle_kv_range_scan(KVMsg *msg);
+
 void nram_rocks_service_init(void);
 void nram_rocks_service_terminate(void);
 

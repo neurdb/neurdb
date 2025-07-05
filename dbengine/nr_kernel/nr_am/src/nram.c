@@ -46,38 +46,41 @@ static const TupleTableSlotOps *nram_slot_callbacks(Relation relation) {
  * ------------------------------------------------------------------------
  */
 
-// static uint64 operationId = 0;  /* a SQL might cause multiple scans */
-
 static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     int nkeys, struct ScanKeyData *key,
                                     ParallelTableScanDesc parallel_scan,
                                     uint32 flags) {
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
+    NRAMKey min_key, max_key;
+    bool ok;
+
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
-
-    // scan->read_state = palloc0(sizeof(TableReadState));
-    // scan->read_state->execExplainOnly = flags & EXEC_FLAG_EXPLAIN_ONLY? true: false;
-    // scan->read_state->operationId = 0;
-    // scan->read_state->done = false;
-    // scan->read_state->key = NULL;
-    
     RelationIncrementReferenceCount(relation);
+
     scan->rs_base.rs_rd = relation;
     scan->rs_base.rs_snapshot = snapshot;
     scan->rs_base.rs_nkeys = nkeys;
-    scan->rs_base.rs_key = key;
+    scan->rs_base.rs_key = key; 
 
+    min_key = palloc0(sizeof(NRAMKeyData));
+    min_key->tableOid = relation->rd_id;
+    min_key->tid = 0;
 
-    // TODO: send the args to the remote server.
-    // ReadBatchArgs args;
-    // args.buf = &readState->buf;
-    // args.bufLen = &readState->bufLen;
-    // args.opid = ++operationId;
-    // readState->hasNext = KVReadBatchRequest(relationId, &args);
-    // rocksengine_get();    
-    // scan->read_state->next = scan->read_state->buf;
-    // scan->read_state->operationId = operationId;
+    max_key = palloc0(sizeof(NRAMKeyData));
+    max_key->tableOid = relation->rd_id + 1;
+    max_key->tid = 0;
+
+    scan->min_key = min_key;
+    scan->max_key = max_key;
+
+    /* Range scan request */
+    ok = RocksClientRangeScan(min_key, max_key, 
+        &scan->results_key, &scan->results, &scan->result_count);
+    Assert(ok);
+
+    scan->cursor = 0;
+
     return (TableScanDesc)scan;
 }
 
@@ -93,67 +96,67 @@ static void nram_endscan(TableScanDesc sscan) {
     NRAM_XACT_BEGIN_BLOCK;
     RelationDecrementReferenceCount(sscan->rs_rd);
 
-    if (scan->min_key)
-        pfree(scan->min_key);
-    if (scan->max_key)
-        pfree(scan->max_key);
-    // rocksengine_iterator_destroy(GetCurrentEngine(), scan->engine_iterator);
+    pfree(scan->min_key);
+    pfree(scan->max_key);
+
+    if (scan->result_count) {
+        for (int i = 0; i < scan->result_count; i++) {
+            pfree(scan->results_key[i]);
+            pfree(scan->results[i]);
+        }
+        pfree(scan->results);
+        pfree(scan->results_key);
+    }
+
     pfree(scan);
 }
 
-// TODO: the get next here could cause conflict on the index!
-// TODO: filter out those uncommitted records.
-static bool nram_getnextslot(TableScanDesc scan, ScanDirection direction,
+static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
                              TupleTableSlot *slot) {
-    NRAMKey tkey;
+    NRAM_INFO();
+    KVScanDesc scan = (KVScanDesc)sscan;
     NRAMValue tvalue;
+    NRAMKey tkey;
     HeapTuple tuple;
-    KVScanDesc sscan;
-    KVEngineIterator *it;
-    MemoryContext oldctx = MemoryContextSwitchTo(TopTransactionContext);
     NRAMXactState xact = GetCurrentNRAMXact();
 
     NRAM_INFO();
-    NRAM_XACT_BEGIN_BLOCK;
-    ExecClearTuple(slot);
-    sscan = (KVScanDesc)scan;
-    it = sscan->engine_iterator;
-    if (direction != ForwardScanDirection)
-        elog(WARNING,
-             "[NRAM]: currently we only support forward scan direction. Got %d",
-             direction);
 
-    if (!it->is_valid(it)) {
-        MemoryContextSwitchTo(oldctx);
+    ExecClearTuple(slot);
+
+    if (direction != ForwardScanDirection) {
+        elog(WARNING, "[NRAM] Only forward scan supported, got %d", direction);
         return false;
     }
 
-    it->get(it, &tkey, &tvalue);
+    if (scan->cursor >= scan->result_count) {
+        return false;
+    }
+
+    Assert(scan->results_key != NULL);
+    Assert(scan->results != NULL);
+    Assert(scan->cursor < scan->result_count);
+
+    tkey = scan->results_key[scan->cursor];
+    tvalue = scan->results[scan->cursor];
+    scan->cursor ++;
     if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
         add_read_set(xact, tkey, tvalue);
     }
 
-    if (tkey->tableOid != scan->rs_rd->rd_id) {
-        // The end of table. Currently, we only support forward scan.
-        // Not that depending on the machine, big/small endian.
-        // The tkey->tableOid could be smaller than scan->rs_rd->rd_id. This is expected.
-        pfree(tkey);
-        pfree(tvalue);
-        MemoryContextSwitchTo(oldctx);
-        return false;
-    }
-    tuple =
-        deserialize_nram_value_to_tuple(tvalue, sscan->rs_base.rs_rd->rd_att);
+    tuple = deserialize_nram_value_to_tuple(tvalue, scan->rs_base.rs_rd->rd_att);
+    tuple->t_tableOid = scan->rs_base.rs_rd->rd_id;
+    nram_encode_tid(tkey->tid, &tuple->t_self);
     ExecStoreHeapTuple(tuple, slot, true);
 
-    it->next(it);
+    Assert(slot != NULL);
+    Assert(TTS_EMPTY(slot) == false);
+    Assert(ItemPointerIsValid(&slot->tts_tid));
+    Assert(slot->tts_tableOid == scan->rs_base.rs_rd->rd_id);
+    NRAM_TEST_INFO("Stored tuple: tid block=%u offset=%u", 
+               BlockIdGetBlockNumber(&(slot->tts_tid.ip_blkid)),
+               slot->tts_tid.ip_posid);
 
-    pfree(tkey);
-    pfree(tvalue);
-    // NRAM_INFO();
-    // heap_freetuple(tuple);
-
-    MemoryContextSwitchTo(oldctx);
     return true;
 }
 
@@ -210,6 +213,8 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
         tvalue,
         kvscan->xs_base.rel->rd_att
     );
+    nram_encode_tid(tkey->tid, &tuple->t_self);
+    tuple->t_tableOid = kvscan->xs_base.rel->rd_id;
 
     ExecClearTuple(slot);
     ExecStoreHeapTuple(tuple, slot, true);
@@ -566,6 +571,7 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_copy_test();
     run_kv_rocks_service_basic_test();
     run_kv_rocks_client_get_put_test();
+    run_kv_rocks_client_range_scan_test();
     
     run_channel_basic_test();
     run_channel_sequential_test();

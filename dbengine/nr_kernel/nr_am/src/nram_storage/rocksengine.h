@@ -56,5 +56,6 @@ bool rocksengine_iterator_is_valid(KVEngineIterator *iterator);
 void rocksengine_iterator_next(KVEngineIterator *iterator);
 void rocksengine_iterator_prev(KVEngineIterator *iterator);
 void rocksengine_iterator_get(KVEngineIterator *iterator, NRAMKey *tkey, NRAMValue *tvalue);
+void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key, int *out_count, NRAMKey **keys, NRAMValue** values);
 
 #endif //ROCKSENGINE_H

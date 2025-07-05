@@ -3,6 +3,7 @@ INFO:  KV serialization test pass!
 INFO:  Value copy test pass!
 INFO:  Rocks service basic test passed!
 INFO:  Rocks service client GET PUT test passed!
+INFO:  Rocks service client RANGE SCAN test passed!
 INFO:  KV channel test passed!
 INFO:  KV channel sequential test passed!
 INFO:  KV channel multi-process test passed

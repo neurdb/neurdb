@@ -22,9 +22,9 @@ rocksdb_options_t *rocksengine_config_options(void) {
  * ------------------------------------------------------------------------
  */
 void rocksengine_fetch_table_key(Oid table_id, char** min_key, char** max_key) {
-    *min_key = malloc(NRAM_TABLE_KEY_LENGTH);
+    *min_key = palloc(NRAM_TABLE_KEY_LENGTH);
     memcpy(*min_key, &table_id, NRAM_TABLE_KEY_LENGTH);
-    *max_key = malloc(NRAM_TABLE_KEY_LENGTH);
+    *max_key = palloc(NRAM_TABLE_KEY_LENGTH);
     table_id += 1;
     memcpy(*max_key, &table_id, NRAM_TABLE_KEY_LENGTH);
 }
@@ -323,6 +323,8 @@ NRAMKey rocksengine_get_min_key(KVEngine *engine, Oid table_id) {
 
     rocksengine_fetch_table_key(table_id, &min_key, &max_key);
     rocksdb_iter_seek(rocks_it->rocksdb_iterator, min_key, NRAM_TABLE_KEY_LENGTH);
+    pfree(min_key);
+    pfree(max_key);
 
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it)) {
         rocksengine_iterator_destroy(engine, (KVEngineIterator *)rocks_it);
@@ -347,6 +349,8 @@ NRAMKey rocksengine_get_max_key(KVEngine *engine, Oid table_id) {
 
     rocksengine_fetch_table_key(table_id, &min_key, &max_key);
     rocksdb_iter_seek_for_prev(rocks_it->rocksdb_iterator, max_key, NRAM_TABLE_KEY_LENGTH);
+    pfree(min_key);
+    pfree(max_key);
 
     if (!rocksengine_iterator_is_valid((KVEngineIterator *)rocks_it))
         return NULL;
@@ -354,4 +358,63 @@ NRAMKey rocksengine_get_max_key(KVEngine *engine, Oid table_id) {
     rocksengine_iterator_get((KVEngineIterator *)rocks_it, &tkey, &tvalue);
     rocksengine_iterator_destroy(engine, (KVEngineIterator *)rocks_it);
     return tkey;
+}
+
+
+void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key, int *out_count, NRAMKey **keys, NRAMValue** values) {
+    RocksEngineIterator *rocks_it = (RocksEngineIterator *)rocksengine_create_iterator(engine, true);
+    Size start_len, end_len;
+    char *start_buf = tkey_serialize(start_key, &start_len);
+    char *end_buf = tkey_serialize(end_key, &end_len);
+    int capacity = 8;
+    int count = 0;
+    NRAM_INFO();
+
+    *out_count = 0;
+    *values = palloc(sizeof(NRAMValue) * capacity);
+    *keys = palloc(sizeof(NRAMKey) * capacity);
+
+    rocksdb_iter_seek(rocks_it->rocksdb_iterator, start_buf, start_len);
+
+    while (rocksdb_iter_valid(rocks_it->rocksdb_iterator)) {
+        Size key_len, val_len;
+        const char *key = rocksdb_iter_key(rocks_it->rocksdb_iterator, &key_len);
+        const char *val = rocksdb_iter_value(rocks_it->rocksdb_iterator, &val_len);
+        NRAMValue tval;
+        NRAMKey tkey;
+
+        /* Stop if key >= end_key */
+        if (key_len != end_len || memcmp(key, end_buf, end_len) >= 0)
+            break;
+
+        tkey = tkey_deserialize(key, key_len);
+        tval = tvalue_deserialize(val, val_len);
+
+        /* Dynamic array expansion */
+        if (count >= capacity) {
+            capacity *= 2;
+            *keys = realloc(*keys, sizeof(NRAMKey) * capacity);
+            *values = realloc(*values, sizeof(NRAMValue) * capacity);
+        }
+
+        (*keys)[count] = tkey;
+        (*values)[count] = tval;
+        count++;
+        rocksdb_iter_next(rocks_it->rocksdb_iterator);
+    }
+
+    *out_count = count;
+
+    /* Clean up */
+    rocksengine_iterator_destroy(engine, (KVEngineIterator *)rocks_it);
+    pfree(start_buf);
+    pfree(end_buf);
+
+    /* Handle empty result */
+    if (count == 0) {
+        pfree(*values);
+        pfree(*keys);
+    }
+
+    NRAM_INFO();
 }

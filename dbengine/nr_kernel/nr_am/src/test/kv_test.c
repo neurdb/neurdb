@@ -311,3 +311,96 @@ void run_kv_rocks_client_get_put_test(void) {
 
     elog(INFO, "Rocks service client GET PUT test passed!");
 }
+
+
+/*
+ * This test:
+ * 1. Launches RocksDB service in a child process
+ * 2. Sends multiple PUT requests with keys in [tableOid:1] to [tableOid:5]
+ * 3. Issues a RANGE_SCAN for [tableOid:2, tableOid:5)
+ * 4. Validates returned keys and values are correct and ordered
+ * 5. Cleans up resources
+ */
+void run_kv_rocks_client_range_scan_test(void) {
+    NRAMKey key, start_key, end_key, *result_keys;
+    NRAMValue value, val_out, *results;
+    NRAMValueFieldData *field;
+    bool ok;
+    int result_count;
+    int table_oid = 5678;
+
+    // 1. Insert 5 keys
+    for (int i = 1; i <= 5; i++) {
+        key = palloc0(sizeof(NRAMKeyData));
+        key->tableOid = table_oid;
+        key->tid = i;
+
+        value = palloc0(sizeof(NRAMValueData) + sizeof(NRAMValueFieldData) + 8);
+        value->xact_id = i;
+        value->nfields = 1;
+
+        field = (NRAMValueFieldData *)value->data;
+        field->attnum = 1;
+        field->type_oid = TEXTOID;
+        field->len = 8;
+
+        char val_str[9];
+        snprintf(val_str, sizeof(val_str), "Value%03d", i);
+        memcpy((char *)field + sizeof(NRAMValueFieldData), val_str, 8);
+
+        ok = RocksClientPut(key, value);
+        Assert(ok);
+
+        pfree(key);
+        pfree(value);
+    }
+
+    // 2. Setup range: [tableOid:2, tableOid:5)
+    start_key = palloc0(sizeof(NRAMKeyData));
+    start_key->tableOid = table_oid;
+    start_key->tid = 2;
+
+    end_key = palloc0(sizeof(NRAMKeyData));
+    end_key->tableOid = table_oid;
+    end_key->tid = 5;
+
+    // 3. Perform range scan with keys
+    ok = RocksClientRangeScan(start_key, end_key, &result_keys, &results, &result_count);
+    Assert(ok);
+    Assert(result_count == 3);  // Expect tid = 2, 3, 4
+
+    // 4. Validate keys and results
+    for (int i = 0; i < result_count; i++) {
+        NRAMKey out_key = result_keys[i];
+        val_out = results[i];
+
+        Assert(out_key->tableOid == table_oid);
+        Assert(out_key->tid == i + 2);  // tid = 2, 3, 4
+
+        Assert(val_out->xact_id == i + 2);
+        Assert(val_out->nfields == 1);
+
+        field = (NRAMValueFieldData *)val_out->data;
+        Assert(field->len == 8);
+
+        char expected[9];
+        snprintf(expected, sizeof(expected), "Value%03d", i + 2);
+
+        if (memcmp((char *)field + sizeof(NRAMValueFieldData), expected, 8) != 0)
+            elog(ERROR, "Range Scan Value mismatch at index %d, expected '%s'", i, expected);
+    }
+
+    // 5. Cleanup
+    for (int i = 0; i < result_count; i++) {
+        pfree(result_keys[i]);
+        pfree(results[i]);
+    }
+    if (result_keys) pfree(result_keys);
+    if (results) pfree(results);
+
+    pfree(start_key);
+    pfree(end_key);
+    CloseRespChannel();
+
+    elog(INFO, "Rocks service client RANGE SCAN test passed!");
+}

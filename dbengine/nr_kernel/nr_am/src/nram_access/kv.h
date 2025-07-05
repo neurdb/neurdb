@@ -25,6 +25,7 @@
 extern void nram_init(void);
 extern void nram_generate_tid(ItemPointer tid);
 extern uint64_t nram_decode_tid(const ItemPointer tid);
+extern void nram_encode_tid(uint64_t logical_tid, ItemPointer tid);
 // extern shmem_startup_hook_type prev_shmem_startup_hook;
 // extern void nram_shmem_startup(void);
 
@@ -37,7 +38,7 @@ typedef NRAMKeyData *NRAMKey;
 
 extern char *stringify_buff(char *buf, int len);
 extern char *tkey_serialize(NRAMKey tkey, Size *out_len);
-extern NRAMKey tkey_deserialize(char *buf, Size len);
+extern NRAMKey tkey_deserialize(const char *buf, Size len);
 extern NRAMKey nram_key_from_tid(Oid tableOid, ItemPointer tid);
 extern NRAMKey copy_nram_key(NRAMKey src);
 
@@ -60,7 +61,7 @@ typedef NRAMValueData *NRAMValue;
 extern NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc);
 extern HeapTuple deserialize_nram_value_to_tuple(NRAMValue val, TupleDesc tupdesc);
 extern char *tvalue_serialize(NRAMValue tvalue, Size *out_len);
-extern NRAMValue tvalue_deserialize(char *buf, Size len);
+extern NRAMValue tvalue_deserialize(const char *buf, Size len);
 extern NRAMValue copy_nram_value(NRAMValue src);
 
 /* ------------------------------------------------------------------------
@@ -126,6 +127,10 @@ typedef struct KVScanDescData {
     KVEngineIterator* engine_iterator;
     NRAMKey min_key;
     NRAMKey max_key;
+    NRAMValue *results;
+    NRAMKey *results_key;
+    uint32_t result_count;
+    uint32_t cursor;
 } KVScanDescData;
 
 typedef KVScanDescData *KVScanDesc;
