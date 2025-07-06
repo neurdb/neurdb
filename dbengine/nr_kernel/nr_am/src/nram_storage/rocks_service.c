@@ -234,6 +234,7 @@ KVMsg *handle_kv_range_scan(KVMsg *msg) {
         pfree(kbuf);
         pfree(vbuf);
     }
+    NRAM_TEST_INFO("Total len = %lu, data len = %lu", total_len, result_count);
 
     resp = NewMsg(kv_range, start_key->tableOid, kv_status_ok, msg->header.respChannel);
     resp->header.entitySize = total_len;
@@ -243,31 +244,34 @@ KVMsg *handle_kv_range_scan(KVMsg *msg) {
     memcpy(write_ptr, &result_count, sizeof(int));
     write_ptr += sizeof(int);
 
-    for (int i = 0; i < result_count; i++) {
-        Size klen, vlen;
-        char *kbuf = tkey_serialize(keys[i], &klen);
-        char *vbuf = tvalue_serialize(results[i], &vlen);
+    if (result_count) {
+        for (int i = 0; i < result_count; i++) {
+            Size klen, vlen;
+            char *kbuf = tkey_serialize(keys[i], &klen);
+            char *vbuf = tvalue_serialize(results[i], &vlen);
 
-        memcpy(write_ptr, &klen, sizeof(Size));
-        write_ptr += sizeof(Size);
-        memcpy(write_ptr, kbuf, klen);
-        write_ptr += klen;
+            memcpy(write_ptr, &klen, sizeof(Size));
+            write_ptr += sizeof(Size);
+            memcpy(write_ptr, kbuf, klen);
+            write_ptr += klen;
 
-        memcpy(write_ptr, &vlen, sizeof(Size));
-        write_ptr += sizeof(Size);
-        memcpy(write_ptr, vbuf, vlen);
-        write_ptr += vlen;
+            memcpy(write_ptr, &vlen, sizeof(Size));
+            write_ptr += sizeof(Size);
+            memcpy(write_ptr, vbuf, vlen);
+            write_ptr += vlen;
 
-        pfree(kbuf);
-        pfree(vbuf);
-        pfree(keys[i]);
-        pfree(results[i]);
+            pfree(kbuf);
+            pfree(vbuf);
+            pfree(keys[i]);
+            pfree(results[i]);
+        }
+
+        pfree(keys);
+        pfree(results);
     }
-
-    pfree(keys);
-    pfree(results);
     pfree(start_key);
     pfree(end_key);
+    // PrintKVMsg(resp);
 
     return resp;
 }

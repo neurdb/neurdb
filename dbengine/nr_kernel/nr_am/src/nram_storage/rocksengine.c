@@ -415,6 +415,4 @@ void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key
         pfree(*values);
         pfree(*keys);
     }
-
-    NRAM_INFO();
 }
