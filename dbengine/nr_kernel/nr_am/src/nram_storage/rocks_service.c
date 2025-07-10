@@ -9,7 +9,7 @@ static volatile sig_atomic_t rocks_service_running = false;
 static ResultQueue result_queue;
 
 /* ------------------------------------------------------------------------
- * Response thread-safe queue: 
+ * Response thread-safe queue:
  *  we add this because the channel can only be used in process context.
  * ------------------------------------------------------------------------
  */
@@ -82,7 +82,7 @@ KVMsg *ResultQueuePop(ResultQueue *q) {
 
 void PrintResultQueue(ResultQueue *q) {
     pthread_mutex_lock(&q->lock);
-    elog(INFO, "<ResultQueue: %p (head:%p, tail:%p, status:%s) --------------- >", 
+    elog(INFO, "<ResultQueue: %p (head:%p, tail:%p, status:%s) --------------- >",
         q, q->head, q->tail, q->shutdown? "shutdown":"alive");
     if (q->shutdown) {
         pthread_mutex_unlock(&q->lock);
@@ -90,7 +90,7 @@ void PrintResultQueue(ResultQueue *q) {
     }
     for (ResultNode* it = q->head; it; it = it->next) {
         PrintKVMsg(it->msg);
-        elog(INFO, "--------------- ");        
+        elog(INFO, "--------------- ");
     }
     elog(INFO, "<ResultQueue: %p ---------------> ", q);
     pthread_mutex_unlock(&q->lock);
@@ -120,7 +120,7 @@ static void ResultQueueClear(ResultQueue *q) {
     }
 }
 
- 
+
 /* ------------------------------------------------------------------------
  * Main funcs
  * ------------------------------------------------------------------------
@@ -145,7 +145,7 @@ void run_rocks(int num_threads) {
             continue;
         }
 
-        NRAM_TEST_INFO("[Rocks] Received msg op=%d, respChan=%u, size=%lu (pid=%d)", 
+        NRAM_TEST_INFO("[Rocks] Received msg op=%d, respChan=%u, size=%lu (pid=%d)",
                         msg->header.op, msg->header.respChannel, msg->header.entitySize, MyProcPid);
 
         if (msg->header.op == kv_close) {
@@ -186,7 +186,7 @@ void run_rocks_no_thread(void) {
             continue;
         }
 
-        NRAM_TEST_INFO("[Rocks] Received msg op=%d, respChan=%u, size=%lu (pid=%d)", 
+        NRAM_TEST_INFO("[Rocks] Received msg op=%d, respChan=%u, size=%lu (pid=%d)",
                         msg->header.op, msg->header.respChannel, msg->header.entitySize, MyProcPid);
 
         if (msg->header.op == kv_close) {
@@ -213,11 +213,11 @@ void *process_request(void *arg) {
     KVMsg *msg = (KVMsg *)arg, *resp = NULL;
     KVChannel *resp_chan;
     char chan_name[64];
-    
+
     snprintf(chan_name, sizeof(chan_name), "kv_resp_%u", msg->header.respChannel);
     resp_chan = KVChannelInit(chan_name, false);
 
-    NRAM_TEST_INFO("[Rocks] Processing msg op=%d, respChan=%u (pid=%d)", 
+    NRAM_TEST_INFO("[Rocks] Processing msg op=%d, respChan=%u (pid=%d)",
         msg->header.op, msg->header.respChannel, MyProcPid);
 
     switch (msg->header.op) {
@@ -415,7 +415,7 @@ PGDLLEXPORT void rocks_service_main(Datum arg) {
     NRAM_INFO();
     pqsignal(SIGTERM, terminate_rocks); // automatic shutdown!!
     BackgroundWorkerUnblockSignals();
-    
+
     if (nthread <= 1) {
         run_rocks_no_thread();
     } else {

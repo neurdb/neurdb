@@ -176,7 +176,7 @@ void run_kv_rocks_service_basic_test(void) {
     Size key_len, val_len, total_len;
     KVMsg *put_msg, *get_msg, *resp_msg;
     NRAMValue val_out;
-    bool ok;    
+    bool ok;
 
     channel = KVChannelInit(ROCKSDB_CHANNEL, false);
     resp_chan = KVChannelInit("kv_resp_9999", true);

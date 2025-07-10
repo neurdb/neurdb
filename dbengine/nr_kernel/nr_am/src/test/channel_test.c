@@ -243,7 +243,7 @@ void run_channel_msg_basic_test(void) {
     KVMsg* msg = NewMsg(kv_put, 12345, kv_status_ok, 12345), *recv;
     char* data = "Hello, KV World!";
     KVChannel *channel = KVChannelInit("basic", true);
-    
+
     msg->header.entitySize = strlen(data) + 1;
     msg->entity = data;
     // PrintKVMsg(&msg);
@@ -271,4 +271,3 @@ void run_channel_msg_basic_test(void) {
     pfree(recv->entity);
     elog(INFO, "KV channel basic message test passed");
 }
-
