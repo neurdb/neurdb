@@ -1,6 +1,12 @@
 setup
 {
-  CREATE TABLE accounts (id INT PRIMARY KEY, balance INT);
+  SET client_min_messages TO WARNING;
+  DROP TABLE IF EXISTS rc_test;
+  DROP EXTENSION IF EXISTS nram CASCADE;
+  DROP ACCESS METHOD IF EXISTS nram;
+  DROP FUNCTION IF EXISTS nram_tableam_handler(internal);
+  CREATE EXTENSION nram;
+  CREATE TABLE accounts (id INT PRIMARY KEY, balance INT) USING nram;
   INSERT INTO accounts VALUES (1, 100);
 }
 

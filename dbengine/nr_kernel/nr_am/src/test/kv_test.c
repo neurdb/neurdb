@@ -208,10 +208,10 @@ void run_kv_rocks_service_basic_test(void) {
     memcpy((char *)put_msg->entity + sizeof(Size), serialized_key, key_len);
     memcpy((char *)put_msg->entity + sizeof(Size) + key_len, serialized_value, val_len);
 
-    ok = KVChannelPushMsg(channel, put_msg, true);
+    ok = KVChannelPushMsg(channel, put_msg, -1);
     Assert(ok);
 
-    resp_msg = KVChannelPopMsg(resp_chan, true);
+    resp_msg = KVChannelPopMsg(resp_chan, -1);
     if (resp_msg == NULL || resp_msg->header.status != kv_status_ok) {
         PrintKVMsg(resp_msg);
         PrintChannelContent(channel);
@@ -224,10 +224,10 @@ void run_kv_rocks_service_basic_test(void) {
     get_msg->header.entitySize = key_len;
     get_msg->entity = serialized_key;
 
-    ok = KVChannelPushMsg(channel, get_msg, true);
+    ok = KVChannelPushMsg(channel, get_msg, -1);
     Assert(ok);
 
-    resp_msg = KVChannelPopMsg(resp_chan, true);
+    resp_msg = KVChannelPopMsg(resp_chan, -1);
 
     if (!resp_msg || resp_msg->header.status != kv_status_ok) {
         PrintKVMsg(resp_msg);
@@ -326,7 +326,7 @@ void run_kv_rocks_client_range_scan_test(void) {
     NRAMValue value, val_out, *results;
     NRAMValueFieldData *field;
     bool ok;
-    int result_count;
+    uint32_t result_count;
     int table_oid = 5678;
 
     // 1. Insert 5 keys

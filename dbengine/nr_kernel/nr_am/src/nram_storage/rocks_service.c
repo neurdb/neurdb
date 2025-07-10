@@ -6,10 +6,126 @@
 static BackgroundWorker worker;
 static KVChannel *channel = NULL;
 static volatile sig_atomic_t rocks_service_running = false;
+static ResultQueue result_queue;
+
+/* ------------------------------------------------------------------------
+ * Response thread-safe queue: 
+ *  we add this because the channel can only be used in process context.
+ * ------------------------------------------------------------------------
+ */
+
+void ResultQueueInit(ResultQueue *q) {
+    NRAM_INFO();
+    pthread_mutex_init(&q->lock, NULL);
+    q->head = q->tail = NULL;
+    q->shutdown = false;
+}
+
+void ResultQueueDestroy(ResultQueue *q) {
+    NRAM_INFO();
+    pthread_mutex_lock(&q->lock);
+    q->shutdown = true;
+    pthread_mutex_unlock(&q->lock);
+
+    ResultNode *curr = q->head;
+    while (curr) {
+        ResultNode *tmp = curr;
+        curr = curr->next;
+        if (tmp->msg) {
+            if (tmp->msg->entity)
+                pfree(tmp->msg->entity);
+            pfree(tmp->msg);
+        }
+        free(tmp);
+    }
+
+    pthread_mutex_destroy(&q->lock);
+}
+
+void ResultQueuePush(ResultQueue *q, KVMsg *msg) {
+    NRAM_INFO();
+    ResultNode *node = malloc(sizeof(ResultNode));
+    node->msg = msg;
+    node->next = NULL;
+
+    pthread_mutex_lock(&q->lock);
+    if (q->shutdown) {
+        pthread_mutex_unlock(&q->lock);
+        return;
+    }
+
+    if (q->tail)
+        q->tail->next = node;
+    else
+        q->head = node;
+    q->tail = node;
+    pthread_mutex_unlock(&q->lock);
+}
+
+KVMsg *ResultQueuePop(ResultQueue *q) {
+    NRAM_INFO();
+    pthread_mutex_lock(&q->lock);
+    ResultNode *node = q->head;
+    if (q->shutdown || node == NULL) {
+        pthread_mutex_unlock(&q->lock);
+        return NULL;
+    }
+
+    q->head = node->next;
+    if (q->head == NULL) q->tail = NULL;
+    pthread_mutex_unlock(&q->lock);
+
+    KVMsg *msg = node->msg;
+    free(node);
+    return msg;
+}
+
+void PrintResultQueue(ResultQueue *q) {
+    pthread_mutex_lock(&q->lock);
+    elog(INFO, "<ResultQueue: %p (head:%p, tail:%p, status:%s) --------------- >", 
+        q, q->head, q->tail, q->shutdown? "shutdown":"alive");
+    for (ResultNode* it = q->head; it; it = it->next) {
+        PrintKVMsg(it->msg);
+        elog(INFO, "--------------- ");        
+    }
+    elog(INFO, "<ResultQueue: %p ---------------> ", q);
+    pthread_mutex_unlock(&q->lock);
+}
+
+bool ResultQueueIsEmpty(ResultQueue *q) {
+    return q == NULL || (q->head == NULL) || q->shutdown;
+}
+
+
+static void ResultQueueClear(ResultQueue *q) {
+    NRAM_INFO();
+    PrintResultQueue(q);
+    while (!ResultQueueIsEmpty(q)) {
+        KVMsg *resp = ResultQueuePop(q);
+        if (resp) {
+            char chan_name[64];
+            snprintf(chan_name, sizeof(chan_name), "kv_resp_%u", resp->header.respChannel);
+            KVChannel *resp_chan = KVChannelInit(chan_name, false);
+            KVChannelPushMsg(resp_chan, resp, -1);
+
+            if (resp->entity)
+                pfree(resp->entity);
+            pfree(resp);
+            pfree(resp_chan);
+        }
+    }
+}
+
+ 
+/* ------------------------------------------------------------------------
+ * Main funcs
+ * ------------------------------------------------------------------------
+ */
 
 void run_rocks(int num_threads) {
     static ThreadPool pool;
     channel = KVChannelInit(ROCKSDB_CHANNEL, true);
+    ResultQueueInit(&result_queue);
 
     NRAM_TEST_INFO("[Rocks] Service started with %d threads (pid=%d)", num_threads, MyProcPid);
     Assert(!rocks_service_running);
@@ -18,9 +134,10 @@ void run_rocks(int num_threads) {
     rocks_service_running = true;
 
     while (rocks_service_running) {
-        KVMsg* msg = KVChannelPopMsg(channel, true);
+        KVMsg* msg = KVChannelPopMsg(channel, ROCKSDB_CHANNEL_DEFAULT_TIMEOUT);
         if (msg == NULL) {
             CHECK_FOR_INTERRUPTS();
+            ResultQueueClear(&result_queue);
             continue;
         }
 
@@ -35,6 +152,8 @@ void run_rocks(int num_threads) {
         }
 
         threadpool_add_task(&pool, process_request, msg);
+
+        ResultQueueClear(&result_queue);
         CHECK_FOR_INTERRUPTS();
     }
 
@@ -49,6 +168,7 @@ void run_rocks(int num_threads) {
 void run_rocks_no_thread(void) {
     NRAM_INFO();
     channel = KVChannelInit(ROCKSDB_CHANNEL, true);
+    ResultQueueInit(&result_queue);
 
     NRAM_TEST_INFO("[Rocks] Service started (pid=%d)", MyProcPid);
 
@@ -56,7 +176,7 @@ void run_rocks_no_thread(void) {
     rocks_service_running = true;
 
     while (rocks_service_running) {
-        KVMsg *msg = KVChannelPopMsg(channel, true);
+        KVMsg *msg = KVChannelPopMsg(channel, ROCKSDB_CHANNEL_DEFAULT_TIMEOUT);
         if (msg == NULL) {
             CHECK_FOR_INTERRUPTS();
             continue;
@@ -73,6 +193,7 @@ void run_rocks_no_thread(void) {
         }
 
         process_request(msg);
+        ResultQueueClear(&result_queue);
         CHECK_FOR_INTERRUPTS();
     }
 
@@ -120,18 +241,15 @@ void *process_request(void *arg) {
     }
 
     if (resp != NULL) {
-        NRAM_TEST_INFO("[Rocks] Sending response op=%d, size=%lu", resp->header.op, resp->header.entitySize);
-        PrintKVMsg(resp);
-        KVChannelPushMsg(resp_chan, resp, true);
-
-        if (resp->entity)
-            pfree(resp->entity);
-        pfree(resp);
+        ResultQueuePush(&result_queue, resp);  // push to result queue
+        PrintResultQueue(&result_queue);
+        pfree(resp_chan);
+    } else {
+        pfree(resp_chan);
+        if (msg->entity)
+            pfree(msg->entity);
+        pfree(msg);
     }
-
-    if (msg->entity)
-        pfree(msg->entity);
-    pfree(msg);
 
     return NULL;
 }
@@ -202,7 +320,7 @@ KVMsg *handle_kv_range_scan(KVMsg *msg) {
     Size key_len_1, key_len_2;
     NRAMKey start_key, end_key, *keys;
     NRAMValue *results;
-    int result_count;
+    uint32_t result_count;
     char *write_ptr;
     Size total_len;
     KVMsg *resp;
@@ -234,7 +352,7 @@ KVMsg *handle_kv_range_scan(KVMsg *msg) {
         pfree(kbuf);
         pfree(vbuf);
     }
-    NRAM_TEST_INFO("Total len = %lu, data len = %lu", total_len, result_count);
+    NRAM_TEST_INFO("Total len = %lu, data len = %u", total_len, result_count);
 
     resp = NewMsg(kv_range, start_key->tableOid, kv_status_ok, msg->header.respChannel);
     resp->header.entitySize = total_len;
@@ -314,8 +432,8 @@ void nram_rocks_service_init(void) {
 
     worker.bgw_flags = BGWORKER_SHMEM_ACCESS | BGWORKER_BACKEND_DATABASE_CONNECTION;
     worker.bgw_start_time = BgWorkerStart_ConsistentState;
-    worker.bgw_restart_time = 1;
-    worker.bgw_main_arg = UInt32GetDatum(0);
+    worker.bgw_restart_time = BGW_NEVER_RESTART;
+    worker.bgw_main_arg = UInt32GetDatum(8);
 
     snprintf(worker.bgw_library_name, BGW_MAXLEN, "nram");
     snprintf(worker.bgw_function_name, BGW_MAXLEN, "rocks_service_main");

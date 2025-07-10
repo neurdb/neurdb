@@ -34,8 +34,8 @@ typedef struct KVChannel {
 
 extern KVChannel* KVChannelInit(const char* name, bool create);
 extern void KVChannelDestroy(KVChannel* channel);
-extern bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block);
-extern bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block);
+extern bool KVChannelPush(KVChannel* channel, const void* data, Size len, long timeout_ms);
+extern bool KVChannelPop(KVChannel* channel, void* out, Size len, long timeout_ms);
 extern void PrintChannelContent(KVChannel* channel);
 extern void TerminateChannel(KVChannel* channel);
 
@@ -99,8 +99,8 @@ typedef struct KVMsg {
 /* Message constructors */
 extern KVMsg* NewMsg(KVOp op, Oid rel_id, KVMsgStatus status, uint32 channel_id);
 extern KVMsg* NewEmptyMsg(void);
-extern bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block);
-extern KVMsg* KVChannelPopMsg(KVChannel* channel, bool block);
+extern bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, long timeout_ms);
+extern KVMsg* KVChannelPopMsg(KVChannel* channel, long timeout_ms);
 extern void PrintKVMsg(const KVMsg* msg);
 
 /* Default entity handlers */

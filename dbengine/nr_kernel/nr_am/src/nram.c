@@ -13,9 +13,12 @@
 #include "utils/builtins.h"
 #include "executor/tuptable.h"
 #include "utils/elog.h"
+#include "utils/snapmgr.h"
 #include "storage/ipc.h"
 #include "storage/lwlock.h"
 #include "storage/shmem.h"
+#include "access/heapam.h"
+#include "access/multixact.h"
 #include "nram_storage/rocks_service.h"
 #include "nram_storage/rocks_handler.h"
 
@@ -26,9 +29,7 @@ PG_MODULE_MAGIC;
  * ------------------------------------------------------------------------
  */
 
-void nram_shutdown_session(void) {
-    CloseRespChannel();
-}
+void nram_shutdown_session(void) { CloseRespChannel(); }
 
 /* ------------------------------------------------------------------------
  * Slot related callbacks
@@ -58,25 +59,32 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     NRAM_XACT_BEGIN_BLOCK;
     RelationIncrementReferenceCount(relation);
 
+    /*
+     * For now we ignore `nkeys` and `key` since we do full table scan only.
+     * If supporting index-only scans or predicate pushdown later, use them.
+     */
     scan->rs_base.rs_rd = relation;
     scan->rs_base.rs_snapshot = snapshot;
     scan->rs_base.rs_nkeys = nkeys;
-    scan->rs_base.rs_key = key; 
+    scan->rs_base.rs_key = key;
+    scan->rs_base.rs_flags = flags;
+    scan->rs_base.rs_parallel = parallel_scan;
 
+    /*
+     * Determine scan bounds (min_key, max_key).
+     * For now, we scan the full range for this tableOid.
+     */
     min_key = palloc0(sizeof(NRAMKeyData));
+    max_key = palloc0(sizeof(NRAMKeyData));
     min_key->tableOid = relation->rd_id;
     min_key->tid = 0;
-
-    max_key = palloc0(sizeof(NRAMKeyData));
     max_key->tableOid = relation->rd_id + 1;
     max_key->tid = 0;
-
     scan->min_key = min_key;
     scan->max_key = max_key;
 
-    /* Range scan request */
-    ok = RocksClientRangeScan(min_key, max_key, 
-        &scan->results_key, &scan->results, &scan->result_count);
+    ok = RocksClientRangeScan(min_key, max_key, &scan->results_key,
+                              &scan->results, &scan->result_count);
     Assert(ok);
 
     scan->cursor = 0;
@@ -87,7 +95,9 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
 static void nram_rescan(TableScanDesc sscan, struct ScanKeyData *key,
                         bool set_params, bool allow_strat, bool allow_sync,
                         bool allow_pagemode) {
+    KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
     NRAM_INFO();
+    scan->cursor = 0;
 }
 
 static void nram_endscan(TableScanDesc sscan) {
@@ -139,12 +149,14 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
 
     tkey = scan->results_key[scan->cursor];
     tvalue = scan->results[scan->cursor];
-    scan->cursor ++;
-    if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
+    scan->cursor++;
+    if (!read_own_write(xact, tkey, &tvalue) &&
+        !read_own_read(xact, tkey, &tvalue)) {
         add_read_set(xact, tkey, tvalue);
     }
 
-    tuple = deserialize_nram_value_to_tuple(tvalue, scan->rs_base.rs_rd->rd_att);
+    tuple =
+        deserialize_nram_value_to_tuple(tvalue, scan->rs_base.rs_rd->rd_att);
     tuple->t_tableOid = scan->rs_base.rs_rd->rd_id;
     nram_encode_tid(tkey->tid, &tuple->t_self);
     ExecStoreHeapTuple(tuple, slot, true);
@@ -153,9 +165,9 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
     Assert(TTS_EMPTY(slot) == false);
     Assert(ItemPointerIsValid(&slot->tts_tid));
     Assert(slot->tts_tableOid == scan->rs_base.rs_rd->rd_id);
-    NRAM_TEST_INFO("Stored tuple: tid block=%u offset=%u", 
-               BlockIdGetBlockNumber(&(slot->tts_tid.ip_blkid)),
-               slot->tts_tid.ip_posid);
+    NRAM_TEST_INFO("Stored tuple: tid block=%u offset=%u",
+                   BlockIdGetBlockNumber(&(slot->tts_tid.ip_blkid)),
+                   slot->tts_tid.ip_posid);
 
     return true;
 }
@@ -174,9 +186,7 @@ static IndexFetchTableData *nram_index_fetch_begin(Relation relation) {
     return (IndexFetchTableData *)kvscan;
 }
 
-static void nram_index_fetch_reset(IndexFetchTableData *scan) {
-    NRAM_INFO();
-}
+static void nram_index_fetch_reset(IndexFetchTableData *scan) { NRAM_INFO(); }
 
 static void nram_index_fetch_end(IndexFetchTableData *scan) {
     IndexFetchKVData *kvscan;
@@ -200,7 +210,8 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
 
     kvscan = (IndexFetchKVData *)scan;
     tkey = nram_key_from_tid(kvscan->xs_base.rel->rd_id, tid);
-    if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
+    if (!read_own_write(xact, tkey, &tvalue) &&
+        !read_own_read(xact, tkey, &tvalue)) {
         tvalue = RocksClientGet(tkey);
         if (tvalue == NULL) {
             pfree(tkey);
@@ -209,10 +220,8 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
         add_read_set(xact, tkey, tvalue);
     }
 
-    tuple = deserialize_nram_value_to_tuple(
-        tvalue,
-        kvscan->xs_base.rel->rd_att
-    );
+    tuple =
+        deserialize_nram_value_to_tuple(tvalue, kvscan->xs_base.rel->rd_att);
     nram_encode_tid(tkey->tid, &tuple->t_self);
     tuple->t_tableOid = kvscan->xs_base.rel->rd_id;
 
@@ -249,15 +258,13 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
     ok = RocksClientPut(tkey, tvalue);
-    if (!ok)
-        elog(WARNING, "NRAM insert failed.");
+    if (!ok) elog(WARNING, "NRAM insert failed.");
     add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
     NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
 
     // Cleanup memory if necessary.
     pfree(tkey);
     pfree(tvalue);
-
 }
 
 static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
@@ -289,30 +296,73 @@ static void nram_tuple_insert(Relation relation, TupleTableSlot *slot,
     }
 }
 
+// We currently do not consider INSERT ON CONFLICT.
 static void nram_tuple_insert_speculative(Relation relation,
                                           TupleTableSlot *slot, CommandId cid,
                                           int options, BulkInsertState bistate,
                                           uint32 specToken) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
+// We currently do not consider INSERT ON CONFLICT.
 static void nram_tuple_complete_speculative(Relation relation,
                                             TupleTableSlot *slot,
                                             uint32 specToken, bool succeeded) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
+// TODO: batch the insert operation during network communication.
 static void nram_multi_insert(Relation relation, TupleTableSlot **slots,
                               int ntuples, CommandId cid, int options,
                               BulkInsertState bistate) {
+    TupleDesc tupdesc = RelationGetDescr(relation);
+    Oid tableOid = RelationGetRelid(relation);
+
     NRAM_INFO();
+    NRAM_XACT_BEGIN_BLOCK;
+
+    for (int i = 0; i < ntuples; i++) {
+        TupleTableSlot *slot = slots[i];
+        HeapTuple tuple;
+        ItemPointerData tid;
+        bool shouldFree = true;
+
+        slot_getallattrs(slot);
+
+        // Set table OID
+        slot->tts_tableOid = tableOid;
+
+        tuple = ExecFetchSlotHeapTuple(slot, true, &shouldFree);
+        tuple->t_tableOid = tableOid;
+
+        nram_generate_tid(&tid);
+        NRAM_TEST_INFO("nram tid generated as %lu (multi %d)",
+                       nram_decode_tid(&tid), i);
+
+        // Serialize and insert
+        NRAMKey tkey = nram_key_from_tid(tableOid, &tid);
+        NRAMValue tvalue = nram_value_serialize_from_tuple(tuple, tupdesc);
+        bool ok = RocksClientPut(tkey, tvalue);
+        if (!ok) elog(WARNING, "NRAM multi-insert failed for tuple %d", i);
+
+        add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
+        NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
+
+        // Update tuple/slot with tid
+        tuple->t_self = tid;
+        slot->tts_tid = tid;
+
+        pfree(tkey);
+        pfree(tvalue);
+        if (shouldFree) heap_freetuple(tuple);
+    }
 }
 
 static TM_Result nram_tuple_delete(Relation relation, ItemPointer tid,
                                    CommandId cid, Snapshot snapshot,
                                    Snapshot crosscheck, bool wait,
                                    TM_FailureData *tmfd, bool changingPart) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return TM_Ok;
 }
 
@@ -322,7 +372,7 @@ static TM_Result nram_tuple_update(Relation relation, ItemPointer otid,
                                    bool wait, TM_FailureData *tmfd,
                                    LockTupleMode *lockmode,
                                    TU_UpdateIndexes *update_indexes) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return TM_Ok;
 }
 
@@ -331,12 +381,12 @@ static TM_Result nram_tuple_lock(Relation relation, ItemPointer tid,
                                  CommandId cid, LockTupleMode mode,
                                  LockWaitPolicy wait_policy, uint8 flags,
                                  TM_FailureData *tmfd) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return TM_Ok;
 }
 
 static void nram_finish_bulk_insert(Relation relation, int options) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 /* ------------------------------------------------------------------------
@@ -344,30 +394,31 @@ static void nram_finish_bulk_insert(Relation relation, int options) {
  * ------------------------------------------------------------------------
  */
 
+// TODO: check on this!!
 static bool nram_fetch_row_version(Relation relation, ItemPointer tid,
                                    Snapshot snapshot, TupleTableSlot *slot) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
 static void nram_get_latest_tid(TableScanDesc sscan, ItemPointer tid) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 static bool nram_tuple_tid_valid(TableScanDesc scan, ItemPointer tid) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
 static bool nram_tuple_satisfies_snapshot(Relation rel, TupleTableSlot *slot,
                                           Snapshot snapshot) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
 static TransactionId nram_index_delete_tuples(Relation rel,
                                               TM_IndexDeleteOp *delstate) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return InvalidTransactionId;
 }
 
@@ -382,15 +433,31 @@ static void nram_relation_set_new_filelocator(Relation rel,
                                               TransactionId *freezeXid,
                                               MultiXactId *minmulti) {
     NRAM_INFO();
+    /*
+     * Initialize to the minimum XID that could put tuples in the table. We
+     * know that no xacts older than RecentXmin are still running, so that
+     * will do.
+     */
+    *freezeXid = RecentXmin;
+
+    /*
+     * Similarly, initialize the minimum Multixact to the first value that
+     * could possibly be stored in tuples in the table.  Running transactions
+     * could reuse values from their local cache, so we are careful to
+     * consider all currently running multis.
+     *
+     * XXX this could be refined further, but is it worth the hassle?
+     */
+    *minmulti = GetOldestMultiXactId();
 }
 
 static void nram_relation_nontransactional_truncate(Relation rel) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 static void nram_relation_copy_data(Relation rel,
                                     const RelFileLocator *newrlocator) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 static void nram_relation_copy_for_cluster(
@@ -398,18 +465,18 @@ static void nram_relation_copy_for_cluster(
     TransactionId OldestXmin, TransactionId *xid_cutoff,
     MultiXactId *multi_cutoff, double *num_tuples, double *tups_vacuumed,
     double *tups_recently_dead) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 static void nram_vacuum_rel(Relation rel, VacuumParams *params,
                             BufferAccessStrategy bstrategy) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 static bool nram_scan_analyze_next_block(TableScanDesc scan,
                                          BlockNumber blockno,
                                          BufferAccessStrategy bstrategy) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
@@ -417,7 +484,7 @@ static bool nram_scan_analyze_next_tuple(TableScanDesc scan,
                                          TransactionId OldestXmin,
                                          double *liverows, double *deadrows,
                                          TupleTableSlot *slot) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
@@ -427,6 +494,9 @@ static double nram_index_build_range_scan(
     BlockNumber numblocks, IndexBuildCallback callback, void *callback_state,
     TableScanDesc scan) {
     NRAM_INFO();
+    // return heapam_index_build_range_scan(
+    //     heapRelation, indexRelation, indexInfo, allow_sync, anyvisible,
+    //     progress, start_blockno, numblocks, callback, callback_state, scan);
     return 0;
 }
 
@@ -434,28 +504,25 @@ static void nram_index_validate_scan(Relation heapRelation,
                                      Relation indexRelation,
                                      IndexInfo *indexInfo, Snapshot snapshot,
                                      ValidateIndexState *state) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 /* ------------------------------------------------------------------------
- * Miscellaneous callbacks
+ * Miscellaneous callbacks (we haven't supported the relation toast yet)
  * ------------------------------------------------------------------------
  */
 
-static bool nram_relation_needs_toast_table(Relation rel) {
-    NRAM_INFO();
-    return false;
-}
+static bool nram_relation_needs_toast_table(Relation rel) { return false; }
 
 static Oid nram_relation_toast_am(Relation rel) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return InvalidOid;
 }
 
 static void nram_fetch_toast_slice(Relation toastrel, Oid valueid,
                                    int32 attrsize, int32 sliceoffset,
                                    int32 slicelength, struct varlena *result) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
 }
 
 /* ------------------------------------------------------------------------
@@ -466,7 +533,7 @@ static void nram_fetch_toast_slice(Relation toastrel, Oid valueid,
 static void nram_estimate_rel_size(Relation rel, int32 *attr_widths,
                                    BlockNumber *pages, double *tuples,
                                    double *allvisfrac) {
-    NRAM_INFO();
+    // Naive implementation, to be refined during plan optimizer implementation.
     /* no data available */
     if (attr_widths) *attr_widths = 0;
     if (pages) *pages = 0;
@@ -481,27 +548,27 @@ static void nram_estimate_rel_size(Relation rel, int32 *attr_widths,
 
 static bool nram_scan_bitmap_next_block(TableScanDesc scan,
                                         TBMIterateResult *tbmres) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
 static bool nram_scan_bitmap_next_tuple(TableScanDesc scan,
                                         TBMIterateResult *tbmres,
                                         TupleTableSlot *slot) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
 static bool nram_scan_sample_next_block(TableScanDesc scan,
                                         SampleScanState *scanstate) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
 static bool nram_scan_sample_next_tuple(TableScanDesc scan,
                                         SampleScanState *scanstate,
                                         TupleTableSlot *slot) {
-    NRAM_INFO();
+    NRAM_UNSUPPORTED();
     return false;
 }
 
@@ -572,7 +639,7 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_kv_rocks_service_basic_test();
     run_kv_rocks_client_get_put_test();
     run_kv_rocks_client_range_scan_test();
-    
+
     run_channel_basic_test();
     run_channel_sequential_test();
     run_channel_multiprocess_test();
@@ -584,10 +651,9 @@ shmem_request_hook_type prev_shmem_request_hook = NULL;
 
 static void nram_shmem_request(void) {
     NRAM_INFO();
-    if (prev_shmem_request_hook)
-        prev_shmem_request_hook();
+    if (prev_shmem_request_hook) prev_shmem_request_hook();
 
-    RequestAddinShmemSpace(sizeof(KVChannelShared) * (MAX_PROC_COUNT+1));
+    RequestAddinShmemSpace(sizeof(KVChannelShared) * (MAX_PROC_COUNT + 1));
 }
 
 void _PG_init(void) {

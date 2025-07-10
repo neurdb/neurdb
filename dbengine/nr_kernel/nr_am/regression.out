@@ -1,0 +1,8 @@
+# using postmaster on Unix socket, default port
+ok 1         - clean                                      12 ms
+ok 2         - init                                        6 ms
+ok 3         - unit_tests                                129 ms
+ok 4         - table_scan                                132 ms
+ok 5         - index_scan                                716 ms
+ok 6         - xact_basic                                114 ms
+# diff command failed with status 512: diff  "/code/neurdb-dev/dbengine/nr_kernel/nr_am/expected/multi_insert.out" "/code/neurdb-dev/dbengine/nr_kernel/nr_am/results/multi_insert.out" > "/code/neurdb-dev/dbengine/nr_kernel/nr_am/results/multi_insert.out.diff"Bail out!
