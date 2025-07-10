@@ -84,6 +84,10 @@ void PrintResultQueue(ResultQueue *q) {
     pthread_mutex_lock(&q->lock);
     elog(INFO, "<ResultQueue: %p (head:%p, tail:%p, status:%s) --------------- >", 
         q, q->head, q->tail, q->shutdown? "shutdown":"alive");
+    if (q->shutdown) {
+        pthread_mutex_unlock(&q->lock);
+        return;
+    }
     for (ResultNode* it = q->head; it; it = it->next) {
         PrintKVMsg(it->msg);
         elog(INFO, "--------------- ");        
@@ -98,8 +102,8 @@ bool ResultQueueIsEmpty(ResultQueue *q) {
 
 
 static void ResultQueueClear(ResultQueue *q) {
-    NRAM_INFO();
-    PrintResultQueue(q);
+    // NRAM_INFO();
+    // PrintResultQueue(q);
     while (!ResultQueueIsEmpty(q)) {
         KVMsg *resp = ResultQueuePop(q);
         if (resp) {
