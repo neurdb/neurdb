@@ -56,7 +56,7 @@ void threadpool_add_task(ThreadPool *pool, TaskFunction func, void *arg) {
     task->function = func;
     task->arg = arg;
     task->next = NULL;
-    
+
     assert(pool != NULL);
     assert(func != NULL);
 
@@ -69,7 +69,7 @@ void threadpool_add_task(ThreadPool *pool, TaskFunction func, void *arg) {
         pool->task_head = task;
     }
     pool->task_tail = task;
-  
+
     pthread_cond_signal(&pool->cond);
     pthread_mutex_unlock(&pool->lock);
 }

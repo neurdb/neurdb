@@ -137,9 +137,9 @@ KVEngineIterator *rocksengine_create_iterator(KVEngine *engine,
 
     rocks_it->rocksdb_readoptions = rocksdb_readoptions_create();
     rocks_it->rocksdb_snapshot = rocksdb_create_snapshot(rocks_engine->rocksdb);
-    rocksdb_readoptions_set_snapshot(rocks_it->rocksdb_readoptions, 
+    rocksdb_readoptions_set_snapshot(rocks_it->rocksdb_readoptions,
         rocks_it->rocksdb_snapshot);
-    rocks_it->rocksdb_iterator = rocksdb_create_iterator(rocks_engine->rocksdb, 
+    rocks_it->rocksdb_iterator = rocksdb_create_iterator(rocks_engine->rocksdb,
         rocks_it->rocksdb_readoptions);
     if (rocks_it->rocksdb_iterator == NULL) {
         rocksdb_readoptions_destroy(rocks_it->rocksdb_readoptions);
