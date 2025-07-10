@@ -25,10 +25,10 @@ PGFILEDESC = "nram - CCaaLF custom table access method"
 PG_CPPFLAGS += -I/usr/local/include -I./src/
 SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
-REGRESS = clean init unit_tests table_scan index_scan xact_basic
+REGRESS = clean init unit_tests table_scan index_scan xact_basic multi_insert
 
 # ISOLATION = read_committed repeatable_read
-ISOLATION = read_committed
+# ISOLATION = read_committed
 ISOLATION_OPTS = --temp-config $(top_srcdir)/src/test/regress/postgresql.conf
 ISOLATIONDIR = $(srcdir)/isolation
 ISOLATION_EXPECTED = $(ISOLATIONDIR)
@@ -72,5 +72,5 @@ test:
 	bash ../scripts/restart_db.sh
 	# psql -d neurdb -f ./sql/clean.sql
 	# psql -d neurdb -f ./sql/init.sql
-	# psql -d neurdb -f ./sql/xact_basic.sql
+	# psql -d neurdb -f ./sql/unit_tests.sql
 	make installcheck

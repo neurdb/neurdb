@@ -17,3 +17,4 @@ SELECT * from y;
 -- Drop all.
 DROP TABLE x;
 DROP TABLE y;
+

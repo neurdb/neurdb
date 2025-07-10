@@ -33,20 +33,20 @@ void run_channel_basic_test(void) {
     /*
      * Step 1: Push and Pop multiple small messages
      */
-    if (!KVChannelPush(channel, msg1, strlen(msg1) + 1, false) ||
-        !KVChannelPush(channel, msg2, strlen(msg2) + 1, false) ||
-        !KVChannelPush(channel, msg3, strlen(msg3) + 1, false))
+    if (!KVChannelPush(channel, msg1, strlen(msg1) + 1, 0) ||
+        !KVChannelPush(channel, msg2, strlen(msg2) + 1, 0) ||
+        !KVChannelPush(channel, msg3, strlen(msg3) + 1, 0))
         elog(ERROR, "KVChannelPush failed in initial phase");
 
-    if (!KVChannelPop(channel, buf, strlen(msg1) + 1, false) ||
+    if (!KVChannelPop(channel, buf, strlen(msg1) + 1, 0) ||
         strcmp(buf, msg1) != 0)
         elog(ERROR, "KVChannelPop failed for msg1, got '%s'", buf);
 
-    if (!KVChannelPop(channel, buf, strlen(msg2) + 1, false) ||
+    if (!KVChannelPop(channel, buf, strlen(msg2) + 1, 0) ||
         strcmp(buf, msg2) != 0)
         elog(ERROR, "KVChannelPop failed for msg2, got '%s'", buf);
 
-    if (!KVChannelPop(channel, buf, strlen(msg3) + 1, false) ||
+    if (!KVChannelPop(channel, buf, strlen(msg3) + 1, 0) ||
         strcmp(buf, msg3) != 0)
         elog(ERROR, "KVChannelPop failed for msg3, got '%s'", buf);
 
@@ -66,11 +66,11 @@ void run_channel_basic_test(void) {
     /*
      * Step 3: Blocking Pop scenario
      */
-    if (!KVChannelPush(channel, msg1, strlen(msg1) + 1, false))
+    if (!KVChannelPush(channel, msg1, strlen(msg1) + 1, 0))
         elog(ERROR, "KVChannelPush failed unexpectedly");
 
     memset(buf, 0, sizeof(buf));
-    if (!KVChannelPop(channel, buf, strlen(msg1) + 1, true))
+    if (!KVChannelPop(channel, buf, strlen(msg1) + 1, -1))
         elog(ERROR, "Blocking KVChannelPop failed");
 
     if (strcmp(buf, msg1) != 0)
@@ -83,7 +83,7 @@ void run_channel_basic_test(void) {
     channel->shared->head = 0;
     channel->shared->tail = KV_CHANNEL_BUFSIZE - 1;  // Leave only 1 byte space
 
-    if (KVChannelPush(channel, msg2, strlen(msg2) + 1, false))
+    if (KVChannelPush(channel, msg2, strlen(msg2) + 1, 0))
         elog(ERROR, "KVChannelPush should have failed due to no space");
 
     KVChannelDestroy(channel);
@@ -118,7 +118,7 @@ void run_channel_sequential_test(void) {
         for (int i = 0; i < 10 && produced < total_messages; i++) {
             snprintf(producer_msg, sizeof(producer_msg), "msg_%04d", produced);
 
-            if (!KVChannelPush(channel, producer_msg, strlen(producer_msg) + 1, false)) {
+            if (!KVChannelPush(channel, producer_msg, strlen(producer_msg) + 1, 0)) {
                 NRAM_TEST_INFO("Buffer full!");
                 break;  // Buffer full, stop producing
             }
@@ -126,7 +126,7 @@ void run_channel_sequential_test(void) {
         }
 
         /* Consume messages if available */
-        while (KVChannelPop(channel, consumer_buf, 9, false)) {
+        while (KVChannelPop(channel, consumer_buf, 9, 0)) {
             if (strncmp(consumer_buf, "msg_", 4) != 0)
                 elog(ERROR, "Corrupted message during pseudo-concurrency: %s", consumer_buf);
 
@@ -177,10 +177,8 @@ void run_channel_multiprocess_test(void) {
 
         while (produced < total_messages) {
             snprintf(msg, sizeof(msg), "msg_%08d-%05d", MyProcPid, produced);
-            if (KVChannelPush(channel, msg, strlen(msg) + 1, true)) {
+            if (KVChannelPush(channel, msg, strlen(msg) + 1, -1)) {
                 produced++;
-                // elog(INFO, "[Producer %d] Push message %d", MyProcPid, produced);
-                // PrintChannelContent(channel);
             } else {
                 pg_usleep(1000);  // Sleep 1ms to avoid tight loop
             }
@@ -207,14 +205,11 @@ void run_channel_multiprocess_test(void) {
         gettimeofday(&start, NULL);
 
         while (consumed < total_messages) {
-            if (KVChannelPop(channel, buf, 19, true)) {
+            if (KVChannelPop(channel, buf, 19, -1)) {
                 if (strncmp(buf, "msg_", 4) != 0) {
                     elog(ERROR, "[Consumer %d] Corrupted message: %s", MyProcPid, buf);
                     PrintChannelContent(channel);
                 }
-                // else {
-                //     elog(INFO, "[Consumer %d] Got message: %s", MyProcPid, buf);
-                // }
                 consumed++;
             } else {
                 pg_usleep(1000);  // Sleep 1ms to reduce CPU usage
@@ -253,12 +248,12 @@ void run_channel_msg_basic_test(void) {
     msg->entity = data;
     // PrintKVMsg(&msg);
 
-    if (!KVChannelPushMsg(channel, msg, true)) {
+    if (!KVChannelPushMsg(channel, msg, -1)) {
         elog(ERROR, "Message channel push fail");
     }
     // PrintChannelContent(channel);
 
-    recv = KVChannelPopMsg(channel, true);
+    recv = KVChannelPopMsg(channel, -1);
 
     if(!recv) {
         PrintKVMsg(recv);

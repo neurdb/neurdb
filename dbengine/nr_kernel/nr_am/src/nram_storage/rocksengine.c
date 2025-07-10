@@ -361,7 +361,7 @@ NRAMKey rocksengine_get_max_key(KVEngine *engine, Oid table_id) {
 }
 
 
-void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key, int *out_count, NRAMKey **keys, NRAMValue** values) {
+void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key, uint32_t *out_count, NRAMKey **keys, NRAMValue** values) {
     RocksEngineIterator *rocks_it = (RocksEngineIterator *)rocksengine_create_iterator(engine, true);
     Size start_len, end_len;
     char *start_buf = tkey_serialize(start_key, &start_len);

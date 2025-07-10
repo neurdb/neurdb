@@ -214,7 +214,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                         NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
                         NRAMValue cur_val = RocksClientGet(opt->key);
                         if (cur_val == NULL) {
-                            elog(ERROR, "transaction validation failed: key vanished");
+                            elog(ERROR, "tran saction validation failed: key vanished");
                             return;
                         }
                         if (cur_val->xact_id != opt->xact_id)

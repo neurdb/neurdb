@@ -48,10 +48,10 @@ bool RocksClientPut(NRAMKey key, NRAMValue value) {
     memcpy((char *)msg->entity + sizeof(Size), serialized_key, key_len);
     memcpy((char *)msg->entity + sizeof(Size) + key_len, serialized_val, val_len);
 
-    ok = KVChannelPushMsg(req_chan, msg, true);
+    ok = KVChannelPushMsg(req_chan, msg, -1);
     Assert(ok);
 
-    resp = KVChannelPopMsg(resp_chan, true);
+    resp = KVChannelPopMsg(resp_chan, -1);
     success = resp && resp->header.status == kv_status_ok && resp->header.op == kv_put;
 
     if (!success) {
@@ -82,10 +82,10 @@ NRAMValue RocksClientGet(NRAMKey key) {
     msg->header.entitySize = key_len;
     msg->entity = serialized_key;
 
-    ok = KVChannelPushMsg(req_chan, msg, true);
+    ok = KVChannelPushMsg(req_chan, msg, -1);
     Assert(ok);
 
-    resp = KVChannelPopMsg(resp_chan, true);
+    resp = KVChannelPopMsg(resp_chan, -1);
 
     success = resp && resp->header.status == kv_status_ok && resp->header.op == kv_get;
     if (!success) {
@@ -108,7 +108,7 @@ NRAMValue RocksClientGet(NRAMKey key) {
 
 // Note: the range is fetched from a snapshot!
 bool RocksClientRangeScan(NRAMKey start_key, NRAMKey end_key,
-                          NRAMKey **out_keys, NRAMValue **out_values, int *out_count) {
+                          NRAMKey **out_keys, NRAMValue **out_values, uint32_t *out_count) {
     KVChannel *req_chan = GetServerChannel(), *resp_chan = GetRespChannel();
     Size key_len_1, key_len_2, total_len;
     char *ptr;
@@ -133,10 +133,10 @@ bool RocksClientRangeScan(NRAMKey start_key, NRAMKey end_key,
     ptr += sizeof(Size);
     memcpy(ptr, serialized_end, key_len_2);
 
-    ok = KVChannelPushMsg(req_chan, msg, true);
+    ok = KVChannelPushMsg(req_chan, msg, -1);
     Assert(ok);
 
-    resp = KVChannelPopMsg(resp_chan, true);
+    resp = KVChannelPopMsg(resp_chan, -1);
     success = resp && resp->header.status == kv_status_ok && resp->header.op == kv_range;
 
     if (success) {

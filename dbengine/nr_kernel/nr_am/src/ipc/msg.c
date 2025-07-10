@@ -66,12 +66,12 @@ void PrintChannelContent(KVChannel* channel) {
     LWLockRelease(&channel->shared->lock);
 }
 
-bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
+bool KVChannelPush(KVChannel* channel, const void* data, Size len, long timeout_ms) {
     uint64 used, space, pos, end, part;
     instr_time start_time, cur_time;
-    long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
     long cur_timeout = timeout_ms;
     // NRAM_INFO();
+    bool block = timeout_ms != 0;
 
     if (len > KV_CHANNEL_BUFSIZE) elog(ERROR, "KVChannel: message too large");
 
@@ -136,11 +136,10 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, bool block) {
         LWLockRelease(&channel->shared->lock);
 
         if (!PostmasterIsAlive())
-            proc_exit(1);
+            proc_exit(0);
 
         if (cur_timeout > 0)
-            ConditionVariableTimedSleep(&channel->shared->cv,
-                                        WAIT_EVENT_KV_CHANNEL, cur_timeout);
+            ConditionVariableTimedSleep(&channel->shared->cv, cur_timeout, WAIT_EVENT_KV_CHANNEL);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
         ConditionVariableCancelSleep();
@@ -179,10 +178,10 @@ static bool UnsafeKVChannelPop(KVChannel* channel, void* out, Size len) {
     }
 }
 
-bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
+bool KVChannelPop(KVChannel* channel, void* out, Size len, long timeout_ms) {
     instr_time start_time, cur_time;
-    long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
     long cur_timeout = timeout_ms;
+    bool block = timeout_ms != 0;
     // NRAM_INFO();
 
     if (len > KV_CHANNEL_BUFSIZE) elog(ERROR, "KVChannel: pop too much");
@@ -222,11 +221,10 @@ bool KVChannelPop(KVChannel* channel, void* out, Size len, bool block) {
         LWLockRelease(&channel->shared->lock);
 
         if (!PostmasterIsAlive())
-            proc_exit(1);
+            proc_exit(0);
 
         if (cur_timeout > 0)
-            ConditionVariableTimedSleep(&channel->shared->cv,
-                                        WAIT_EVENT_KV_CHANNEL, cur_timeout);
+            ConditionVariableTimedSleep(&channel->shared->cv, cur_timeout, WAIT_EVENT_KV_CHANNEL);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
         ConditionVariableCancelSleep();
@@ -403,7 +401,7 @@ void PrintKVMsg(const KVMsg* msg) {
     }
 }
 
-bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block) {
+bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, long timeout_ms) {
     uint64 header_size = sizeof(KVMsgHeader);
     uint64 entity_size = msg->header.entitySize;
     uint64 total_size = header_size + entity_size;
@@ -424,14 +422,14 @@ bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, bool block) {
         offset += entity_size;
     }
 
-    return KVChannelPush(channel, temp, total_size, block);
+    return KVChannelPush(channel, temp, total_size, timeout_ms);
 }
 
-KVMsg* KVChannelPopMsg(KVChannel* channel, bool block) {
+KVMsg* KVChannelPopMsg(KVChannel* channel, long timeout_ms) {
     instr_time start_time, cur_time;
-    long timeout_ms = ROCKSDB_CHANNEL_TIMEOUT;
     long cur_timeout = timeout_ms;
     KVMsg* msg = NewEmptyMsg();
+    bool block = timeout_ms != 0;
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
     NRAM_TEST_INFO("Calling KVChannelPopMsg from proc %d", MyProcPid);
@@ -469,7 +467,7 @@ KVMsg* KVChannelPopMsg(KVChannel* channel, bool block) {
 
             if (cur_timeout <= 0) {
                 LWLockRelease(&channel->shared->lock);
-                elog(ERROR, "KVChannelPopMsg encounters timeout");
+                NRAM_TEST_INFO("KVChannelPopMsg encounters timeout");
                 pfree(msg);
                 return NULL;
             }
@@ -480,11 +478,10 @@ KVMsg* KVChannelPopMsg(KVChannel* channel, bool block) {
         LWLockRelease(&channel->shared->lock);
 
         if (!PostmasterIsAlive())
-            proc_exit(1);
+            proc_exit(0);
 
         if (cur_timeout > 0)
-            ConditionVariableTimedSleep(&channel->shared->cv,
-                                        WAIT_EVENT_KV_CHANNEL, cur_timeout);
+            ConditionVariableTimedSleep(&channel->shared->cv, cur_timeout, WAIT_EVENT_KV_CHANNEL);
         else
             ConditionVariableSleep(&channel->shared->cv, WAIT_EVENT_KV_CHANNEL);
         ConditionVariableCancelSleep();
