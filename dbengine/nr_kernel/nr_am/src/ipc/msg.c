@@ -432,7 +432,7 @@ KVMsg* KVChannelPopMsg(KVChannel* channel, long timeout_ms) {
     bool block = timeout_ms != 0;
 
     if (block && timeout_ms > 0) INSTR_TIME_SET_CURRENT(start_time);
-    NRAM_TEST_INFO("Calling KVChannelPopMsg from proc %d", MyProcPid);
+    // NRAM_TEST_INFO("Calling KVChannelPopMsg from proc %d", MyProcPid);
 
     while (pg_atomic_read_u32(&channel->shared->is_running)) {
         LWLockAcquire(&channel->shared->lock, LW_EXCLUSIVE);
