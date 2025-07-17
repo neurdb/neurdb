@@ -44,6 +44,7 @@ RUN apt-get install -y \
     libcurl4-openssl-dev \
     libwebsockets-dev \
     libcjson-dev \
+    librocksdb-dev \
     && apt-get clean
 
 # Download libtorch CPU version and extract it to /home
