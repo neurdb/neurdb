@@ -176,7 +176,6 @@ void run_kv_rocks_service_basic_test(void) {
     Size key_len, val_len, total_len;
     KVMsg *put_msg, *get_msg, *resp_msg;
     NRAMValue val_out;
-    bool ok;
 
     channel = KVChannelInit(ROCKSDB_CHANNEL, false);
     resp_chan = KVChannelInit("kv_resp_9999", true);
@@ -208,8 +207,7 @@ void run_kv_rocks_service_basic_test(void) {
     memcpy((char *)put_msg->entity + sizeof(Size), serialized_key, key_len);
     memcpy((char *)put_msg->entity + sizeof(Size) + key_len, serialized_value, val_len);
 
-    ok = KVChannelPushMsg(channel, put_msg, -1);
-    Assert(ok);
+    KVChannelPushMsg(channel, put_msg, -1);
 
     resp_msg = KVChannelPopMsg(resp_chan, -1);
     if (resp_msg == NULL || resp_msg->header.status != kv_status_ok) {
@@ -224,8 +222,7 @@ void run_kv_rocks_service_basic_test(void) {
     get_msg->header.entitySize = key_len;
     get_msg->entity = serialized_key;
 
-    ok = KVChannelPushMsg(channel, get_msg, -1);
-    Assert(ok);
+    KVChannelPushMsg(channel, get_msg, -1);
 
     resp_msg = KVChannelPopMsg(resp_chan, -1);
 
@@ -274,7 +271,6 @@ void run_kv_rocks_client_get_put_test(void) {
     NRAMKey key;
     NRAMValue value, val_out;
     NRAMValueFieldData *field;
-    bool ok;
 
     // 2. Construct key and value
     key = palloc0(sizeof(NRAMKeyData));
@@ -292,8 +288,7 @@ void run_kv_rocks_client_get_put_test(void) {
     memcpy((char *)field + sizeof(NRAMValueFieldData), "ABCDEFG", 7);
 
     // 3. PUT
-    ok = RocksClientPut(key, value);
-    Assert(ok);
+    RocksClientPut(key, value);
 
     // 4. GET
     val_out = RocksClientGet(key);
@@ -325,9 +320,9 @@ void run_kv_rocks_client_range_scan_test(void) {
     NRAMKey key, start_key, end_key, *result_keys;
     NRAMValue value, val_out, *results;
     NRAMValueFieldData *field;
-    bool ok;
     uint32_t result_count;
     int table_oid = 5678;
+    char val_str[9], expected[9];
 
     // 1. Insert 5 keys
     for (int i = 1; i <= 5; i++) {
@@ -344,12 +339,10 @@ void run_kv_rocks_client_range_scan_test(void) {
         field->type_oid = TEXTOID;
         field->len = 8;
 
-        char val_str[9];
         snprintf(val_str, sizeof(val_str), "Value%03d", i);
         memcpy((char *)field + sizeof(NRAMValueFieldData), val_str, 8);
 
-        ok = RocksClientPut(key, value);
-        Assert(ok);
+        RocksClientPut(key, value);
 
         pfree(key);
         pfree(value);
@@ -365,25 +358,24 @@ void run_kv_rocks_client_range_scan_test(void) {
     end_key->tid = 5;
 
     // 3. Perform range scan with keys
-    ok = RocksClientRangeScan(start_key, end_key, &result_keys, &results, &result_count);
-    Assert(ok);
+    RocksClientRangeScan(start_key, end_key, &result_keys, &results, &result_count);
     Assert(result_count == 3);  // Expect tid = 2, 3, 4
 
     // 4. Validate keys and results
     for (int i = 0; i < result_count; i++) {
         NRAMKey out_key = result_keys[i];
+        bool ok = true;
         val_out = results[i];
 
-        Assert(out_key->tableOid == table_oid);
-        Assert(out_key->tid == i + 2);  // tid = 2, 3, 4
-
-        Assert(val_out->xact_id == i + 2);
-        Assert(val_out->nfields == 1);
+        ok = ok && (out_key->tableOid == table_oid);
+        ok = ok && (out_key->tid == i + 2);  // tid = 2, 3, 4
+        ok = ok && (val_out->xact_id == i + 2);
+        ok = ok && (val_out->nfields == 1);
+        Assert(ok);
 
         field = (NRAMValueFieldData *)val_out->data;
         Assert(field->len == 8);
 
-        char expected[9];
         snprintf(expected, sizeof(expected), "Value%03d", i + 2);
 
         if (memcmp((char *)field + sizeof(NRAMValueFieldData), expected, 8) != 0)

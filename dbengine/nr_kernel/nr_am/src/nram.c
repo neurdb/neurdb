@@ -53,7 +53,6 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     uint32 flags) {
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
     NRAMKey min_key, max_key;
-    bool ok;
 
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
@@ -83,9 +82,8 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     scan->min_key = min_key;
     scan->max_key = max_key;
 
-    ok = RocksClientRangeScan(min_key, max_key, &scan->results_key,
-                              &scan->results, &scan->result_count);
-    Assert(ok);
+    if (!RocksClientRangeScan(min_key, max_key, &scan->results_key, &scan->results, &scan->result_count))
+        elog(ERROR, "Get range failed");
 
     scan->cursor = 0;
 
@@ -123,7 +121,6 @@ static void nram_endscan(TableScanDesc sscan) {
 
 static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
                              TupleTableSlot *slot) {
-    NRAM_INFO();
     KVScanDesc scan = (KVScanDesc)sscan;
     NRAMValue tvalue;
     NRAMKey tkey;
@@ -245,7 +242,6 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     TupleDesc tupdesc;
     NRAMKey tkey;
     NRAMValue tvalue;
-    bool ok;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
 
@@ -257,8 +253,9 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     tkey = nram_key_from_tid(tup->t_tableOid, tid);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
 
-    ok = RocksClientPut(tkey, tvalue);
-    if (!ok) elog(WARNING, "NRAM insert failed.");
+    if (!RocksClientPut(tkey, tvalue))
+        elog(WARNING, "NRAM insert failed.");
+
     add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
     NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
 
@@ -317,6 +314,8 @@ static void nram_multi_insert(Relation relation, TupleTableSlot **slots,
                               BulkInsertState bistate) {
     TupleDesc tupdesc = RelationGetDescr(relation);
     Oid tableOid = RelationGetRelid(relation);
+    NRAMKey tkey;
+    NRAMValue tvalue;
 
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
@@ -340,10 +339,10 @@ static void nram_multi_insert(Relation relation, TupleTableSlot **slots,
                        nram_decode_tid(&tid), i);
 
         // Serialize and insert
-        NRAMKey tkey = nram_key_from_tid(tableOid, &tid);
-        NRAMValue tvalue = nram_value_serialize_from_tuple(tuple, tupdesc);
-        bool ok = RocksClientPut(tkey, tvalue);
-        if (!ok) elog(WARNING, "NRAM multi-insert failed for tuple %d", i);
+        tkey = nram_key_from_tid(tableOid, &tid);
+        tvalue = nram_value_serialize_from_tuple(tuple, tupdesc);
+        if (!RocksClientPut(tkey, tvalue))
+            elog(WARNING, "NRAM multi-insert failed for tuple %d", i);
 
         add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
         NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);

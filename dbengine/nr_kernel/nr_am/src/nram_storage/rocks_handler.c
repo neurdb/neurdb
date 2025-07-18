@@ -49,7 +49,10 @@ bool RocksClientPut(NRAMKey key, NRAMValue value) {
     memcpy((char *)msg->entity + sizeof(Size) + key_len, serialized_val, val_len);
 
     ok = KVChannelPushMsg(req_chan, msg, -1);
-    Assert(ok);
+    if (!ok) {
+        elog(WARNING, "RocksClientPut: message pushing failed.");
+        return false;
+    }
 
     resp = KVChannelPopMsg(resp_chan, -1);
     success = resp && resp->header.status == kv_status_ok && resp->header.op == kv_put;
@@ -83,7 +86,10 @@ NRAMValue RocksClientGet(NRAMKey key) {
     msg->entity = serialized_key;
 
     ok = KVChannelPushMsg(req_chan, msg, -1);
-    Assert(ok);
+    if (!ok) {
+        elog(WARNING, "RocksClientGet: message pushing failed.");
+        return NULL;
+    }
 
     resp = KVChannelPopMsg(resp_chan, -1);
 
@@ -134,7 +140,10 @@ bool RocksClientRangeScan(NRAMKey start_key, NRAMKey end_key,
     memcpy(ptr, serialized_end, key_len_2);
 
     ok = KVChannelPushMsg(req_chan, msg, -1);
-    Assert(ok);
+    if (!ok) {
+        elog(WARNING, "RocksClientRangeScan: message pushing failed.");
+        return false;
+    }
 
     resp = KVChannelPopMsg(resp_chan, -1);
     success = resp && resp->header.status == kv_status_ok && resp->header.op == kv_range;
