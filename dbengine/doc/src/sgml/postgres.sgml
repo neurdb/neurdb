@@ -20,7 +20,7 @@ break is not needed in a wider output rendering.
 
 ]>
 
-<book id="postgres">
+<book id="neurdb">
  <title>PostgreSQL &version; Documentation</title>
 
  <bookinfo>

@@ -181,7 +181,7 @@ main(int argc, char *argv[])
 	}
 
 	/* No point in trying to use postgres db when creating postgres db. */
-	if (maintenance_db == NULL && strcmp(dbname, "postgres") == 0)
+	if (maintenance_db == NULL && strcmp(dbname, "neurdb") == 0)
 		maintenance_db = "template1";
 
 	cparams.dbname = maintenance_db;

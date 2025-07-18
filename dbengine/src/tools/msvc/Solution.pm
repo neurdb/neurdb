@@ -402,7 +402,7 @@ sub GenerateFiles
 		PACKAGE_VERSION => qq{"$package_version"},
 		PG_INT128_TYPE => undef,
 		PG_INT64_TYPE => 'long long int',
-		PG_KRB_SRVNAM => qq{"postgres"},
+		PG_KRB_SRVNAM => qq{"neurdb"},
 		PG_MAJORVERSION => qq{"$majorver"},
 		PG_MAJORVERSION_NUM => $majorver,
 		PG_MINORVERSION_NUM => $minorver,

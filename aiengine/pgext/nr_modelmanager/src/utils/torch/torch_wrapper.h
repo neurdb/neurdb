@@ -21,7 +21,7 @@ extern "C" {
  * @member {at::Tensor} tensor - the wrapped torch::Tensor
  */
 typedef struct {
-  void *tensor;  // torch::Tensor
+    void *tensor;  // torch::Tensor
 } TensorWrapper;
 
 /**
@@ -30,7 +30,7 @@ typedef struct {
  * torch::jit::script::Module
  */
 typedef struct {
-  void *module;  // torch::jit::script::Module
+    void *module;  // torch::jit::script::Module
 } ModelWrapper;
 
 /********* Functions for TensorWrapper ********/

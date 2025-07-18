@@ -52,7 +52,7 @@ bool load_policy()
     char timeout_policy_str[STATE_SPACE + 2];
 
     printf("starting load policy\n");
-    pol_file = fopen("/home/hexiang/CLionProjects/neurdb/dbengine/policies.txt", "r");
+    pol_file = fopen("/code/neurdb-dev/dbengine/policies.txt", "r");
     if (!pol_file) {
         perror("Failed to open file");
         return false;
@@ -122,7 +122,7 @@ void refresh_lock_strategy()
     Assert(state >= 0 && state < STATE_SPACE);
     MyProc->rank = Policy->rank[state];
     LockTimeout =  (int) Policy->timeout[state];
-    XactLockStrategy = LOCK_RW;
+    XactLockStrategy = LOCK_RWL;
     XactIsoLevel = XACT_READ_COMMITTED;
 
     Assert((!IsolationIsSerializable() && !IsolationNeedLock()) || IsolationLearnCC()

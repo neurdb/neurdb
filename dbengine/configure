@@ -8682,7 +8682,7 @@ if test "${with_krb_srvnam+set}" = set; then :
   esac
 
 else
-  with_krb_srvnam="postgres"
+  with_krb_srvnam="neurdb"
 fi
 
 

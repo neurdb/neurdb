@@ -278,7 +278,7 @@ parallel_vacuum_init(Relation rel, Relation *indrels, int nindexes,
 	pvs->heaprel = rel;
 
 	EnterParallelMode();
-	pcxt = CreateParallelContext("postgres", "parallel_vacuum_main",
+	pcxt = CreateParallelContext("neurdb", "parallel_vacuum_main",
 								 parallel_workers);
 	Assert(pcxt->nworkers > 0);
 	pvs->pcxt = pcxt;

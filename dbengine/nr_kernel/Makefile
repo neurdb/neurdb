@@ -1,5 +1,5 @@
 # List of subdirectories to process
-SUBDIRS := nr_ext nr_pipeline
+SUBDIRS := nr_ext nr_pipeline nr_am
 
 # Default target: build all subprojects
 .PHONY: all $(SUBDIRS) install debug clean help

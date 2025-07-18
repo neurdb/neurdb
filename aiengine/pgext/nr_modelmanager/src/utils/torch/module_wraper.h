@@ -14,11 +14,11 @@ extern "C" {
 
 /******** Struct definitions ********/
 typedef struct {
-  void *module;  // torch::jit::script::Module
+    void *module;  // torch::jit::script::Module
 } ModuleWrapper;
 
 typedef struct {
-  char *bytes;  // use torch::pickle::dumps to serialize
+    char *bytes;  // use torch::pickle::dumps to serialize
 } PickledModuleWrapper;
 
 /******** Function definitions ********/

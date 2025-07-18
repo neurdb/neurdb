@@ -917,7 +917,7 @@ AC_SUBST(krb_srvtab)
 PGAC_ARG_REQ(with, krb-srvnam,
              [NAME], [default service principal name in Kerberos (GSSAPI) [postgres]],
              [],
-             [with_krb_srvnam="postgres"])
+             [with_krb_srvnam="neurdb"])
 AC_SUBST(with_krb_srvnam)
 AC_DEFINE_UNQUOTED([PG_KRB_SRVNAM], ["$with_krb_srvnam"],
                    [Define to the name of the default NeurDB service principal in Kerberos (GSSAPI). (--with-krb-srvnam=NAME)])

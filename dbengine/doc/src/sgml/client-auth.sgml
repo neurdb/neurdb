@@ -818,14 +818,14 @@ host    all             all             localhost               trust
 local   db1,"/^db\d{2,4}$",db2     all             localhost        trust
 
 # Allow any user from any host with IP address 192.168.93.x to connect
-# to database "postgres" as the same user name that ident reports for
+# to database "neurdb" as the same user name that ident reports for
 # the connection (typically the operating system user name).
 #
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 host    postgres        all             192.168.93.0/24         ident
 
 # Allow any user from host 192.168.12.10 to connect to database
-# "postgres" if the user's password is correctly supplied.
+# "neurdb" if the user's password is correctly supplied.
 #
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 host    postgres        all             192.168.12.10/32        scram-sha-256

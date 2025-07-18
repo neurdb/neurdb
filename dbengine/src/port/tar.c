@@ -185,11 +185,11 @@ tarCreateHeader(char *h, const char *filename, const char *linktarget,
 
 	/* User 32 */
 	/* XXX: Do we need to care about setting correct username? */
-	strlcpy(&h[265], "postgres", 32);
+	strlcpy(&h[265], "neurdb", 32);
 
 	/* Group 32 */
 	/* XXX: Do we need to care about setting correct group name? */
-	strlcpy(&h[297], "postgres", 32);
+	strlcpy(&h[297], "neurdb", 32);
 
 	/* Major Dev 8 */
 	print_tar_number(&h[329], 8, 0);

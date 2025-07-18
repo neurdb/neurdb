@@ -9,26 +9,24 @@ static bool prepare_query(SpiConnection *conn, const char *query, int nargs,
  * @return {bool} - true if success, false otherwise
  */
 bool spi_init(SpiConnection *conn) {
-  if (conn->connected) {
-    // already connected
-    return true;
-  }
-  PG_TRY();
-  {
-    if (SPI_connect() != SPI_OK_CONNECT) {
-      return false;
+    if (conn->connected) {
+        // already connected
+        return true;
     }
-    conn->connected = true;
-    return true;
-  }
-  PG_CATCH();
-  {
-    ereport(
-        ERROR,
-        (errmsg(
-            "spi_init: exception occurred while trying to connect to SPI")));
-  }
-  PG_END_TRY();
+    PG_TRY();
+    {
+        if (SPI_connect() != SPI_OK_CONNECT) {
+            return false;
+        }
+        conn->connected = true;
+        return true;
+    }
+    PG_CATCH();
+    {
+        ereport(ERROR, (errmsg("spi_init: exception occurred while trying to "
+                               "connect to SPI")));
+    }
+    PG_END_TRY();
 }
 
 /**
@@ -46,41 +44,42 @@ bool spi_init(SpiConnection *conn) {
  */
 bool spi_execute_query(SpiConnection *conn, const char *query, int nargs,
                        Oid *arg_types, Datum *values, const char *nulls) {
-  if (!conn->connected) {
-    ereport(ERROR,
-            (errmsg("spi_execute_query: SPI connection is not connected")));
-  }
-  // if the query is not prepared, prepare it
-  if (!conn->prepared && !prepare_query(conn, query, nargs, arg_types)) {
-    return false;
-  }
-
-  // query is now prepared, execute it
-  PG_TRY();
-  {
-    SPI_result = SPI_execute_plan(conn->plan, values, nulls, false, 0);
-
-    // SPI_execute_plan returns a status code, which should be larger than 0 if
-    // the query is successful, and smaller than 0 if the query fails
-    // @see {postgres source code}/src/include/executor/spi.h, SPI_OK_* and
-    // SPI_ERROR_*
-    if (SPI_result < 0) {
-      return false;
+    if (!conn->connected) {
+        ereport(ERROR,
+                (errmsg("spi_execute_query: SPI connection is not connected")));
     }
-    conn->returned = true;
-    conn->prepared = false;
-    SPI_freeplan(conn->plan);  // free the plan after execution
-    // one SPI connect might have multiple SPI_execute_plan calls, therefore
-    // reset the prepared flag
-    return true;
-  }
-  PG_CATCH();
-  {
-    ereport(
-        ERROR,
-        (errmsg("spi_execute_query: query execution failed with exception")));
-  }
-  PG_END_TRY();
+    // if the query is not prepared, prepare it
+    if (!conn->prepared && !prepare_query(conn, query, nargs, arg_types)) {
+        return false;
+    }
+
+    // query is now prepared, execute it
+    PG_TRY();
+    {
+        SPI_result = SPI_execute_plan(conn->plan, values, nulls, false, 0);
+
+        // SPI_execute_plan returns a status code, which should be larger than 0
+        // if the query is successful, and smaller than 0 if the query fails
+        // @see {postgres source code}/src/include/executor/spi.h, SPI_OK_* and
+        // SPI_ERROR_*
+        if (SPI_result < 0) {
+            return false;
+        }
+        conn->returned = true;
+        conn->prepared = false;
+        SPI_freeplan(conn->plan);  // free the plan after execution
+        // one SPI connect might have multiple SPI_execute_plan calls, therefore
+        // reset the prepared flag
+        return true;
+    }
+    PG_CATCH();
+    {
+        ereport(
+            ERROR,
+            (errmsg(
+                "spi_execute_query: query execution failed with exception")));
+    }
+    PG_END_TRY();
 }
 
 /**
@@ -89,25 +88,25 @@ bool spi_execute_query(SpiConnection *conn, const char *query, int nargs,
  * @return {void}
  */
 void spi_finish(SpiConnection *conn) {
-  if (!conn->connected) {
-    // already disconnected
-    return;
-  }
-  PG_TRY();
-  {
-    SPI_finish();
-    conn->connected = false;
-    conn->prepared = false;
-    conn->returned = false;
-    // conn->plan = NULL;      // SPI_finish() will free the plan, don't need to
-    // do it here
-  }
-  PG_CATCH();
-  {
-    ereport(ERROR, (errmsg("spi_finish: exception occurred while trying to "
-                           "disconnect from SPI")));
-  }
-  PG_END_TRY();
+    if (!conn->connected) {
+        // already disconnected
+        return;
+    }
+    PG_TRY();
+    {
+        SPI_finish();
+        conn->connected = false;
+        conn->prepared = false;
+        conn->returned = false;
+        // conn->plan = NULL;      // SPI_finish() will free the plan, don't
+        // need to do it here
+    }
+    PG_CATCH();
+    {
+        ereport(ERROR, (errmsg("spi_finish: exception occurred while trying to "
+                               "disconnect from SPI")));
+    }
+    PG_END_TRY();
 }
 
 /**
@@ -118,7 +117,7 @@ void spi_finish(SpiConnection *conn) {
  * @see https://www.postgresql.org/docs/current/spi-spi-execute.html
  */
 Datum *spi_get_single_result(SpiConnection *conn) {
-  return spi_get_single_result_p(conn, 0);
+    return spi_get_single_result_p(conn, 0);
 }
 
 /**
@@ -128,29 +127,29 @@ Datum *spi_get_single_result(SpiConnection *conn) {
  * @return the result in Datum, NULL if no result
  */
 Datum *spi_get_single_result_p(SpiConnection *conn, const int index) {
-  // check if the query has been executed and returned, and if the result is not
-  // empty
-  if (conn->returned && SPI_tuptable != NULL && SPI_tuptable->vals != NULL &&
-      SPI_tuptable->vals[0] != NULL &&  // SPI_processed is the number of rows
-                                        // the (last) query returned
-      SPI_processed >
-          0 &&  // @see
-                // https://www.postgresql.org/docs/current/spi-spi-execute.html
-      SPI_tuptable->tupdesc != NULL &&
-      SPI_tuptable->tupdesc->natts > index) {
-    bool isnull;
-    Datum *result = (Datum *)palloc(sizeof(Datum));
-    *result = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc,
-                            index + 1, &isnull);
-    if (isnull) {
-      pfree(result);
-      return NULL;
+    // check if the query has been executed and returned, and if the result is
+    // not empty
+    if (conn->returned && SPI_tuptable != NULL && SPI_tuptable->vals != NULL &&
+        SPI_tuptable->vals[0] != NULL &&  // SPI_processed is the number of rows
+                                          // the (last) query returned
+        SPI_processed >
+            0 &&  // @see
+                  // https://www.postgresql.org/docs/current/spi-spi-execute.html
+        SPI_tuptable->tupdesc != NULL &&
+        SPI_tuptable->tupdesc->natts > index) {
+        bool isnull;
+        Datum *result = (Datum *)palloc(sizeof(Datum));
+        *result = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc,
+                                index + 1, &isnull);
+        if (isnull) {
+            pfree(result);
+            return NULL;
+        }
+        return result;
+    } else {
+        // no result to get from
+        return NULL;
     }
-    return result;
-  } else {
-    // no result to get from
-    return NULL;
-  }
 }
 
 /********static functions********/
@@ -166,27 +165,30 @@ Datum *spi_get_single_result_p(SpiConnection *conn, const int index) {
  */
 static bool prepare_query(SpiConnection *conn, const char *query, int nargs,
                           Oid *arg_types) {
-  if (!conn->connected) {
-    ereport(ERROR, (errmsg("prepare_query: SPI connection is not connected")));
-  }
-  if (conn->prepared) {
-    // already prepared
-    return true;
-  }
-  PG_TRY();
-  {
-    conn->plan = SPI_prepare(query, nargs, arg_types);
-    if (conn->plan == NULL) {
-      // ereport(ERROR, (errmsg("prepare_query: unable to prepare query")));
-      return false;
+    if (!conn->connected) {
+        ereport(ERROR,
+                (errmsg("prepare_query: SPI connection is not connected")));
     }
-    conn->prepared = true;
-    return true;
-  }
-  PG_CATCH();
-  {
-    ereport(ERROR, (errmsg("prepare_query: exception occurred while trying to "
-                           "prepare query")));
-  }
-  PG_END_TRY();
+    if (conn->prepared) {
+        // already prepared
+        return true;
+    }
+    PG_TRY();
+    {
+        conn->plan = SPI_prepare(query, nargs, arg_types);
+        if (conn->plan == NULL) {
+            // ereport(ERROR, (errmsg("prepare_query: unable to prepare
+            // query")));
+            return false;
+        }
+        conn->prepared = true;
+        return true;
+    }
+    PG_CATCH();
+    {
+        ereport(ERROR,
+                (errmsg("prepare_query: exception occurred while trying to "
+                        "prepare query")));
+    }
+    PG_END_TRY();
 }

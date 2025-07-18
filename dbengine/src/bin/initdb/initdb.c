@@ -2563,10 +2563,10 @@ setup_bin_paths(const char *argv0)
 
 		if (ret == -1)
 			pg_fatal("program \"%s\" is needed by %s but was not found in the same directory as \"%s\"",
-					 "postgres", progname, full_path);
+					 "neurdb", progname, full_path);
 		else
 			pg_fatal("program \"%s\" was found by \"%s\" but was not the same version as %s",
-					 "postgres", full_path, progname);
+					 "neurdb", full_path, progname);
 	}
 
 	/* store binary directory */

@@ -463,7 +463,7 @@ InitializeParallelDSM(ParallelContext *pcxt)
 		 * Serialize entrypoint information.  It's unsafe to pass function
 		 * pointers across processes, as the function pointer may be different
 		 * in each process in EXEC_BACKEND builds, so we always pass library
-		 * and function name.  (We use library name "postgres" for functions
+		 * and function name.  (We use library name "neurdb" for functions
 		 * in the core backend.)
 		 */
 		lnamelen = strlen(pcxt->library_name);
@@ -577,7 +577,7 @@ LaunchParallelWorkers(ParallelContext *pcxt)
 		| BGWORKER_CLASS_PARALLEL;
 	worker.bgw_start_time = BgWorkerStart_ConsistentState;
 	worker.bgw_restart_time = BGW_NEVER_RESTART;
-	sprintf(worker.bgw_library_name, "postgres");
+	sprintf(worker.bgw_library_name, "neurdb");
 	sprintf(worker.bgw_function_name, "ParallelWorkerMain");
 	worker.bgw_main_arg = UInt32GetDatum(dsm_segment_handle(pcxt->seg));
 	worker.bgw_notify_pid = MyProcPid;
@@ -1580,7 +1580,7 @@ ParallelWorkerShutdown(int code, Datum arg)
 /*
  * Look up (and possibly load) a parallel worker entry point function.
  *
- * For functions contained in the core code, we use library name "postgres"
+ * For functions contained in the core code, we use library name "neurdb"
  * and consult the InternalParallelWorkers array.  External functions are
  * looked up, and loaded if necessary, using load_external_function().
  *
@@ -1602,7 +1602,7 @@ LookupParallelWorkerFunction(const char *libraryname, const char *funcname)
 	 * If the function is to be loaded from postgres itself, search the
 	 * InternalParallelWorkers array.
 	 */
-	if (strcmp(libraryname, "postgres") == 0)
+	if (strcmp(libraryname, "neurdb") == 0)
 	{
 		int			i;
 
