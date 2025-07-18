@@ -53,7 +53,6 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
                                     uint32 flags) {
     KVScanDesc scan = (KVScanDesc)palloc0(sizeof(KVScanDescData));
     NRAMKey min_key, max_key;
-
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
     RelationIncrementReferenceCount(relation);
@@ -242,6 +241,7 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     TupleDesc tupdesc;
     NRAMKey tkey;
     NRAMValue tvalue;
+    bool ok;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
 
