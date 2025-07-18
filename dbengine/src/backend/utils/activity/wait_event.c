@@ -759,6 +759,9 @@ pgstat_get_wait_io(WaitEventIO w)
 		case WAIT_EVENT_WAL_WRITE:
 			event_name = "WALWrite";
 			break;
+		case WAIT_EVENT_KV_CHANNEL:
+			event_name = "KvChannel";
+			break;
 
 			/* no default case, so that compiler will warn */
 	}

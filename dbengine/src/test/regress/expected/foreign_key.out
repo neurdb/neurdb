@@ -24,7 +24,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "fkt
 DETAIL:  Key (ftest1)=(100) is not present in table "pktable".
 -- Check FKTABLE
 SELECT * FROM FKTABLE;
- ftest1 | ftest2
+ ftest1 | ftest2 
 --------+--------
       1 |      2
       2 |      3
@@ -36,7 +36,7 @@ SELECT * FROM FKTABLE;
 DELETE FROM PKTABLE WHERE ptest1=1;
 -- Check FKTABLE for removal of matched row
 SELECT * FROM FKTABLE;
- ftest1 | ftest2
+ ftest1 | ftest2 
 --------+--------
       2 |      3
       3 |      4
@@ -47,7 +47,7 @@ SELECT * FROM FKTABLE;
 UPDATE PKTABLE SET ptest1=1 WHERE ptest1=2;
 -- Check FKTABLE for update of matched row
 SELECT * FROM FKTABLE;
- ftest1 | ftest2
+ ftest1 | ftest2 
 --------+--------
       3 |      4
         |      1
@@ -95,7 +95,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "con
 DETAIL:  MATCH FULL does not allow mixing of null and nonnull key values.
 -- Check FKTABLE
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      2 |      4
       1 |      3 |      5
@@ -108,7 +108,7 @@ SELECT * FROM FKTABLE;
 DELETE FROM PKTABLE WHERE ptest1=1 and ptest2=2;
 -- Check FKTABLE for removal of matched row
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      3 |      5
       2 |      4 |      8
@@ -121,7 +121,7 @@ SELECT * FROM FKTABLE;
 DELETE FROM PKTABLE WHERE ptest1=5 and ptest2=10;
 -- Check FKTABLE (should be no change)
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      3 |      5
       2 |      4 |      8
@@ -134,7 +134,7 @@ SELECT * FROM FKTABLE;
 UPDATE PKTABLE SET ptest1=1 WHERE ptest1=2;
 -- Check FKTABLE for update of matched row
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      3 |      5
       3 |      6 |     12
@@ -153,7 +153,7 @@ UPDATE FKTABLE SET ftest1 = 1 WHERE ftest1 = 1;
 ALTER TABLE PKTABLE ALTER COLUMN ptest1 TYPE bigint;
 ALTER TABLE FKTABLE ALTER COLUMN ftest1 TYPE bigint;
 SELECT * FROM PKTABLE;
- ptest1 | ptest2 | ptest3
+ ptest1 | ptest2 | ptest3  
 --------+--------+---------
       1 |      3 | Test1-2
       3 |      6 | Test3
@@ -162,7 +162,7 @@ SELECT * FROM PKTABLE;
 (4 rows)
 
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       3 |      6 |     12
         |        |      0
@@ -210,7 +210,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "con
 DETAIL:  MATCH FULL does not allow mixing of null and nonnull key values.
 -- Check FKTABLE
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      2 |      4
       1 |      3 |      5
@@ -223,7 +223,7 @@ SELECT * FROM FKTABLE;
 DELETE FROM PKTABLE WHERE ptest1=1 and ptest2=2;
 -- Check FKTABLE to check for removal
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      3 |      5
       2 |      4 |      8
@@ -236,7 +236,7 @@ SELECT * FROM FKTABLE;
 DELETE FROM PKTABLE WHERE ptest1=5 and ptest2=10;
 -- Check FKTABLE (should be no change)
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      3 |      5
       2 |      4 |      8
@@ -249,7 +249,7 @@ SELECT * FROM FKTABLE;
 UPDATE PKTABLE SET ptest1=1 WHERE ptest1=2;
 -- Check FKTABLE for update of matched row
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3
+ ftest1 | ftest2 | ftest3 
 --------+--------+--------
       1 |      3 |      5
       3 |      6 |     12
@@ -288,7 +288,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "fkt
 DETAIL:  Key (ftest1)=(100) is not present in table "pktable".
 -- Check FKTABLE
 SELECT * FROM FKTABLE;
- ftest1 | ftest2
+ ftest1 | ftest2 
 --------+--------
       1 |      2
       2 |      3
@@ -298,7 +298,7 @@ SELECT * FROM FKTABLE;
 
 -- Check PKTABLE
 SELECT * FROM PKTABLE;
- ptest1 | ptest2
+ ptest1 | ptest2 
 --------+--------
       1 | Test1
       2 | Test2
@@ -315,7 +315,7 @@ DETAIL:  Key (ptest1)=(1) is still referenced from table "fktable".
 DELETE FROM PKTABLE WHERE ptest1=5;
 -- Check PKTABLE for deletes
 SELECT * FROM PKTABLE;
- ptest1 | ptest2
+ ptest1 | ptest2 
 --------+--------
       1 | Test1
       2 | Test2
@@ -331,7 +331,7 @@ DETAIL:  Key (ptest1)=(2) is still referenced from table "fktable".
 UPDATE PKTABLE SET ptest1=0 WHERE ptest1=4;
 -- Check PKTABLE for updates
 SELECT * FROM PKTABLE;
- ptest1 | ptest2
+ ptest1 | ptest2 
 --------+--------
       1 | Test1
       2 | Test2
@@ -375,7 +375,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "con
 DETAIL:  Key (ftest1, ftest2, ftest3)=(1, 2, 7) is not present in table "pktable".
 -- Show FKTABLE
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       1 |      2 |      3 |      1
         |      2 |      3 |      2
@@ -398,7 +398,7 @@ DETAIL:  Key (ptest1, ptest2, ptest3)=(1, 2, 3) is still referenced from table "
 DELETE FROM PKTABLE where ptest1=2;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       1 |      2 |      3 | test1
       1 |      3 |      3 | test2
@@ -406,7 +406,7 @@ SELECT * from PKTABLE;
 (3 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       1 |      2 |      3 |      1
         |      2 |      3 |      2
@@ -427,14 +427,14 @@ INSERT INTO PKTABLE VALUES (2, NULL, 4, 'test3');
 INSERT INTO FKTABLE VALUES (1, 2, 3, 1);
 DELETE FROM PKTABLE WHERE ptest1 = 2;
 SELECT * FROM PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       1 |      2 |      3 | test1
       1 |      3 |        | test2
 (2 rows)
 
 SELECT * FROM FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       1 |      2 |      3 |      1
 (1 row)
@@ -463,7 +463,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "con
 DETAIL:  Key (ftest1, ftest2, ftest3)=(1, 2, 7) is not present in table "pktable".
 -- Show FKTABLE
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       1 |      2 |      3 |      1
         |      2 |      3 |      2
@@ -478,7 +478,7 @@ UPDATE PKTABLE set ptest2=5 where ptest2=2;
 UPDATE PKTABLE set ptest1=1 WHERE ptest2=3;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       2 |      4 |      5 | test4
       1 |      5 |      3 | test1
@@ -487,7 +487,7 @@ SELECT * from PKTABLE;
 (4 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
         |      2 |      3 |      2
       2 |        |      3 |      3
@@ -500,7 +500,7 @@ SELECT * from FKTABLE;
 DELETE FROM PKTABLE where ptest1=1 and ptest2=5 and ptest3=3;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       2 |      4 |      5 | test4
       1 |      3 |      3 | test2
@@ -508,7 +508,7 @@ SELECT * from PKTABLE;
 (3 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
         |      2 |      3 |      2
       2 |        |      3 |      3
@@ -520,14 +520,14 @@ SELECT * from FKTABLE;
 DELETE FROM PKTABLE where ptest1=2;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       1 |      3 |      3 | test2
       1 |      3 |      4 | test3
 (2 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
         |      2 |      3 |      2
       2 |        |      3 |      3
@@ -560,7 +560,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "con
 DETAIL:  Key (ftest1, ftest2, ftest3)=(1, 2, 7) is not present in table "pktable".
 -- Show FKTABLE
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       1 |      2 |      3 |      1
       2 |      3 |      4 |      1
@@ -576,7 +576,7 @@ UPDATE PKTABLE set ptest2=5 where ptest2=2;
 UPDATE PKTABLE set ptest2=2 WHERE ptest2=3 and ptest1=1;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       2 |      3 |      4 | test3
       2 |      4 |      5 | test4
@@ -585,7 +585,7 @@ SELECT * from PKTABLE;
 (4 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       2 |      3 |      4 |      1
         |      2 |      3 |      2
@@ -599,7 +599,7 @@ SELECT * from FKTABLE;
 DELETE FROM PKTABLE where ptest1=2 and ptest2=3 and ptest3=4;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       2 |      4 |      5 | test4
       1 |      5 |      3 | test1
@@ -607,7 +607,7 @@ SELECT * from PKTABLE;
 (3 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
         |      2 |      3 |      2
       2 |        |      3 |      3
@@ -621,14 +621,14 @@ SELECT * from FKTABLE;
 DELETE FROM PKTABLE where ptest2=5;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       2 |      4 |      5 | test4
       1 |      2 |      3 | test2
 (2 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
         |      2 |      3 |      2
       2 |        |      3 |      3
@@ -665,7 +665,7 @@ ERROR:  insert or update on table "fktable" violates foreign key constraint "con
 DETAIL:  Key (ftest1, ftest2, ftest3)=(1, 2, 7) is not present in table "pktable".
 -- Show FKTABLE
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       1 |      2 |      3 |      1
       2 |      3 |      4 |      1
@@ -687,7 +687,7 @@ UPDATE PKTABLE set ptest2=10 where ptest2=4;
 UPDATE PKTABLE set ptest2=2 WHERE ptest2=3 and ptest1=1;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       2 |      3 |      4 | test3
       2 |     -1 |      5 | test5
@@ -697,7 +697,7 @@ SELECT * from PKTABLE;
 (5 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
       2 |      3 |      4 |      1
         |      2 |      3 |      2
@@ -712,7 +712,7 @@ SELECT * from FKTABLE;
 DELETE FROM PKTABLE where ptest1=2 and ptest2=3 and ptest3=4;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       2 |     -1 |      5 | test5
       0 |     -1 |     -2 | test1
@@ -721,7 +721,7 @@ SELECT * from PKTABLE;
 (4 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
         |      2 |      3 |      2
       2 |        |      3 |      3
@@ -736,7 +736,7 @@ SELECT * from FKTABLE;
 DELETE FROM PKTABLE where ptest2=-1 and ptest3=5;
 -- Show PKTABLE and FKTABLE
 SELECT * from PKTABLE;
- ptest1 | ptest2 | ptest3 | ptest4
+ ptest1 | ptest2 | ptest3 | ptest4 
 --------+--------+--------+--------
       0 |     -1 |     -2 | test1
       2 |     10 |      5 | test4
@@ -744,7 +744,7 @@ SELECT * from PKTABLE;
 (3 rows)
 
 SELECT * from FKTABLE;
- ftest1 | ftest2 | ftest3 | ftest4
+ ftest1 | ftest2 | ftest3 | ftest4 
 --------+--------+--------+--------
         |      2 |      3 |      2
       2 |        |      3 |      3
@@ -775,7 +775,7 @@ CREATE TABLE FKTABLE (
   FOREIGN KEY (tid, fk_id_del_set_default) REFERENCES PKTABLE ON DELETE SET DEFAULT (fk_id_del_set_default)
 );
 SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = 'fktable'::regclass::oid ORDER BY oid;
-                                                pg_get_constraintdef
+                                                pg_get_constraintdef                                                
 --------------------------------------------------------------------------------------------------------------------
  FOREIGN KEY (tid, fk_id_del_set_null) REFERENCES pktable(tid, id) ON DELETE SET NULL (fk_id_del_set_null)
  FOREIGN KEY (tid, fk_id_del_set_default) REFERENCES pktable(tid, id) ON DELETE SET DEFAULT (fk_id_del_set_default)
@@ -787,9 +787,9 @@ INSERT INTO FKTABLE VALUES
   (1, 2, NULL, 2);
 DELETE FROM PKTABLE WHERE id = 1 OR id = 2;
 SELECT * FROM FKTABLE ORDER BY id;
- tid | id | fk_id_del_set_null | fk_id_del_set_default
+ tid | id | fk_id_del_set_null | fk_id_del_set_default 
 -----+----+--------------------+-----------------------
-   1 |  1 |                    |
+   1 |  1 |                    |                      
    1 |  2 |                    |                     0
 (2 rows)
 
@@ -1303,49 +1303,49 @@ INSERT INTO tasks VALUES (1,1,NULL,NULL);
 INSERT INTO tasks VALUES (2,2,2,NULL);
 INSERT INTO tasks VALUES (3,3,3,3);
 SELECT * FROM tasks;
- id | owner | worker | checked_by
+ id | owner | worker | checked_by 
 ----+-------+--------+------------
-  1 |     1 |        |
-  2 |     2 |      2 |
+  1 |     1 |        |           
+  2 |     2 |      2 |           
   3 |     3 |      3 |          3
 (3 rows)
 
 UPDATE users SET id = 4 WHERE id = 3;
 SELECT * FROM tasks;
- id | owner | worker | checked_by
+ id | owner | worker | checked_by 
 ----+-------+--------+------------
-  1 |     1 |        |
-  2 |     2 |      2 |
+  1 |     1 |        |           
+  2 |     2 |      2 |           
   3 |     4 |      4 |          4
 (3 rows)
 
 DELETE FROM users WHERE id = 4;
 SELECT * FROM tasks;
- id | owner | worker | checked_by
+ id | owner | worker | checked_by 
 ----+-------+--------+------------
-  1 |     1 |        |
-  2 |     2 |      2 |
-  3 |       |        |
+  1 |     1 |        |           
+  2 |     2 |      2 |           
+  3 |       |        |           
 (3 rows)
 
 -- could fail with only 2 changes to make, if row was already updated
 BEGIN;
 UPDATE tasks set id=id WHERE id=2;
 SELECT * FROM tasks;
- id | owner | worker | checked_by
+ id | owner | worker | checked_by 
 ----+-------+--------+------------
-  1 |     1 |        |
-  3 |       |        |
-  2 |     2 |      2 |
+  1 |     1 |        |           
+  3 |       |        |           
+  2 |     2 |      2 |           
 (3 rows)
 
 DELETE FROM users WHERE id = 2;
 SELECT * FROM tasks;
- id | owner | worker | checked_by
+ id | owner | worker | checked_by 
 ----+-------+--------+------------
-  1 |     1 |        |
-  3 |       |        |
-  2 |       |        |
+  1 |     1 |        |           
+  3 |       |        |           
+  2 |       |        |           
 (3 rows)
 
 COMMIT;
@@ -1365,7 +1365,7 @@ values
 begin;
     update selfref set a = 123 where a = 0;
     select a, b from selfref;
-  a  |  b
+  a  |  b  
 -----+-----
    1 |   1
  123 | 123
@@ -1373,7 +1373,7 @@ begin;
 
     update selfref set a = 456 where a = 123;
     select a, b from selfref;
-  a  |  b
+  a  |  b  
 -----+-----
    1 |   1
  456 | 456
@@ -1389,14 +1389,14 @@ create temp table defc (f1 int default 0
 insert into defp values (0), (1), (2);
 insert into defc values (2);
 select * from defc;
- f1
+ f1 
 ----
   2
 (1 row)
 
 delete from defp where f1 = 2;
 select * from defc;
- f1
+ f1 
 ----
   0
 (1 row)
@@ -1407,7 +1407,7 @@ DETAIL:  Key (f1)=(0) is still referenced from table "defc".
 alter table defc alter column f1 set default 1;
 delete from defp where f1 = 0;
 select * from defc;
- f1
+ f1 
 ----
   1
 (1 row)
@@ -1452,7 +1452,7 @@ create temp table t1 (a integer primary key, b text);
 create temp table t2 (a integer primary key, b integer references t1);
 create rule r1 as on delete to t1 do delete from t2 where t2.b = old.a;
 explain (costs off) delete from t1 where a = 1;
-                 QUERY PLAN
+                 QUERY PLAN                 
 --------------------------------------------
  Delete on t2
    ->  Nested Loop
@@ -1460,7 +1460,7 @@ explain (costs off) delete from t1 where a = 1;
                Index Cond: (a = 1)
          ->  Seq Scan on t2
                Filter: (b = 1)
-
+ 
  Delete on t1
    ->  Index Scan using t1_pkey on t1
          Index Cond: (a = 1)
@@ -1492,7 +1492,7 @@ create table fktable2 (
   foreign key (a, very_very_long_column_name_to_exceed_63_characters) references pktable2
 );
 select conname from pg_constraint where conrelid = 'fktable2'::regclass order by conname;
-                             conname
+                             conname                             
 -----------------------------------------------------------------
  fktable2_a_very_very_long_column_name_to_exceed_63_charac_fkey1
  fktable2_a_very_very_long_column_name_to_exceed_63_charact_fkey
@@ -1542,27 +1542,27 @@ create table fktable2 (x float8, y float8, foreign key (x, y) references pktable
 insert into pktable2 values ('-0', '-0');
 insert into fktable2 values ('-0', '-0');
 select * from pktable2;
- a  | b
+ a  | b  
 ----+----
  -0 | -0
 (1 row)
 
 select * from fktable2;
- x  | y
+ x  | y  
 ----+----
  -0 | -0
 (1 row)
 
 update pktable2 set a = '0' where a = '-0';
 select * from pktable2;
- a | b
+ a | b  
 ---+----
  0 | -0
 (1 row)
 
 -- should have updated fktable2.x
 select * from fktable2;
- x | y
+ x | y  
 ---+----
  0 | -0
 (1 row)
@@ -1656,10 +1656,10 @@ DETAIL:  Key (a, b)=(2500, 2502) is still referenced from table "fk_partitioned_
 -- check psql behavior
 \d fk_notpartitioned_pk
         Table "public.fk_notpartitioned_pk"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
- b      | integer |           | not null |
+ a      | integer |           | not null | 
+ b      | integer |           | not null | 
 Indexes:
     "fk_notpartitioned_pk_pkey" PRIMARY KEY, btree (a, b)
 Referenced by:
@@ -1722,32 +1722,32 @@ DETAIL:  MATCH FULL does not allow mixing of null and nonnull key values.
 DROP TABLE fk_partitioned_fk_full;
 -- ON UPDATE SET NULL
 SELECT tableoid::regclass, a, b FROM fk_partitioned_fk WHERE b IS NULL ORDER BY a;
-      tableoid       |  a   | b
+      tableoid       |  a   | b 
 ---------------------+------+---
- fk_partitioned_fk_3 | 2502 |
- fk_partitioned_fk_1 |      |
+ fk_partitioned_fk_3 | 2502 |  
+ fk_partitioned_fk_1 |      |  
 (2 rows)
 
 UPDATE fk_notpartitioned_pk SET a = a + 1 WHERE a = 2502;
 SELECT tableoid::regclass, a, b FROM fk_partitioned_fk WHERE b IS NULL ORDER BY a;
-      tableoid       |  a   | b
+      tableoid       |  a   | b 
 ---------------------+------+---
- fk_partitioned_fk_3 | 2502 |
- fk_partitioned_fk_1 |      |
- fk_partitioned_fk_1 |      |
+ fk_partitioned_fk_3 | 2502 |  
+ fk_partitioned_fk_1 |      |  
+ fk_partitioned_fk_1 |      |  
 (3 rows)
 
 -- ON DELETE SET NULL
 INSERT INTO fk_partitioned_fk VALUES (2503, 2503);
 SELECT count(*) FROM fk_partitioned_fk WHERE a IS NULL;
- count
+ count 
 -------
      2
 (1 row)
 
 DELETE FROM fk_notpartitioned_pk;
 SELECT count(*) FROM fk_partitioned_fk WHERE a IS NULL;
- count
+ count 
 -------
      3
 (1 row)
@@ -1768,7 +1768,7 @@ DETAIL:  Key (a, b)=(2501, 142857) is not present in table "fk_notpartitioned_pk
 INSERT INTO fk_notpartitioned_pk VALUES (2501, 142857);
 UPDATE fk_notpartitioned_pk SET a = 1500 WHERE a = 2502;
 SELECT * FROM fk_partitioned_fk WHERE b = 142857;
-  a   |   b
+  a   |   b    
 ------+--------
  2501 | 142857
 (1 row)
@@ -1781,9 +1781,9 @@ ALTER TABLE fk_partitioned_fk ADD FOREIGN KEY (a, b)
 BEGIN;
 DELETE FROM fk_notpartitioned_pk WHERE b = 142857;
 SELECT * FROM fk_partitioned_fk WHERE a IS NOT NULL OR b IS NOT NULL ORDER BY a NULLS LAST;
-  a   |   b
+  a   |   b    
 ------+--------
- 2502 |
+ 2502 |       
       | 142857
 (2 rows)
 
@@ -1800,7 +1800,7 @@ INSERT INTO fk_notpartitioned_pk VALUES (500, 100000), (2501, 100000);
 INSERT INTO fk_partitioned_fk VALUES (500, 100000);
 DELETE FROM fk_notpartitioned_pk WHERE a = 500;
 SELECT * FROM fk_partitioned_fk ORDER BY a;
-  a   |   b
+  a   |   b    
 ------+--------
  2501 | 100000
 (1 row)
@@ -1813,14 +1813,14 @@ ALTER TABLE fk_partitioned_fk ADD FOREIGN KEY (a, b)
   ON DELETE CASCADE ON UPDATE CASCADE;
 UPDATE fk_notpartitioned_pk SET a = 2502 WHERE a = 2501;
 SELECT * FROM fk_partitioned_fk WHERE b = 142857;
-  a   |   b
+  a   |   b    
 ------+--------
  2502 | 142857
 (1 row)
 
 -- Now you see it ...
 SELECT * FROM fk_partitioned_fk WHERE b = 142857;
-  a   |   b
+  a   |   b    
 ------+--------
  2502 | 142857
 (1 row)
@@ -1828,7 +1828,7 @@ SELECT * FROM fk_partitioned_fk WHERE b = 142857;
 DELETE FROM fk_notpartitioned_pk WHERE b = 142857;
 -- now you don't.
 SELECT * FROM fk_partitioned_fk WHERE a = 142857;
- a | b
+ a | b 
 ---+---
 (0 rows)
 
@@ -1843,7 +1843,7 @@ DROP TABLE fk_partitioned_fk;
 -- constraint should still be there
 \d fk_partitioned_fk_2;
         Table "public.fk_partitioned_fk_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
  a      | integer |           |          | 2501
  b      | integer |           |          | 142857
@@ -1860,10 +1860,10 @@ ALTER TABLE fk_partitioned_fk ATTACH PARTITION fk_partitioned_fk_2 FOR VALUES IN
 -- should have only one constraint
 \d fk_partitioned_fk_2
         Table "public.fk_partitioned_fk_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- b      | integer |           |          |
- a      | integer |           |          |
+ b      | integer |           |          | 
+ a      | integer |           |          | 
 Partition of: fk_partitioned_fk FOR VALUES IN (1500, 1502)
 Foreign-key constraints:
     TABLE "fk_partitioned_fk" CONSTRAINT "fk_partitioned_fk_a_b_fkey" FOREIGN KEY (a, b) REFERENCES fk_notpartitioned_pk(a, b) ON UPDATE CASCADE ON DELETE CASCADE
@@ -1879,10 +1879,10 @@ ALTER TABLE fk_partitioned_fk ATTACH PARTITION fk_partitioned_fk_4 FOR VALUES IN
 -- should only have one constraint
 \d fk_partitioned_fk_4
   Partitioned table "public.fk_partitioned_fk_4"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: fk_partitioned_fk FOR VALUES IN (3500, 3502)
 Partition key: RANGE (b, a)
 Foreign-key constraints:
@@ -1891,10 +1891,10 @@ Number of partitions: 2 (Use \d+ to list them.)
 
 \d fk_partitioned_fk_4_1
        Table "public.fk_partitioned_fk_4_1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: fk_partitioned_fk_4 FOR VALUES FROM (1, 1) TO (100, 100)
 Foreign-key constraints:
     TABLE "fk_partitioned_fk" CONSTRAINT "fk_partitioned_fk_a_b_fkey" FOREIGN KEY (a, b) REFERENCES fk_notpartitioned_pk(a, b) ON UPDATE CASCADE ON DELETE CASCADE
@@ -1902,10 +1902,10 @@ Foreign-key constraints:
 -- this one has an FK with mismatched properties
 \d fk_partitioned_fk_4_2
        Table "public.fk_partitioned_fk_4_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: fk_partitioned_fk_4 FOR VALUES FROM (100, 100) TO (1000, 1000)
 Foreign-key constraints:
     "fk_partitioned_fk_4_2_a_b_fkey" FOREIGN KEY (a, b) REFERENCES fk_notpartitioned_pk(a, b) ON UPDATE SET NULL
@@ -1924,10 +1924,10 @@ ALTER TABLE fk_partitioned_fk ATTACH PARTITION fk_partitioned_fk_5 FOR VALUES IN
 -- so it gets a new one
 \d fk_partitioned_fk_5
   Partitioned table "public.fk_partitioned_fk_5"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: fk_partitioned_fk FOR VALUES IN (4500)
 Partition key: RANGE (a)
 Foreign-key constraints:
@@ -1942,10 +1942,10 @@ ALTER TABLE fk_partitioned_fk_5 DETACH PARTITION fk_partitioned_fk_5_1;
 ALTER TABLE fk_partitioned_fk_5 ATTACH PARTITION fk_partitioned_fk_5_1 FOR VALUES FROM (0) TO (10);
 \d fk_partitioned_fk_5_1
        Table "public.fk_partitioned_fk_5_1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Partition of: fk_partitioned_fk_5 FOR VALUES FROM (0) TO (10)
 Foreign-key constraints:
     "fk_partitioned_fk_5_1_a_b_fkey" FOREIGN KEY (a, b) REFERENCES fk_notpartitioned_pk(a, b)
@@ -2028,7 +2028,7 @@ LEFT JOIN pg_class cf ON cf.oid = co.confrelid
 LEFT JOIN pg_constraint p ON p.oid = co.conparentid
 WHERE cr.oid IN (SELECT relid FROM pg_partition_tree('parted_self_fk'))
 ORDER BY co.contype, cr.relname, co.conname, p.conname;
-    relname     |          conname           | contype | convalidated |         conparent          | convalidated |   foreignrel
+    relname     |          conname           | contype | convalidated |         conparent          | convalidated |   foreignrel   
 ----------------+----------------------------+---------+--------------+----------------------------+--------------+----------------
  part1_self_fk  | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
  part2_self_fk  | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
@@ -2036,12 +2036,12 @@ ORDER BY co.contype, cr.relname, co.conname, p.conname;
  part33_self_fk | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
  part3_self_fk  | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
  parted_self_fk | parted_self_fk_id_abc_fkey | f       | t            |                            |              | parted_self_fk
- part1_self_fk  | part1_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            |
- part2_self_fk  | part2_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            |
- part32_self_fk | part32_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            |
- part33_self_fk | part33_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            |
- part3_self_fk  | part3_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            |
- parted_self_fk | parted_self_fk_pkey        | p       | t            |                            |              |
+ part1_self_fk  | part1_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            | 
+ part2_self_fk  | part2_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            | 
+ part32_self_fk | part32_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            | 
+ part33_self_fk | part33_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            | 
+ part3_self_fk  | part3_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            | 
+ parted_self_fk | parted_self_fk_pkey        | p       | t            |                            |              | 
 (12 rows)
 
 -- detach and re-attach multiple times just to ensure everything is kosher
@@ -2057,7 +2057,7 @@ LEFT JOIN pg_class cf ON cf.oid = co.confrelid
 LEFT JOIN pg_constraint p ON p.oid = co.conparentid
 WHERE cr.oid IN (SELECT relid FROM pg_partition_tree('parted_self_fk'))
 ORDER BY co.contype, cr.relname, co.conname, p.conname;
-    relname     |          conname           | contype | convalidated |         conparent          | convalidated |   foreignrel
+    relname     |          conname           | contype | convalidated |         conparent          | convalidated |   foreignrel   
 ----------------+----------------------------+---------+--------------+----------------------------+--------------+----------------
  part1_self_fk  | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
  part2_self_fk  | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
@@ -2065,12 +2065,12 @@ ORDER BY co.contype, cr.relname, co.conname, p.conname;
  part33_self_fk | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
  part3_self_fk  | parted_self_fk_id_abc_fkey | f       | t            | parted_self_fk_id_abc_fkey | t            | parted_self_fk
  parted_self_fk | parted_self_fk_id_abc_fkey | f       | t            |                            |              | parted_self_fk
- part1_self_fk  | part1_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            |
- part2_self_fk  | part2_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            |
- part32_self_fk | part32_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            |
- part33_self_fk | part33_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            |
- part3_self_fk  | part3_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            |
- parted_self_fk | parted_self_fk_pkey        | p       | t            |                            |              |
+ part1_self_fk  | part1_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            | 
+ part2_self_fk  | part2_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            | 
+ part32_self_fk | part32_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            | 
+ part33_self_fk | part33_self_fk_pkey        | p       | t            | part3_self_fk_pkey         | t            | 
+ part3_self_fk  | part3_self_fk_pkey         | p       | t            | parted_self_fk_pkey        | t            | 
+ parted_self_fk | parted_self_fk_pkey        | p       | t            |                            |              | 
 (12 rows)
 
 -- Leave this table around, for pg_upgrade/pg_dump tests
@@ -2089,9 +2089,9 @@ create schema fkpart0
 alter table fkpart0.fk_part add foreign key (a) references fkpart0.pkey;
 \d fkpart0.fk_part_1	\\ -- should have only one FK
              Table "fkpart0.fk_part_1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: fkpart0.fk_part FOR VALUES IN (1)
 Foreign-key constraints:
     TABLE "fkpart0.fk_part" CONSTRAINT "fk_part_a_fkey" FOREIGN KEY (a) REFERENCES fkpart0.pkey(a)
@@ -2100,9 +2100,9 @@ alter table fkpart0.fk_part_1 drop constraint fk_part_1_a_fkey;
 ERROR:  cannot drop inherited constraint "fk_part_1_a_fkey" of relation "fk_part_1"
 \d fkpart0.fk_part_23	\\ -- should have only one FK
       Partitioned table "fkpart0.fk_part_23"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: fkpart0.fk_part FOR VALUES IN (2, 3)
 Partition key: LIST (a)
 Foreign-key constraints:
@@ -2111,9 +2111,9 @@ Number of partitions: 1 (Use \d+ to list them.)
 
 \d fkpart0.fk_part_23_2	\\ -- should have only one FK
            Table "fkpart0.fk_part_23_2"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: fkpart0.fk_part_23 FOR VALUES IN (2)
 Foreign-key constraints:
     TABLE "fkpart0.fk_part" CONSTRAINT "fk_part_a_fkey" FOREIGN KEY (a) REFERENCES fkpart0.pkey(a)
@@ -2125,9 +2125,9 @@ ERROR:  cannot drop inherited constraint "fk_part_23_a_fkey" of relation "fk_par
 create table fkpart0.fk_part_4 partition of fkpart0.fk_part for values in (4);
 \d fkpart0.fk_part_4
              Table "fkpart0.fk_part_4"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: fkpart0.fk_part FOR VALUES IN (4)
 Foreign-key constraints:
     TABLE "fkpart0.fk_part" CONSTRAINT "fk_part_a_fkey" FOREIGN KEY (a) REFERENCES fkpart0.pkey(a)
@@ -2140,9 +2140,9 @@ create table fkpart0.fk_part_56_5 partition of fkpart0.fk_part_56
     for values in (5);
 \d fkpart0.fk_part_56
       Partitioned table "fkpart0.fk_part_56"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
+ a      | integer |           |          | 
 Partition of: fkpart0.fk_part FOR VALUES IN (5, 6)
 Partition key: LIST (a)
 Foreign-key constraints:
@@ -2419,7 +2419,7 @@ SELECT pg_describe_object('pg_constraint'::regclass, oid, 0), confrelid::regclas
 FROM pg_catalog.pg_constraint
 WHERE conrelid IN (SELECT relid FROM pg_partition_tree('fk'))
 ORDER BY conrelid::regclass::text, conname;
-         pg_describe_object         | confrelid |               case
+         pg_describe_object         | confrelid |               case                
 ------------------------------------+-----------+-----------------------------------
  constraint fk_a_fkey on table fk   | pk        | TOP
  constraint fk_a_fkey1 on table fk  | pk1       | constraint fk_a_fkey on table fk
@@ -2565,14 +2565,14 @@ INSERT INTO pk VALUES (1);
 INSERT INTO fk VALUES (1);
 UPDATE pk SET a = 20;
 SELECT tableoid::regclass, * FROM fk;
- tableoid | a
+ tableoid | a  
 ----------+----
  fk12     | 20
 (1 row)
 
 DELETE FROM pk WHERE a = 20;
 SELECT tableoid::regclass, * FROM fk;
- tableoid | a
+ tableoid | a 
 ----------+---
 (0 rows)
 
@@ -2589,10 +2589,10 @@ INSERT INTO fk VALUES (20), (50);
 UPDATE pk SET a = 21 WHERE a = 20;
 DELETE FROM pk WHERE a = 50;
 SELECT tableoid::regclass, * FROM fk;
- tableoid | a
+ tableoid | a 
 ----------+---
- fk_d     |
- fk_d     |
+ fk_d     |  
+ fk_d     |  
 (2 rows)
 
 DROP TABLE fk;
@@ -2606,19 +2606,19 @@ ALTER TABLE fk ADD FOREIGN KEY (a) REFERENCES pk ON UPDATE SET DEFAULT ON DELETE
 CREATE TABLE fk_d PARTITION OF fk DEFAULT;
 INSERT INTO fk VALUES (1, 20), (2, 30);
 DELETE FROM pk WHERE a = 20 RETURNING *;
- a
+ a  
 ----
  20
 (1 row)
 
 UPDATE pk SET a = 90 WHERE a = 30 RETURNING *;
- a
+ a  
 ----
  90
 (1 row)
 
 SELECT tableoid::regclass, * FROM fk;
- tableoid | id | a
+ tableoid | id | a  
 ----------+----+----
  fk12     |  1 | 50
  fk12     |  2 | 50
@@ -2641,7 +2641,7 @@ UPDATE pk SET a = 90 WHERE a = 30;
 ERROR:  update or delete on table "pk" violates foreign key constraint "fk_a_fkey" on table "fk"
 DETAIL:  Key (a)=(30) is still referenced from table "fk".
 SELECT tableoid::regclass, * FROM fk;
- tableoid | a
+ tableoid | a  
 ----------+----
  fk12     | 20
  fk12     | 30
@@ -2688,12 +2688,12 @@ INSERT INTO fkpart9.pk VALUES (35);
 INSERT INTO fkpart9.fk VALUES (35);
 DELETE FROM fkpart9.pk WHERE a=35;
 SELECT * FROM fkpart9.pk;
- a
+ a 
 ---
 (0 rows)
 
 SELECT * FROM fkpart9.fk;
- fk_a
+ fk_a 
 ------
 (0 rows)
 
@@ -2805,28 +2805,28 @@ INSERT INTO fkpart11.fk_another VALUES (1), (3);
 -- cascaded to fk and fk_parted.  Updates of fk_parted, of which one is
 -- cross-partition (3 -> 4), are further cascaded to fk_another.
 UPDATE fkpart11.pk SET a = a + 1 RETURNING tableoid::pg_catalog.regclass, *;
-   tableoid    | a |  b
+   tableoid    | a |  b  
 ---------------+---+-----
  fkpart11.pk12 | 2 | xxx
  fkpart11.pk3  | 4 | yyy
 (2 rows)
 
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.fk;
-  tableoid   | a
+  tableoid   | a 
 -------------+---
  fkpart11.fk | 2
  fkpart11.fk | 4
 (2 rows)
 
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.fk_parted;
-   tableoid   | a
+   tableoid   | a 
 --------------+---
  fkpart11.fk1 | 2
  fkpart11.fk3 | 4
 (2 rows)
 
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.fk_another;
-      tableoid       | a
+      tableoid       | a 
 ---------------------+---
  fkpart11.fk_another | 2
  fkpart11.fk_another | 4
@@ -2848,27 +2848,27 @@ HINT:  Consider defining the foreign key on table "pk".
 -- it's okay though if the non-leaf partition is updated directly
 UPDATE fkpart11.pk1 SET a = a - 1;
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.pk;
-   tableoid    | a |  b
+   tableoid    | a |  b  
 ---------------+---+-----
  fkpart11.pk11 | 1 | xxx
  fkpart11.pk3  | 4 | yyy
 (2 rows)
 
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.fk;
-  tableoid   | a
+  tableoid   | a 
 -------------+---
  fkpart11.fk | 1
 (1 row)
 
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.fk_parted;
-   tableoid   | a
+   tableoid   | a 
 --------------+---
  fkpart11.fk1 | 1
  fkpart11.fk3 | 4
 (2 rows)
 
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.fk_another;
-      tableoid       | a
+      tableoid       | a 
 ---------------------+---
  fkpart11.fk_another | 4
  fkpart11.fk_another | 1
@@ -2883,7 +2883,7 @@ ALTER TABLE fkpart11.fk ADD CONSTRAINT fkey FOREIGN KEY (a) REFERENCES fkpart11.
 -- will delete (1) from p11 which is cascaded to fk
 UPDATE fkpart11.pk SET a = a + 1 WHERE a = 1;
 SELECT tableoid::pg_catalog.regclass, * FROM fkpart11.fk;
- tableoid | a
+ tableoid | a 
 ----------+---
 (0 rows)
 

@@ -846,7 +846,7 @@ syslogger_forkexec(void)
 	char		csvfilenobuf[32];
 	char		jsonfilenobuf[32];
 
-	av[ac++] = "postgres";
+	av[ac++] = "neurdb";
 	av[ac++] = "--forklog";
 	av[ac++] = NULL;			/* filled in by postmaster_forkexec */
 

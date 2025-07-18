@@ -3894,7 +3894,7 @@ set_transmission_modes(void)
 								 PGC_USERSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true, 0, false);
 	if (IntervalStyle != INTSTYLE_POSTGRES)
-		(void) set_config_option("intervalstyle", "postgres",
+		(void) set_config_option("intervalstyle", "neurdb",
 								 PGC_USERSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true, 0, false);
 	if (extra_float_digits < 3)

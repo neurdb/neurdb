@@ -890,7 +890,7 @@ InitPostgres(const char *in_dbname, Oid dboid,
 					(errcode(ERRCODE_UNDEFINED_OBJECT),
 					 errmsg("no roles are defined in this database system"),
 					 errhint("You should immediately run CREATE USER \"%s\" SUPERUSER;.",
-							 username != NULL ? username : "postgres")));
+							 username != NULL ? username : "neurdb")));
 	}
 	else if (IsBackgroundWorker)
 	{
@@ -1271,7 +1271,7 @@ process_startup_options(Port *port, bool am_superuser)
 		av = (char **) palloc(maxac * sizeof(char *));
 		ac = 0;
 
-		av[ac++] = "postgres";
+		av[ac++] = "neurdb";
 
 		pg_split_opts(av, &ac, port->cmdline_options);
 

@@ -24,6 +24,12 @@ rm $NEURDBPATH/logfile || true
 # Clean the psql folder (only for debugging purposes)
 # rm -rf $NR_PSQL_PATH   || true
 
+# # Install external lib.
+# git clone https://github.com/facebook/rocksdb.git
+# cd rocksdb
+# make shared_lib -j
+# sudo make install-shared
+
 # Create psql folder
 mkdir -p $NR_PSQL_PATH
 
@@ -97,7 +103,7 @@ sudo make clean
 sudo make install
 
 ## Register nr_kernel as preloaded library
-echo 'shared_preload_libraries = '\''nr_ext'\''' >> $NR_DBDATA_PATH/postgresql.conf
+echo 'shared_preload_libraries = '\''nr_ext, nram'\''' >> $NR_DBDATA_PATH/postgresql.conf
 
 echo "Install NR Data Pipeline Extension & NR kernel extension Done"
 

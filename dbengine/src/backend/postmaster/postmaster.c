@@ -4504,7 +4504,7 @@ backend_forkexec(Port *port)
 	char	   *av[4];
 	int			ac = 0;
 
-	av[ac++] = "postgres";
+	av[ac++] = "neurdb";
 	av[ac++] = "--forkbackend";
 	av[ac++] = NULL;			/* filled in by internal_forkexec */
 
@@ -5342,7 +5342,7 @@ StartChildProcess(AuxProcType type)
 		/*
 		 * Set up command-line arguments for subprocess
 		 */
-		av[ac++] = "postgres";
+		av[ac++] = "neurdb";
 		av[ac++] = "--forkaux";
 		av[ac++] = NULL;		/* filled in by postmaster_forkexec */
 
@@ -5675,7 +5675,7 @@ bgworker_forkexec(int shmem_slot)
 
 	snprintf(forkav, MAXPGPATH, "--forkbgworker=%d", shmem_slot);
 
-	av[ac++] = "postgres";
+	av[ac++] = "neurdb";
 	av[ac++] = forkav;
 	av[ac++] = NULL;			/* filled in by postmaster_forkexec */
 	av[ac] = NULL;

@@ -7,8 +7,8 @@ NUM_ROWS = 150
 
 # Database connection parameters
 DB_PARAMS = {
-    "dbname": "postgres",
-    "user": "postgres",
+    "dbname": "neurdb",
+    "user": "neurdb",
     "host": "localhost",
     "port": "5432",
 }

@@ -1050,7 +1050,7 @@ getRestoreCommand(const char *argv0)
 		return;
 
 	/* find postgres executable */
-	rc = find_other_exec(argv0, "postgres",
+	rc = find_other_exec(argv0, "neurdb",
 						 PG_BACKEND_VERSIONSTR,
 						 postgres_exec_path);
 
@@ -1063,10 +1063,10 @@ getRestoreCommand(const char *argv0)
 
 		if (rc == -1)
 			pg_fatal("program \"%s\" is needed by %s but was not found in the same directory as \"%s\"",
-					 "postgres", progname, full_path);
+					 "neurdb", progname, full_path);
 		else
 			pg_fatal("program \"%s\" was found by \"%s\" but was not the same version as %s",
-					 "postgres", full_path, progname);
+					 "neurdb", full_path, progname);
 	}
 
 	/*
@@ -1122,7 +1122,7 @@ ensureCleanShutdown(const char *argv0)
 	PQExpBuffer postgres_cmd;
 
 	/* locate postgres binary */
-	if ((ret = find_other_exec(argv0, "postgres",
+	if ((ret = find_other_exec(argv0, "neurdb",
 							   PG_BACKEND_VERSIONSTR,
 							   exec_path)) < 0)
 	{
@@ -1133,10 +1133,10 @@ ensureCleanShutdown(const char *argv0)
 
 		if (ret == -1)
 			pg_fatal("program \"%s\" is needed by %s but was not found in the same directory as \"%s\"",
-					 "postgres", progname, full_path);
+					 "neurdb", progname, full_path);
 		else
 			pg_fatal("program \"%s\" was found by \"%s\" but was not the same version as %s",
-					 "postgres", full_path, progname);
+					 "neurdb", full_path, progname);
 	}
 
 	pg_log_info("executing \"%s\" for target server to complete crash recovery",

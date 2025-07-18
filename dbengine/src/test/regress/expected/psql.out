@@ -30,7 +30,7 @@ on
 off
 -- \g and \gx
 SELECT 1 as one, 2 as two \g
- one | two
+ one | two 
 -----+-----
    1 |   2
 (1 row)
@@ -46,7 +46,7 @@ three | 3
 four  | 4
 
 \g
- three | four
+ three | four 
 -------+------
      3 |    4
 (1 row)
@@ -54,7 +54,7 @@ four  | 4
 -- \gx should work in FETCH_COUNT mode too
 \set FETCH_COUNT 1
 SELECT 1 as one, 2 as two \g
- one | two
+ one | two 
 -----+-----
    1 |   2
 (1 row)
@@ -70,7 +70,7 @@ three | 3
 four  | 4
 
 \g
- three | four
+ three | four 
 -------+------
      3 |    4
 (1 row)
@@ -81,7 +81,7 @@ SELECT 1 as one, 2 as two \g (format=csv csv_fieldsep='\t')
 one	two
 1	2
 \g
- one | two
+ one | two 
 -----+-----
    1 |   2
 (1 row)
@@ -93,26 +93,26 @@ one | 1
 two | 2
 
 \g
- one | two
+ one | two 
 -----+-----
    1 |   2
 (1 row)
 
 -- \bind (extended query protocol)
 SELECT 1 \bind \g
- ?column?
+ ?column? 
 ----------
         1
 (1 row)
 
 SELECT $1 \bind 'foo' \g
- ?column?
+ ?column? 
 ----------
  foo
 (1 row)
 
 SELECT $1, $2 \bind 'foo' 'bar' \g
- ?column? | ?column?
+ ?column? | ?column? 
 ----------+----------
  foo      | bar
 (1 row)
@@ -121,7 +121,7 @@ SELECT $1, $2 \bind 'foo' 'bar' \g
 -- parse error
 SELECT foo \bind \g
 ERROR:  column "foo" does not exist
-LINE 1: SELECT foo
+LINE 1: SELECT foo 
                ^
 -- tcop error
 SELECT 1 \; SELECT 2 \bind \g
@@ -148,14 +148,14 @@ select 3 as x, 4 as y \gset pref01_ \echo :pref01_x \echo :pref01_y
 3
 4
 select 5 as x, 6 as y \gset pref01_ \\ \g \echo :pref01_x :pref01_y
- x | y
+ x | y 
 ---+---
  5 | 6
 (1 row)
 
 5 6
 select 7 as x, 8 as y \g \gset pref01_ \echo :pref01_x :pref01_y
- x | y
+ x | y 
 ---+---
  7 | 8
 (1 row)
@@ -194,7 +194,7 @@ SELECT
     'foo'::varchar(4) as six,
     CURRENT_DATE AS now
 \gdesc
- Column |         Type
+ Column |         Type         
 --------+----------------------
  zero   | text
  one    | integer
@@ -209,14 +209,14 @@ SELECT
 -- should work with tuple-returning utilities, such as EXECUTE
 PREPARE test AS SELECT 1 AS first, 2 AS second;
 EXECUTE test \gdesc
- Column |  Type
+ Column |  Type   
 --------+---------
  first  | integer
  second | integer
 (2 rows)
 
 EXPLAIN EXECUTE test \gdesc
-   Column   | Type
+   Column   | Type 
 ------------+------
  QUERY PLAN | text
 (1 row)
@@ -224,7 +224,7 @@ EXPLAIN EXECUTE test \gdesc
 -- should fail cleanly - syntax error
 SELECT 1 + \gdesc
 ERROR:  syntax error at end of input
-LINE 1: SELECT 1 +
+LINE 1: SELECT 1 + 
                    ^
 -- check behavior with empty results
 SELECT \gdesc
@@ -239,7 +239,7 @@ LINE 1: TABLE bububu;
 -- query buffer should remain unchanged
 SELECT 1 AS x, 'Hello', 2 AS y, true AS "dirty\name"
 \gdesc
-   Column   |  Type
+   Column   |  Type   
 ------------+---------
  x          | integer
  ?column?   | text
@@ -248,14 +248,14 @@ SELECT 1 AS x, 'Hello', 2 AS y, true AS "dirty\name"
 (4 rows)
 
 \g
- x | ?column? | y | dirty\name
+ x | ?column? | y | dirty\name 
 ---+----------+---+------------
  1 | Hello    | 2 | t
 (1 row)
 
 -- all on one line
 SELECT 3 AS x, 'Hello', 4 AS y, true AS "dirty\name" \gdesc \g
-   Column   |  Type
+   Column   |  Type   
 ------------+---------
  x          | integer
  ?column?   | text
@@ -263,7 +263,7 @@ SELECT 3 AS x, 'Hello', 4 AS y, true AS "dirty\name" \gdesc \g
  dirty\name | boolean
 (4 rows)
 
- x | ?column? | y | dirty\name
+ x | ?column? | y | dirty\name 
 ---+----------+---+------------
  3 | Hello    | 4 | t
 (1 row)
@@ -300,13 +300,13 @@ union all
 select 'drop table gexec_test', 'select ''2000-01-01''::date as party_over'
 \gexec
 select 1 as ones
- ones
+ ones 
 ------
     1
 (1 row)
 
 select x.y, x.y*2 as double from generate_series(1,4) as x(y)
- y | double
+ y | double 
 ---+--------
  1 |      2
  2 |      4
@@ -318,7 +318,7 @@ drop table gexec_test
 drop table gexec_test
 ERROR:  table "gexec_test" does not exist
 select '2000-01-01'::date as party_over
- party_over
+ party_over 
 ------------
  01-01-2000
 (1 row)
@@ -353,8 +353,8 @@ pager                    1
 pager_min_lines          0
 recordsep                '\n'
 recordsep_zero           off
-tableattr
-title
+tableattr                
+title                    
 tuples_only              off
 unicode_border_linestyle single
 unicode_column_linestyle single
@@ -398,8 +398,8 @@ yy
 \pset format aligned
 execute q;
          ab         +        a         +
-                    +        bc
-         c
+                    +        bc         
+         c                              
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
 xxxx                +yyyyyyyyyyyyyyyy  +
@@ -410,14 +410,14 @@ xxxxxxxxxxxx        +yyyyyyyy          +
 xxxxxxxxxxxxxx      +yyyyyy            +
 xxxxxxxxxxxxxxxx    +yyyy              +
 xxxxxxxxxxxxxxxxxx  +yy                +
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx 
 (2 rows)
 
 \pset format wrapped
 execute q;
          ab         +        a         +
-                    +        bc
-         c
+                    +        bc         
+         c                              
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
 xxxx                +yyyyyyyyyyyyyyyy  +
@@ -428,7 +428,7 @@ xxxxxxxxxxxx        +yyyyyyyy          +
 xxxxxxxxxxxxxx      +yyyyyy            +
 xxxxxxxxxxxxxxxx    +yyyy              +
 xxxxxxxxxxxxxxxxxx  +yy                +
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx 
 (2 rows)
 
 \pset border 1
@@ -460,8 +460,8 @@ yy
 \pset format aligned
 execute q;
           ab         +|         a         +
-                     +|         bc
-          c           |
+                     +|         bc         
+          c           |                    
 ----------------------+--------------------
  xx                   | yyyyyyyyyyyyyyyyyy
  xxxx                +| yyyyyyyyyyyyyyyy  +
@@ -472,14 +472,14 @@ execute q;
  xxxxxxxxxxxxxx      +| yyyyyy            +
  xxxxxxxxxxxxxxxx    +| yyyy              +
  xxxxxxxxxxxxxxxxxx  +| yy                +
- xxxxxxxxxxxxxxxxxxxx |
+ xxxxxxxxxxxxxxxxxxxx | 
 (2 rows)
 
 \pset format wrapped
 execute q;
         ab        +|         a         +
-                  +|         bc
-         c         |
+                  +|         bc         
+         c         |                    
 -------------------+--------------------
  xx                | yyyyyyyyyyyyyyyyyy
  xxxx             +| yyyyyyyyyyyyyyyy  +
@@ -490,9 +490,9 @@ execute q;
  xxxxxxxxxxxxxx   +| yyyyyy            +
  xxxxxxxxxxxxxxxx +| yyyy              +
  xxxxxxxxxxxxxxxxx.| yy                +
-.x                +|
- xxxxxxxxxxxxxxxxx.|
-.xxx               |
+.x                +| 
+ xxxxxxxxxxxxxxxxx.| 
+.xxx               | 
 (2 rows)
 
 \pset border 2
@@ -598,13 +598,13 @@ yy
 
 \pset format aligned
 execute q;
-* Record 1
+* Record 1            
 ab+ xx
   +
-c
+c  
 a + yyyyyyyyyyyyyyyyyy
-bc
-* Record 2
+bc 
+* Record 2            
 ab+ xxxx                +
   + xxxxxx              +
 c   xxxxxxxx            +
@@ -622,17 +622,17 @@ bc  yyyyyyyyyyyyyy      +
     yyyyyy              +
     yyyy                +
     yy                  +
-
+    
 
 \pset format wrapped
 execute q;
-* Record 1
+* Record 1       
 ab+ xx
   +
-c
+c  
 a + yyyyyyyyyyyyyyy.
 bc .yyy
-* Record 2
+* Record 2       
 ab+ xxxx           +
   + xxxxxx         +
 c   xxxxxxxx       +
@@ -654,7 +654,7 @@ bc .y              +
     yyyyyy         +
     yyyy           +
     yy             +
-
+    
 
 \pset border 1
 \pset format unaligned
@@ -712,7 +712,7 @@ bc | yyyyyyyyyyyyyy      +
    | yyyyyy              +
    | yyyy                +
    | yy                  +
-   |
+   | 
 
 \pset format wrapped
 execute q;
@@ -744,7 +744,7 @@ bc |.yy            +
    | yyyyyy        +
    | yyyy          +
    | yy            +
-   |
+   | 
 
 \pset border 2
 \pset format unaligned
@@ -873,38 +873,38 @@ yy
 (2 rows)
 \pset format aligned
 execute q;
-         ab                  a
-                    +        bc
-         c          +
+         ab                  a         
+                    +        bc        
+         c          +                  
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
-xxxx                 yyyyyyyyyyyyyyyy
-xxxxxx               yyyyyyyyyyyyyy
-xxxxxxxx             yyyyyyyyyyyy
-xxxxxxxxxx           yyyyyyyyyy
-xxxxxxxxxxxx         yyyyyyyy
-xxxxxxxxxxxxxx       yyyyyy
-xxxxxxxxxxxxxxxx     yyyy
-xxxxxxxxxxxxxxxxxx   yy
-xxxxxxxxxxxxxxxxxxxx
+xxxx                 yyyyyyyyyyyyyyyy   
+xxxxxx               yyyyyyyyyyyyyy     
+xxxxxxxx             yyyyyyyyyyyy       
+xxxxxxxxxx           yyyyyyyyyy         
+xxxxxxxxxxxx         yyyyyyyy           
+xxxxxxxxxxxxxx       yyyyyy             
+xxxxxxxxxxxxxxxx     yyyy               
+xxxxxxxxxxxxxxxxxx   yy                 
+xxxxxxxxxxxxxxxxxxxx 
 (2 rows)
 
 \pset format wrapped
 execute q;
-         ab                  a
-                    +        bc
-         c          +
+         ab                  a         
+                    +        bc        
+         c          +                  
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
-xxxx                 yyyyyyyyyyyyyyyy
-xxxxxx               yyyyyyyyyyyyyy
-xxxxxxxx             yyyyyyyyyyyy
-xxxxxxxxxx           yyyyyyyyyy
-xxxxxxxxxxxx         yyyyyyyy
-xxxxxxxxxxxxxx       yyyyyy
-xxxxxxxxxxxxxxxx     yyyy
-xxxxxxxxxxxxxxxxxx   yy
-xxxxxxxxxxxxxxxxxxxx
+xxxx                 yyyyyyyyyyyyyyyy   
+xxxxxx               yyyyyyyyyyyyyy     
+xxxxxxxx             yyyyyyyyyyyy       
+xxxxxxxxxx           yyyyyyyyyy         
+xxxxxxxxxxxx         yyyyyyyy           
+xxxxxxxxxxxxxx       yyyyyy             
+xxxxxxxxxxxxxxxx     yyyy               
+xxxxxxxxxxxxxxxxxx   yy                 
+xxxxxxxxxxxxxxxxxxxx 
 (2 rows)
 
 \pset border 1
@@ -935,40 +935,40 @@ yy
 (2 rows)
 \pset format aligned
 execute q;
-          ab          |         a
-+                     |+        bc
-+         c           |+
+          ab          |         a          
++                     |+        bc         
++         c           |+                   
 ----------------------+--------------------
  xx                   | yyyyyyyyyyyyyyyyyy
- xxxx                 | yyyyyyyyyyyyyyyy
- xxxxxx               : yyyyyyyyyyyyyy
- xxxxxxxx             : yyyyyyyyyyyy
- xxxxxxxxxx           : yyyyyyyyyy
- xxxxxxxxxxxx         : yyyyyyyy
- xxxxxxxxxxxxxx       : yyyyyy
- xxxxxxxxxxxxxxxx     : yyyy
- xxxxxxxxxxxxxxxxxx   : yy
- xxxxxxxxxxxxxxxxxxxx :
+ xxxx                 | yyyyyyyyyyyyyyyy   
+ xxxxxx               : yyyyyyyyyyyyyy     
+ xxxxxxxx             : yyyyyyyyyyyy       
+ xxxxxxxxxx           : yyyyyyyyyy         
+ xxxxxxxxxxxx         : yyyyyyyy           
+ xxxxxxxxxxxxxx       : yyyyyy             
+ xxxxxxxxxxxxxxxx     : yyyy               
+ xxxxxxxxxxxxxxxxxx   : yy                 
+ xxxxxxxxxxxxxxxxxxxx : 
 (2 rows)
 
 \pset format wrapped
 execute q;
-        ab         |         a
-+                  |+        bc
-+        c         |+
+        ab         |         a          
++                  |+        bc         
++        c         |+                   
 -------------------+--------------------
  xx                | yyyyyyyyyyyyyyyyyy
- xxxx              | yyyyyyyyyyyyyyyy
- xxxxxx            : yyyyyyyyyyyyyy
- xxxxxxxx          : yyyyyyyyyyyy
- xxxxxxxxxx        : yyyyyyyyyy
- xxxxxxxxxxxx      : yyyyyyyy
- xxxxxxxxxxxxxx    : yyyyyy
- xxxxxxxxxxxxxxxx  : yyyy
- xxxxxxxxxxxxxxxxx : yy
- x                 :
- xxxxxxxxxxxxxxxxx
- xxx
+ xxxx              | yyyyyyyyyyyyyyyy   
+ xxxxxx            : yyyyyyyyyyyyyy     
+ xxxxxxxx          : yyyyyyyyyyyy       
+ xxxxxxxxxx        : yyyyyyyyyy         
+ xxxxxxxxxxxx      : yyyyyyyy           
+ xxxxxxxxxxxxxx    : yyyyyy             
+ xxxxxxxxxxxxxxxx  : yyyy               
+ xxxxxxxxxxxxxxxxx : yy                 
+ x                 : 
+ xxxxxxxxxxxxxxxxx   
+ xxx                 
 (2 rows)
 
 \pset border 2
@@ -1074,13 +1074,13 @@ yy
 
 \pset format aligned
 execute q;
-* Record 1
+* Record 1             
  ab xx
-+
-+c
++  
++c 
  a  yyyyyyyyyyyyyyyyyy
 +bc
-* Record 2
+* Record 2             
  ab xxxx
 +   xxxxxx
 +c  xxxxxxxx
@@ -1098,17 +1098,17 @@ execute q;
     yyyyyy
     yyyy
     yy
-
+    
 
 \pset format wrapped
 execute q;
-* Record 1
+* Record 1         
  ab xx
-+
-+c
++  
++c 
  a  yyyyyyyyyyyyyyyy
 +bc yy
-* Record 2
+* Record 2         
  ab xxxx
 +   xxxxxx
 +c  xxxxxxxx
@@ -1128,7 +1128,7 @@ execute q;
     yyyyyy
     yyyy
     yy
-
+    
 
 \pset border 1
 \pset format unaligned
@@ -1186,7 +1186,7 @@ execute q;
     : yyyyyy
     : yyyy
     : yy
-    :
+    : 
 
 \pset format wrapped
 execute q;
@@ -1218,7 +1218,7 @@ execute q;
     : yyyyyy
     : yyyy
     : yy
-    :
+    : 
 
 \pset border 2
 \pset format unaligned
@@ -1339,7 +1339,7 @@ xxxxxxxxxxxxxxxxxxxx|
 (10 rows)
 \pset format aligned
 execute q;
-  0123456789abcdef       0123456789
+  0123456789abcdef       0123456789     
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
 xxxx                 yyyyyyyyyyyyyyyy
@@ -1350,12 +1350,12 @@ xxxxxxxxxxxx         yyyyyyyy
 xxxxxxxxxxxxxx       yyyyyy
 xxxxxxxxxxxxxxxx     yyyy
 xxxxxxxxxxxxxxxxxx   yy
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx 
 (10 rows)
 
 \pset format wrapped
 execute q;
-  0123456789abcdef       0123456789
+  0123456789abcdef       0123456789     
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
 xxxx                 yyyyyyyyyyyyyyyy
@@ -1366,7 +1366,7 @@ xxxxxxxxxxxx         yyyyyyyy
 xxxxxxxxxxxxxx       yyyyyy
 xxxxxxxxxxxxxxxx     yyyy
 xxxxxxxxxxxxxxxxxx   yy
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx 
 (10 rows)
 
 \pset border 1
@@ -1386,7 +1386,7 @@ xxxxxxxxxxxxxxxxxxxx|
 (10 rows)
 \pset format aligned
 execute q;
-   0123456789abcdef   |     0123456789
+   0123456789abcdef   |     0123456789     
 ----------------------+--------------------
  xx                   | yyyyyyyyyyyyyyyyyy
  xxxx                 | yyyyyyyyyyyyyyyy
@@ -1397,12 +1397,12 @@ execute q;
  xxxxxxxxxxxxxx       | yyyyyy
  xxxxxxxxxxxxxxxx     | yyyy
  xxxxxxxxxxxxxxxxxx   | yy
- xxxxxxxxxxxxxxxxxxxx |
+ xxxxxxxxxxxxxxxxxxxx | 
 (10 rows)
 
 \pset format wrapped
 execute q;
-  0123456789abcdef   |    0123456789
+  0123456789abcdef   |    0123456789    
 ---------------------+------------------
  xx                  | yyyyyyyyyyyyyyyy.
                      |.yy
@@ -1414,8 +1414,8 @@ execute q;
  xxxxxxxxxxxxxx      | yyyyyy
  xxxxxxxxxxxxxxxx    | yyyy
  xxxxxxxxxxxxxxxxxx  | yy
- xxxxxxxxxxxxxxxxxxx.|
-.x                   |
+ xxxxxxxxxxxxxxxxxxx.| 
+.x                   | 
 (10 rows)
 
 \pset border 2
@@ -1508,76 +1508,76 @@ execute q;
 0123456789|
 \pset format aligned
 execute q;
-* Record 1
+* Record 1                          
 0123456789abcdef xx
 0123456789       yyyyyyyyyyyyyyyyyy
-* Record 2
+* Record 2                          
 0123456789abcdef xxxx
 0123456789       yyyyyyyyyyyyyyyy
-* Record 3
+* Record 3                          
 0123456789abcdef xxxxxx
 0123456789       yyyyyyyyyyyyyy
-* Record 4
+* Record 4                          
 0123456789abcdef xxxxxxxx
 0123456789       yyyyyyyyyyyy
-* Record 5
+* Record 5                          
 0123456789abcdef xxxxxxxxxx
 0123456789       yyyyyyyyyy
-* Record 6
+* Record 6                          
 0123456789abcdef xxxxxxxxxxxx
 0123456789       yyyyyyyy
-* Record 7
+* Record 7                          
 0123456789abcdef xxxxxxxxxxxxxx
 0123456789       yyyyyy
-* Record 8
+* Record 8                          
 0123456789abcdef xxxxxxxxxxxxxxxx
 0123456789       yyyy
-* Record 9
+* Record 9                          
 0123456789abcdef xxxxxxxxxxxxxxxxxx
 0123456789       yy
-* Record 10
+* Record 10                         
 0123456789abcdef xxxxxxxxxxxxxxxxxxxx
-0123456789
+0123456789       
 
 \pset format wrapped
 execute q;
-* Record 1
+* Record 1                  
 0123456789abcdef xx
 0123456789       yyyyyyyyyyyy.
                 .yyyyyy
-* Record 2
+* Record 2                  
 0123456789abcdef xxxx
 0123456789       yyyyyyyyyyyy.
                 .yyyy
-* Record 3
+* Record 3                  
 0123456789abcdef xxxxxx
 0123456789       yyyyyyyyyyyy.
                 .yy
-* Record 4
+* Record 4                  
 0123456789abcdef xxxxxxxx
 0123456789       yyyyyyyyyyyy
-* Record 5
+* Record 5                  
 0123456789abcdef xxxxxxxxxx
 0123456789       yyyyyyyyyy
-* Record 6
+* Record 6                  
 0123456789abcdef xxxxxxxxxxxx
 0123456789       yyyyyyyy
-* Record 7
+* Record 7                  
 0123456789abcdef xxxxxxxxxxxx.
                 .xx
 0123456789       yyyyyy
-* Record 8
+* Record 8                  
 0123456789abcdef xxxxxxxxxxxx.
                 .xxxx
 0123456789       yyyy
-* Record 9
+* Record 9                  
 0123456789abcdef xxxxxxxxxxxx.
                 .xxxxxx
 0123456789       yy
-* Record 10
+* Record 10                 
 0123456789abcdef xxxxxxxxxxxx.
                 .xxxxxxxx
-0123456789
+0123456789       
 
 \pset border 1
 \pset format unaligned
@@ -1642,7 +1642,7 @@ execute q;
 0123456789       | yy
 -[ RECORD 10 ]---+---------------------
 0123456789abcdef | xxxxxxxxxxxxxxxxxxxx
-0123456789       |
+0123456789       | 
 
 \pset format wrapped
 execute q;
@@ -1684,7 +1684,7 @@ execute q;
 -[ RECORD 10 ]---+-----------
 0123456789abcdef | xxxxxxxxxx.
                  |.xxxxxxxxxx
-0123456789       |
+0123456789       | 
 
 \pset border 2
 \pset format unaligned
@@ -1840,40 +1840,40 @@ execute q;
 0123456789|
 \pset format aligned
 execute q;
-* Record 1
+* Record 1                          
 0123456789abcdef xx
 0123456789       yyyyyyyyyyyyyyyyyy
-* Record 2
+* Record 2                          
 0123456789abcdef xxxx
 0123456789       yyyyyyyyyyyyyyyy
-* Record 3
+* Record 3                          
 0123456789abcdef xxxxxx
 0123456789       yyyyyyyyyyyyyy
-* Record 4
+* Record 4                          
 0123456789abcdef xxxxxxxx
 0123456789       yyyyyyyyyyyy
-* Record 5
+* Record 5                          
 0123456789abcdef xxxxxxxxxx
 0123456789       yyyyyyyyyy
-* Record 6
+* Record 6                          
 0123456789abcdef xxxxxxxxxxxx
 0123456789       yyyyyyyy
-* Record 7
+* Record 7                          
 0123456789abcdef xxxxxxxxxxxxxx
 0123456789       yyyyyy
-* Record 8
+* Record 8                          
 0123456789abcdef xxxxxxxxxxxxxxxx
 0123456789       yyyy
-* Record 9
+* Record 9                          
 0123456789abcdef xxxxxxxxxxxxxxxxxx
 0123456789       yy
-* Record 10
+* Record 10                         
 0123456789abcdef xxxxxxxxxxxxxxxxxxxx
-0123456789
+0123456789       
 
 \pset format wrapped
 execute q;
-* Record 1
+* Record 1         
 0123456789abcdef xx
 0123456789       yyy.
                 .yyy.
@@ -1881,7 +1881,7 @@ execute q;
                 .yyy.
                 .yyy.
                 .yyy
-* Record 2
+* Record 2         
 0123456789abcdef xxx.
                 .x
 0123456789       yyy.
@@ -1890,7 +1890,7 @@ execute q;
                 .yyy.
                 .yyy.
                 .y
-* Record 3
+* Record 3         
 0123456789abcdef xxx.
                 .xxx
 0123456789       yyy.
@@ -1898,7 +1898,7 @@ execute q;
                 .yyy.
                 .yyy.
                 .yy
-* Record 4
+* Record 4         
 0123456789abcdef xxx.
                 .xxx.
                 .xx
@@ -1906,7 +1906,7 @@ execute q;
                 .yyy.
                 .yyy.
                 .yyy
-* Record 5
+* Record 5         
 0123456789abcdef xxx.
                 .xxx.
                 .xxx.
@@ -1915,7 +1915,7 @@ execute q;
                 .yyy.
                 .yyy.
                 .y
-* Record 6
+* Record 6         
 0123456789abcdef xxx.
                 .xxx.
                 .xxx.
@@ -1923,7 +1923,7 @@ execute q;
 0123456789       yyy.
                 .yyy.
                 .yy
-* Record 7
+* Record 7         
 0123456789abcdef xxx.
                 .xxx.
                 .xxx.
@@ -1931,7 +1931,7 @@ execute q;
                 .xx
 0123456789       yyy.
                 .yyy
-* Record 8
+* Record 8         
 0123456789abcdef xxx.
                 .xxx.
                 .xxx.
@@ -1940,7 +1940,7 @@ execute q;
                 .x
 0123456789       yyy.
                 .y
-* Record 9
+* Record 9         
 0123456789abcdef xxx.
                 .xxx.
                 .xxx.
@@ -1948,7 +1948,7 @@ execute q;
                 .xxx.
                 .xxx
 0123456789       yy
-* Record 10
+* Record 10        
 0123456789abcdef xxx.
                 .xxx.
                 .xxx.
@@ -1956,7 +1956,7 @@ execute q;
                 .xxx.
                 .xxx.
                 .xx
-0123456789
+0123456789       
 
 \pset border 1
 \pset format unaligned
@@ -2021,7 +2021,7 @@ execute q;
 0123456789       | yy
 -[ RECORD 10 ]---+---------------------
 0123456789abcdef | xxxxxxxxxxxxxxxxxxxx
-0123456789       |
+0123456789       | 
 
 \pset format wrapped
 execute q;
@@ -2108,7 +2108,7 @@ execute q;
                  |.xxx.
                  |.xxx.
                  |.xx
-0123456789       |
+0123456789       | 
 
 \pset border 2
 \pset format unaligned
@@ -2284,7 +2284,7 @@ xxxxxxxxxxxxxxxxxxxx|
 (10 rows)
 \pset format aligned
 execute q;
-  0123456789abcdef       0123456789
+  0123456789abcdef       0123456789    
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
 xxxx                 yyyyyyyyyyyyyyyy
@@ -2295,12 +2295,12 @@ xxxxxxxxxxxx         yyyyyyyy
 xxxxxxxxxxxxxx       yyyyyy
 xxxxxxxxxxxxxxxx     yyyy
 xxxxxxxxxxxxxxxxxx   yy
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx 
 (10 rows)
 
 \pset format wrapped
 execute q;
-  0123456789abcdef       0123456789
+  0123456789abcdef       0123456789    
 -------------------- ------------------
 xx                   yyyyyyyyyyyyyyyyyy
 xxxx                 yyyyyyyyyyyyyyyy
@@ -2311,7 +2311,7 @@ xxxxxxxxxxxx         yyyyyyyy
 xxxxxxxxxxxxxx       yyyyyy
 xxxxxxxxxxxxxxxx     yyyy
 xxxxxxxxxxxxxxxxxx   yy
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx 
 (10 rows)
 
 \pset border 1
@@ -2331,7 +2331,7 @@ xxxxxxxxxxxxxxxxxxxx|
 (10 rows)
 \pset format aligned
 execute q;
-   0123456789abcdef   |     0123456789
+   0123456789abcdef   |     0123456789     
 ----------------------+--------------------
  xx                   | yyyyyyyyyyyyyyyyyy
  xxxx                 | yyyyyyyyyyyyyyyy
@@ -2342,14 +2342,14 @@ execute q;
  xxxxxxxxxxxxxx       | yyyyyy
  xxxxxxxxxxxxxxxx     | yyyy
  xxxxxxxxxxxxxxxxxx   | yy
- xxxxxxxxxxxxxxxxxxxx |
+ xxxxxxxxxxxxxxxxxxxx | 
 (10 rows)
 
 \pset format wrapped
 execute q;
-  0123456789abcdef   |    0123456789
+  0123456789abcdef   |    0123456789    
 ---------------------+------------------
- xx                  | yyyyyyyyyyyyyyyy
+ xx                  | yyyyyyyyyyyyyyyy 
                      ; yy
  xxxx                | yyyyyyyyyyyyyyyy
  xxxxxx              | yyyyyyyyyyyyyy
@@ -2359,8 +2359,8 @@ execute q;
  xxxxxxxxxxxxxx      | yyyyyy
  xxxxxxxxxxxxxxxx    | yyyy
  xxxxxxxxxxxxxxxxxx  | yy
- xxxxxxxxxxxxxxxxxxx |
- x
+ xxxxxxxxxxxxxxxxxxx | 
+ x                     
 (10 rows)
 
 \pset border 2
@@ -2452,69 +2452,69 @@ execute q;
 0123456789|
 \pset format aligned
 execute q;
-* Record 1
+* Record 1                          
 0123456789abcdef xx
 0123456789       yyyyyyyyyyyyyyyyyy
-* Record 2
+* Record 2                          
 0123456789abcdef xxxx
 0123456789       yyyyyyyyyyyyyyyy
-* Record 3
+* Record 3                          
 0123456789abcdef xxxxxx
 0123456789       yyyyyyyyyyyyyy
-* Record 4
+* Record 4                          
 0123456789abcdef xxxxxxxx
 0123456789       yyyyyyyyyyyy
-* Record 5
+* Record 5                          
 0123456789abcdef xxxxxxxxxx
 0123456789       yyyyyyyyyy
-* Record 6
+* Record 6                          
 0123456789abcdef xxxxxxxxxxxx
 0123456789       yyyyyyyy
-* Record 7
+* Record 7                          
 0123456789abcdef xxxxxxxxxxxxxx
 0123456789       yyyyyy
-* Record 8
+* Record 8                          
 0123456789abcdef xxxxxxxxxxxxxxxx
 0123456789       yyyy
-* Record 9
+* Record 9                          
 0123456789abcdef xxxxxxxxxxxxxxxxxx
 0123456789       yy
-* Record 10
+* Record 10                         
 0123456789abcdef xxxxxxxxxxxxxxxxxxxx
-0123456789
+0123456789       
 
 \pset format wrapped
 execute q;
-* Record 1
+* Record 1                          
 0123456789abcdef xx
 0123456789       yyyyyyyyyyyyyyyyyy
-* Record 2
+* Record 2                          
 0123456789abcdef xxxx
 0123456789       yyyyyyyyyyyyyyyy
-* Record 3
+* Record 3                          
 0123456789abcdef xxxxxx
 0123456789       yyyyyyyyyyyyyy
-* Record 4
+* Record 4                          
 0123456789abcdef xxxxxxxx
 0123456789       yyyyyyyyyyyy
-* Record 5
+* Record 5                          
 0123456789abcdef xxxxxxxxxx
 0123456789       yyyyyyyyyy
-* Record 6
+* Record 6                          
 0123456789abcdef xxxxxxxxxxxx
 0123456789       yyyyyyyy
-* Record 7
+* Record 7                          
 0123456789abcdef xxxxxxxxxxxxxx
 0123456789       yyyyyy
-* Record 8
+* Record 8                          
 0123456789abcdef xxxxxxxxxxxxxxxx
 0123456789       yyyy
-* Record 9
+* Record 9                          
 0123456789abcdef xxxxxxxxxxxxxxxxxx
 0123456789       yy
-* Record 10
+* Record 10                         
 0123456789abcdef xxxxxxxxxxxxxxxxxxxx
-0123456789
+0123456789       
 
 \pset border 1
 \pset format unaligned
@@ -2579,7 +2579,7 @@ execute q;
 0123456789       | yy
 -[ RECORD 10 ]---+---------------------
 0123456789abcdef | xxxxxxxxxxxxxxxxxxxx
-0123456789       |
+0123456789       | 
 
 \pset format wrapped
 execute q;
@@ -2612,7 +2612,7 @@ execute q;
 0123456789       | yy
 -[ RECORD 10 ]---+---------------------
 0123456789abcdef | xxxxxxxxxxxxxxxxxxxx
-0123456789       |
+0123456789       | 
 
 \pset border 2
 \pset format unaligned
@@ -2727,7 +2727,7 @@ create table psql_serial_tab (id serial);
 \pset expanded off
 \d psql_serial_tab_id_seq
                Sequence "public.psql_serial_tab_id_seq"
-  Type   | Start | Minimum |  Maximum   | Increment | Cycles? | Cache
+  Type   | Start | Minimum |  Maximum   | Increment | Cycles? | Cache 
 ---------+-------+---------+------------+-----------+---------+-------
  integer |     1 |       1 | 2147483647 |         1 | no      |     1
 Owned by: public.psql_serial_tab.id
@@ -2814,7 +2814,7 @@ Type|func
 \pset expanded off
 \d psql_serial_tab_id_seq
                Sequence "public.psql_serial_tab_id_seq"
-  Type   | Start | Minimum |  Maximum   | Increment | Cycles? | Cache
+  Type   | Start | Minimum |  Maximum   | Increment | Cycles? | Cache 
 ---------+-------+---------+------------+-----------+---------+-------
  integer |     1 |       1 | 2147483647 |         1 | no      |     1
 Owned by: public.psql_serial_tab.id
@@ -2869,78 +2869,78 @@ CREATE VIEW view_heap_psql AS SELECT f1 from tbl_heap_psql;
 CREATE MATERIALIZED VIEW mat_view_heap_psql USING heap_psql AS SELECT f1 from tbl_heap_psql;
 \d+ tbl_heap_psql
                               Table "tableam_display.tbl_heap_psql"
- Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+----------------+-----------+----------+---------+----------+--------------+-------------
- f1     | integer        |           |          |         | plain    |              |
- f2     | character(100) |           |          |         | extended |              |
+ f1     | integer        |           |          |         | plain    |              | 
+ f2     | character(100) |           |          |         | extended |              | 
 
 \d+ tbl_heap
                                  Table "tableam_display.tbl_heap"
- Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+----------------+-----------+----------+---------+----------+--------------+-------------
- f1     | integer        |           |          |         | plain    |              |
- f2     | character(100) |           |          |         | extended |              |
+ f1     | integer        |           |          |         | plain    |              | 
+ f2     | character(100) |           |          |         | extended |              | 
 
 \set HIDE_TABLEAM off
 \d+ tbl_heap_psql
                               Table "tableam_display.tbl_heap_psql"
- Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+----------------+-----------+----------+---------+----------+--------------+-------------
- f1     | integer        |           |          |         | plain    |              |
- f2     | character(100) |           |          |         | extended |              |
+ f1     | integer        |           |          |         | plain    |              | 
+ f2     | character(100) |           |          |         | extended |              | 
 Access method: heap_psql
 
 \d+ tbl_heap
                                  Table "tableam_display.tbl_heap"
- Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |      Type      | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+----------------+-----------+----------+---------+----------+--------------+-------------
- f1     | integer        |           |          |         | plain    |              |
- f2     | character(100) |           |          |         | extended |              |
+ f1     | integer        |           |          |         | plain    |              | 
+ f2     | character(100) |           |          |         | extended |              | 
 Access method: heap
 
 -- AM is displayed for tables, indexes and materialized views.
 \d+
                                                            List of relations
-     Schema      |        Name        |       Type        |        Owner         | Persistence | Access method |  Size   | Description
+     Schema      |        Name        |       Type        |        Owner         | Persistence | Access method |  Size   | Description 
 -----------------+--------------------+-------------------+----------------------+-------------+---------------+---------+-------------
- tableam_display | mat_view_heap_psql | materialized view | regress_display_role | permanent   | heap_psql     | 0 bytes |
- tableam_display | tbl_heap           | table             | regress_display_role | permanent   | heap          | 0 bytes |
- tableam_display | tbl_heap_psql      | table             | regress_display_role | permanent   | heap_psql     | 0 bytes |
- tableam_display | view_heap_psql     | view              | regress_display_role | permanent   |               | 0 bytes |
+ tableam_display | mat_view_heap_psql | materialized view | regress_display_role | permanent   | heap_psql     | 0 bytes | 
+ tableam_display | tbl_heap           | table             | regress_display_role | permanent   | heap          | 0 bytes | 
+ tableam_display | tbl_heap_psql      | table             | regress_display_role | permanent   | heap_psql     | 0 bytes | 
+ tableam_display | view_heap_psql     | view              | regress_display_role | permanent   |               | 0 bytes | 
 (4 rows)
 
 \dt+
                                                   List of relations
-     Schema      |     Name      | Type  |        Owner         | Persistence | Access method |  Size   | Description
+     Schema      |     Name      | Type  |        Owner         | Persistence | Access method |  Size   | Description 
 -----------------+---------------+-------+----------------------+-------------+---------------+---------+-------------
- tableam_display | tbl_heap      | table | regress_display_role | permanent   | heap          | 0 bytes |
- tableam_display | tbl_heap_psql | table | regress_display_role | permanent   | heap_psql     | 0 bytes |
+ tableam_display | tbl_heap      | table | regress_display_role | permanent   | heap          | 0 bytes | 
+ tableam_display | tbl_heap_psql | table | regress_display_role | permanent   | heap_psql     | 0 bytes | 
 (2 rows)
 
 \dm+
                                                            List of relations
-     Schema      |        Name        |       Type        |        Owner         | Persistence | Access method |  Size   | Description
+     Schema      |        Name        |       Type        |        Owner         | Persistence | Access method |  Size   | Description 
 -----------------+--------------------+-------------------+----------------------+-------------+---------------+---------+-------------
- tableam_display | mat_view_heap_psql | materialized view | regress_display_role | permanent   | heap_psql     | 0 bytes |
+ tableam_display | mat_view_heap_psql | materialized view | regress_display_role | permanent   | heap_psql     | 0 bytes | 
 (1 row)
 
 -- But not for views and sequences.
 \dv+
                                           List of relations
-     Schema      |      Name      | Type |        Owner         | Persistence |  Size   | Description
+     Schema      |      Name      | Type |        Owner         | Persistence |  Size   | Description 
 -----------------+----------------+------+----------------------+-------------+---------+-------------
- tableam_display | view_heap_psql | view | regress_display_role | permanent   | 0 bytes |
+ tableam_display | view_heap_psql | view | regress_display_role | permanent   | 0 bytes | 
 (1 row)
 
 \set HIDE_TABLEAM on
 \d+
                                                    List of relations
-     Schema      |        Name        |       Type        |        Owner         | Persistence |  Size   | Description
+     Schema      |        Name        |       Type        |        Owner         | Persistence |  Size   | Description 
 -----------------+--------------------+-------------------+----------------------+-------------+---------+-------------
- tableam_display | mat_view_heap_psql | materialized view | regress_display_role | permanent   | 0 bytes |
- tableam_display | tbl_heap           | table             | regress_display_role | permanent   | 0 bytes |
- tableam_display | tbl_heap_psql      | table             | regress_display_role | permanent   | 0 bytes |
- tableam_display | view_heap_psql     | view              | regress_display_role | permanent   | 0 bytes |
+ tableam_display | mat_view_heap_psql | materialized view | regress_display_role | permanent   | 0 bytes | 
+ tableam_display | tbl_heap           | table             | regress_display_role | permanent   | 0 bytes | 
+ tableam_display | tbl_heap_psql      | table             | regress_display_role | permanent   | 0 bytes | 
+ tableam_display | view_heap_psql     | view              | regress_display_role | permanent   | 0 bytes | 
 (4 rows)
 
 RESET ROLE;
@@ -2959,7 +2959,7 @@ DROP ROLE regress_display_role;
 \pset numericlocale true
 select n, -n as m, n * 111 as x, '1e90'::float8 as f
 from generate_series(0,3) n;
- n | m  |  x  |   f
+ n | m  |  x  |   f   
 ---+----+-----+-------
  0 |  0 |   0 | 1e+90
  1 | -1 | 111 | 1e+90
@@ -3082,11 +3082,11 @@ execute q;
 |====
 2+^|Record 1
 <l|a\|title <l|some\|text
-<l|empty  <l|
+<l|empty  <l| 
 <l|int >l|1
 2+^|Record 2
 <l|a\|title <l|some\|text
-<l|empty  <l|
+<l|empty  <l| 
 <l|int >l|2
 |====
 \pset border 1
@@ -3096,11 +3096,11 @@ execute q;
 |====
 2+^|Record 1
 <l|a\|title <l|some\|text
-<l|empty  <l|
+<l|empty  <l| 
 <l|int >l|1
 2+^|Record 2
 <l|a\|title <l|some\|text
-<l|empty  <l|
+<l|empty  <l| 
 <l|int >l|2
 |====
 \pset border 2
@@ -3110,11 +3110,11 @@ execute q;
 |====
 2+^|Record 1
 <l|a\|title <l|some\|text
-<l|empty  <l|
+<l|empty  <l| 
 <l|int >l|1
 2+^|Record 2
 <l|a\|title <l|some\|text
-<l|empty  <l|
+<l|empty  <l| 
 <l|int >l|2
 |====
 deallocate q;
@@ -3168,12 +3168,12 @@ execute q;
 "a""title","some""text"
 junk,"  <foo>
 <bar>"
-empty,
+empty,   
 int,1
 "a""title","some""text"
 junk,"  <foo>
 <bar>"
-empty,
+empty,   
 int,2
 deallocate q;
 -- special cases
@@ -3581,7 +3581,7 @@ pg\_catalog & exp & double precision & double precision & func \\
 pg\_catalog & exp & numeric & numeric & func \\
 \end{tabular}
 
-\noindent
+\noindent 
 \pset tuples_only false
 \pset expanded on
 \d psql_serial_tab_id_seq
@@ -3620,7 +3620,7 @@ Argument data types & numeric \\
 Type & func \\
 \end{tabular}
 
-\noindent
+\noindent 
 \pset tuples_only false
 prepare q as
   select 'some\more_text' as "a$title", E'  #<foo>%&^~|\n{bar}' as "junk",
@@ -3692,7 +3692,7 @@ empty &     \\
 int & 2 \\
 \end{tabular}
 
-\noindent
+\noindent 
 \pset border 1
 execute q;
 \begin{tabular}{c|l}
@@ -3710,7 +3710,7 @@ empty &     \\
 int & 2 \\
 \end{tabular}
 
-\noindent
+\noindent 
 \pset border 2
 execute q;
 \begin{tabular}{|c|l|}
@@ -3731,7 +3731,7 @@ int & 2 \\
 \hline
 \end{tabular}
 
-\noindent
+\noindent 
 \pset border 3
 execute q;
 \begin{tabular}{|c|l|}
@@ -3752,7 +3752,7 @@ int & 2 \\
 \hline
 \end{tabular}
 
-\noindent
+\noindent 
 deallocate q;
 -- test latex-longtable output format
 \pset format latex-longtable
@@ -3844,7 +3844,7 @@ Argument data types & numeric \\
 Type & func \\
 \end{tabular}
 
-\noindent
+\noindent 
 \pset tuples_only false
 prepare q as
   select 'some\more_text' as "a$title", E'  #<foo>%&^~|\n{bar}' as "junk",
@@ -4008,7 +4008,7 @@ empty &     \\
 int & 2 \\
 \end{tabular}
 
-\noindent
+\noindent 
 \pset border 1
 execute q;
 \begin{tabular}{c|l}
@@ -4026,7 +4026,7 @@ empty &     \\
 int & 2 \\
 \end{tabular}
 
-\noindent
+\noindent 
 \pset border 2
 execute q;
 \begin{tabular}{|c|l|}
@@ -4047,7 +4047,7 @@ int & 2 \\
 \hline
 \end{tabular}
 
-\noindent
+\noindent 
 \pset border 3
 execute q;
 \begin{tabular}{|c|l|}
@@ -4068,7 +4068,7 @@ int & 2 \\
 \hline
 \end{tabular}
 
-\noindent
+\noindent 
 \pset tableattr lr
 execute q;
 \begin{tabular}{|c|l|}
@@ -4089,7 +4089,7 @@ int & 2 \\
 \hline
 \end{tabular}
 
-\noindent
+\noindent 
 \pset tableattr
 deallocate q;
 -- test troff-ms output format
@@ -4237,7 +4237,7 @@ c l.
 a\(rstitle	some\(rstext
 junk	  <foo>
 <bar>
-empty
+empty	   
 int	1
 .T&
 c s.
@@ -4247,7 +4247,7 @@ c l.
 a\(rstitle	some\(rstext
 junk	  <foo>
 <bar>
-empty
+empty	   
 int	2
 .TE
 .DS L
@@ -4265,7 +4265,7 @@ c | l.
 a\(rstitle	some\(rstext
 junk	  <foo>
 <bar>
-empty
+empty	   
 int	1
 .T&
 c s.
@@ -4276,7 +4276,7 @@ c | l.
 a\(rstitle	some\(rstext
 junk	  <foo>
 <bar>
-empty
+empty	   
 int	2
 .TE
 .DS L
@@ -4294,7 +4294,7 @@ c l.
 a\(rstitle	some\(rstext
 junk	  <foo>
 <bar>
-empty
+empty	   
 int	1
 _
 .T&
@@ -4306,7 +4306,7 @@ c l.
 a\(rstitle	some\(rstext
 junk	  <foo>
 <bar>
-empty
+empty	   
 int	2
 .TE
 .DS L
@@ -4343,13 +4343,13 @@ foo = bar
 -- tests for \if ... \endif
 \if true
   select 'okay';
- ?column?
+ ?column? 
 ----------
  okay
 (1 row)
 
   select 'still okay';
-  ?column?
+  ?column?  
 ------------
  still okay
 (1 row)
@@ -4360,7 +4360,7 @@ foo = bar
 \endif
 -- at this point query buffer should still have last valid line
 \g
-  ?column?
+  ?column?  
 ------------
  still okay
 (1 row)
@@ -4373,13 +4373,13 @@ select
     (bogus
   \endif
   forty_two;
- forty_two
+ forty_two 
 -----------
         42
 (1 row)
 
 select \if false \\ (bogus \else \\ 42 \endif \\ forty_two;
- forty_two
+ forty_two 
 -----------
         42
 (1 row)
@@ -4573,13 +4573,13 @@ should print #8-1
 #10-2 ok, variable no_such_variable is not defined
 \endif
 SELECT :{?i} AS i_is_defined;
- i_is_defined
+ i_is_defined 
 --------------
  t
 (1 row)
 
 SELECT NOT :{?no_such_var} AS no_such_var_is_not_defined;
- no_such_var_is_not_defined
+ no_such_var_is_not_defined 
 ----------------------------
  t
 (1 row)
@@ -4614,7 +4614,7 @@ ERROR:  bar
 CONTEXT:  PL/pgSQL function inline_code_block line 4 at RAISE
 -- test printing and clearing the query buffer
 SELECT 1;
- ?column?
+ ?column? 
 ----------
         1
 (1 row)
@@ -4625,13 +4625,13 @@ SELECT 2 \r
 \p
 SELECT 1;
 SELECT 3 \p
-SELECT 3
+SELECT 3 
 UNION SELECT 4 \p
-SELECT 3
-UNION SELECT 4
+SELECT 3 
+UNION SELECT 4 
 UNION SELECT 5
 ORDER BY 1;
- ?column?
+ ?column? 
 ----------
         3
         4
@@ -4640,14 +4640,14 @@ ORDER BY 1;
 
 \r
 \p
-SELECT 3
-UNION SELECT 4
+SELECT 3 
+UNION SELECT 4 
 UNION SELECT 5
 ORDER BY 1;
 -- tests for special result variables
 -- working query, 2 rows selected
 SELECT 1 AS stuff UNION SELECT 2;
- stuff
+ stuff 
 -------
      1
      2
@@ -4722,7 +4722,7 @@ last error message: division by zero
 \set VERBOSITY default
 -- working \gdesc
 SELECT 3 AS three, 4 AS four \gdesc
- Column |  Type
+ Column |  Type   
 --------+---------
  three  | integer
  four   | integer
@@ -4737,7 +4737,7 @@ number of rows: 2
 -- \gdesc with an error
 SELECT 4 AS \gdesc
 ERROR:  syntax error at end of input
-LINE 1: SELECT 4 AS
+LINE 1: SELECT 4 AS 
                     ^
 \echo 'error:' :ERROR
 error: true
@@ -4752,7 +4752,7 @@ last error code: 42601
 -- check row count for a cursor-fetched query
 \set FETCH_COUNT 10
 select unique2 from tenk1 order by unique2 limit 19;
- unique2
+ unique2 
 ---------
        0
        1
@@ -4783,7 +4783,7 @@ error code: 00000
 number of rows: 19
 -- cursor-fetched query with an error after the first group
 select 1/(15-unique2) from tenk1 order by unique2 limit 19;
- ?column?
+ ?column? 
 ----------
         0
         0
@@ -4824,22 +4824,22 @@ create index testpart_orange_index on testpart_orange(logdate);
 -- only partition related object should be displayed
 \dP test*apple*
                                          List of partitioned relations
-  Schema  |         Name         |           Owner           |       Type        | Parent name |     Table
+  Schema  |         Name         |           Owner           |       Type        | Parent name |     Table      
 ----------+----------------------+---------------------------+-------------------+-------------+----------------
- testpart | testpart_apple       | regress_partitioning_role | partitioned table |             |
+ testpart | testpart_apple       | regress_partitioning_role | partitioned table |             | 
  testpart | testpart_apple_index | regress_partitioning_role | partitioned index |             | testpart_apple
 (2 rows)
 
 \dPt test*apple*
                      List of partitioned tables
-  Schema  |      Name      |           Owner           | Parent name
+  Schema  |      Name      |           Owner           | Parent name 
 ----------+----------------+---------------------------+-------------
- testpart | testpart_apple | regress_partitioning_role |
+ testpart | testpart_apple | regress_partitioning_role | 
 (1 row)
 
 \dPi test*apple*
                                 List of partitioned indexes
-  Schema  |         Name         |           Owner           | Parent name |     Table
+  Schema  |         Name         |           Owner           | Parent name |     Table      
 ----------+----------------------+---------------------------+-------------+----------------
  testpart | testpart_apple_index | regress_partitioning_role |             | testpart_apple
 (1 row)
@@ -4867,47 +4867,47 @@ create table child_35_40 partition of child_30_40
 insert into parent_tab values (generate_series(30,39));
 \dPt
             List of partitioned tables
-  Schema  |    Name    |           Owner
+  Schema  |    Name    |           Owner           
 ----------+------------+---------------------------
  testpart | parent_tab | regress_partitioning_role
 (1 row)
 
 \dPi
                    List of partitioned indexes
-  Schema  |     Name     |           Owner           |   Table
+  Schema  |     Name     |           Owner           |   Table    
 ----------+--------------+---------------------------+------------
  testpart | parent_index | regress_partitioning_role | parent_tab
 (1 row)
 
 \dP testpart.*
                                        List of partitioned relations
-  Schema  |        Name        |           Owner           |       Type        | Parent name  |    Table
+  Schema  |        Name        |           Owner           |       Type        | Parent name  |    Table    
 ----------+--------------------+---------------------------+-------------------+--------------+-------------
- testpart | parent_tab         | regress_partitioning_role | partitioned table |              |
- testpart | child_30_40        | regress_partitioning_role | partitioned table | parent_tab   |
+ testpart | parent_tab         | regress_partitioning_role | partitioned table |              | 
+ testpart | child_30_40        | regress_partitioning_role | partitioned table | parent_tab   | 
  testpart | parent_index       | regress_partitioning_role | partitioned index |              | parent_tab
  testpart | child_30_40_id_idx | regress_partitioning_role | partitioned index | parent_index | child_30_40
 (4 rows)
 
 \dP
                             List of partitioned relations
-  Schema  |     Name     |           Owner           |       Type        |   Table
+  Schema  |     Name     |           Owner           |       Type        |   Table    
 ----------+--------------+---------------------------+-------------------+------------
- testpart | parent_tab   | regress_partitioning_role | partitioned table |
+ testpart | parent_tab   | regress_partitioning_role | partitioned table | 
  testpart | parent_index | regress_partitioning_role | partitioned index | parent_tab
 (2 rows)
 
 \dPtn
                     List of partitioned tables
-  Schema  |    Name     |           Owner           | Parent name
+  Schema  |    Name     |           Owner           | Parent name 
 ----------+-------------+---------------------------+-------------
- testpart | parent_tab  | regress_partitioning_role |
+ testpart | parent_tab  | regress_partitioning_role | 
  testpart | child_30_40 | regress_partitioning_role | parent_tab
 (2 rows)
 
 \dPin
                               List of partitioned indexes
-  Schema  |        Name        |           Owner           | Parent name  |    Table
+  Schema  |        Name        |           Owner           | Parent name  |    Table    
 ----------+--------------------+---------------------------+--------------+-------------
  testpart | parent_index       | regress_partitioning_role |              | parent_tab
  testpart | child_30_40_id_idx | regress_partitioning_role | parent_index | child_30_40
@@ -4915,20 +4915,20 @@ insert into parent_tab values (generate_series(30,39));
 
 \dPn
                                        List of partitioned relations
-  Schema  |        Name        |           Owner           |       Type        | Parent name  |    Table
+  Schema  |        Name        |           Owner           |       Type        | Parent name  |    Table    
 ----------+--------------------+---------------------------+-------------------+--------------+-------------
- testpart | parent_tab         | regress_partitioning_role | partitioned table |              |
- testpart | child_30_40        | regress_partitioning_role | partitioned table | parent_tab   |
+ testpart | parent_tab         | regress_partitioning_role | partitioned table |              | 
+ testpart | child_30_40        | regress_partitioning_role | partitioned table | parent_tab   | 
  testpart | parent_index       | regress_partitioning_role | partitioned index |              | parent_tab
  testpart | child_30_40_id_idx | regress_partitioning_role | partitioned index | parent_index | child_30_40
 (4 rows)
 
 \dPn testpart.*
                                        List of partitioned relations
-  Schema  |        Name        |           Owner           |       Type        | Parent name  |    Table
+  Schema  |        Name        |           Owner           |       Type        | Parent name  |    Table    
 ----------+--------------------+---------------------------+-------------------+--------------+-------------
- testpart | parent_tab         | regress_partitioning_role | partitioned table |              |
- testpart | child_30_40        | regress_partitioning_role | partitioned table | parent_tab   |
+ testpart | parent_tab         | regress_partitioning_role | partitioned table |              | 
+ testpart | child_30_40        | regress_partitioning_role | partitioned table | parent_tab   | 
  testpart | parent_index       | regress_partitioning_role | partitioned index |              | parent_tab
  testpart | child_30_40_id_idx | regress_partitioning_role | partitioned index | parent_index | child_30_40
 (4 rows)
@@ -4941,7 +4941,7 @@ drop role regress_partitioning_role;
 -- \d on toast table (use pg_statistic's toast table, which has a known name)
 \d pg_toast.pg_toast_2619
 TOAST table "pg_toast.pg_toast_2619"
-   Column   |  Type
+   Column   |  Type   
 ------------+---------
  chunk_id   | oid
  chunk_seq  | integer
@@ -4953,7 +4953,7 @@ Indexes:
 -- check printing info about access methods
 \dA
 List of access methods
-  Name  | Type
+  Name  | Type  
 --------+-------
  brin   | Index
  btree  | Index
@@ -4967,7 +4967,7 @@ List of access methods
 
 \dA *
 List of access methods
-  Name  | Type
+  Name  | Type  
 --------+-------
  brin   | Index
  btree  | Index
@@ -4981,7 +4981,7 @@ List of access methods
 
 \dA h*
 List of access methods
- Name  | Type
+ Name  | Type  
 -------+-------
  hash  | Index
  heap  | Table
@@ -4990,20 +4990,20 @@ List of access methods
 
 \dA foo
 List of access methods
- Name | Type
+ Name | Type 
 ------+------
 (0 rows)
 
 \dA foo bar
 List of access methods
- Name | Type
+ Name | Type 
 ------+------
 (0 rows)
 
 \dA: extra argument "bar" ignored
 \dA+
                              List of access methods
-  Name  | Type  |       Handler        |              Description
+  Name  | Type  |       Handler        |              Description               
 --------+-------+----------------------+----------------------------------------
  brin   | Index | brinhandler          | block range index (BRIN) access method
  btree  | Index | bthandler            | b-tree index access method
@@ -5011,13 +5011,13 @@ List of access methods
  gist   | Index | gisthandler          | GiST index access method
  hash   | Index | hashhandler          | hash index access method
  heap   | Table | heap_tableam_handler | heap table access method
- heap2  | Table | heap_tableam_handler |
+ heap2  | Table | heap_tableam_handler | 
  spgist | Index | spghandler           | SP-GiST index access method
 (8 rows)
 
 \dA+ *
                              List of access methods
-  Name  | Type  |       Handler        |              Description
+  Name  | Type  |       Handler        |              Description               
 --------+-------+----------------------+----------------------------------------
  brin   | Index | brinhandler          | block range index (BRIN) access method
  btree  | Index | bthandler            | b-tree index access method
@@ -5025,28 +5025,28 @@ List of access methods
  gist   | Index | gisthandler          | GiST index access method
  hash   | Index | hashhandler          | hash index access method
  heap   | Table | heap_tableam_handler | heap table access method
- heap2  | Table | heap_tableam_handler |
+ heap2  | Table | heap_tableam_handler | 
  spgist | Index | spghandler           | SP-GiST index access method
 (8 rows)
 
 \dA+ h*
                      List of access methods
- Name  | Type  |       Handler        |       Description
+ Name  | Type  |       Handler        |       Description        
 -------+-------+----------------------+--------------------------
  hash  | Index | hashhandler          | hash index access method
  heap  | Table | heap_tableam_handler | heap table access method
- heap2 | Table | heap_tableam_handler |
+ heap2 | Table | heap_tableam_handler | 
 (3 rows)
 
 \dA+ foo
        List of access methods
- Name | Type | Handler | Description
+ Name | Type | Handler | Description 
 ------+------+---------+-------------
 (0 rows)
 
 \dAc brin pg*.oid*
                       List of operator classes
-  AM  | Input type | Storage type |    Operator class    | Default?
+  AM  | Input type | Storage type |    Operator class    | Default? 
 ------+------------+--------------+----------------------+----------
  brin | oid        |              | oid_bloom_ops        | no
  brin | oid        |              | oid_minmax_multi_ops | no
@@ -5055,7 +5055,7 @@ List of access methods
 
 \dAf spgist
           List of operator families
-   AM   | Operator family | Applicable types
+   AM   | Operator family | Applicable types 
 --------+-----------------+------------------
  spgist | box_ops         | box
  spgist | kd_point_ops    | point
@@ -5068,40 +5068,40 @@ List of access methods
 
 \dAf btree int4
               List of operator families
-  AM   | Operator family |     Applicable types
+  AM   | Operator family |     Applicable types      
 -------+-----------------+---------------------------
  btree | integer_ops     | smallint, integer, bigint
 (1 row)
 
 \dAo+ btree float_ops
                                 List of operators of operator families
-  AM   | Operator family |               Operator                | Strategy | Purpose | Sort opfamily
+  AM   | Operator family |               Operator                | Strategy | Purpose | Sort opfamily 
 -------+-----------------+---------------------------------------+----------+---------+---------------
- btree | float_ops       | <(double precision,double precision)  |        1 | search  |
- btree | float_ops       | <=(double precision,double precision) |        2 | search  |
- btree | float_ops       | =(double precision,double precision)  |        3 | search  |
- btree | float_ops       | >=(double precision,double precision) |        4 | search  |
- btree | float_ops       | >(double precision,double precision)  |        5 | search  |
- btree | float_ops       | <(real,real)                          |        1 | search  |
- btree | float_ops       | <=(real,real)                         |        2 | search  |
- btree | float_ops       | =(real,real)                          |        3 | search  |
- btree | float_ops       | >=(real,real)                         |        4 | search  |
- btree | float_ops       | >(real,real)                          |        5 | search  |
- btree | float_ops       | <(double precision,real)              |        1 | search  |
- btree | float_ops       | <=(double precision,real)             |        2 | search  |
- btree | float_ops       | =(double precision,real)              |        3 | search  |
- btree | float_ops       | >=(double precision,real)             |        4 | search  |
- btree | float_ops       | >(double precision,real)              |        5 | search  |
- btree | float_ops       | <(real,double precision)              |        1 | search  |
- btree | float_ops       | <=(real,double precision)             |        2 | search  |
- btree | float_ops       | =(real,double precision)              |        3 | search  |
- btree | float_ops       | >=(real,double precision)             |        4 | search  |
- btree | float_ops       | >(real,double precision)              |        5 | search  |
+ btree | float_ops       | <(double precision,double precision)  |        1 | search  | 
+ btree | float_ops       | <=(double precision,double precision) |        2 | search  | 
+ btree | float_ops       | =(double precision,double precision)  |        3 | search  | 
+ btree | float_ops       | >=(double precision,double precision) |        4 | search  | 
+ btree | float_ops       | >(double precision,double precision)  |        5 | search  | 
+ btree | float_ops       | <(real,real)                          |        1 | search  | 
+ btree | float_ops       | <=(real,real)                         |        2 | search  | 
+ btree | float_ops       | =(real,real)                          |        3 | search  | 
+ btree | float_ops       | >=(real,real)                         |        4 | search  | 
+ btree | float_ops       | >(real,real)                          |        5 | search  | 
+ btree | float_ops       | <(double precision,real)              |        1 | search  | 
+ btree | float_ops       | <=(double precision,real)             |        2 | search  | 
+ btree | float_ops       | =(double precision,real)              |        3 | search  | 
+ btree | float_ops       | >=(double precision,real)             |        4 | search  | 
+ btree | float_ops       | >(double precision,real)              |        5 | search  | 
+ btree | float_ops       | <(real,double precision)              |        1 | search  | 
+ btree | float_ops       | <=(real,double precision)             |        2 | search  | 
+ btree | float_ops       | =(real,double precision)              |        3 | search  | 
+ btree | float_ops       | >=(real,double precision)             |        4 | search  | 
+ btree | float_ops       | >(real,double precision)              |        5 | search  | 
 (20 rows)
 
 \dAo * pg_catalog.jsonb_path_ops
              List of operators of operator families
- AM  | Operator family |      Operator      | Strategy | Purpose
+ AM  | Operator family |      Operator      | Strategy | Purpose 
 -----+-----------------+--------------------+----------+---------
  gin | jsonb_path_ops  | @>(jsonb,jsonb)    |        7 | search
  gin | jsonb_path_ops  | @?(jsonb,jsonpath) |       15 | search
@@ -5110,7 +5110,7 @@ List of access methods
 
 \dAp+ btree float_ops
                                                          List of support functions of operator families
-  AM   | Operator family | Registered left type | Registered right type | Number |                                   Function
+  AM   | Operator family | Registered left type | Registered right type | Number |                                   Function                                   
 -------+-----------------+----------------------+-----------------------+--------+------------------------------------------------------------------------------
  btree | float_ops       | double precision     | double precision      |      1 | btfloat8cmp(double precision,double precision)
  btree | float_ops       | double precision     | double precision      |      2 | btfloat8sortsupport(internal)
@@ -5124,7 +5124,7 @@ List of access methods
 
 \dAp * pg_catalog.uuid_ops
                             List of support functions of operator families
-  AM   | Operator family | Registered left type | Registered right type | Number |      Function
+  AM   | Operator family | Registered left type | Registered right type | Number |      Function      
 -------+-----------------+----------------------+-----------------------+--------+--------------------
  btree | uuid_ops        | uuid                 | uuid                  |      1 | uuid_cmp
  btree | uuid_ops        | uuid                 | uuid                  |      2 | uuid_sortsupport
@@ -5137,23 +5137,23 @@ List of access methods
 set work_mem = 10240;
 \dconfig work_mem
 List of configuration parameters
- Parameter | Value
+ Parameter | Value 
 -----------+-------
  work_mem  | 10MB
 (1 row)
 
 \dconfig+ work*
              List of configuration parameters
- Parameter | Value |  Type   | Context | Access privileges
+ Parameter | Value |  Type   | Context | Access privileges 
 -----------+-------+---------+---------+-------------------
- work_mem  | 10MB  | integer | user    |
+ work_mem  | 10MB  | integer | user    | 
 (1 row)
 
 reset work_mem;
 -- check \df, \do with argument specifications
 \df *sqrt
                              List of functions
-   Schema   |     Name     | Result data type | Argument data types | Type
+   Schema   |     Name     | Result data type | Argument data types | Type 
 ------------+--------------+------------------+---------------------+------
  pg_catalog | dsqrt        | double precision | double precision    | func
  pg_catalog | numeric_sqrt | numeric          | numeric             | func
@@ -5163,7 +5163,7 @@ reset work_mem;
 
 \df *sqrt num*
                              List of functions
-   Schema   |     Name     | Result data type | Argument data types | Type
+   Schema   |     Name     | Result data type | Argument data types | Type 
 ------------+--------------+------------------+---------------------+------
  pg_catalog | numeric_sqrt | numeric          | numeric             | func
  pg_catalog | sqrt         | numeric          | numeric             | func
@@ -5171,7 +5171,7 @@ reset work_mem;
 
 \df int*pl
                             List of functions
-   Schema   |    Name     | Result data type | Argument data types | Type
+   Schema   |    Name     | Result data type | Argument data types | Type 
 ------------+-------------+------------------+---------------------+------
  pg_catalog | int24pl     | integer          | smallint, integer   | func
  pg_catalog | int28pl     | bigint           | smallint, bigint    | func
@@ -5187,7 +5187,7 @@ reset work_mem;
 
 \df int*pl int4
                           List of functions
-   Schema   |  Name   | Result data type | Argument data types | Type
+   Schema   |  Name   | Result data type | Argument data types | Type 
 ------------+---------+------------------+---------------------+------
  pg_catalog | int42pl | integer          | integer, smallint   | func
  pg_catalog | int48pl | bigint           | integer, bigint     | func
@@ -5196,7 +5196,7 @@ reset work_mem;
 
 \df int*pl * pg_catalog.int8
                           List of functions
-   Schema   |  Name   | Result data type | Argument data types | Type
+   Schema   |  Name   | Result data type | Argument data types | Type 
 ------------+---------+------------------+---------------------+------
  pg_catalog | int28pl | bigint           | smallint, bigint    | func
  pg_catalog | int48pl | bigint           | integer, bigint     | func
@@ -5205,7 +5205,7 @@ reset work_mem;
 
 \df acl* aclitem[]
                                                                     List of functions
-   Schema   |    Name     | Result data type |                                        Argument data types                                         | Type
+   Schema   |    Name     | Result data type |                                        Argument data types                                         | Type 
 ------------+-------------+------------------+----------------------------------------------------------------------------------------------------+------
  pg_catalog | aclcontains | boolean          | aclitem[], aclitem                                                                                 | func
  pg_catalog | aclexplode  | SETOF record     | acl aclitem[], OUT grantor oid, OUT grantee oid, OUT privilege_type text, OUT is_grantable boolean | func
@@ -5215,7 +5215,7 @@ reset work_mem;
 
 \df has_database_privilege oid text
                                   List of functions
-   Schema   |          Name          | Result data type | Argument data types | Type
+   Schema   |          Name          | Result data type | Argument data types | Type 
 ------------+------------------------+------------------+---------------------+------
  pg_catalog | has_database_privilege | boolean          | oid, text           | func
  pg_catalog | has_database_privilege | boolean          | oid, text, text     | func
@@ -5223,14 +5223,14 @@ reset work_mem;
 
 \df has_database_privilege oid text -
                                   List of functions
-   Schema   |          Name          | Result data type | Argument data types | Type
+   Schema   |          Name          | Result data type | Argument data types | Type 
 ------------+------------------------+------------------+---------------------+------
  pg_catalog | has_database_privilege | boolean          | oid, text           | func
 (1 row)
 
 \dfa bit* small*
                           List of functions
-   Schema   |  Name   | Result data type | Argument data types | Type
+   Schema   |  Name   | Result data type | Argument data types | Type 
 ------------+---------+------------------+---------------------+------
  pg_catalog | bit_and | smallint         | smallint            | agg
  pg_catalog | bit_or  | smallint         | smallint            | agg
@@ -5239,21 +5239,21 @@ reset work_mem;
 
 \df *._pg_expandarray
                                              List of functions
-       Schema       |      Name       | Result data type |            Argument data types            | Type
+       Schema       |      Name       | Result data type |            Argument data types            | Type 
 --------------------+-----------------+------------------+-------------------------------------------+------
  information_schema | _pg_expandarray | SETOF record     | anyarray, OUT x anyelement, OUT n integer | func
 (1 row)
 
 \do - pg_catalog.int4
                                List of operators
-   Schema   | Name | Left arg type | Right arg type | Result type | Description
+   Schema   | Name | Left arg type | Right arg type | Result type | Description 
 ------------+------+---------------+----------------+-------------+-------------
  pg_catalog | -    |               | integer        | integer     | negate
 (1 row)
 
 \do && anyarray *
                                List of operators
-   Schema   | Name | Left arg type | Right arg type | Result type | Description
+   Schema   | Name | Left arg type | Right arg type | Result type | Description 
 ------------+------+---------------+----------------+-------------+-------------
  pg_catalog | &&   | anyarray      | anyarray       | boolean     | overlaps
 (1 row)
@@ -5278,11 +5278,11 @@ create function psql_df_plpgsql ()
 comment on function psql_df_plpgsql () is 'some comment';
 \df+ psql_df_*
                                                                                        List of functions
- Schema |       Name       | Result data type | Argument data types | Type | Volatility | Parallel |       Owner       | Security | Access privileges | Language | Internal name | Description
+ Schema |       Name       | Result data type | Argument data types | Type | Volatility | Parallel |       Owner       | Security | Access privileges | Language | Internal name | Description  
 --------+------------------+------------------+---------------------+------+------------+----------+-------------------+----------+-------------------+----------+---------------+--------------
- public | psql_df_internal | double precision | double precision    | func | immutable  | safe     | regress_psql_user | invoker  |                   | internal | dsin          |
+ public | psql_df_internal | double precision | double precision    | func | immutable  | safe     | regress_psql_user | invoker  |                   | internal | dsin          | 
  public | psql_df_plpgsql  | void             |                     | func | volatile   | unsafe   | regress_psql_user | invoker  |                   | plpgsql  |               | some comment
- public | psql_df_sql      | integer          | x integer           | func | volatile   | unsafe   | regress_psql_user | definer  |                   | sql      |               |
+ public | psql_df_sql      | integer          | x integer           | func | volatile   | unsafe   | regress_psql_user | definer  |                   | sql      |               | 
 (3 rows)
 
 rollback;
@@ -5348,7 +5348,7 @@ CREATE TABLE ac_test (a int);
 INSERT INTO ac_test VALUES (1);
 COMMIT;
 SELECT * FROM ac_test;
- a
+ a 
 ---
  1
 (1 row)
@@ -5357,7 +5357,7 @@ COMMIT;
 INSERT INTO ac_test VALUES (2);
 ROLLBACK;
 SELECT * FROM ac_test;
- a
+ a 
 ---
  1
 (1 row)
@@ -5367,7 +5367,7 @@ BEGIN;
 INSERT INTO ac_test VALUES (3);
 COMMIT;
 SELECT * FROM ac_test;
- a
+ a 
 ---
  1
  3
@@ -5378,7 +5378,7 @@ BEGIN;
 INSERT INTO ac_test VALUES (4);
 ROLLBACK;
 SELECT * FROM ac_test;
- a
+ a 
 ---
  1
  3
@@ -5403,7 +5403,7 @@ LINE 1: INSERT INTO oer_test VALUES ('foo');
 INSERT INTO oer_test VALUES (3);
 COMMIT;
 SELECT * FROM oer_test;
- a
+ a 
 ---
  1
  3
@@ -5413,7 +5413,7 @@ BEGIN;
 INSERT INTO oer_test VALUES (4);
 ROLLBACK;
 SELECT * FROM oer_test;
- a
+ a 
 ---
  1
  3
@@ -5425,7 +5425,7 @@ COMMIT AND CHAIN;
 INSERT INTO oer_test VALUES (6);
 COMMIT;
 SELECT * FROM oer_test;
- a
+ a 
 ---
  1
  3
@@ -5452,17 +5452,17 @@ $$;
 SELECT 1 AS one \; SELECT warn('1.5') \; SELECT 2 AS two ;
 NOTICE:  warn 1.5
 CONTEXT:  PL/pgSQL function warn(text) line 2 at RAISE
- one
+ one 
 -----
    1
 (1 row)
 
- warn
+ warn 
 ------
  t
 (1 row)
 
- two
+ two 
 -----
    2
 (1 row)
@@ -5471,12 +5471,12 @@ CONTEXT:  PL/pgSQL function warn(text) line 2 at RAISE
 SELECT 3 AS three \; SELECT warn('3.5') \; SELECT 4 AS four \gset
 NOTICE:  warn 3.5
 CONTEXT:  PL/pgSQL function warn(text) line 2 at RAISE
- three
+ three 
 -------
      3
 (1 row)
 
- warn
+ warn 
 ------
  t
 (1 row)
@@ -5490,7 +5490,7 @@ LINE 1: SELECT 5 ; SELECT 6 + ; SELECT warn('6.5') ; SELECT 7 ;
                               ^
 -- with aborted transaction, stop on first error
 BEGIN \; SELECT 8 AS eight \; SELECT 9/0 AS nine \; ROLLBACK \; SELECT 10 AS ten ;
- eight
+ eight 
 -------
      8
 (1 row)
@@ -5510,7 +5510,7 @@ COPY psql_comics TO STDOUT \;
 TRUNCATE psql_comics \;
 DROP TABLE psql_comics \;
 SELECT 'ok' AS "done" ;
- begin
+ begin 
 -------
  ok
 (1 row)
@@ -5518,7 +5518,7 @@ SELECT 'ok' AS "done" ;
 Calvin
 Susie
 Hobbes
- done
+ done 
 ------
  ok
 (1 row)
@@ -5527,7 +5527,7 @@ Hobbes
 SELECT 1 AS one \; SELECT warn('1.5') \; SELECT 2 AS two ;
 NOTICE:  warn 1.5
 CONTEXT:  PL/pgSQL function warn(text) line 2 at RAISE
- two
+ two 
 -----
    2
 (1 row)
@@ -5550,28 +5550,28 @@ COPY reload_output(line) FROM :'g_out_file';
 COPY (SELECT 'foo') TO STDOUT \; COPY (SELECT 'bar') TO STDOUT \g :g_out_file
 COPY reload_output(line) FROM :'g_out_file';
 SELECT line FROM reload_output ORDER BY lineno;
-  line
+  line   
 ---------
-  a
+  a 
  ---
   1
  (1 row)
-
-  b
+ 
+  b 
  ---
   2
  (1 row)
-
-  c
+ 
+  c 
  ---
   3
  (1 row)
-
-  d
+ 
+  d 
  ---
   4
  (1 row)
-
+ 
  foo
  bar
 (22 rows)
@@ -5595,7 +5595,7 @@ UPDATE onek SET unique1 = unique1 WHERE false;
 -- Check the contents of the files generated.
 COPY reload_output(line) FROM :'g_out_file';
 SELECT line FROM reload_output ORDER BY lineno;
- line
+ line 
 ------
  0
  1
@@ -5612,28 +5612,28 @@ SELECT line FROM reload_output ORDER BY lineno;
 TRUNCATE TABLE reload_output;
 COPY reload_output(line) FROM :'o_out_file';
 SELECT line FROM reload_output ORDER BY lineno;
-   line
+   line   
 ----------
-  max
+  max 
  -----
   999
  (1 row)
-
-  a
+ 
+  a 
  ---
   1
  (1 row)
-
-  b
+ 
+  b 
  ---
   2
  (1 row)
-
-  c
+ 
+  c 
  ---
   3
  (1 row)
-
+ 
  COPY 10
  UPDATE 0
 (22 rows)
@@ -5649,7 +5649,7 @@ COPY (SELECT 'foo2') TO STDOUT \; COPY (SELECT 'bar2') TO STDOUT \g :g_out_file
 -- Check the contents of the files generated.
 COPY reload_output(line) FROM :'g_out_file';
 SELECT line FROM reload_output ORDER BY lineno;
- line
+ line 
 ------
  foo2
  bar2
@@ -5658,7 +5658,7 @@ SELECT line FROM reload_output ORDER BY lineno;
 TRUNCATE TABLE reload_output;
 COPY reload_output(line) FROM :'o_out_file';
 SELECT line FROM reload_output ORDER BY lineno;
- line
+ line 
 ------
  foo1
  bar1
@@ -5683,7 +5683,7 @@ ROLLBACK;
 SELECT * FROM foo ORDER BY 1 \;
 DROP TABLE foo \;
 COMMIT;
-   s
+   s   
 -------
  hello
  world
@@ -5703,7 +5703,7 @@ ROLLBACK \;
 -- implicit transactions
 SELECT * FROM foo ORDER BY 1 \;
 DROP TABLE foo;
-   s
+   s   
 -------
  hello
  world
@@ -5734,7 +5734,7 @@ CONTEXT:  PL/pgSQL function psql_error(text) line 3 at RAISE
 INSERT INTO bla VALUES ('Calvin'), ('Hobbes');
 COMMIT;
 SELECT * FROM bla ORDER BY 1;
-   s
+   s    
 --------
  Calvin
  Hobbes
@@ -5747,7 +5747,7 @@ INSERT INTO bla VALUES ('Rosalyn') \;     -- will rollback
 SELECT 'before error' AS show \;          -- will show nevertheless!
   SELECT psql_error('boum!') \;           -- failure
   SELECT 'after error' AS noshow;         -- hidden by preceding error
-     show
+     show     
 --------------
  before error
 (1 row)
@@ -5761,7 +5761,7 @@ CONTEXT:  PL/pgSQL function psql_error(text) line 3 at RAISE
 INSERT INTO bla VALUES ('Miss Wormwood'); -- succeeds
 COMMIT;
 SELECT * FROM bla ORDER BY 1;
-       s
+       s       
 ---------------
  Calvin
  Hobbes
@@ -5782,7 +5782,7 @@ INSERT INTO bla VALUES ('Mum') \;         -- will rollback
 SELECT COUNT(*) AS "#mum"
 FROM bla WHERE s = 'Mum' \;               -- but be counted here
 SELECT psql_error('bad!');                -- implicit partial rollback
- #mum
+ #mum 
 ------
     1
 (1 row)
@@ -5793,12 +5793,12 @@ COMMIT;
 SELECT COUNT(*) AS "#mum"
 FROM bla WHERE s = 'Mum' \;               -- no mum here
 SELECT * FROM bla ORDER BY 1;
- #mum
+ #mum 
 ------
     0
 (1 row)
 
-       s
+       s       
 ---------------
  Calvin
  Dad
@@ -6038,234 +6038,234 @@ improper qualified name (too many dotted names): nonesuch.myevt
 -- check that dots within quoted name segments are not counted
 \dA "no.such.access.method"
 List of access methods
- Name | Type
+ Name | Type 
 ------+------
 (0 rows)
 
 \dt "no.such.table.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \da "no.such.aggregate.function"
                      List of aggregate functions
- Schema | Name | Result data type | Argument data types | Description
+ Schema | Name | Result data type | Argument data types | Description 
 --------+------+------------------+---------------------+-------------
 (0 rows)
 
 \dAc "no.such.operator.class"
                   List of operator classes
- AM | Input type | Storage type | Operator class | Default?
+ AM | Input type | Storage type | Operator class | Default? 
 ----+------------+--------------+----------------+----------
 (0 rows)
 
 \dAf "no.such.operator.family"
         List of operator families
- AM | Operator family | Applicable types
+ AM | Operator family | Applicable types 
 ----+-----------------+------------------
 (0 rows)
 
 \dAo "no.such.operator.of.operator.family"
         List of operators of operator families
- AM | Operator family | Operator | Strategy | Purpose
+ AM | Operator family | Operator | Strategy | Purpose 
 ----+-----------------+----------+----------+---------
 (0 rows)
 
 \dAp "no.such.operator.support.function.of.operator.family"
                      List of support functions of operator families
- AM | Operator family | Registered left type | Registered right type | Number | Function
+ AM | Operator family | Registered left type | Registered right type | Number | Function 
 ----+-----------------+----------------------+-----------------------+--------+----------
 (0 rows)
 
 \db "no.such.tablespace"
    List of tablespaces
- Name | Owner | Location
+ Name | Owner | Location 
 ------+-------+----------
 (0 rows)
 
 \dc "no.such.conversion"
                List of conversions
- Schema | Name | Source | Destination | Default?
+ Schema | Name | Source | Destination | Default? 
 --------+------+--------+-------------+----------
 (0 rows)
 
 \dC "no.such.cast"
                   List of casts
- Source type | Target type | Function | Implicit?
+ Source type | Target type | Function | Implicit? 
 -------------+-------------+----------+-----------
 (0 rows)
 
 \dd "no.such.object.description"
          Object descriptions
- Schema | Name | Object | Description
+ Schema | Name | Object | Description 
 --------+------+--------+-------------
 (0 rows)
 
 \dD "no.such.domain"
                         List of domains
- Schema | Name | Type | Collation | Nullable | Default | Check
+ Schema | Name | Type | Collation | Nullable | Default | Check 
 --------+------+------+-----------+----------+---------+-------
 (0 rows)
 
 \ddp "no.such.default.access.privilege"
          Default access privileges
- Owner | Schema | Type | Access privileges
+ Owner | Schema | Type | Access privileges 
 -------+--------+------+-------------------
 (0 rows)
 
 \di "no.such.index.relation"
           List of relations
- Schema | Name | Type | Owner | Table
+ Schema | Name | Type | Owner | Table 
 --------+------+------+-------+-------
 (0 rows)
 
 \dm "no.such.materialized.view"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \ds "no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \dt "no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \dv "no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \des "no.such.foreign.server"
        List of foreign servers
- Name | Owner | Foreign-data wrapper
+ Name | Owner | Foreign-data wrapper 
 ------+-------+----------------------
 (0 rows)
 
 \dew "no.such.foreign.data.wrapper"
    List of foreign-data wrappers
- Name | Owner | Handler | Validator
+ Name | Owner | Handler | Validator 
 ------+-------+---------+-----------
 (0 rows)
 
 \df "no.such.function"
                        List of functions
- Schema | Name | Result data type | Argument data types | Type
+ Schema | Name | Result data type | Argument data types | Type 
 --------+------+------------------+---------------------+------
 (0 rows)
 
 \dF "no.such.text.search.configuration"
 List of text search configurations
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFd "no.such.text.search.dictionary"
 List of text search dictionaries
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFp "no.such.text.search.parser"
  List of text search parsers
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFt "no.such.text.search.template"
 List of text search templates
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dg "no.such.role"
      List of roles
- Role name | Attributes
+ Role name | Attributes 
 -----------+------------
 
 \dL "no.such.language"
           List of languages
- Name | Owner | Trusted | Description
+ Name | Owner | Trusted | Description 
 ------+-------+---------+-------------
 (0 rows)
 
 \dn "no.such.schema"
 List of schemas
- Name | Owner
+ Name | Owner 
 ------+-------
 (0 rows)
 
 \do "no.such.operator"
                              List of operators
- Schema | Name | Left arg type | Right arg type | Result type | Description
+ Schema | Name | Left arg type | Right arg type | Result type | Description 
 --------+------+---------------+----------------+-------------+-------------
 (0 rows)
 
 \dO "no.such.collation"
                                   List of collations
- Schema | Name | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic?
+ Schema | Name | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic? 
 --------+------+----------+---------+-------+------------+-----------+----------------
 (0 rows)
 
 \dp "no.such.access.privilege"
                             Access privileges
- Schema | Name | Type | Access privileges | Column privileges | Policies
+ Schema | Name | Type | Access privileges | Column privileges | Policies 
 --------+------+------+-------------------+-------------------+----------
 (0 rows)
 
 \dP "no.such.partitioned.relation"
            List of partitioned relations
- Schema | Name | Owner | Type | Parent name | Table
+ Schema | Name | Owner | Type | Parent name | Table 
 --------+------+-------+------+-------------+-------
 (0 rows)
 
 \drds "no.such.setting"
       List of settings
- Role | Database | Settings
+ Role | Database | Settings 
 ------+----------+----------
 (0 rows)
 
 \dRp "no.such.publication"
                               List of publications
- Name | Owner | All tables | Inserts | Updates | Deletes | Truncates | Via root
+ Name | Owner | All tables | Inserts | Updates | Deletes | Truncates | Via root 
 ------+-------+------------+---------+---------+---------+-----------+----------
 (0 rows)
 
 \dRs "no.such.subscription"
         List of subscriptions
- Name | Owner | Enabled | Publication
+ Name | Owner | Enabled | Publication 
 ------+-------+---------+-------------
 (0 rows)
 
 \dT "no.such.data.type"
      List of data types
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dx "no.such.installed.extension"
      List of installed extensions
- Name | Version | Schema | Description
+ Name | Version | Schema | Description 
 ------+---------+--------+-------------
 (0 rows)
 
 \dX "no.such.extended.statistics"
                  List of extended statistics
- Schema | Name | Definition | Ndistinct | Dependencies | MCV
+ Schema | Name | Definition | Ndistinct | Dependencies | MCV 
 --------+------+------------+-----------+--------------+-----
 (0 rows)
 
 \dy "no.such.event.trigger"
               List of event triggers
- Name | Event | Owner | Enabled | Function | Tags
+ Name | Event | Owner | Enabled | Function | Tags 
 ------+-------+-------+---------+----------+------
 (0 rows)
 
@@ -6274,13 +6274,13 @@ List of schemas
 improper qualified name (too many dotted names): "no.such.schema"."no.such.access.method"
 \dt "no.such.schema"."no.such.table.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \da "no.such.schema"."no.such.aggregate.function"
                      List of aggregate functions
- Schema | Name | Result data type | Argument data types | Description
+ Schema | Name | Result data type | Argument data types | Description 
 --------+------+------------------+---------------------+-------------
 (0 rows)
 
@@ -6296,61 +6296,61 @@ improper qualified name (too many dotted names): "no.such.schema"."no.such.opera
 improper qualified name (too many dotted names): "no.such.schema"."no.such.tablespace"
 \dc "no.such.schema"."no.such.conversion"
                List of conversions
- Schema | Name | Source | Destination | Default?
+ Schema | Name | Source | Destination | Default? 
 --------+------+--------+-------------+----------
 (0 rows)
 
 \dC "no.such.schema"."no.such.cast"
                   List of casts
- Source type | Target type | Function | Implicit?
+ Source type | Target type | Function | Implicit? 
 -------------+-------------+----------+-----------
 (0 rows)
 
 \dd "no.such.schema"."no.such.object.description"
          Object descriptions
- Schema | Name | Object | Description
+ Schema | Name | Object | Description 
 --------+------+--------+-------------
 (0 rows)
 
 \dD "no.such.schema"."no.such.domain"
                         List of domains
- Schema | Name | Type | Collation | Nullable | Default | Check
+ Schema | Name | Type | Collation | Nullable | Default | Check 
 --------+------+------+-----------+----------+---------+-------
 (0 rows)
 
 \ddp "no.such.schema"."no.such.default.access.privilege"
          Default access privileges
- Owner | Schema | Type | Access privileges
+ Owner | Schema | Type | Access privileges 
 -------+--------+------+-------------------
 (0 rows)
 
 \di "no.such.schema"."no.such.index.relation"
           List of relations
- Schema | Name | Type | Owner | Table
+ Schema | Name | Type | Owner | Table 
 --------+------+------+-------+-------
 (0 rows)
 
 \dm "no.such.schema"."no.such.materialized.view"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \ds "no.such.schema"."no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \dt "no.such.schema"."no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \dv "no.such.schema"."no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
@@ -6360,31 +6360,31 @@ improper qualified name (too many dotted names): "no.such.schema"."no.such.forei
 improper qualified name (too many dotted names): "no.such.schema"."no.such.foreign.data.wrapper"
 \df "no.such.schema"."no.such.function"
                        List of functions
- Schema | Name | Result data type | Argument data types | Type
+ Schema | Name | Result data type | Argument data types | Type 
 --------+------+------------------+---------------------+------
 (0 rows)
 
 \dF "no.such.schema"."no.such.text.search.configuration"
 List of text search configurations
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFd "no.such.schema"."no.such.text.search.dictionary"
 List of text search dictionaries
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFp "no.such.schema"."no.such.text.search.parser"
  List of text search parsers
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFt "no.such.schema"."no.such.text.search.template"
 List of text search templates
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
@@ -6394,25 +6394,25 @@ improper qualified name (too many dotted names): "no.such.schema"."no.such.role"
 cross-database references are not implemented: "no.such.schema"."no.such.language"
 \do "no.such.schema"."no.such.operator"
                              List of operators
- Schema | Name | Left arg type | Right arg type | Result type | Description
+ Schema | Name | Left arg type | Right arg type | Result type | Description 
 --------+------+---------------+----------------+-------------+-------------
 (0 rows)
 
 \dO "no.such.schema"."no.such.collation"
                                   List of collations
- Schema | Name | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic?
+ Schema | Name | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic? 
 --------+------+----------+---------+-------+------------+-----------+----------------
 (0 rows)
 
 \dp "no.such.schema"."no.such.access.privilege"
                             Access privileges
- Schema | Name | Type | Access privileges | Column privileges | Policies
+ Schema | Name | Type | Access privileges | Column privileges | Policies 
 --------+------+------+-------------------+-------------------+----------
 (0 rows)
 
 \dP "no.such.schema"."no.such.partitioned.relation"
            List of partitioned relations
- Schema | Name | Owner | Type | Parent name | Table
+ Schema | Name | Owner | Type | Parent name | Table 
 --------+------+-------+------+-------------+-------
 (0 rows)
 
@@ -6424,7 +6424,7 @@ improper qualified name (too many dotted names): "no.such.schema"."no.such.publi
 improper qualified name (too many dotted names): "no.such.schema"."no.such.subscription"
 \dT "no.such.schema"."no.such.data.type"
      List of data types
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
@@ -6432,7 +6432,7 @@ improper qualified name (too many dotted names): "no.such.schema"."no.such.subsc
 improper qualified name (too many dotted names): "no.such.schema"."no.such.installed.extension"
 \dX "no.such.schema"."no.such.extended.statistics"
                  List of extended statistics
- Schema | Name | Definition | Ndistinct | Dependencies | MCV
+ Schema | Name | Definition | Ndistinct | Dependencies | MCV 
 --------+------+------------+-----------+--------------+-----
 (0 rows)
 
@@ -6441,133 +6441,133 @@ improper qualified name (too many dotted names): "no.such.schema"."no.such.event
 -- again, but with current database and dotted schema qualifications.
 \dt regression."no.such.schema"."no.such.table.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \da regression."no.such.schema"."no.such.aggregate.function"
                      List of aggregate functions
- Schema | Name | Result data type | Argument data types | Description
+ Schema | Name | Result data type | Argument data types | Description 
 --------+------+------------------+---------------------+-------------
 (0 rows)
 
 \dc regression."no.such.schema"."no.such.conversion"
                List of conversions
- Schema | Name | Source | Destination | Default?
+ Schema | Name | Source | Destination | Default? 
 --------+------+--------+-------------+----------
 (0 rows)
 
 \dC regression."no.such.schema"."no.such.cast"
                   List of casts
- Source type | Target type | Function | Implicit?
+ Source type | Target type | Function | Implicit? 
 -------------+-------------+----------+-----------
 (0 rows)
 
 \dd regression."no.such.schema"."no.such.object.description"
          Object descriptions
- Schema | Name | Object | Description
+ Schema | Name | Object | Description 
 --------+------+--------+-------------
 (0 rows)
 
 \dD regression."no.such.schema"."no.such.domain"
                         List of domains
- Schema | Name | Type | Collation | Nullable | Default | Check
+ Schema | Name | Type | Collation | Nullable | Default | Check 
 --------+------+------+-----------+----------+---------+-------
 (0 rows)
 
 \di regression."no.such.schema"."no.such.index.relation"
           List of relations
- Schema | Name | Type | Owner | Table
+ Schema | Name | Type | Owner | Table 
 --------+------+------+-------+-------
 (0 rows)
 
 \dm regression."no.such.schema"."no.such.materialized.view"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \ds regression."no.such.schema"."no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \dt regression."no.such.schema"."no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \dv regression."no.such.schema"."no.such.relation"
       List of relations
- Schema | Name | Type | Owner
+ Schema | Name | Type | Owner 
 --------+------+------+-------
 (0 rows)
 
 \df regression."no.such.schema"."no.such.function"
                        List of functions
- Schema | Name | Result data type | Argument data types | Type
+ Schema | Name | Result data type | Argument data types | Type 
 --------+------+------------------+---------------------+------
 (0 rows)
 
 \dF regression."no.such.schema"."no.such.text.search.configuration"
 List of text search configurations
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFd regression."no.such.schema"."no.such.text.search.dictionary"
 List of text search dictionaries
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFp regression."no.such.schema"."no.such.text.search.parser"
  List of text search parsers
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dFt regression."no.such.schema"."no.such.text.search.template"
 List of text search templates
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \do regression."no.such.schema"."no.such.operator"
                              List of operators
- Schema | Name | Left arg type | Right arg type | Result type | Description
+ Schema | Name | Left arg type | Right arg type | Result type | Description 
 --------+------+---------------+----------------+-------------+-------------
 (0 rows)
 
 \dO regression."no.such.schema"."no.such.collation"
                                   List of collations
- Schema | Name | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic?
+ Schema | Name | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic? 
 --------+------+----------+---------+-------+------------+-----------+----------------
 (0 rows)
 
 \dp regression."no.such.schema"."no.such.access.privilege"
                             Access privileges
- Schema | Name | Type | Access privileges | Column privileges | Policies
+ Schema | Name | Type | Access privileges | Column privileges | Policies 
 --------+------+------+-------------------+-------------------+----------
 (0 rows)
 
 \dP regression."no.such.schema"."no.such.partitioned.relation"
            List of partitioned relations
- Schema | Name | Owner | Type | Parent name | Table
+ Schema | Name | Owner | Type | Parent name | Table 
 --------+------+-------+------+-------------+-------
 (0 rows)
 
 \dT regression."no.such.schema"."no.such.data.type"
      List of data types
- Schema | Name | Description
+ Schema | Name | Description 
 --------+------+-------------
 (0 rows)
 
 \dX regression."no.such.schema"."no.such.extended.statistics"
                  List of extended statistics
- Schema | Name | Definition | Ndistinct | Dependencies | MCV
+ Schema | Name | Definition | Ndistinct | Dependencies | MCV 
 --------+------+------------+-----------+--------------+-----
 (0 rows)
 
@@ -6635,7 +6635,7 @@ GRANT regress_du_role0 TO regress_du_role1 WITH ADMIN FALSE, INHERIT FALSE, SET 
 GRANT regress_du_role0 TO regress_du_role2 WITH ADMIN FALSE, INHERIT FALSE, SET FALSE GRANTED BY regress_du_role2;
 \drg regress_du_role*
                              List of role grants
-    Role name     |    Member of     |       Options       |     Grantor
+    Role name     |    Member of     |       Options       |     Grantor      
 ------------------+------------------+---------------------+------------------
  regress_du_role1 | regress_du_role0 | ADMIN, INHERIT, SET | regress_du_admin
  regress_du_role1 | regress_du_role0 | INHERIT             | regress_du_role1
@@ -6648,7 +6648,7 @@ GRANT regress_du_role0 TO regress_du_role2 WITH ADMIN FALSE, INHERIT FALSE, SET 
 
 \du regress_du_role*
           List of roles
-    Role name     |  Attributes
+    Role name     |  Attributes  
 ------------------+--------------
  regress_du_role0 | Cannot login
  regress_du_role1 | Cannot login

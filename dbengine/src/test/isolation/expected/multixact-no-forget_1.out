@@ -4,7 +4,7 @@ starting permutation: s1_show s1_commit s2_commit
 step s1_show: SELECT current_setting('default_transaction_isolation') <> 'read committed';
 ?column?
 --------
-t
+t       
 (1 row)
 
 step s1_commit: COMMIT;

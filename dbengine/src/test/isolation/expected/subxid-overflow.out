@@ -5,7 +5,7 @@ step ins: TRUNCATE subxids; INSERT INTO subxids VALUES (0, 0);
 step subxov: BEGIN; SELECT gen_subxids(100);
 gen_subxids
 -----------
-
+           
 (1 row)
 
 step xmax: BEGIN; INSERT INTO subxids VALUES (99, 0); COMMIT;
@@ -22,7 +22,7 @@ step ins: TRUNCATE subxids; INSERT INTO subxids VALUES (0, 0);
 step subxov: BEGIN; SELECT gen_subxids(100);
 gen_subxids
 -----------
-
+           
 (1 row)
 
 step sub3: BEGIN; SAVEPOINT s; INSERT INTO subxids VALUES (1, 0);
@@ -47,7 +47,7 @@ step ins: TRUNCATE subxids; INSERT INTO subxids VALUES (0, 0);
 step subxov: BEGIN; SELECT gen_subxids(100);
 gen_subxids
 -----------
-
+           
 (1 row)
 
 step sub3: BEGIN; SAVEPOINT s; INSERT INTO subxids VALUES (1, 0);
@@ -73,7 +73,7 @@ step ins: TRUNCATE subxids; INSERT INTO subxids VALUES (0, 0);
 step subxov: BEGIN; SELECT gen_subxids(100);
 gen_subxids
 -----------
-
+           
 (1 row)
 
 step xmax: BEGIN; INSERT INTO subxids VALUES (99, 0); COMMIT;

@@ -882,7 +882,7 @@ RegisterBackgroundWorker(BackgroundWorker *worker)
 				(errmsg_internal("registering background worker \"%s\"", worker->bgw_name)));
 
 	if (!process_shared_preload_libraries_in_progress &&
-		strcmp(worker->bgw_library_name, "postgres") != 0)
+		strcmp(worker->bgw_library_name, "neurdb") != 0)
 	{
 		if (!IsUnderPostmaster)
 			ereport(LOG,
@@ -1232,7 +1232,7 @@ TerminateBackgroundWorker(BackgroundWorkerHandle *handle)
 /*
  * Look up (and possibly load) a bgworker entry point function.
  *
- * For functions contained in the core code, we use library name "postgres"
+ * For functions contained in the core code, we use library name "neurdb"
  * and consult the InternalBGWorkers array.  External functions are
  * looked up, and loaded if necessary, using load_external_function().
  *
@@ -1254,7 +1254,7 @@ LookupBackgroundWorkerFunction(const char *libraryname, const char *funcname)
 	 * If the function is to be loaded from postgres itself, search the
 	 * InternalBGWorkers array.
 	 */
-	if (strcmp(libraryname, "postgres") == 0)
+	if (strcmp(libraryname, "neurdb") == 0)
 	{
 		int			i;
 

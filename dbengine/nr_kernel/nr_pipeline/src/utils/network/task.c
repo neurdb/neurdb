@@ -10,7 +10,7 @@ void init_train_task_spec(TrainTaskSpec *task, const char *architecture,
                           int n_batch_eval, int n_batch_test,
                           double learning_rate, const char *optimizer,
                           const char *loss, const char *metrics, int cacheSize,
-                          char *features, char *target, int nFeat, int nField) {
+                          char *features, char *target, int nFeat, int nField, int nclass) {
   task->architecture = strdup(architecture);
   task->batch_size = batch_size;
   task->epoch = epoch;
@@ -26,11 +26,12 @@ void init_train_task_spec(TrainTaskSpec *task, const char *architecture,
   task->nField = nField;
   task->features = strdup(features);
   task->target = strdup(target);
+  task->nclass = nclass;
 }
 
 void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
                               int batch_size, int n_batch, const char *metrics,
-                              int cacheSize, int nFeat, int nField,
+                              int cacheSize, int nFeat, int nField, int nclass,
                               int modelId) {
   task->architecture = strdup(architecture);
   task->batch_size = batch_size;
@@ -40,6 +41,7 @@ void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
   task->nFeat = nFeat;
   task->nField = nField;
   task->modelId = modelId;
+  task->nclass = nclass;
 }
 
 void init_finetune_task_spec(FinetuneTaskSpec *task, const char *model_name,
@@ -97,6 +99,7 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
       cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
       cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
       cJSON_AddNumberToObject(json, "nField", spec->nField);
+      cJSON_AddNumberToObject(json, "nclass", spec->nclass);
 
       cJSON *spec_json = cJSON_CreateObject();
       cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);
@@ -117,6 +120,7 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
       cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
       cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
       cJSON_AddNumberToObject(json, "nField", spec->nField);
+      cJSON_AddNumberToObject(json, "nclass", spec->nclass);
       cJSON_AddNumberToObject(json, "modelId", spec->modelId);
 
       cJSON *spec_json = cJSON_CreateObject();

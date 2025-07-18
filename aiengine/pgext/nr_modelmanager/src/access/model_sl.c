@@ -123,36 +123,37 @@
 // }
 
 ModelWrapper *load_model_by_id(const int model_id) {
-  // prepare the query to load the model metadata
-  const char *model_query =
-      "SELECT model_meta FROM model WHERE model_id = $1";  // model_meta is of
-                                                           // type bytea
-  Oid arg_types[1] = {INT4OID};
-  Datum values[1] = {Int32GetDatum(model_id)};
-  const char nulls[1] = {' '};
+    // prepare the query to load the model metadata
+    const char *model_query =
+        "SELECT model_meta FROM model WHERE model_id = $1";  // model_meta is of
+                                                             // type bytea
+    Oid arg_types[1] = {INT4OID};
+    Datum values[1] = {Int32GetDatum(model_id)};
+    const char nulls[1] = {' '};
 
-  // initialize the SPI connection
-  SpiConnection conn = {0};
+    // initialize the SPI connection
+    SpiConnection conn = {0};
 
-  if (!spi_init(&conn)) {
-    ereport(ERROR,
+    if (!spi_init(&conn)) {
+        ereport(
+            ERROR,
             (errmsg("load_model_by_id: unable to initialize SPI connection")));
-  }
-  // execute the query
-  if (!spi_execute_query(&conn, model_query, 1, arg_types, values, nulls)) {
-    ereport(ERROR, (errmsg("load_model_by_id: unable to execute query")));
-  }
-  const bytea *model_meta = DatumGetByteaP(*spi_get_single_result(&conn));
+    }
+    // execute the query
+    if (!spi_execute_query(&conn, model_query, 1, arg_types, values, nulls)) {
+        ereport(ERROR, (errmsg("load_model_by_id: unable to execute query")));
+    }
+    const bytea *model_meta = DatumGetByteaP(*spi_get_single_result(&conn));
 
-  const char *layer_query =
-      "SELECT model_id, layer_id, create_time, layer_data FROM layer WHERE "
-      "model_id = $1";
-  if (!spi_execute_query(&conn, layer_query, 1, arg_types, values, nulls)) {
-    ereport(ERROR, (errmsg("load_model_by_id: unable to execute query")));
-  }
-  const int num_layers = SPI_processed;
-  // TODO: load the layers
-  return NULL;
+    const char *layer_query =
+        "SELECT model_id, layer_id, create_time, layer_data FROM layer WHERE "
+        "model_id = $1";
+    if (!spi_execute_query(&conn, layer_query, 1, arg_types, values, nulls)) {
+        ereport(ERROR, (errmsg("load_model_by_id: unable to execute query")));
+    }
+    const int num_layers = SPI_processed;
+    // TODO: load the layers
+    return NULL;
 }
 
 // prepare the query

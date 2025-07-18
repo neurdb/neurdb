@@ -39,7 +39,7 @@
 #define XACT_SERIALIZABLE		3
 
 #define LOCK_NONE   0
-#define LOCK_RW    1
+#define LOCK_RWL    1
 #define LOCK_ASSERT_ABORT    2
 #define LOCK_LEARNED    3
 
@@ -63,7 +63,7 @@ extern int  XactLockStrategy;
 #define IsolationUsesXactSnapshot() (XactIsoLevel >= XACT_REPEATABLE_READ)
 #define IsolationIsSerializable() (XactIsoLevel == XACT_SERIALIZABLE)
 #define IsolationIsSSI() (IsolationIsSerializable() && XactLockStrategy == LOCK_NONE)
-#define IsolationNeedLock() (XactLockStrategy == LOCK_RW)
+#define IsolationNeedLock() (XactLockStrategy == LOCK_RWL)
 #define IsolationLearnCC() (DefaultXactLockStrategy == LOCK_LEARNED)
 
 /* Xact read-only state */

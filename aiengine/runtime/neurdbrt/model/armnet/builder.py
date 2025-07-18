@@ -15,27 +15,36 @@ from .model import ARMNetModel
 
 class ARMNetModelBuilder(BuilderBase):
     def __init__(self, args):
-        super().__init__()
-        self.args = args
+        super().__init__(args)
         self._logger = logger.bind(model="ARM-Net")
+
+        self._parse_noutput()
+
+    def _parse_noutput(self):
+        """for binary classification, should directly use pos/neg to indicate 1/0"""
+        if self._args.noutput == 2:
+            self._args.noutput = 1
 
     def _init_model_arch(self):
         print(f"[_init_model_arch]: Moving model to {DEVICE}")
-        if self._model is None:
-            self._model = ARMNetModel(
-                self._nfield if self._nfield else self.args.nfield,
-                self._nfeat if self._nfeat else self.args.nfeat,
-                self.args.nemb,
-                self.args.nattn_head,
-                self.args.alpha,
-                self.args.h,
-                self.args.mlp_nlayer,
-                self.args.mlp_nhid,
-                self.args.dropout,
-                self.args.ensemble,
-                self.args.dnn_nlayer,
-                self.args.dnn_nhid,
-            ).to(DEVICE)
+        if self._model:
+            return
+
+        self._model = ARMNetModel(
+            self._args.nfields,
+            self._args.nfeat,
+            self._args.nemb,
+            self._args.nattn_head,
+            self._args.alpha,
+            self._args.h,
+            self._args.mlp_nlayer,
+            self._args.mlp_nhid,
+            self._args.dropout,
+            self._args.ensemble,
+            self._args.dnn_nlayer,
+            self._args.dnn_nhid,
+            self._args.noutput,
+        ).to(DEVICE)
 
     async def train(
         self,
@@ -49,24 +58,23 @@ class ARMNetModelBuilder(BuilderBase):
     ):
         logger = self._logger.bind(task="train")
 
-        # _nfeat, _nfield = self.model_dimension
         # create model
         self._init_model_arch()
 
-        logger.info("model created with args", **vars(self.args))
+        logger.info("model created with args", **vars(self._args))
 
         # if this is to load model from the dict,
-        if self.args.state_dict_path:
+        if self._args.state_dict_path:
             print("loading model from state dict")
             self._init_model_arch()
-            self._model.load_state_dict(torch.load(self.args.state_dict_path))
-            logger.info("model loaded", state_dict_path=self.args.state_dict_path)
+            self._model.load_state_dict(torch.load(self._args.state_dict_path))
+            logger.info("model loaded", state_dict_path=self._args.state_dict_path)
         else:
             print("loading model from database")
 
         # optimizer
         opt_metric = nn.BCEWithLogitsLoss(reduction="mean").to(DEVICE)
-        optimizer = optim.Adam(self._model.parameters(), lr=self.args.lr)
+        optimizer = optim.Adam(self._model.parameters(), lr=self._args.lr)
 
         logger.info("built the optimziers")
 
@@ -75,7 +83,7 @@ class ARMNetModelBuilder(BuilderBase):
             if p.requires_grad:
                 p.register_hook(lambda grad: torch.clamp(grad, -1.0, 1.0))
 
-        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.benchmark = True  # type:ignore
 
         logger.info("register_hook and build cudnn bencnmark")
 
@@ -86,8 +94,8 @@ class ARMNetModelBuilder(BuilderBase):
 
         logger.info("start training...")
 
-        for epoch in range(self.args.epoch):
-            logger.info("Epoch start", curr_epoch=epoch, end_at_epoch=self.args.epoch)
+        for epoch in range(self._args.epoch):
+            logger.info("Epoch start", curr_epoch=epoch, end_at_epoch=self._args.epoch)
 
             # Training phase
             self._model.train()
@@ -128,26 +136,13 @@ class ARMNetModelBuilder(BuilderBase):
                 train_time_avg.update(time.time() - train_timestamp)
                 train_timestamp = time.time()
 
-                if batch_idx % self.args.report_freq == 0:
+                if batch_idx % self._args.report_freq == 0:
                     logger.info(
                         "%s",
-                        f"Epoch [{epoch:3d}/{self.args.epoch}][{batch_idx:3d}/{len(train_loader)}]\t"
-                        f"{train_time_avg.val:.3f} ({train_time_avg.avg:.3f}) AUC {train_auc_avg.val:4f} "
-                        f"({train_auc_avg.avg:4f}) Loss {train_loss_avg.val:8.4f} ({train_loss_avg.avg:8.4f})",
-                        # epoch={
-                        #     "now": epoch,
-                        #     "end": self.args.epoch,
-                        # },
-                        # batch={
-                        #     "now": batch_idx,
-                        #     "end": len(train_loader),
-                        # },
-                        # time={"batch": train_time_avg.val, "avg": train_time_avg.avg},
-                        # auc={
-                        #     "batch": train_auc_avg.val,
-                        #     "avg": train_auc_avg.avg,
-                        # },
-                        # loss={"batch": train_loss_avg.val, "avg": train_loss_avg.avg},
+                        f"Epoch [{epoch:3d}/{self._args.epoch}][{batch_idx:3d}/{len(train_loader)}]\t"
+                        f"{train_time_avg.val:.3f} ({train_time_avg.avg:.3f}) "
+                        f"AUC {train_auc_avg.val:4f} ({train_auc_avg.avg:4f}) "
+                        f"Loss {train_loss_avg.val:8.4f} ({train_loss_avg.avg:8.4f})",
                     )
                 if batch_idx + 1 == train_batch_num:
                     break
@@ -200,7 +195,7 @@ class ARMNetModelBuilder(BuilderBase):
                 #     f"Early stopped, {patience_cnt}-th best auc at epoch {epoch - 1}"
                 # )
 
-            if patience_cnt >= self.args.patience:
+            if patience_cnt >= self._args.patience:
                 self._logger.info(
                     "Evaluation end",
                     epoch=epoch,
@@ -260,7 +255,7 @@ class ARMNetModelBuilder(BuilderBase):
                 time_avg.update(time.time() - timestamp)
                 timestamp = time.time()
 
-                if batch_idx % self.args.report_freq == 0:
+                if batch_idx % self._args.report_freq == 0:
                     logger.info(
                         f"Epoch [{batch_idx:3d}/{len(data_loader)}]\t"
                         f"{time_avg.val:.3f} ({time_avg.avg:.3f}) AUC {auc_avg.val:4f} ({auc_avg.avg:4f}) "
@@ -281,11 +276,11 @@ class ARMNetModelBuilder(BuilderBase):
         logger = self._logger.bind(task="inference")
         print(f"begin inference for {inf_batch_num} batches ")
         # if this is to load model from the dict,
-        if self.args.state_dict_path:
+        if self._args.state_dict_path:
             print("loading model from state dict")
             self._init_model_arch()
-            self._model.load_state_dict(torch.load(self.args.state_dict_path))
-            logger.info("model loaded", state_dict_path=self.args.state_dict_path)
+            self._model.load_state_dict(torch.load(self._args.state_dict_path))
+            logger.info("model loaded", state_dict_path=self._args.state_dict_path)
         else:
             print("loading model from database")
 

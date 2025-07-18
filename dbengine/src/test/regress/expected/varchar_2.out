@@ -19,34 +19,34 @@ INSERT INTO VARCHAR_TBL (f1) VALUES ('cd');
 ERROR:  value too long for type character varying(1)
 INSERT INTO VARCHAR_TBL (f1) VALUES ('c     ');
 SELECT * FROM VARCHAR_TBL;
- f1
+ f1 
 ----
  a
  A
  1
  2
  3
-
+ 
  c
 (7 rows)
 
 SELECT c.*
    FROM VARCHAR_TBL c
    WHERE c.f1 <> 'a';
- f1
+ f1 
 ----
  A
  1
  2
  3
-
+ 
  c
 (6 rows)
 
 SELECT c.*
    FROM VARCHAR_TBL c
    WHERE c.f1 = 'a';
- f1
+ f1 
 ----
  a
 (1 row)
@@ -54,24 +54,24 @@ SELECT c.*
 SELECT c.*
    FROM VARCHAR_TBL c
    WHERE c.f1 < 'a';
- f1
+ f1 
 ----
-
+ 
 (1 row)
 
 SELECT c.*
    FROM VARCHAR_TBL c
    WHERE c.f1 <= 'a';
- f1
+ f1 
 ----
  a
-
+ 
 (2 rows)
 
 SELECT c.*
    FROM VARCHAR_TBL c
    WHERE c.f1 > 'a';
- f1
+ f1 
 ----
  A
  1
@@ -83,7 +83,7 @@ SELECT c.*
 SELECT c.*
    FROM VARCHAR_TBL c
    WHERE c.f1 >= 'a';
- f1
+ f1 
 ----
  a
  A
@@ -103,7 +103,7 @@ DROP TABLE VARCHAR_TBL;
 INSERT INTO VARCHAR_TBL (f1) VALUES ('abcde');
 ERROR:  value too long for type character varying(4)
 SELECT * FROM VARCHAR_TBL;
-  f1
+  f1  
 ------
  a
  ab
@@ -113,19 +113,20 @@ SELECT * FROM VARCHAR_TBL;
 
 -- Also try it with non-error-throwing API
 SELECT pg_input_is_valid('abcd  ', 'varchar(4)');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  t
 (1 row)
 
 SELECT pg_input_is_valid('abcde', 'varchar(4)');
- pg_input_is_valid
+ pg_input_is_valid 
 -------------------
  f
 (1 row)
 
 SELECT * FROM pg_input_error_info('abcde', 'varchar(4)');
-                   message                    | detail | hint | sql_error_code
+                   message                    | detail | hint | sql_error_code 
 ----------------------------------------------+--------+------+----------------
  value too long for type character varying(4) |        |      | 22001
 (1 row)
+

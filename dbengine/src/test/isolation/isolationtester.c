@@ -116,14 +116,14 @@ main(int argc, char **argv)
 
 	/*
 	 * If the user supplies a non-option parameter on the command line, use it
-	 * as the conninfo string; otherwise default to setting dbname=postgres
+	 * as the conninfo string; otherwise default to setting dbname=neurdb
 	 * and using environment variables or defaults for all other connection
 	 * parameters.
 	 */
 	if (argc > optind)
 		conninfo = argv[optind];
 	else
-		conninfo = "dbname = postgres";
+		conninfo = "dbname = neurdb";
 
 	/*
 	 * If PG_TEST_TIMEOUT_DEFAULT is set, adopt its value (given in seconds)

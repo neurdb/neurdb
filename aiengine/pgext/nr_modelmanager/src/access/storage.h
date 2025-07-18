@@ -9,11 +9,11 @@
  * Layer storage, this is used to store the layer information in the database
  */
 typedef struct {
-  char *layer_class;
-  char *init_params;
-  void *state_dict;
-  size_t state_dict_size;
-  char *name;
+    char *layer_class;
+    char *init_params;
+    void *state_dict;
+    size_t state_dict_size;
+    char *name;
 } LayerStorage;
 
 /**
@@ -65,10 +65,10 @@ void free_layer_storage(LayerStorage *layer_storage);
  * ModelStorage is used to store the model
  */
 typedef struct {
-  char *model_class;
-  char *init_params;
-  LayerStorage **layers;
-  size_t layer_count;
+    char *model_class;
+    char *init_params;
+    LayerStorage **layers;
+    size_t layer_count;
 } ModelStorage;
 
 /**
@@ -76,11 +76,11 @@ typedef struct {
  * the model in the database
  */
 typedef struct {
-  void *model_meta_pickled;
-  size_t model_meta_pickled_size;
-  void **layer_sequence_pickled;
-  size_t *layer_sequence_pickled_size;
-  size_t layer_count;
+    void *model_meta_pickled;
+    size_t model_meta_pickled_size;
+    void **layer_sequence_pickled;
+    size_t *layer_sequence_pickled_size;
+    size_t layer_count;
 } PickledModelStorage;
 
 /**

@@ -378,7 +378,7 @@ avlauncher_forkexec(void)
 	char	   *av[10];
 	int			ac = 0;
 
-	av[ac++] = "postgres";
+	av[ac++] = "neurdb";
 	av[ac++] = "--forkavlauncher";
 	av[ac++] = NULL;			/* filled in by postmaster_forkexec */
 	av[ac] = NULL;
@@ -1449,7 +1449,7 @@ avworker_forkexec(void)
 	char	   *av[10];
 	int			ac = 0;
 
-	av[ac++] = "postgres";
+	av[ac++] = "neurdb";
 	av[ac++] = "--forkavworker";
 	av[ac++] = NULL;			/* filled in by postmaster_forkexec */
 	av[ac] = NULL;

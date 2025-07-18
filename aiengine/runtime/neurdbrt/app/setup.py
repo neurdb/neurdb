@@ -24,10 +24,6 @@ class Setup:
         self._args = args
         self._db = db
 
-    # def _load_dataset(self) -> bytes:
-    #     with open(self._dataset_file_path, "rb") as f:
-    #         return f.read()
-
     async def train(
         self, epoch: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
     ) -> Tuple[int, Error]:
@@ -35,9 +31,10 @@ class Setup:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
                 train_batch_num, eva_batch_num, test_batch_num
             )
+            self._args.nfields = nfields
+            self._args.nfeat = nfeat
 
             builder = build_model(self._model_name, self._args)
-            builder.model_dimension = (nfeat, nfields)
             await builder.train(
                 self.libsvm_data,
                 self.libsvm_data,
@@ -71,6 +68,8 @@ class Setup:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
                 train_batch_num, eva_batch_num, test_batch_num
             )
+            self._args.nfields = nfields
+            self._args.nfeat = nfeat
 
             try:
                 builder = build_model(self._model_name, self._args)
@@ -84,7 +83,6 @@ class Setup:
                     layer.requires_grad_(False)
 
             builder.model = model.to(DEVICE)
-            builder.model_dimension = (nfeat, nfields)
             await builder.train(
                 self.libsvm_data,
                 self.libsvm_data,

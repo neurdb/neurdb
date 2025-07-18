@@ -4,13 +4,13 @@ starting permutation: s1a s2a s2b s1b s2c
 step s1a: SELECT * FROM foo FOR SHARE NOWAIT;
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s2a: SELECT * FROM foo FOR SHARE NOWAIT;
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s2b: SELECT * FROM foo FOR UPDATE NOWAIT;
@@ -22,13 +22,13 @@ starting permutation: s2a s1a s2b s1b s2c
 step s2a: SELECT * FROM foo FOR SHARE NOWAIT;
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s1a: SELECT * FROM foo FOR SHARE NOWAIT;
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s2b: SELECT * FROM foo FOR UPDATE NOWAIT;
@@ -40,13 +40,13 @@ starting permutation: s2a s2b s1a s1b s2c
 step s2a: SELECT * FROM foo FOR SHARE NOWAIT;
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s2b: SELECT * FROM foo FOR UPDATE NOWAIT;
 id|data
 --+----
- 1|x
+ 1|x   
 (1 row)
 
 step s1a: SELECT * FROM foo FOR SHARE NOWAIT;

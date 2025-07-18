@@ -9,7 +9,7 @@ INSERT INTO mvtest_t VALUES
 -- we want a view based on the table, too, since views present additional challenges
 CREATE VIEW mvtest_tv AS SELECT type, sum(amt) AS totamt FROM mvtest_t GROUP BY type;
 SELECT * FROM mvtest_tv ORDER BY type;
- type | totamt
+ type | totamt 
 ------+--------
  x    |      5
  y    |     12
@@ -19,7 +19,7 @@ SELECT * FROM mvtest_tv ORDER BY type;
 -- create a materialized view with no data, and confirm correct behavior
 EXPLAIN (costs off)
   CREATE MATERIALIZED VIEW mvtest_tm AS SELECT type, sum(amt) AS totamt FROM mvtest_t GROUP BY type WITH NO DATA;
-         QUERY PLAN
+         QUERY PLAN         
 ----------------------------
  HashAggregate
    Group Key: type
@@ -28,7 +28,7 @@ EXPLAIN (costs off)
 
 CREATE MATERIALIZED VIEW mvtest_tm AS SELECT type, sum(amt) AS totamt FROM mvtest_t GROUP BY type WITH NO DATA;
 SELECT relispopulated FROM pg_class WHERE oid = 'mvtest_tm'::regclass;
- relispopulated
+ relispopulated 
 ----------------
  f
 (1 row)
@@ -38,14 +38,14 @@ ERROR:  materialized view "mvtest_tm" has not been populated
 HINT:  Use the REFRESH MATERIALIZED VIEW command.
 REFRESH MATERIALIZED VIEW mvtest_tm;
 SELECT relispopulated FROM pg_class WHERE oid = 'mvtest_tm'::regclass;
- relispopulated
+ relispopulated 
 ----------------
  t
 (1 row)
 
 CREATE UNIQUE INDEX mvtest_tm_type ON mvtest_tm (type);
 SELECT * FROM mvtest_tm ORDER BY type;
- type | totamt
+ type | totamt 
 ------+--------
  x    |      5
  y    |     12
@@ -55,7 +55,7 @@ SELECT * FROM mvtest_tm ORDER BY type;
 -- create various views
 EXPLAIN (costs off)
   CREATE MATERIALIZED VIEW mvtest_tvm AS SELECT * FROM mvtest_tv ORDER BY type;
-            QUERY PLAN
+            QUERY PLAN            
 ----------------------------------
  Sort
    Sort Key: mvtest_t.type
@@ -66,7 +66,7 @@ EXPLAIN (costs off)
 
 CREATE MATERIALIZED VIEW mvtest_tvm AS SELECT * FROM mvtest_tv ORDER BY type;
 SELECT * FROM mvtest_tvm;
- type | totamt
+ type | totamt 
 ------+--------
  x    |      5
  y    |     12
@@ -80,7 +80,7 @@ CREATE UNIQUE INDEX mvtest_tvmm_pred ON mvtest_tvmm (grandtot) WHERE grandtot < 
 CREATE VIEW mvtest_tvv AS SELECT sum(totamt) AS grandtot FROM mvtest_tv;
 EXPLAIN (costs off)
   CREATE MATERIALIZED VIEW mvtest_tvvm AS SELECT * FROM mvtest_tvv;
-            QUERY PLAN
+            QUERY PLAN            
 ----------------------------------
  Aggregate
    ->  HashAggregate
@@ -95,10 +95,10 @@ CREATE INDEX mvtest_aa ON mvtest_bb (grandtot);
 -- check that plans seem reasonable
 \d+ mvtest_tvm
                            Materialized view "public.mvtest_tvm"
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+---------+-----------+----------+---------+----------+--------------+-------------
- type   | text    |           |          |         | extended |              |
- totamt | numeric |           |          |         | main     |              |
+ type   | text    |           |          |         | extended |              | 
+ totamt | numeric |           |          |         | main     |              | 
 View definition:
  SELECT type,
     totamt
@@ -107,10 +107,10 @@ View definition:
 
 \d+ mvtest_tvm
                            Materialized view "public.mvtest_tvm"
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+---------+-----------+----------+---------+----------+--------------+-------------
- type   | text    |           |          |         | extended |              |
- totamt | numeric |           |          |         | main     |              |
+ type   | text    |           |          |         | extended |              | 
+ totamt | numeric |           |          |         | main     |              | 
 View definition:
  SELECT type,
     totamt
@@ -119,18 +119,18 @@ View definition:
 
 \d+ mvtest_tvvm
                            Materialized view "public.mvtest_tvvm"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 ----------+---------+-----------+----------+---------+---------+--------------+-------------
- grandtot | numeric |           |          |         | main    |              |
+ grandtot | numeric |           |          |         | main    |              | 
 View definition:
  SELECT grandtot
    FROM mvtest_tvv;
 
 \d+ mvtest_bb
                             Materialized view "public.mvtest_bb"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 ----------+---------+-----------+----------+---------+---------+--------------+-------------
- grandtot | numeric |           |          |         | main    |              |
+ grandtot | numeric |           |          |         | main    |              | 
 Indexes:
     "mvtest_aa" btree (grandtot)
 View definition:
@@ -143,9 +143,9 @@ ALTER MATERIALIZED VIEW mvtest_tvm SET SCHEMA mvtest_mvschema;
 \d+ mvtest_tvm
 \d+ mvtest_tvmm
                            Materialized view "public.mvtest_tvmm"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 ----------+---------+-----------+----------+---------+---------+--------------+-------------
- grandtot | numeric |           |          |         | main    |              |
+ grandtot | numeric |           |          |         | main    |              | 
 Indexes:
     "mvtest_tvmm_expr" UNIQUE, btree ((grandtot > 0::numeric))
     "mvtest_tvmm_pred" UNIQUE, btree (grandtot) WHERE grandtot < 0::numeric
@@ -156,10 +156,10 @@ View definition:
 SET search_path = mvtest_mvschema, public;
 \d+ mvtest_tvm
                       Materialized view "mvtest_mvschema.mvtest_tvm"
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+---------+-----------+----------+---------+----------+--------------+-------------
- type   | text    |           |          |         | extended |              |
- totamt | numeric |           |          |         | main     |              |
+ type   | text    |           |          |         | extended |              | 
+ totamt | numeric |           |          |         | main     |              | 
 View definition:
  SELECT type,
     totamt
@@ -170,7 +170,7 @@ View definition:
 INSERT INTO mvtest_t VALUES (6, 'z', 13);
 -- confirm pre- and post-refresh contents of fairly simple materialized views
 SELECT * FROM mvtest_tm ORDER BY type;
- type | totamt
+ type | totamt 
 ------+--------
  x    |      5
  y    |     12
@@ -178,7 +178,7 @@ SELECT * FROM mvtest_tm ORDER BY type;
 (3 rows)
 
 SELECT * FROM mvtest_tvm ORDER BY type;
- type | totamt
+ type | totamt 
 ------+--------
  x    |      5
  y    |     12
@@ -188,7 +188,7 @@ SELECT * FROM mvtest_tvm ORDER BY type;
 REFRESH MATERIALIZED VIEW CONCURRENTLY mvtest_tm;
 REFRESH MATERIALIZED VIEW mvtest_tvm;
 SELECT * FROM mvtest_tm ORDER BY type;
- type | totamt
+ type | totamt 
 ------+--------
  x    |      5
  y    |     12
@@ -196,7 +196,7 @@ SELECT * FROM mvtest_tm ORDER BY type;
 (3 rows)
 
 SELECT * FROM mvtest_tvm ORDER BY type;
- type | totamt
+ type | totamt 
 ------+--------
  x    |      5
  y    |     12
@@ -207,39 +207,39 @@ RESET search_path;
 -- confirm pre- and post-refresh contents of nested materialized views
 EXPLAIN (costs off)
   SELECT * FROM mvtest_tmm;
-       QUERY PLAN
+       QUERY PLAN       
 ------------------------
  Seq Scan on mvtest_tmm
 (1 row)
 
 EXPLAIN (costs off)
   SELECT * FROM mvtest_tvmm;
-       QUERY PLAN
+       QUERY PLAN        
 -------------------------
  Seq Scan on mvtest_tvmm
 (1 row)
 
 EXPLAIN (costs off)
   SELECT * FROM mvtest_tvvm;
-       QUERY PLAN
+       QUERY PLAN        
 -------------------------
  Seq Scan on mvtest_tvvm
 (1 row)
 
 SELECT * FROM mvtest_tmm;
- grandtot
+ grandtot 
 ----------
        28
 (1 row)
 
 SELECT * FROM mvtest_tvmm;
- grandtot
+ grandtot 
 ----------
        28
 (1 row)
 
 SELECT * FROM mvtest_tvvm;
- grandtot
+ grandtot 
 ----------
        28
 (1 row)
@@ -252,39 +252,39 @@ REFRESH MATERIALIZED VIEW mvtest_tvmm;
 REFRESH MATERIALIZED VIEW mvtest_tvvm;
 EXPLAIN (costs off)
   SELECT * FROM mvtest_tmm;
-       QUERY PLAN
+       QUERY PLAN       
 ------------------------
  Seq Scan on mvtest_tmm
 (1 row)
 
 EXPLAIN (costs off)
   SELECT * FROM mvtest_tvmm;
-       QUERY PLAN
+       QUERY PLAN        
 -------------------------
  Seq Scan on mvtest_tvmm
 (1 row)
 
 EXPLAIN (costs off)
   SELECT * FROM mvtest_tvvm;
-       QUERY PLAN
+       QUERY PLAN        
 -------------------------
  Seq Scan on mvtest_tvvm
 (1 row)
 
 SELECT * FROM mvtest_tmm;
- grandtot
+ grandtot 
 ----------
        41
 (1 row)
 
 SELECT * FROM mvtest_tvmm;
- grandtot
+ grandtot 
 ----------
        41
 (1 row)
 
 SELECT * FROM mvtest_tvvm;
- grandtot
+ grandtot 
 ----------
        41
 (1 row)
@@ -300,7 +300,7 @@ SELECT * FROM mvtest_tvvm FOR SHARE;
 ERROR:  cannot lock rows in materialized view "mvtest_tvvm"
 -- test join of mv and view
 SELECT type, m.totamt AS mtot, v.totamt AS vtot FROM mvtest_tm m LEFT JOIN mvtest_tv v USING (type) ORDER BY type;
- type | mtot | vtot
+ type | mtot | vtot 
 ------+------+------
  x    |    5 |    5
  y    |   12 |   12
@@ -341,10 +341,10 @@ CREATE VIEW mvtest_vt1 AS SELECT 1 moo;
 CREATE VIEW mvtest_vt2 AS SELECT moo, 2*moo FROM mvtest_vt1 UNION ALL SELECT moo, 3*moo FROM mvtest_vt1;
 \d+ mvtest_vt2
                           View "public.mvtest_vt2"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Description
+  Column  |  Type   | Collation | Nullable | Default | Storage | Description 
 ----------+---------+-----------+----------+---------+---------+-------------
- moo      | integer |           |          |         | plain   |
- ?column? | integer |           |          |         | plain   |
+ moo      | integer |           |          |         | plain   | 
+ ?column? | integer |           |          |         | plain   | 
 View definition:
  SELECT mvtest_vt1.moo,
     2 * mvtest_vt1.moo AS "?column?"
@@ -357,10 +357,10 @@ UNION ALL
 CREATE MATERIALIZED VIEW mv_test2 AS SELECT moo, 2*moo FROM mvtest_vt2 UNION ALL SELECT moo, 3*moo FROM mvtest_vt2;
 \d+ mv_test2
                             Materialized view "public.mv_test2"
-  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description
+  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
 ----------+---------+-----------+----------+---------+---------+--------------+-------------
- moo      | integer |           |          |         | plain   |              |
- ?column? | integer |           |          |         | plain   |              |
+ moo      | integer |           |          |         | plain   |              | 
+ ?column? | integer |           |          |         | plain   |              | 
 View definition:
  SELECT mvtest_vt2.moo,
     2 * mvtest_vt2.moo AS "?column?"
@@ -372,7 +372,7 @@ UNION ALL
 
 CREATE MATERIALIZED VIEW mv_test3 AS SELECT * FROM mv_test2 WHERE moo = 12345;
 SELECT relispopulated FROM pg_class WHERE oid = 'mv_test3'::regclass;
- relispopulated
+ relispopulated 
 ----------------
  t
 (1 row)
@@ -424,7 +424,7 @@ CREATE UNIQUE INDEX mvtest_boxmv_id ON mvtest_boxmv (id);
 UPDATE mvtest_boxes SET b = '(2,2),(1,1)' WHERE id = 2;
 REFRESH MATERIALIZED VIEW CONCURRENTLY mvtest_boxmv;
 SELECT * FROM mvtest_boxmv ORDER BY id;
- id |              b
+ id |              b              
 ----+-----------------------------
   1 | (32,32),(31,31)
   2 | (2,2),(1,1)
@@ -453,31 +453,31 @@ REFRESH MATERIALIZED VIEW mvtest_mv_v_2;
 REFRESH MATERIALIZED VIEW mvtest_mv_v_3;
 REFRESH MATERIALIZED VIEW mvtest_mv_v_4;
 SELECT * FROM mvtest_v;
- x | j
+ x | j 
 ---+---
  1 | 3
 (1 row)
 
 SELECT * FROM mvtest_mv_v;
- ii | jj
+ ii | jj 
 ----+----
   1 |  3
 (1 row)
 
 SELECT * FROM mvtest_mv_v_2;
- ii | j
+ ii | j 
 ----+---
   1 | 3
 (1 row)
 
 SELECT * FROM mvtest_mv_v_3;
- ii | jj
+ ii | jj 
 ----+----
   1 |  3
 (1 row)
 
 SELECT * FROM mvtest_mv_v_4;
- ii | j
+ ii | j 
 ----+---
   1 | 3
 (1 row)
@@ -494,13 +494,13 @@ CREATE MATERIALIZED VIEW mv_unspecified_types AS
   SELECT 42 as i, 42.5 as num, 'foo' as u, 'foo'::unknown as u2, null as n;
 \d+ mv_unspecified_types
                       Materialized view "public.mv_unspecified_types"
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description
+ Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+---------+-----------+----------+---------+----------+--------------+-------------
- i      | integer |           |          |         | plain    |              |
- num    | numeric |           |          |         | main     |              |
- u      | text    |           |          |         | extended |              |
- u2     | text    |           |          |         | extended |              |
- n      | text    |           |          |         | extended |              |
+ i      | integer |           |          |         | plain    |              | 
+ num    | numeric |           |          |         | main     |              | 
+ u      | text    |           |          |         | extended |              | 
+ u2     | text    |           |          |         | extended |              | 
+ n      | text    |           |          |         | extended |              | 
 View definition:
  SELECT 42 AS i,
     42.5 AS num,
@@ -509,9 +509,9 @@ View definition:
     NULL::text AS n;
 
 SELECT * FROM mv_unspecified_types;
- i  | num  |  u  | u2  | n
+ i  | num  |  u  | u2  | n 
 ----+------+-----+-----+---
- 42 | 42.5 | foo | foo |
+ 42 | 42.5 | foo | foo | 
 (1 row)
 
 DROP MATERIALIZED VIEW mv_unspecified_types;
@@ -527,7 +527,7 @@ CREATE TABLE mvtest_v AS SELECT generate_series(1,10) AS a;
 CREATE MATERIALIZED VIEW mvtest_mv_v AS SELECT a FROM mvtest_v WHERE a <= 5;
 DELETE FROM mvtest_v WHERE EXISTS ( SELECT * FROM mvtest_mv_v WHERE mvtest_mv_v.a = mvtest_v.a );
 SELECT * FROM mvtest_v;
- a
+ a  
 ----
   6
   7
@@ -537,7 +537,7 @@ SELECT * FROM mvtest_v;
 (5 rows)
 
 SELECT * FROM mvtest_mv_v;
- a
+ a 
 ---
  1
  2
@@ -598,13 +598,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 SELECT mvtest_func();
- mvtest_func
+ mvtest_func 
 -------------
-
+ 
 (1 row)
 
 SELECT * FROM mvtest1;
- x
+ x 
 ---
  1
 (1 row)
@@ -625,7 +625,7 @@ CREATE MATERIALIZED VIEW matview_schema.mv_withdata1 (a) AS
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE MATERIALIZED VIEW matview_schema.mv_withdata2 (a) AS
   SELECT generate_series(1, 10) WITH DATA;
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  ProjectSet (actual rows=10 loops=1)
    ->  Result (actual rows=1 loops=1)
@@ -637,7 +637,7 @@ CREATE MATERIALIZED VIEW matview_schema.mv_nodata1 (a) AS
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE MATERIALIZED VIEW matview_schema.mv_nodata2 (a) AS
   SELECT generate_series(1, 10) WITH NO DATA;
-          QUERY PLAN
+          QUERY PLAN           
 -------------------------------
  ProjectSet (never executed)
    ->  Result (never executed)
@@ -675,7 +675,7 @@ EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE MATERIALIZED VIEW IF NOT EXISTS matview_ine_tab AS
     SELECT 1 / 0; -- ok
 NOTICE:  relation "matview_ine_tab" already exists, skipping
- QUERY PLAN
+ QUERY PLAN 
 ------------
 (0 rows)
 
@@ -687,7 +687,7 @@ EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE MATERIALIZED VIEW IF NOT EXISTS matview_ine_tab AS
     SELECT 1 / 0 WITH NO DATA; -- ok
 NOTICE:  relation "matview_ine_tab" already exists, skipping
- QUERY PLAN
+ QUERY PLAN 
 ------------
 (0 rows)
 

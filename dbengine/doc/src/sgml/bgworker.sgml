@@ -142,7 +142,7 @@ typedef struct BackgroundWorker
    The named library will be dynamically loaded by the worker process and
    <structfield>bgw_function_name</structfield> will be used to identify the
    function to be called.  If calling a function in the core code, this must
-   be set to <literal>"postgres"</literal>.
+   be set to <literal>"neurdb"</literal>.
   </para>
 
   <para>

@@ -6,7 +6,7 @@ create function polyf(x anyelement) returns anyelement as $$
   select x + 1
 $$ language sql;
 select polyf(42) as int, polyf(4.5) as num;
- int | num
+ int | num 
 -----+-----
   43 | 5.5
 (1 row)
@@ -16,7 +16,7 @@ ERROR:  operator does not exist: point + integer
 LINE 2:   select x + 1
                    ^
 HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
-QUERY:
+QUERY:  
   select x + 1
 
 CONTEXT:  SQL function "polyf" during inlining
@@ -25,7 +25,7 @@ create function polyf(x anyelement) returns anyarray as $$
   select array[x + 1, x + 2]
 $$ language sql;
 select polyf(42) as int, polyf(4.5) as num;
-   int   |    num
+   int   |    num    
 ---------+-----------
  {43,44} | {5.5,6.5}
 (1 row)
@@ -35,7 +35,7 @@ create function polyf(x anyarray) returns anyelement as $$
   select x[1]
 $$ language sql;
 select polyf(array[2,4]) as int, polyf(array[4.5, 7.7]) as num;
- int | num
+ int | num 
 -----+-----
    2 | 4.5
 (1 row)
@@ -47,7 +47,7 @@ create function polyf(x anyarray) returns anyarray as $$
   select x
 $$ language sql;
 select polyf(array[2,4]) as int, polyf(array[4.5, 7.7]) as num;
-  int  |    num
+  int  |    num    
 -------+-----------
  {2,4} | {4.5,7.7}
 (1 row)
@@ -66,7 +66,7 @@ create function polyf(x anyrange) returns anyarray as $$
   select array[lower(x), upper(x)]
 $$ language sql;
 select polyf(int4range(42, 49)) as int, polyf(float8range(4.5, 7.8)) as num;
-   int   |    num
+   int   |    num    
 ---------+-----------
  {42,49} | {4.5,7.8}
 (1 row)
@@ -76,7 +76,7 @@ create function polyf(x anycompatible, y anycompatible) returns anycompatiblearr
   select array[x, y]
 $$ language sql;
 select polyf(2, 4) as int, polyf(2, 4.5) as num;
-  int  |   num
+  int  |   num   
 -------+---------
  {2,4} | {2,4.5}
 (1 row)
@@ -86,7 +86,7 @@ create function polyf(x anycompatiblerange, y anycompatible, z anycompatible) re
   select array[lower(x), upper(x), y, z]
 $$ language sql;
 select polyf(int4range(42, 49), 11, 2::smallint) as int, polyf(float8range(4.5, 7.8), 7.8, 11::real) as num;
-     int      |       num
+     int      |       num        
 --------------+------------------
  {42,49,11,2} | {4.5,7.8,7.8,11}
 (1 row)
@@ -101,7 +101,7 @@ create function polyf(x anycompatiblemultirange, y anycompatible, z anycompatibl
   select array[lower(x), upper(x), y, z]
 $$ language sql;
 select polyf(multirange(int4range(42, 49)), 11, 2::smallint) as int, polyf(multirange(float8range(4.5, 7.8)), 7.8, 11::real) as num;
-     int      |       num
+     int      |       num        
 --------------+------------------
  {42,49,11,2} | {4.5,7.8,7.8,11}
 (1 row)
@@ -122,7 +122,7 @@ create function polyf(x anycompatiblerange, y anycompatiblearray) returns anycom
   select x
 $$ language sql;
 select polyf(int4range(42, 49), array[11]) as int, polyf(float8range(4.5, 7.8), array[7]) as num;
-   int   |    num
+   int   |    num    
 ---------+-----------
  [42,49) | [4.5,7.8)
 (1 row)
@@ -138,7 +138,7 @@ create function polyf(x anycompatiblemultirange, y anycompatiblearray) returns a
   select x
 $$ language sql;
 select polyf(multirange(int4range(42, 49)), array[11]) as int, polyf(multirange(float8range(4.5, 7.8)), array[7]) as num;
-    int    |     num
+    int    |     num     
 -----------+-------------
  {[42,49)} | {[4.5,7.8)}
 (1 row)
@@ -152,21 +152,21 @@ as $$
 $$ language sql;
 select x, pg_typeof(x), y, pg_typeof(y)
   from polyf(11, array[1, 2], 42, 34.5);
-    x     | pg_typeof |     y     | pg_typeof
+    x     | pg_typeof |     y     | pg_typeof 
 ----------+-----------+-----------+-----------
  {11,1,2} | integer[] | {42,34.5} | numeric[]
 (1 row)
 
 select x, pg_typeof(x), y, pg_typeof(y)
   from polyf(11, array[1, 2], point(1,2), point(3,4));
-    x     | pg_typeof |         y         | pg_typeof
+    x     | pg_typeof |         y         | pg_typeof 
 ----------+-----------+-------------------+-----------
  {11,1,2} | integer[] | {"(1,2)","(3,4)"} | point[]
 (1 row)
 
 select x, pg_typeof(x), y, pg_typeof(y)
   from polyf(11, '{1,2}', point(1,2), '(3,4)');
-    x     | pg_typeof |         y         | pg_typeof
+    x     | pg_typeof |         y         | pg_typeof 
 ----------+-----------+-------------------+-----------
  {11,1,2} | integer[] | {"(1,2)","(3,4)"} | point[]
 (1 row)
@@ -182,7 +182,7 @@ drop function polyf(a anyelement, b anyarray,
 create function polyf(anyrange) returns anymultirange
 as 'select multirange($1);' language sql;
 select polyf(int4range(1,10));
-  polyf
+  polyf   
 ----------
  {[1,10)}
 (1 row)
@@ -193,7 +193,7 @@ drop function polyf(anyrange);
 create function polyf(anymultirange) returns anyelement
 as 'select lower($1);' language sql;
 select polyf(int4multirange(int4range(1,10), int4range(20,30)));
- polyf
+ polyf 
 -------
      1
 (1 row)
@@ -204,7 +204,7 @@ drop function polyf(anymultirange);
 create function polyf(anycompatiblerange) returns anycompatiblemultirange
 as 'select multirange($1);' language sql;
 select polyf(int4range(1,10));
-  polyf
+  polyf   
 ----------
  {[1,10)}
 (1 row)
@@ -215,7 +215,7 @@ drop function polyf(anycompatiblerange);
 create function polyf(anymultirange) returns anyrange
 as 'select range_merge($1);' language sql;
 select polyf(int4multirange(int4range(1,10), int4range(20,30)));
- polyf
+ polyf  
 --------
  [1,30)
 (1 row)
@@ -226,7 +226,7 @@ drop function polyf(anymultirange);
 create function polyf(anycompatiblemultirange) returns anycompatiblerange
 as 'select range_merge($1);' language sql;
 select polyf(int4multirange(int4range(1,10), int4range(20,30)));
- polyf
+ polyf  
 --------
  [1,30)
 (1 row)
@@ -237,7 +237,7 @@ drop function polyf(anycompatiblemultirange);
 create function polyf(anycompatiblemultirange) returns anycompatible
 as 'select lower($1);' language sql;
 select polyf(int4multirange(int4range(1,10), int4range(20,30)));
- polyf
+ polyf 
 -------
      1
 (1 row)
@@ -601,7 +601,7 @@ insert into t values(3,array[3],'a');
 insert into t values(3,array[3],'b');
 -- test the successfully created polymorphic aggregates
 select f3, myaggp01a(*) from t group by f3 order by f3;
- f3 | myaggp01a
+ f3 | myaggp01a 
 ----+-----------
  a  | {}
  b  | {}
@@ -609,7 +609,7 @@ select f3, myaggp01a(*) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp03a(*) from t group by f3 order by f3;
- f3 | myaggp03a
+ f3 | myaggp03a 
 ----+-----------
  a  | {}
  b  | {}
@@ -617,7 +617,7 @@ select f3, myaggp03a(*) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp03b(*) from t group by f3 order by f3;
- f3 | myaggp03b
+ f3 | myaggp03b 
 ----+-----------
  a  | {}
  b  | {}
@@ -625,7 +625,7 @@ select f3, myaggp03b(*) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp05a(f1) from t group by f3 order by f3;
- f3 | myaggp05a
+ f3 | myaggp05a 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -633,7 +633,7 @@ select f3, myaggp05a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp06a(f1) from t group by f3 order by f3;
- f3 | myaggp06a
+ f3 | myaggp06a 
 ----+-----------
  a  | {}
  b  | {}
@@ -641,7 +641,7 @@ select f3, myaggp06a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp08a(f1) from t group by f3 order by f3;
- f3 | myaggp08a
+ f3 | myaggp08a 
 ----+-----------
  a  | {}
  b  | {}
@@ -649,7 +649,7 @@ select f3, myaggp08a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp09a(f1) from t group by f3 order by f3;
- f3 | myaggp09a
+ f3 | myaggp09a 
 ----+-----------
  a  | {}
  b  | {}
@@ -657,7 +657,7 @@ select f3, myaggp09a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp09b(f1) from t group by f3 order by f3;
- f3 | myaggp09b
+ f3 | myaggp09b 
 ----+-----------
  a  | {}
  b  | {}
@@ -665,7 +665,7 @@ select f3, myaggp09b(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp10a(f1) from t group by f3 order by f3;
- f3 | myaggp10a
+ f3 | myaggp10a 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -673,7 +673,7 @@ select f3, myaggp10a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp10b(f1) from t group by f3 order by f3;
- f3 | myaggp10b
+ f3 | myaggp10b 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -681,7 +681,7 @@ select f3, myaggp10b(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp20a(f1) from t group by f3 order by f3;
- f3 | myaggp20a
+ f3 | myaggp20a 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -689,7 +689,7 @@ select f3, myaggp20a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggp20b(f1) from t group by f3 order by f3;
- f3 | myaggp20b
+ f3 | myaggp20b 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -697,7 +697,7 @@ select f3, myaggp20b(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn01a(*) from t group by f3 order by f3;
- f3 | myaggn01a
+ f3 | myaggn01a 
 ----+-----------
  a  | {}
  b  | {}
@@ -705,7 +705,7 @@ select f3, myaggn01a(*) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn01b(*) from t group by f3 order by f3;
- f3 | myaggn01b
+ f3 | myaggn01b 
 ----+-----------
  a  | {}
  b  | {}
@@ -713,7 +713,7 @@ select f3, myaggn01b(*) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn03a(*) from t group by f3 order by f3;
- f3 | myaggn03a
+ f3 | myaggn03a 
 ----+-----------
  a  | {}
  b  | {}
@@ -721,7 +721,7 @@ select f3, myaggn03a(*) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn05a(f1) from t group by f3 order by f3;
- f3 | myaggn05a
+ f3 | myaggn05a 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -729,7 +729,7 @@ select f3, myaggn05a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn05b(f1) from t group by f3 order by f3;
- f3 | myaggn05b
+ f3 | myaggn05b 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -737,7 +737,7 @@ select f3, myaggn05b(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn06a(f1) from t group by f3 order by f3;
- f3 | myaggn06a
+ f3 | myaggn06a 
 ----+-----------
  a  | {}
  b  | {}
@@ -745,7 +745,7 @@ select f3, myaggn06a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn06b(f1) from t group by f3 order by f3;
- f3 | myaggn06b
+ f3 | myaggn06b 
 ----+-----------
  a  | {}
  b  | {}
@@ -753,7 +753,7 @@ select f3, myaggn06b(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn08a(f1) from t group by f3 order by f3;
- f3 | myaggn08a
+ f3 | myaggn08a 
 ----+-----------
  a  | {}
  b  | {}
@@ -761,7 +761,7 @@ select f3, myaggn08a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn08b(f1) from t group by f3 order by f3;
- f3 | myaggn08b
+ f3 | myaggn08b 
 ----+-----------
  a  | {}
  b  | {}
@@ -769,7 +769,7 @@ select f3, myaggn08b(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn09a(f1) from t group by f3 order by f3;
- f3 | myaggn09a
+ f3 | myaggn09a 
 ----+-----------
  a  | {}
  b  | {}
@@ -777,7 +777,7 @@ select f3, myaggn09a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select f3, myaggn10a(f1) from t group by f3 order by f3;
- f3 | myaggn10a
+ f3 | myaggn10a 
 ----+-----------
  a  | {1,2,3}
  b  | {1,2,3}
@@ -785,7 +785,7 @@ select f3, myaggn10a(f1) from t group by f3 order by f3;
 (3 rows)
 
 select mysum2(f1, f1 + 1) from t;
- mysum2
+ mysum2 
 --------
      38
 (1 row)
@@ -806,7 +806,7 @@ NOTICE:  bleat 123456
 NOTICE:  bleat -123455
 NOTICE:  bleat 2147483647
 NOTICE:  bleat -2147483646
-     f1      |   sql_if
+     f1      |   sql_if    
 -------------+-------------
            0 |           1
       123456 |      123456
@@ -816,7 +816,7 @@ NOTICE:  bleat -2147483646
 (5 rows)
 
 select q2, sql_if(q2 > 0, q2, q2 + 1) from int8_tbl;
-        q2         |      sql_if
+        q2         |      sql_if       
 -------------------+-------------------
                456 |               456
   4567890123456789 |  4567890123456789
@@ -834,14 +834,14 @@ CREATE AGGREGATE array_larger_accum (anyarray)
 );
 SELECT array_larger_accum(i)
 FROM (VALUES (ARRAY[1,2]), (ARRAY[3,4])) as t(i);
- array_larger_accum
+ array_larger_accum 
 --------------------
  {3,4}
 (1 row)
 
 SELECT array_larger_accum(i)
 FROM (VALUES (ARRAY[row(1,2),row(3,4)]), (ARRAY[row(5,6),row(7,8)])) as t(i);
- array_larger_accum
+ array_larger_accum 
 --------------------
  {"(5,6)","(7,8)"}
 (1 row)
@@ -866,7 +866,7 @@ create aggregate build_group(anyelement, integer) (
   STYPE = anyarray
 );
 select build_group(q1,3) from int8_tbl;
-        build_group
+        build_group         
 ----------------------------
  {123,123,4567890123456789}
 (1 row)
@@ -898,19 +898,19 @@ create aggregate first_el_agg_any(anyelement) (
   FINALFUNC = first_el
 );
 select first_el_agg_f8(x::float8) from generate_series(1,10) x;
- first_el_agg_f8
+ first_el_agg_f8 
 -----------------
                1
 (1 row)
 
 select first_el_agg_any(x) from generate_series(1,10) x;
- first_el_agg_any
+ first_el_agg_any 
 ------------------
                 1
 (1 row)
 
 select first_el_agg_f8(x::float8) over(order by x) from generate_series(1,10) x;
- first_el_agg_f8
+ first_el_agg_f8 
 -----------------
                1
                1
@@ -925,7 +925,7 @@ select first_el_agg_f8(x::float8) over(order by x) from generate_series(1,10) x;
 (10 rows)
 
 select first_el_agg_any(x) over(order by x) from generate_series(1,10) x;
- first_el_agg_any
+ first_el_agg_any 
 ------------------
                 1
                 1
@@ -942,7 +942,7 @@ select first_el_agg_any(x) over(order by x) from generate_series(1,10) x;
 -- check that we can apply functions taking ANYARRAY to pg_stats
 select distinct array_ndims(histogram_bounds) from pg_stats
 where histogram_bounds is not null;
- array_ndims
+ array_ndims 
 -------------
            1
 (1 row)
@@ -953,7 +953,7 @@ select max(histogram_bounds) from pg_stats where tablename = 'pg_am';
 ERROR:  cannot compare arrays of different element types
 -- another corner case is the input functions for polymorphic pseudotypes
 select array_in('{1,2,3}','int4'::regtype,-1);  -- this has historically worked
- array_in
+ array_in 
 ----------
  {1,2,3}
 (1 row)
@@ -969,19 +969,19 @@ create function myleast(variadic anyarray) returns anyelement as $$
   select min($1[i]) from generate_subscripts($1,1) g(i)
 $$ language sql immutable strict;
 select myleast(10, 1, 20, 33);
- myleast
+ myleast 
 ---------
        1
 (1 row)
 
 select myleast(1.1, 0.22, 0.55);
- myleast
+ myleast 
 ---------
     0.22
 (1 row)
 
 select myleast('z'::text);
- myleast
+ myleast 
 ---------
  z
 (1 row)
@@ -993,22 +993,22 @@ LINE 1: select myleast();
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 -- test with variadic call parameter
 select myleast(variadic array[1,2,3,4,-1]);
- myleast
+ myleast 
 ---------
       -1
 (1 row)
 
 select myleast(variadic array[1.1, -5.5]);
- myleast
+ myleast 
 ---------
     -5.5
 (1 row)
 
 --test with empty variadic call parameter
 select myleast(variadic array[]::int[]);
- myleast
+ myleast 
 ---------
-
+        
 (1 row)
 
 -- an example with some ordinary arguments too
@@ -1016,27 +1016,27 @@ create function concat(text, variadic anyarray) returns text as $$
   select array_to_string($2, $1);
 $$ language sql immutable strict;
 select concat('%', 1, 2, 3, 4, 5);
-  concat
+  concat   
 -----------
  1%2%3%4%5
 (1 row)
 
 select concat('|', 'a'::text, 'b', 'c');
- concat
+ concat 
 --------
  a|b|c
 (1 row)
 
 select concat('|', variadic array[1,2,33]);
- concat
+ concat 
 --------
  1|2|33
 (1 row)
 
 select concat('|', variadic array[]::int[]);
- concat
+ concat 
 --------
-
+ 
 (1 row)
 
 drop function concat(text, anyarray);
@@ -1045,13 +1045,13 @@ create function formarray(anyelement, variadic anyarray) returns anyarray as $$
   select array_prepend($1, $2);
 $$ language sql immutable strict;
 select formarray(1,2,3,4,5);
-  formarray
+  formarray  
 -------------
  {1,2,3,4,5}
 (1 row)
 
 select formarray(1.1, variadic array[1.2,55.5]);
-   formarray
+   formarray    
 ----------------
  {1.1,1.2,55.5}
 (1 row)
@@ -1074,55 +1074,55 @@ HINT:  No function matches the given name and argument types. You might need to 
 drop function formarray(anyelement, variadic anyarray);
 -- test pg_typeof() function
 select pg_typeof(null);           -- unknown
- pg_typeof
+ pg_typeof 
 -----------
  unknown
 (1 row)
 
 select pg_typeof(0);              -- integer
- pg_typeof
+ pg_typeof 
 -----------
  integer
 (1 row)
 
 select pg_typeof(0.0);            -- numeric
- pg_typeof
+ pg_typeof 
 -----------
  numeric
 (1 row)
 
 select pg_typeof(1+1 = 2);        -- boolean
- pg_typeof
+ pg_typeof 
 -----------
  boolean
 (1 row)
 
 select pg_typeof('x');            -- unknown
- pg_typeof
+ pg_typeof 
 -----------
  unknown
 (1 row)
 
 select pg_typeof('' || '');       -- text
- pg_typeof
+ pg_typeof 
 -----------
  text
 (1 row)
 
 select pg_typeof(pg_typeof(0));   -- regtype
- pg_typeof
+ pg_typeof 
 -----------
  regtype
 (1 row)
 
 select pg_typeof(array[1.2,55.5]); -- numeric[]
- pg_typeof
+ pg_typeof 
 -----------
  numeric[]
 (1 row)
 
 select pg_typeof(myleast(10, 1, 20, 33));  -- polymorphic input
- pg_typeof
+ pg_typeof 
 -----------
  integer
 (1 row)
@@ -1133,19 +1133,19 @@ create function dfunc(a int = 1, int = 2) returns int as $$
   select $1 + $2;
 $$ language sql;
 select dfunc();
- dfunc
+ dfunc 
 -------
      3
 (1 row)
 
 select dfunc(10);
- dfunc
+ dfunc 
 -------
     12
 (1 row)
 
 select dfunc(10, 20);
- dfunc
+ dfunc 
 -------
     30
 (1 row)
@@ -1170,7 +1170,7 @@ create function dfunc(a int = 1, out sum int, b int = 2) as $$
   select $1 + $2;
 $$ language sql;
 select dfunc();
- dfunc
+ dfunc 
 -------
      3
 (1 row)
@@ -1178,7 +1178,7 @@ select dfunc();
 -- verify it lists properly
 \df dfunc
                                           List of functions
- Schema | Name  | Result data type |                    Argument data types                    | Type
+ Schema | Name  | Result data type |                    Argument data types                    | Type 
 --------+-------+------------------+-----------------------------------------------------------+------
  public | dfunc | integer          | a integer DEFAULT 1, OUT sum integer, b integer DEFAULT 2 | func
 (1 row)
@@ -1189,7 +1189,7 @@ create function dfunc(a int DEFAULT 1.0, int DEFAULT '-1') returns int as $$
   select $1 + $2;
 $$ language sql;
 select dfunc();
- dfunc
+ dfunc 
 -------
      0
 (1 row)
@@ -1203,25 +1203,25 @@ LINE 1: select dfunc();
                ^
 HINT:  Could not choose a best candidate function. You might need to add explicit type casts.
 select dfunc('Hi');  -- ok
-   dfunc
+   dfunc   
 -----------
  Hi, World
 (1 row)
 
 select dfunc('Hi', 'City');  -- ok
-  dfunc
+  dfunc   
 ----------
  Hi, City
 (1 row)
 
 select dfunc(0);  -- ok
- dfunc
+ dfunc 
 -------
     -1
 (1 row)
 
 select dfunc(10, 20);  -- ok
- dfunc
+ dfunc 
 -------
     30
 (1 row)
@@ -1252,13 +1252,13 @@ LINE 1: select dfunc(1, 2);
                ^
 HINT:  Could not choose a best candidate function. You might need to add explicit type casts.
 select dfunc(1, 2, 3);  -- ok
- dfunc
+ dfunc 
 -------
      4
 (1 row)
 
 select dfunc(1, 2, 3, 4);  -- ok
- dfunc
+ dfunc 
 -------
      4
 (1 row)
@@ -1275,25 +1275,25 @@ create function dfunc(anyelement = 'World'::text) returns text as $$
   select 'Hello, ' || $1::text;
 $$ language sql;
 select dfunc();
-    dfunc
+    dfunc     
 --------------
  Hello, World
 (1 row)
 
 select dfunc(0);
-  dfunc
+  dfunc   
 ----------
  Hello, 0
 (1 row)
 
 select dfunc(to_date('20081215','YYYYMMDD'));
-       dfunc
+       dfunc       
 -------------------
  Hello, 12-15-2008
 (1 row)
 
 select dfunc('City'::text);
-    dfunc
+    dfunc    
 -------------
  Hello, City
 (1 row)
@@ -1308,13 +1308,13 @@ LINE 1: select dfunc();
                ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 select dfunc(10);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
 
 select dfunc(10,20);
- dfunc
+ dfunc 
 -------
      2
 (1 row)
@@ -1322,19 +1322,19 @@ select dfunc(10,20);
 create or replace function dfunc(a variadic int[] default array[]::int[]) returns int as
 $$ select array_upper($1, 1) $$ language sql;
 select dfunc();  -- now ok
- dfunc
+ dfunc 
 -------
-
+      
 (1 row)
 
 select dfunc(10);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
 
 select dfunc(10,20);
- dfunc
+ dfunc 
 -------
      2
 (1 row)
@@ -1346,7 +1346,7 @@ ERROR:  cannot remove parameter defaults from existing function
 HINT:  Use DROP FUNCTION dfunc(integer[]) first.
 \df dfunc
                                      List of functions
- Schema | Name  | Result data type |               Argument data types               | Type
+ Schema | Name  | Result data type |               Argument data types               | Type 
 --------+-------+------------------+-------------------------------------------------+------
  public | dfunc | integer          | VARIADIC a integer[] DEFAULT ARRAY[]::integer[] | func
 (1 row)
@@ -1370,7 +1370,7 @@ LINE 1: select dfunc(1);
 HINT:  Could not choose a best candidate function. You might need to add explicit type casts.
 -- but this works since the ambiguous functions aren't preferred anyway
 select dfunc('Hi');
- dfunc
+ dfunc 
 -------
  Hi
 (1 row)
@@ -1386,25 +1386,25 @@ create function dfunc(a int, b int, c int = 0, d int = 0)
   select $1, $2, $3, $4;
 $$ language sql;
 select (dfunc(10,20,30)).*;
- a  | b  | c  | d
+ a  | b  | c  | d 
 ----+----+----+---
  10 | 20 | 30 | 0
 (1 row)
 
 select (dfunc(a := 10, b := 20, c := 30)).*;
- a  | b  | c  | d
+ a  | b  | c  | d 
 ----+----+----+---
  10 | 20 | 30 | 0
 (1 row)
 
 select * from dfunc(a := 10, b := 20);
- a  | b  | c | d
+ a  | b  | c | d 
 ----+----+---+---
  10 | 20 | 0 | 0
 (1 row)
 
 select * from dfunc(b := 10, a := 20);
- a  | b  | c | d
+ a  | b  | c | d 
 ----+----+---+---
  20 | 10 | 0 | 0
 (1 row)
@@ -1415,19 +1415,19 @@ LINE 1: select * from dfunc(0);
                       ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 select * from dfunc(1,2);
- a | b | c | d
+ a | b | c | d 
 ---+---+---+---
  1 | 2 | 0 | 0
 (1 row)
 
 select * from dfunc(1,2,c := 3);
- a | b | c | d
+ a | b | c | d 
 ---+---+---+---
  1 | 2 | 3 | 0
 (1 row)
 
 select * from dfunc(1,2,d := 3);
- a | b | c | d
+ a | b | c | d 
 ---+---+---+---
  1 | 2 | 0 | 3
 (1 row)
@@ -1462,31 +1462,31 @@ create function dfunc(a varchar, b numeric, c date = current_date)
   select $1, $2, $3;
 $$ language sql;
 select (dfunc('Hello World', 20, '2009-07-25'::date)).*;
-      a      | b  |     c
+      a      | b  |     c      
 -------------+----+------------
  Hello World | 20 | 07-25-2009
 (1 row)
 
 select * from dfunc('Hello World', 20, '2009-07-25'::date);
-      a      | b  |     c
+      a      | b  |     c      
 -------------+----+------------
  Hello World | 20 | 07-25-2009
 (1 row)
 
 select * from dfunc(c := '2009-07-25'::date, a := 'Hello World', b := 20);
-      a      | b  |     c
+      a      | b  |     c      
 -------------+----+------------
  Hello World | 20 | 07-25-2009
 (1 row)
 
 select * from dfunc('Hello World', b := 20, c := '2009-07-25'::date);
-      a      | b  |     c
+      a      | b  |     c      
 -------------+----+------------
  Hello World | 20 | 07-25-2009
 (1 row)
 
 select * from dfunc('Hello World', c := '2009-07-25'::date, b := 20);
-      a      | b  |     c
+      a      | b  |     c      
 -------------+----+------------
  Hello World | 20 | 07-25-2009
 (1 row)
@@ -1503,49 +1503,49 @@ returns record as $$
   select $1, $2;
 $$ language sql;
 select (dfunc()).*;
-  _a   | _c
+  _a   | _c 
 -------+----
- def a |
+ def a |   
 (1 row)
 
 select * from dfunc();
-  _a   | _c
+  _a   | _c 
 -------+----
- def a |
+ def a |   
 (1 row)
 
 select * from dfunc('Hello', 100);
-  _a   | _c
+  _a   | _c  
 -------+-----
  Hello | 100
 (1 row)
 
 select * from dfunc(a := 'Hello', c := 100);
-  _a   | _c
+  _a   | _c  
 -------+-----
  Hello | 100
 (1 row)
 
 select * from dfunc(c := 100, a := 'Hello');
-  _a   | _c
+  _a   | _c  
 -------+-----
  Hello | 100
 (1 row)
 
 select * from dfunc('Hello');
-  _a   | _c
+  _a   | _c 
 -------+----
- Hello |
+ Hello |   
 (1 row)
 
 select * from dfunc('Hello', c := 100);
-  _a   | _c
+  _a   | _c  
 -------+-----
  Hello | 100
 (1 row)
 
 select * from dfunc(c := 100);
-  _a   | _c
+  _a   | _c  
 -------+-----
  def a | 100
 (1 row)
@@ -1576,7 +1576,7 @@ ERROR:  parameter name "a" used more than once
 -- valid
 create function testpolym(a int, out a int) returns int as $$ select $1;$$ language sql;
 select testpolym(37);
- testpolym
+ testpolym 
 -----------
         37
 (1 row)
@@ -1584,7 +1584,7 @@ select testpolym(37);
 drop function testpolym(int);
 create function testpolym(a int) returns table(a int) as $$ select $1;$$ language sql;
 select * from testpolym(37);
- a
+ a  
 ----
  37
 (1 row)
@@ -1596,172 +1596,172 @@ returns anyelement as $$
   select case when $3 then $1 else $2 end;
 $$ language sql;
 select dfunc(1,2);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
 
 select dfunc('a'::text, 'b'); -- positional notation with default
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc(a := 1, b := 2);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
 
 select dfunc(a := 'a'::text, b := 'b');
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc(a := 'a'::text, b := 'b', flag := false); -- named notation
- dfunc
+ dfunc 
 -------
  b
 (1 row)
 
 select dfunc(b := 'b'::text, a := 'a'); -- named notation with default
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc(a := 'a'::text, flag := true); -- named notation with default
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc(a := 'a'::text, flag := false); -- named notation with default
- dfunc
+ dfunc 
 -------
-
+ 
 (1 row)
 
 select dfunc(b := 'b'::text, a := 'a', flag := true); -- named notation
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc('a'::text, 'b', false); -- full positional notation
- dfunc
+ dfunc 
 -------
  b
 (1 row)
 
 select dfunc('a'::text, 'b', flag := false); -- mixed notation
- dfunc
+ dfunc 
 -------
  b
 (1 row)
 
 select dfunc('a'::text, 'b', true); -- full positional notation
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc('a'::text, 'b', flag := true); -- mixed notation
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 -- ansi/sql syntax
 select dfunc(a => 1, b => 2);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
 
 select dfunc(a => 'a'::text, b => 'b');
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc(a => 'a'::text, b => 'b', flag => false); -- named notation
- dfunc
+ dfunc 
 -------
  b
 (1 row)
 
 select dfunc(b => 'b'::text, a => 'a'); -- named notation with default
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc(a => 'a'::text, flag => true); -- named notation with default
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc(a => 'a'::text, flag => false); -- named notation with default
- dfunc
+ dfunc 
 -------
-
+ 
 (1 row)
 
 select dfunc(b => 'b'::text, a => 'a', flag => true); -- named notation
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc('a'::text, 'b', false); -- full positional notation
- dfunc
+ dfunc 
 -------
  b
 (1 row)
 
 select dfunc('a'::text, 'b', flag => false); -- mixed notation
- dfunc
+ dfunc 
 -------
  b
 (1 row)
 
 select dfunc('a'::text, 'b', true); -- full positional notation
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 select dfunc('a'::text, 'b', flag => true); -- mixed notation
- dfunc
+ dfunc 
 -------
  a
 (1 row)
 
 -- this tests lexer edge cases around =>
 select dfunc(a =>-1);
- dfunc
+ dfunc 
 -------
     -1
 (1 row)
 
 select dfunc(a =>+1);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
 
 select dfunc(a =>/**/1);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
 
 select dfunc(a =>--comment to be removed by psql
   1);
- dfunc
+ dfunc 
 -------
      1
 (1 row)
@@ -1783,7 +1783,7 @@ CREATE VIEW dfview AS
      dfunc(q1, flag := q1<q2, b := q2) as c4
      FROM int8_tbl;
 select * from dfview;
-        q1        |        q2         |        c3        |        c4
+        q1        |        q2         |        c3        |        c4         
 ------------------+-------------------+------------------+-------------------
               123 |               456 |              456 |               123
               123 |  4567890123456789 | 4567890123456789 |               123
@@ -1794,12 +1794,12 @@ select * from dfview;
 
 \d+ dfview
                            View "public.dfview"
- Column |  Type  | Collation | Nullable | Default | Storage | Description
+ Column |  Type  | Collation | Nullable | Default | Storage | Description 
 --------+--------+-----------+----------+---------+---------+-------------
- q1     | bigint |           |          |         | plain   |
- q2     | bigint |           |          |         | plain   |
- c3     | bigint |           |          |         | plain   |
- c4     | bigint |           |          |         | plain   |
+ q1     | bigint |           |          |         | plain   | 
+ q2     | bigint |           |          |         | plain   | 
+ c3     | bigint |           |          |         | plain   | 
+ c4     | bigint |           |          |         | plain   | 
 View definition:
  SELECT q1,
     q2,
@@ -1817,13 +1817,13 @@ returns anycompatible as $$
   select greatest($1, $2)
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, 12) x;
- x  | pg_typeof
+ x  | pg_typeof 
 ----+-----------
  12 | integer
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, 12.3) x;
-  x   | pg_typeof
+  x   | pg_typeof 
 ------+-----------
  12.3 | numeric
 (1 row)
@@ -1834,7 +1834,7 @@ LINE 1: select x, pg_typeof(x) from anyctest(11, point(1,2)) x;
                                     ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 select x, pg_typeof(x) from anyctest('11', '12.3') x;  -- defaults to text
-  x   | pg_typeof
+  x   | pg_typeof 
 ------+-----------
  12.3 | text
 (1 row)
@@ -1845,13 +1845,13 @@ returns anycompatiblearray as $$
   select array[$1, $2]
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, 12) x;
-    x    | pg_typeof
+    x    | pg_typeof 
 ---------+-----------
  {11,12} | integer[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, 12.3) x;
-     x     | pg_typeof
+     x     | pg_typeof 
 -----------+-----------
  {11,12.3} | numeric[]
 (1 row)
@@ -1867,25 +1867,25 @@ returns anycompatiblearray as $$
   select array[$1] || $2
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, array[12]) x;
-    x    | pg_typeof
+    x    | pg_typeof 
 ---------+-----------
  {11,12} | integer[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, array[12.3]) x;
-     x     | pg_typeof
+     x     | pg_typeof 
 -----------+-----------
  {11,12.3} | numeric[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(12.3, array[13]) x;
-     x     | pg_typeof
+     x     | pg_typeof 
 -----------+-----------
  {12.3,13} | numeric[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(12.3, '{13,14.4}') x;
-       x        | pg_typeof
+       x        | pg_typeof 
 ----------------+-----------
  {12.3,13,14.4} | numeric[]
 (1 row)
@@ -1906,13 +1906,13 @@ returns anycompatiblerange as $$
   select $2
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, int4range(4,7)) x;
-   x   | pg_typeof
+   x   | pg_typeof 
 -------+-----------
  [4,7) | int4range
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, numrange(4,7)) x;
-   x   | pg_typeof
+   x   | pg_typeof 
 -------+-----------
  [4,7) | numrange
 (1 row)
@@ -1935,7 +1935,7 @@ returns anycompatible as $$
   select lower($1) + upper($2)
 $$ language sql;
 select x, pg_typeof(x) from anyctest(int4range(11,12), int4range(4,7)) x;
- x  | pg_typeof
+ x  | pg_typeof 
 ----+-----------
  18 | integer
 (1 row)
@@ -1958,13 +1958,13 @@ returns anycompatiblemultirange as $$
   select $2
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, multirange(int4range(4,7))) x;
-    x    |   pg_typeof
+    x    |   pg_typeof    
 ---------+----------------
  {[4,7)} | int4multirange
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, multirange(numrange(4,7))) x;
-    x    |   pg_typeof
+    x    |   pg_typeof   
 ---------+---------------
  {[4,7)} | nummultirange
 (1 row)
@@ -1987,7 +1987,7 @@ returns anycompatible as $$
   select lower($1) + upper($2)
 $$ language sql;
 select x, pg_typeof(x) from anyctest(multirange(int4range(11,12)), multirange(int4range(4,7))) x;
- x  | pg_typeof
+ x  | pg_typeof 
 ----+-----------
  18 | integer
 (1 row)
@@ -2010,13 +2010,13 @@ returns anycompatiblearray as $$
   select array[$1, $2]
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, 12) x;
-    x    | pg_typeof
+    x    | pg_typeof 
 ---------+-----------
  {11,12} | integer[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, 12.3) x;
-     x     | pg_typeof
+     x     | pg_typeof 
 -----------+-----------
  {11,12.3} | numeric[]
 (1 row)
@@ -2033,19 +2033,19 @@ returns anycompatiblearray as $$
   select array[c, d]
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, array[1, 2], 42, 34.5) x;
-     x     | pg_typeof
+     x     | pg_typeof 
 -----------+-----------
  {42,34.5} | numeric[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, array[1, 2], point(1,2), point(3,4)) x;
-         x         | pg_typeof
+         x         | pg_typeof 
 -------------------+-----------
  {"(1,2)","(3,4)"} | point[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, '{1,2}', point(1,2), '(3,4)') x;
-         x         | pg_typeof
+         x         | pg_typeof 
 -------------------+-----------
  {"(1,2)","(3,4)"} | point[]
 (1 row)
@@ -2062,19 +2062,19 @@ returns anycompatiblearray as $$
   select $1
 $$ language sql;
 select x, pg_typeof(x) from anyctest(11, 12) x;
-    x    | pg_typeof
+    x    | pg_typeof 
 ---------+-----------
  {11,12} | integer[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, 12.2) x;
-     x     | pg_typeof
+     x     | pg_typeof 
 -----------+-----------
  {11,12.2} | numeric[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(11, '12') x;
-    x    | pg_typeof
+    x    | pg_typeof 
 ---------+-----------
  {11,12} | integer[]
 (1 row)
@@ -2084,13 +2084,13 @@ ERROR:  invalid input syntax for type integer: "12.2"
 LINE 1: select x, pg_typeof(x) from anyctest(11, '12.2') x;
                                                  ^
 select x, pg_typeof(x) from anyctest(variadic array[11, 12]) x;
-    x    | pg_typeof
+    x    | pg_typeof 
 ---------+-----------
  {11,12} | integer[]
 (1 row)
 
 select x, pg_typeof(x) from anyctest(variadic array[11, 12.2]) x;
-     x     | pg_typeof
+     x     | pg_typeof 
 -----------+-----------
  {11,12.2} | numeric[]
 (1 row)

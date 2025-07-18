@@ -10,7 +10,7 @@ step notify3: NOTIFY c3, 'payload3';
 step notifyf: SELECT pg_notify('c2', NULL);
 pg_notify
 ---------
-
+         
 (1 row)
 
 notifier: NOTIFY "c2" with payload "" from notifier
@@ -24,7 +24,7 @@ step notifyd2: NOTIFY c1; NOTIFY c1; NOTIFY c1, 'p1'; NOTIFY c1, 'p2';
 notifier: NOTIFY "c1" with payload "" from notifier
 notifier: NOTIFY "c1" with payload "p1" from notifier
 notifier: NOTIFY "c1" with payload "p2" from notifier
-step notifys1:
+step notifys1: 
 	BEGIN;
 	NOTIFY c1, 'payload'; NOTIFY "c2", 'payload';
 	NOTIFY c1, 'payload'; NOTIFY "c2", 'payload';
@@ -55,7 +55,7 @@ step notify3: NOTIFY c3, 'payload3';
 step notifyf: SELECT pg_notify('c2', NULL);
 pg_notify
 ---------
-
+         
 (1 row)
 
 step lcheck: SELECT 1 AS x;
@@ -79,7 +79,7 @@ step notify3: NOTIFY c3, 'payload3';
 step notifyf: SELECT pg_notify('c2', NULL);
 pg_notify
 ---------
-
+         
 (1 row)
 
 notifier: NOTIFY "c2" with payload "" from notifier
@@ -110,7 +110,7 @@ step lbegin: BEGIN;
 step usage: SELECT pg_notification_queue_usage() > 0 AS nonzero;
 nonzero
 -------
-f
+f      
 (1 row)
 
 step bignotify: SELECT count(pg_notify('c1', s::text)) FROM generate_series(1, 1000) s;
@@ -122,5 +122,6 @@ count
 step usage: SELECT pg_notification_queue_usage() > 0 AS nonzero;
 nonzero
 -------
-t
+t      
 (1 row)
+

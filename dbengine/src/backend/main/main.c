@@ -102,7 +102,7 @@ main(int argc, char *argv[])
 	/*
 	 * Set up locale information
 	 */
-	set_pglocale_pgservice(argv[0], PG_TEXTDOMAIN("postgres"));
+	set_pglocale_pgservice(argv[0], PG_TEXTDOMAIN("neurdb"));
 
 	/*
 	 * In the postmaster, absorb the environment values for LC_COLLATE and

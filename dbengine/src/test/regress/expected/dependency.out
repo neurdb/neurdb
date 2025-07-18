@@ -68,20 +68,20 @@ GRANT ALL ON deptest1 TO regress_dep_user2;
 RESET SESSION AUTHORIZATION;
 \z deptest1
                                                Access privileges
- Schema |   Name   | Type  |                 Access privileges                  | Column privileges | Policies
+ Schema |   Name   | Type  |                 Access privileges                  | Column privileges | Policies 
 --------+----------+-------+----------------------------------------------------+-------------------+----------
- public | deptest1 | table | regress_dep_user0=arwdDxt/regress_dep_user0       +|                   |
-        |          |       | regress_dep_user1=a*r*w*d*D*x*t*/regress_dep_user0+|                   |
-        |          |       | regress_dep_user2=arwdDxt/regress_dep_user1        |                   |
+ public | deptest1 | table | regress_dep_user0=arwdDxt/regress_dep_user0       +|                   | 
+        |          |       | regress_dep_user1=a*r*w*d*D*x*t*/regress_dep_user0+|                   | 
+        |          |       | regress_dep_user2=arwdDxt/regress_dep_user1        |                   | 
 (1 row)
 
 DROP OWNED BY regress_dep_user1;
 -- all grants revoked
 \z deptest1
                                            Access privileges
- Schema |   Name   | Type  |              Access privileges              | Column privileges | Policies
+ Schema |   Name   | Type  |              Access privileges              | Column privileges | Policies 
 --------+----------+-------+---------------------------------------------+-------------------+----------
- public | deptest1 | table | regress_dep_user0=arwdDxt/regress_dep_user0 |                   |
+ public | deptest1 | table | regress_dep_user0=arwdDxt/regress_dep_user0 |                   | 
 (1 row)
 
 -- table was dropped
@@ -108,7 +108,7 @@ ALTER SEQUENCE ss1 OWNED BY deptest2.f1;
 CREATE TYPE deptest_t AS (a int);
 SELECT typowner = relowner
 FROM pg_type JOIN pg_class c ON typrelid = c.oid WHERE typname = 'deptest_t';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)
@@ -117,14 +117,14 @@ RESET SESSION AUTHORIZATION;
 REASSIGN OWNED BY regress_dep_user1 TO regress_dep_user2;
 \dt deptest
               List of relations
- Schema |  Name   | Type  |       Owner
+ Schema |  Name   | Type  |       Owner       
 --------+---------+-------+-------------------
  public | deptest | table | regress_dep_user2
 (1 row)
 
 SELECT typowner = relowner
 FROM pg_type JOIN pg_class c ON typrelid = c.oid WHERE typname = 'deptest_t';
- ?column?
+ ?column? 
 ----------
  t
 (1 row)

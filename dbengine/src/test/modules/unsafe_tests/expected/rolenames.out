@@ -112,7 +112,7 @@ SET ROLE regress_testrol2;
 --  ALTER ROLE
 BEGIN;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -126,7 +126,7 @@ SELECT * FROM chkrolattr();
 
 ALTER ROLE CURRENT_ROLE WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -140,7 +140,7 @@ SELECT * FROM chkrolattr();
 
 ALTER ROLE "current_role" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -155,7 +155,7 @@ SELECT * FROM chkrolattr();
 ALTER ROLE CURRENT_ROLE WITH NOREPLICATION;
 ALTER ROLE CURRENT_USER WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -169,7 +169,7 @@ SELECT * FROM chkrolattr();
 
 ALTER ROLE "current_user" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -183,7 +183,7 @@ SELECT * FROM chkrolattr();
 
 ALTER ROLE SESSION_USER WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -197,7 +197,7 @@ SELECT * FROM chkrolattr();
 
 ALTER ROLE "session_user" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -212,7 +212,7 @@ SELECT * FROM chkrolattr();
 ALTER USER "Public" WITH REPLICATION;
 ALTER USER "None" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | t
  Public           | -            | f        | t
@@ -227,7 +227,7 @@ SELECT * FROM chkrolattr();
 ALTER USER regress_testrol1 WITH NOREPLICATION;
 ALTER USER regress_testrol2 WITH NOREPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | t
  Public           | -            | f        | t
@@ -267,7 +267,7 @@ ERROR:  role "nonexistent" does not exist
 --  ALTER USER
 BEGIN;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -281,7 +281,7 @@ SELECT * FROM chkrolattr();
 
 ALTER USER CURRENT_ROLE WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -295,7 +295,7 @@ SELECT * FROM chkrolattr();
 
 ALTER USER "current_role" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -310,7 +310,7 @@ SELECT * FROM chkrolattr();
 ALTER USER CURRENT_ROLE WITH NOREPLICATION;
 ALTER USER CURRENT_USER WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -324,7 +324,7 @@ SELECT * FROM chkrolattr();
 
 ALTER USER "current_user" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -338,7 +338,7 @@ SELECT * FROM chkrolattr();
 
 ALTER USER SESSION_USER WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -352,7 +352,7 @@ SELECT * FROM chkrolattr();
 
 ALTER USER "session_user" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | f
  Public           | -            | f        | f
@@ -367,7 +367,7 @@ SELECT * FROM chkrolattr();
 ALTER USER "Public" WITH REPLICATION;
 ALTER USER "None" WITH REPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | t
  Public           | -            | f        | t
@@ -382,7 +382,7 @@ SELECT * FROM chkrolattr();
 ALTER USER regress_testrol1 WITH NOREPLICATION;
 ALTER USER regress_testrol2 WITH NOREPLICATION;
 SELECT * FROM chkrolattr();
-       role       | rolekeyword  | canlogin | replication
+       role       | rolekeyword  | canlogin | replication 
 ------------------+--------------+----------+-------------
  None             | -            | f        | t
  Public           | -            | f        | t
@@ -421,7 +421,7 @@ ALTER USER nonexistent WITH NOREPLICATION; -- error
 ERROR:  role "nonexistent" does not exist
 --  ALTER ROLE SET/RESET
 SELECT * FROM chksetconfig();
- db | role | rolkeyword | setconfig
+ db | role | rolkeyword | setconfig 
 ----+------+------------+-----------
 (0 rows)
 
@@ -432,7 +432,7 @@ ALTER ROLE "current_user" SET application_name to 'FOOFOO';
 ALTER ROLE "Public" SET application_name to 'BARBAR';
 ALTER ROLE ALL SET application_name to 'SLAP';
 SELECT * FROM chksetconfig();
- db  |       role       |  rolkeyword  |         setconfig
+ db  |       role       |  rolkeyword  |         setconfig         
 -----+------------------+--------------+---------------------------
  ALL | Public           | -            | {application_name=BARBAR}
  ALL | current_user     | -            | {application_name=FOOFOO}
@@ -443,7 +443,7 @@ SELECT * FROM chksetconfig();
 
 ALTER ROLE regress_testrol1 SET application_name to 'SLAM';
 SELECT * FROM chksetconfig();
- db  |       role       |  rolkeyword  |         setconfig
+ db  |       role       |  rolkeyword  |         setconfig         
 -----+------------------+--------------+---------------------------
  ALL | Public           | -            | {application_name=BARBAR}
  ALL | current_user     | -            | {application_name=FOOFOO}
@@ -459,7 +459,7 @@ ALTER ROLE "current_user" RESET application_name;
 ALTER ROLE "Public" RESET application_name;
 ALTER ROLE ALL RESET application_name;
 SELECT * FROM chksetconfig();
- db | role | rolkeyword | setconfig
+ db | role | rolkeyword | setconfig 
 ----+------+------------+-----------
 (0 rows)
 
@@ -473,7 +473,7 @@ ALTER ROLE nonexistent SET application_name to 'BOMB'; -- error
 ERROR:  role "nonexistent" does not exist
 --  ALTER USER SET/RESET
 SELECT * FROM chksetconfig();
- db | role | rolkeyword | setconfig
+ db | role | rolkeyword | setconfig 
 ----+------+------------+-----------
 (0 rows)
 
@@ -484,7 +484,7 @@ ALTER USER "current_user" SET application_name to 'FOOFOO';
 ALTER USER "Public" SET application_name to 'BARBAR';
 ALTER USER ALL SET application_name to 'SLAP';
 SELECT * FROM chksetconfig();
- db  |       role       |  rolkeyword  |         setconfig
+ db  |       role       |  rolkeyword  |         setconfig         
 -----+------------------+--------------+---------------------------
  ALL | Public           | -            | {application_name=BARBAR}
  ALL | current_user     | -            | {application_name=FOOFOO}
@@ -495,7 +495,7 @@ SELECT * FROM chksetconfig();
 
 ALTER USER regress_testrol1 SET application_name to 'SLAM';
 SELECT * FROM chksetconfig();
- db  |       role       |  rolkeyword  |         setconfig
+ db  |       role       |  rolkeyword  |         setconfig         
 -----+------------------+--------------+---------------------------
  ALL | Public           | -            | {application_name=BARBAR}
  ALL | current_user     | -            | {application_name=FOOFOO}
@@ -511,7 +511,7 @@ ALTER USER "current_user" RESET application_name;
 ALTER USER "Public" RESET application_name;
 ALTER USER ALL RESET application_name;
 SELECT * FROM chksetconfig();
- db | role | rolkeyword | setconfig
+ db | role | rolkeyword | setconfig 
 ----+------+------------+-----------
 (0 rows)
 
@@ -551,7 +551,7 @@ ERROR:  role "nonexistent" does not exist
 SELECT n.nspname, r.rolname FROM pg_namespace n
  JOIN pg_roles r ON (r.oid = n.nspowner)
  WHERE n.nspname LIKE 'newschema_' ORDER BY 1;
-  nspname   |     rolname
+  nspname   |     rolname      
 ------------+------------------
  newschema1 | regress_testrol2
  newschema2 | current_user
@@ -590,7 +590,7 @@ ERROR:  role "nonexistent" does not exist
 SELECT n.nspname, r.rolname FROM pg_namespace n
  JOIN pg_roles r ON (r.oid = n.nspowner)
  WHERE n.nspname LIKE 'newschema_' ORDER BY 1;
-  nspname   |     rolname
+  nspname   |     rolname      
 ------------+------------------
  newschema1 | regress_testrol2
  newschema2 | current_user
@@ -633,7 +633,7 @@ SELECT c.relname, r.rolname
  FROM pg_class c JOIN pg_roles r ON (r.oid = c.relowner)
  WHERE relname LIKE 'testtab_'
  ORDER BY 1;
- relname  |     rolname
+ relname  |     rolname      
 ----------+------------------
  testtab1 | regress_testrol2
  testtab2 | current_user
@@ -682,7 +682,7 @@ SELECT p.proname, r.rolname
  FROM pg_proc p JOIN pg_roles r ON (r.oid = p.proowner)
  WHERE proname LIKE 'testagg_'
  ORDER BY 1;
- proname  |     rolname
+ proname  |     rolname      
 ----------+------------------
  testagg1 | regress_testrol2
  testagg2 | current_user
@@ -720,7 +720,7 @@ CREATE USER MAPPING FOR regress_testrolx SERVER sv9 OPTIONS (user 'regress_testr
 CREATE USER MAPPING FOR nonexistent SERVER sv10 OPTIONS (user 'nonexistent'); -- error;
 ERROR:  role "nonexistent" does not exist
 SELECT * FROM chkumapping();
-      umname      | umserver |         umoptions
+      umname      | umserver |         umoptions         
 ------------------+----------+---------------------------
  regress_testrol2 | sv1      | {user=CURRENT_USER}
  current_user     | sv2      | {"user=\"current_user\""}
@@ -756,7 +756,7 @@ ALTER USER MAPPING FOR nonexistent SERVER sv10
  OPTIONS (SET user 'nonexistent_alt'); -- error
 ERROR:  role "nonexistent" does not exist
 SELECT * FROM chkumapping();
-      umname      | umserver |           umoptions
+      umname      | umserver |           umoptions           
 ------------------+----------+-------------------------------
  regress_testrol2 | sv1      | {user=CURRENT_USER_alt}
  current_user     | sv2      | {"user=\"current_user\"_alt"}
@@ -782,7 +782,7 @@ DROP USER MAPPING FOR regress_testrolx SERVER sv9;
 DROP USER MAPPING FOR nonexistent SERVER sv10;  -- error
 ERROR:  role "nonexistent" does not exist
 SELECT * FROM chkumapping();
- umname | umserver | umoptions
+ umname | umserver | umoptions 
 --------+----------+-----------
 (0 rows)
 
@@ -796,7 +796,7 @@ CREATE USER MAPPING FOR PUBLIC SERVER sv7 OPTIONS (user 'PUBLIC');
 CREATE USER MAPPING FOR "Public" SERVER sv8 OPTIONS (user '"Public"');
 CREATE USER MAPPING FOR regress_testrolx SERVER sv9 OPTIONS (user 'regress_testrolx');
 SELECT * FROM chkumapping();
-      umname      | umserver |         umoptions
+      umname      | umserver |         umoptions         
 ------------------+----------+---------------------------
  regress_testrol2 | sv1      | {user=CURRENT_USER}
  current_user     | sv2      | {"user=\"current_user\""}
@@ -812,7 +812,7 @@ SELECT * FROM chkumapping();
 -- DROP USER MAPPING IF EXISTS
 DROP USER MAPPING IF EXISTS FOR CURRENT_USER SERVER sv1;
 SELECT * FROM chkumapping();
-      umname      | umserver |         umoptions
+      umname      | umserver |         umoptions         
 ------------------+----------+---------------------------
  current_user     | sv2      | {"user=\"current_user\""}
  regress_testrol2 | sv3      | {user=CURRENT_ROLE}
@@ -826,7 +826,7 @@ SELECT * FROM chkumapping();
 
 DROP USER MAPPING IF EXISTS FOR "current_user" SERVER sv2;
 SELECT * FROM chkumapping();
-      umname      | umserver |        umoptions
+      umname      | umserver |        umoptions        
 ------------------+----------+-------------------------
  regress_testrol2 | sv3      | {user=CURRENT_ROLE}
  regress_testrol2 | sv4      | {user=USER}
@@ -839,7 +839,7 @@ SELECT * FROM chkumapping();
 
 DROP USER MAPPING IF EXISTS FOR CURRENT_USER SERVER sv3;
 SELECT * FROM chkumapping();
-      umname      | umserver |        umoptions
+      umname      | umserver |        umoptions        
 ------------------+----------+-------------------------
  regress_testrol2 | sv4      | {user=USER}
  user             | sv5      | {"user=\"USER\""}
@@ -851,7 +851,7 @@ SELECT * FROM chkumapping();
 
 DROP USER MAPPING IF EXISTS FOR USER SERVER sv4;
 SELECT * FROM chkumapping();
-      umname      | umserver |        umoptions
+      umname      | umserver |        umoptions        
 ------------------+----------+-------------------------
  user             | sv5      | {"user=\"USER\""}
  regress_testrol1 | sv6      | {user=SESSION_USER}
@@ -862,7 +862,7 @@ SELECT * FROM chkumapping();
 
 DROP USER MAPPING IF EXISTS FOR "user" SERVER sv5;
 SELECT * FROM chkumapping();
-      umname      | umserver |        umoptions
+      umname      | umserver |        umoptions        
 ------------------+----------+-------------------------
  regress_testrol1 | sv6      | {user=SESSION_USER}
                   | sv7      | {user=PUBLIC}
@@ -872,7 +872,7 @@ SELECT * FROM chkumapping();
 
 DROP USER MAPPING IF EXISTS FOR SESSION_USER SERVER sv6;
 SELECT * FROM chkumapping();
-      umname      | umserver |        umoptions
+      umname      | umserver |        umoptions        
 ------------------+----------+-------------------------
                   | sv7      | {user=PUBLIC}
  Public           | sv8      | {"user=\"Public\""}
@@ -881,7 +881,7 @@ SELECT * FROM chkumapping();
 
 DROP USER MAPPING IF EXISTS FOR PUBLIC SERVER sv7;
 SELECT * FROM chkumapping();
-      umname      | umserver |        umoptions
+      umname      | umserver |        umoptions        
 ------------------+----------+-------------------------
  Public           | sv8      | {"user=\"Public\""}
  regress_testrolx | sv9      | {user=regress_testrolx}
@@ -889,14 +889,14 @@ SELECT * FROM chkumapping();
 
 DROP USER MAPPING IF EXISTS FOR "Public" SERVER sv8;
 SELECT * FROM chkumapping();
-      umname      | umserver |        umoptions
+      umname      | umserver |        umoptions        
 ------------------+----------+-------------------------
  regress_testrolx | sv9      | {user=regress_testrolx}
 (1 row)
 
 DROP USER MAPPING IF EXISTS FOR regress_testrolx SERVER sv9;
 SELECT * FROM chkumapping();
- umname | umserver | umoptions
+ umname | umserver | umoptions 
 --------+----------+-----------
 (0 rows)
 
@@ -910,18 +910,18 @@ CREATE SCHEMA test_roles_schema AUTHORIZATION pg_signal_backend; --success
 SET ROLE regress_testrol2;
 UPDATE pg_proc SET proacl = null WHERE proname LIKE 'testagg_';
 SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
- proname  | proacl
+ proname  | proacl 
 ----------+--------
- testagg1 |
- testagg2 |
- testagg3 |
- testagg4 |
- testagg5 |
- testagg6 |
- testagg7 |
- testagg8 |
- testagg9 |
- testagga |
+ testagg1 | 
+ testagg2 | 
+ testagg3 | 
+ testagg4 | 
+ testagg5 | 
+ testagg6 | 
+ testagg7 | 
+ testagg8 | 
+ testagg9 | 
+ testagga | 
 (10 rows)
 
 REVOKE ALL PRIVILEGES ON FUNCTION testagg1(int2) FROM PUBLIC;
@@ -943,7 +943,7 @@ GRANT ALL PRIVILEGES ON FUNCTION testagg8(int2) TO "public";
 GRANT ALL PRIVILEGES ON FUNCTION testagg9(int2)
  TO current_user, public, regress_testrolx;
 SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
- proname  |                                                              proacl
+ proname  |                                                              proacl                                                               
 ----------+-----------------------------------------------------------------------------------------------------------------------------------
  testagg1 | {regress_testrol2=X/regress_testrol2,=X/regress_testrol2}
  testagg2 | {current_user=X/current_user,regress_testrol2=X/current_user}
@@ -954,7 +954,7 @@ SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
  testagg7 | {regress_testrol0=X/regress_testrol0,regress_testrolx=X/regress_testrol0}
  testagg8 | {regress_testrol0=X/regress_testrol0,=X/regress_testrol0}
  testagg9 | {=X/regress_testrol0,regress_testrol0=X/regress_testrol0,regress_testrol2=X/regress_testrol0,regress_testrolx=X/regress_testrol0}
- testagga |
+ testagga | 
 (10 rows)
 
 GRANT ALL PRIVILEGES ON FUNCTION testagga(int2) TO USER; --error
@@ -970,7 +970,7 @@ ERROR:  role name "none" is reserved
 LINE 1: GRANT ALL PRIVILEGES ON FUNCTION testagga(int2) TO "none";
                                                            ^
 SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
- proname  |                                                              proacl
+ proname  |                                                              proacl                                                               
 ----------+-----------------------------------------------------------------------------------------------------------------------------------
  testagg1 | {regress_testrol2=X/regress_testrol2,=X/regress_testrol2}
  testagg2 | {current_user=X/current_user,regress_testrol2=X/current_user}
@@ -981,7 +981,7 @@ SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
  testagg7 | {regress_testrol0=X/regress_testrol0,regress_testrolx=X/regress_testrol0}
  testagg8 | {regress_testrol0=X/regress_testrol0,=X/regress_testrol0}
  testagg9 | {=X/regress_testrol0,regress_testrol0=X/regress_testrol0,regress_testrol2=X/regress_testrol0,regress_testrolx=X/regress_testrol0}
- testagga |
+ testagga | 
 (10 rows)
 
 REVOKE ALL PRIVILEGES ON FUNCTION testagg1(int2) FROM PUBLIC;
@@ -995,7 +995,7 @@ REVOKE ALL PRIVILEGES ON FUNCTION testagg8(int2) FROM "public";
 REVOKE ALL PRIVILEGES ON FUNCTION testagg9(int2)
  FROM current_user, public, regress_testrolx;
 SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
- proname  |                proacl
+ proname  |                proacl                 
 ----------+---------------------------------------
  testagg1 | {regress_testrol2=X/regress_testrol2}
  testagg2 | {current_user=X/current_user}
@@ -1006,7 +1006,7 @@ SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
  testagg7 | {regress_testrol0=X/regress_testrol0}
  testagg8 | {regress_testrol0=X/regress_testrol0}
  testagg9 | {regress_testrol0=X/regress_testrol0}
- testagga |
+ testagga | 
 (10 rows)
 
 REVOKE ALL PRIVILEGES ON FUNCTION testagga(int2) FROM USER; --error
@@ -1022,7 +1022,7 @@ ERROR:  role name "none" is reserved
 LINE 1: ...EVOKE ALL PRIVILEGES ON FUNCTION testagga(int2) FROM "none";
                                                                 ^
 SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
- proname  |                proacl
+ proname  |                proacl                 
 ----------+---------------------------------------
  testagg1 | {regress_testrol2=X/regress_testrol2}
  testagg2 | {current_user=X/current_user}
@@ -1033,7 +1033,7 @@ SELECT proname, proacl FROM pg_proc WHERE proname LIKE 'testagg_';
  testagg7 | {regress_testrol0=X/regress_testrol0}
  testagg8 | {regress_testrol0=X/regress_testrol0}
  testagg9 | {regress_testrol0=X/regress_testrol0}
- testagga |
+ testagga | 
 (10 rows)
 
 -- DEFAULT MONITORING ROLES
@@ -1045,7 +1045,7 @@ SET SESSION AUTHORIZATION regress_role_haspriv;
 -- returns true with role member of pg_read_all_stats
 SELECT COUNT(*) = 0 AS haspriv FROM pg_stat_activity
   WHERE query = '<insufficient privilege>';
- haspriv
+ haspriv 
 ---------
  t
 (1 row)
@@ -1054,7 +1054,7 @@ SET SESSION AUTHORIZATION regress_role_nopriv;
 -- returns false with role not member of pg_read_all_stats
 SELECT COUNT(*) = 0 AS haspriv FROM pg_stat_activity
   WHERE query = '<insufficient privilege>';
- haspriv
+ haspriv 
 ---------
  f
 (1 row)
@@ -1069,7 +1069,7 @@ SET LOCAL session_preload_libraries TO 'path-to-preload-libraries';
 SET SESSION AUTHORIZATION regress_role_haspriv;
 -- passes with role member of pg_read_all_settings
 SHOW session_preload_libraries;
-  session_preload_libraries
+  session_preload_libraries  
 -----------------------------
  "path-to-preload-libraries"
 (1 row)

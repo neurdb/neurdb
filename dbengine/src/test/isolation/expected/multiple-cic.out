@@ -4,14 +4,14 @@ starting permutation: s2l s1i s2i
 step s2l: SELECT pg_advisory_lock(281457);
 pg_advisory_lock
 ----------------
-
+                
 (1 row)
 
-step s1i:
+step s1i: 
 		CREATE INDEX CONCURRENTLY mcic_one_pkey ON mcic_one (id)
 		WHERE lck_shr(281457);
  <waiting ...>
-step s2i:
+step s2i: 
 		CREATE INDEX CONCURRENTLY mcic_two_pkey ON mcic_two (id)
 		WHERE unlck();
  <waiting ...>
@@ -19,5 +19,6 @@ step s1i: <... completed>
 step s2i: <... completed>
 unlck
 -----
-t
+t    
 (1 row)
+

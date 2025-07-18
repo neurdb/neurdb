@@ -28,7 +28,7 @@ ERROR:  permission denied for table tbl_withdata1
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE TABLE selinto_schema.tbl_withdata2 (a) AS
   SELECT generate_series(1,3) WITH DATA;
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  ProjectSet (actual rows=3 loops=1)
    ->  Result (actual rows=1 loops=1)
@@ -40,7 +40,7 @@ CREATE TABLE selinto_schema.tbl_nodata1 (a) AS
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE TABLE selinto_schema.tbl_nodata2 (a) AS
   SELECT generate_series(1,3) WITH NO DATA;
-          QUERY PLAN
+          QUERY PLAN           
 -------------------------------
  ProjectSet (never executed)
    ->  Result (never executed)
@@ -53,7 +53,7 @@ CREATE TABLE selinto_schema.tbl_withdata3 (a) AS
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE TABLE selinto_schema.tbl_withdata4 (a) AS
   EXECUTE data_sel WITH DATA;
-              QUERY PLAN
+              QUERY PLAN              
 --------------------------------------
  ProjectSet (actual rows=3 loops=1)
    ->  Result (actual rows=1 loops=1)
@@ -65,7 +65,7 @@ CREATE TABLE selinto_schema.tbl_nodata3 (a) AS
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE TABLE selinto_schema.tbl_nodata4 (a) AS
   EXECUTE data_sel WITH NO DATA;
-          QUERY PLAN
+          QUERY PLAN           
 -------------------------------
  ProjectSet (never executed)
    ->  Result (never executed)
@@ -100,24 +100,24 @@ CREATE TABLE ctas_nodata_2 (ii, jj) AS SELECT i, j FROM ctas_base WITH NO DATA; 
 CREATE TABLE ctas_nodata_3 (ii) AS SELECT i, j FROM ctas_base; -- OK
 CREATE TABLE ctas_nodata_4 (ii) AS SELECT i, j FROM ctas_base WITH NO DATA; -- OK
 SELECT * FROM ctas_nodata;
- ii | jj
+ ii | jj 
 ----+----
   1 |  2
 (1 row)
 
 SELECT * FROM ctas_nodata_2;
- ii | jj
+ ii | jj 
 ----+----
 (0 rows)
 
 SELECT * FROM ctas_nodata_3;
- ii | j
+ ii | j 
 ----+---
   1 | 2
 (1 row)
 
 SELECT * FROM ctas_nodata_4;
- ii | j
+ ii | j 
 ----+---
 (0 rows)
 
@@ -135,13 +135,13 @@ AS $$
   CREATE TABLE created_table AS SELECT * FROM int8_tbl;
 $$ LANGUAGE SQL;
 SELECT make_table();
- make_table
+ make_table 
 ------------
-
+ 
 (1 row)
 
 SELECT * FROM created_table;
-        q1        |        q2
+        q1        |        q2         
 ------------------+-------------------
               123 |               456
               123 |  4567890123456789
@@ -194,7 +194,7 @@ ERROR:  relation "ctas_ine_tbl" already exists
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE TABLE IF NOT EXISTS ctas_ine_tbl AS SELECT 1 / 0; -- ok
 NOTICE:  relation "ctas_ine_tbl" already exists, skipping
- QUERY PLAN
+ QUERY PLAN 
 ------------
 (0 rows)
 
@@ -204,7 +204,7 @@ ERROR:  relation "ctas_ine_tbl" already exists
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE TABLE IF NOT EXISTS ctas_ine_tbl AS SELECT 1 / 0 WITH NO DATA; -- ok
 NOTICE:  relation "ctas_ine_tbl" already exists, skipping
- QUERY PLAN
+ QUERY PLAN 
 ------------
 (0 rows)
 
@@ -215,7 +215,7 @@ ERROR:  relation "ctas_ine_tbl" already exists
 EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
   CREATE TABLE IF NOT EXISTS ctas_ine_tbl AS EXECUTE ctas_ine_query; -- ok
 NOTICE:  relation "ctas_ine_tbl" already exists, skipping
- QUERY PLAN
+ QUERY PLAN 
 ------------
 (0 rows)
 

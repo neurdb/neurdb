@@ -15,25 +15,25 @@ INSERT INTO test_having VALUES (8, 4, 'CCCC', 'I');
 INSERT INTO test_having VALUES (9, 4, 'CCCC', 'j');
 SELECT b, c FROM test_having
 	GROUP BY b, c HAVING count(*) = 1 ORDER BY b, c;
- b |    c
+ b |    c     
 ---+----------
- 1 | XXXX
- 3 | bbbb
+ 1 | XXXX    
+ 3 | bbbb    
 (2 rows)
 
 -- HAVING is effectively equivalent to WHERE in this case
 SELECT b, c FROM test_having
 	GROUP BY b, c HAVING b = 3 ORDER BY b, c;
- b |    c
+ b |    c     
 ---+----------
- 3 | BBBB
- 3 | bbbb
+ 3 | BBBB    
+ 3 | bbbb    
 (2 rows)
 
 SELECT lower(c), count(c) FROM test_having
 	GROUP BY lower(c) HAVING count(*) > 2 OR min(a) = max(a)
 	ORDER BY lower(c);
- lower | count
+ lower | count 
 -------+-------
  bbbb  |     3
  cccc  |     4
@@ -43,7 +43,7 @@ SELECT lower(c), count(c) FROM test_having
 SELECT c, max(a) FROM test_having
 	GROUP BY c HAVING count(*) > 2 OR min(a) = max(a)
 	ORDER BY c;
-    c     | max
+    c     | max 
 ----------+-----
  XXXX     |   0
  bbbb     |   5
@@ -52,12 +52,12 @@ SELECT c, max(a) FROM test_having
 -- test degenerate cases involving HAVING without GROUP BY
 -- Per SQL spec, these should generate 0 or 1 row, even without aggregates
 SELECT min(a), max(a) FROM test_having HAVING min(a) = max(a);
- min | max
+ min | max 
 -----+-----
 (0 rows)
 
 SELECT min(a), max(a) FROM test_having HAVING min(a) < max(a);
- min | max
+ min | max 
 -----+-----
    0 |   9
 (1 row)
@@ -73,19 +73,19 @@ LINE 1: SELECT 1 AS one FROM test_having HAVING a > 1;
                                                 ^
 -- the really degenerate case: need not scan table at all
 SELECT 1 AS one FROM test_having HAVING 1 > 2;
- one
+ one 
 -----
 (0 rows)
 
 SELECT 1 AS one FROM test_having HAVING 1 < 2;
- one
+ one 
 -----
    1
 (1 row)
 
 -- and just to prove that we aren't scanning the table:
 SELECT 1 AS one FROM test_having WHERE 1/a = 1 HAVING 1 < 2;
- one
+ one 
 -----
    1
 (1 row)

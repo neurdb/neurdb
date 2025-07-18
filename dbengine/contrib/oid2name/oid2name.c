@@ -600,7 +600,7 @@ main(int argc, char **argv)
 
 	if (my_opts->dbname == NULL)
 	{
-		my_opts->dbname = "postgres";
+		my_opts->dbname = "neurdb";
 		my_opts->nodb = true;
 	}
 	pgconn = sql_conn(my_opts);

@@ -1957,7 +1957,7 @@ drop_database_if_exists(const char *dbname)
 	/* Set warning level so we don't see chatter about nonexistent DB */
 	psql_add_command(buf, "SET client_min_messages = warning");
 	psql_add_command(buf, "DROP DATABASE IF EXISTS \"%s\"", dbname);
-	psql_end_command(buf, "postgres");
+	psql_end_command(buf, "neurdb");
 }
 
 static void
@@ -1984,7 +1984,7 @@ create_database(const char *dbname)
 					 "ALTER DATABASE \"%s\" SET bytea_output TO 'hex';"
 					 "ALTER DATABASE \"%s\" SET timezone_abbreviations TO 'Default';",
 					 dbname, dbname, dbname, dbname, dbname, dbname);
-	psql_end_command(buf, "postgres");
+	psql_end_command(buf, "neurdb");
 
 	/*
 	 * Install any requested extensions.  We use CREATE IF NOT EXISTS so that
@@ -2002,7 +2002,7 @@ drop_role_if_exists(const char *rolename)
 	/* Set warning level so we don't see chatter about nonexistent role */
 	psql_add_command(buf, "SET client_min_messages = warning");
 	psql_add_command(buf, "DROP ROLE IF EXISTS \"%s\"", rolename);
-	psql_end_command(buf, "postgres");
+	psql_end_command(buf, "neurdb");
 }
 
 static void
@@ -2016,13 +2016,13 @@ create_role(const char *rolename, const _stringlist *granted_dbs)
 		psql_add_command(buf, "GRANT ALL ON DATABASE \"%s\" TO \"%s\"",
 						 granted_dbs->str, rolename);
 	}
-	psql_end_command(buf, "postgres");
+	psql_end_command(buf, "neurdb");
 }
 
 static void
 help(void)
 {
-	printf(_("NeurDB regression test driver\n"));
+	printf(_("PostgreSQL regression test driver\n"));
 	printf(_("\n"));
 	printf(_("Usage:\n  %s [OPTION]... [EXTRA-TEST]...\n"), progname);
 	printf(_("\n"));

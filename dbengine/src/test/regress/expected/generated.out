@@ -1,31 +1,31 @@
 -- sanity check of system catalog
 SELECT attrelid, attname, attgenerated FROM pg_attribute WHERE attgenerated NOT IN ('', 's');
- attrelid | attname | attgenerated
+ attrelid | attname | attgenerated 
 ----------+---------+--------------
 (0 rows)
 
 CREATE TABLE gtest0 (a int PRIMARY KEY, b int GENERATED ALWAYS AS (55) STORED);
 CREATE TABLE gtest1 (a int PRIMARY KEY, b int GENERATED ALWAYS AS (a * 2) STORED);
 SELECT table_name, column_name, column_default, is_nullable, is_generated, generation_expression FROM information_schema.columns WHERE table_name LIKE 'gtest_' ORDER BY 1, 2;
- table_name | column_name | column_default | is_nullable | is_generated | generation_expression
+ table_name | column_name | column_default | is_nullable | is_generated | generation_expression 
 ------------+-------------+----------------+-------------+--------------+-----------------------
- gtest0     | a           |                | NO          | NEVER        |
+ gtest0     | a           |                | NO          | NEVER        | 
  gtest0     | b           |                | YES         | ALWAYS       | 55
- gtest1     | a           |                | NO          | NEVER        |
+ gtest1     | a           |                | NO          | NEVER        | 
  gtest1     | b           |                | YES         | ALWAYS       | (a * 2)
 (4 rows)
 
 SELECT table_name, column_name, dependent_column FROM information_schema.column_column_usage ORDER BY 1, 2, 3;
- table_name | column_name | dependent_column
+ table_name | column_name | dependent_column 
 ------------+-------------+------------------
  gtest1     | a           | b
 (1 row)
 
 \d gtest1
                             Table "public.gtest1"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           | not null |
+ a      | integer |           | not null | 
  b      | integer |           |          | generated always as (a * 2) stored
 Indexes:
     "gtest1_pkey" PRIMARY KEY, btree (a)
@@ -117,7 +117,7 @@ ERROR:  cannot insert a non-DEFAULT value into column "b"
 DETAIL:  Column "b" is a generated column.
 INSERT INTO gtest1 VALUES (3, DEFAULT), (4, DEFAULT);  -- ok
 SELECT * FROM gtest1 ORDER BY a;
- a | b
+ a | b 
 ---+---
  1 | 2
  2 | 4
@@ -131,21 +131,21 @@ UPDATE gtest1 SET b = 11 WHERE a = 1;  -- error
 ERROR:  column "b" can only be updated to DEFAULT
 DETAIL:  Column "b" is a generated column.
 SELECT * FROM gtest1 ORDER BY a;
- a | b
+ a | b 
 ---+---
  1 | 2
  2 | 4
 (2 rows)
 
 SELECT a, b, b * 2 AS b2 FROM gtest1 ORDER BY a;
- a | b | b2
+ a | b | b2 
 ---+---+----
  1 | 2 |  4
  2 | 4 |  8
 (2 rows)
 
 SELECT a, b FROM gtest1 WHERE b = 4 ORDER BY a;
- a | b
+ a | b 
 ---+---
  2 | 4
 (1 row)
@@ -154,7 +154,7 @@ SELECT a, b FROM gtest1 WHERE b = 4 ORDER BY a;
 INSERT INTO gtest1 VALUES (2000000000);
 ERROR:  integer out of range
 SELECT * FROM gtest1;
- a | b
+ a | b 
 ---+---
  2 | 4
  1 | 2
@@ -165,7 +165,7 @@ DELETE FROM gtest1 WHERE a = 2000000000;
 CREATE TABLE gtestx (x int, y int);
 INSERT INTO gtestx VALUES (11, 1), (22, 2), (33, 3);
 SELECT * FROM gtestx, gtest1 WHERE gtestx.y = gtest1.a;
- x  | y | a | b
+ x  | y | a | b 
 ----+---+---+---
  11 | 1 | 1 | 2
  22 | 2 | 2 | 4
@@ -174,7 +174,7 @@ SELECT * FROM gtestx, gtest1 WHERE gtestx.y = gtest1.a;
 DROP TABLE gtestx;
 -- test UPDATE/DELETE quals
 SELECT * FROM gtest1 ORDER BY a;
- a | b
+ a | b 
 ---+---
  1 | 2
  2 | 4
@@ -182,7 +182,7 @@ SELECT * FROM gtest1 ORDER BY a;
 
 UPDATE gtest1 SET a = 3 WHERE b = 4;
 SELECT * FROM gtest1 ORDER BY a;
- a | b
+ a | b 
 ---+---
  1 | 2
  3 | 6
@@ -190,7 +190,7 @@ SELECT * FROM gtest1 ORDER BY a;
 
 DELETE FROM gtest1 WHERE b = 2;
 SELECT * FROM gtest1 ORDER BY a;
- a | b
+ a | b 
 ---+---
  3 | 6
 (1 row)
@@ -208,7 +208,7 @@ MERGE INTO gtestm t USING (VALUES (1, 10), (2, 20)) v(id, f1) ON t.id = v.id
   WHEN MATCHED THEN UPDATE SET f1 = v.f1
   WHEN NOT MATCHED THEN INSERT VALUES (v.id, v.f1, 200);
 SELECT * FROM gtestm ORDER BY id;
- id | f1 | f2  | f3 | f4
+ id | f1 | f2  | f3 | f4  
 ----+----+-----+----+-----
   1 | 10 | 100 | 20 | 200
   2 | 20 | 200 | 40 | 400
@@ -218,7 +218,7 @@ DROP TABLE gtestm;
 -- views
 CREATE VIEW gtest1v AS SELECT * FROM gtest1;
 SELECT * FROM gtest1v;
- a | b
+ a | b 
 ---+---
  3 | 6
 (1 row)
@@ -245,7 +245,7 @@ INSERT INTO gtest1v VALUES (8, DEFAULT), (9, DEFAULT);  -- error
 ERROR:  cannot insert a non-DEFAULT value into column "b"
 DETAIL:  Column "b" is a generated column.
 SELECT * FROM gtest1v;
- a | b
+ a | b  
 ---+----
  3 |  6
  5 | 10
@@ -257,7 +257,7 @@ DELETE FROM gtest1v WHERE a >= 5;
 DROP VIEW gtest1v;
 -- CTEs
 WITH foo AS (SELECT * FROM gtest1) SELECT * FROM foo;
- a | b
+ a | b 
 ---+---
  3 | 6
 (1 row)
@@ -265,27 +265,27 @@ WITH foo AS (SELECT * FROM gtest1) SELECT * FROM foo;
 -- inheritance
 CREATE TABLE gtest1_1 () INHERITS (gtest1);
 SELECT * FROM gtest1_1;
- a | b
+ a | b 
 ---+---
 (0 rows)
 
 \d gtest1_1
                            Table "public.gtest1_1"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           | not null |
+ a      | integer |           | not null | 
  b      | integer |           |          | generated always as (a * 2) stored
 Inherits: gtest1
 
 INSERT INTO gtest1_1 VALUES (4);
 SELECT * FROM gtest1_1;
- a | b
+ a | b 
 ---+---
  4 | 8
 (1 row)
 
 SELECT * FROM gtest1;
- a | b
+ a | b 
 ---+---
  3 | 6
  4 | 8
@@ -313,11 +313,11 @@ CREATE TABLE gtestx (x int, b int GENERATED ALWAYS AS (a * 22) STORED) INHERITS 
 NOTICE:  merging column "b" with inherited definition
 \d+ gtestx
                                                 Table "public.gtestx"
- Column |  Type   | Collation | Nullable |               Default               | Storage | Stats target | Description
+ Column |  Type   | Collation | Nullable |               Default               | Storage | Stats target | Description 
 --------+---------+-----------+----------+-------------------------------------+---------+--------------+-------------
- a      | integer |           | not null |                                     | plain   |              |
- b      | integer |           |          | generated always as (a * 22) stored | plain   |              |
- x      | integer |           |          |                                     | plain   |              |
+ a      | integer |           | not null |                                     | plain   |              | 
+ b      | integer |           |          | generated always as (a * 22) stored | plain   |              | 
+ x      | integer |           |          |                                     | plain   |              | 
 Inherits: gtest1
 
 CREATE TABLE gtestxx_1 (a int NOT NULL, b int);
@@ -349,11 +349,11 @@ NOTICE:  moving and merging column "b" with inherited definition
 DETAIL:  User-specified column moved to the position of the inherited column.
 \d gtest1_y
                            Table "public.gtest1_y"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           | not null |
+ a      | integer |           | not null | 
  b      | integer |           |          | generated always as (x + 1) stored
- x      | integer |           |          |
+ x      | integer |           |          | 
 Inherits: gtest1,
           gtesty
 
@@ -362,14 +362,14 @@ CREATE TABLE gtestp (f1 int);
 CREATE TABLE gtestc (f2 int GENERATED ALWAYS AS (f1+1) STORED) INHERITS(gtestp);
 INSERT INTO gtestc values(42);
 TABLE gtestc;
- f1 | f2
+ f1 | f2 
 ----+----
  42 | 43
 (1 row)
 
 UPDATE gtestp SET f1 = f1 * 10;
 TABLE gtestc;
- f1  | f2
+ f1  | f2  
 -----+-----
  420 | 421
 (1 row)
@@ -380,43 +380,43 @@ NOTICE:  drop cascades to table gtestc
 CREATE TABLE gtest3 (a int, b int GENERATED ALWAYS AS (a * 3) STORED);
 INSERT INTO gtest3 (a) VALUES (1), (2), (3), (NULL);
 SELECT * FROM gtest3 ORDER BY a;
- a | b
+ a | b 
 ---+---
  1 | 3
  2 | 6
  3 | 9
-   |
+   |  
 (4 rows)
 
 UPDATE gtest3 SET a = 22 WHERE a = 2;
 SELECT * FROM gtest3 ORDER BY a;
- a  | b
+ a  | b  
 ----+----
   1 |  3
   3 |  9
  22 | 66
-    |
+    |   
 (4 rows)
 
 CREATE TABLE gtest3a (a text, b text GENERATED ALWAYS AS (a || '+' || a) STORED);
 INSERT INTO gtest3a (a) VALUES ('a'), ('b'), ('c'), (NULL);
 SELECT * FROM gtest3a ORDER BY a;
- a |  b
+ a |  b  
 ---+-----
  a | a+a
  b | b+b
  c | c+c
-   |
+   | 
 (4 rows)
 
 UPDATE gtest3a SET a = 'bb' WHERE a = 'b';
 SELECT * FROM gtest3a ORDER BY a;
- a  |   b
+ a  |   b   
 ----+-------
  a  | a+a
  bb | bb+bb
  c  | c+c
-    |
+    | 
 (4 rows)
 
 -- COPY
@@ -433,7 +433,7 @@ COPY gtest1 (a, b) FROM stdin;
 ERROR:  column "b" is a generated column
 DETAIL:  Generated columns cannot be used in COPY.
 SELECT * FROM gtest1 ORDER BY a;
- a | b
+ a | b 
 ---+---
  1 | 2
  2 | 4
@@ -454,7 +454,7 @@ COPY gtest3 (a, b) FROM stdin;
 ERROR:  column "b" is a generated column
 DETAIL:  Generated columns cannot be used in COPY.
 SELECT * FROM gtest3 ORDER BY a;
- a | b
+ a | b  
 ---+----
  1 |  3
  2 |  6
@@ -466,9 +466,9 @@ SELECT * FROM gtest3 ORDER BY a;
 CREATE TABLE gtest2 (a int PRIMARY KEY, b int GENERATED ALWAYS AS (NULL) STORED);
 INSERT INTO gtest2 VALUES (1);
 SELECT * FROM gtest2;
- a | b
+ a | b 
 ---+---
- 1 |
+ 1 |  
 (1 row)
 
 -- simple column reference for varlena types
@@ -476,10 +476,10 @@ CREATE TABLE gtest_varlena (a varchar, b varchar GENERATED ALWAYS AS (a) STORED)
 INSERT INTO gtest_varlena (a) VALUES('01234567890123456789');
 INSERT INTO gtest_varlena (a) VALUES(NULL);
 SELECT * FROM gtest_varlena ORDER BY a;
-          a           |          b
+          a           |          b           
 ----------------------+----------------------
  01234567890123456789 | 01234567890123456789
-                      |
+                      | 
 (2 rows)
 
 DROP TABLE gtest_varlena;
@@ -491,7 +491,7 @@ CREATE TABLE gtest4 (
 );
 INSERT INTO gtest4 VALUES (1), (6);
 SELECT * FROM gtest4;
- a |    b
+ a |    b    
 ---+---------
  1 | (2,3)
  6 | (12,18)
@@ -508,7 +508,7 @@ INSERT INTO gtest_tableoid VALUES (1), (2);
 ALTER TABLE gtest_tableoid ADD COLUMN
   c regclass GENERATED ALWAYS AS (tableoid) STORED;
 SELECT * FROM gtest_tableoid;
- a | b |       c
+ a | b |       c        
 ---+---+----------------
  1 | t | gtest_tableoid
  2 | t | gtest_tableoid
@@ -524,9 +524,9 @@ ALTER TABLE gtest10 DROP COLUMN b CASCADE;  -- drops c too
 NOTICE:  drop cascades to column c of table gtest10
 \d gtest10
               Table "public.gtest10"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           | not null |
+ a      | integer |           | not null | 
 Indexes:
     "gtest10_pkey" PRIMARY KEY, btree (a)
 
@@ -547,7 +547,7 @@ SET ROLE regress_user11;
 SELECT a, b FROM gtest11s;  -- not allowed
 ERROR:  permission denied for table gtest11s
 SELECT a, c FROM gtest11s;  -- allowed
- a | c
+ a | c  
 ---+----
  1 | 20
  2 | 40
@@ -556,7 +556,7 @@ SELECT a, c FROM gtest11s;  -- allowed
 SELECT gf1(10);  -- not allowed
 ERROR:  permission denied for function gf1
 SELECT a, c FROM gtest12s;  -- allowed
- a | c
+ a | c  
 ---+----
  1 | 30
  2 | 60
@@ -620,9 +620,9 @@ CREATE INDEX gtest22c_expr_idx ON gtest22c ((b * 3));
 CREATE INDEX gtest22c_pred_idx ON gtest22c (a) WHERE b > 0;
 \d gtest22c
                            Table "public.gtest22c"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           |          |
+ a      | integer |           |          | 
  b      | integer |           |          | generated always as (a * 2) stored
 Indexes:
     "gtest22c_b_idx" btree (b)
@@ -633,40 +633,40 @@ INSERT INTO gtest22c VALUES (1), (2), (3);
 SET enable_seqscan TO off;
 SET enable_bitmapscan TO off;
 EXPLAIN (COSTS OFF) SELECT * FROM gtest22c WHERE b = 4;
-                 QUERY PLAN
+                 QUERY PLAN                  
 ---------------------------------------------
  Index Scan using gtest22c_b_idx on gtest22c
    Index Cond: (b = 4)
 (2 rows)
 
 SELECT * FROM gtest22c WHERE b = 4;
- a | b
+ a | b 
 ---+---
  2 | 4
 (1 row)
 
 EXPLAIN (COSTS OFF) SELECT * FROM gtest22c WHERE b * 3 = 6;
-                   QUERY PLAN
+                   QUERY PLAN                   
 ------------------------------------------------
  Index Scan using gtest22c_expr_idx on gtest22c
    Index Cond: ((b * 3) = 6)
 (2 rows)
 
 SELECT * FROM gtest22c WHERE b * 3 = 6;
- a | b
+ a | b 
 ---+---
  1 | 2
 (1 row)
 
 EXPLAIN (COSTS OFF) SELECT * FROM gtest22c WHERE a = 1 AND b > 0;
-                   QUERY PLAN
+                   QUERY PLAN                   
 ------------------------------------------------
  Index Scan using gtest22c_pred_idx on gtest22c
    Index Cond: (a = 1)
 (2 rows)
 
 SELECT * FROM gtest22c WHERE a = 1 AND b > 0;
- a | b
+ a | b 
 ---+---
  1 | 2
 (1 row)
@@ -683,9 +683,9 @@ ERROR:  invalid ON DELETE action for foreign key constraint containing generated
 CREATE TABLE gtest23b (a int PRIMARY KEY, b int GENERATED ALWAYS AS (a * 2) STORED REFERENCES gtest23a (x));
 \d gtest23b
                            Table "public.gtest23b"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           | not null |
+ a      | integer |           | not null | 
  b      | integer |           |          | generated always as (a * 2) stored
 Indexes:
     "gtest23b_pkey" PRIMARY KEY, btree (a)
@@ -757,53 +757,53 @@ CREATE TABLE gtest_child3 (f1 date NOT NULL, f2 bigint, f3 bigint GENERATED ALWA
 ALTER TABLE gtest_parent ATTACH PARTITION gtest_child3 FOR VALUES FROM ('2016-09-01') TO ('2016-10-01');
 \d gtest_child
                           Table "public.gtest_child"
- Column |  Type  | Collation | Nullable |               Default
+ Column |  Type  | Collation | Nullable |               Default               
 --------+--------+-----------+----------+-------------------------------------
- f1     | date   |           | not null |
- f2     | bigint |           |          |
+ f1     | date   |           | not null | 
+ f2     | bigint |           |          | 
  f3     | bigint |           |          | generated always as (f2 * 2) stored
 Partition of: gtest_parent FOR VALUES FROM ('07-01-2016') TO ('08-01-2016')
 
 \d gtest_child2
                           Table "public.gtest_child2"
- Column |  Type  | Collation | Nullable |               Default
+ Column |  Type  | Collation | Nullable |               Default                
 --------+--------+-----------+----------+--------------------------------------
- f1     | date   |           | not null |
- f2     | bigint |           |          |
+ f1     | date   |           | not null | 
+ f2     | bigint |           |          | 
  f3     | bigint |           |          | generated always as (f2 * 22) stored
 Partition of: gtest_parent FOR VALUES FROM ('08-01-2016') TO ('09-01-2016')
 
 \d gtest_child3
                           Table "public.gtest_child3"
- Column |  Type  | Collation | Nullable |               Default
+ Column |  Type  | Collation | Nullable |               Default                
 --------+--------+-----------+----------+--------------------------------------
- f1     | date   |           | not null |
- f2     | bigint |           |          |
+ f1     | date   |           | not null | 
+ f2     | bigint |           |          | 
  f3     | bigint |           |          | generated always as (f2 * 33) stored
 Partition of: gtest_parent FOR VALUES FROM ('09-01-2016') TO ('10-01-2016')
 
 INSERT INTO gtest_parent (f1, f2) VALUES ('2016-07-15', 1);
 SELECT * FROM gtest_parent;
-     f1     | f2 | f3
+     f1     | f2 | f3 
 ------------+----+----
  07-15-2016 |  1 |  2
 (1 row)
 
 SELECT * FROM gtest_child;
-     f1     | f2 | f3
+     f1     | f2 | f3 
 ------------+----+----
  07-15-2016 |  1 |  2
 (1 row)
 
 UPDATE gtest_parent SET f1 = f1 + 60;
 SELECT * FROM gtest_parent;
-     f1     | f2 | f3
+     f1     | f2 | f3 
 ------------+----+----
  09-13-2016 |  1 | 33
 (1 row)
 
 SELECT * FROM gtest_child3;
-     f1     | f2 | f3
+     f1     | f2 | f3 
 ------------+----+----
  09-13-2016 |  1 | 33
 (1 row)
@@ -825,7 +825,7 @@ CREATE TABLE gtest25 (a int PRIMARY KEY);
 INSERT INTO gtest25 VALUES (3), (4);
 ALTER TABLE gtest25 ADD COLUMN b int GENERATED ALWAYS AS (a * 3) STORED;
 SELECT * FROM gtest25 ORDER BY a;
- a | b
+ a | b  
 ---+----
  3 |  9
  4 | 12
@@ -842,7 +842,7 @@ ALTER TABLE gtest25 ADD COLUMN d int DEFAULT 101;
 ALTER TABLE gtest25 ALTER COLUMN d SET DATA TYPE float8,
   ADD COLUMN y float8 GENERATED ALWAYS AS (d * 4) STORED;
 SELECT * FROM gtest25 ORDER BY a;
- a | b  | c  |  x  |  d  |  y
+ a | b  | c  |  x  |  d  |  y  
 ---+----+----+-----+-----+-----
  3 |  9 | 42 | 168 | 101 | 404
  4 | 12 | 42 | 168 | 101 | 404
@@ -850,9 +850,9 @@ SELECT * FROM gtest25 ORDER BY a;
 
 \d gtest25
                                          Table "public.gtest25"
- Column |       Type       | Collation | Nullable |                       Default
+ Column |       Type       | Collation | Nullable |                       Default                        
 --------+------------------+-----------+----------+------------------------------------------------------
- a      | integer          |           | not null |
+ a      | integer          |           | not null | 
  b      | integer          |           |          | generated always as (a * 3) stored
  c      | integer          |           |          | 42
  x      | integer          |           |          | generated always as (c * 4) stored
@@ -874,14 +874,14 @@ DETAIL:  Column "a" is used by generated column "x".
 ALTER TABLE gtest27 ALTER COLUMN x TYPE numeric;
 \d gtest27
                                 Table "public.gtest27"
- Column |  Type   | Collation | Nullable |                  Default
+ Column |  Type   | Collation | Nullable |                  Default                   
 --------+---------+-----------+----------+--------------------------------------------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
  x      | numeric |           |          | generated always as (((a + b) * 2)) stored
 
 SELECT * FROM gtest27;
- a | b  | x
+ a | b  | x  
 ---+----+----
  3 |  7 | 20
  4 | 11 | 30
@@ -900,10 +900,10 @@ ALTER TABLE gtest27
   ADD COLUMN x bigint GENERATED ALWAYS AS ((a + b) * 2) STORED;
 \d gtest27
                               Table "public.gtest27"
- Column |  Type  | Collation | Nullable |                 Default
+ Column |  Type  | Collation | Nullable |                 Default                  
 --------+--------+-----------+----------+------------------------------------------
- a      | bigint |           |          |
- b      | bigint |           |          |
+ a      | bigint |           |          | 
+ b      | bigint |           |          | 
  x      | bigint |           |          | generated always as ((a + b) * 2) stored
 
 -- Ideally you could just do this, but not today (and should x change type?):
@@ -914,14 +914,14 @@ ERROR:  cannot alter type of a column used by a generated column
 DETAIL:  Column "a" is used by generated column "x".
 \d gtest27
                               Table "public.gtest27"
- Column |  Type  | Collation | Nullable |                 Default
+ Column |  Type  | Collation | Nullable |                 Default                  
 --------+--------+-----------+----------+------------------------------------------
- a      | bigint |           |          |
- b      | bigint |           |          |
+ a      | bigint |           |          | 
+ b      | bigint |           |          | 
  x      | bigint |           |          | generated always as ((a + b) * 2) stored
 
 SELECT * FROM gtest27;
- a | b  | x
+ a | b  | x  
 ---+----+----
  3 |  7 | 20
  4 | 11 | 30
@@ -941,28 +941,28 @@ ALTER TABLE gtest29 ALTER COLUMN b DROP EXPRESSION;
 INSERT INTO gtest29 (a) VALUES (5);
 INSERT INTO gtest29 (a, b) VALUES (6, 66);
 SELECT * FROM gtest29;
- a | b
+ a | b  
 ---+----
  3 |  6
  4 |  8
- 5 |
+ 5 |   
  6 | 66
 (4 rows)
 
 \d gtest29
               Table "public.gtest29"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 
 -- check that dependencies between columns have also been removed
 ALTER TABLE gtest29 DROP COLUMN a;  -- should not drop b
 \d gtest29
               Table "public.gtest29"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- b      | integer |           |          |
+ b      | integer |           |          | 
 
 -- with inheritance
 CREATE TABLE gtest30 (
@@ -973,18 +973,18 @@ CREATE TABLE gtest30_1 () INHERITS (gtest30);
 ALTER TABLE gtest30 ALTER COLUMN b DROP EXPRESSION;
 \d gtest30
               Table "public.gtest30"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Number of child tables: 1 (Use \d+ to list them.)
 
 \d gtest30_1
              Table "public.gtest30_1"
- Column |  Type   | Collation | Nullable | Default
+ Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------
- a      | integer |           |          |
- b      | integer |           |          |
+ a      | integer |           |          | 
+ b      | integer |           |          | 
 Inherits: gtest30
 
 DROP TABLE gtest30 CASCADE;
@@ -998,17 +998,17 @@ ALTER TABLE ONLY gtest30 ALTER COLUMN b DROP EXPRESSION;  -- error
 ERROR:  ALTER TABLE / DROP EXPRESSION must be applied to child tables too
 \d gtest30
                             Table "public.gtest30"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           |          |
+ a      | integer |           |          | 
  b      | integer |           |          | generated always as (a * 2) stored
 Number of child tables: 1 (Use \d+ to list them.)
 
 \d gtest30_1
                            Table "public.gtest30_1"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- a      | integer |           |          |
+ a      | integer |           |          | 
  b      | integer |           |          | generated always as (a * 2) stored
 Inherits: gtest30
 
@@ -1072,7 +1072,7 @@ INSERT INTO gtest26 (a) VALUES (-2), (0), (3);
 INFO:  gtest2: BEFORE: new = (-2,)
 INFO:  gtest4: AFTER: new = (-2,-4)
 SELECT * FROM gtest26 ORDER BY a;
- a  | b
+ a  | b  
 ----+----
  -2 | -4
   0 |  0
@@ -1087,7 +1087,7 @@ INFO:  gtest3: AFTER: new = (4,8)
 INFO:  gtest4: AFTER: old = (3,6)
 INFO:  gtest4: AFTER: new = (-6,-12)
 SELECT * FROM gtest26 ORDER BY a;
- a  |  b
+ a  |  b  
 ----+-----
  -6 | -12
   0 |   0
@@ -1098,7 +1098,7 @@ DELETE FROM gtest26 WHERE a = -6;
 INFO:  gtest1: BEFORE: old = (-6,-12)
 INFO:  gtest3: AFTER: old = (-6,-12)
 SELECT * FROM gtest26 ORDER BY a;
- a | b
+ a | b 
 ---+---
  0 | 0
  4 | 8
@@ -1151,7 +1151,7 @@ INFO:  gtest12_01: BEFORE: new = (11,)
 INFO:  gtest12_03: BEFORE: old = (1,2)
 INFO:  gtest12_03: BEFORE: new = (10,)
 SELECT * FROM gtest26 ORDER BY a;
- a  | b
+ a  | b  
 ----+----
  10 | 20
 (1 row)
@@ -1167,15 +1167,16 @@ ALTER TABLE gtest28a DROP COLUMN a;
 CREATE TABLE gtest28b (LIKE gtest28a INCLUDING GENERATED);
 \d gtest28*
                            Table "public.gtest28a"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- b      | integer |           |          |
- c      | integer |           |          |
+ b      | integer |           |          | 
+ c      | integer |           |          | 
  x      | integer |           |          | generated always as (b * 2) stored
 
                            Table "public.gtest28b"
- Column |  Type   | Collation | Nullable |              Default
+ Column |  Type   | Collation | Nullable |              Default               
 --------+---------+-----------+----------+------------------------------------
- b      | integer |           |          |
- c      | integer |           |          |
+ b      | integer |           |          | 
+ c      | integer |           |          | 
  x      | integer |           |          | generated always as (b * 2) stored
+

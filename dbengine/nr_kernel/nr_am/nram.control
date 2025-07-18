@@ -1,0 +1,5 @@
+# nram.control
+comment = 'Custom CCaaLF-based Table Access Method'
+default_version = '1.0'
+relocatable = true
+module_pathname = '$libdir/nram'
