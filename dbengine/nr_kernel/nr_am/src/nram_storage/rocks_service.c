@@ -22,14 +22,15 @@ void ResultQueueInit(ResultQueue *q) {
 }
 
 void ResultQueueDestroy(ResultQueue *q) {
+    ResultNode *curr, *tmp;
     NRAM_INFO();
     pthread_mutex_lock(&q->lock);
     q->shutdown = true;
     pthread_mutex_unlock(&q->lock);
 
-    ResultNode *curr = q->head;
+    curr = q->head;
     while (curr) {
-        ResultNode *tmp = curr;
+        tmp = curr;
         curr = curr->next;
         if (tmp->msg) {
             if (tmp->msg->entity)
@@ -43,8 +44,8 @@ void ResultQueueDestroy(ResultQueue *q) {
 }
 
 void ResultQueuePush(ResultQueue *q, KVMsg *msg) {
-    NRAM_INFO();
     ResultNode *node = malloc(sizeof(ResultNode));
+    NRAM_INFO();
     node->msg = msg;
     node->next = NULL;
 
@@ -63,9 +64,11 @@ void ResultQueuePush(ResultQueue *q, KVMsg *msg) {
 }
 
 KVMsg *ResultQueuePop(ResultQueue *q) {
+    ResultNode *node;
+    KVMsg *msg;
     NRAM_INFO();
     pthread_mutex_lock(&q->lock);
-    ResultNode *node = q->head;
+    node = q->head;
     if (q->shutdown || node == NULL) {
         pthread_mutex_unlock(&q->lock);
         return NULL;
@@ -75,7 +78,7 @@ KVMsg *ResultQueuePop(ResultQueue *q) {
     if (q->head == NULL) q->tail = NULL;
     pthread_mutex_unlock(&q->lock);
 
-    KVMsg *msg = node->msg;
+    msg = node->msg;
     free(node);
     return msg;
 }
@@ -104,12 +107,13 @@ bool ResultQueueIsEmpty(ResultQueue *q) {
 static void ResultQueueClear(ResultQueue *q) {
     // NRAM_INFO();
     // PrintResultQueue(q);
+    KVChannel *resp_chan;
     while (!ResultQueueIsEmpty(q)) {
         KVMsg *resp = ResultQueuePop(q);
         if (resp) {
             char chan_name[64];
             snprintf(chan_name, sizeof(chan_name), "kv_resp_%u", resp->header.respChannel);
-            KVChannel *resp_chan = KVChannelInit(chan_name, false);
+            resp_chan = KVChannelInit(chan_name, false);
             KVChannelPushMsg(resp_chan, resp, -1);
 
             if (resp->entity)
@@ -334,10 +338,10 @@ KVMsg *handle_kv_range_scan(KVMsg *msg) {
 
     /* Deserialize start_key and end_key */
     memcpy(&key_len_1, msg->entity, sizeof(Size));
-    start_key = tkey_deserialize(msg->entity + sizeof(Size), key_len_1);
+    start_key = tkey_deserialize((char *)msg->entity + sizeof(Size), key_len_1);
 
-    memcpy(&key_len_2, msg->entity + sizeof(Size) + key_len_1, sizeof(Size));
-    end_key = tkey_deserialize(msg->entity + sizeof(Size) + key_len_1 + sizeof(Size), key_len_2);
+    memcpy(&key_len_2, (char *)msg->entity + sizeof(Size) + key_len_1, sizeof(Size));
+    end_key = tkey_deserialize((char *)msg->entity + sizeof(Size) + key_len_1 + sizeof(Size), key_len_2);
 
     NRAM_TEST_INFO("[Rocks] handle_kv_range_scan, [table %u - %lu, table %u - %lu)",
                    start_key->tableOid, start_key->tid, end_key->tableOid, end_key->tid);
