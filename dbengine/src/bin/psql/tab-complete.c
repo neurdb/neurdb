@@ -3325,21 +3325,29 @@ psql_completion(const char *text, int start, int end)
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
 			 TailMatches("ON", MatchAny))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("NOT DEFERRABLE", "DEFERRABLE", "INITIALLY",
 						  "REFERENCING", "FOR", "WHEN (", "EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("NOT DEFERRABLE", "DEFERRABLE", "INITIALLY",
 						  "REFERENCING", "FOR", "WHEN (", "EXECUTE PROCEDURE");
+#endif
 	}
 	else if ((HeadMatches("CREATE", "TRIGGER") ||
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
 			 (TailMatches("DEFERRABLE") || TailMatches("INITIALLY", "IMMEDIATE|DEFERRED")))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("REFERENCING", "FOR", "WHEN (", "EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("REFERENCING", "FOR", "WHEN (", "EXECUTE PROCEDURE");
+#endif
 	}
 	else if ((HeadMatches("CREATE", "TRIGGER") ||
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
@@ -3354,20 +3362,28 @@ psql_completion(const char *text, int start, int end)
 			 (TailMatches("REFERENCING", "OLD", "TABLE", "AS", MatchAny) ||
 			  TailMatches("REFERENCING", "OLD", "TABLE", MatchAny)))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("NEW TABLE", "FOR", "WHEN (", "EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("NEW TABLE", "FOR", "WHEN (", "EXECUTE PROCEDURE");
+#endif
 	}
 	else if ((HeadMatches("CREATE", "TRIGGER") ||
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
 			 (TailMatches("REFERENCING", "NEW", "TABLE", "AS", MatchAny) ||
 			  TailMatches("REFERENCING", "NEW", "TABLE", MatchAny)))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("OLD TABLE", "FOR", "WHEN (", "EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("OLD TABLE", "FOR", "WHEN (", "EXECUTE PROCEDURE");
+#endif
 	}
 	else if ((HeadMatches("CREATE", "TRIGGER") ||
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
@@ -3376,10 +3392,14 @@ psql_completion(const char *text, int start, int end)
 			  TailMatches("REFERENCING", "OLD|NEW", "TABLE", "AS", MatchAny, "OLD|NEW", "TABLE", MatchAny) ||
 			  TailMatches("REFERENCING", "OLD|NEW", "TABLE", MatchAny, "OLD|NEW", "TABLE", MatchAny)))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("FOR", "WHEN (", "EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("FOR", "WHEN (", "EXECUTE PROCEDURE");
+#endif
 	}
 	else if ((HeadMatches("CREATE", "TRIGGER") ||
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
@@ -3394,19 +3414,27 @@ psql_completion(const char *text, int start, int end)
 			 (TailMatches("FOR", "EACH", "ROW|STATEMENT") ||
 			  TailMatches("FOR", "ROW|STATEMENT")))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("WHEN (", "EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("WHEN (", "EXECUTE PROCEDURE");
+#endif
 	}
 	else if ((HeadMatches("CREATE", "TRIGGER") ||
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
 			 TailMatches("WHEN", "(*)"))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("EXECUTE PROCEDURE");
+#endif
 	}
 
 	/*
@@ -3417,10 +3445,14 @@ psql_completion(const char *text, int start, int end)
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
 			 TailMatches("EXECUTE"))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("PROCEDURE");
+#endif
 	}
 	else if ((HeadMatches("CREATE", "TRIGGER") ||
 			  HeadMatches("CREATE", "OR", "REPLACE", "TRIGGER")) &&
@@ -3531,18 +3563,26 @@ psql_completion(const char *text, int start, int end)
 	 */
 	else if (Matches("CREATE", "EVENT", "TRIGGER", MatchAny, "ON", MatchAny))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("WHEN TAG IN (", "EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("WHEN TAG IN (", "EXECUTE PROCEDURE");
+#endif
 	}
 	else if (HeadMatches("CREATE", "EVENT", "TRIGGER") &&
 			 TailMatches("WHEN|AND", MatchAny, "IN", "(*)"))
 	{
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		if (pset.sversion >= 110000)
+#endif
 			COMPLETE_WITH("EXECUTE FUNCTION");
+#if defined(NR_COMPATIBLE_PG_VERSION)
 		else
 			COMPLETE_WITH("EXECUTE PROCEDURE");
+#endif
 	}
 	else if (HeadMatches("CREATE", "EVENT", "TRIGGER") &&
 			 TailMatches("EXECUTE", "FUNCTION|PROCEDURE"))
