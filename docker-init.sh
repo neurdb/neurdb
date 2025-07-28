@@ -36,7 +36,7 @@ mkdir -p $NR_PSQL_PATH
 # Compile PostgreSQL
 cd $NR_DBENGINE_PATH
 make distclean || true
-./configure --prefix=$NR_PSQL_PATH
+./configure --prefix=$NR_PSQL_PATH  --enable-debug
 make -j
 make install
 echo 'Done! Now start the database'
