@@ -277,7 +277,13 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
 
   NeurDBInferenceResult *result = palloc(sizeof(NeurDBInferenceResult));
   // TODO: infer the type of the result
-  result->typeoid = TEXTOID;
+  if (type == PREDICT_CLASS) {
+    result->typeoid = TEXTOID;
+  } else if (type == PREDICT_VALUE) {
+    result->typeoid = FLOAT8OID;
+  } else {
+    elog(ERROR, "Unsupported data type");
+  }
   result->result = presult;
   result->id_class_map = last_id_class_map;
 
