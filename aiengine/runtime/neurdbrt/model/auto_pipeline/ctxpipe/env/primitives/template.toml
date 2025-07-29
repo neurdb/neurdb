@@ -1,0 +1,885 @@
+### Global imports & definitions
+
+[meta]
+head = """\
+import os
+from typing import Tuple
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+"""
+global = """\
+def catch_num(data):
+    num_cols = [col for col in data.columns if str(data[col].dtypes) != "object"]
+    num_cols.sort()
+    cat_cols = [col for col in data.columns if col not in num_cols]
+    cat_train_x = data[cat_cols]
+    num_train_x = data[num_cols]
+    return cat_train_x, num_train_x
+
+
+class Primitive:
+    def __init__(self, name="blank"):
+        self.name = name
+        self.description = "No-op"
+        self.type = "blank"
+
+    def transform(
+        self, train_x: pd.DataFrame, test_x: pd.DataFrame, train_y: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        return train_x, test_x
+
+    def __repr__(self) -> str:
+        return f"<{self.name}>"
+"""
+
+### Blank component
+
+[components.blank]
+head = ""
+global = ""
+local = ""
+
+### ImputerNum components
+
+[components.ImputerMean]
+head = "from sklearn.impute import SimpleImputer"
+global = """\
+class ImputerMean(Primitive):
+    def __init__(self, random_state=0):
+        super(ImputerMean, self).__init__(name="ImputerMean")
+        self.type = "ImputerNum"
+        self.imp = SimpleImputer()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_trainX, num_trainX = catch_num(train_x)
+        cat_testX, num_testX = catch_num(test_x)
+        self.imp.fit(num_trainX)
+        cols = list(num_trainX.columns)
+        num_trainX = self.imp.fit_transform(num_trainX)
+        num_trainX = pd.DataFrame(num_trainX).reset_index(drop=True).infer_objects()
+        cols = ["num_" + str(i) for i in num_trainX.columns]
+        num_trainX.columns = cols
+        train_data_x = pd.concat(
+            [cat_trainX.reset_index(drop=True), num_trainX.reset_index(drop=True)],
+            axis=1,
+        )
+
+        cols = list(num_testX.columns)
+        num_testX = self.imp.fit_transform(num_testX)
+        num_testX = pd.DataFrame(num_testX).reset_index(drop=True).infer_objects()
+        cols = ["num_" + str(i) for i in num_testX.columns]
+        num_testX.columns = cols
+        test_data_x = pd.concat(
+            [cat_testX.reset_index(drop=True), num_testX.reset_index(drop=True)], axis=1
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = ImputerMean().transform(train_x, test_x, train_y)
+"""
+
+[components.ImputerMedian]
+head = "from sklearn.impute import SimpleImputer"
+global = """\
+class ImputerMedian(Primitive):
+    def __init__(self, random_state=0):
+        super(ImputerMedian, self).__init__(name="ImputerMedian")
+        self.type = "ImputerNum"
+        self.imp = SimpleImputer(strategy="median")
+    
+    def transform(self, train_x, test_x, train_y):
+        cat_trainX, num_trainX = catch_num(train_x)
+        cat_testX, num_testX = catch_num(test_x)
+        self.imp.fit(num_trainX)
+        cols = list(num_trainX.columns)
+        num_trainX = self.imp.fit_transform(num_trainX)
+        num_trainX = pd.DataFrame(num_trainX).reset_index(drop=True).infer_objects()
+        cols = ["num_" + str(i) for i in num_trainX.columns]
+        num_trainX.columns = cols
+        train_data_x = pd.concat(
+            [cat_trainX.reset_index(drop=True), num_trainX.reset_index(drop=True)],
+            axis=1,
+        )
+        num_testX = self.imp.fit_transform(num_testX)
+        num_testX = pd.DataFrame(num_testX).reset_index(drop=True).infer_objects()
+        cols = ["num_" + str(i) for i in num_testX.columns]
+        num_testX.columns = cols
+        test_data_x = pd.concat(
+            [cat_testX.reset_index(drop=True), num_testX.reset_index(drop=True)], axis=1
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = ImputerMedian().transform(train_x, test_x, train_y)
+"""
+
+[components.ImputerNumMode]
+head = "from sklearn.impute import SimpleImputer"
+global = """\
+class ImputerNumPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(ImputerNumPrim, self).__init__(name="ImputerNumMode")
+        self.type = "ImputerNum"
+        self.imp = SimpleImputer(strategy="most_frequent")
+
+    def transform(self, train_x, test_x, train_y):
+        cat_trainX, num_trainX = catch_num(train_x)
+        cat_testX, num_testX = catch_num(test_x)
+        self.imp.fit(num_trainX)
+
+        cols = list(num_trainX.columns)
+        num_trainX = self.imp.fit_transform(num_trainX)
+        num_trainX = pd.DataFrame(num_trainX).reset_index(drop=True).infer_objects()
+        cols = ["num_" + str(i) for i in num_trainX.columns]
+        num_trainX.columns = cols
+        train_data_x = pd.concat(
+            [cat_trainX.reset_index(drop=True), num_trainX.reset_index(drop=True)],
+            axis=1,
+        )
+
+        cols = list(num_testX.columns)
+        num_testX = self.imp.fit_transform(num_testX)
+        num_testX = pd.DataFrame(num_testX).reset_index(drop=True).infer_objects()
+        cols = ["num_" + str(i) for i in num_testX.columns]
+        num_testX.columns = cols
+        test_data_x = pd.concat(
+            [cat_testX.reset_index(drop=True), num_testX.reset_index(drop=True)], axis=1
+        )
+
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = ImputerNumPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.ImputerCatMode]
+head = "from sklearn.impute import SimpleImputer"
+global = """\
+class ImputerCatPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(ImputerCatPrim, self).__init__(name="ImputerCatMode")
+        self.description = (
+            "Imputation transformer for completing missing values by mode."
+        )
+        self.imp = SimpleImputer(strategy="most_frequent")
+
+    def transform(self, train_x, test_x, train_y):
+        cat_trainX, num_trainX = catch_num(train_x)
+        cat_testX, num_testX = catch_num(test_x)
+        self.imp.fit(cat_trainX)
+        cols = list(cat_trainX.columns)
+        cat_trainX = self.imp.fit_transform(cat_trainX.reset_index(drop=True))
+        cat_trainX = pd.DataFrame(cat_trainX).reset_index(drop=True).infer_objects()
+        cols = ["col_" + str(i) for i in cat_trainX.columns]
+        cat_trainX.columns = cols
+        cat_trainX = cat_trainX.reset_index(drop=True)
+        num_trainX = num_trainX.reset_index(drop=True)
+
+        train_data_x = pd.concat([cat_trainX, num_trainX], axis=1)
+        cols = list(cat_testX.columns)
+        cat_testX = self.imp.fit_transform(cat_testX.reset_index(drop=True))
+        cat_testX = pd.DataFrame(cat_testX).reset_index(drop=True).infer_objects()
+        cols = ["col_" + str(i) for i in cat_testX.columns]
+        cat_testX.columns = cols
+        test_data_x = pd.concat(
+            [cat_testX.reset_index(drop=True), num_testX.reset_index(drop=True)], axis=1
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = ImputerCatPrim().transform(train_x, test_x, train_y)
+"""
+
+### Encoder components
+
+[components.NumericData]
+head = ""
+global = """\
+class NumericDataPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(NumericDataPrim, self).__init__(name="NumericData")
+        self.type = "Encoder"
+
+    def transform(self, train_x, test_x, train_y):
+        num_cols = train_x._get_numeric_data().columns
+        train_x = train_x[num_cols]
+        num_cols = test_x._get_numeric_data().columns
+        test_x = test_x[num_cols]
+        return train_x, test_x
+"""
+local = """\
+train_x, test_x = NumericDataPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.LabelEncoder]
+head = "from sklearn.preprocessing import LabelEncoder"
+global = """\
+class LabelEncoderPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(LabelEncoderPrim, self).__init__(name="LabelEncoder")
+        self.type = "DataPreprocess"
+        self.preprocess = {}
+
+    def transform(self, train_x, test_x, train_y):
+        cat_trainX, num_trainX = catch_num(train_x)
+        cat_testX, num_testX = catch_num(test_x)
+        cols = cat_trainX.columns
+
+        for col in cols:
+            self.preprocess[col] = LabelEncoder()
+            train_arr = self.preprocess[col].fit_transform(cat_trainX[col].astype(str))
+            test_arr = self.preprocess[col].fit_transform(cat_testX[col].astype(str))
+            cat_trainX[col] = train_arr
+            cat_testX[col] = test_arr
+
+        cat_trainX = cat_trainX.infer_objects()
+        cat_trainX = cat_trainX.iloc[:, ~cat_trainX.columns.duplicated()]
+        train_data_x = pd.concat(
+            [cat_trainX.reset_index(drop=True), num_trainX.reset_index(drop=True)],
+            axis=1,
+        ).infer_objects()
+
+        cat_testX = cat_testX.infer_objects()
+        cat_testX = cat_testX.iloc[:, ~cat_testX.columns.duplicated()]
+        test_data_x = pd.concat(
+            [cat_testX.reset_index(drop=True), num_testX.reset_index(drop=True)], axis=1
+        ).infer_objects()
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = LabelEncoderPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.OneHotEncoder]
+head = "from sklearn.preprocessing import OneHotEncoder"
+global = """\
+class OneHotEncoderPrim(Primitive):
+    # can handle missing values. turns nans to extra category
+    def __init__(self, random_state=0):
+        super(OneHotEncoderPrim, self).__init__(name="OneHotEncoder")
+        self.type = "DataPreprocess"
+        self.preprocess = OneHotEncoder()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_trainX, num_trainX = catch_num(train_x)
+        cat_testX, num_testX = catch_num(test_x)
+        cat_cols = cat_trainX.columns
+        self.preprocess = ColumnTransformer(
+            [("one_hot", OneHotEncoder(handle_unknown="ignore"), cat_cols)]
+        )
+
+        dummies = []
+        len_trainx = num_trainX.shape[0]
+        len_testx = num_testX.shape[0]
+        for col in cat_cols:
+            temp = pd.get_dummies(
+                pd.concat([cat_trainX[col], cat_testX[col]], axis=0).reset_index(
+                    drop=True
+                ),
+                prefix=col,
+            )
+            train_d = temp.iloc[0:len_trainx, :].reset_index(drop=True)
+            test_d = temp.iloc[len_trainx:, :].reset_index(drop=True)
+            train_x = pd.concat(
+                [train_x.reset_index(drop=True), train_d], axis=1
+            ).reset_index(drop=True)
+            test_x = pd.concat(
+                [test_x.reset_index(drop=True), test_d], axis=1
+            ).reset_index(drop=True)
+
+        train_x = train_x.drop(columns=cat_cols).infer_objects()
+        test_x = test_x.drop(columns=cat_cols).infer_objects()
+        return train_x, test_x
+"""
+
+[components.MinMaxScaler]
+head = "from sklearn.preprocessing import MinMaxScaler"
+global = """\
+class MinMaxScalerPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(MinMaxScalerPrim, self).__init__(name="MinMaxScaler")
+        self.type = "FeaturePreprocessing"
+        self.scaler = MinMaxScaler()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = MinMaxScalerPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.MaxAbsScaler]
+head = "from sklearn.preprocessing import MaxAbsScaler"
+global = """\
+
+class MaxAbsScalerPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(MaxAbsScalerPrim, self).__init__(name="MaxAbsScaler")
+        self.type = "FeaturePreprocessing"
+        self.scaler = MaxAbsScaler()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = MaxAbsScalerPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.RobustScaler]
+head = "from sklearn.preprocessing import RobustScaler"
+global = """\
+class RobustScalerPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(RobustScalerPrim, self).__init__(name="RobustScaler")
+        self.type = "FeaturePreprocessing"
+        self.scaler = RobustScaler()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = RobustScalerPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.StandardScaler]
+head = "from sklearn.preprocessing import StandardScaler"
+global = """\
+class StandardScalerPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(StandardScalerPrim, self).__init__(name="StandardScaler")
+        self.type = "FeaturePreprocessing"
+        self.scaler = StandardScaler()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = StandardScalerPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.QuantileTransformer]
+head = "from sklearn.preprocessing import QuantileTransformer"
+global = """\
+class QuantileTransformerPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(QuantileTransformerPrim, self).__init__(name="QuantileTransformer")
+        self.type = "FeaturePreprocessing"
+        self.scaler = QuantileTransformer()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = QuantileTransformerPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.PowerTransformer]
+head = "from sklearn.preprocessing import PowerTransformer"
+global = """\
+class PowerTransformerPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(PowerTransformerPrim, self).__init__(name="PowerTransformer")
+        self.type = "FeaturePreprocessing"
+        self.scaler = PowerTransformer()
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = PowerTransformerPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.Normalizer]
+head = "from sklearn.preprocessing import Normalizer"
+global = """\
+class NormalizerPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(NormalizerPrim, self).__init__(name="Normalizer")
+        self.type = "FeaturePreprocessing"
+        self.scaler = Normalizer()
+
+    def can_accept(self, data):
+        return self.can_accept_c(data)
+
+    def is_needed(self, data):
+        return True
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = NormalizerPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.KBinsDiscretizerOrdinal]
+head = "from sklearn.preprocessing import KBinsDiscretizer"
+global = """\
+class KBinsDiscretizerOrdinalPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(KBinsDiscretizerOrdinalPrim, self).__init__(
+            name="KBinsDiscretizerOrdinal"
+        )
+        self.type = "FeaturePreprocessing"
+
+    def transform(self, train_x, test_x, train_y):
+        cat_train_x, num_train_x = catch_num(train_x)
+        cat_test_x, num_test_x = catch_num(test_x)
+        self.scaler = ColumnTransformer(
+            [("discrit", KBinsDiscretizer(encode="ordinal"), list(num_train_x.columns))]
+        )
+        self.scaler.fit(num_train_x)
+
+        num_train_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_train_x), columns=list(num_train_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        train_data_x = pd.concat(
+            [cat_train_x.reset_index(drop=True), num_train_x.reset_index(drop=True)],
+            axis=1,
+        )
+
+        num_test_x = (
+            pd.DataFrame(
+                self.scaler.transform(num_test_x), columns=list(num_test_x.columns)
+            )
+            .reset_index(drop=True)
+            .infer_objects()
+        )
+        test_data_x = pd.concat(
+            [cat_test_x.reset_index(drop=True), num_test_x.reset_index(drop=True)],
+            axis=1,
+        )
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = KBinsDiscretizerOrdinalPrim().transform(train_x, test_x, train_y)
+"""
+
+### FeatureEngine components
+
+[components.PolynomialFeatures]
+head = "from sklearn.preprocessing import PolynomialFeatures"
+global = """\
+class PolynomialFeaturesPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(PolynomialFeaturesPrim, self).__init__(name="PolynomialFeatures")
+        self.type = "FeatureEngine"
+        self.scaler = PolynomialFeatures(include_bias=False)
+
+    def transform(self, train_x, test_x, train_y):
+        self.scaler.fit(train_x)
+
+        train_data_x = self.scaler.transform(train_x)
+        train_data_x = pd.DataFrame(train_data_x)
+        train_data_x = train_data_x.loc[:, ~train_data_x.columns.duplicated()]
+
+        test_data_x = self.scaler.transform(test_x)
+        test_data_x = pd.DataFrame(test_data_x)
+        test_data_x = test_data_x.loc[:, ~test_data_x.columns.duplicated()]
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = PolynomialFeaturesPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.InteractionFeatures]
+head = "from sklearn.preprocessing import PolynomialFeatures"
+global = """\
+class InteractionFeaturesPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(InteractionFeaturesPrim, self).__init__(name="InteractionFeatures")
+        self.type = "FeatureEngine"
+        self.scaler = PolynomialFeatures(interaction_only=True, include_bias=False)
+
+    def transform(self, train_x, test_x, train_y):
+        self.scaler.fit(train_x)
+
+        train_data_x = self.scaler.transform(train_x)
+        train_data_x = pd.DataFrame(train_data_x)
+        train_data_x = train_data_x.loc[:, ~train_data_x.columns.duplicated()]
+
+        test_data_x = self.scaler.transform(test_x)
+        test_data_x = pd.DataFrame(test_data_x)
+        test_data_x = test_data_x.loc[:, ~test_data_x.columns.duplicated()]
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = InteractionFeaturesPrim().transform(train_x, test_x, train_y)
+"""
+
+[components.PCA_AUTO]
+head = "from sklearn.decomposition import PCA"
+global = """\
+class PCA_AUTO_Prim(Primitive):
+    def __init__(self, random_state=0):
+        super(PCA_AUTO_Prim, self).__init__(name="PCA_AUTO")
+        self.type = "FeatureEngine"
+        self.pca = PCA(svd_solver="auto")  # n_components=0.9
+
+    def transform(self, train_x, test_x, train_y):
+        cols = list(train_x.columns)
+        self.pca.fit(train_x)
+
+        train_data_x = self.pca.transform(train_x)
+        train_data_x = pd.DataFrame(train_data_x, columns=cols[: train_data_x.shape[1]])
+
+        test_data_x = self.pca.transform(test_x)
+        test_data_x = pd.DataFrame(test_data_x, columns=cols[: test_data_x.shape[1]])
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = PCA_AUTO_Prim().transform(train_x, test_x, train_y)
+"""
+
+[components.IncrementalPCA]
+head = "from sklearn.decomposition import IncrementalPCA"
+global = """\
+class IncrementalPCA_Prim(Primitive):
+    def __init__(self, random_state=0):
+        super(IncrementalPCA_Prim, self).__init__(name="IncrementalPCA")
+        self.type = "FeatureEngine"
+        self.pca = IncrementalPCA()
+
+    def transform(self, train_x, test_x, train_y):
+        cols = list(train_x.columns)
+        self.pca.fit(train_x)
+
+        train_data_x = self.pca.transform(train_x)
+        train_data_x = pd.DataFrame(train_data_x, columns=cols[: train_data_x.shape[1]])
+
+        test_data_x = self.pca.transform(test_x)
+        test_data_x = pd.DataFrame(test_data_x, columns=cols[: test_data_x.shape[1]])
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = IncrementalPCA_Prim().transform(train_x, test_x, train_y)
+"""
+
+[components.KernelPCA]
+head = "from sklearn.decomposition import KernelPCA"
+global = """\
+
+class KernelPCA_Prim(Primitive):
+    def __init__(self, random_state=0):
+        super(KernelPCA_Prim, self).__init__(name="KernelPCA")
+        self.type = "FeatureEngine"
+        self.pca = KernelPCA(n_components=2)  # n_components=5
+
+    def transform(self, train_x, test_x, train_y):
+        cols = list(train_x.columns)
+        self.pca.fit(train_x)
+
+        train_data_x = self.pca.transform(train_x)
+        train_data_x = pd.DataFrame(train_data_x, columns=cols[: train_data_x.shape[1]])
+
+        test_data_x = self.pca.transform(test_x)
+        test_data_x = pd.DataFrame(test_data_x, columns=cols[: test_data_x.shape[1]])
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = KernelPCA_Prim().transform(train_x, test_x, train_y)
+"""
+
+[components.TruncatedSVD]
+head = "from sklearn.decomposition import TruncatedSVD"
+global = """\
+class TruncatedSVD_Prim(Primitive):
+    def __init__(self, random_state=0):
+        super(TruncatedSVD_Prim, self).__init__(name="TruncatedSVD")
+        self.type = "FeatureEngine"
+        self.pca = TruncatedSVD(n_components=2)
+
+    def transform(self, train_x, test_x, train_y):
+        cols = list(train_x.columns)
+        self.pca.fit(train_x)
+
+        train_data_x = self.pca.transform(train_x)
+        train_data_x = pd.DataFrame(train_data_x, columns=cols[: train_data_x.shape[1]])
+
+        test_data_x = self.pca.transform(test_x)
+        test_data_x = pd.DataFrame(test_data_x, columns=cols[: test_data_x.shape[1]])
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = TruncatedSVD_Prim().transform(train_x, test_x, train_y)
+"""
+
+[components.RandomTreesEmbedding]
+head = "from sklearn.ensemble import RandomTreesEmbedding"
+global = """\
+class RandomTreesEmbeddingPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(RandomTreesEmbeddingPrim, self).__init__(name="RandomTreesEmbedding")
+        self.type = "FeatureEngine"
+        self.pca = RandomTreesEmbedding(random_state=random_state)
+
+    def transform(self, train_x, test_x, train_y):
+        self.pca.fit(train_x)
+        cols = list(train_x.columns)
+
+        train_data_x = self.pca.transform(train_x).toarray()
+        new_cols = list(map(str, list(range(train_data_x.shape[1]))))
+        train_data_x = pd.DataFrame(train_data_x, columns=new_cols)
+
+        test_data_x = self.pca.transform(test_x).toarray()
+        new_cols = list(map(str, list(range(test_data_x.shape[1]))))
+        test_data_x = pd.DataFrame(test_data_x, columns=new_cols)
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = RandomTreesEmbeddingPrim().transform(train_x, test_x, train_y)
+"""
+
+### FeatureSelection components
+
+[components.VarianceThreshold]
+head = """\
+from sklearn.feature_selection import VarianceThreshold
+from itertools import compress"""
+
+global = """\
+class VarianceThresholdPrim(Primitive):
+    def __init__(self, random_state=0):
+        super(VarianceThresholdPrim, self).__init__(name="VarianceThreshold")
+        self.type = "FeatureSelection"
+        self.selector = VarianceThreshold()
+
+    def transform(self, train_x, test_x, train_y):
+        self.selector.fit(train_x)
+
+        cols = list(train_x.columns)
+        mask = self.selector.get_support(indices=False)
+        final_cols = list(compress(cols, mask))
+        train_data_x = pd.DataFrame(
+            self.selector.transform(train_x), columns=final_cols
+        )
+
+        cols = list(test_x.columns)
+        mask = self.selector.get_support(indices=False)
+        final_cols = list(compress(cols, mask))
+        test_data_x = pd.DataFrame(self.selector.transform(test_x), columns=final_cols)
+        return train_data_x, test_data_x
+"""
+local = """\
+train_x, test_x = VarianceThresholdPrim().transform(train_x, test_x, train_y)
+"""
+
+### Predictor
+
+[model]
+head = "from sklearn.linear_model import LogisticRegression"
+global = """\
+class LogisticRegressionPrim(Primitive):
+    def __init__(self):
+        super(LogisticRegressionPrim, self).__init__(name="LogisticRegression")
+        self.type = "Classifier"
+
+    def predict(self, train_x, test_x, train_y):
+        model = LogisticRegression(solver="liblinear", random_state=0, n_jobs=5)
+        model.fit(train_x, train_y)
+        pred_y = model.predict(test_x)
+        return pred_y
+"""
+local = """\
+pred_y = LogisticRegressionPrim().predict(train_x, test_x, train_y)
+"""
