@@ -198,7 +198,7 @@ async def train_task(
     train_batch_num: int,
     eval_batch_num: int,
     test_batch_num: int,
-    features: List[str],
+    features: str,
     target: str,
 ) -> int:
     logger.info(
@@ -255,7 +255,7 @@ async def on_inference(data: dict):
             model_id=data["modelId"],
             inf_batch_num=req.total_batch_num,
             table_name=data["table"],
-            features=data["features"],
+            features=data["features"].split(","),
             target=data["target"],
         )
     ).add_done_callback(
@@ -285,7 +285,7 @@ async def inference_task(
         target=target,
     )
 
-    response, err = await setup.inference(model_id, inf_batch_num)
+    response, err = await setup.inference(model_id, inf_batch_num, features, target)
     if err is not None:
         logger.error(f"inference failed with error: {err}")
         return []

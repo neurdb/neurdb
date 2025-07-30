@@ -101,7 +101,7 @@ class Setup:
             return -1, str(traceback.format_exc())
 
     async def inference(
-        self, model_id: int, inf_batch_num: int
+        self, model_id: int, inf_batch_num: int, features: List[str], target: str
     ) -> Tuple[List[List[Any]], Error]:
         try:
             self.libsvm_data.setup_for_inference_task(inf_batch_num)
@@ -112,7 +112,9 @@ class Setup:
             except FileNotFoundError:
                 return [], f"model {self._model_name} not trained yet"
 
-            infer_res = await builder.inference(self.libsvm_data, inf_batch_num)
+            infer_res = await builder.inference(
+                self.libsvm_data, inf_batch_num, features, target
+            )
             return infer_res, None
 
         except Exception:

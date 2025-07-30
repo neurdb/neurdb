@@ -53,7 +53,11 @@ class BuilderBase(ABC):
 
     @abstractmethod
     async def inference(
-        self, test_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
+        self,
+        test_loader: Union[DataLoader, StreamingDataSet],
+        inf_batch_num: int,
+        features: List[str],
+        target: str,
     ) -> List[List[Any]]:
         """
 
