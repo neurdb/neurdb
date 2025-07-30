@@ -2146,21 +2146,16 @@ StartTransaction(void)
 
     if (!IsolationLearnCC())
     {
-        XactIsoLevel = DefaultXactIsoLevel;
-        XactLockStrategy = DefaultXactLockStrategy;
-        // if (!IsolationNeedLock())
-        //     XactIsoLevel = XACT_SERIALIZABLE;
         if (IsolationIsSerializable())
-        {
             // In case of SSI, disable locking based methods.
             XactLockStrategy = LOCK_NONE;
-            Assert(XactLockStrategy == LOCK_NONE);
-        }
-
         if (!(IsolationNeedLock() || IsolationIsSerializable()))
             elog(DEBUG2, "[debug] xact%d is not running in serializable mode (iso:%d, lock:%d).\n", MyProc->lxid , XactIsoLevel, XactLockStrategy);
     }
-    else init_rl_state(vxid.localTransactionId);
+    else {
+		// elog(INFO, "CC learning triggered");
+		init_rl_state(vxid.localTransactionId);
+	}
 
 	TRACE_POSTGRESQL_TRANSACTION_START(vxid.localTransactionId);
 
