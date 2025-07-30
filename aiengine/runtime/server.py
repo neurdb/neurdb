@@ -151,7 +151,7 @@ async def on_ack_result(data: dict):
 
 async def on_train(data: dict):
     req = TaskRequest(data, is_inference=False)
-    await init_database(req)
+    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
 
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
@@ -230,7 +230,7 @@ async def train_task(
 async def on_inference(data: dict):
     req = TaskRequest(data, is_inference=True)
 
-    await init_database(req)
+    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
@@ -298,7 +298,7 @@ async def inference_task(
 async def on_finetune(data: dict):
     req = TaskRequest(data, is_inference=False)
 
-    await init_database(req)
+    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
@@ -361,7 +361,7 @@ async def finetune_task(
     return model_id
 
 
-async def init_database(req: TaskRequest):
+async def init_database(req: TaskRequest, in_libsvm_format: bool = True):
     # Get the arguments from the request
     session_id = req.session_id
     n_feat = req.n_feat
@@ -383,7 +383,8 @@ async def init_database(req: TaskRequest):
     # Create the data dispatcher if it doesn't exist
     dispatchers = quart_app.config["dispatchers"]
     if not dispatchers.contains(session_id, session_id):
-        d = LibSvmDataDispatcher()
+        d = LibSvmDataDispatcher(in_libsvm_format=in_libsvm_format)
+        logger.debug(f"Created data dispatcher", in_libsvm_format=in_libsvm_format)
         dispatchers.add(session_id, session_id, d)
 
         d.bound_client_to_cache(c, session_id)
