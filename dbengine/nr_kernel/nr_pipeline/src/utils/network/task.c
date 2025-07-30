@@ -72,6 +72,8 @@ void free_train_task_spec(TrainTaskSpec *task) {
   free(task->optimizer);
   free(task->loss);
   free(task->metrics);
+  free(task->features);
+  free(task->target);
   free(task);
 }
 
