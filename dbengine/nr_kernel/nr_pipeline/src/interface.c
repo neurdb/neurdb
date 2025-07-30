@@ -34,7 +34,8 @@ char *char_array2str(char **char_array, int n_elements);
 
 void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
                         int n_features, char **feature_names, char *table_name,
-                        StringInfo libsvm_data, bool has_label, int label_col);
+                        StringInfo libsvm_data, bool has_label, int label_col, 
+                        const char *model_name);
 
 static NrWebsocket *_connect_to_ai_engine() {
   NrWebsocket *ws = nws_initialize(NrAIEngineHost, NrAIEnginePort, "/ws", 10);
@@ -164,7 +165,8 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   int n_batches = PG_GETARG_INT32(4);                       // batch number
   int nfeat = PG_GETARG_INT32(5);  // max number of input ids
   ArrayType *features = PG_GETARG_ARRAYTYPE_P(6);
-  PredictType type = PG_GETARG_INT32(7);
+  char *target = text_to_cstring(PG_GETARG_TEXT_P(7));  // target column
+  PredictType type = PG_GETARG_INT32(8);
 
   int n_features;
   char **feature_names =
@@ -203,7 +205,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
   InferenceTaskSpec *inference_task_spec = malloc(sizeof(InferenceTaskSpec));
   init_inference_task_spec(inference_task_spec, model_name, batch_size,
                            n_batches, "metrics", 80, nfeat, n_features, n_class,
-                           model_id);
+                           model_id, char_array2str(feature_names, n_features), target);
   nws_send_task(ws, T_INFERENCE, table_name, inference_task_spec);
   free_inference_task_spec(inference_task_spec);
 
@@ -249,7 +251,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     TupleDesc tupdesc = tuptable->tupdesc;
 
     _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
-                       &libsvm_data, false, 0);
+                       &libsvm_data, false, 0, model_name);
 
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
@@ -413,7 +415,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     TupleDesc tupdesc = tuptable->tupdesc;
 
     _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
-                       &libsvm_data, true, n_features + 1);
+                       &libsvm_data, true, n_features + 1, model_name);
 
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
@@ -540,7 +542,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     TupleDesc tupdesc = tuptable->tupdesc;
 
     _build_libsvm_data(tuptable, tupdesc, n_features, feature_names, table_name,
-                       &libsvm_data, true, n_features + 1);
+                       &libsvm_data, true, n_features + 1, model_name);
 
     record_query_end_time(time_metric);
     record_operation_start_time(time_metric);
@@ -575,11 +577,11 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
  * @param has_label bool Whether to include a label (true for train/finetune,
  * false for inference)
  * @param label_col int Column index of the label (ignored if has_label is
- * false)
+ * @param model_name const char* Name of the model
  */
 void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
                         int n_features, char **feature_names, char *table_name,
-                        StringInfo libsvm_data, bool has_label, int label_col) {
+                        StringInfo libsvm_data, bool has_label, int label_col, const char *model_name) {
   StringInfoData row_data;
   initStringInfo(&row_data);
 
@@ -621,8 +623,13 @@ void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
         case VARCHAROID:
         case CHAROID:
           char *text = DatumGetCString(value);
-          int token = encode_text(text, table_name, feature_names[col]);
-          appendStringInfo(&row_data, " %d", token);
+          if (model_name != "auto_pipeline") {
+            int token = encode_text(text, table_name, feature_names[col]);
+            appendStringInfo(&row_data, " %d", token);
+          } else {
+            // TODO: formally handle escaped characters
+            appendStringInfo(&row_data, " \"%s\"", text);
+          }
           break;
         default:
           SPI_finish();

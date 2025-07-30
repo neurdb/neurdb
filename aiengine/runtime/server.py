@@ -201,6 +201,17 @@ async def train_task(
     features: List[str],
     target: str,
 ) -> int:
+    logger.info(
+        f"train_task called",
+        table_name=table_name,
+        epoch=epoch,
+        train_batch_num=train_batch_num,
+        eval_batch_num=eval_batch_num,
+        test_batch_num=test_batch_num,
+        features=features,
+        target=target,
+    )
+
     model_id, err = await setup.train(
         epoch, train_batch_num, eval_batch_num, test_batch_num
     )
@@ -243,6 +254,9 @@ async def on_inference(data: dict):
             ),
             model_id=data["modelId"],
             inf_batch_num=req.total_batch_num,
+            table_name=data["table"],
+            features=data["features"],
+            target=data["target"],
         )
     ).add_done_callback(
         lambda task: inference_done_callback(task.result(), req.session_id)
@@ -258,8 +272,19 @@ def inference_done_callback(result, session_id):
 async def inference_task(
     setup: Setup,
     model_id: int,
+    table_name: str,
     inf_batch_num: int,
+    features: List[str],
+    target: str,
 ) -> List[List[Any]]:
+    logger.info(
+        f"train_task called",
+        table_name=table_name,
+        inf_batch_num=inf_batch_num,
+        features=features,
+        target=target,
+    )
+
     response, err = await setup.inference(model_id, inf_batch_num)
     if err is not None:
         logger.error(f"inference failed with error: {err}")

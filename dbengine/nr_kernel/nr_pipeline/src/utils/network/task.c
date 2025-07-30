@@ -32,7 +32,7 @@ void init_train_task_spec(TrainTaskSpec *task, const char *architecture,
 void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
                               int batch_size, int n_batch, const char *metrics,
                               int cacheSize, int nFeat, int nField, int nclass,
-                              int modelId) {
+                              int modelId, char *features, char *target) {
   task->architecture = strdup(architecture);
   task->batch_size = batch_size;
   task->n_batch = n_batch;
@@ -42,6 +42,8 @@ void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
   task->nField = nField;
   task->modelId = modelId;
   task->nclass = nclass;
+  task->features = strdup(features);
+  task->target = strdup(target);
 }
 
 void init_finetune_task_spec(FinetuneTaskSpec *task, const char *model_name,
@@ -80,6 +82,8 @@ void free_train_task_spec(TrainTaskSpec *task) {
 void free_inference_task_spec(InferenceTaskSpec *task) {
   free(task->architecture);
   free(task->metrics);
+  free(task->features);
+  free(task->target);
   free(task);
 }
 
@@ -119,6 +123,8 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
     case T_INFERENCE: {
       InferenceTaskSpec *spec = (InferenceTaskSpec *)task_spec;
       cJSON_AddStringToObject(json, "architecture", spec->architecture);
+      cJSON_AddStringToObject(json, "features", spec->features);
+      cJSON_AddStringToObject(json, "target", spec->target);
       cJSON_AddNumberToObject(json, "cacheSize", spec->cacheSize);
       cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
       cJSON_AddNumberToObject(json, "nField", spec->nField);
