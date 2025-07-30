@@ -223,7 +223,7 @@ Datum nr_inference(PG_FUNCTION_ARGS) {
     if (i > 0) {
       appendStringInfoString(&query, ", ");
     }
-    appendStringInfoString(&query, feature_names[i]);
+    appendStringInfo(&query, "\"%s\"", feature_names[i]);
   }
   appendStringInfo(&query, " FROM %s", table_name);
 
@@ -373,7 +373,7 @@ Datum nr_train(PG_FUNCTION_ARGS) {
     if (i > 0) {
       appendStringInfoString(&query, ", ");
     }
-    appendStringInfoString(&query, feature_names[i]);
+    appendStringInfo(&query, "\"%s\"", feature_names[i]);
   }
   appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
@@ -497,7 +497,7 @@ Datum nr_finetune(PG_FUNCTION_ARGS) {
     if (i > 0) {
       appendStringInfoString(&query, ", ");
     }
-    appendStringInfoString(&query, feature_names[i]);
+    appendStringInfo(&query, "\"%s\"", feature_names[i]);
   }
   appendStringInfo(&query, ", %s FROM %s", target, table_name);
 
