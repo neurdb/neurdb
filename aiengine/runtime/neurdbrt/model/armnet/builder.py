@@ -56,6 +56,8 @@ class ARMNetModelBuilder(BuilderBase):
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
+        feature_names: List[str],
+        target_name: str,
     ):
         logger = self._logger.bind(task="train")
 
@@ -277,8 +279,8 @@ class ARMNetModelBuilder(BuilderBase):
         self,
         data_loader: StreamingDataSet,
         inf_batch_num: int,
-        features: List[str],
-        target: str,
+        feature_names: List[str],
+        target_name: str,
     ):
         logger = self._logger.bind(task="inference")
         print(f"begin inference for {inf_batch_num} batches ")

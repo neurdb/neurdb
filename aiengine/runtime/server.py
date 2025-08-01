@@ -179,8 +179,8 @@ async def on_train(data: dict):
             train_batch_num=data["spec"]["nBatchTrain"],
             eval_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
-            features=data["features"].split(","),
-            target=data["target"],
+            feature_names=data["features"].split(","),
+            target_name=data["target"],
         )
     ).add_done_callback(lambda task: train_done_callback(task.result(), req.session_id))
 
@@ -198,8 +198,8 @@ async def train_task(
     train_batch_num: int,
     eval_batch_num: int,
     test_batch_num: int,
-    features: List[str],
-    target: str,
+    feature_names: List[str],
+    target_name: str,
 ) -> int:
     logger.info(
         f"train_task called",
@@ -208,12 +208,17 @@ async def train_task(
         train_batch_num=train_batch_num,
         eval_batch_num=eval_batch_num,
         test_batch_num=test_batch_num,
-        features=features,
-        target=target,
+        feature_names=feature_names,
+        target_name=target_name,
     )
 
     model_id, err = await setup.train(
-        epoch, train_batch_num, eval_batch_num, test_batch_num, features, target
+        epoch,
+        train_batch_num,
+        eval_batch_num,
+        test_batch_num,
+        feature_names,
+        target_name,
     )
     if err is not None:
         logger.error(f"train failed with error: {err}")
@@ -222,7 +227,9 @@ async def train_task(
     print(f"train done. model_id: {model_id}")
 
     if NEURDB_CONNECTOR:
-        NEURDB_CONNECTOR.register_model(model_id, table_name, features, target)
+        NEURDB_CONNECTOR.register_model(
+            model_id, table_name, feature_names, target_name
+        )
 
     return model_id
 
@@ -255,8 +262,8 @@ async def on_inference(data: dict):
             model_id=data["modelId"],
             inf_batch_num=req.total_batch_num,
             table_name=data["table"],
-            features=data["features"].split(","),
-            target=data["target"],
+            feature_names=data["features"].split(","),
+            target_name=data["target"],
         )
     ).add_done_callback(
         lambda task: inference_done_callback(task.result(), req.session_id)
@@ -274,18 +281,20 @@ async def inference_task(
     model_id: int,
     table_name: str,
     inf_batch_num: int,
-    features: List[str],
-    target: str,
+    feature_names: List[str],
+    target_name: str,
 ) -> List[List[Any]]:
     logger.info(
         f"train_task called",
         table_name=table_name,
         inf_batch_num=inf_batch_num,
-        features=features,
-        target=target,
+        feature_names=feature_names,
+        target_name=target_name,
     )
 
-    response, err = await setup.inference(model_id, inf_batch_num, features, target)
+    response, err = await setup.inference(
+        model_id, inf_batch_num, feature_names, target_name
+    )
     if err is not None:
         logger.error(f"inference failed with error: {err}")
         return []
@@ -325,8 +334,8 @@ async def on_finetune(data: dict):
             train_batch_num=data["spec"]["nBatchTrain"],
             eva_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
-            features=data["features"].split(","),
-            target=data["target"],
+            feature_names=data["features"].split(","),
+            target_name=data["target"],
         )
     ).add_done_callback(
         lambda task: finetune_done_callback(task.result(), req.session_id)
@@ -346,8 +355,8 @@ async def finetune_task(
     train_batch_num: int,
     eva_batch_num: int,
     test_batch_num: int,
-    features: List[str],
-    target: str,
+    feature_names: List[str],
+    target_name: str,
 ) -> int:
     model_id, err = await setup.finetune(
         model_id,
@@ -356,8 +365,8 @@ async def finetune_task(
         train_batch_num=train_batch_num,
         eva_batch_num=eva_batch_num,
         test_batch_num=test_batch_num,
-        features=features,
-        target=target,
+        feature_names=feature_names,
+        target_name=target_name,
     )
     if err is not None:
         logger.error(f"train failed with error: {err}")

@@ -38,8 +38,8 @@ class BuilderBase(ABC):
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
-        features: List[str],
-        target: str,
+        feature_names: List[str],
+        target_name: str,
     ):
         """
         :param train_loader:
@@ -60,8 +60,8 @@ class BuilderBase(ABC):
         self,
         test_loader: Union[DataLoader, StreamingDataSet],
         inf_batch_num: int,
-        features: List[str],
-        target: str,
+        feature_names: List[str],
+        target_name: str,
     ) -> List[List[Any]]:
         """
 

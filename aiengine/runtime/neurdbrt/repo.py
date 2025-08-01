@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import List, TypedDict
 
 import neurdb
 from neurdb.storeman import ModelStorage
@@ -51,6 +51,6 @@ class ModelRepository:
         return True
 
     def register_model(
-        self, model_id: int, table_name: str, features: list[str], target: str
+        self, model_id: int, table_name: str, feature_names: List[str], target_name: str
     ):
-        self._conn.register_model(model_id, table_name, features, [target])
+        self._conn.register_model(model_id, table_name, feature_names, [target_name])

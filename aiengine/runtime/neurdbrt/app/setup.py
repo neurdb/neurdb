@@ -30,8 +30,8 @@ class Setup:
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
-        features: List[str],
-        target: str,
+        feature_names: List[str],
+        target_name: str,
     ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
@@ -49,8 +49,8 @@ class Setup:
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num,
-                features,
-                target,
+                feature_names,
+                target_name,
             )
 
             if self._args.run_model == "in_database":
@@ -71,8 +71,8 @@ class Setup:
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
-        features: List[str],
-        target: str,
+        feature_names: List[str],
+        target_name: str,
     ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
@@ -101,8 +101,8 @@ class Setup:
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num,
-                features,
-                target,
+                feature_names,
+                target_name,
             )
 
             model_id = self._db.update_layers(model_id, model_storage, start_layer_id)
@@ -113,7 +113,11 @@ class Setup:
             return -1, str(traceback.format_exc())
 
     async def inference(
-        self, model_id: int, inf_batch_num: int, features: List[str], target: str
+        self,
+        model_id: int,
+        inf_batch_num: int,
+        feature_names: List[str],
+        target_name: str,
     ) -> Tuple[List[List[Any]], Error]:
         try:
             self.libsvm_data.setup_for_inference_task(inf_batch_num)
@@ -125,7 +129,7 @@ class Setup:
                 return [], f"model {self._model_name} not trained yet"
 
             infer_res = await builder.inference(
-                self.libsvm_data, inf_batch_num, features, target
+                self.libsvm_data, inf_batch_num, feature_names, target_name
             )
             return infer_res, None
 
