@@ -128,6 +128,17 @@ class NeurDB:
         """
         features_hash = Hash.md5_list(feature_columns)
         targets_hash = Hash.md5_list(target_columns)
+
+        logger.debug(
+            "register model",
+            model_id=model_id,
+            table_name=table_name,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+            feature_hash=features_hash,
+            target_hash=targets_hash,
+        )
+
         self.database.insert(
             "router",
             ["model_id", "table_name", "feature_columns", "target_columns"],
