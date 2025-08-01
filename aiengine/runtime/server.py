@@ -179,7 +179,7 @@ async def on_train(data: dict):
             train_batch_num=data["spec"]["nBatchTrain"],
             eval_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
-            features=data["features"],
+            features=data["features"].split(","),
             target=data["target"],
         )
     ).add_done_callback(lambda task: train_done_callback(task.result(), req.session_id))
@@ -198,7 +198,7 @@ async def train_task(
     train_batch_num: int,
     eval_batch_num: int,
     test_batch_num: int,
-    features: str,
+    features: List[str],
     target: str,
 ) -> int:
     logger.info(
@@ -213,7 +213,7 @@ async def train_task(
     )
 
     model_id, err = await setup.train(
-        epoch, train_batch_num, eval_batch_num, test_batch_num
+        epoch, train_batch_num, eval_batch_num, test_batch_num, features, target
     )
     if err is not None:
         logger.error(f"train failed with error: {err}")
@@ -325,6 +325,8 @@ async def on_finetune(data: dict):
             train_batch_num=data["spec"]["nBatchTrain"],
             eva_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
+            features=data["features"].split(","),
+            target=data["target"],
         )
     ).add_done_callback(
         lambda task: finetune_done_callback(task.result(), req.session_id)
@@ -344,6 +346,8 @@ async def finetune_task(
     train_batch_num: int,
     eva_batch_num: int,
     test_batch_num: int,
+    features: List[str],
+    target: str,
 ) -> int:
     model_id, err = await setup.finetune(
         model_id,
@@ -352,6 +356,8 @@ async def finetune_task(
         train_batch_num=train_batch_num,
         eva_batch_num=eva_batch_num,
         test_batch_num=test_batch_num,
+        features=features,
+        target=target,
     )
     if err is not None:
         logger.error(f"train failed with error: {err}")

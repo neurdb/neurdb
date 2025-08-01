@@ -38,6 +38,8 @@ class BuilderBase(ABC):
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
+        features: List[str],
+        target: str,
     ):
         """
         :param train_loader:
@@ -47,6 +49,8 @@ class BuilderBase(ABC):
         :param train_batch_num: batch in each epoch
         :param eva_batch_num: overall batch
         :param test_batch_num: overall batch
+        :param features: feature names
+        :param target: target name
         :return:
         """
         pass
@@ -63,6 +67,8 @@ class BuilderBase(ABC):
 
         :param test_loader:
         :param inf_batch_num:
+        :param features: feature names
+        :param target: target name
         :return:
         """
         pass

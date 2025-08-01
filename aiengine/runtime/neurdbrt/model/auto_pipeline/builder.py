@@ -1,4 +1,5 @@
 import time
+from typing import List
 
 import numpy as np
 import torch
@@ -33,6 +34,8 @@ class AutoPipelineBuilder(BuilderBase):
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
+        features: List[str],
+        target: str,
     ):
         logger = self._logger.bind(task="train")
 
@@ -43,15 +46,17 @@ class AutoPipelineBuilder(BuilderBase):
 
         start_time = time.time()
 
-        logger.info("No training is needed for CtxPipe. Skipping")
+        data = []
 
         # consume all data so that it does not block the event loop
         for epoch in range(self._args.epoch):
             logger.info("Epoch start", curr_epoch=epoch, end_at_epoch=self._args.epoch)
 
             batch_idx = -1
-            async for _ in train_loader:
+            async for batch in train_loader:
                 batch_idx += 1
+
+                data.extend(batch)
 
                 if batch_idx + 1 == train_batch_num:
                     break
@@ -70,6 +75,10 @@ class AutoPipelineBuilder(BuilderBase):
                 if batch_idx + 1 == test_batch_num:
                     break
 
+        logger.info("all data collected", len=len(data))
+        
+        print(data[0])
+
         # dummy model
         self._model = torch.nn.Sequential(torch.nn.Linear(1, 1))
 
@@ -80,7 +89,13 @@ class AutoPipelineBuilder(BuilderBase):
                 f"streaming dataloader time usage = {train_loader.total_time_fetching}"
             )
 
-    async def inference(self, data_loader: StreamingDataSet, inf_batch_num: int):
+    async def inference(
+        self,
+        data_loader: StreamingDataSet,
+        inf_batch_num: int,
+        features: List[str],
+        target: str,
+    ):
         logger = self._logger.bind(task="inference")
         print(f"begin inference for {inf_batch_num} batches ")
         # if this is to load model from the dict,
@@ -92,6 +107,8 @@ class AutoPipelineBuilder(BuilderBase):
         # else:
         #     print("loading model from database")
 
+        data = []
+
         start_time = time.time()
         predictions = []
         with torch.no_grad():
@@ -99,15 +116,20 @@ class AutoPipelineBuilder(BuilderBase):
             async for batch in data_loader:
                 batch_idx += 1
 
+                data.extend(batch)
+
                 # y = self._model(batch)
                 # predictions.append(y.cpu().numpy().tolist())
 
-                predictions.append(np.random.rand(len(batch)).tolist())
+                # logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
 
-                logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
+                # dummy data
+                predictions.append(np.random.rand(len(batch)).tolist())
 
                 if batch_idx + 1 == inf_batch_num:
                     break
+
+        logger.info("all data collected", len=len(data))
 
         logger.info(f"Done inference for {inf_batch_num} batches ")
         logger.info("---- Inference end ---- ", time=time_since(since=start_time))

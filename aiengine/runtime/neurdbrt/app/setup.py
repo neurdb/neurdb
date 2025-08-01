@@ -25,7 +25,13 @@ class Setup:
         self._db = db
 
     async def train(
-        self, epoch: int, train_batch_num: int, eva_batch_num: int, test_batch_num: int
+        self,
+        epoch: int,
+        train_batch_num: int,
+        eva_batch_num: int,
+        test_batch_num: int,
+        features: List[str],
+        target: str,
     ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
@@ -43,6 +49,8 @@ class Setup:
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num,
+                features,
+                target,
             )
 
             if self._args.run_model == "in_database":
@@ -63,6 +71,8 @@ class Setup:
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
+        features: List[str],
+        target: str,
     ) -> Tuple[int, Error]:
         try:
             nfields, nfeat = self.libsvm_data.setup_for_train_task(
@@ -91,6 +101,8 @@ class Setup:
                 train_batch_num,
                 eva_batch_num,
                 test_batch_num,
+                features,
+                target,
             )
 
             model_id = self._db.update_layers(model_id, model_storage, start_layer_id)
