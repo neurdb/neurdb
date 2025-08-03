@@ -1,3 +1,4 @@
+import pickle
 import shutil
 import time
 from typing import List
@@ -12,6 +13,8 @@ from neurdbrt.utils.date import time_since
 from ..base import BuilderBase
 from .run import evaluate_single_dataset, Info
 from auto_pipeline.config import default_config as conf
+from auto_pipeline.ctxpipe.env.primitives.primitive import Primitive
+from auto_pipeline.ctxpipe.env.primitives.predictor import LogisticRegressionPrim
 
 
 class AutoPipelineBuilder(BuilderBase):
@@ -26,9 +29,6 @@ class AutoPipelineBuilder(BuilderBase):
         if self._args.noutput == 2:
             self._args.noutput = 1
 
-    # def _load_model(self):
-    # print(f"[_load_model]: Loading model from {self._args.state_dict_path}")
-
     async def train(
         self,
         train_loader: StreamingDataSet,
@@ -42,11 +42,6 @@ class AutoPipelineBuilder(BuilderBase):
         target_name: str,
     ):
         logger = self._logger.bind(task="train")
-
-        # create model
-        # self._load_model()
-
-        # logger.info("model created with args", **vars(self._args))
 
         start_time = time.time()
 
@@ -93,7 +88,7 @@ class AutoPipelineBuilder(BuilderBase):
             "label_name": target_name,
             "label_index": conf.data.columns.get_loc(target_name),
         }
-        evaluate_single_dataset(
+        pipeline = evaluate_single_dataset(
             Info(
                 aipipe_core_prefix=f"{conf.exp_dir}/.tmp",
                 result_prefix=f"{conf.exp_dir}/.tmp/result",
@@ -103,6 +98,11 @@ class AutoPipelineBuilder(BuilderBase):
             end=32000,
             dry_run=True,
         )
+        if pipeline is not None:
+            logger.info("pipeline", pipeline=pipeline)
+            self._model = [pickle.dumps(s) for s in pipeline]
+        else:
+            raise ValueError("pipeline is None")
 
         shutil.rmtree(f"{conf.exp_dir}/.tmp")
 
@@ -121,15 +121,7 @@ class AutoPipelineBuilder(BuilderBase):
         target_name: str,
     ):
         logger = self._logger.bind(task="inference")
-        print(f"begin inference for {inf_batch_num} batches ")
-        # if this is to load model from the dict,
-        # if self._args.state_dict_path:
-        #     print("loading model from state dict")
-        #     # self._load_model()
-        #     # self._model.load_state_dict(torch.load(self._args.state_dict_path))
-        #     logger.info("model loaded", state_dict_path=self._args.state_dict_path)
-        # else:
-        #     print("loading model from database")
+        logger.debug(f"begin inference for {inf_batch_num} batches")
 
         data = []
 
@@ -140,20 +132,33 @@ class AutoPipelineBuilder(BuilderBase):
             async for batch in data_loader:
                 batch_idx += 1
 
-                data.extend(batch)
+                features = batch["value"]
+                for i in range(len(features)):
+                    data.append(features[i])
 
-                # y = self._model(batch)
-                # predictions.append(y.cpu().numpy().tolist())
-
-                # logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
-
-                # dummy data
-                predictions.append(np.random.rand(len(batch)).tolist())
+                ### dummy data
+                # predictions.append(np.random.rand(len(batch)).tolist())
 
                 if batch_idx + 1 == inf_batch_num:
                     break
 
         logger.debug("all data collected", len=len(data))
+
+        sequence: List[Primitive] = [pickle.loads(s) for s in self._model]
+
+        logger.info(f"sequence: {sequence}")
+
+        df = pd.DataFrame(data, columns=feature_names).infer_objects()
+        logger.info("data frame created", len=len(df), df=df)
+
+        for i in range(len(sequence) - 1):
+            df = sequence[i].transform_x(df)
+
+        predictor: LogisticRegressionPrim = sequence[-1]
+        prediction = predictor.predict(df)[:, 1] - 0.5
+        print(prediction)
+        
+        predictions = [prediction]
 
         logger.info(f"Done inference for {inf_batch_num} batches ")
         logger.info("---- Inference end ---- ", time=time_since(since=start_time))

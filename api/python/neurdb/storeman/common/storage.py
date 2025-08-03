@@ -1,8 +1,39 @@
+from abc import ABCMeta
 import pickle
 from io import BytesIO
 from typing import List, Optional, Type, Union
 
 from torch import nn
+
+
+class Pickled(metaclass=ABCMeta):
+    """
+    Abstract base class for the pickled representation of the model
+    """
+
+    @property
+    def model_meta_pickled(self) -> bytes:
+        """
+        Get the pickled representation of metadata
+        @return: pickled representation of metadata
+        """
+        raise NotImplementedError
+
+    @model_meta_pickled.setter
+    def model_meta_pickled(self, value: bytes):
+        raise NotImplementedError
+
+    @property
+    def layer_sequence_pickled(self) -> List[bytes]:
+        """
+        Get the pickled representation of each layer
+        @return: list of pickled representation of each layer
+        """
+        raise NotImplementedError
+
+    @layer_sequence_pickled.setter
+    def layer_sequence_pickled(self, value: List[bytes]):
+        raise NotImplementedError
 
 
 class LayerStorage:
@@ -218,9 +249,9 @@ class ModelStorage:
         Get the pickled representation of the model
         :@return: Pickled object
         """
-        return ModelStorage.Pickled(self)
+        return ModelStorage.PickledModel(self)
 
-    class Pickled:
+    class PickledModel(Pickled):
         """
         Inner class to support the pickling of the ModelStorage object
         """
@@ -267,6 +298,29 @@ class ModelStorage:
                     ]
                 ),
             )
+
+
+class PickledList(Pickled):
+    def __init__(self, model_meta_pickled: bytes, layer_sequence_pickled: List[bytes]):
+        self._model_meta_pickled = model_meta_pickled
+        self._layer_sequence_pickled = layer_sequence_pickled
+        super().__init__()
+
+    @property
+    def model_meta_pickled(self) -> bytes:
+        return self._model_meta_pickled
+
+    @model_meta_pickled.setter
+    def model_meta_pickled(self, value: bytes):
+        self._model_meta_pickled = value
+
+    @property
+    def layer_sequence_pickled(self) -> List[bytes]:
+        return self._layer_sequence_pickled
+
+    @layer_sequence_pickled.setter
+    def layer_sequence_pickled(self, value: List[bytes]):
+        self._layer_sequence_pickled = value
 
 
 class Utils:

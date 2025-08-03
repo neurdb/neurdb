@@ -20,6 +20,9 @@ class Primitive:
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         return train_x, test_x
 
+    def transform_x(self, test_x: pd.DataFrame) -> pd.DataFrame:
+        return test_x
+
     def can_accept(self, data):
         return True
 

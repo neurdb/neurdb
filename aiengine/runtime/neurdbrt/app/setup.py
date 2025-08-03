@@ -54,7 +54,10 @@ class Setup:
             )
 
             if self._args.run_model == "in_database":
-                model_id = self._db.insert_model(builder.model)
+                if self._model_name == "auto_pipeline":
+                    model_id = self._db.insert_list(builder.model)
+                else:
+                    model_id = self._db.insert_model(builder.model)
             else:
                 model_id = -1
             return model_id, None
@@ -124,7 +127,10 @@ class Setup:
 
             builder = build_model(self._model_name, self._args)
             try:
-                builder.model = self._db.get_model(model_id).to_model().to(DEVICE)
+                if self._model_name == "auto_pipeline":
+                    builder.model = self._db.get_list(model_id)
+                else:
+                    builder.model = self._db.get_model(model_id).to_model().to(DEVICE)
             except FileNotFoundError:
                 return [], f"model {self._model_name} not trained yet"
 

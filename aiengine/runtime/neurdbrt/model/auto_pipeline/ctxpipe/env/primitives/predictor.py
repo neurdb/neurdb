@@ -317,6 +317,7 @@ class LogisticRegressionPrim(Primitive):
         
 https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html"""
         self.accept_type = "c"
+        self.model = LogisticRegression(solver="liblinear", random_state=0, n_jobs=5)
 
     def can_accept(self, data):
         return self.can_accept_c(data, "Classification")
@@ -325,10 +326,12 @@ https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticR
         return True
 
     def transform(self, train_x, train_y, test_x):
-        model = LogisticRegression(solver="liblinear", random_state=0, n_jobs=5)
-        model.fit(train_x, train_y)
-        pred_y = model.predict(test_x)
+        self.model.fit(train_x, train_y)
+        pred_y = self.model.predict(test_x)
         return pred_y
+
+    def predict(self, test_x):
+        return self.model.predict_proba(test_x)
 
 
 class NearestCentroidPrim(Primitive):

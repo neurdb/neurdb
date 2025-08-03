@@ -214,10 +214,14 @@ class Setup:
             end = start + 1
 
         test_model_iterations = list(range(start, end + 1, conf.checkpoint_interval))
+
+        pipeline = None
         for it in test_model_iterations:
             logger.info(f"evaluating on model iteration {it}...")
-            self._evaluate_iteration(it, datasets, ctasks, dry_run)
+            pipeline = self._evaluate_iteration(it, datasets, ctasks, dry_run)
             logger.info(f"evaluating on model iteration {it} done")
+
+        return pipeline
 
     def _reset_failed_file(self):
         with open(self._info.done_file_path, "w") as f:
@@ -261,6 +265,7 @@ class Setup:
         model_tag = f"ctx_{iteration}"
         logger.info(f"model_tag={model_tag}")
 
+        pipeline = None
         for _, info in datasets.items():
             dataset_name = info["dataset"]
             # if (
@@ -290,7 +295,7 @@ class Setup:
                 env.eval_predictor_name,
             )
 
-            self._do_evaluate(
+            pipeline = self._do_evaluate(
                 dataset=Dataset(dataset_name, dataset_path, label_index, label_name),
                 model=env.eval_predictor_name,
                 dry_run=dry_run,
@@ -298,6 +303,8 @@ class Setup:
             )
 
             gc.collect()
+
+        return pipeline
 
     def _do_evaluate(
         self,
@@ -341,6 +348,8 @@ class Setup:
                     f"{dataset.path}\t{dataset.label_column_id}"
                     f"\t{model}\n"
                 )
+
+            return [*pg._agentman.tester.result, pg._agentman.tester.result_predictor]
 
         except Exception as e:
             print(traceback.format_exc())
@@ -394,7 +403,7 @@ def evaluate_single_dataset(
         DatasetBuilder(info).build()
 
     """Then *comment above line* and evaluate pipeline search"""
-    setup.evaluate_pipeline(start=start, end=end, dry_run=dry_run)
+    return setup.evaluate_pipeline(start=start, end=end, dry_run=dry_run)
 
 
 if __name__ == "__main__":

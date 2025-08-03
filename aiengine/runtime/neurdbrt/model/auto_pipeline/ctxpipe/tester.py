@@ -34,6 +34,7 @@ class Tester:
         self.outputdir = self._config.model_dir
 
         self._result: Optional[List[Primitive]] = None
+        self._result_predictor: Optional[Primitive] = None
 
     def _epsilon_by_frame(self, frame_id):
         return self.epsilon_final + (
@@ -216,6 +217,7 @@ class Tester:
         """if done, evaluate and save result"""
         if done:
             self._result = self.env.pipeline.sequence
+            self._result_predictor = self.env.pipeline.predictor
 
             with open(self._config.pipelines_file_name, "a") as f:
                 f.write(
@@ -261,6 +263,15 @@ class Tester:
             )
 
         return self._result
+
+    @property
+    def result_predictor(self) -> Primitive:
+        if self._result_predictor is None:
+            raise ValueError(
+                "Pipeline has not been found yet. Please run inference first."
+            )
+
+        return self._result_predictor
 
     def inference(
         self, data_path, tag: str = "56000", dataset_name="UNKNOWN"

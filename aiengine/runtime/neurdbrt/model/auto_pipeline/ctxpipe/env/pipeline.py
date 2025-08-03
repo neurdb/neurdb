@@ -35,9 +35,9 @@ def _do_add_step(
         queue.close()
         return
 
-    queue.put([train_x, test_x, num_cols, cat_cols])
+    queue.put([train_x, test_x, num_cols, cat_cols, step])
     queue.close()
-    return train_x, test_x, num_cols, cat_cols
+    return train_x, test_x, num_cols, cat_cols, step
 
 
 def _do_evaluate(
@@ -54,9 +54,9 @@ def _do_evaluate(
         queue.close()
         return
 
-    queue.put([pred_y, result])
+    queue.put([pred_y, result, predictor])
     queue.close()
-    return pred_y, result
+    return pred_y, result, predictor
 
 
 class Pipeline:
@@ -269,12 +269,12 @@ class Pipeline:
                 logger.error(f"adding step {step} timed out")
                 return -1
 
-            [self.train_x, self.test_x, self.num_cols, self.cat_cols] = func_return
+            [self.train_x, self.test_x, self.num_cols, self.cat_cols, fitted_step] = func_return
         except FunctionTimedOut:
             logger.error(f"adding step {step} timed out")
             return -1
 
-        self.sequence.append(step)
+        self.sequence.append(fitted_step)
         self.gsequence[self.index] = step.gid
 
         self.index += 1
@@ -307,7 +307,7 @@ class Pipeline:
                 )
                 self.result = -1
             else:
-                [self.pred_y, self.result] = func_return
+                [self.pred_y, self.result, self.predictor] = func_return
         except FunctionTimedOut:
             logger.error(
                 f"evaluating {self.sequence} using predictor {self.predictor.name} timed out"

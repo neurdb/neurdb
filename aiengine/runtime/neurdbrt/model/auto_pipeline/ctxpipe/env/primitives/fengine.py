@@ -335,7 +335,7 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomTreesEm
         return train_data_x, test_data_x
 
     def transform_x(self, test_x):
-        self.pca.fit(test_x)
+        # self.pca.fit(test_x)
 
         test_data_x = self.pca.transform(test_x).toarray()
         new_cols = list(map(str, list(range(test_data_x.shape[1]))))

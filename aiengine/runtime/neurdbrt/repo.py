@@ -1,7 +1,7 @@
 from typing import List, TypedDict
 
 import neurdb
-from neurdb.storeman import ModelStorage
+from neurdb.storeman import ModelStorage, Pickled, PickledList
 from neurdbrt.log import logger
 from torch import nn
 
@@ -24,7 +24,14 @@ class ModelRepository:
             del self._conn
 
     def insert_model(self, model: nn.Module) -> int:
-        serialized_model = neurdb.ModelSerializer.serialize_model(model)
+        serialized_model: Pickled = neurdb.ModelSerializer.serialize_model(model)
+        return self._conn.save_model(serialized_model)
+
+    def insert_list(self, model_list: List[bytes]) -> int:
+        serialized_model = PickledList(
+            model_meta_pickled=bytes("LIST", "utf-8"),
+            layer_sequence_pickled=model_list,
+        )
         return self._conn.save_model(serialized_model)
 
     def update_layers(
@@ -42,6 +49,10 @@ class ModelRepository:
     def get_model(self, model_id: int) -> ModelStorage:
         storage = self._conn.load_model(model_id).unpack()
         return storage
+
+    def get_list(self, model_id: int) -> List[bytes]:
+        storage = self._conn.load_list(model_id)
+        return storage.layer_sequence_pickled
 
     def has_model(self, model_id: int) -> bool:
         try:

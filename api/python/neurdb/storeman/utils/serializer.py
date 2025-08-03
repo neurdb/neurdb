@@ -3,7 +3,7 @@ from io import BytesIO
 
 import torch
 
-from ..common import ModelStorage
+from ..common import ModelStorage, Pickled
 
 
 class ModelSerializer:
@@ -13,7 +13,7 @@ class ModelSerializer:
 
     # ---------------- Public APIs ----------------
     @staticmethod
-    def serialize_model(model: torch.nn.Module) -> ModelStorage.Pickled:
+    def serialize_model(model: torch.nn.Module) -> Pickled:
         """
         Serialize a PyTorch model to a pickled representation
         :param model: PyTorch model in nn.Module format
@@ -22,7 +22,7 @@ class ModelSerializer:
         return ModelStorage.from_model(model).get_pickled()
 
     @staticmethod
-    def deserialize_model(model_pickled: ModelStorage.Pickled) -> torch.nn.Module:
+    def deserialize_model(model_pickled: ModelStorage.PickledModel) -> torch.nn.Module:
         """
         Deserialize a pickled representation of a PyTorch model to a PyTorch model
         :param model_pickled: The pickled representation of the model in storage

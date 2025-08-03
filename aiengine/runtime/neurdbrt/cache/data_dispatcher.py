@@ -28,7 +28,7 @@ class LibSvmDataDispatcher:
 
         # Initialize aggregation variables
         self.total_preprocessing_time = 0.0
-        
+
         self._in_libsvm_format = in_libsvm_format
 
     def bound_client_to_cache(self, data_cache: DataCache, client_id: str):
@@ -125,7 +125,7 @@ class LibSvmDataDispatcher:
 
     # ------------------------- data operation -------------------------
 
-    async def add(self, data: str): 
+    async def add(self, data: str):
         """
         Add data to the cache.
         :param data: The dataset in LibSVM format.
@@ -140,7 +140,21 @@ class LibSvmDataDispatcher:
             _nfields = self.data_cache.dataset_statistics[1]
             batch_data = libsvm_batch_preprocess_id_only(data, _nfields)
         else:
-            batch_data = data.split("\n")
+            batches = data.split("\n")
+
+            values = []
+            y = []
+            for b in batches:
+                tokens = b.split()
+                if len(tokens) == 0:
+                    continue
+
+                # first value is the label
+                y.append(tokens[0])
+                # other values are features
+                values.append(tokens[1:])
+
+            batch_data = {"value": values, "y": y}
 
         # Record the end time
         end_time = time.time()
