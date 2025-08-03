@@ -89,6 +89,9 @@ https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxSc
 
     def transform_x(self, test_x):
         cat_test_x, num_test_x = catch_num(test_x)
+        
+        if len(num_test_x.columns) == 0:
+            return test_x
 
         self.scaler.fit(test_x)
 
