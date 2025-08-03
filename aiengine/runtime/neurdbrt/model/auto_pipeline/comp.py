@@ -1,8 +1,7 @@
 from typing import List
 
-from ctxpipe.env.metric import *
-from ctxpipe.env.primitives import *
-import env
+from .ctxpipe.env.metric import *
+from .ctxpipe.env.primitives import *
 
 selected_prim: Primitive = LogisticRegressionPrim()
 

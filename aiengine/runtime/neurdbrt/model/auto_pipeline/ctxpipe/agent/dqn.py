@@ -7,10 +7,10 @@ import numpy as np
 import torch
 from loguru import logger
 from torch import nn
-from torch.optim import Adam, AdamW
+from torch.optim import Adam
 
 from auto_pipeline import env, comp, deterministic, util
-from config import AgentConfig, default_config, default_dqn_config
+from auto_pipeline.config import AgentConfig, default_config, default_dqn_config
 
 from ..ctx import TableEmbedder, TextEmbedder, embedder
 from ..env.pipeline import Pipeline

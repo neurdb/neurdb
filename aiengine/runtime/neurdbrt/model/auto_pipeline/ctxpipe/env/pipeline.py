@@ -10,9 +10,8 @@ from loguru import logger
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-import comp
-import util
-from config import GlobalConfig
+from auto_pipeline import comp, util
+from auto_pipeline.config import GlobalConfig
 
 from .primitives.predictor import *
 

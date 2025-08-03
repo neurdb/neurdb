@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 import torch
 
-import env
+from . import env
 
 __all__ = ["abspath", "write_json", "read_json"]
 

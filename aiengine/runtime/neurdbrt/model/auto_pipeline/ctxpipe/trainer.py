@@ -7,13 +7,13 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 from loguru import logger
 
-import comp
-from config import AgentConfig, Config
-from ctxpipe.agent.dqn import Agent
-from ctxpipe.ctx import TableEmbedder, TextEmbedder, embedder
-from ctxpipe.env.enviroment import Environment
-from ctxpipe.env.primitives.imputercat import ImputerCatPrim
-from ctxpipe.env.primitives.primitive import Primitive
+from .. import comp
+from ..config import AgentConfig
+from .agent.dqn import Agent
+from .ctx import TableEmbedder, TextEmbedder, embedder
+from .env.enviroment import Environment
+from .env.primitives.imputercat import ImputerCatPrim
+from .env.primitives.primitive import Primitive
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 

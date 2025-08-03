@@ -4,8 +4,8 @@ import warnings
 import numpy as np
 import torch
 
-import deterministic
-from ctxpipe.env.primitives import *
+from . import deterministic
+from .ctxpipe.env.primitives import *
 
 
 def init():
@@ -18,7 +18,7 @@ def init():
 
     warnings.filterwarnings("ignore")
 
-    from config import default_config as conf
+    from .config import default_config as conf
 
     conf.makedirs()
 

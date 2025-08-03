@@ -3,7 +3,10 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import env
+if __name__ == "__main__":
+    import env
+else:
+    from auto_pipeline import env
 
 env.init()
 
@@ -11,7 +14,6 @@ import argparse
 import gc
 import json
 import shutil
-import time
 import traceback
 from glob import glob
 

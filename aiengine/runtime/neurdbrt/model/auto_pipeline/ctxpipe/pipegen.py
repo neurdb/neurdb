@@ -1,8 +1,9 @@
 from loguru import logger
-from ctxpipe.agentman import AgentManager
-from ctxpipe.dataset import Dataset
 
-# from ctxpipe.stats import Stats
+from .agentman import AgentManager
+from .dataset import Dataset
+
+# from .stats import Stats
 
 
 class PipelineGenerator:

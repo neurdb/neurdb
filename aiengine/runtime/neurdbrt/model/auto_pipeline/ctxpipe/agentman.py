@@ -1,9 +1,9 @@
-from config import default_agent_config, default_env_config
-from ctxpipe.agent.dqn import Agent
-from ctxpipe.dataset import Dataset
-from ctxpipe.env.enviroment import Environment
-from ctxpipe.tester import Tester
-from ctxpipe.trainer import Trainer
+from ..config import default_agent_config, default_env_config
+from .agent.dqn import Agent
+from .dataset import Dataset
+from .env.enviroment import Environment
+from .tester import Tester
+from .trainer import Trainer
 
 
 class AgentManager:

@@ -1,6 +1,6 @@
 import numpy as np
 
-import deterministic
+from auto_pipeline import deterministic
 
 
 class ReplayBuffer(object):

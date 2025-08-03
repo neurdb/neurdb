@@ -6,9 +6,8 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
-import comp
-import deterministic
-from config import EnvConfig
+from auto_pipeline import comp, deterministic
+from auto_pipeline.config import EnvConfig
 
 from .pipeline import Pipeline
 from .primitives.primitive import Primitive

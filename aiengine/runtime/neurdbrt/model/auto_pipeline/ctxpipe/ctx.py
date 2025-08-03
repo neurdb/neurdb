@@ -11,7 +11,7 @@ from transformers import (
     TapasTokenizer,
 )
 
-import env
+from .. import env
 
 
 class TableEmbedder(metaclass=ABCMeta):

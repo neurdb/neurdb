@@ -3,7 +3,7 @@ import os
 
 from loguru import logger
 
-import util
+from .. import util
 
 DEFAULT_AIPIPE_PREFIX = "exp/diffprep/aipipe"
 DEFAULT_RESULT_PREFIX = "exp/diffprep/result"
