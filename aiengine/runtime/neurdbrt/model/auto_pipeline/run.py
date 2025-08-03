@@ -26,6 +26,7 @@ if __name__ == "__main__":
     from ctxpipe.dataset import Dataset
     from ctxpipe.info import Info
     from ctxpipe.pipegen import PipelineGenerator
+
     # from ctxpipe.stats import Stats, init_stats_db
     # from ctxpipe.env.primitives.primitive import Primitive
 else:
@@ -35,8 +36,8 @@ else:
     from auto_pipeline.ctxpipe.info import Info
     from auto_pipeline.ctxpipe.pipegen import PipelineGenerator
 
-# from auto_pipeline.ctxpipe.stats import Stats, init_stats_db
-# from auto_pipeline.ctxpipe.env.primitives.primitive import Primitive
+# from .ctxpipe.stats import Stats, init_stats_db
+# from .ctxpipe.env.primitives.primitive import Primitive
 
 
 class CollectionBuilder:
@@ -143,6 +144,36 @@ class DatasetBuilder:
 
         self._update_files(
             dataset=Dataset(ds, ds_csv, label_index, label_name),
+            predictor_name=env.eval_predictor_name,
+        )
+
+    def _update_files(self, dataset: Dataset, predictor_name: str):
+        """
+        update adds information of current task and dataset in information
+        files if not exist.
+
+        NOTE: ctasks = classification tasks
+        """
+        util.write_json(self._info.dataset_info_path, {dataset.name: dataset.info})
+        util.write_json(
+            self._info.task_info_path,
+            {"0": dataset.make_task_info(predictor_name, dataset.name)},
+        )
+        util.write_json(self._info.task_index_path, [0])
+
+
+class InMemoryDatasetBuilder:
+    def __init__(self, info: Info, data_info: dict) -> None:
+        self._info = info
+        self._data_info = data_info
+
+    def build(self):
+        label_name = self._data_info["label_name"]
+        label_index = self._data_info["label_index"]
+        logger.debug(f"label_name: {label_name}, label_index: {label_index}")
+
+        self._update_files(
+            dataset=Dataset("InMemoryDataset", "mem://", label_index, label_name),
             predictor_name=env.eval_predictor_name,
         )
 
@@ -329,7 +360,7 @@ class Setup:
 
 
 def evaluate(info: Info, start: int, end: int = -1, dry_run: bool = False):
-    logger.warning(f"single dataset mode: {config.GlobalConfig.single_dataset_mode}")
+    logger.warning(f"single dataset mode: {config.default_config.single_dataset_mode}")
 
     setup = Setup(info)
 
@@ -343,13 +374,24 @@ def evaluate(info: Info, start: int, end: int = -1, dry_run: bool = False):
 def evaluate_single_dataset(
     info: Info, start: int, end: int = -1, dry_run: bool = False
 ):
-    config.GlobalConfig.single_dataset_mode = True
-    logger.warning(f"single dataset mode: {config.GlobalConfig.single_dataset_mode}")
+    conf.single_dataset_mode = True
+    logger.warning(f"single dataset mode: {conf.single_dataset_mode}")
+
+    if conf.data_in_memory:
+        logger.warning("data_in_memory is True, data will be loaded from memory")
+    else:
+        logger.warning("data_in_memory is False, data will be loaded from disk")
 
     setup = Setup(info)
 
     """Run this first to create information files"""
-    DatasetBuilder(info).build()
+    if conf.data_in_memory:
+        if conf.data_info is None:
+            raise ValueError("data_info is None")
+
+        InMemoryDatasetBuilder(info, conf.data_info).build()
+    else:
+        DatasetBuilder(info).build()
 
     """Then *comment above line* and evaluate pipeline search"""
     setup.evaluate_pipeline(start=start, end=end, dry_run=dry_run)

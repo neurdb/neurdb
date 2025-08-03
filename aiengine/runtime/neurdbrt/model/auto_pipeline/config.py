@@ -120,6 +120,10 @@ class GlobalConfig:
 
     single_dataset_mode = False
 
+    data_in_memory = False
+    data: Optional[pd.DataFrame] = None
+    data_info: Optional[dict] = None
+
 
 default_config = GlobalConfig()
 

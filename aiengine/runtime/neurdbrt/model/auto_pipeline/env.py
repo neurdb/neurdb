@@ -18,7 +18,7 @@ def init():
 
     warnings.filterwarnings("ignore")
 
-    from .config import default_config as conf
+    from auto_pipeline.config import default_config as conf
 
     conf.makedirs()
 

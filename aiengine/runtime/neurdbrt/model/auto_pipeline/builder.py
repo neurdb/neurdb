@@ -11,7 +11,7 @@ from neurdbrt.utils.date import time_since
 
 from ..base import BuilderBase
 from .run import evaluate_single_dataset, Info
-from .config import default_config as conf
+from auto_pipeline.config import default_config as conf
 
 
 class AutoPipelineBuilder(BuilderBase):
@@ -60,7 +60,10 @@ class AutoPipelineBuilder(BuilderBase):
             async for batch in train_loader:
                 batch_idx += 1
 
-                data.extend(batch)
+                features = batch["value"]
+                label = batch["y"]
+                for i in range(len(features)):
+                    data.append([*features[i], label[i]])
 
                 if batch_idx + 1 == train_batch_num:
                     break
@@ -79,12 +82,29 @@ class AutoPipelineBuilder(BuilderBase):
                 if batch_idx + 1 == test_batch_num:
                     break
 
-        logger.info("all data collected", len=len(data))
-        
-        print(data[0])
+        logger.debug("all data collected", len=len(data), first=data[0])
 
-        # dummy model
-        self._model = torch.nn.Sequential(torch.nn.Linear(1, 1))
+        df = pd.DataFrame(data, columns=[*feature_names, target_name])
+        logger.info("data frame created", len=len(df), df=df)
+
+        conf.data_in_memory = True
+        conf.data = df
+        conf.data_info = {
+            "label_name": target_name,
+            "label_index": conf.data.columns.get_loc(target_name),
+        }
+        evaluate_single_dataset(
+            Info(
+                aipipe_core_prefix=f"{conf.exp_dir}/.tmp",
+                result_prefix=f"{conf.exp_dir}/.tmp/result",
+                dataset_prefix="",
+            ),
+            start=32000,
+            end=32000,
+            dry_run=True,
+        )
+
+        shutil.rmtree(f"{conf.exp_dir}/.tmp")
 
         self._logger.info("Train end", time=time_since(since=start_time))
 
@@ -133,7 +153,7 @@ class AutoPipelineBuilder(BuilderBase):
                 if batch_idx + 1 == inf_batch_num:
                     break
 
-        logger.info("all data collected", len=len(data))
+        logger.debug("all data collected", len=len(data))
 
         logger.info(f"Done inference for {inf_batch_num} batches ")
         logger.info("---- Inference end ---- ", time=time_since(since=start_time))

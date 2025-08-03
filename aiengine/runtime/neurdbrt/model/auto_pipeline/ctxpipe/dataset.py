@@ -2,6 +2,8 @@ from typing import Dict, List, TypedDict
 
 import pandas as pd
 
+from auto_pipeline.config import default_config as conf
+
 
 class TaskInfo(TypedDict):
     dataset: str
@@ -54,7 +56,12 @@ class Dataset:
 
     @property
     def info(self) -> DatasetInfo:
-        data = pd.read_csv(self.path)
+        if conf.data_in_memory:
+            data = conf.data
+            if data is None:
+                raise ValueError("data is None")
+        else:
+            data = pd.read_csv(self.path)
 
         columns = data.columns
         column_index = {}

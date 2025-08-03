@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
 from auto_pipeline import comp, util
-from auto_pipeline.config import GlobalConfig
+from auto_pipeline.config import EnvConfig, default_config
 
 from .primitives.predictor import *
 
@@ -62,7 +62,7 @@ def _do_evaluate(
 class Pipeline:
 
     def __init__(
-        self, taskid, predictor: Primitive, metric, config: GlobalConfig, train=True
+        self, taskid, predictor: Primitive, metric, config: EnvConfig, train=True
     ):
         self._config = config
         self.taskid = taskid
@@ -102,7 +102,9 @@ class Pipeline:
         self._logic_pipeline_id = value
 
     def load_data(self, taskid, ratio=0.8, split_random_state=0):
-        if self._config.single_dataset_mode:
+        if default_config.data_in_memory:
+            data = default_config.data.infer_objects()
+        elif default_config.single_dataset_mode:
             data = pd.read_csv(
                 os.path.join(
                     self._config.dataset_path,

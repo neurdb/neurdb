@@ -15,9 +15,9 @@ from loguru import logger
 
 import config
 import util
-from config import default_config as conf
-from ctxpipe.info import Info
-from ctxpipe.pipegen import PipelineGenerator
+from auto_pipeline.config import default_config as conf
+from .ctxpipe.info import Info
+from .ctxpipe.pipegen import PipelineGenerator
 # from ctxpipe.stats import Stats, init_stats_db
 
 

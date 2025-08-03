@@ -270,21 +270,29 @@ class Tester:
 
         score = 0
         reward_dic = {}
-        datasetname = data_path.split("/")[-2]
-
-        i = None
-        for taskid in self._config.classification_task_dic:
-            if datasetname == self._config.classification_task_dic[taskid]["dataset"]:
-                i = taskid
-
-        if i is None:
-            raise ValueError("Invalid i")
-
         seq = []
         select_cl = 0
-        for cl in comp.predictors:
-            if cl.name == self._config.classification_task_dic[i]["model"]:
-                select_cl = cl
+
+        if self._config.data_in_memory:
+            taskid = -1  # dummy
+            select_cl = comp.selected_prim.id
+        else:
+            datasetname = data_path.split("/")[-2]
+
+            i = None
+            for taskid in self._config.classification_task_dic:
+                if (
+                    datasetname
+                    == self._config.classification_task_dic[taskid]["dataset"]
+                ):
+                    i = taskid
+
+            if i is None:
+                raise ValueError("Invalid i")
+
+            for cl in comp.predictors:
+                if cl.name == self._config.classification_task_dic[i]["model"]:
+                    select_cl = cl
 
         self.start_time = time.time()
         self.env.reset(
