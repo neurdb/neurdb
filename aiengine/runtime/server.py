@@ -22,6 +22,8 @@ from neurdbrt.log import configure_logging, logger
 from neurdbrt.repo import ModelRepository
 from quart import Quart, current_app, g, websocket
 
+import uvicorn
+
 configure_logging(None)
 api_configure_logging(None)
 
@@ -415,3 +417,6 @@ async def init_database(req: TaskRequest, in_libsvm_format: bool = True):
 
 
 app = quart_app
+
+
+uvicorn.run(app, host="0.0.0.0", port=8090, log_level="debug")
