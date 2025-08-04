@@ -1,5 +1,5 @@
-DROP EXTENSION IF EXISTS nr_preprocessing;
-CREATE EXTENSION nr_preprocessing;
+DROP EXTENSION IF EXISTS nr_pipeline;
+CREATE EXTENSION nr_pipeline;
 
 -- Set the batch size and number of batches
 SET nr_task_batch_size TO 60;
@@ -10,4 +10,4 @@ FROM frappe_test
 TRAIN ON feature1, feature2, feature3, feature4, feature5, feature6, feature7, feature8, feature9, feature10;
 
 -- Drop the extension and the table
-DROP EXTENSION nr_preprocessing;
+DROP EXTENSION nr_pipeline;

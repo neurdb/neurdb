@@ -14,7 +14,7 @@ class LibSvmDataDispatcher:
     LibSvmDataDispatcher monitors the cache and requests data to fill the cache.
     """
 
-    def __init__(self, data_cache: DataCache = None):
+    def __init__(self, data_cache: DataCache = None, in_libsvm_format: bool = True):
         """
         Initialize the LibSvmDataDispatcher with an optional data cache.
         :param data_cache: The data cache it is currently handling.
@@ -28,6 +28,8 @@ class LibSvmDataDispatcher:
 
         # Initialize aggregation variables
         self.total_preprocessing_time = 0.0
+
+        self._in_libsvm_format = in_libsvm_format
 
     def bound_client_to_cache(self, data_cache: DataCache, client_id: str):
         """
@@ -134,8 +136,25 @@ class LibSvmDataDispatcher:
         start_time = time.time()
 
         # Process the data
-        _nfields = self.data_cache.dataset_statistics[1]
-        batch_data = libsvm_batch_preprocess_id_only(data, _nfields)
+        if self._in_libsvm_format:
+            _nfields = self.data_cache.dataset_statistics[1]
+            batch_data = libsvm_batch_preprocess_id_only(data, _nfields)
+        else:
+            batches = data.split("\n")
+
+            values = []
+            y = []
+            for b in batches:
+                tokens = b.split()
+                if len(tokens) == 0:
+                    continue
+
+                # first value is the label
+                y.append(tokens[0])
+                # other values are features
+                values.append(tokens[1:])
+
+            batch_data = {"value": values, "y": y}
 
         # Record the end time
         end_time = time.time()

@@ -3,6 +3,7 @@ import json
 from threading import Thread
 from typing import Any, List
 
+import uvicorn
 from neurdb.logger import configure_logging as api_configure_logging
 from neurdbrt.app import Setup, WebsocketSender, before_execute
 from neurdbrt.app.msg import (
@@ -151,7 +152,7 @@ async def on_ack_result(data: dict):
 
 async def on_train(data: dict):
     req = TaskRequest(data, is_inference=False)
-    await init_database(req)
+    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
 
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
@@ -179,8 +180,8 @@ async def on_train(data: dict):
             train_batch_num=data["spec"]["nBatchTrain"],
             eval_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
-            features=data["features"],
-            target=data["target"],
+            feature_names=data["features"].split(","),
+            target_name=data["target"],
         )
     ).add_done_callback(lambda task: train_done_callback(task.result(), req.session_id))
 
@@ -198,11 +199,27 @@ async def train_task(
     train_batch_num: int,
     eval_batch_num: int,
     test_batch_num: int,
-    features: List[str],
-    target: str,
+    feature_names: List[str],
+    target_name: str,
 ) -> int:
+    logger.info(
+        f"train_task called",
+        table_name=table_name,
+        epoch=epoch,
+        train_batch_num=train_batch_num,
+        eval_batch_num=eval_batch_num,
+        test_batch_num=test_batch_num,
+        feature_names=feature_names,
+        target_name=target_name,
+    )
+
     model_id, err = await setup.train(
-        epoch, train_batch_num, eval_batch_num, test_batch_num
+        epoch,
+        train_batch_num,
+        eval_batch_num,
+        test_batch_num,
+        feature_names,
+        target_name,
     )
     if err is not None:
         logger.error(f"train failed with error: {err}")
@@ -211,7 +228,9 @@ async def train_task(
     print(f"train done. model_id: {model_id}")
 
     if NEURDB_CONNECTOR:
-        NEURDB_CONNECTOR.register_model(model_id, table_name, features, target)
+        NEURDB_CONNECTOR.register_model(
+            model_id, table_name, feature_names, target_name
+        )
 
     return model_id
 
@@ -219,7 +238,7 @@ async def train_task(
 async def on_inference(data: dict):
     req = TaskRequest(data, is_inference=True)
 
-    await init_database(req)
+    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
@@ -243,6 +262,9 @@ async def on_inference(data: dict):
             ),
             model_id=data["modelId"],
             inf_batch_num=req.total_batch_num,
+            table_name=data["table"],
+            feature_names=data["features"].split(","),
+            target_name=data["target"],
         )
     ).add_done_callback(
         lambda task: inference_done_callback(task.result(), req.session_id)
@@ -258,9 +280,22 @@ def inference_done_callback(result, session_id):
 async def inference_task(
     setup: Setup,
     model_id: int,
+    table_name: str,
     inf_batch_num: int,
+    feature_names: List[str],
+    target_name: str,
 ) -> List[List[Any]]:
-    response, err = await setup.inference(model_id, inf_batch_num)
+    logger.info(
+        f"train_task called",
+        table_name=table_name,
+        inf_batch_num=inf_batch_num,
+        feature_names=feature_names,
+        target_name=target_name,
+    )
+
+    response, err = await setup.inference(
+        model_id, inf_batch_num, feature_names, target_name
+    )
     if err is not None:
         logger.error(f"inference failed with error: {err}")
         return []
@@ -273,7 +308,7 @@ async def inference_task(
 async def on_finetune(data: dict):
     req = TaskRequest(data, is_inference=False)
 
-    await init_database(req)
+    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
@@ -300,6 +335,8 @@ async def on_finetune(data: dict):
             train_batch_num=data["spec"]["nBatchTrain"],
             eva_batch_num=data["spec"]["nBatchEval"],
             test_batch_num=data["spec"]["nBatchTest"],
+            feature_names=data["features"].split(","),
+            target_name=data["target"],
         )
     ).add_done_callback(
         lambda task: finetune_done_callback(task.result(), req.session_id)
@@ -319,6 +356,8 @@ async def finetune_task(
     train_batch_num: int,
     eva_batch_num: int,
     test_batch_num: int,
+    feature_names: List[str],
+    target_name: str,
 ) -> int:
     model_id, err = await setup.finetune(
         model_id,
@@ -327,6 +366,8 @@ async def finetune_task(
         train_batch_num=train_batch_num,
         eva_batch_num=eva_batch_num,
         test_batch_num=test_batch_num,
+        feature_names=feature_names,
+        target_name=target_name,
     )
     if err is not None:
         logger.error(f"train failed with error: {err}")
@@ -336,7 +377,7 @@ async def finetune_task(
     return model_id
 
 
-async def init_database(req: TaskRequest):
+async def init_database(req: TaskRequest, in_libsvm_format: bool = True):
     # Get the arguments from the request
     session_id = req.session_id
     n_feat = req.n_feat
@@ -358,7 +399,8 @@ async def init_database(req: TaskRequest):
     # Create the data dispatcher if it doesn't exist
     dispatchers = quart_app.config["dispatchers"]
     if not dispatchers.contains(session_id, session_id):
-        d = LibSvmDataDispatcher()
+        d = LibSvmDataDispatcher(in_libsvm_format=in_libsvm_format)
+        logger.debug(f"Created data dispatcher", in_libsvm_format=in_libsvm_format)
         dispatchers.add(session_id, session_id, d)
 
         d.bound_client_to_cache(c, session_id)
@@ -374,3 +416,6 @@ async def init_database(req: TaskRequest):
 
 
 app = quart_app
+
+
+uvicorn.run(app, host="0.0.0.0", port=8090, log_level="debug")

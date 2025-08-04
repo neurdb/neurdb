@@ -1,4 +1,5 @@
 import time
+from typing import List
 
 import torch
 import torch.nn as nn
@@ -55,6 +56,8 @@ class ARMNetModelBuilder(BuilderBase):
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
+        feature_names: List[str],
+        target_name: str,
     ):
         logger = self._logger.bind(task="train")
 
@@ -272,7 +275,13 @@ class ARMNetModelBuilder(BuilderBase):
         logger.info(f"Evaluate end", time=time_since(s=time_avg.sum))
         return auc_avg.avg
 
-    async def inference(self, data_loader: StreamingDataSet, inf_batch_num: int):
+    async def inference(
+        self,
+        data_loader: StreamingDataSet,
+        inf_batch_num: int,
+        feature_names: List[str],
+        target_name: str,
+    ):
         logger = self._logger.bind(task="inference")
         print(f"begin inference for {inf_batch_num} batches ")
         # if this is to load model from the dict,

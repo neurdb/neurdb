@@ -27,9 +27,9 @@ Oid			modelLookupArgTypes[MODEL_LOOKUP_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTARRAYO
 char	   *trainingFuncName = "nr_train";
 Oid			trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
 
-#define INFERENCE_PARAMS_ARRAY_SIZE 8
+#define INFERENCE_PARAMS_ARRAY_SIZE 9
 char	   *inferenceFuncName = "nr_inference";
-Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, INT4OID};
+Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
 
 
 static List *
@@ -399,7 +399,8 @@ exec_udf(PredictType type,
 	inferenceFCInfo->args[4].value = Int32GetDatum(NrTaskNumBatches);
 	inferenceFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
 	inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
-	inferenceFCInfo->args[7].value = Int32GetDatum(type);
+	inferenceFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
+	inferenceFCInfo->args[8].value = Int32GetDatum(type);
 
 	set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
 

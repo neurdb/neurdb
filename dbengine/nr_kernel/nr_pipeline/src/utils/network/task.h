@@ -41,6 +41,8 @@ typedef struct {
   char *metrics;
 
   int cacheSize;
+  char *features;
+  char *target;
   int nFeat;
   int nField;
   int modelId;
@@ -76,7 +78,7 @@ void init_train_task_spec(TrainTaskSpec *task, const char *architecture,
 void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
                               int batch_size, int n_batch, const char *metrics,
                               int cacheSize, int nFeat, int nField, int nclass,
-                              int modelId);
+                              int modelId, char *features, char *target);
 
 void init_finetune_task_spec(FinetuneTaskSpec *task, const char *model_name,
                              int model_id, int batch_size, int epoch,

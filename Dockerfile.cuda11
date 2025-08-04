@@ -7,10 +7,6 @@ EXPOSE 5432
 # Set environment variables to avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Add env path and fix git ownership.
-ENV PATH="/home/neurdb/.local/bin:${PATH}"
-RUN git config --global --add safe.directory /code/neurdb-dev
-
 # Upgrade pip
 RUN apt-get update
 
@@ -58,6 +54,7 @@ RUN apt-get install -y \
     libcurl4-openssl-dev \
     libwebsockets-dev \
     libcjson-dev \
+    librocksdb-dev \
     && apt-get clean
 
 # Download libtorch CPU version and extract it to /home
@@ -122,6 +119,10 @@ RUN chmod +x /usr/local/bin/docker-init.sh
 
 # Change to non-root user 'neurdb' for database compilation and running the init script
 USER neurdb
+
+# Add env path and fix git ownership.
+ENV PATH="/home/neurdb/.local/bin:${PATH}"
+RUN git config --global --add safe.directory /code/neurdb-dev
 
 # Command to run the init.sh script
 CMD ["bash", "/usr/local/bin/docker-init.sh"]

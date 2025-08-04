@@ -1,7 +1,7 @@
 import asyncio
 from enum import Enum
 from queue import Empty, Full
-from typing import Optional, Tuple
+from typing import Generic, Optional, Tuple, TypeVar
 
 from neurdbrt.log import logger
 
@@ -26,7 +26,10 @@ class Bufferkey(Enum):
         return None
 
 
-class DataCache:
+T = TypeVar("T")
+
+
+class DataCache(Generic[T]):
     """
     DataCache manages caching of different datasets with thread-safe operations.
     """
@@ -69,7 +72,7 @@ class DataCache:
 
     # ------------------------- data operation -------------------------
 
-    async def add(self, value) -> bool:
+    async def add(self, value: T) -> bool:
         """
         Add a value to the right of the queue if the queue is not full.
         :param value: The value to add to the queue.
@@ -86,7 +89,7 @@ class DataCache:
             )
             return False
 
-    async def get(self) -> Optional[dict]:
+    async def get(self) -> Optional[T]:
         """
         Retrieve and remove the oldest value from the queue (read from left).
         :return: The oldest value from the queue, or None if the queue is empty.
