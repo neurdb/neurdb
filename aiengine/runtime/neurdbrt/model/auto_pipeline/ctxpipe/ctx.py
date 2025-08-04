@@ -11,6 +11,8 @@ from transformers import (
     TapasTokenizer,
 )
 
+from neurdbrt.log import logger
+
 from .. import env
 
 
@@ -115,7 +117,12 @@ class TapasEmbedder(TableEmbedder):
         return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
 
 
-embedder = GTEEmbedder()
+if os.path.exists(GTEEmbedder.CTX_MODEL_PATH):
+    embedder = GTEEmbedder()
+else:
+    embedder = None
+    logger.warning("GTE model not found. auto_pipeline will not work!")
+
 # embedder = TapasEmbedder()
 
 if __name__ == "__main__":
