@@ -512,7 +512,7 @@ static inline bool
 SerializationNeededForRead(Relation relation, Snapshot snapshot)
 {
 	/* Nothing to do if this is not a serializable transaction */
-    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
+    if (MySerializableXact == InvalidSerializableXact || IsolationIsNotSSI())
 		return false;
 
 	/*
@@ -556,7 +556,7 @@ static inline bool
 SerializationNeededForWrite(Relation relation)
 {
 	/* Nothing to do if this is not a serializable transaction */
-    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
+    if (MySerializableXact == InvalidSerializableXact || IsolationIsNotSSI())
 		return false;
 
 	/* Check if the relation doesn't participate in predicate locking */
@@ -1876,7 +1876,7 @@ CreateLocalPredicateLockHash(void)
 	HASHCTL		hash_ctl;
 
 	/* Initialize the backend-local hash table of parent locks */
-    Assert(IsolationIsSSI());
+    Assert(!IsolationIsNotSSI() && IsolationIsSerializable());
 	Assert(LocalPredicateLockHash == NULL);
 	hash_ctl.keysize = sizeof(PREDICATELOCKTARGETTAG);
 	hash_ctl.entrysize = sizeof(LOCALPREDICATELOCK);
@@ -3300,7 +3300,7 @@ ReleasePredicateLocks(bool isCommit, bool isReadOnlySafe)
 		}
 	}
 
-    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
+    if (MySerializableXact == InvalidSerializableXact)
 	{
 		Assert(LocalPredicateLockHash == NULL);
 		return;
@@ -4647,7 +4647,7 @@ PreCommit_CheckForSerializationFailure(void)
 {
 	dlist_iter	near_iter;
 
-    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
+    if (MySerializableXact == InvalidSerializableXact || IsolationIsNotSSI())
 		return;
 
 	Assert(IsolationIsSerializable());
@@ -4742,7 +4742,7 @@ AtPrepare_PredicateLocks(void)
 	xactRecord = &(record.data.xactRecord);
 	lockRecord = &(record.data.lockRecord);
 
-    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
+    if (MySerializableXact == InvalidSerializableXact || IsolationIsNotSSI())
 		return;
 
 	/* Generate an xact record for our SERIALIZABLEXACT */
@@ -4801,7 +4801,7 @@ AtPrepare_PredicateLocks(void)
 void
 PostPrepare_PredicateLocks(TransactionId xid)
 {
-    if (MySerializableXact == InvalidSerializableXact || !IsolationIsSSI())
+    if (MySerializableXact == InvalidSerializableXact || IsolationIsNotSSI())
 		return;
 
 	Assert(SxactIsPrepared(MySerializableXact));
