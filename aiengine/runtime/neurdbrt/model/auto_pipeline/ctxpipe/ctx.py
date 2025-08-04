@@ -3,6 +3,7 @@ from abc import ABCMeta
 
 import pandas as pd
 import torch
+from neurdbrt.log import logger
 from transformers import (
     AutoModel,
     AutoTokenizer,
@@ -10,8 +11,6 @@ from transformers import (
     TapasModel,
     TapasTokenizer,
 )
-
-from neurdbrt.log import logger
 
 from .. import env
 
