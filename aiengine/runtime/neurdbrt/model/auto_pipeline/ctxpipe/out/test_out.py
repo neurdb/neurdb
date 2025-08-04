@@ -1,5 +1,4 @@
 import pytest
-
 from ctxpipe.out import build_context, render_script
 
 

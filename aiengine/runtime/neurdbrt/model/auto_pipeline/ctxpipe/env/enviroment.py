@@ -4,10 +4,9 @@ from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from loguru import logger
-
 from auto_pipeline import comp, deterministic
 from auto_pipeline.config import EnvConfig
+from loguru import logger
 
 from .pipeline import Pipeline
 from .primitives.primitive import Primitive

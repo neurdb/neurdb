@@ -87,7 +87,7 @@ class ImputerMedian(Primitive):
         super(ImputerMedian, self).__init__(name="ImputerMedian")
         self.type = "ImputerNum"
         self.imp = SimpleImputer(strategy="median")
-    
+
     def transform(self, train_x, test_x, train_y):
         cat_trainX, num_trainX = catch_num(train_x)
         cat_testX, num_testX = catch_num(test_x)

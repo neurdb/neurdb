@@ -1,10 +1,9 @@
 from enum import Enum, auto
 
 import torch
-from torch import nn
-
 from auto_pipeline import comp
 from auto_pipeline.config import DQNConfig
+from torch import nn
 
 ENABLE_MODULO_HOOK = False
 ENABLE_CONTEXT_GATE = True

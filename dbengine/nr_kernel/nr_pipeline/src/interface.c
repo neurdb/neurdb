@@ -34,7 +34,7 @@ char *char_array2str(char **char_array, int n_elements);
 
 void _build_libsvm_data(SPITupleTable *tuptable, TupleDesc tupdesc,
                         int n_features, char **feature_names, char *table_name,
-                        StringInfo libsvm_data, bool has_label, int label_col, 
+                        StringInfo libsvm_data, bool has_label, int label_col,
                         const char *model_name);
 
 static NrWebsocket *_connect_to_ai_engine() {

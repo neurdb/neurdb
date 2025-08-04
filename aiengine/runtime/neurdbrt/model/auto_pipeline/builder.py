@@ -6,15 +6,15 @@ from typing import List
 import numpy as np
 import pandas as pd
 import torch
+from auto_pipeline.config import default_config as conf
+from auto_pipeline.ctxpipe.env.primitives.predictor import LogisticRegressionPrim
+from auto_pipeline.ctxpipe.env.primitives.primitive import Primitive
 from neurdbrt.dataloader import StreamingDataSet
 from neurdbrt.log import logger
 from neurdbrt.utils.date import time_since
 
 from ..base import BuilderBase
-from .run import evaluate_single_dataset, Info
-from auto_pipeline.config import default_config as conf
-from auto_pipeline.ctxpipe.env.primitives.primitive import Primitive
-from auto_pipeline.ctxpipe.env.primitives.predictor import LogisticRegressionPrim
+from .run import Info, evaluate_single_dataset
 
 
 class AutoPipelineBuilder(BuilderBase):
@@ -157,7 +157,7 @@ class AutoPipelineBuilder(BuilderBase):
         predictor: LogisticRegressionPrim = sequence[-1]
         prediction = predictor.predict(df)[:, 1] - 0.5
         print(prediction)
-        
+
         predictions = [prediction]
 
         logger.info(f"Done inference for {inf_batch_num} batches ")

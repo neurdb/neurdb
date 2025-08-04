@@ -11,13 +11,14 @@ import time
 import traceback
 from glob import glob
 
-from loguru import logger
-
 import config
 import util
 from auto_pipeline.config import default_config as conf
+from loguru import logger
+
 from .ctxpipe.info import Info
 from .ctxpipe.pipegen import PipelineGenerator
+
 # from ctxpipe.stats import Stats, init_stats_db
 
 

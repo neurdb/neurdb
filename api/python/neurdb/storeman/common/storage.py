@@ -1,5 +1,5 @@
-from abc import ABCMeta
 import pickle
+from abc import ABCMeta
 from io import BytesIO
 from typing import List, Optional, Type, Union
 

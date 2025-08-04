@@ -3,6 +3,7 @@ import json
 from threading import Thread
 from typing import Any, List
 
+import uvicorn
 from neurdb.logger import configure_logging as api_configure_logging
 from neurdbrt.app import Setup, WebsocketSender, before_execute
 from neurdbrt.app.msg import (
@@ -21,8 +22,6 @@ from neurdbrt.hook import exec_hooks_on_start, register_hooks
 from neurdbrt.log import configure_logging, logger
 from neurdbrt.repo import ModelRepository
 from quart import Quart, current_app, g, websocket
-
-import uvicorn
 
 configure_logging(None)
 api_configure_logging(None)

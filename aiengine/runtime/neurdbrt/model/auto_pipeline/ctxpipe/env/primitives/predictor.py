@@ -314,7 +314,7 @@ class LogisticRegressionPrim(Primitive):
         self.id = 4
         self.type = "Classifier"
         self.description = """Logistic Regression (aka logit, MaxEnt) classifier.
-        
+
 https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html"""
         self.accept_type = "c"
         self.model = LogisticRegression(solver="liblinear", random_state=0, n_jobs=5)

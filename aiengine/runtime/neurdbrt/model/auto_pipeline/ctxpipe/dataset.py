@@ -1,7 +1,6 @@
 from typing import Dict, List, TypedDict
 
 import pandas as pd
-
 from auto_pipeline.config import default_config as conf
 
 

@@ -6,12 +6,11 @@ from multiprocessing import Process
 from typing import List
 
 import pandas as pd
+from auto_pipeline import comp, util
+from auto_pipeline.config import EnvConfig, default_config
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-
-from auto_pipeline import comp, util
-from auto_pipeline.config import EnvConfig, default_config
 
 from .primitives.predictor import *
 
@@ -269,7 +268,9 @@ class Pipeline:
                 logger.error(f"adding step {step} timed out")
                 return -1
 
-            [self.train_x, self.test_x, self.num_cols, self.cat_cols, fitted_step] = func_return
+            [self.train_x, self.test_x, self.num_cols, self.cat_cols, fitted_step] = (
+                func_return
+            )
         except FunctionTimedOut:
             logger.error(f"adding step {step} timed out")
             return -1

@@ -73,7 +73,7 @@ class InteractionFeaturesPrim(Primitive):
         self.hyperparams = []
         self.type = "FeatureEngine"
         self.description = """Generate interaction features.
-        
+
 Only interaction features are produced: features that are products of at most degree distinct input features, i.e. terms with power of 2 or higher of the same input feature are excluded:"""
         self.scaler = PolynomialFeatures(interaction_only=True, include_bias=False)
         self.accept_type = "c_t"

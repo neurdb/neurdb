@@ -1,7 +1,7 @@
 import asyncio
 from enum import Enum
 from queue import Empty, Full
-from typing import Optional, Tuple, TypeVar, Generic
+from typing import Generic, Optional, Tuple, TypeVar
 
 from neurdbrt.log import logger
 

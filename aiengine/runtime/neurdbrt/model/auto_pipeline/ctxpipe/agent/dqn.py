@@ -5,12 +5,11 @@ from typing import Any, List, Optional, Union
 
 import numpy as np
 import torch
+from auto_pipeline import comp, deterministic, env, util
+from auto_pipeline.config import AgentConfig, default_config, default_dqn_config
 from loguru import logger
 from torch import nn
 from torch.optim import Adam
-
-from auto_pipeline import env, comp, deterministic, util
-from auto_pipeline.config import AgentConfig, default_config, default_dqn_config
 
 from ..ctx import TableEmbedder, TextEmbedder, embedder
 from ..env.pipeline import Pipeline

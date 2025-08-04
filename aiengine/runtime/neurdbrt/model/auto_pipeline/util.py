@@ -14,6 +14,7 @@ __all__ = ["abspath", "write_json", "read_json"]
 
 def abspath(*paths: str):
     import auto_pipeline
+
     return os.path.abspath(os.path.join(auto_pipeline.__path__[0], *paths))
 
 

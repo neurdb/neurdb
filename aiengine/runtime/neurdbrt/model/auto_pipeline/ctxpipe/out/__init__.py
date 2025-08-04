@@ -4,7 +4,6 @@ from typing import List
 import toml
 from jinja2 import Environment, FileSystemLoader
 
-
 _curr_dir = os.path.dirname(__file__)
 
 
@@ -47,10 +46,13 @@ notebook_env = Environment(
     loader=FileSystemLoader(_curr_dir), trim_blocks=False, lstrip_blocks=False
 )
 
+
 def valid_json(s: str):
     return s.replace("\n", "\\n").replace('"', '\\"')
 
+
 notebook_env.filters["valid_json"] = valid_json
+
 
 def render_notebook(context: dict, **extra):
     template = notebook_env.get_template("notebook.ipynb.jinja")
