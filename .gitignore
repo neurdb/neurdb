@@ -19,3 +19,5 @@ socket.io-client-cpp/
 /code/neurdb-dev/aiengine/runtime/nohup.out
 
 rocksdb
+external/*
+!external/.gitkeep

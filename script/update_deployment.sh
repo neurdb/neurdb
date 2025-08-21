@@ -77,7 +77,7 @@ sudo make install
 
 # # Start AI service
 # cd $NR_AIENGINE_PATH/runtime
-# pkill -f "python -m hypercorn server:app -c app_config.toml" 2>/dev/null || true
+# pkill -f "python server.py" 2>/dev/null || true
 # export NR_LOG_LEVEL=INFO
 # nohup python -m hypercorn server:app -c app_config.toml &
 # echo "Hypercorn restarted (PID $!)."
