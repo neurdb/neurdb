@@ -30,6 +30,7 @@ if [ ! -d "$PREFIX/model" ]; then
   temp_dir=`mktemp -d /tmp/neurdb-XXXXXXXX`
   git clone --depth 1 https://github.com/ctxpipe/ctxpipe $temp_dir
   mv $temp_dir/models/ctxpipe-3linear $PREFIX/model
+  rm -rf $temp_dir
   echo "Done."
 else
   echo "CtxPipe models already exists. Skipping download."
