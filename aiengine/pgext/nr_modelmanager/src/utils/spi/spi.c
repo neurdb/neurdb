@@ -1,14 +1,14 @@
 #include "spi.h"
 
-static bool prepare_query(SpiConnection *conn, const char *query, int nargs,
-                          Oid *arg_types);  // prepare a query for execution
+static bool prepare_query(SpiConnection* conn, const char* query, int nargs,
+                          Oid* arg_types);  // prepare a query for execution
 
 /**
  * @description: initialize the SPI connection
  * @param {SpiConnection *} conn - the SPI connection
  * @return {bool} - true if success, false otherwise
  */
-bool spi_init(SpiConnection *conn) {
+bool spi_init(SpiConnection* conn) {
     if (conn->connected) {
         // already connected
         return true;
@@ -42,8 +42,8 @@ bool spi_init(SpiConnection *conn) {
  * null, `'n'` for null
  * @return {bool} - true if success, false otherwise
  */
-bool spi_execute_query(SpiConnection *conn, const char *query, int nargs,
-                       Oid *arg_types, Datum *values, const char *nulls) {
+bool spi_execute_query(SpiConnection* conn, const char* query, int nargs,
+                       Oid* arg_types, Datum* values, const char* nulls) {
     if (!conn->connected) {
         ereport(ERROR,
                 (errmsg("spi_execute_query: SPI connection is not connected")));
@@ -87,7 +87,7 @@ bool spi_execute_query(SpiConnection *conn, const char *query, int nargs,
  * @param {SpiConnection *} conn - the SPI connection
  * @return {void}
  */
-void spi_finish(SpiConnection *conn) {
+void spi_finish(SpiConnection* conn) {
     if (!conn->connected) {
         // already disconnected
         return;
@@ -116,7 +116,7 @@ void spi_finish(SpiConnection *conn) {
  * @see https://www.postgresql.org/docs/current/spi-spi-getvalue.html
  * @see https://www.postgresql.org/docs/current/spi-spi-execute.html
  */
-Datum *spi_get_single_result(SpiConnection *conn) {
+Datum* spi_get_single_result(SpiConnection* conn) {
     return spi_get_single_result_p(conn, 0);
 }
 
@@ -126,7 +126,7 @@ Datum *spi_get_single_result(SpiConnection *conn) {
  * @param index the column index of the result
  * @return the result in Datum, NULL if no result
  */
-Datum *spi_get_single_result_p(SpiConnection *conn, const int index) {
+Datum* spi_get_single_result_p(SpiConnection* conn, const int index) {
     // check if the query has been executed and returned, and if the result is
     // not empty
     if (conn->returned && SPI_tuptable != NULL && SPI_tuptable->vals != NULL &&
@@ -138,7 +138,7 @@ Datum *spi_get_single_result_p(SpiConnection *conn, const int index) {
         SPI_tuptable->tupdesc != NULL &&
         SPI_tuptable->tupdesc->natts > index) {
         bool isnull;
-        Datum *result = (Datum *)palloc(sizeof(Datum));
+        Datum* result = (Datum*)palloc(sizeof(Datum));
         *result = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc,
                                 index + 1, &isnull);
         if (isnull) {
@@ -163,8 +163,8 @@ Datum *spi_get_single_result_p(SpiConnection *conn, const int index) {
  * @param {Oid *} arg_types - the types of the arguments
  * @return {bool} - true if success, false otherwise
  */
-static bool prepare_query(SpiConnection *conn, const char *query, int nargs,
-                          Oid *arg_types) {
+static bool prepare_query(SpiConnection* conn, const char* query, int nargs,
+                          Oid* arg_types) {
     if (!conn->connected) {
         ereport(ERROR,
                 (errmsg("prepare_query: SPI connection is not connected")));

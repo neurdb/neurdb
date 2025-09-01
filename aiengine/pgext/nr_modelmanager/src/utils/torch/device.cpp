@@ -2,7 +2,7 @@
 
 #include <torch/torch.h>
 
-void *device = nullptr;
+void* device = nullptr;
 
 void initialize_device() {
     // if CUDA is available, set the device to kCUDA
@@ -15,6 +15,6 @@ void initialize_device() {
 }
 
 bool device_is_cuda() {
-    const auto device_type = static_cast<torch::Device *>(device)->type();
+    const auto device_type = static_cast<torch::Device*>(device)->type();
     return device_type == torch::kCUDA;
 }
