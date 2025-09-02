@@ -7,6 +7,7 @@
 #include "access/tableam.h"
 #include "access/heapam.h"
 #include "access/xact.h"
+#include "access/htup_details.h"
 #include "nodes/execnodes.h"
 #include "catalog/index.h"
 #include "commands/vacuum.h"
@@ -30,6 +31,24 @@ PG_MODULE_MAGIC;
  */
 
 void nram_shutdown_session(void) { CloseRespChannel(); }
+
+static bool nram_value_check_visibility(NRAMValue tvalue, NRAMXactState xact) {
+    if (tvalue->xact_id == xact->xact_id || !NRAMValueIsPrivate(tvalue)) {
+        return true;
+    }
+    return false;
+}
+
+// Mark a tuple as always-visible to core MVCC (safe for OCC)
+static inline void
+nram_mark_tuple_visible_always(HeapTuple tup) {
+    HeapTupleHeader t = tup->t_data;
+
+    HeapTupleHeaderSetXminFrozen(t);
+    HeapTupleHeaderSetXmax(t, InvalidTransactionId);
+    t->t_infomask |= HEAP_XMAX_INVALID;
+}
+
 
 /* ------------------------------------------------------------------------
  * Slot related callbacks
@@ -135,24 +154,34 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
         return false;
     }
 
-    if (scan->cursor >= scan->result_count) {
-        return false;
-    }
+    while (true) {
+        if (scan->cursor >= scan->result_count) {
+            return false;
+        }
 
-    Assert(scan->results_key != NULL);
-    Assert(scan->results != NULL);
-    Assert(scan->cursor < scan->result_count);
+        Assert(scan->results_key != NULL);
+        Assert(scan->results != NULL);
+        Assert(scan->cursor < scan->result_count);
 
-    tkey = scan->results_key[scan->cursor];
-    tvalue = scan->results[scan->cursor];
-    scan->cursor++;
-    if (!read_own_write(xact, tkey, &tvalue) &&
-        !read_own_read(xact, tkey, &tvalue)) {
-        add_read_set(xact, tkey, tvalue);
+        tkey = scan->results_key[scan->cursor];
+        tvalue = scan->results[scan->cursor];
+        if (read_own_write(xact, tkey, &tvalue) || read_own_read(xact, tkey, &tvalue)) {
+            // The value is read/modified by the current transaction
+            scan->cursor++;
+            break;
+        } else if (nram_value_check_visibility(tvalue, xact)) {
+            // The value is created by a committed transaction 
+            add_read_set(xact, tkey, tvalue);
+            scan->cursor++;
+            break;
+        }
+        // Otherwise, skip this version and continue to the next one.
+        scan->cursor++;
     }
 
     tuple =
         deserialize_nram_value_to_tuple(tvalue, scan->rs_base.rs_rd->rd_att);
+    nram_mark_tuple_visible_always(tuple);
     tuple->t_tableOid = scan->rs_base.rs_rd->rd_id;
     nram_encode_tid(tkey->tid, &tuple->t_self);
     ExecStoreHeapTuple(tuple, slot, true);
@@ -206,11 +235,22 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
 
     kvscan = (IndexFetchKVData *)scan;
     tkey = nram_key_from_tid(kvscan->xs_base.rel->rd_id, tid);
-    if (!read_own_write(xact, tkey, &tvalue) &&
-        !read_own_read(xact, tkey, &tvalue)) {
+    *call_again = false;
+    *all_dead = false;
+
+    if (read_own_write(xact, tkey, &tvalue) || read_own_read(xact, tkey, &tvalue)) {
+        // The value is read/modified by the current transaction, just do nothing.
+    } else {
         tvalue = RocksClientGet(tkey);
         if (tvalue == NULL) {
+            *all_dead = true;
             pfree(tkey);
+            return false;
+        }
+        if (!nram_value_check_visibility(tvalue, xact)) {
+            *all_dead = false;
+            pfree(tkey);
+            pfree(tvalue);
             return false;
         }
         add_read_set(xact, tkey, tvalue);
@@ -220,11 +260,10 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
         deserialize_nram_value_to_tuple(tvalue, kvscan->xs_base.rel->rd_att);
     nram_encode_tid(tkey->tid, &tuple->t_self);
     tuple->t_tableOid = kvscan->xs_base.rel->rd_id;
+    nram_mark_tuple_visible_always(tuple);
 
     ExecClearTuple(slot);
     ExecStoreHeapTuple(tuple, slot, true);
-    *call_again = false;
-    *all_dead = false;
 
     pfree(tkey);
     pfree(tvalue);
@@ -250,12 +289,15 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     NRAM_TEST_INFO("nram tid generated as %lu", nram_decode_tid(tid));
 
     // Serialize key and value from tuple
+    // TODO: resolve the table level conflicts (between the insert and the scan).
     tkey = nram_key_from_tid(tup->t_tableOid, tid);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
+    tvalue->flags |= NRAMF_PRIVATE; // mark as private until commit
 
-    if (!RocksClientPut(tkey, tvalue))
-        elog(WARNING, "NRAM insert failed.");
-
+    if (!RocksClientPut(tkey, tvalue)) {
+        elog(ERROR, "RocksClientPut failed in insert");
+    }
+    tvalue->flags &= ~NRAMF_PRIVATE; // deferred release of private mark until commit
     add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
     NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
 
@@ -341,11 +383,15 @@ static void nram_multi_insert(Relation relation, TupleTableSlot **slots,
         // Serialize and insert
         tkey = nram_key_from_tid(tableOid, &tid);
         tvalue = nram_value_serialize_from_tuple(tuple, tupdesc);
-        if (!RocksClientPut(tkey, tvalue))
-            elog(WARNING, "NRAM multi-insert failed for tuple %d", i);
+        tvalue->flags |= NRAMF_PRIVATE; // mark as private until commit
+        if (!RocksClientPut(tkey, tvalue)) {
+            // The index conflicts are handled with table locks.
+            elog(ERROR, "RocksClientPut failed in multi_insert");
+        }
 
-        add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
+        tvalue->flags &= ~NRAMF_PRIVATE; // deferred release of private mark until commit
         NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
+        add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
 
         // Update tuple/slot with tid
         tuple->t_self = tid;
@@ -365,13 +411,73 @@ static TM_Result nram_tuple_delete(Relation relation, ItemPointer tid,
     return TM_Ok;
 }
 
-static TM_Result nram_tuple_update(Relation relation, ItemPointer otid,
-                                   TupleTableSlot *slot, CommandId cid,
-                                   Snapshot snapshot, Snapshot crosscheck,
-                                   bool wait, TM_FailureData *tmfd,
-                                   LockTupleMode *lockmode,
-                                   TU_UpdateIndexes *update_indexes) {
-    NRAM_UNSUPPORTED();
+static TM_Result
+nram_tuple_update(Relation relation, ItemPointer otid,
+                  TupleTableSlot *slot, CommandId cid,
+                  Snapshot snapshot, Snapshot crosscheck,
+                  bool wait, TM_FailureData *tmfd,
+                  LockTupleMode *lockmode,
+                  TU_UpdateIndexes *update_indexes) {
+    TupleDesc tupdesc = RelationGetDescr(relation);
+    Oid tableOid = RelationGetRelid(relation);
+    NRAMXactState xact = GetCurrentNRAMXact();
+    NRAMKey new_key;
+    NRAMValue new_value;
+    HeapTuple new_tuple = NULL;
+    ItemPointerData ntid = *otid;    // We maintain a single version, so otid == ntid
+    bool shouldFree = true;
+
+    NRAM_INFO();
+    NRAM_XACT_BEGIN_BLOCK;
+
+    // We do not support index now (to be supported)
+    *lockmode = NoLock;
+    *update_indexes = false;
+    
+    memset(tmfd, 0, sizeof(TM_FailureData));
+    new_key = nram_key_from_tid(tableOid, &ntid);
+
+    if (!ItemPointerIsValid(otid)) {
+        elog(ERROR, "Invalid otid in nram_tuple_update");
+    }
+
+    {   // read the old value
+        NRAMKey old_key = nram_key_from_tid(tableOid, otid);
+        NRAMValue old_value = NULL;
+
+        if (read_own_write(xact, old_key, &old_value) || read_own_read(xact, old_key, &old_value)) {
+            // The value is read/modified by the current transaction
+            // just do nothing.
+        } else {
+            old_value = RocksClientGet(old_key);
+            if (old_value == NULL) {
+                elog(ERROR, "Tuple to be updated does not exist");
+            }
+            if (!nram_value_check_visibility(old_value, xact)) {
+                elog(ERROR, "Tuple to be updated is not visible");
+            }
+            add_read_set(xact, old_key, old_value);
+        }
+    }
+
+    // For OCC, the update operation does not need to check visibility.
+    // Just storage the new value into the local write set.
+    slot_getallattrs(slot);
+    slot->tts_tableOid = tableOid;
+    slot->tts_tid = ntid;
+
+    // calculate the new value
+    new_tuple = ExecFetchSlotHeapTuple(slot, true, &shouldFree);
+    new_tuple->t_tableOid = tableOid;
+    new_tuple->t_self = ntid;
+    new_value = nram_value_serialize_from_tuple(new_tuple, tupdesc);
+
+    add_write_set(GetCurrentNRAMXact(), new_key, new_value);
+
+    if (shouldFree) heap_freetuple(new_tuple);
+    pfree(new_key); pfree(new_value);
+    NRAM_INFO();
+
     return TM_Ok;
 }
 
@@ -393,11 +499,51 @@ static void nram_finish_bulk_insert(Relation relation, int options) {
  * ------------------------------------------------------------------------
  */
 
-// TODO: check on this!!
+
+/*
+Fetch tuple at `tid` into `slot`, after doing a visibility test according 
+to `snapshot`. If a tuple was found and passed the visibility test, then 
+returns true, false otherwise.
+
+In NRAM, there should only exists one single version on kv storage (no visibity prob).
+Thus, directly fetch the record and return true.
+*/
 static bool nram_fetch_row_version(Relation relation, ItemPointer tid,
                                    Snapshot snapshot, TupleTableSlot *slot) {
-    NRAM_UNSUPPORTED();
-    return false;
+    NRAMKey tkey;
+    NRAMValue tvalue;
+    HeapTuple tuple;
+    NRAMXactState xact = GetCurrentNRAMXact();
+    NRAM_INFO();
+    NRAM_XACT_BEGIN_BLOCK;
+
+    tkey = nram_key_from_tid(relation->rd_id, tid);
+    if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
+        tvalue = RocksClientGet(tkey);
+        if (tvalue == NULL) {
+            pfree(tkey);
+            return false;
+        }
+        if (!nram_value_check_visibility(tvalue, xact)) {
+            pfree(tkey);
+            pfree(tvalue);
+            return false;
+        }
+        add_read_set(xact, tkey, tvalue);
+    }
+
+    tuple =
+        deserialize_nram_value_to_tuple(tvalue, relation->rd_att);
+    nram_mark_tuple_visible_always(tuple);
+    nram_encode_tid(tkey->tid, &tuple->t_self);
+    tuple->t_tableOid = relation->rd_id;
+
+    ExecClearTuple(slot);
+    ExecStoreHeapTuple(tuple, slot, true);
+
+    pfree(tkey);
+    pfree(tvalue);
+    return true;
 }
 
 static void nram_get_latest_tid(TableScanDesc sscan, ItemPointer tid) {
@@ -411,8 +557,9 @@ static bool nram_tuple_tid_valid(TableScanDesc scan, ItemPointer tid) {
 
 static bool nram_tuple_satisfies_snapshot(Relation rel, TupleTableSlot *slot,
                                           Snapshot snapshot) {
-    NRAM_UNSUPPORTED();
-    return false;
+    // single-version OCC: anything we return is already filtered
+    // (committed store || write-set overlay).
+    return !TTS_EMPTY(slot);
 }
 
 static TransactionId nram_index_delete_tuples(Relation rel,

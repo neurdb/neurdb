@@ -45,22 +45,12 @@ PG_CONFIG = ${NEURDBPATH}/psql/bin/pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
-.PHONY: debug test # rocks_server clean_rocks_server
+.PHONY: debug test
 
-debug:
+debug:#
 	$(MAKE) PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" \
 	        SHLIB_LINK="$(SHLIB_LINK)" \
 	        CFLAGS="-g -O0 -Wall"
-
-# rocks_server: $(ROCKSDB_SERVER_BIN)
-
-# $(ROCKSDB_SERVER_BIN): $(ROCKSDB_SERVER_SRC)
-# 	gcc -o $@ $< -I$(ROCKSDB_INC_PATH) -L$(ROCKSDB_LIB_PATH) -lrocksdb -Wl,-rpath,$(ROCKSDB_LIB_PATH)
-
-# clean_rocks_server:
-# 	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
-# 	rm -rf $(ROCKSDB_SERVER_BIN)
-#  clean_rocks_server rocks_server
 
 test:
 	rm -rf ../logfile
