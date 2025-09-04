@@ -1,0 +1,5 @@
+########## pg_neurstore control ##########
+comment = 'Postgres NeurStore extension'
+default_version = '1.0.0'
+module_pathname = '$libdir/libpg_neurstore'
+relocatable = false
