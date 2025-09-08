@@ -50,7 +50,7 @@ typedef struct NRAMValueFieldData {
 } NRAMValueFieldData;
 
 // NRAMValueData memory arrangement: [xact id] [flags] [nfields] [field1 data1] ...
-// Note: in NRAM, we do not maintain multiple versions of a tuple.  
+// Note: in NRAM, we do not maintain multiple versions of a tuple.
 // Thus, we do not need to maintain a full visibility map.
 // We only need to check if the transaction that created/deleted this tuple has committed.
 typedef struct NRAMValueData {

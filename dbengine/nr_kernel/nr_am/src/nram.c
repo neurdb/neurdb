@@ -170,7 +170,7 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
             scan->cursor++;
             break;
         } else if (nram_value_check_visibility(tvalue, xact)) {
-            // The value is created by a committed transaction 
+            // The value is created by a committed transaction
             add_read_set(xact, tkey, tvalue);
             scan->cursor++;
             break;
@@ -433,7 +433,7 @@ nram_tuple_update(Relation relation, ItemPointer otid,
     // We do not support index now (to be supported)
     *lockmode = NoLock;
     *update_indexes = false;
-    
+
     memset(tmfd, 0, sizeof(TM_FailureData));
     new_key = nram_key_from_tid(tableOid, &ntid);
 
@@ -501,8 +501,8 @@ static void nram_finish_bulk_insert(Relation relation, int options) {
 
 
 /*
-Fetch tuple at `tid` into `slot`, after doing a visibility test according 
-to `snapshot`. If a tuple was found and passed the visibility test, then 
+Fetch tuple at `tid` into `slot`, after doing a visibility test according
+to `snapshot`. If a tuple was found and passed the visibility test, then
 returns true, false otherwise.
 
 In NRAM, there should only exists one single version on kv storage (no visibity prob).

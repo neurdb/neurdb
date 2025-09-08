@@ -234,7 +234,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                                     (errmsg("Transaction aborted during read set validation."),
                                     errdetail("Transaction ID: %u", current_nram_xact->xact_id)));
                         }
-                        
+
                         // We acquired the lock successfully & we are not already the lock owner, meaning no one is writing to it.
                         // We can release the lock immediately.
                         if (r == LOCKACQUIRE_OK)
