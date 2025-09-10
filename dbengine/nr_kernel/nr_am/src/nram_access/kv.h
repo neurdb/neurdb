@@ -49,12 +49,21 @@ typedef struct NRAMValueFieldData {
     // char data[FLEXIBLE_ARRAY_MEMBER];
 } NRAMValueFieldData;
 
-// NRAMValueData memory arrangement: [xact id] [nfields] [field1 data1] ...
+// NRAMValueData memory arrangement: [xact id] [flags] [nfields] [field1 data1] ...
+// Note: in NRAM, we do not maintain multiple versions of a tuple.
+// Thus, we do not need to maintain a full visibility map.
+// We only need to check if the transaction that created/deleted this tuple has committed.
 typedef struct NRAMValueData {
     TransactionId xact_id;    // The transaction that has created this data version.
+    int16 flags;      // reserved for future use
     int16 nfields;
     char data[FLEXIBLE_ARRAY_MEMBER];  // Consecutive NRAMValueFieldData blocks
 } NRAMValueData;
+
+#define NRAMF_PRIVATE  0x0001
+#define NRAMF_DELETED  0x0002
+#define NRAMValueIsPrivate(v)  ((v)->flags & NRAMF_PRIVATE)
+#define NRAMValueIsDeleted(v)  ((v)->flags & NRAMF_DELETED)
 
 typedef NRAMValueData *NRAMValue;
 

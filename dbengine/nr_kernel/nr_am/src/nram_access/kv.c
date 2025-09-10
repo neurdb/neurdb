@@ -108,6 +108,7 @@ NRAMValue nram_value_serialize_from_tuple(HeapTuple tuple, TupleDesc tupdesc) {
     val = (NRAMValueData *)palloc0(total_size);
     val->nfields = tupdesc->natts;
     val->xact_id = GetTopTransactionId();
+    val->flags = 0;
 
     pos = (char*)val + offsetof(NRAMValueData, data);
     for (int i = 0; i < tupdesc->natts; i++) {
@@ -156,13 +157,17 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
         ptr += field_size;
     }
 
-    total_len = sizeof(TransactionId) + sizeof(int16) + data_len;
+    total_len = sizeof(TransactionId) + sizeof(int16) + sizeof(int16) + data_len;
 
     buf = palloc(total_len);
     write_ptr = buf;
 
     memcpy(write_ptr, &tvalue->xact_id, sizeof(TransactionId));
     write_ptr += sizeof(TransactionId);
+
+
+    memcpy(write_ptr, &tvalue->flags, sizeof(int16));
+    write_ptr += sizeof(int16);
 
     memcpy(write_ptr, &tvalue->nfields, sizeof(int16));
     write_ptr += sizeof(int16);
@@ -183,7 +188,7 @@ char *tvalue_serialize(NRAMValue tvalue, Size *out_len) {
 
 NRAMValue tvalue_deserialize(const char *buf, Size len) {
     TransactionId xact_id;
-    int16 nfields;
+    int16 nfields, flags;
     char *ptr;
     Size data_len, total_len;
     NRAMValue tvalue;
@@ -191,6 +196,9 @@ NRAMValue tvalue_deserialize(const char *buf, Size len) {
     // Read header
     memcpy(&xact_id, buf, sizeof(TransactionId));
     buf += sizeof(TransactionId);
+
+    memcpy(&flags, buf, sizeof(int16));
+    buf += sizeof(int16);
 
     memcpy(&nfields, buf, sizeof(int16));
     buf += sizeof(int16);
@@ -201,6 +209,7 @@ NRAMValue tvalue_deserialize(const char *buf, Size len) {
     tvalue = (NRAMValue)palloc(total_len);
     tvalue->xact_id = xact_id;
     tvalue->nfields = nfields;
+    tvalue->flags = flags;
 
     ptr = (char *)tvalue + offsetof(NRAMValueData, data);
     memcpy(ptr, buf, data_len);
@@ -263,6 +272,7 @@ NRAMValue copy_nram_value(NRAMValue src) {
     dst = (NRAMValue)palloc(total_len);
     dst->xact_id = src->xact_id;
     dst->nfields = src->nfields;
+    dst->flags = src->flags;
 
     memcpy((char *)dst + offsetof(NRAMValueData, data),
            (char *)src + offsetof(NRAMValueData, data),

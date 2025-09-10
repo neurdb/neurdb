@@ -27,8 +27,7 @@ SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
 REGRESS = clean init unit_tests table_scan index_scan xact_basic
 
-# ISOLATION = read_committed repeatable_read
-ISOLATION = read_committed
+ISOLATION = ssi_read_committed rc_read_committed repeatable_read lost_updated
 ISOLATION_OPTS = --temp-config $(top_srcdir)/src/test/regress/postgresql.conf
 ISOLATIONDIR = $(srcdir)/isolation
 ISOLATION_EXPECTED = $(ISOLATIONDIR)
@@ -45,22 +44,12 @@ PG_CONFIG = ${NEURDBPATH}/psql/bin/pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
-.PHONY: debug test # rocks_server clean_rocks_server
+.PHONY: debug test
 
-debug:
+debug:#
 	$(MAKE) PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" \
 	        SHLIB_LINK="$(SHLIB_LINK)" \
 	        CFLAGS="-g -O0 -Wall"
-
-# rocks_server: $(ROCKSDB_SERVER_BIN)
-
-# $(ROCKSDB_SERVER_BIN): $(ROCKSDB_SERVER_SRC)
-# 	gcc -o $@ $< -I$(ROCKSDB_INC_PATH) -L$(ROCKSDB_LIB_PATH) -lrocksdb -Wl,-rpath,$(ROCKSDB_LIB_PATH)
-
-# clean_rocks_server:
-# 	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
-# 	rm -rf $(ROCKSDB_SERVER_BIN)
-#  clean_rocks_server rocks_server
 
 test:
 	rm -rf ../logfile

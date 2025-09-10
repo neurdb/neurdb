@@ -106,7 +106,6 @@ static inline bool nram_key_equal(NRAMKey k1, NRAMKey k2) {
 
 NRAMXactOpt find_write_set(NRAMXactState state, NRAMKey key) {
     ListCell *cell;
-    // Assert(CurrentMemoryContext == TopTransactionContext);
     NRAM_TEST_INFO("write_set=%p length=%d",
         state->write_set, list_length(state->write_set));
 
@@ -120,7 +119,6 @@ NRAMXactOpt find_write_set(NRAMXactState state, NRAMKey key) {
 
 NRAMXactOpt find_read_set(NRAMXactState state, NRAMKey key) {
     ListCell *cell;
-    // Assert(CurrentMemoryContext == TopTransactionContext);
     foreach(cell, state->read_set) {
         NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
         if (nram_key_equal(opt->key, key))
@@ -212,23 +210,43 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                     NRAM_TEST_INFO("The validation is processing, validating read values.");
                     foreach(cell, current_nram_xact->read_set) {
                         NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
+                        LockAcquireResult r;
+
+                        // During read, we abort for pending writes. (peek lock here).
+    	                SET_LOCKTAG_ADVISORY(tag, opt->key->tableOid, opt->key->tid, 0, 0);
+                        r = LockAcquire(&tag, ShareLock, false, true);
+                        if (r == LOCKACQUIRE_NOT_AVAIL) {
+                            elog(ERROR,
+                                "The transaction %u validation failed: concurrent update detected",
+                                current_nram_xact->xact_id);
+                        }
+
                         NRAMValue cur_val = RocksClientGet(opt->key);
                         if (cur_val == NULL) {
-                            elog(ERROR, "tran saction validation failed: key vanished");
+                            elog(ERROR,
+                                "The transaction %u validation failed: invisible key",
+                                current_nram_xact->xact_id);
                             return;
                         }
-                        if (cur_val->xact_id != opt->xact_id)
-                            elog(ERROR,
-                                "The transaction %u gets aborted during read set validation.",
-                                current_nram_xact->xact_id);
-                    }
 
+                        if (cur_val->xact_id != opt->xact_id) {
+                            ereport(ERROR,
+                                    (errmsg("Transaction aborted during read set validation."),
+                                    errdetail("Transaction ID: %u", current_nram_xact->xact_id)));
+                        }
+
+                        // We acquired the lock successfully & we are not already the lock owner, meaning no one is writing to it.
+                        // We can release the lock immediately.
+                        if (r == LOCKACQUIRE_OK)
+                            LockRelease(&tag, ShareLock, false);
+                    }
                 }
 
                 NRAM_TEST_INFO("Post-validation release write locks.");
                 current_nram_xact->validated = true;
                 foreach(cell, current_nram_xact->write_set) {
                     NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
+                    RocksClientPut(opt->key, opt->value);   // deferred write for OCC.
 	                SET_LOCKTAG_ADVISORY(tag, opt->key->tableOid, opt->key->tid, 0, 0);
                     LockRelease(&tag, ExclusiveLock, false);
                 }
