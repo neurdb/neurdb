@@ -3,8 +3,25 @@
 
 #include "postgres.h"
 
-#include "optimizer/planner.h"
+#include "nodes/pathnodes.h"
+#include "nodes/plannodes.h"
+
 #include "executor/executor.h"
+
+/* Hook for plugins to get control in planner() */
+typedef PlannedStmt *(*planner_hook_type) (Query *parse,
+										   const char *query_string,
+										   int cursorOptions,
+										   ParamListInfo boundParams);
+extern PGDLLIMPORT planner_hook_type planner_hook;
+
+/* Hook for plugins to get control when grouping_planner() plans upper rels */
+typedef void (*create_upper_paths_hook_type) (PlannerInfo *root,
+											  UpperRelationKind stage,
+											  RelOptInfo *input_rel,
+											  RelOptInfo *output_rel,
+											  void *extra);
+extern PGDLLIMPORT create_upper_paths_hook_type create_upper_paths_hook;
 
 
 extern PlanState *NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags);

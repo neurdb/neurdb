@@ -3,6 +3,8 @@
 #include <limits.h>
 #include <math.h>
 
+#include "nr_kernel.h"
+
 #include "access/genam.h"
 #include "access/htup_details.h"
 #include "access/parallel.h"
@@ -37,7 +39,6 @@
 #include "optimizer/paths.h"
 #include "optimizer/plancat.h"
 #include "optimizer/planmain.h"
-#include "optimizer/planner.h"
 #include "optimizer/prep.h"
 #include "optimizer/subselect.h"
 #include "optimizer/tlist.h"
@@ -229,6 +230,29 @@ static bool group_by_has_partkey(RelOptInfo *input_rel,
 								 List *targetList,
 								 List *groupClause);
 static int	common_prefix_cmp(const void *a, const void *b);
+
+
+/* NeurDB: Limit helper functions to local scope */
+static PlannedStmt *standard_planner(Query *parse, const char *query_string,
+									 int cursorOptions,
+									 ParamListInfo boundParams);
+
+static PlannerInfo *subquery_planner(PlannerGlobal *glob, Query *parse,
+									 PlannerInfo *parent_root,
+									 bool hasRecursion, double tuple_fraction);
+
+static RowMarkType select_rowmark_type(RangeTblEntry *rte,
+									   LockClauseStrength strength);
+
+static bool limit_needed(Query *parse);
+
+static void mark_partial_aggref(Aggref *agg, AggSplit aggsplit);
+
+static Path *get_cheapest_fractional_path(RelOptInfo *rel,
+										  double tuple_fraction);
+
+static Expr *preprocess_phv_expression(PlannerInfo *root, Expr *expr);
+/* END NeurDB: Limit helper functions to local scope */
 
 
 PlannedStmt *
