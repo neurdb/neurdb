@@ -280,7 +280,7 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     TupleDesc tupdesc;
     NRAMKey tkey;
     NRAMValue tvalue;
-    bool ok;
+    // bool ok;
     NRAM_INFO();
     NRAM_XACT_BEGIN_BLOCK;
 
@@ -790,6 +790,9 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
     run_channel_sequential_test();
     run_channel_multiprocess_test();
     run_channel_msg_basic_test();
+
+    run_policy_basic_test();
+    run_policy_full_load_verify_test();
     PG_RETURN_VOID();
 }
 
@@ -800,6 +803,7 @@ static void nram_shmem_request(void) {
     if (prev_shmem_request_hook) prev_shmem_request_hook();
 
     RequestAddinShmemSpace(sizeof(KVChannelShared) * (MAX_PROC_COUNT + 1));
+    RequestAddinShmemSpace(sizeof(CachedAgentFuncData));
 }
 
 void _PG_init(void) {

@@ -11,6 +11,7 @@
 #include "nram_access/kv.h"
 #include "access/xact.h"
 #include "nodes/pg_list.h"
+#include "nram_xact/action.h"
 
 typedef enum XactOpType {
     XACT_OP_READ,
@@ -34,6 +35,8 @@ typedef struct NRAMXactStateData {
     bool validated;
     TimestampTz begin_ts;
     // rocksdb_snapshot_t *snapshot;
+    XactFeature feature;    // used for NeurCC
+    CCAction action;      // used for NeurCC
 
     List *read_set;     // key hash -> version or just existence
     List *write_set;
@@ -55,5 +58,7 @@ extern bool read_own_write(NRAMXactState state, const NRAMKey key, NRAMValue *va
 extern bool read_own_read(NRAMXactState state, const NRAMKey key, NRAMValue *value);
 extern bool validate_read_set(NRAMXactState state);
 extern NRAMXactState GetCurrentNRAMXact(void);
+
+extern void before_access(NRAMXactState state, bool is_write);
 
 #endif

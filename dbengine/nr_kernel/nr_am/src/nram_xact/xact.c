@@ -2,7 +2,7 @@
 #include "utils/memutils.h"
 #include "nram_storage/rocks_handler.h"
 #include "storage/lock.h"
-#include "port.h"
+#include "storage/proc.h"
 
 /* ------------------------------------------------------------------------
  * Transaction related codes.
@@ -305,4 +305,26 @@ bool validate_read_set(NRAMXactState state) {
             return false;
     }
     return true;
+}
+
+
+// To support NeurCC, this function is called before each access (read or write).
+void before_access(NRAMXactState state, bool is_write) {
+    NRAM_INFO();
+    if (state->feature == NULL) {
+        MemoryContext oldCtx = MemoryContextSwitchTo(TopTransactionContext);
+        state->feature = palloc0(sizeof(XactFeatureData));
+        state->feature->n_access = 0;
+        state->feature->cur_op = 0;
+        state->feature->n_dep = MyProc->nDep;
+        MemoryContextSwitchTo(oldCtx);
+    } else {
+        state->feature->n_access += 1;
+        if (is_write)
+            state->feature->cur_op = UPDATE_OPT;
+        state->feature->n_dep = MyProc->nDep;
+    }
+    state->action = get_action(state->feature);
+    MyProc->rank = state->action->priority;    // set the wait priority.
+    LockTimeout = state->action->timeout;  // set the wait timeout.
 }

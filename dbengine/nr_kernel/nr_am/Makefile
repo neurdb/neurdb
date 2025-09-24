@@ -6,6 +6,7 @@ OBJS = \
 	${EXTPATH}/src/nram.o \
 	${EXTPATH}/src/nram_access/kv.o \
 	${EXTPATH}/src/nram_xact/xact.o \
+	${EXTPATH}/src/nram_xact/action.o \
 	${EXTPATH}/src/nram_storage/rocksengine.o \
 	${EXTPATH}/src/nram_storage/rocks_service.o \
 	${EXTPATH}/src/nram_storage/thread.o \
@@ -13,6 +14,7 @@ OBJS = \
 	${EXTPATH}/src/ipc/msg.o \
 	${EXTPATH}/src/test/kv_test.o \
 	${EXTPATH}/src/test/channel_test.o \
+	${EXTPATH}/src/test/action_test.o \
 	${EXTPATH}/src/nram_utils/config.o
 
 
@@ -27,7 +29,7 @@ SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
 REGRESS = clean init unit_tests table_scan index_scan xact_basic
 
-ISOLATION = ssi_read_committed rc_read_committed repeatable_read lost_updated
+ISOLATION = ssi_read_committed rc_read_committed repeatable_read lost_update
 ISOLATION_OPTS = --temp-config $(top_srcdir)/src/test/regress/postgresql.conf
 ISOLATIONDIR = $(srcdir)/isolation
 ISOLATION_EXPECTED = $(ISOLATIONDIR)
@@ -63,3 +65,16 @@ test:
 	# psql -d neurdb -f ./sql/init.sql
 	# psql -d neurdb -f ./sql/unit_tests.sql
 	make installcheck
+
+unit-test:
+	rm -rf ../logfile
+	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
+	$(ROCKSDB_SERVER_BIN) & sleep 1  # Give server time to start
+	make clean
+	make debug -j
+	sudo make install
+	bash ../scripts/restart_db.sh
+	echo "Running unit tests..."
+	psql -d neurdb -f ./sql/clean.sql
+	psql -d neurdb -f ./sql/init.sql
+	psql -d neurdb -f ./sql/unit_tests.sql
