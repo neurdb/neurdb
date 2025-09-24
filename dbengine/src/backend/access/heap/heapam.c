@@ -3928,8 +3928,9 @@ l2:
 	/*
 	 * Release the lmgr tuple lock, if we had it.
 	 */
-    if (have_tuple_lock && !IsolationNeedLock())
+    if (have_tuple_lock && !IsolationNeedLock()) {
         UnlockTupleTuplock(relation, &(oldtup.t_self), *lockmode);
+	}
 
 	pgstat_count_heap_update(relation, use_hot_update, newbuf != buffer);
 

@@ -21,3 +21,7 @@ socket.io-client-cpp/
 rocksdb
 external/*
 !external/.gitkeep
+
+# Ignore test output files
+dbengine/nr_kernel/nr_am/output_iso/*
+dbengine/nr_kernel/nr_am/results/*
