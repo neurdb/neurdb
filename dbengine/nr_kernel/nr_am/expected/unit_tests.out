@@ -8,6 +8,8 @@ INFO:  KV channel test passed!
 INFO:  KV channel sequential test passed!
 INFO:  KV channel multi-process test passed
 INFO:  KV channel basic message test passed
+INFO:  Agent function basic test passed!
+INFO:  Agent function verification test passed
  run_nram_tests 
 ----------------
  

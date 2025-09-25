@@ -40,15 +40,13 @@ static bool nram_value_check_visibility(NRAMValue tvalue, NRAMXactState xact) {
 }
 
 // Mark a tuple as always-visible to core MVCC (safe for OCC)
-static inline void
-nram_mark_tuple_visible_always(HeapTuple tup) {
+static inline void nram_mark_tuple_visible_always(HeapTuple tup) {
     HeapTupleHeader t = tup->t_data;
 
     HeapTupleHeaderSetXminFrozen(t);
     HeapTupleHeaderSetXmax(t, InvalidTransactionId);
     t->t_infomask |= HEAP_XMAX_INVALID;
 }
-
 
 /* ------------------------------------------------------------------------
  * Slot related callbacks
@@ -100,7 +98,8 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     scan->min_key = min_key;
     scan->max_key = max_key;
 
-    if (!RocksClientRangeScan(min_key, max_key, &scan->results_key, &scan->results, &scan->result_count))
+    if (!RocksClientRangeScan(min_key, max_key, &scan->results_key,
+                              &scan->results, &scan->result_count))
         elog(ERROR, "Get range failed");
 
     scan->cursor = 0;
@@ -108,6 +107,7 @@ static TableScanDesc nram_beginscan(Relation relation, Snapshot snapshot,
     return (TableScanDesc)scan;
 }
 
+// TODO: check locks for scan.
 static void nram_rescan(TableScanDesc sscan, struct ScanKeyData *key,
                         bool set_params, bool allow_strat, bool allow_sync,
                         bool allow_pagemode) {
@@ -165,7 +165,8 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
 
         tkey = scan->results_key[scan->cursor];
         tvalue = scan->results[scan->cursor];
-        if (read_own_write(xact, tkey, &tvalue) || read_own_read(xact, tkey, &tvalue)) {
+        if (read_own_write(xact, tkey, &tvalue) ||
+            read_own_read(xact, tkey, &tvalue)) {
             // The value is read/modified by the current transaction
             scan->cursor++;
             break;
@@ -238,9 +239,14 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
     *call_again = false;
     *all_dead = false;
 
-    if (read_own_write(xact, tkey, &tvalue) || read_own_read(xact, tkey, &tvalue)) {
-        // The value is read/modified by the current transaction, just do nothing.
+    if (read_own_write(xact, tkey, &tvalue) ||
+        read_own_read(xact, tkey, &tvalue)) {
+        // The value is read/modified by the current transaction, just do
+        // nothing.
     } else {
+        before_access(xact, false);
+        if (xact->action->detect_all) nram_lock(tkey, ShareLock);
+
         tvalue = RocksClientGet(tkey);
         if (tvalue == NULL) {
             *all_dead = true;
@@ -289,15 +295,22 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     NRAM_TEST_INFO("nram tid generated as %lu", nram_decode_tid(tid));
 
     // Serialize key and value from tuple
-    // TODO: resolve the table level conflicts (between the insert and the scan).
+    // TODO: resolve the table level conflicts (between the insert and the
+    // scan).
     tkey = nram_key_from_tid(tup->t_tableOid, tid);
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
-    tvalue->flags |= NRAMF_PRIVATE; // mark as private until commit
+    tvalue->flags |= NRAMF_PRIVATE;  // mark as private until commit
+
+    before_access(GetCurrentNRAMXact(), true);
+    if (GetCurrentNRAMXact()->action->detect_all) {
+        nram_lock(tkey, ExclusiveLock);
+    }
 
     if (!RocksClientPut(tkey, tvalue)) {
         elog(ERROR, "RocksClientPut failed in insert");
     }
-    tvalue->flags &= ~NRAMF_PRIVATE; // deferred release of private mark until commit
+    tvalue->flags &=
+        ~NRAMF_PRIVATE;  // deferred release of private mark until commit
     add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
     NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
 
@@ -383,13 +396,19 @@ static void nram_multi_insert(Relation relation, TupleTableSlot **slots,
         // Serialize and insert
         tkey = nram_key_from_tid(tableOid, &tid);
         tvalue = nram_value_serialize_from_tuple(tuple, tupdesc);
-        tvalue->flags |= NRAMF_PRIVATE; // mark as private until commit
+        tvalue->flags |= NRAMF_PRIVATE;  // mark as private until commit
+
+        before_access(GetCurrentNRAMXact(), true);
+        if (GetCurrentNRAMXact()->action->detect_all) {
+            nram_lock(tkey, ExclusiveLock);
+        }
         if (!RocksClientPut(tkey, tvalue)) {
             // The index conflicts are handled with table locks.
             elog(ERROR, "RocksClientPut failed in multi_insert");
         }
 
-        tvalue->flags &= ~NRAMF_PRIVATE; // deferred release of private mark until commit
+        tvalue->flags &=
+            ~NRAMF_PRIVATE;  // deferred release of private mark until commit
         NRAM_TEST_INFO("ADD! key = <%d:%lu>", tkey->tableOid, tkey->tid);
         add_write_set(GetCurrentNRAMXact(), tkey, tvalue);
 
@@ -411,20 +430,20 @@ static TM_Result nram_tuple_delete(Relation relation, ItemPointer tid,
     return TM_Ok;
 }
 
-static TM_Result
-nram_tuple_update(Relation relation, ItemPointer otid,
-                  TupleTableSlot *slot, CommandId cid,
-                  Snapshot snapshot, Snapshot crosscheck,
-                  bool wait, TM_FailureData *tmfd,
-                  LockTupleMode *lockmode,
-                  TU_UpdateIndexes *update_indexes) {
+static TM_Result nram_tuple_update(Relation relation, ItemPointer otid,
+                                   TupleTableSlot *slot, CommandId cid,
+                                   Snapshot snapshot, Snapshot crosscheck,
+                                   bool wait, TM_FailureData *tmfd,
+                                   LockTupleMode *lockmode,
+                                   TU_UpdateIndexes *update_indexes) {
     TupleDesc tupdesc = RelationGetDescr(relation);
     Oid tableOid = RelationGetRelid(relation);
     NRAMXactState xact = GetCurrentNRAMXact();
     NRAMKey new_key;
     NRAMValue new_value;
     HeapTuple new_tuple = NULL;
-    ItemPointerData ntid = *otid;    // We maintain a single version, so otid == ntid
+    ItemPointerData ntid =
+        *otid;  // We maintain a single version, so otid == ntid
     bool shouldFree = true;
 
     NRAM_INFO();
@@ -441,14 +460,18 @@ nram_tuple_update(Relation relation, ItemPointer otid,
         elog(ERROR, "Invalid otid in nram_tuple_update");
     }
 
-    {   // read the old value
+    {  // read the old value
         NRAMKey old_key = nram_key_from_tid(tableOid, otid);
         NRAMValue old_value = NULL;
 
-        if (read_own_write(xact, old_key, &old_value) || read_own_read(xact, old_key, &old_value)) {
+        if (read_own_write(xact, old_key, &old_value) ||
+            read_own_read(xact, old_key, &old_value)) {
             // The value is read/modified by the current transaction
             // just do nothing.
         } else {
+            before_access(xact, true);
+            if (xact->action->detect_all) nram_lock(new_key, ExclusiveLock);
+
             old_value = RocksClientGet(old_key);
             if (old_value == NULL) {
                 elog(ERROR, "Tuple to be updated does not exist");
@@ -475,7 +498,8 @@ nram_tuple_update(Relation relation, ItemPointer otid,
     add_write_set(GetCurrentNRAMXact(), new_key, new_value);
 
     if (shouldFree) heap_freetuple(new_tuple);
-    pfree(new_key); pfree(new_value);
+    pfree(new_key);
+    pfree(new_value);
     NRAM_INFO();
 
     return TM_Ok;
@@ -499,14 +523,13 @@ static void nram_finish_bulk_insert(Relation relation, int options) {
  * ------------------------------------------------------------------------
  */
 
-
 /*
 Fetch tuple at `tid` into `slot`, after doing a visibility test according
 to `snapshot`. If a tuple was found and passed the visibility test, then
 returns true, false otherwise.
 
-In NRAM, there should only exists one single version on kv storage (no visibity prob).
-Thus, directly fetch the record and return true.
+In NRAM, there should only exists one single version on kv storage (no visibity
+prob). Thus, directly fetch the record and return true.
 */
 static bool nram_fetch_row_version(Relation relation, ItemPointer tid,
                                    Snapshot snapshot, TupleTableSlot *slot) {
@@ -518,7 +541,10 @@ static bool nram_fetch_row_version(Relation relation, ItemPointer tid,
     NRAM_XACT_BEGIN_BLOCK;
 
     tkey = nram_key_from_tid(relation->rd_id, tid);
-    if (!read_own_write(xact, tkey, &tvalue) && !read_own_read(xact, tkey, &tvalue)) {
+    if (!read_own_write(xact, tkey, &tvalue) &&
+        !read_own_read(xact, tkey, &tvalue)) {
+        before_access(xact, false);
+        if (xact->action->detect_all) nram_lock(tkey, ShareLock);
         tvalue = RocksClientGet(tkey);
         if (tvalue == NULL) {
             pfree(tkey);
@@ -532,8 +558,7 @@ static bool nram_fetch_row_version(Relation relation, ItemPointer tid,
         add_read_set(xact, tkey, tvalue);
     }
 
-    tuple =
-        deserialize_nram_value_to_tuple(tvalue, relation->rd_att);
+    tuple = deserialize_nram_value_to_tuple(tvalue, relation->rd_att);
     nram_mark_tuple_visible_always(tuple);
     nram_encode_tid(tkey->tid, &tuple->t_self);
     tuple->t_tableOid = relation->rd_id;
@@ -797,6 +822,7 @@ Datum run_nram_tests(PG_FUNCTION_ARGS) {
 }
 
 shmem_request_hook_type prev_shmem_request_hook = NULL;
+shmem_startup_hook_type prev_shmem_startup_hook = NULL;
 
 static void nram_shmem_request(void) {
     NRAM_INFO();
@@ -806,9 +832,22 @@ static void nram_shmem_request(void) {
     RequestAddinShmemSpace(sizeof(CachedAgentFuncData));
 }
 
+static void nram_shmem_startup(void) {
+    if (prev_shmem_startup_hook) prev_shmem_startup_hook();
+
+    /* Serialize init of shared structs */
+    LWLockAcquire(AddinShmemInitLock, LW_EXCLUSIVE);
+    init_agent_function_cache(); /* <— do it here */
+    /* init any other ShmemInitStruct-backed objects here as well */
+    LWLockRelease(AddinShmemInitLock);
+}
+
 void _PG_init(void) {
     prev_shmem_request_hook = shmem_request_hook;
     shmem_request_hook = nram_shmem_request;
+    prev_shmem_startup_hook = shmem_startup_hook;
+    shmem_startup_hook = nram_shmem_startup;
+
     nram_init();
     nram_register_xact_hook();
     nram_rocks_service_init();
@@ -819,4 +858,21 @@ void _PG_fini(void) {
     nram_unregister_xact_hook();
     nram_rocks_service_terminate();
     shmem_request_hook = prev_shmem_request_hook;
+    shmem_startup_hook = prev_shmem_startup_hook;
+}
+
+/* ------------------------------------------------------------------------
+ * Load agent function
+ * ------------------------------------------------------------------------
+ */
+
+Datum nram_load_policy(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(nram_load_policy);
+
+Datum nram_load_policy(PG_FUNCTION_ARGS) {
+    text *tpath = PG_GETARG_TEXT_PP(0);
+    char *path = text_to_cstring(tpath);
+
+    load_agent_function(path);
+    PG_RETURN_VOID();
 }
