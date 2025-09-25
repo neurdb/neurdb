@@ -60,5 +60,8 @@ extern bool validate_read_set(NRAMXactState state);
 extern NRAMXactState GetCurrentNRAMXact(void);
 
 extern void before_access(NRAMXactState state, bool is_write);
+extern void nram_lock(NRAMKey key, LOCKMODE mode);
+extern LockAcquireResult nram_try_lock(NRAMKey key, LOCKMODE mode);
+extern bool nram_release(NRAMKey key, LOCKMODE mode);
 
 #endif

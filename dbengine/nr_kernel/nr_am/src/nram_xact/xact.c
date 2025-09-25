@@ -52,6 +52,30 @@ void refresh_nram_xact(void) {
         current_nram_xact = NewNRAMXactState(xact_id);
 }
 
+void nram_lock(NRAMKey key, LOCKMODE mode) {
+    LOCKTAG tag;
+    LockAcquireResult res;
+    SET_LOCKTAG_ADVISORY(tag, key->tableOid, key->tid, 0, 0);
+    res = LockAcquire(&tag, mode, false, false);
+    if (res == LOCKACQUIRE_NOT_AVAIL) {
+        elog(ERROR, "Failed to acquire advisory lock for <%d:%lu>",
+             key->tableOid, key->tid);
+    }
+}
+
+bool nram_release(NRAMKey key, LOCKMODE mode) {
+    LOCKTAG tag;
+    SET_LOCKTAG_ADVISORY(tag, key->tableOid, key->tid, 0, 0);
+    return LockRelease(&tag, mode, false);
+}
+
+
+LockAcquireResult nram_try_lock(NRAMKey key, LOCKMODE mode) {
+    LOCKTAG tag;
+    SET_LOCKTAG_ADVISORY(tag, key->tableOid, key->tid, 0, 0);
+    return LockAcquire(&tag, mode, false, true);
+}
+
 NRAMXactState GetCurrentNRAMXact(void) {
     refresh_nram_xact();
     return current_nram_xact;
@@ -195,14 +219,12 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                     current_nram_xact->xact_id);
             } else {
                 ListCell *cell;
-                LOCKTAG tag;
 
                 list_sort(current_nram_xact->write_set, nram_opt_cmp);
                 NRAM_TEST_INFO("Pre-validation add write locks.");
                 foreach(cell, current_nram_xact->write_set) {
                     NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
-	                SET_LOCKTAG_ADVISORY(tag, opt->key->tableOid, opt->key->tid, 0, 0);
-                    LockAcquire(&tag, ExclusiveLock, false, true);
+                    nram_lock(opt->key, ExclusiveLock);
                 }
 
                 if (IsolationIsSerializable()) {
@@ -213,8 +235,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                         LockAcquireResult r;
 
                         // During read, we abort for pending writes. (peek lock here).
-    	                SET_LOCKTAG_ADVISORY(tag, opt->key->tableOid, opt->key->tid, 0, 0);
-                        r = LockAcquire(&tag, ShareLock, false, true);
+                        r = nram_try_lock(opt->key, ShareLock);
                         if (r == LOCKACQUIRE_NOT_AVAIL) {
                             elog(ERROR,
                                 "The transaction %u validation failed: concurrent update detected",
@@ -238,7 +259,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                         // We acquired the lock successfully & we are not already the lock owner, meaning no one is writing to it.
                         // We can release the lock immediately.
                         if (r == LOCKACQUIRE_OK)
-                            LockRelease(&tag, ShareLock, false);
+                            nram_release(opt->key, ShareLock);
                     }
                 }
 
@@ -247,8 +268,7 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                 foreach(cell, current_nram_xact->write_set) {
                     NRAMXactOpt opt = (NRAMXactOpt) lfirst(cell);
                     RocksClientPut(opt->key, opt->value);   // deferred write for OCC.
-	                SET_LOCKTAG_ADVISORY(tag, opt->key->tableOid, opt->key->tid, 0, 0);
-                    LockRelease(&tag, ExclusiveLock, false);
+                    nram_release(opt->key, ExclusiveLock);
                 }
                 // TODO: flush to WAL here.
                 NRAM_TEST_INFO("Validation succeed.");
@@ -328,3 +348,4 @@ void before_access(NRAMXactState state, bool is_write) {
     MyProc->rank = state->action->priority;    // set the wait priority.
     LockTimeout = state->action->timeout;  // set the wait timeout.
 }
+
