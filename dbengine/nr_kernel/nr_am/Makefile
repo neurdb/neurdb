@@ -29,7 +29,10 @@ SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
 
 REGRESS = clean init unit_tests table_scan index_scan xact_basic
 
-ISOLATION = ssi_read_committed rc_read_committed repeatable_read lost_update
+ISOLATION = ssi_read_committed rc_read_committed \
+			repeatable_read repeatable_read_2pl \
+			lost_update lost_update_2pl
+
 ISOLATION_OPTS = --temp-config $(top_srcdir)/src/test/regress/postgresql.conf
 ISOLATIONDIR = $(srcdir)/isolation
 ISOLATION_EXPECTED = $(ISOLATIONDIR)

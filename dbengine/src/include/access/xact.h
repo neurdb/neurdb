@@ -62,7 +62,6 @@ extern int  XactLockStrategy;
 #define IsolationUsesXactSnapshot() (XactIsoLevel >= XACT_REPEATABLE_READ)
 #define IsolationIsSerializable() (XactIsoLevel == XACT_SERIALIZABLE)
 #define IsolationIsNotSSI() (XactLockStrategy != LOCK_NONE)
-#define IsolationNeedLock() false	// dummy function, always return false
 
 /* Xact read-only state */
 extern PGDLLIMPORT bool DefaultXactReadOnly;

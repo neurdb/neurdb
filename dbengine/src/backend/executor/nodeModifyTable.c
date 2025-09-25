@@ -3870,6 +3870,7 @@ ExecModifyTable(PlanState *pstate)
 													   SnapshotAny,
 													   oldSlot))
 						elog(ERROR, "failed to fetch tuple being updated");
+					// elog(INFO, "fetched tuple being updated");
 				}
 				slot = ExecGetUpdateNewTuple(resultRelInfo, context.planSlot,
 											 oldSlot);

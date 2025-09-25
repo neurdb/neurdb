@@ -7,8 +7,8 @@ setup
   DROP FUNCTION IF EXISTS nram_tableam_handler(internal);
   CREATE EXTENSION nram;
   CREATE TABLE accounts (id INT PRIMARY KEY, balance INT) USING nram;
-  INSERT INTO accounts VALUES (1, 100);
-  SELECT nram_load_policy('occ');
+  INSERT INTO accounts VALUES (1, 100), (2, 200), (3, 300);
+  SELECT nram_load_policy('2pl');
 }
 
 teardown
@@ -30,4 +30,4 @@ step s2_c { COMMIT; }
 
 # Under weak control, final balance may be 80 or 90 depending on interleaving.
 # Under SERIALIZABLE, one should fail.
-permutation s1_r s2_r s1_w s2_w s1_c s2_c
+permutation s1_w s2_w s1_r s1_c s2_r s2_c

@@ -39,7 +39,7 @@ void run_policy_basic_test(void) {
         elog(ERROR, "get_action returned NULL for default feature");
 
     if (act->detect_all != false || act->priority != 0.0 ||
-        act->timeout != DEFAULT_WAIT_NS)
+        act->timeout != DEFAULT_WAIT_MS)
         elog(ERROR,
              "Default action not set correctly (detect_all=%d, priority=%f, "
              "timeout=%u)",
@@ -82,29 +82,27 @@ void run_policy_basic_test(void) {
     elog(INFO, "Agent function basic test passed!");
 }
 
-void
-run_policy_full_load_verify_test(void)
-{
+void run_policy_full_load_verify_test(void) {
     const char *fn = "/tmp/nram_policy_full.tsv";
     FILE *fp;
 
-    /* Make sure shared cache is ready (ok in tests; in prod use shmem_startup_hook) */
-   if (GlobalCachedAgentFunc == NULL)
+    /* Make sure shared cache is ready (ok in tests; in prod use
+     * shmem_startup_hook) */
+    if (GlobalCachedAgentFunc == NULL)
         elog(ERROR, "GlobalCachedAgentFunc not initialized");
 
     fp = fopen(fn, "w");
     if (!fp)
-        ereport(ERROR,
-                (errcode(ERRCODE_INTERNAL_ERROR),
-                 errmsg("failed to open %s for write", fn)));
+        ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+                        errmsg("failed to open %s for write", fn)));
 
-    for (uint32 i = 0; i < MAX_XACT_FEATURE_SPACE; i++)
-    {
-        uint32 detect   = (i & 1U);
-        double prio     = (double)i / 7.0;
-        uint64 tout64   = (uint64)i * 1234U + 7U;  /* portable 64-bit */
+    for (uint32 i = 0; i < MAX_XACT_FEATURE_SPACE; i++) {
+        uint32 detect = (i & 1U);
+        double prio = (double)i / 7.0;
+        uint64 tout64 = (uint64)i * 1234U + 7U; /* portable 64-bit */
 
-        /* If your loader expects uint32 timeout, clamp here to avoid wrap surprises */
+        /* If your loader expects uint32 timeout, clamp here to avoid wrap
+         * surprises */
         /* uint32 tout32 = (uint32) tout64; */
 
         /* index detect priority timeout */
@@ -112,36 +110,35 @@ run_policy_full_load_verify_test(void)
     }
 
     if (fclose(fp) != 0)
-        ereport(ERROR,
-                (errcode(ERRCODE_INTERNAL_ERROR),
-                 errmsg("failed to close %s after write", fn)));
+        ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
+                        errmsg("failed to close %s after write", fn)));
 
     /* Load into the shared cache */
     load_agent_function(fn);
 
     /* Verify slots */
-    for (uint32 i = 0; i < MAX_XACT_FEATURE_SPACE; i++)
-    {
+    for (uint32 i = 0; i < MAX_XACT_FEATURE_SPACE; i++) {
         XactFeatureData feat;
         CCActionData *act;
         const double exp_prio = (double)i / 7.0;
-        const uint32 exp_tout = (uint32)i * 1234U + 7U;  /* loader may cast to uint32 */
+        const uint32 exp_tout =
+            (uint32)i * 1234U + 7U; /* loader may cast to uint32 */
         const bool exp_detect = (i & 1U) ? true : false;
         uint32 idx;
 
-        feat.n_access = i & 31U;  /* max 31 */
+        feat.n_access = i & 31U; /* max 31 */
         feat.cur_op = (i & 2U) ? UPDATE_OPT : READ_OPT;
-        feat.n_dep = (i >> 2) & 15U;  /* max 15, currently unused */
+        feat.n_dep = (i >> 2) & 15U; /* max 15, currently unused */
 
         idx = expected_idx(feat.n_access, feat.cur_op);
-        if (idx != i)
-            continue;  /* skip unused slots */
+        if (idx != i) continue; /* skip unused slots */
 
         act = &GlobalCachedAgentFunc->act[idx];
         if (act == NULL)
-            ereport(ERROR,
-                    (errcode(ERRCODE_INTERNAL_ERROR),
-                     errmsg("get_action returned NULL for feature index %u", i)));
+            ereport(
+                ERROR,
+                (errcode(ERRCODE_INTERNAL_ERROR),
+                 errmsg("get_action returned NULL for feature index %u", i)));
 
         /* detect_all */
         if (act->detect_all != exp_detect)
@@ -156,11 +153,12 @@ run_policy_full_load_verify_test(void)
         {
             double diff = fabs(act->priority - exp_prio);
             if (diff >= 1e-12)
-                ereport(ERROR,
-                        (errcode(ERRCODE_INTERNAL_ERROR),
-                         errmsg("full verify idx%u failed: priority mismatch", i),
-                         errdetail("got=%.17g expected=%.17g (|diff|=%.3e)",
-                                   act->priority, exp_prio, diff)));
+                ereport(
+                    ERROR,
+                    (errcode(ERRCODE_INTERNAL_ERROR),
+                     errmsg("full verify idx%u failed: priority mismatch", i),
+                     errdetail("got=%.17g expected=%.17g (|diff|=%.3e)",
+                               act->priority, exp_prio, diff)));
         }
 
         /* timeout: loader may cast to uint32 */

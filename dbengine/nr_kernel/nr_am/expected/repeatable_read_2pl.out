@@ -1,0 +1,24 @@
+Parsed test spec with 2 sessions
+
+starting permutation: s1_read1 s2_update s1_read2 s1_commit s2_commit
+nram_load_policy
+----------------
+                
+(1 row)
+
+step s1_read1: SELECT balance FROM accounts WHERE id = 1;
+balance
+-------
+    100
+(1 row)
+
+step s2_update: UPDATE accounts SET balance = 50 WHERE id = 1; <waiting ...>
+step s1_read2: SELECT balance FROM accounts WHERE id = 1;
+balance
+-------
+    100
+(1 row)
+
+step s1_commit: COMMIT;
+step s2_update: <... completed>
+step s2_commit: COMMIT;
