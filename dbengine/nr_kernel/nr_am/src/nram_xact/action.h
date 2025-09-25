@@ -14,8 +14,9 @@
 #define NUM_OF_SYS_XACTS 5
 #define SKIP_XACT(tid) ((tid) <= NUM_OF_SYS_XACTS)
 #define SEC_TO_NS(sec) ((sec) * 1000000000)
+#define SEC_TO_MS(sec) ((sec) * 1000)
 #define NS_TO_US(ns) ((ns) / 1000.0)
-#define DEFAULT_WAIT_NS SEC_TO_NS(1)  // 1 second.
+#define DEFAULT_WAIT_MS SEC_TO_MS(1)  // 1 second (following Postgres standard).
 
 #define READ_OPT 0
 #define UPDATE_OPT 1
@@ -29,7 +30,7 @@
 typedef struct CCActionData {
     bool detect_all;
     double priority;
-    uint32_t timeout;  // in nanoseconds.
+    uint32_t timeout;  // in ms.
 } CCActionData;
 
 typedef CCActionData* CCAction;

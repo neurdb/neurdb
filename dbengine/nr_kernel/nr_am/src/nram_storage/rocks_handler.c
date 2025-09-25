@@ -39,6 +39,8 @@ bool RocksClientPut(NRAMKey key, NRAMValue value) {
     KVMsg *msg = NewMsg(kv_put, key->tableOid, kv_status_none, MyProcPid), *resp;
     bool ok, success;
 
+    NRAM_INFO();
+
     total_len = key_len + val_len + sizeof(Size);
 
     msg->header.entitySize = total_len;
@@ -81,6 +83,8 @@ NRAMValue RocksClientGet(NRAMKey key) {
     KVMsg *msg = NewMsg(kv_get, key->tableOid, kv_status_none, MyProcPid), *resp;
     bool ok, success;
     NRAMValue val_out;
+
+    NRAM_INFO();
 
     msg->header.entitySize = key_len;
     msg->entity = serialized_key;

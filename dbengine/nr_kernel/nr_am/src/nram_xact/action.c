@@ -55,7 +55,7 @@ void init_agent_function_cache(void) {
         for (uint32 i = 0; i < MAX_XACT_FEATURE_SPACE; ++i) {
             ptr->act[i].detect_all = false;
             ptr->act[i].priority = 0.0;            /* neutral priority */
-            ptr->act[i].timeout = DEFAULT_WAIT_NS; /* 1s wait by default */
+            ptr->act[i].timeout = DEFAULT_WAIT_MS; /* 1s wait by default */
         }
     }
 
@@ -76,13 +76,41 @@ void load_agent_function(const char *filename) {
     if (filename == NULL || filename[0] == '\0')
         ereport(ERROR, (errmsg("load_agent_function: invalid filename")));
 
+    if (pg_strcasecmp(filename, "2pl") == 0) {
+        LWLockAcquire(AddinShmemInitLock, LW_EXCLUSIVE);
+        for (uint32 i = 0; i < MAX_XACT_FEATURE_SPACE; ++i)
+        {
+            CCActionData *a = &GlobalCachedAgentFunc->act[i];
+            a->detect_all = true;    /* take advisory locks on read/write */
+            a->priority   = 0.0;     /* neutral */
+            a->timeout    = DEFAULT_WAIT_MS;
+        }
+        LWLockRelease(AddinShmemInitLock);
+        elog(INFO, "[NRAM] installed built-in 2PL policy");
+        return;
+    }
+
+    if (pg_strcasecmp(filename, "occ") == 0) {
+        LWLockAcquire(AddinShmemInitLock, LW_EXCLUSIVE);
+        for (uint32 i = 0; i < MAX_XACT_FEATURE_SPACE; ++i)
+        {
+            CCActionData *a = &GlobalCachedAgentFunc->act[i];
+            a->detect_all = false;    /* take no advisory locks on read/write */
+            a->priority   = 0.0;     /* neutral */
+            a->timeout    = DEFAULT_WAIT_MS;
+        }
+        LWLockRelease(AddinShmemInitLock);
+        elog(INFO, "[NRAM] installed built-in 2PL policy");
+        return;
+    }
+
     fp = fopen(filename, "r");
     if (fp == NULL)
         ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
                         errmsg("load_agent_function: could not open \"%s\": %m",
                                filename)));
 
-    /* Simple, robust TSV/space-separated format per line:
+    /* Simple TSV/space-separated format per line:
      * index  detect_all  priority  timeout_ns
      * - index: 0..1023 (optional; if omitted, we compute from a running cursor)
      * - detect_all: 0/1
