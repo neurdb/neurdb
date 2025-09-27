@@ -232,7 +232,6 @@ void run_channel_multiprocess_test(void) {
     KVChannel* channel;
     char* name = "multi_proc_kv_channel";
     pid_t producer_pid, consumer_pid;
-    int status = 0;
     channel = KVChannelInit(name, true);
     BackgroundWorker producer, consumer;
     BackgroundWorkerHandle *handle_producer, *handle_consumer;

@@ -66,12 +66,12 @@ async def prepopulate(pool, table, n_keys, payload_bytes):
         existing = await conn.fetchval(f"SELECT count(*) FROM {table}")
         if existing >= n_keys:
             return
-        print(f"[loader] inserting keys {existing+1}..{n_keys} via INSERT batches")
+        # print(f"[loader] inserting keys {existing+1}..{n_keys} via INSERT batches")
         sql = f"INSERT INTO {table}(id,balance,pad) VALUES($1,$2,$3)"
         for base in range(existing+1, n_keys+1, batch):
             upper = min(base+batch-1, n_keys)
             vals = [(i, 1000, pad) for i in range(base, upper+1)]
-            print(f"[loader] inserting {len(vals)} rows id={base}..{upper}")
+            # print(f"[loader] inserting {len(vals)} rows id={base}..{upper}")
             async with conn.transaction():
                 await conn.executemany(sql, vals)
 
@@ -89,15 +89,15 @@ async def run_txn(conn, sampler, args, stats, table, mix):
                 await conn.fetchval(f"SELECT balance FROM {table} WHERE id = {k}")
                 stats["reads"] += 1
             elif op == "UPDATE":
-                delta = random.randint(-10, 10)
-                await conn.execute(f"UPDATE {table} SET balance = balance + {delta} WHERE id = {k}")
+                data = random.randint(-10000, 10000)
+                await conn.execute(f"UPDATE {table} SET balance = {data} WHERE id = {k}")
                 stats["writes"] += 1
             else:  # RMW
                 val = await conn.fetchval(f"SELECT balance FROM {table} WHERE id = {k}")
                 if val is None:
                     raise RuntimeError(f"RMW failed: id={k} not found")
                 delta = random.randint(-10, 10)
-                await conn.execute(f"UPDATE {table} SET balance = balance + {delta} WHERE id = {k}")
+                await conn.execute(f"UPDATE {table} SET balance = {val + delta} WHERE id = {k}")
                 stats["rmw"] += 1
 
 
@@ -125,6 +125,7 @@ async def worker(pool, sampler, args, stats, stop_event):
                         stats["aborts"] += 1
                         stats["ops"] += args.txn_length
                         sqlstate = getattr(e, "sqlstate", None)
+                        # print("[worker] transaction aborted:", e, file=sys.stderr)
                         if sqlstate in RETRYABLE_SQLSTATES and attempt < MAX_RETRIES:
                             attempt += 1
                             backoff = min(0.01 * (2 ** (attempt - 1)), 1.0)
@@ -140,27 +141,38 @@ async def worker(pool, sampler, args, stats, stop_event):
 
 
 # -------- DB setup --------
-async def setup_db(pool, table):
-    sql = f"""
-    DROP TABLE IF EXISTS {table};
-    DROP EXTENSION IF EXISTS nram CASCADE;
-    DROP ACCESS METHOD IF EXISTS nram;
-    DROP FUNCTION IF EXISTS nram_tableam_handler(internal);
-    CREATE EXTENSION IF NOT EXISTS nram;
+async def setup_db(pool, table, policy):
+    if policy is None:
+        sql = f"""
+        DROP TABLE IF EXISTS {table};
 
-    CREATE TABLE {table}(
-      id      BIGINT PRIMARY KEY,
-      balance BIGINT NOT NULL,
-      pad     TEXT NOT NULL DEFAULT ''
-    ) USING nram;
-    CREATE INDEX IF NOT EXISTS accounts_id_inc ON accounts USING btree (id);
-    """
+        CREATE TABLE {table}(
+        id      BIGINT PRIMARY KEY,
+        balance BIGINT NOT NULL,
+        pad     TEXT NOT NULL DEFAULT ''
+        );
+        CREATE INDEX IF NOT EXISTS accounts_id_inc ON accounts USING btree (id);
+        """
+    else:
+        sql = f"""
+        DROP TABLE IF EXISTS {table};
+        DROP EXTENSION IF EXISTS nram CASCADE;
+        DROP ACCESS METHOD IF EXISTS nram;
+        DROP FUNCTION IF EXISTS nram_tableam_handler(internal);
+        CREATE EXTENSION IF NOT EXISTS nram;
+
+        CREATE TABLE {table}(
+        id      BIGINT PRIMARY KEY,
+        balance BIGINT NOT NULL,
+        pad     TEXT NOT NULL DEFAULT ''
+        ) USING nram;
+        CREATE INDEX IF NOT EXISTS accounts_id_inc ON accounts USING btree (id);
+        """
     
     async with pool.acquire() as conn:
         await conn.execute(sql)
 
 
-# -------- Runner --------
 async def main():
     p = argparse.ArgumentParser(description="YCSB-like benchmark for neurdb (NRAM table).")
     p.add_argument("--dsn", default=os.environ.get("PG_DSN","postgres://127.0.0.1/neurdb"),
@@ -180,18 +192,19 @@ async def main():
     p.add_argument("--isolation", default="SERIALIZABLE",
                    choices=["READ COMMITTED","REPEATABLE READ","SERIALIZABLE"])
     p.add_argument("--preload", action="store_false", help="Prepopulate table to n-keys")
-    p.add_argument("--policy", default="occ", help="Call SELECT nram_load_policy('<name>')")
+    p.add_argument("--policy", default=None, help="Call SELECT nram_load_policy('<name>')")    # No policy for postgres.
     args = p.parse_args()
     
-    print("[setup] running `make setup` to cleanup the database …")
-    rc = subprocess.call(["make", "setup"])
+    sampler = ZipfSampler(args.n_keys, args.zipf_theta)
+    
+    # print("[setup] running `make setup` to cleanup the database …")
+    rc = subprocess.call(["make", "setup"],
+                         stdout=subprocess.DEVNULL)
     if rc != 0:
         print(f"[setup] `make setup` failed with exit code {rc}, aborting.")
         return
-    sampler = ZipfSampler(args.n_keys, args.zipf_theta)
     
-    
-    print(f"[setup] connecting to database {args.dsn} with {args.threads} threads …")
+    # print(f"[setup] connecting to database {args.dsn} with {args.threads} threads …")
     async def init_conn(conn, iso_sql):
         await conn.execute(f"SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL {iso_sql}")
     iso_sql = args.isolation.upper()
@@ -199,11 +212,11 @@ async def main():
         dsn=args.dsn, min_size=args.threads, max_size=args.threads,
     )
 
-    print(f"[setup] preparing table {args.table} and loading policy {args.policy}")
-    await setup_db(pool, args.table)
+    # print(f"[setup] preparing table {args.table} and loading policy {args.policy}")
+    await setup_db(pool, args.table, args.policy)
     async with pool.acquire() as c:
         # await c.execute("SET client_min_messages TO WARNING")
-        if args.policy:
+        if args.policy is not None:
             await c.execute("SELECT nram_load_policy($1)", args.policy)
 
     if args.preload:
