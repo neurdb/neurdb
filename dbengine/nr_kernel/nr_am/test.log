@@ -1,0 +1,60 @@
+rm -rf ../logfile
+rm -rf "/code/neurdb-dev/psql/data/pg_rocksdb/"
+/code/neurdb-dev/dbengine/nr_kernel/nr_am/server/server & sleep 1  # Give server time to start
+make clean
+make[1]: Entering directory '/code/neurdb-dev/dbengine/nr_kernel/nr_am'
+rm -f nram.so   libnram.a  libnram.pc
+rm -f /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_access/kv.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/xact.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/action.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocksengine.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_service.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/thread.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_handler.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/ipc/msg.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/kv_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/channel_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/action_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_utils/config.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_access/kv.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/xact.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/action.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocksengine.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_service.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/thread.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_handler.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/ipc/msg.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/kv_test.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/channel_test.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/action_test.bc /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_utils/config.bc
+rm -rf results/ regression.diffs regression.out tmp_check/ tmp_check_iso/ log/ output_iso/
+rm -rf output_iso/ tmp_check_iso/
+make[1]: Leaving directory '/code/neurdb-dev/dbengine/nr_kernel/nr_am'
+make debug -j
+make[1]: Entering directory '/code/neurdb-dev/dbengine/nr_kernel/nr_am'
+make PG_CPPFLAGS="-I/usr/local/include -I./src/ -DDEBUG" \
+        SHLIB_LINK="-L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib " \
+        CFLAGS="-g -O0 -Wall"
+make[2]: Entering directory '/code/neurdb-dev/dbengine/nr_kernel/nr_am'
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_access/kv.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_access/kv.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/xact.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/xact.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/action.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/action.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocksengine.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocksengine.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_service.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_service.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/thread.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/thread.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_handler.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_handler.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/ipc/msg.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/ipc/msg.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/kv_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/kv_test.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/channel_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/channel_test.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/action_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/action_test.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -I/usr/local/include -I./src/ -DDEBUG -I. -I./ -I/code/neurdb-dev/psql/include/postgresql/server -I/code/neurdb-dev/psql/include/postgresql/internal  -D_GNU_SOURCE   -c -o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_utils/config.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_utils/config.c
+gcc -g -O0 -Wall -fPIC -fvisibility=hidden -shared -o nram.so /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_access/kv.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/xact.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_xact/action.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocksengine.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_service.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/thread.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_storage/rocks_handler.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/ipc/msg.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/kv_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/channel_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/test/action_test.o /code/neurdb-dev/dbengine/nr_kernel/nr_am/src/nram_utils/config.o -L/code/neurdb-dev/psql/lib    -Wl,--as-needed -Wl,-rpath,'/code/neurdb-dev/psql/lib',--enable-new-dtags -fvisibility=hidden -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib 
+make[2]: Leaving directory '/code/neurdb-dev/dbengine/nr_kernel/nr_am'
+make[1]: Leaving directory '/code/neurdb-dev/dbengine/nr_kernel/nr_am'
+sudo make install
+/usr/bin/mkdir -p '/code/neurdb-dev/psql/lib/postgresql'
+/usr/bin/mkdir -p '/code/neurdb-dev/psql/share/postgresql/extension'
+/usr/bin/mkdir -p '/code/neurdb-dev/psql/share/postgresql/extension'
+/usr/bin/install -c -m 755  nram.so '/code/neurdb-dev/psql/lib/postgresql/nram.so'
+/usr/bin/install -c -m 644 .//nram.control '/code/neurdb-dev/psql/share/postgresql/extension/'
+/usr/bin/install -c -m 644 .//sql/nram--1.0.sql  '/code/neurdb-dev/psql/share/postgresql/extension/'
+bash ../scripts/restart_db.sh
+waiting for server to shut down.... done
+server stopped
+waiting for server to start.... done
+server started
+echo "Running unit tests..."
+Running unit tests...
+psql -d neurdb -f ./sql/clean.sql
+SET
+DROP TABLE
+DROP TABLE
+DROP EXTENSION
+DROP ACCESS METHOD
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+psql -d neurdb -f ./sql/init.sql
+CREATE EXTENSION
+CREATE FUNCTION
+CREATE FUNCTION
+psql -d neurdb -f ./sql/unit_tests.sql

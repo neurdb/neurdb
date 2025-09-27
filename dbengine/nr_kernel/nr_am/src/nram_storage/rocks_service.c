@@ -215,12 +215,9 @@ void run_rocks_no_thread(void) {
 
 void *process_request(void *arg) {
     KVMsg *msg = (KVMsg *)arg, *resp = NULL;
-    KVChannel *resp_chan;
     char chan_name[64];
 
     snprintf(chan_name, sizeof(chan_name), "kv_resp_%u", msg->header.respChannel);
-    resp_chan = KVChannelInit(chan_name, false);
-
     NRAM_TEST_INFO("[Rocks] Processing msg op=%d, respChan=%u (pid=%d)",
         msg->header.op, msg->header.respChannel, MyProcPid);
 
@@ -251,9 +248,7 @@ void *process_request(void *arg) {
     if (resp != NULL) {
         ResultQueuePush(&result_queue, resp);  // push to result queue
         PrintResultQueue(&result_queue);
-        pfree(resp_chan);
     } else {
-        pfree(resp_chan);
         if (msg->entity)
             pfree(msg->entity);
         pfree(msg);
@@ -441,7 +436,7 @@ void nram_rocks_service_init(void) {
     worker.bgw_flags = BGWORKER_SHMEM_ACCESS | BGWORKER_BACKEND_DATABASE_CONNECTION;
     worker.bgw_start_time = BgWorkerStart_ConsistentState;
     worker.bgw_restart_time = BGW_NEVER_RESTART;
-    worker.bgw_main_arg = UInt32GetDatum(8);
+    worker.bgw_main_arg = UInt32GetDatum(1);
 
     snprintf(worker.bgw_library_name, BGW_MAXLEN, "nram");
     snprintf(worker.bgw_function_name, BGW_MAXLEN, "rocks_service_main");

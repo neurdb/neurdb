@@ -203,10 +203,3 @@ void print_xact_feature(StringInfo str, XactFeature feature) {
                                                        : "UNKNOWN",
                      feature->n_dep, encode_feature_10bit(feature));
 }
-
-/* ---------- Shared memory sizing helper (optional) ----------
- * If you hook into Postgres' shmem request path, call this to reserve bytes.
- */
-Size NeurCC_AgentFuncCacheShmemSize(void) {
-    return add_size(sizeof(CachedAgentFuncData), 0);
-}

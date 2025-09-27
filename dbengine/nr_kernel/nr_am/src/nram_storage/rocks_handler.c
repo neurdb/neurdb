@@ -9,6 +9,7 @@ static KVChannel *ServerChannel = NULL;
 
 static inline KVChannel* GetRespChannel(void) {
     char resp_name[NAMEDATALEN];
+    NRAM_INFO();
 
     if (RespChannel != NULL)
         return RespChannel;
@@ -19,6 +20,7 @@ static inline KVChannel* GetRespChannel(void) {
 }
 
 static inline KVChannel* GetServerChannel(void) {
+    NRAM_INFO();
     if (ServerChannel != NULL)
         return ServerChannel;
 
@@ -154,8 +156,8 @@ bool RocksClientRangeScan(NRAMKey start_key, NRAMKey end_key,
 
     if (success) {
         ptr = resp->entity;
-        memcpy(out_count, ptr, sizeof(int));
-        ptr += sizeof(int);
+        memcpy(out_count, ptr, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
 
         *out_keys = palloc(sizeof(NRAMKey) * (*out_count));
         *out_values = palloc(sizeof(NRAMValue) * (*out_count));
