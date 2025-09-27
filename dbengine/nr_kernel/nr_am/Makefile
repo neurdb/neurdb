@@ -81,3 +81,16 @@ unit-test:
 	psql -d neurdb -f ./sql/clean.sql
 	psql -d neurdb -f ./sql/init.sql
 	psql -d neurdb -f ./sql/unit_tests.sql
+
+
+setup:
+	rm -rf ../logfile
+	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
+	$(ROCKSDB_SERVER_BIN) & sleep 1  # Give server time to start
+	make clean
+	make debug -j
+	sudo make install
+	bash ../scripts/restart_db.sh
+	psql -d neurdb -f ./sql/clean.sql
+	psql -d neurdb -f ./sql/init.sql
+	

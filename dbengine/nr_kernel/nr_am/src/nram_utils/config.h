@@ -9,9 +9,9 @@
 #define NRAM_UNSUPPORTED() elog(ERROR, "[NRAM] calling unsupported function %s", __func__)
 
 // PHX: use the following two debug macros when debugging the code.
-// #define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
-// #define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
+#define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define NRAM_INFO() elog(INFO, "[NRAM] calling function %s", __func__)
 
 
-#define NRAM_TEST_INFO(fmt, ...)
-#define NRAM_INFO()
+// #define NRAM_TEST_INFO(fmt, ...)
+// #define NRAM_INFO()
