@@ -25,3 +25,6 @@ external/*
 # Ignore test output files
 dbengine/nr_kernel/nr_am/output_iso/*
 dbengine/nr_kernel/nr_am/results/*
+dbengine/nr_kernel/nr_am/optimizer/bo-all
+dbengine/nr_kernel/nr_am/optimizer/bo-steps
+dbengine/nr_kernel/nr_am/optimizer/__pycache__

@@ -20,7 +20,7 @@
 
 #define READ_OPT 0
 #define UPDATE_OPT 1
-#define MAX_XACT_FEATURE_SPACE (1 << 10)
+#define MAX_XACT_FEATURE_SPACE (1 << 5)
 
 /* ------------------------------------------------------------------------
  * NeurCC related codes.

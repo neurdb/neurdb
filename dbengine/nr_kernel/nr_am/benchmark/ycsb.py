@@ -195,6 +195,9 @@ async def main():
     p.add_argument("--policy", default=None, help="Call SELECT nram_load_policy('<name>')")    # No policy for postgres.
     args = p.parse_args()
     
+    if args.policy not in [None, "2pl", "occ"]:
+        args.policy = os.path.abspath(args.policy)
+    
     sampler = ZipfSampler(args.n_keys, args.zipf_theta)
     
     # print("[setup] running `make setup` to cleanup the database …")
@@ -267,7 +270,7 @@ async def main():
     ops = manager["ops"]
     r = manager["reads"]; w = manager["writes"]; rmw = manager["rmw"]
     commits = manager["commits"]; aborts = manager["aborts"]
-    thr = ops / elapsed
+    thr = commits / elapsed
 
     lats = sorted(manager["latencies_ns"])
     def pct(p):
@@ -277,7 +280,7 @@ async def main():
 
     print("\n=== YCSB-like Summary ===")
     print(f"Elapsed        : {elapsed:.3f}s")
-    print(f"Throughput     : {thr:,.0f} ops/s  (txn ops)")
+    print(f"Throughput     : {thr:.0f} tps")
     print(f"Commits/Aborts : {commits:,} / {aborts:,}")
     print(f"Reads/Writes/RMW: {r:,} / {w:,} / {rmw:,}")
     if lats:
