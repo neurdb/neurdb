@@ -7,6 +7,7 @@ setup
   DROP FUNCTION IF EXISTS nram_tableam_handler(internal);
   CREATE EXTENSION nram;
   CREATE TABLE accounts (id INT PRIMARY KEY, balance INT) USING nram;
+  CREATE INDEX IF NOT EXISTS accounts_id_inc ON accounts USING btree (id);
   INSERT INTO accounts VALUES (1, 100), (2, 200), (3, 300);
   SELECT nram_load_policy('2pl');
 }
@@ -17,13 +18,13 @@ teardown
 }
 
 session s1
-setup { BEGIN ISOLATION LEVEL SERIALIZABLE; }
+setup { BEGIN ISOLATION LEVEL SERIALIZABLE; SET enable_seqscan = off; SET enable_bitmapscan = off; }
 step s1_r { SELECT balance FROM accounts WHERE id = 1; }
 step s1_w { UPDATE accounts SET balance = balance - 10 WHERE id = 1; }
 step s1_c { COMMIT; }
 
 session s2
-setup { BEGIN ISOLATION LEVEL SERIALIZABLE; }
+setup { BEGIN ISOLATION LEVEL SERIALIZABLE; SET enable_seqscan = off; SET enable_bitmapscan = off; }
 step s2_r { SELECT balance FROM accounts WHERE id = 1; }
 step s2_w { UPDATE accounts SET balance = balance - 20 WHERE id = 1; }
 step s2_c { COMMIT; }

@@ -114,7 +114,7 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, long timeout_
 
         if (!block) {
             LWLockRelease(&channel->shared->lock);
-            elog(INFO, "KVChannelPush non-blocking and full, drop message");
+            NRAM_TEST_INFO("KVChannelPush non-blocking and full, push message failed");
             return false;
         }
 
@@ -144,7 +144,7 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, long timeout_
         ConditionVariableCancelSleep();
     }
 
-    elog(INFO, "KVChannelPush channel not running, drop message");
+    NRAM_TEST_INFO("KVChannelPush channel not running, push message failed");
     return false;
 }
 

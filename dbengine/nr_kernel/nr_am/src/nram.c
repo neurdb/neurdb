@@ -176,7 +176,8 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
             scan->cursor++;
             break;
         } else if (nram_value_check_visibility(tvalue, xact)) {
-            // For detect all, we need to lock the tuple for read and reload the value.
+            // For detect all, we need to lock the tuple for read and reload the
+            // value.
             if (xact->action->detect_all) {
                 ItemPointerData tid;
                 nram_encode_tid(tkey->tid, &tid);
@@ -185,7 +186,8 @@ static bool nram_getnextslot(TableScanDesc sscan, ScanDirection direction,
                 tvalue = RocksClientGet(tkey);
             }
 
-            // For read operations expose to users, we need to validate the later.
+            // For read operations expose to users, we need to validate the
+            // later.
             if (nram_for_read(xact)) {
                 add_read_set(xact, tkey, tvalue);
             }
@@ -279,8 +281,7 @@ static bool nram_index_fetch_tuple(IndexFetchTableData *scan, ItemPointer tid,
             pfree(tvalue);
             return false;
         }
-        if(nram_for_read(xact))
-            add_read_set(xact, tkey, tvalue);
+        if (nram_for_read(xact)) add_read_set(xact, tkey, tvalue);
     }
 
     tuple =
@@ -323,8 +324,7 @@ static void nram_insert(Relation relation, HeapTuple tup, CommandId cid,
     tvalue = nram_value_serialize_from_tuple(tup, tupdesc);
     tvalue->flags |= NRAMF_PRIVATE;  // mark as private until commit
 
-    if (xact->action->detect_all)
-        nram_lock_for_write(relation, tid);
+    if (xact->action->detect_all) nram_lock_for_write(relation, tid);
 
     if (!RocksClientPut(tkey, tvalue)) {
         elog(ERROR, "RocksClientPut failed in insert");
@@ -870,6 +870,47 @@ static void nram_ExecutorEnd(QueryDesc *qd) {
 shmem_request_hook_type prev_shmem_request_hook = NULL;
 shmem_startup_hook_type prev_shmem_startup_hook = NULL;
 
+// #include "nodes/extensible.h"
+// #include "nodes/pathnodes.h"
+// #include "optimizer/planner.h"
+// #include "optimizer/paths.h"
+// #include "utils/rel.h"
+
+// set_rel_pathlist_hook_type prev_set_rel_pathlist_hook = NULL;
+// static bool nram_force_index = true;  /* GUC */
+// static Oid nram_am_oid = InvalidOid;
+
+// static void nram_set_rel_pathlist_hook(PlannerInfo *root, RelOptInfo *rel,
+//                                        Index rti, RangeTblEntry *rte) {
+//     if (prev_set_rel_pathlist_hook)
+//         prev_set_rel_pathlist_hook(root, rel, rti, rte);
+
+//     if (!nram_force_index || rte->rtekind != RTE_RELATION) return;
+
+//     /* Lazy init AM OID once */
+//     if (!OidIsValid(nram_am_oid)) nram_am_oid = get_table_am_oid("nram", false);
+//     Relation rel = table_open(rte->relid, NoLock);
+//     bool is_nram = (rel->->relam == nram_am_oid);
+//     table_close(rel, NoLock);
+//     if (get_rel_relam(rte->relid) != nram_am_oid)
+//         return;
+
+//     /* Prune SeqScanPath / BitmapHeapPath from rel->pathlist */
+//     List *kept = NIL;
+//     for (ListCell *lc = list_head(rel->pathlist); lc;
+//          lc = lnext(rel->pathlist, lc)) {
+//         Path *p = (Path *)lfirst(lc);
+//         if (p->pathtype == T_SeqScan || p->pathtype == T_BitmapHeapScan)
+//             continue; /* drop it */
+//         kept = lappend(kept, p);
+//     }
+//     rel->pathlist = kept;
+
+//     /* If nothing left (no usable index), ERROR to make the requirement explicit. */
+//     if (rel->pathlist == NIL)
+//         elog(ERROR, (errmsg("NRAM: no index path available and seqscan is disabled")));
+// }
+
 static void nram_shmem_request(void) {
     NRAM_INFO();
     if (prev_shmem_request_hook) prev_shmem_request_hook();
@@ -895,8 +936,8 @@ void _PG_init(void) {
     shmem_startup_hook = nram_shmem_startup;
     prev_ExecutorStart = ExecutorStart_hook;
     ExecutorStart_hook = nram_ExecutorStart;
-    prev_ExecutorEnd   = ExecutorEnd_hook;
-    ExecutorEnd_hook   = nram_ExecutorEnd;
+    prev_ExecutorEnd = ExecutorEnd_hook;
+    ExecutorEnd_hook = nram_ExecutorEnd;
 
     nram_init();
     nram_register_xact_hook();
@@ -910,7 +951,7 @@ void _PG_fini(void) {
     shmem_request_hook = prev_shmem_request_hook;
     shmem_startup_hook = prev_shmem_startup_hook;
     ExecutorStart_hook = prev_ExecutorStart;
-    ExecutorEnd_hook   = prev_ExecutorEnd;
+    ExecutorEnd_hook = prev_ExecutorEnd;
 }
 
 /* ------------------------------------------------------------------------

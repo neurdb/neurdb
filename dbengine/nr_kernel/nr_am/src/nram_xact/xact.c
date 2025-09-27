@@ -336,9 +336,11 @@ static void nram_xact_callback(XactEvent event, void *arg) {
                         // During read, we abort for pending writes. (peek lock here).
                         r = nram_try_validation_lock(opt->key, ShareLock);
                         if (r == LOCKACQUIRE_NOT_AVAIL) {
-                            elog(ERROR,
-                                "The transaction %u validation failed: concurrent update detected",
-                                current_nram_xact->xact_id);
+                            ereport(ERROR,
+                                    (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
+                                    errmsg("Transaction aborted during read set validation."),
+                                    errdetail("The transaction %u validation failed: concurrent update detected",
+                                current_nram_xact->xact_id)));
                         }
 
                         NRAMValue cur_val = RocksClientGet(opt->key);
@@ -351,7 +353,8 @@ static void nram_xact_callback(XactEvent event, void *arg) {
 
                         if (cur_val->xact_id != opt->xact_id) {
                             ereport(ERROR,
-                                    (errmsg("Transaction aborted during read set validation."),
+                                    (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
+                                    errmsg("Transaction aborted during read set validation."),
                                     errdetail("Transaction ID: %u", current_nram_xact->xact_id)));
                         }
 

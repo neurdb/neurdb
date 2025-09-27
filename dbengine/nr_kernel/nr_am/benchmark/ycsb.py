@@ -61,7 +61,7 @@ def pick_op(mix: Tuple[float,float,float]) -> str:
 # -------- Data prepopulation --------
 async def prepopulate(pool, table, n_keys, payload_bytes):
     pad = "x" * max(1, payload_bytes)
-    batch = 100
+    batch = 1000
     async with pool.acquire() as conn:
         existing = await conn.fetchval(f"SELECT count(*) FROM {table}")
         if existing >= n_keys:
@@ -77,47 +77,71 @@ async def prepopulate(pool, table, n_keys, payload_bytes):
 
 
 # -------- Worker --------
-async def worker(pool, sampler: ZipfSampler, args, stats, stop_event: asyncio.Event):
+async def run_txn(conn, sampler, args, stats, table, mix):
+    # one logical transaction worth of work
+    async with conn.transaction(isolation=args.isolation.lower()):
+        await conn.execute("SET enable_seqscan = off")
+        await conn.execute("SET enable_bitmapscan = off")
+        for _ in range(args.txn_length):
+            op = pick_op(mix)
+            k = sampler.sample()
+            if op == "READ":
+                await conn.fetchval(f"SELECT balance FROM {table} WHERE id = {k}")
+                stats["reads"] += 1
+            elif op == "UPDATE":
+                delta = random.randint(-10, 10)
+                await conn.execute(f"UPDATE {table} SET balance = balance + {delta} WHERE id = {k}")
+                stats["writes"] += 1
+            else:  # RMW
+                val = await conn.fetchval(f"SELECT balance FROM {table} WHERE id = {k}")
+                if val is None:
+                    raise RuntimeError(f"RMW failed: id={k} not found")
+                delta = random.randint(-10, 10)
+                await conn.execute(f"UPDATE {table} SET balance = balance + {delta} WHERE id = {k}")
+                stats["rmw"] += 1
+
+
+RETRYABLE_SQLSTATES = {"40001", 
+                       "40P01", 
+                       "55P03"}  # serialization, deadlock, lock timeout (optional)
+MAX_RETRIES = 5
+
+async def worker(pool, sampler, args, stats, stop_event):
     table = args.table
-    mix = WORKLOADS.get(args.workload.upper(), (args.read_ratio, 1.0-args.read_ratio, 0.0))
-    iso = args.isolation.upper()
-    iso_sql = {
-        "READ COMMITTED": "READ COMMITTED",
-        "REPEATABLE READ": "REPEATABLE READ",
-        "SERIALIZABLE": "SERIALIZABLE"
-    }.get(iso, "READ COMMITTED")
+    mix = WORKLOADS.get(args.workload.upper(), (args.read_ratio, 1.0 - args.read_ratio, 0.0))
 
     while not stop_event.is_set():
         t0 = time.perf_counter_ns()
         try:
             async with pool.acquire() as conn:
-                # set session defaults once per acquired connection
-                await conn.execute(f"SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL {iso_sql}")
-                async with conn.transaction():
-                    for _ in range(args.txn_length):
-                        op = pick_op(mix)
-                        k = sampler.sample()
-                        if op == "READ":
-                            await conn.fetchval(f"SELECT balance FROM {table} WHERE id={k}")
-                            stats["reads"] += 1
-                        elif op == "UPDATE":
-                            delta = random.randint(-10, 10)
-                            await conn.execute(f"UPDATE {table} SET balance=balance+{delta} WHERE id={k}")
-                            stats["writes"] += 1
-            stats["commits"] += 1
+                attempt = 0
+                while True:
+                    try:
+                        await run_txn(conn, sampler, args, stats, table, mix)
+                        stats["commits"] += 1
+                        stats["ops"] += args.txn_length
+                        break
+                    except Exception as e:
+                        stats["aborts"] += 1
+                        stats["ops"] += args.txn_length
+                        sqlstate = getattr(e, "sqlstate", None)
+                        if sqlstate in RETRYABLE_SQLSTATES and attempt < MAX_RETRIES:
+                            attempt += 1
+                            backoff = min(0.01 * (2 ** (attempt - 1)), 1.0)
+                            await asyncio.sleep(backoff)
+                            continue
+                        # non-retryable or retries exhausted: stop retrying
+                        raise
         except Exception as e:
+            # Already counted as abort above; just log
             print(f"[worker] transaction aborted: {e}")
-            stats["aborts"] += 1
         finally:
-            stats["ops"] += args.txn_length
             stats["latencies_ns"].append(time.perf_counter_ns() - t0)
 
 
-
 # -------- DB setup --------
-async def setup_db(pool, table, policy):
+async def setup_db(pool, table):
     sql = f"""
-    SET client_min_messages TO WARNING;
     DROP TABLE IF EXISTS {table};
     DROP EXTENSION IF EXISTS nram CASCADE;
     DROP ACCESS METHOD IF EXISTS nram;
@@ -129,11 +153,10 @@ async def setup_db(pool, table, policy):
       balance BIGINT NOT NULL,
       pad     TEXT NOT NULL DEFAULT ''
     ) USING nram;
-
-    SELECT nram_load_policy('{policy}');
+    CREATE INDEX IF NOT EXISTS accounts_id_inc ON accounts USING btree (id);
     """
+    
     async with pool.acquire() as conn:
-        # run as single batch
         await conn.execute(sql)
 
 
@@ -143,37 +166,43 @@ async def main():
     p.add_argument("--dsn", default=os.environ.get("PG_DSN","postgres://127.0.0.1/neurdb"),
                    help="NeurDB DSN (e.g. postgres://user:pass@host:5432/db)")
     p.add_argument("--table", default="accounts", help="Target table name")
-    p.add_argument("--n-keys", type=int, default=1_000_00, help="Number of keys")
+    p.add_argument("--n-keys", type=int, default=10000, help="Number of keys")
     p.add_argument("--payload-bytes", type=int, default=0, help="Size of text padding per row")
-    p.add_argument("--threads", type=int, default=8, help="Concurrent workers")
-    p.add_argument("--duration", type=int, default=30, help="Benchmark duration seconds")
+    p.add_argument("--threads", type=int, default=4, help="Concurrent workers")
+    p.add_argument("--duration", type=int, default=5, help="Benchmark duration seconds")
     p.add_argument("--warmup", type=int, default=2, help="Warmup seconds")
-    p.add_argument("--txn-length", type=int, default=1, help="Ops per transaction")
+    p.add_argument("--txn-length", type=int, default=10, help="Ops per transaction")
     p.add_argument("--workload", default="A", choices=list(WORKLOADS.keys())+["custom"],
                    help="YCSB mix: A/B/C/F or custom")
     p.add_argument("--read-ratio", type=float, default=0.5,
                    help="Used only if workload=custom (0..1)")
-    p.add_argument("--zipf-theta", type=float, default=0.99, help="Zipf skew (0=uniform)")
+    p.add_argument("--zipf-theta", type=float, default=0.8, help="Zipf skew (0=uniform)")
     p.add_argument("--isolation", default="SERIALIZABLE",
                    choices=["READ COMMITTED","REPEATABLE READ","SERIALIZABLE"])
-    p.add_argument("--preload", action="store_true", help="Prepopulate table to n-keys")
+    p.add_argument("--preload", action="store_false", help="Prepopulate table to n-keys")
     p.add_argument("--policy", default="occ", help="Call SELECT nram_load_policy('<name>')")
     args = p.parse_args()
     
-    print("[setup] running `make setup` …")
+    print("[setup] running `make setup` to cleanup the database …")
     rc = subprocess.call(["make", "setup"])
     if rc != 0:
         print(f"[setup] `make setup` failed with exit code {rc}, aborting.")
         return
     sampler = ZipfSampler(args.n_keys, args.zipf_theta)
+    
+    
+    print(f"[setup] connecting to database {args.dsn} with {args.threads} threads …")
+    async def init_conn(conn, iso_sql):
+        await conn.execute(f"SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL {iso_sql}")
+    iso_sql = args.isolation.upper()
+    pool = await asyncpg.create_pool(
+        dsn=args.dsn, min_size=args.threads, max_size=args.threads,
+    )
 
-    pool = await asyncpg.create_pool(dsn=args.dsn, min_size=args.threads, max_size=args.threads)
     print(f"[setup] preparing table {args.table} and loading policy {args.policy}")
-    await setup_db(pool, args.table, args.policy)
-
+    await setup_db(pool, args.table)
     async with pool.acquire() as c:
-        await c.execute("SET client_min_messages TO WARNING")
-        # Optional: set NRAM policy
+        # await c.execute("SET client_min_messages TO WARNING")
         if args.policy:
             await c.execute("SELECT nram_load_policy($1)", args.policy)
 
