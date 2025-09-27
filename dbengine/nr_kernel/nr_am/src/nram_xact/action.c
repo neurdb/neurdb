@@ -15,24 +15,16 @@ CachedAgentFunc GlobalCachedAgentFunc = NULL;
 
 static inline uint32 min_u32(uint32 x, uint32 y) { return (x < y) ? x : y; }
 
-/* 10-bit encoding:
- * [9]      : cur_op (1 bit)
- * [8..4]   : n_access (5 bits, 0..31, clamped)
- * --> [3..0]   : n_dep (2 bits, 0..15, clamped)
- * Total    : 10 bits -> 0..1023 == MAX_XACT_FEATURE_SPACE-1
- */
 static inline uint32 encode_feature_10bit(const XactFeature feature) {
     uint32 op = (feature->cur_op ? 1U : 0U);      /* 1 bit  */
-    uint32 acc = min_u32(feature->n_access, 31U); /* 5 bits */
-    // uint32 dep = min_u32(feature->n_dep,    15U);          /* 4 bits */
-    // disabled by now.
+    uint32 acc = min_u32(feature->n_access, 15U); /* 4 bits */
 
     uint32 idx = 0;
     idx |= op;
-    idx <<= 5;
+    idx <<= 4;
     idx |= acc;
 
-    return idx; /* 0..64 */
+    return idx; /* 0..32 */
 }
 
 /* ---------- Shared state backing ---------- */
