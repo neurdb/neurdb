@@ -39,8 +39,6 @@ ISOLATION_EXPECTED = $(ISOLATIONDIR)
 ISOLATION_OUTPUT = $(ISOLATIONDIR)
 ISOLATION_SQL = $(ISOLATIONDIR)
 
-ROCKSDB_SERVER_SRC = ${EXTPATH}/server/server.c
-ROCKSDB_SERVER_BIN = ${EXTPATH}/server/server
 ROCKSDB_LIB_PATH = /usr/local/lib
 ROCKSDB_INC_PATH = /usr/local/include
 
@@ -59,7 +57,6 @@ debug:#
 test:
 	rm -rf ../logfile
 	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
-	$(ROCKSDB_SERVER_BIN) & sleep 1  # Give server time to start
 	make clean
 	make debug -j
 	sudo make install
@@ -72,7 +69,6 @@ test:
 unit-test:
 	rm -rf ../logfile
 	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
-	$(ROCKSDB_SERVER_BIN) & sleep 1  # Give server time to start
 	make clean
 	make debug -j
 	sudo make install
@@ -86,7 +82,6 @@ unit-test:
 setup:
 	rm -rf ../logfile
 	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
-	$(ROCKSDB_SERVER_BIN) & sleep 1  # Give server time to start
 	make clean
 	make debug -j
 	sudo make install
