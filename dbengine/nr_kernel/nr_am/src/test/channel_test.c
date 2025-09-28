@@ -267,7 +267,7 @@ void run_channel_multiprocess_test(void) {
     /* Parent waits */
     if (WaitForBackgroundWorkerShutdown(handle_producer) != BGWH_STOPPED)
         elog(ERROR, "producer did not stop cleanly");
-    
+
     if (WaitForBackgroundWorkerShutdown(handle_consumer) != BGWH_STOPPED)
         elog(ERROR, "consumer did not stop cleanly");
 

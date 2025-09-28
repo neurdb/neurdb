@@ -450,4 +450,3 @@ void before_access(NRAMXactState state) {
     MyProc->rank = state->action->priority;    // set the wait priority.
     LockTimeout = state->action->timeout;  // set the wait timeout.
 }
-

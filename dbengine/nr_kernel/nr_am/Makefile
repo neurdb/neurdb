@@ -88,4 +88,4 @@ setup:
 	bash ../scripts/restart_db.sh
 	psql -d neurdb -f ./sql/clean.sql
 	psql -d neurdb -f ./sql/init.sql
-	
+

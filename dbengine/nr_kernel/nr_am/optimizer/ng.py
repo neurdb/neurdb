@@ -1,5 +1,6 @@
-import time
 import json
+import time
+
 import nevergrad as ng
 from cc_optimizer import CCLearner, Policy
 
@@ -40,7 +41,9 @@ def benchmark_optimizer(learner: CCLearner, optimizer_class, neval: int = 100):
     # Seed with starting points if provided
     if learner.training_stage == 0 and learner.starting_points:
         for p in learner.starting_points:
-            candidate = optimizer.parametrization.spawn_child(new_value=((), p.encode()))
+            candidate = optimizer.parametrization.spawn_child(
+                new_value=((), p.encode())
+            )
             optimizer.tell(candidate, evaluate(*candidate.args, **candidate.kwargs))
         learner.starting_points = None
 
@@ -96,10 +99,14 @@ def training(command, fin_log_dir, state_size, start_policy=None, neval=1000):
         if learner.best_policy is not None:
             print(
                 "Starting a new training stage {round}, at iteration {iter} got value {best}!".format(
-                    round=learner.training_stage, iter=learner.current_iter, best=learner.best_policy.score
+                    round=learner.training_stage,
+                    iter=learner.current_iter,
+                    best=learner.best_policy.score,
                 )
             )
-        print(f"Completed {name} in {duration:.2f} seconds, best score: {best_score:.4f}")
+        print(
+            f"Completed {name} in {duration:.2f} seconds, best score: {best_score:.4f}"
+        )
 
     learner.close()
     return results
