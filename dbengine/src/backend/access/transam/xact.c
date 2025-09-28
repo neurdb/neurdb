@@ -2014,7 +2014,7 @@ AdjustTransaction()
 
     if (tb != TBLOCK_INPROGRESS && tb != TBLOCK_PARALLEL_INPROGRESS)
         return;
-		
+
     if (XactLockStrategy == LOCK_ASSERT_ABORT)
     {
         ereport(ERROR,

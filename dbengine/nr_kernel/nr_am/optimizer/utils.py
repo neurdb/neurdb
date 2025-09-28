@@ -2,33 +2,33 @@
 
 import datetime
 import os
+import re
 import signal
 import subprocess
-import re
 import time
-
 
 eps = 1e-5
 
 
-def save_arg_dict(d, base_dir='./', filename='args.txt', log=True):
+def save_arg_dict(d, base_dir="./", filename="args.txt", log=True):
     def _format_value(vx):
         if isinstance(v, float):
-            return '%.8f' % vx
+            return "%.8f" % vx
         elif isinstance(v, int):
-            return '%d' % vx
+            return "%d" % vx
         else:
-            return '%s' % str(vx)
+            return "%s" % str(vx)
 
-    with open(os.path.join(base_dir, filename), 'w') as f:
+    with open(os.path.join(base_dir, filename), "w") as f:
         for k, v in d.items():
-            f.write('%s\t%s\n' % (k, _format_value(v)))
+            f.write("%s\t%s\n" % (k, _format_value(v)))
     if log:
-        print('Saved settings to %s' % os.path.join(base_dir, filename))
+        print("Saved settings to %s" % os.path.join(base_dir, filename))
 
 
 def mkdir_p(path, log=True):
     import errno
+
     try:
         os.makedirs(path)
     except OSError as exc:
@@ -37,13 +37,17 @@ def mkdir_p(path, log=True):
         else:
             raise
     if log:
-        print('Created directory %s' % path)
+        print("Created directory %s" % path)
 
 
-def date_filename(base_dir='./', prefix=''):
+def date_filename(base_dir="./", prefix=""):
     dt = datetime.datetime.now()
-    return os.path.join(base_dir, '{}{}_{:02d}-{:02d}-{:02d}'.format(
-        prefix, dt.date(), dt.hour, dt.minute, dt.second))
+    return os.path.join(
+        base_dir,
+        "{}{}_{:02d}-{:02d}-{:02d}".format(
+            prefix, dt.date(), dt.hour, dt.minute, dt.second
+        ),
+    )
 
 
 def setup(args):
@@ -57,17 +61,18 @@ def setup(args):
 
 
 REGEX_THR = re.compile(
-    r'^\s*Throughput\s*:\s*([0-9][0-9,]*(?:\.\d+)?)\s*(?:tps|ops/s)\b',
+    r"^\s*Throughput\s*:\s*([0-9][0-9,]*(?:\.\d+)?)\s*(?:tps|ops/s)\b",
     re.IGNORECASE | re.MULTILINE,
 )
 
 REGEX_CA = re.compile(
-    r'^\s*Commits/Aborts\s*:\s*([0-9][0-9,]*)\s*/\s*([0-9][0-9,]*)\b',
+    r"^\s*Commits/Aborts\s*:\s*([0-9][0-9,]*)\s*/\s*([0-9][0-9,]*)\b",
     re.IGNORECASE | re.MULTILINE,
 )
 
+
 def _num(s: str) -> float:
-    return float(s.replace(',', ''))
+    return float(s.replace(",", ""))
 
 
 def parse(return_string: str):
@@ -76,14 +81,14 @@ def parse(return_string: str):
         return 0.0, 0.0
 
     thr_m = REGEX_THR.search(return_string)
-    ca_m  = REGEX_CA.search(return_string)
+    ca_m = REGEX_CA.search(return_string)
 
     throughput = _num(thr_m.group(1)) if thr_m else 0.0
 
     if ca_m:
         commits = _num(ca_m.group(1))
-        aborts  = _num(ca_m.group(2))
-        total   = commits + aborts
+        aborts = _num(ca_m.group(2))
+        total = commits + aborts
         abort_rate = (aborts / total) if total > 0 else 0.0
     else:
         abort_rate = 0.0
@@ -92,10 +97,10 @@ def parse(return_string: str):
 
 
 def run(command, die_after=0):
-    extra = {} if die_after == 0 else {'preexec_fn': os.setsid}
+    extra = {} if die_after == 0 else {"preexec_fn": os.setsid}
     process = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        shell=True, **extra)
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, **extra
+    )
     for _ in range(die_after if die_after > 0 else 600):
         if process.poll() is not None:
             break
@@ -105,16 +110,16 @@ def run(command, die_after=0):
         try:
             os.killpg(os.getpgid(process.pid), signal.SIGTERM)
         except Exception as e:
-            print('{}, but continuing'.format(e))
-        assert die_after != 0, 'Should only time out with die_after set'
-        print('Failed with return code {}'.format(process.returncode))
+            print("{}, but continuing".format(e))
+        assert die_after != 0, "Should only time out with die_after set"
+        print("Failed with return code {}".format(process.returncode))
         print("error running: ", command)
         process.stdout.flush()
-        return process.stdout.read().decode('utf-8')
+        return process.stdout.read().decode("utf-8")
     elif out_code > 0:
-        print('Failed with return code {}'.format(process.returncode))
+        print("Failed with return code {}".format(process.returncode))
         print("error running: ", command)
         process.stdout.flush()
-        return process.stdout.read().decode('utf-8')
+        return process.stdout.read().decode("utf-8")
     process.stdout.flush()
-    return process.stdout.read().decode('utf-8')
+    return process.stdout.read().decode("utf-8")
