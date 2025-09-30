@@ -407,8 +407,10 @@ ExecutePlan(EState *estate, PlanState *planstate,
 		 * Count tuples processed, if this is a SELECT.  (For other operation
 		 * types, the ModifyTable plan node must count the appropriate
 		 * events.)
+		 * 
+		 * NEURDB: PREDICT has same execution logic as SELECT
 		 */
-		if (operation == CMD_SELECT)
+		if (operation == CMD_SELECT || operation == CMD_PREDICT)
 			(estate->es_processed)++;
 
 		/*
@@ -666,6 +668,7 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 	switch (queryDesc->operation)
 	{
 		case CMD_SELECT:
+		case CMD_PREDICT: /* PREDICT has same execution steps as SELECT */
 
 			/*
 			 * SELECT FOR [KEY] UPDATE/SHARE and modifying CTEs need to mark
@@ -685,16 +688,16 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 				eflags |= EXEC_FLAG_SKIP_TRIGGERS;
 			break;
 
-		case CMD_PREDICT:
+		// case CMD_PREDICT:
 
-			elog(DEBUG1, "[NeurDB_ExecutorStart], case in the CMD_PREDICT");
+			// elog(DEBUG1, "[NeurDB_ExecutorStart], case in the CMD_PREDICT");
 
 			/*
 			 * Bypass the trigger which are often associated with INSERT,
 			 * UPDATE, and DELETE operations
 			 */
-			eflags |= EXEC_FLAG_SKIP_TRIGGERS;
-			break;
+			// eflags |= EXEC_FLAG_SKIP_TRIGGERS;
+			// break;
 
 		case CMD_INSERT:
 		case CMD_DELETE:
@@ -782,8 +785,13 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 	 */
 	estate->es_processed = 0;
 
+	/* 
+	 * NEURDB: We need to set sendTuples for PREDICT, otherwise ExecutePlan() will not call 
+	 * dest->receiveSlot()
+	 */
 	sendTuples =
-		(operation == CMD_SELECT || queryDesc->plannedstmt->hasReturning);
+		(operation == CMD_SELECT || operation == CMD_PREDICT 
+			|| queryDesc->plannedstmt->hasReturning);
 
 	if (sendTuples)
 		dest->rStartup(dest, operation, queryDesc->tupDesc);
