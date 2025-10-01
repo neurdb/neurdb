@@ -119,24 +119,12 @@
 #include "miscadmin.h"
 #include "nodes/nodeFuncs.h"
 
+#include "nodePredict.h"
+
 static TupleTableSlot *ExecProcNodeFirst(PlanState *node);
 static TupleTableSlot *ExecProcNodeInstr(PlanState *node);
 static bool ExecShutdownNode_walker(PlanState *node, void *context);
 
-
-
-static NeurDBPredictState *
-ExecNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
-{
-	NeurDBPredictState *result = makeNode(NeurDBPredictState);
-
-	result->ps.plan = (Plan *) node;
-	/* result->targetList = node->targetList; */
-	/* result->fromClause = node->fromClause; */
-	result->stmt = node->stmt;
-
-	return result;
-}
 
 /* ------------------------------------------------------------------------
  *		ExecInitNode
@@ -404,8 +392,8 @@ NeurDB_ExecInitNode(Plan *node, EState *estate, int eflags)
 			break;
 
 		case T_NeurDBPredict:
-			result = (PlanState *) ExecNeurDBPredict((NeurDBPredict *) node,
-													 estate, eflags);
+			result = (PlanState *) ExecInitNeurDBPredict((NeurDBPredict *) node,
+														 estate, eflags);
 			break;
 
 		default:
@@ -567,28 +555,6 @@ MultiExecProcNode(PlanState *node)
 
 	return result;
 }
-
-void
-ExecEndNeurDBPredict(NeurDBPredictState * node)
-{
-	/*
-	 * Free the exprcontext
-	 */
-	ExecFreeExprContext(&node->ps);
-
-	/*
-	 * clean out the tuple table
-	 *
-	 * TEMP: For now, no tuple table stored in result slot
-	 */
-	// ExecClearTuple(node->ps.ps_ResultTupleSlot);
-
-	/*
-	 * shut down subplans
-	 */
-	ExecEndNode(outerPlanState(node));
-}
-
 
 /* ----------------------------------------------------------------
  *		ExecEndNode

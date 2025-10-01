@@ -13,7 +13,6 @@
 #include "utils/snapmgr.h"
 
 #include "parser/parse_node.h"
-#include "predict.h"
 
 /* --- START ---------------------------------------------------------------- */
 
@@ -274,7 +273,7 @@ InitPlan(QueryDesc *queryDesc, int eflags)
 	 * Initialize the junk filter if needed.  SELECT queries need a filter if
 	 * there are any junk attrs in the top-level tlist.
 	 */
-	if (operation == CMD_SELECT)
+	if (operation == CMD_SELECT || operation == CMD_PREDICT)
 	{
 		bool		junk_filter_needed = false;
 		ListCell   *tlist;
@@ -407,7 +406,7 @@ ExecutePlan(EState *estate, PlanState *planstate,
 		 * Count tuples processed, if this is a SELECT.  (For other operation
 		 * types, the ModifyTable plan node must count the appropriate
 		 * events.)
-		 * 
+		 *
 		 * NEURDB: PREDICT has same execution logic as SELECT
 		 */
 		if (operation == CMD_SELECT || operation == CMD_PREDICT)
@@ -472,6 +471,7 @@ NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
 		return;
 	}
 
+#if 0
 	if (operation == CMD_PREDICT)
 	{
 		if (planstate == NULL)
@@ -501,11 +501,14 @@ NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
 	}
 	else
 	{
+#endif
 		elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecutePlan");
 		ExecutePlan(estate, planstate, use_parallel_mode, operation, sendTuples,
 					numberTuples, direction, dest, execute_once);
 		elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Finished ExecutePlan");
+#if 0
 	}
+#endif
 }
 
 /* ----------------------------------------------------------------
@@ -668,7 +671,7 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 	switch (queryDesc->operation)
 	{
 		case CMD_SELECT:
-		case CMD_PREDICT: /* PREDICT has same execution steps as SELECT */
+		case CMD_PREDICT:		/* PREDICT has same execution steps as SELECT */
 
 			/*
 			 * SELECT FOR [KEY] UPDATE/SHARE and modifying CTEs need to mark
@@ -688,16 +691,19 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 				eflags |= EXEC_FLAG_SKIP_TRIGGERS;
 			break;
 
-		// case CMD_PREDICT:
+			/* case CMD_PREDICT: */
 
-			// elog(DEBUG1, "[NeurDB_ExecutorStart], case in the CMD_PREDICT");
+			/*
+			 * elog(DEBUG1, "[NeurDB_ExecutorStart], case in the
+			 * CMD_PREDICT");
+			 */
 
 			/*
 			 * Bypass the trigger which are often associated with INSERT,
 			 * UPDATE, and DELETE operations
 			 */
-			// eflags |= EXEC_FLAG_SKIP_TRIGGERS;
-			// break;
+			/* eflags |= EXEC_FLAG_SKIP_TRIGGERS; */
+			/* break; */
 
 		case CMD_INSERT:
 		case CMD_DELETE:
@@ -785,13 +791,13 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 	 */
 	estate->es_processed = 0;
 
-	/* 
-	 * NEURDB: We need to set sendTuples for PREDICT, otherwise ExecutePlan() will not call 
-	 * dest->receiveSlot()
+	/*
+	 * NEURDB: We need to set sendTuples for PREDICT, otherwise ExecutePlan()
+	 * will not call dest->receiveSlot()
 	 */
 	sendTuples =
-		(operation == CMD_SELECT || operation == CMD_PREDICT 
-			|| queryDesc->plannedstmt->hasReturning);
+		(operation == CMD_SELECT || operation == CMD_PREDICT
+		 || queryDesc->plannedstmt->hasReturning);
 
 	if (sendTuples)
 		dest->rStartup(dest, operation, queryDesc->tupDesc);

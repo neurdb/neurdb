@@ -999,6 +999,12 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 		PlannedStmt *stmt;
 
 		/* TEMP: Skip planning for PREDICT queries */
+		/* 
+		 * UPDATE (2025.09.23): Try to unify PREDICT and SELECT queries. 
+		 * This means that we are now making a PREDICT query go through all 
+		 * normal planning-execution steps. 
+		 */
+#if 0
 		if (query->commandType == CMD_PREDICT)
 		{
 			/* Utility commands require no planning. */
@@ -1010,8 +1016,9 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 			stmt->stmt_len = query->stmt_len;
 			stmt->queryId = query->queryId;
 		}
-                /* Commands like EXPLAIN, VACUUM are handled directly without invoking the query planner. */
-                else if (query->commandType == CMD_UTILITY)
+#endif
+        /* Commands like EXPLAIN, VACUUM are handled directly without invoking the query planner. */
+		if (query->commandType == CMD_UTILITY)
 		{
 			/* Utility commands require no planning. */
 			stmt = makeNode(PlannedStmt);

@@ -252,12 +252,13 @@ static Path *get_cheapest_fractional_path(RelOptInfo *rel,
 										  double tuple_fraction);
 
 static Expr *preprocess_phv_expression(PlannerInfo *root, Expr *expr);
+
 /* END NeurDB: Limit helper functions to local scope */
 
 
 PlannedStmt *
 NeurDB_planner(Query *parse, const char *query_string, int cursorOptions,
-				 ParamListInfo boundParams)
+			   ParamListInfo boundParams)
 {
 	PlannedStmt *result;
 	PlannerGlobal *glob;
@@ -385,6 +386,7 @@ NeurDB_planner(Query *parse, const char *query_string, int cursorOptions,
 	}
 
 	/* primary planning entry point (may recurse for subqueries) */
+
 	root = subquery_planner(glob, parse, NULL,
 							false, tuple_fraction);
 
@@ -393,6 +395,28 @@ NeurDB_planner(Query *parse, const char *query_string, int cursorOptions,
 	best_path = get_cheapest_fractional_path(final_rel, tuple_fraction);
 
 	top_plan = create_plan(root, best_path);
+
+	/*
+	 * NeurDB: We perform a trick for this by only considering the subquery
+	 * for CMD_PREDICT
+	 */
+	if (parse->commandType == CMD_PREDICT)
+	{
+		/* Add NeurDBPredict node to the top plan */
+		NeurDBPredict *top_plan_add_predict = makeNode(NeurDBPredict);
+		top_plan_add_predict->plan.targetlist = parse->predictTargetList;
+		top_plan_add_predict->plan.qual = NIL;
+		top_plan_add_predict->plan.lefttree = top_plan;
+		top_plan_add_predict->plan.righttree = NULL;
+		top_plan_add_predict->plan.startup_cost = top_plan->startup_cost;
+		top_plan_add_predict->plan.total_cost = top_plan->total_cost;
+		top_plan_add_predict->plan.plan_rows = top_plan->plan_rows;
+		top_plan_add_predict->plan.plan_width = top_plan->plan_width;
+		top_plan_add_predict->plan.parallel_aware = false;
+		top_plan_add_predict->plan.parallel_safe = false;
+
+		top_plan = top_plan_add_predict;
+	}
 
 	/*
 	 * If creating a plan for a scrollable cursor, make sure it can run

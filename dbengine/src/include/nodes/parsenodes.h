@@ -235,6 +235,10 @@ typedef struct Query
 	int			stmt_location;
 	/* length in bytes; 0 means "rest of string" */
 	int			stmt_len pg_node_attr(query_jumble_ignore);
+
+	/* NeurDB */
+	List 		*predictTargetList; /* target list */
+	Node		*predictStmt; /* original statement */
 } Query;
 
 
