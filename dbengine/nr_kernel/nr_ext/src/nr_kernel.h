@@ -38,9 +38,9 @@ extern ExecutorFinish_hook_type original_executorfinish_hook;
 
 PlannedStmt *NeurDB_planner(Query *parse, const char *query_string, int cursorOptions, ParamListInfo boundParams);
 
-void NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags);
-void NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction, uint64 count, bool execute_once);
-void NeurDB_ExecutorEnd(QueryDesc *queryDesc);
-void NeurDB_ExecutorFinish(QueryDesc *queryDesc);
+void		NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags);
+void		NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction, uint64 count, bool execute_once);
+void		NeurDB_ExecutorEnd(QueryDesc *queryDesc);
+void		NeurDB_ExecutorFinish(QueryDesc *queryDesc);
 
 #endif
