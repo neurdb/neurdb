@@ -999,10 +999,10 @@ pg_plan_queries(List *querytrees, const char *query_string, int cursorOptions,
 		PlannedStmt *stmt;
 
 		/* TEMP: Skip planning for PREDICT queries */
-		/* 
-		 * UPDATE (2025.09.23): Try to unify PREDICT and SELECT queries. 
-		 * This means that we are now making a PREDICT query go through all 
-		 * normal planning-execution steps. 
+		/*
+		 * UPDATE (2025.09.23): Try to unify PREDICT and SELECT queries.
+		 * This means that we are now making a PREDICT query go through all
+		 * normal planning-execution steps.
 		 */
 #if 0
 		if (query->commandType == CMD_PREDICT)

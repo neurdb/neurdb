@@ -3709,7 +3709,7 @@ RewriteQuery(Query *parsetree, List *rewrite_events, int orig_rt_length)
 	 * SELECT rules are handled later when we have all the queries that should
 	 * get executed.  Also, utilities aren't rewritten at all (do we still
 	 * need that check?)
-	 * 
+	 *
 	 * NEURDB: Same as SELECT
 	 */
 	if (event != CMD_SELECT && event != CMD_PREDICT && event != CMD_UTILITY)

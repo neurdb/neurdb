@@ -3618,7 +3618,7 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	/* transform targetlist */
 	qry->predictTargetList = transformTargetList(pstate, stmt->targetList,
 										  EXPR_KIND_SELECT_TARGET);
-	
+
 	/* assign range tables */
 	qry->rtable = pstate->p_rtable;
 	if (list_length(qry->rtable) != 1)
@@ -3631,8 +3631,8 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	rte = linitial(qry->rtable);
 	if (rte->rtekind == RTE_RELATION)
 	{
-		/* 
-		 * if statement is like: PREDICT ... OF r1, r2, ..., rn FROM t, 
+		/*
+		 * if statement is like: PREDICT ... OF r1, r2, ..., rn FROM t,
 		 * then the target list should be r1, r2, ..., rn (same as parsed
 		 * result from stmt->targetList)
 		 */
