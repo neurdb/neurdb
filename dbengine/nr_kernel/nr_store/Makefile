@@ -19,7 +19,7 @@ cargo:
 	  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y )
 
 external: cargo
-	bash scripts/build_external.sh
+	bash script/build_external.sh
 
 configure: external
 	mkdir -p $(BUILD_DIR)
