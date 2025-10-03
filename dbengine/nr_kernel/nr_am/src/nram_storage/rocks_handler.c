@@ -9,6 +9,7 @@ static KVChannel *ServerChannel = NULL;
 
 static inline KVChannel* GetRespChannel(void) {
     char resp_name[NAMEDATALEN];
+    NRAM_INFO();
 
     if (RespChannel != NULL)
         return RespChannel;
@@ -19,6 +20,7 @@ static inline KVChannel* GetRespChannel(void) {
 }
 
 static inline KVChannel* GetServerChannel(void) {
+    NRAM_INFO();
     if (ServerChannel != NULL)
         return ServerChannel;
 
@@ -38,6 +40,8 @@ bool RocksClientPut(NRAMKey key, NRAMValue value) {
     char *serialized_val = tvalue_serialize(value, &val_len);
     KVMsg *msg = NewMsg(kv_put, key->tableOid, kv_status_none, MyProcPid), *resp;
     bool ok, success;
+
+    NRAM_INFO();
 
     total_len = key_len + val_len + sizeof(Size);
 
@@ -81,6 +85,8 @@ NRAMValue RocksClientGet(NRAMKey key) {
     KVMsg *msg = NewMsg(kv_get, key->tableOid, kv_status_none, MyProcPid), *resp;
     bool ok, success;
     NRAMValue val_out;
+
+    NRAM_INFO();
 
     msg->header.entitySize = key_len;
     msg->entity = serialized_key;
@@ -150,8 +156,8 @@ bool RocksClientRangeScan(NRAMKey start_key, NRAMKey end_key,
 
     if (success) {
         ptr = resp->entity;
-        memcpy(out_count, ptr, sizeof(int));
-        ptr += sizeof(int);
+        memcpy(out_count, ptr, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
 
         *out_keys = palloc(sizeof(NRAMKey) * (*out_count));
         *out_values = palloc(sizeof(NRAMValue) * (*out_count));

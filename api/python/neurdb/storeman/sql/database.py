@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import psycopg2
 from neurdb.logger import logger
 
-from ..common.storage import ModelStorage
+from ..common.storage import ModelStorage, Pickled, PickledList
 from ..config import Configuration
 from ..utils.hash import Hash
 from .entity import LayerEntity, ModelEntity
@@ -25,7 +25,7 @@ class NeurDB:
         self.database = Database(db_name, db_user, db_host, db_port)
         self._init_neurdb()
 
-    def save_model(self, model_storage_pickle: ModelStorage.Pickled) -> int:
+    def save_model(self, model_storage_pickle: Pickled) -> int:
         """
         Save the model to the database
         @param ModelStorage.Pickled model_storage_pickle: pickled representation of the model
@@ -45,7 +45,11 @@ class NeurDB:
             self._save_layer_entity(layer_entity)
         return model_id
 
-    def load_model(self, model_id: int) -> ModelStorage.Pickled:
+    def load_model(self, model_id: int) -> ModelStorage.PickledModel:
+        model_meta, layer_sequence_pickled = self._load_meta_and_layers(model_id)
+        return ModelStorage.PickledModel(model_meta, layer_sequence_pickled)
+
+    def _load_meta_and_layers(self, model_id: int) -> Tuple[bytes, List[bytes]]:
         """
         Load the model from the database
         @param int model_id: model id
@@ -85,7 +89,11 @@ class NeurDB:
 
         layer_sequence_pickled = [layer[3] for layer in selected_layers]
 
-        return ModelStorage.Pickled(model_meta, layer_sequence_pickled)
+        return model_meta, layer_sequence_pickled
+
+    def load_list(self, model_id: int) -> Pickled:
+        model_meta, layer_sequence_pickled = self._load_meta_and_layers(model_id)
+        return PickledList(model_meta, layer_sequence_pickled)
 
     def update_model(self, model_id: int, layer_id: int, layer_data: bytes) -> None:
         """
@@ -128,6 +136,17 @@ class NeurDB:
         """
         features_hash = Hash.md5_list(feature_columns)
         targets_hash = Hash.md5_list(target_columns)
+
+        logger.debug(
+            "register model",
+            model_id=model_id,
+            table_name=table_name,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+            feature_hash=features_hash,
+            target_hash=targets_hash,
+        )
+
         self.database.insert(
             "router",
             ["model_id", "table_name", "feature_columns", "target_columns"],

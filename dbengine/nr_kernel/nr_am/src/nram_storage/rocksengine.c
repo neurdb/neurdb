@@ -393,8 +393,8 @@ void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key
         /* Dynamic array expansion */
         if (count >= capacity) {
             capacity *= 2;
-            *keys = realloc(*keys, sizeof(NRAMKey) * capacity);
-            *values = realloc(*values, sizeof(NRAMValue) * capacity);
+            *keys = repalloc(*keys, sizeof(NRAMKey) * capacity);
+            *values = repalloc(*values, sizeof(NRAMValue) * capacity);
         }
 
         (*keys)[count] = tkey;

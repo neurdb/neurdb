@@ -3766,8 +3766,11 @@ connection_warnings(bool in_startup)
 		 * predates our support cutoff (currently 9.2).
 		 * NEURDB: Version re-counted
 		 */
+#if defined(NR_COMPATIBLE_PG_VERSION)
+		if (pset.sversion / 100 > client_ver / 100 || pset.sversion < 90200) {
+#else
 		if (pset.sversion / 100 > client_ver / 100) {
-		/* || pset.sversion < 90200) */
+#endif
 			printf(_("WARNING: %s major version %s, server major version %s.\n"
 					 "         Some psql features might not work.\n"),
 				   pset.progname,
@@ -5514,8 +5517,10 @@ get_create_object_cmd(EditableObjectType obj_type, Oid oid,
 			 * separately.  Materialized views (introduced in 9.3) may have
 			 * arbitrary storage parameter reloptions.
 			 */
+#if defined(NR_COMPATIBLE_PG_VERSION)
 			if (pset.sversion >= 90400)
 			{
+#endif
 				printfPQExpBuffer(query,
 								  "SELECT nspname, relname, relkind, "
 								  "pg_catalog.pg_get_viewdef(c.oid, true), "
@@ -5526,6 +5531,7 @@ get_create_object_cmd(EditableObjectType obj_type, Oid oid,
 								  "LEFT JOIN pg_catalog.pg_namespace n "
 								  "ON c.relnamespace = n.oid WHERE c.oid = %u",
 								  oid);
+#if defined(NR_COMPATIBLE_PG_VERSION)
 			}
 			else
 			{
@@ -5539,6 +5545,7 @@ get_create_object_cmd(EditableObjectType obj_type, Oid oid,
 								  "ON c.relnamespace = n.oid WHERE c.oid = %u",
 								  oid);
 			}
+#endif
 			break;
 	}
 

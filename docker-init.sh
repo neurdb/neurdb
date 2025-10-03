@@ -110,7 +110,7 @@ echo "Install NR Data Pipeline Extension & NR kernel extension Done"
 # Run python server
 cd $NR_AIENGINE_PATH/runtime
 export NR_LOG_LEVEL=INFO  # Set log level
-nohup python -m hypercorn server:app -c app_config.toml &
+nohup python server.py &
 echo 'Python Server started!'
 
 echo "Please use 'control + c' to exit the logging print"

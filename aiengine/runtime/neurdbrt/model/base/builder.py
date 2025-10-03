@@ -38,6 +38,8 @@ class BuilderBase(ABC):
         train_batch_num: int,
         eva_batch_num: int,
         test_batch_num: int,
+        feature_names: List[str],
+        target_name: str,
     ):
         """
         :param train_loader:
@@ -47,18 +49,26 @@ class BuilderBase(ABC):
         :param train_batch_num: batch in each epoch
         :param eva_batch_num: overall batch
         :param test_batch_num: overall batch
+        :param features: feature names
+        :param target: target name
         :return:
         """
         pass
 
     @abstractmethod
     async def inference(
-        self, test_loader: Union[DataLoader, StreamingDataSet], inf_batch_num: int
+        self,
+        test_loader: Union[DataLoader, StreamingDataSet],
+        inf_batch_num: int,
+        feature_names: List[str],
+        target_name: str,
     ) -> List[List[Any]]:
         """
 
         :param test_loader:
         :param inf_batch_num:
+        :param features: feature names
+        :param target: target name
         :return:
         """
         pass

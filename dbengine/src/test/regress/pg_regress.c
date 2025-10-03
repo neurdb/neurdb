@@ -6,8 +6,7 @@
  * the regression tests, and should be mostly compatible with it.
  * Initial author of C translation: Magnus Hagander
  *
- * This code is released under the terms of the PostgreSQL License.
- *
+ * Portions Copyright (c) 2024-2025, NeurDB
  * Portions Copyright (c) 1996-2023, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
@@ -2150,7 +2149,7 @@ regression_main(int argc, char *argv[],
 				help();
 				exit(0);
 			case 'V':
-				puts("pg_regress (PostgreSQL) " PG_VERSION);
+				puts("pg_regress (NeurDB) " PG_VERSION);
 				exit(0);
 			case 1:
 
@@ -2393,7 +2392,7 @@ regression_main(int argc, char *argv[],
 		 * Check if there is a postmaster running already.
 		 */
 		snprintf(buf2, sizeof(buf2),
-				 "\"%s%spsql\" -X postgres <%s 2>%s",
+				 "\"%s%spsql\" -X neurdb <%s 2>%s",
 				 bindir ? bindir : "",
 				 bindir ? "/" : "",
 				 DEVNULL, DEVNULL);
@@ -2410,7 +2409,7 @@ regression_main(int argc, char *argv[],
 					note("port %d apparently in use", port);
 					if (!port_specified_by_user)
 						note("could not determine an available port");
-					bail("Specify an unused port using the --port option or shut down any conflicting PostgreSQL servers.");
+					bail("Specify an unused port using the --port option or shut down any conflicting NeurDB servers.");
 				}
 
 				note("port %d apparently in use, trying %d", port, port + 1);
