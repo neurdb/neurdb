@@ -1,7 +1,7 @@
 # Testing recall
 
 Selecting HNSW parameters for a specific use case highly impacts the search quality. One way to test the quality of the constructed index is to compare the HNSW search results to the actual results (i.e., the actual `k` nearest neighbors).
-For that cause, the API enables creating a simple "brute-force" index in which vectors are stored as is, and searching for the `k` nearest neighbors to a query vector requires going over the entire index.  
+For that cause, the API enables creating a simple "brute-force" index in which vectors are stored as is, and searching for the `k` nearest neighbors to a query vector requires going over the entire index.
 Comparing between HNSW and brute-force results may help with finding the desired HNSW parameters for achieving a satisfying recall, based on the index size and data dimension.
 
 ### Brute force index API

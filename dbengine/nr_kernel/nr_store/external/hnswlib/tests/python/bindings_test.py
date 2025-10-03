@@ -1,9 +1,8 @@
 import os
 import unittest
 
-import numpy as np
-
 import hnswlib
+import numpy as np
 
 
 class RandomSelfTestCase(unittest.TestCase):
@@ -16,7 +15,7 @@ class RandomSelfTestCase(unittest.TestCase):
         data = np.float32(np.random.random((num_elements, dim)))
 
         # Declaring index
-        p = hnswlib.Index(space='l2', dim=dim)  # possible options are l2, cosine or ip
+        p = hnswlib.Index(space="l2", dim=dim)  # possible options are l2, cosine or ip
 
         # Initiating index
         # max_elements - the maximum number of elements, should be known beforehand
@@ -35,24 +34,26 @@ class RandomSelfTestCase(unittest.TestCase):
         p.set_num_threads(4)  # by default using all available cores
 
         # We split the data in two batches:
-        data1 = data[:num_elements // 2]
-        data2 = data[num_elements // 2:]
+        data1 = data[: num_elements // 2]
+        data2 = data[num_elements // 2 :]
 
         print("Adding first batch of %d elements" % (len(data1)))
         p.add_items(data1)
 
         # Query the elements for themselves and measure recall:
         labels, distances = p.knn_query(data1, k=1)
-        self.assertAlmostEqual(np.mean(labels.reshape(-1) == np.arange(len(data1))), 1.0, 3)
+        self.assertAlmostEqual(
+            np.mean(labels.reshape(-1) == np.arange(len(data1))), 1.0, 3
+        )
 
         # Serializing and deleting the index:
-        index_path = 'first_half.bin'
+        index_path = "first_half.bin"
         print("Saving index to '%s'" % index_path)
         p.save_index(index_path)
         del p
 
         # Re-initiating, loading the index
-        p = hnswlib.Index(space='l2', dim=dim)  # you can change the sa
+        p = hnswlib.Index(space="l2", dim=dim)  # you can change the sa
 
         print("\nLoading index from '%s'\n" % index_path)
         p.load_index(index_path)
@@ -63,6 +64,8 @@ class RandomSelfTestCase(unittest.TestCase):
         # Query the elements for themselves and measure recall:
         labels, distances = p.knn_query(data, k=1)
 
-        self.assertAlmostEqual(np.mean(labels.reshape(-1) == np.arange(len(data))), 1.0, 3)
-        
+        self.assertAlmostEqual(
+            np.mean(labels.reshape(-1) == np.arange(len(data))), 1.0, 3
+        )
+
         os.remove(index_path)

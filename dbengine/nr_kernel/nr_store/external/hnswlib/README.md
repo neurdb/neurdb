@@ -3,16 +3,16 @@ Header-only C++ HNSW implementation with python bindings, insertions and updates
 
 **NEWS:**
 
-**version 0.8.0** 
+**version 0.8.0**
 
 * Multi-vector document search and epsilon search (for now, only in C++)
-* By default, there is no statistic aggregation, which speeds up the multi-threaded search (it does not seem like people are using it anyway: [Issue #495](https://github.com/nmslib/hnswlib/issues/495)). 
+* By default, there is no statistic aggregation, which speeds up the multi-threaded search (it does not seem like people are using it anyway: [Issue #495](https://github.com/nmslib/hnswlib/issues/495)).
 * Various bugfixes and improvements
 * `get_items` now have `return_type` parameter, which can be either 'numpy' or 'list'
 
 Full list of changes: https://github.com/nmslib/hnswlib/pull/523
 
-**version 0.7.0** 
+**version 0.7.0**
 
 * Added support to filtering (#402, #430) by [@kishorenc](https://github.com/kishorenc)
 * Added python interface for filtering (though note its performance is limited by GIL) (#417) by [@gtsoukas](https://github.com/gtsoukas)
@@ -25,7 +25,7 @@ Full list of changes: https://github.com/nmslib/hnswlib/pull/523
 ### Highlights:
 1) Lightweight, header-only, no dependencies other than C++ 11
 2) Interfaces for C++, Python, external support for Java and R (https://github.com/jlmelville/rcpphnsw).
-3) Has full support for incremental index construction and updating the elements. Has support for element deletions 
+3) Has full support for incremental index construction and updating the elements. Has support for element deletions
 (by marking them in index). Index is picklable.
 4) Can work with custom user defined distances (C++).
 5) Significantly less memory footprint and faster build time compared to current nmslib's implementation.
@@ -45,26 +45,26 @@ Description of the algorithm parameters can be found in [ALGO_PARAMS.md](ALGO_PA
 
 Note that inner product is not an actual metric. An element can be closer to some other element than to itself. That allows some speedup if you remove all elements that are not the closest to themselves from the index.
 
-For other spaces use the nmslib library https://github.com/nmslib/nmslib. 
+For other spaces use the nmslib library https://github.com/nmslib/nmslib.
 
 #### API description
 * `hnswlib.Index(space, dim)` creates a non-initialized index an HNSW in space `space` with integer dimension `dim`.
 
 `hnswlib.Index` methods:
-* `init_index(max_elements, M = 16, ef_construction = 200, random_seed = 100, allow_replace_deleted = False)` initializes the index from with no elements. 
+* `init_index(max_elements, M = 16, ef_construction = 200, random_seed = 100, allow_replace_deleted = False)` initializes the index from with no elements.
     * `max_elements` defines the maximum number of elements that can be stored in the structure(can be increased/shrunk).
     * `ef_construction` defines a construction time/accuracy trade-off (see [ALGO_PARAMS.md](ALGO_PARAMS.md)).
     * `M` defines tha maximum number of outgoing connections in the graph ([ALGO_PARAMS.md](ALGO_PARAMS.md)).
     * `allow_replace_deleted` enables replacing of deleted elements with new added ones.
-    
-* `add_items(data, ids, num_threads = -1, replace_deleted = False)` - inserts the `data`(numpy array of vectors, shape:`N*dim`) into the structure. 
+
+* `add_items(data, ids, num_threads = -1, replace_deleted = False)` - inserts the `data`(numpy array of vectors, shape:`N*dim`) into the structure.
     * `num_threads` sets the number of cpu threads to use (-1 means use default).
-    * `ids` are optional N-size numpy array of integer labels for all elements in `data`. 
+    * `ids` are optional N-size numpy array of integer labels for all elements in `data`.
       - If index already has the elements with the same labels, their features will be updated. Note that update procedure is slower than insertion of a new element, but more memory- and query-efficient.
     * `replace_deleted` replaces deleted elements. Note it allows to save memory.
       - to use it `init_index` should be called with `allow_replace_deleted=True`
     * Thread-safe with other `add_items` calls, but not with `knn_query`.
-    
+
 * `mark_deleted(label)`  - marks the element as deleted, so it will be omitted from search results. Throws an exception if it is already deleted.
 
 * `unmark_deleted(label)`  - unmarks the element as deleted, so it will be not be omitted from search results.
@@ -74,22 +74,22 @@ For other spaces use the nmslib library https://github.com/nmslib/nmslib.
 * `set_ef(ef)` - sets the query time accuracy/speed trade-off, defined by the `ef` parameter (
 [ALGO_PARAMS.md](ALGO_PARAMS.md)). Note that the parameter is currently not saved along with the index, so you need to set it manually after loading.
 
-* `knn_query(data, k = 1, num_threads = -1, filter = None)` make a batch query for `k` closest elements for each element of the 
+* `knn_query(data, k = 1, num_threads = -1, filter = None)` make a batch query for `k` closest elements for each element of the
     * `data` (shape:`N*dim`). Returns a numpy array of (shape:`N*k`).
     * `num_threads` sets the number of cpu threads to use (-1 means use default).
     * `filter` filters elements by its labels, returns elements with allowed ids. Note that search with a filter works slow in python in multithreaded mode. It is recommended to set `num_threads=1`
     * Thread-safe with other `knn_query` calls, but not with `add_items`.
-    
+
 * `load_index(path_to_index, max_elements = 0, allow_replace_deleted = False)` loads the index from persistence to the uninitialized index.
     * `max_elements`(optional) resets the maximum number of elements in the structure.
     * `allow_replace_deleted` specifies whether the index being loaded has enabled replacing of deleted elements.
-      
+
 * `save_index(path_to_index)` saves the index from persistence.
 
 * `set_num_threads(num_threads)` set the default number of cpu threads used during data insertion/querying.
-  
+
 * `get_items(ids, return_type = 'numpy')` - returns a numpy array (shape:`N*dim`) of vectors that have integer identifiers specified in `ids` numpy vector (shape:`N`) if `return_type` is `list` return list of lists. Note that for cosine similarity it currently returns **normalized** vectors.
-  
+
 * `get_ids_list()`  - returns a list of all elements' ids.
 
 * `get_max_elements()` - returns the current capacity of the index
@@ -98,17 +98,17 @@ For other spaces use the nmslib library https://github.com/nmslib/nmslib.
 
 Read-only properties of `hnswlib.Index` class:
 
-* `space` - name of the space (can be one of "l2", "ip", or "cosine"). 
+* `space` - name of the space (can be one of "l2", "ip", or "cosine").
 
-* `dim`   - dimensionality of the space. 
+* `dim`   - dimensionality of the space.
 
-* `M` - parameter that defines the maximum number of outgoing connections in the graph. 
+* `M` - parameter that defines the maximum number of outgoing connections in the graph.
 
-* `ef_construction` - parameter that controls speed/accuracy trade-off during the index construction. 
+* `ef_construction` - parameter that controls speed/accuracy trade-off during the index construction.
 
-* `max_elements` - current capacity of the index. Equivalent to `p.get_max_elements()`. 
+* `max_elements` - current capacity of the index. Equivalent to `p.get_max_elements()`.
 
-* `element_count` - number of items in the index. Equivalent to `p.get_current_count()`. 
+* `element_count` - number of items in the index. Equivalent to `p.get_current_count()`.
 
 Properties of `hnswlib.Index` that support reading and writing:
 
@@ -116,9 +116,9 @@ Properties of `hnswlib.Index` that support reading and writing:
 
 * `num_threads` - default number of threads to use in `add_items` or `knn_query`. Note that calling `p.set_num_threads(3)` is equivalent to `p.num_threads=3`.
 
-  
-        
-  
+
+
+
 #### Python bindings examples
 [See more examples here](examples/python/EXAMPLES.md):
 * Creating index, inserting elements, searching, serialization/deserialization
@@ -159,7 +159,7 @@ labels, distances = p.knn_query(data, k = 1)
 p_copy = pickle.loads(pickle.dumps(p)) # creates a copy of index p using pickle round-trip
 
 ### Index parameters are exposed as class properties:
-print(f"Parameters passed to constructor:  space={p_copy.space}, dim={p_copy.dim}") 
+print(f"Parameters passed to constructor:  space={p_copy.space}, dim={p_copy.dim}")
 print(f"Index construction: M={p_copy.M}, ef_construction={p_copy.ef_construction}")
 print(f"Index size is {p_copy.element_count} and index capacity is {p_copy.max_elements}")
 print(f"Search speed/quality trade-off parameter: ef={p_copy.ef}")
@@ -256,7 +256,7 @@ or you can install via pip:
 `pip install hnswlib`
 
 
-### For developers 
+### For developers
 Contributions are highly welcome!
 
 Please make pull requests against the `develop` branch.
@@ -271,13 +271,13 @@ python -m unittest discover --start-directory tests/python --pattern "bindings_t
 * Non-metric space library (nmslib) - main library(python, C++), supports exotic distances: https://github.com/nmslib/nmslib
 * Faiss library by facebook, uses own HNSW  implementation for coarse quantization (python, C++):
 https://github.com/facebookresearch/faiss
-* Code for the paper 
-["Revisiting the Inverted Indices for Billion-Scale Approximate Nearest Neighbors"](https://arxiv.org/abs/1802.02422) 
+* Code for the paper
+["Revisiting the Inverted Indices for Billion-Scale Approximate Nearest Neighbors"](https://arxiv.org/abs/1802.02422)
 (current state-of-the-art in compressed indexes, C++):
 https://github.com/dbaranchuk/ivf-hnsw
-* Amazon PECOS https://github.com/amzn/pecos 
-* TOROS N2 (python, C++): https://github.com/kakao/n2 
-* Online HNSW (C++): https://github.com/andrusha97/online-hnsw) 
+* Amazon PECOS https://github.com/amzn/pecos
+* TOROS N2 (python, C++): https://github.com/kakao/n2
+* Online HNSW (C++): https://github.com/andrusha97/online-hnsw)
 * Go implementation: https://github.com/Bithack/go-hnsw
 * Python implementation (as a part of the clustering code by by Matteo Dell'Amico): https://github.com/matteodellamico/flexible-clustering
 * Julia implmentation https://github.com/JuliaNeighbors/HNSW.jl
@@ -288,7 +288,7 @@ https://github.com/dbaranchuk/ivf-hnsw
 * Rust implementation https://github.com/rust-cv/hnsw
 * Rust implementation for memory and thread safety purposes and There is  A Trait to enable the user to implement its own distances. It takes as data slices of types T satisfying T:Serialize+Clone+Send+Sync.: https://github.com/jean-pierreBoth/hnswlib-rs
 
-### 200M SIFT test reproduction 
+### 200M SIFT test reproduction
 To download and extract the bigann dataset (from root directory):
 ```bash
 python tests/cpp/download_bigann.py
@@ -319,7 +319,7 @@ To compile (from root directory):
 mkdir build
 cd build
 cmake ..
-make 
+make
 ```
 To run test **without** updates (from `build` directory)
 ```bash

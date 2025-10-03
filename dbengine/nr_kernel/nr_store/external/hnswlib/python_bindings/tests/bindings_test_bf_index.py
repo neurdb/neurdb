@@ -1,8 +1,7 @@
 import unittest
 
-import numpy as np
-
 import hnswlib
+import numpy as np
 
 
 class RandomSelfTestCase(unittest.TestCase):
@@ -17,7 +16,9 @@ class RandomSelfTestCase(unittest.TestCase):
         data = np.float32(np.random.random((num_elements, dim)))
 
         # Declaring index
-        bf_index = hnswlib.BFIndex(space='l2', dim=dim)  # possible options are l2, cosine or ip
+        bf_index = hnswlib.BFIndex(
+            space="l2", dim=dim
+        )  # possible options are l2, cosine or ip
         bf_index.init_index(max_elements=num_elements)
 
         num_threads = 8
@@ -37,7 +38,7 @@ class RandomSelfTestCase(unittest.TestCase):
         print("Checking results")
         for i in range(num_queries):
             query = queries[i]
-            sq_dists = (data - query)**2
+            sq_dists = (data - query) ** 2
             dists = np.sum(sq_dists, axis=1)
             labels_gt = np.argsort(dists)[:k]
             dists_gt = dists[labels_gt]

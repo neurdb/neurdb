@@ -1,7 +1,8 @@
 import os
+import unittest
+
 import hnswlib
 import numpy as np
-import unittest
 
 
 class RandomSelfTestCase(unittest.TestCase):
@@ -17,8 +18,10 @@ class RandomSelfTestCase(unittest.TestCase):
         data = np.float32(np.random.random((num_elements, dim)))
 
         # Declaring index
-        hnsw_index = hnswlib.Index(space='l2', dim=dim)  # possible options are l2, cosine or ip
-        bf_index = hnswlib.BFIndex(space='l2', dim=dim)
+        hnsw_index = hnswlib.Index(
+            space="l2", dim=dim
+        )  # possible options are l2, cosine or ip
+        bf_index = hnswlib.BFIndex(space="l2", dim=dim)
 
         # Initing both hnsw and brute force indices
         # max_elements - the maximum number of elements (capacity). Will throw an exception if exceeded
@@ -64,18 +67,18 @@ class RandomSelfTestCase(unittest.TestCase):
                         correct += 1
                         break
 
-        recall_before = float(correct) / (k*num_queries)
+        recall_before = float(correct) / (k * num_queries)
         print("recall is :", recall_before)
         self.assertGreater(recall_before, recall_threshold)
 
         # test serializing  the brute force index
-        index_path = 'bf_index.bin'
+        index_path = "bf_index.bin"
         print("Saving index to '%s'" % index_path)
         bf_index.save_index(index_path)
         del bf_index
 
         # Re-initiating, loading the index
-        bf_index = hnswlib.BFIndex(space='l2', dim=dim)
+        bf_index = hnswlib.BFIndex(space="l2", dim=dim)
 
         print("\nLoading index from '%s'\n" % index_path)
         bf_index.load_index(index_path)
@@ -92,7 +95,7 @@ class RandomSelfTestCase(unittest.TestCase):
                         correct += 1
                         break
 
-        recall_after = float(correct) / (k*num_queries)
+        recall_after = float(correct) / (k * num_queries)
         print("recall after reloading is :", recall_after)
 
         self.assertEqual(recall_before, recall_after)

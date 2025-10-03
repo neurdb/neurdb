@@ -1,14 +1,15 @@
+import pickle
+import threading
+
 import hnswlib
 import numpy as np
-import threading
-import pickle
-
 
 """
 Example of python wrapper for hnswlib that supports python objects as ids
 """
 
-class Index():
+
+class Index:
     def __init__(self, space, dim):
         self.index = hnswlib.Index(space, dim)
         self.lock = threading.Lock()
@@ -16,7 +17,9 @@ class Index():
         self.cur_ind = 0
 
     def init_index(self, max_elements, ef_construction=200, M=16):
-        self.index.init_index(max_elements=max_elements, ef_construction=ef_construction, M=M)
+        self.index.init_index(
+            max_elements=max_elements, ef_construction=ef_construction, M=M
+        )
 
     def add_items(self, data, ids=None):
         if ids is not None:
@@ -59,7 +62,5 @@ class Index():
         labels_int, distances = self.index.knn_query(data=data, k=k)
         labels = []
         for li in labels_int:
-            labels.append(
-                [self.dict_labels[l] for l in li]
-            )
+            labels.append([self.dict_labels[l] for l in li])
         return labels, distances

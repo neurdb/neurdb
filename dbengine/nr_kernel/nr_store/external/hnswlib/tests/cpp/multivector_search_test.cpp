@@ -82,7 +82,7 @@ int main() {
         assert(hnsw_docs.size() == num_docs);
 
         // Check overall recall
-        std::vector<std::pair<dist_t, hnswlib::labeltype>> gt_results = 
+        std::vector<std::pair<dist_t, hnswlib::labeltype>> gt_results =
             alg_brute->searchKnnCloserFirst(query_data, max_elements);
         std::unordered_set<docidtype> gt_docs;
         for (int i = 0; i < gt_results.size(); i++) {

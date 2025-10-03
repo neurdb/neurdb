@@ -1,7 +1,6 @@
 import hnswlib
 import numpy as np
 
-
 """
 Example of filtering elements when searching
 """
@@ -13,7 +12,7 @@ num_elements = 10000
 data = np.float32(np.random.random((num_elements, dim)))
 
 # Declaring index
-hnsw_index = hnswlib.Index(space='l2', dim=dim)  # possible options are l2, cosine or ip
+hnsw_index = hnswlib.Index(space="l2", dim=dim)  # possible options are l2, cosine or ip
 
 # Initiating index
 # max_elements - the maximum number of elements, should be known beforehand
@@ -39,8 +38,10 @@ hnsw_index.add_items(data, ids=np.arange(num_elements))
 
 print("Querying only even elements")
 # Define filter function that allows only even ids
-filter_function = lambda idx: idx%2 == 0
+filter_function = lambda idx: idx % 2 == 0
 # Query the elements for themselves and search only for even elements:
 # Warning: search with a filter works slow in python in multithreaded mode, therefore we set num_threads=1
-labels, distances = hnsw_index.knn_query(data, k=1, num_threads=1, filter=filter_function)
+labels, distances = hnsw_index.knn_query(
+    data, k=1, num_threads=1, filter=filter_function
+)
 # labels contain only elements with even id
