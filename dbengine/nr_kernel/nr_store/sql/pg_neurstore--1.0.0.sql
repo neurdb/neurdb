@@ -1,5 +1,5 @@
 /* define tables and functions for pg_neurstore PostgreSQL extension */
-CREATE TABLE model
+CREATE TABLE ns_model
 (
     model_id   serial PRIMARY KEY,
     model_name text  NOT NULL

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.21)
 project(pg_neurstore C CXX)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 17)
@@ -20,11 +20,18 @@ if (PG_ROOT)
 endif ()
 
 ############ Find packages ############
+set(PostgreSQL_ROOT /code/neurdb-dev/psql)
+set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
+set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")
+set(PostgreSQL_LIBDIR "${PostgreSQL_ROOT}/lib")
+set(PostgreSQL_SHAREDIR "${PostgreSQL_ROOT}/share")
+
 # postgresql
 find_package(PostgreSQL REQUIRED)
 if (NOT PostgreSQL_FOUND)
     message(FATAL_ERROR "PostgreSQL not found")
 endif ()
+
 find_path(PostgreSQL_SERVER_INCLUDE_DIR
         NAMES postgres.h
         HINTS ${PostgreSQL_INCLUDE_DIRS}
@@ -123,6 +130,13 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_link_libraries(
+        neurstore_microservice
+        PRIVATE
+        neurstore_core
+        hnswlib
+)
+
 # pg_neurstore
 FILE(GLOB_RECURSE NEURSTORE_PG
         ${CMAKE_CURRENT_SOURCE_DIR}/src/pgext/*.c
@@ -151,24 +165,8 @@ set_target_properties(pg_neurstore PROPERTIES
 )
 
 ############ Installation ############
-execute_process(
-        COMMAND pg_config --sharedir
-        OUTPUT_VARIABLE PG_SHARE_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-set(PostgreSQL_EXTENSION_DIR "${PG_SHARE_DIR}/extension")
-
-execute_process(
-        COMMAND pg_config --pkglibdir
-        OUTPUT_VARIABLE PG_LIB_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-install(TARGETS pg_neurstore neurstore_core
-        LIBRARY DESTINATION ${PG_LIB_DIR})
-
-install(FILES pg_neurstore.control sql/pg_neurstore--1.0.0.sql
-        DESTINATION ${PostgreSQL_EXTENSION_DIR})
+install(TARGETS pg_neurstore neurstore_core LIBRARY DESTINATION ${PostgreSQL_LIBDIR})
+install(FILES pg_neurstore.control sql/pg_neurstore--1.0.0.sql DESTINATION ${PostgreSQL_SHAREDIR}/extension)
 
 ############ Example ############
 file(GLOB EXAMPLES

@@ -161,7 +161,7 @@ ns_save_model(PG_FUNCTION_ARGS) {
         PG_RETURN_BOOL(false);
     }
 
-    Relation rel = pgext_open("model", RowExclusiveLock);
+    Relation rel = pgext_open("ns_model", RowExclusiveLock);
     Datum nextval_result = pgext_nextval("model_model_id_seq");
     Datum values[2];
     bool nulls_insert[2] = {false, false};
@@ -265,7 +265,7 @@ ns_save_models(PG_FUNCTION_ARGS) {
     if (!ok)
         PG_RETURN_BOOL(false);
 
-    Relation rel = pgext_open("model", RowExclusiveLock);
+    Relation rel = pgext_open("ns_model", RowExclusiveLock);
 
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < n_models; ++i) {
@@ -522,7 +522,7 @@ static bool lookup_model_name(int model_id, char **model_name_out) {
     if (!OidIsValid(idx_oid))
         ereport(ERROR, (errmsg("Index model_pkey not found")));
 
-    Relation rel = pgext_open("model", AccessShareLock);
+    Relation rel = pgext_open("ns_model", AccessShareLock);
     pgext_select(rel, idx_oid, &skey, 1, model_select_callback, &sel);
     pgext_close(rel, AccessShareLock);
     if (!sel.found)
