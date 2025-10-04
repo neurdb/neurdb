@@ -238,6 +238,7 @@ typedef struct Query
 
 	/* NeurDB */
 	List 		*predictTargetList; /* target list */
+	List		*trainOn; /* columns used to train the model */
 	Node		*predictStmt; /* original statement */
 } Query;
 

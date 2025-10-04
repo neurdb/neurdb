@@ -3606,6 +3606,8 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	Query	   *qry = makeNode(Query);
 	RangeTblEntry *rte;
 	Query 		*subquery;
+	ListCell *l, *ptl;
+	TargetEntry *te, *pte;
 
 	qry->commandType = CMD_PREDICT;
 
@@ -3618,6 +3620,22 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	/* transform targetlist */
 	qry->predictTargetList = transformTargetList(pstate, stmt->targetList,
 										  EXPR_KIND_SELECT_TARGET);
+
+	qry->trainOn = transformTargetList(pstate, stmt->trainOnSpec->trainOn,
+									  EXPR_KIND_SELECT_TARGET);
+
+	/* remove all elements in trainOn if they are in predictTargetList */
+	foreach(l, qry->trainOn)
+	{
+		te = (TargetEntry *)lfirst(l);
+		foreach (ptl, qry->predictTargetList) {
+			pte = (TargetEntry *)lfirst(ptl);
+			if (pg_strcasecmp(te->resname, pte->resname) == 0) {
+				qry->trainOn = list_delete_cell(qry->trainOn, l);
+				break;
+			}
+		}
+    }
 
 	/* assign range tables */
 	qry->rtable = pstate->p_rtable;
