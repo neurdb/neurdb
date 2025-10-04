@@ -599,8 +599,8 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	outerPlan = outerPlan(node);
 	outerPlanState(predictstate) = ExecInitNode(outerPlan, estate, eflags);
 
-	/* 
-	 * Initialize result tuple slot 
+	/*
+	 * Initialize result tuple slot
 	 */
 	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
 

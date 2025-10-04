@@ -660,7 +660,7 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 				json_object_constructor_null_clause_opt
 				json_array_constructor_null_clause_opt
 
-%type <node>	neurdb_target neurdb_from opt_neurdb_train_on opt_neurdb_with opt_neurdb_values 
+%type <node>	neurdb_target neurdb_from opt_neurdb_train_on opt_neurdb_with opt_neurdb_values
 %type <list> 	neurdb_train_on_columns neurdb_train_on_list
 %type <target>	neurdb_train_on_el
 %type <str>		opt_neurdb_model_name
