@@ -3621,6 +3621,16 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	qry->predictTargetList = transformTargetList(pstate, stmt->targetList,
 										  EXPR_KIND_SELECT_TARGET);
 
+	foreach(l, qry->predictTargetList)
+	{
+		te = (TargetEntry *) lfirst(l);
+		Var *var = (Var *) te->expr;
+		if (IsA(var, Var))
+		{
+			var->varno = OUTER_VAR;
+		}
+	}
+
 	qry->trainOn = transformTargetList(pstate, stmt->trainOnSpec->trainOn,
 									  EXPR_KIND_SELECT_TARGET);
 

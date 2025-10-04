@@ -528,10 +528,29 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 static TupleTableSlot *
 ExecNeurDBPredict(PlanState *pstate)
 {
+	NeurDBPredictState *predictstate = (NeurDBPredictState *) pstate;
+	PlanState  *outerPlan;
+	TupleTableSlot *slot;
+
+	outerPlan = outerPlanState(predictstate);
+
+	/* TEMP: Return dummy result */
+    slot = ExecProcNode(outerPlan);
+	if (TupIsNull(slot))
+	{
+		return NULL;
+	}
+
+	predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
+    slot = ExecProject(predictstate->ps.ps_ProjInfo);
+
+	return slot;
+
+#if 0
 	if (pstate == NULL)
 	{
 		elog(ERROR, "[NeurDB_ExecutePlanWrapper] planstate is NULL.");
-		return;
+		return NULL;
 	}
 	else
 	{
@@ -539,9 +558,7 @@ ExecNeurDBPredict(PlanState *pstate)
 			 (void *) pstate);
 	}
 
-	/* Cast the utility statement to NeurDBPredictStmt */
-	NeurDBPredictState *state = (NeurDBPredictState *) pstate;
-	NeurDBPredictStmt *stmt = state->stmt;
+	NeurDBPredictStmt *stmt = predictstate->stmt;
 
 	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] NeurDBPredictStmt extracted: %p",
 		 (void *) stmt);
@@ -551,6 +568,7 @@ ExecNeurDBPredict(PlanState *pstate)
 	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt");
 	ExecPredictStmt(stmt, NULL, whereClauseString, pstate->ps_ResultTupleSlot);
 	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt Done");
+#endif
 }
 
 
@@ -562,6 +580,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 
 	predictstate = makeNode(NeurDBPredictState);
 	predictstate->ps.plan = (Plan *) node;
+	predictstate->ps.plan->targetlist = node->predictTargetList;
 	predictstate->ps.state = estate;
 	predictstate->ps.ExecProcNode = ExecNeurDBPredict;
 
@@ -570,44 +589,45 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	predictstate->stmt = node->stmt;
 
 	/*
+	 * To use projection, need ExprContext
+	 */
+	ExecAssignExprContext(estate, &predictstate->ps);
+
+	/*
 	 * initialize outer plan
 	 */
 	outerPlan = outerPlan(node);
 	outerPlanState(predictstate) = ExecInitNode(outerPlan, estate, eflags);
 
-	/*
-	 * Initialize result type.
+	/* 
+	 * Initialize result tuple slot 
 	 */
-	ExecInitResultTypeTL(&predictstate->ps);
-	predictstate->ps.resultopsset = true;
-	predictstate->ps.resultops = ExecGetResultSlotOps(outerPlanState(predictstate),
-													  &predictstate->ps.resultopsfixed);
+	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
 
 	/*
-	 * TODO: handle projection info
+	 * initialize projection info
 	 */
-	predictstate->ps.ps_ProjInfo = NULL;
+	predictstate->ps.ps_ProjInfo =
+		ExecBuildProjectionInfo(node->predictTargetList,
+								predictstate->ps.ps_ExprContext,
+								predictstate->ps.ps_ResultTupleSlot,
+								predictstate,
+								ExecTypeFromTL(node->predictTargetList));
 
 	return predictstate;
 }
 
+/* ----------------------------------------------------------------
+ *		ExecEndNeurDBPredict
+ *
+ *		This shuts down the subplan and frees resources allocated
+ *		to this node.
+ * ----------------------------------------------------------------
+ */
 void
 ExecEndNeurDBPredict(NeurDBPredictState * node)
 {
-	/*
-	 * Free the exprcontext
-	 */
 	ExecFreeExprContext(&node->ps);
-
-	/*
-	 * clean out the tuple table
-	 */
-	if (node->ps.ps_ResultTupleSlot)
-		ExecClearTuple(node->ps.ps_ResultTupleSlot);
-
-	/*
-	 * shut down subplans
-	 */
 	ExecEndNode(outerPlanState(node));
 }
 
