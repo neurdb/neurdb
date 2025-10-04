@@ -103,7 +103,7 @@ sudo make clean
 sudo make install
 
 ## Register nr_kernel as preloaded library
-echo 'shared_preload_libraries = '\''nr_ext, nram'\''' >> $NR_DBDATA_PATH/postgresql.conf
+echo 'shared_preload_libraries = '\''nr_ext, nram, pg_neurstore'\''' >> $NR_DBDATA_PATH/postgresql.conf
 
 echo "Install NR Data Pipeline Extension & NR kernel extension Done"
 
