@@ -7,7 +7,6 @@
 
 #include "access/relation.h"
 #include "access/heapam.h"
-#include "executor/executor.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
 #include "parser/parse_target.h"
@@ -534,15 +533,31 @@ ExecNeurDBPredict(PlanState *pstate)
 
 	outerPlan = outerPlanState(predictstate);
 
-	/* TEMP: Return dummy result */
-    slot = ExecProcNode(outerPlan);
-	if (TupIsNull(slot))
+	for (;;)
 	{
-		return NULL;
-	}
+		/* TEMP: Return dummy result */
+		slot = ExecProcNode(outerPlan);
+		if (TupIsNull(slot))
+		{
+			if (predictstate->nrpstate == NEURDBPREDICT_TRAIN)
+			{
+				/* TEMP: We simulate second pass for inference */
+				predictstate->nrpstate = NEURDBPREDICT_INFERENCE;
+				ExecReScan(outerPlan);
+				continue;
+			}
+			else
+			{
+				/* end inference */
+				return NULL;
+			}
+		}
 
-	predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
-    slot = ExecProject(predictstate->ps.ps_ProjInfo);
+		predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
+		slot = ExecProject(predictstate->ps.ps_ProjInfo);
+
+		break;
+	}
 
 	return slot;
 
@@ -613,6 +628,13 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 								predictstate->ps.ps_ResultTupleSlot,
 								predictstate,
 								ExecTypeFromTL(node->predictTargetList));
+
+	/* 
+	 * TEMP: We set the state to TRAIN in order to test rescan function.
+	 * In the real setup, the initial state will be decided by whether the 
+	 * model is trained or not.
+	 */
+	predictstate->nrpstate = NEURDBPREDICT_TRAIN;
 
 	return predictstate;
 }
