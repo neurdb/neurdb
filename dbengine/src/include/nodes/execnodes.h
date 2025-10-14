@@ -2778,8 +2778,8 @@ typedef enum
 typedef struct NeurDBPredictState
 {
 	PlanState	ps;						/* its first field is NodeTag */
-	NeurDBPredictStmt *stmt;			
-	NeurDBPredictStateCond nrpstate;	
+	NeurDBPredictStmt *stmt;
+	NeurDBPredictStateCond nrpstate;
 } NeurDBPredictState;
 
 #endif							/* EXECNODES_H */

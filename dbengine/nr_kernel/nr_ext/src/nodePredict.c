@@ -629,9 +629,9 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 								predictstate,
 								ExecTypeFromTL(node->predictTargetList));
 
-	/* 
+	/*
 	 * TEMP: We set the state to TRAIN in order to test rescan function.
-	 * In the real setup, the initial state will be decided by whether the 
+	 * In the real setup, the initial state will be decided by whether the
 	 * model is trained or not.
 	 */
 	predictstate->nrpstate = NEURDBPREDICT_TRAIN;
