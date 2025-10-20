@@ -4,6 +4,8 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include "miscadmin.h"
+#include "postmaster/bgworker.h"
+#include "storage/ipc.h"
 
 /*
  * This test:
@@ -104,7 +106,8 @@ void run_channel_sequential_test(void) {
     char* name = "pseudo_conc_kv_channel";
     char producer_msg[128];
     char consumer_buf[128] = {0};
-    int total_messages = 1000;
+    int total_messages = 1000000;
+    int ncol = 10000;
     int produced = 0;
     int consumed = 0;
 
@@ -115,8 +118,8 @@ void run_channel_sequential_test(void) {
      */
     while (consumed < total_messages) {
         /* Produce multiple messages */
-        for (int i = 0; i < 10 && produced < total_messages; i++) {
-            snprintf(producer_msg, sizeof(producer_msg), "msg_%04d", produced);
+        for (int i = 0; i < ncol && produced < total_messages; i++) {
+            snprintf(producer_msg, sizeof(producer_msg), "msg_%04d", produced % 10000);
 
             if (!KVChannelPush(channel, producer_msg, strlen(producer_msg) + 1, 0)) {
                 NRAM_TEST_INFO("Buffer full!");
@@ -132,10 +135,8 @@ void run_channel_sequential_test(void) {
 
             consumed++;
         }
-
-        /* Random sleep to mimic timing gaps */
-        if (produced % 100 == 0 || consumed % 100 == 0)
-            pg_usleep(1000);
+        if (produced != consumed)
+            elog(ERROR, "Produced: %d, Consumed: %d", produced, consumed);
     }
 
     if (produced != total_messages || consumed != total_messages)
@@ -144,6 +145,79 @@ void run_channel_sequential_test(void) {
     KVChannelDestroy(channel);
 
     elog(INFO, "KV channel sequential test passed!");
+}
+
+
+PGDLLEXPORT void producer_bgw_main(Datum arg) {
+    const char *name = "multi_proc_kv_channel";
+    int total_messages = 10000;
+    double timeout_secs = 60.0;
+    char msg[128];
+    int produced = 0;
+    struct timeval start, now;
+    double elapsed;
+    KVChannel* channel = KVChannelInit(name, false);
+    BackgroundWorkerUnblockSignals();
+    NRAM_INFO();
+
+    gettimeofday(&start, NULL);
+
+    while (produced < total_messages) {
+        snprintf(msg, sizeof(msg), "msg_%08d-%05d", MyProcPid % 100000000, produced % 100000);
+        if (KVChannelPush(channel, msg, strlen(msg) + 1, -1)) {
+            produced++;
+        } else {
+            pg_usleep(1000);  // Sleep 1ms to avoid tight loop
+        }
+
+        gettimeofday(&now, NULL);
+        elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
+        if (elapsed > timeout_secs) {
+            elog(ERROR, "[Producer %d] Timeout after %.2f seconds", MyProcPid, timeout_secs);
+            PrintChannelContent(channel);
+        }
+    }
+
+    elog(INFO, "[Producer %d] Finished producing %d messages", MyProcPid, produced);
+    proc_exit(0);
+}
+
+
+PGDLLEXPORT void consumer_bgw_main(Datum arg) {
+    const char *name = "multi_proc_kv_channel";
+    int total_messages = 10000;
+    double timeout_secs = 60.0;
+    char buf[128];
+    int consumed = 0;
+    struct timeval start, now;
+    double elapsed;
+
+    KVChannel* channel = KVChannelInit(name, false);
+    BackgroundWorkerUnblockSignals();
+    gettimeofday(&start, NULL);
+    NRAM_INFO();
+
+    while (consumed < total_messages) {
+        if (KVChannelPop(channel, buf, 19, -1)) {
+            if (strncmp(buf, "msg_", 4) != 0) {
+                elog(ERROR, "[Consumer %d] Corrupted message: %s", MyProcPid, buf);
+                PrintChannelContent(channel);
+            }
+            consumed++;
+        } else {
+            pg_usleep(1000);  // Sleep 1ms to reduce CPU usage
+        }
+
+        gettimeofday(&now, NULL);
+        elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
+        if (elapsed > timeout_secs) {
+            elog(ERROR, "[Consumer %d] Timeout after %.2f seconds", MyProcPid, timeout_secs);
+            PrintChannelContent(channel);
+        }
+    }
+
+    elog(INFO, "[Consumer %d] Finished consuming %d messages", MyProcPid, consumed);
+    proc_exit(0);
 }
 
 
@@ -158,80 +232,45 @@ void run_channel_multiprocess_test(void) {
     KVChannel* channel;
     char* name = "multi_proc_kv_channel";
     pid_t producer_pid, consumer_pid;
-    int total_messages = 10, status = 0;
-    double timeout_secs = 2.0;
-
     channel = KVChannelInit(name, true);
+    BackgroundWorker producer, consumer;
+    BackgroundWorkerHandle *handle_producer, *handle_consumer;
 
-    producer_pid = fork();
-    if (producer_pid == 0) {
-        /* Producer process */
-        char msg[128];
-        int produced = 0;
-        struct timeval start, now;
-        double elapsed;
+    memset(&producer, 0, sizeof(producer));
+    producer.bgw_flags = BGWORKER_SHMEM_ACCESS;
+    producer.bgw_start_time = BgWorkerStart_ConsistentState;
+    producer.bgw_restart_time = BGW_NEVER_RESTART;
+    producer.bgw_notify_pid = MyProcPid;
+    snprintf(producer.bgw_library_name, BGW_MAXLEN, "nram");
+    snprintf(producer.bgw_function_name, BGW_MAXLEN, "producer_bgw_main");
+    snprintf(producer.bgw_name, BGW_MAXLEN, "test producer");
+    if (!RegisterDynamicBackgroundWorker(&producer, &handle_producer))
+        elog(ERROR, "could not register producer");
 
-        channel = KVChannelInit(name, false);
+    memset(&consumer, 0, sizeof(consumer));
+    consumer.bgw_flags = BGWORKER_SHMEM_ACCESS;
+    consumer.bgw_start_time = BgWorkerStart_ConsistentState;
+    consumer.bgw_restart_time = BGW_NEVER_RESTART;
+    consumer.bgw_notify_pid = MyProcPid;
+    snprintf(consumer.bgw_library_name, BGW_MAXLEN, "nram");
+    snprintf(consumer.bgw_function_name, BGW_MAXLEN, "consumer_bgw_main");
+    snprintf(consumer.bgw_name, BGW_MAXLEN, "test consumer");
+    if (!RegisterDynamicBackgroundWorker(&consumer, &handle_consumer))
+        elog(ERROR, "could not register consumer");
 
-        gettimeofday(&start, NULL);
+    if (WaitForBackgroundWorkerStartup(handle_producer, &producer_pid) != BGWH_STARTED)
+        elog(ERROR, "producer did not start");
+    if (WaitForBackgroundWorkerStartup(handle_consumer, &consumer_pid) != BGWH_STARTED)
+        elog(ERROR, "consumer did not start");
 
-        while (produced < total_messages) {
-            snprintf(msg, sizeof(msg), "msg_%08d-%05d", MyProcPid, produced);
-            if (KVChannelPush(channel, msg, strlen(msg) + 1, -1)) {
-                produced++;
-            } else {
-                pg_usleep(1000);  // Sleep 1ms to avoid tight loop
-            }
-
-            gettimeofday(&now, NULL);
-            elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
-            if (elapsed > timeout_secs) {
-                elog(ERROR, "[Producer %d] Timeout after %.2f seconds", MyProcPid, timeout_secs);
-                PrintChannelContent(channel);
-            }
-        }
-        _exit(0);
-    }
-
-    consumer_pid = fork();
-    if (consumer_pid == 0) {
-        /* Consumer process */
-        char buf[128];
-        int consumed = 0;
-        struct timeval start, now;
-        double elapsed;
-
-        channel = KVChannelInit(name, false);
-        gettimeofday(&start, NULL);
-
-        while (consumed < total_messages) {
-            if (KVChannelPop(channel, buf, 19, -1)) {
-                if (strncmp(buf, "msg_", 4) != 0) {
-                    elog(ERROR, "[Consumer %d] Corrupted message: %s", MyProcPid, buf);
-                    PrintChannelContent(channel);
-                }
-                consumed++;
-            } else {
-                pg_usleep(1000);  // Sleep 1ms to reduce CPU usage
-            }
-
-            gettimeofday(&now, NULL);
-            elapsed = (now.tv_sec - start.tv_sec) + (now.tv_usec - start.tv_usec) / 1e6;
-            if (elapsed > timeout_secs) {
-                elog(ERROR, "[Consumer %d] Timeout after %.2f seconds", MyProcPid, timeout_secs);
-                PrintChannelContent(channel);
-            }
-        }
-        _exit(0);
-    }
 
     /* Parent waits */
-    waitpid(producer_pid, &status, 0);
-    Assert(status == 0);
-    waitpid(consumer_pid, &status, 0);
-    Assert(status == 0);
+    if (WaitForBackgroundWorkerShutdown(handle_producer) != BGWH_STOPPED)
+        elog(ERROR, "producer did not stop cleanly");
 
-    // PrintChannelContent(channel);
+    if (WaitForBackgroundWorkerShutdown(handle_consumer) != BGWH_STOPPED)
+        elog(ERROR, "consumer did not stop cleanly");
+
     Assert(channel->shared->head == channel->shared->tail);
 
     KVChannelDestroy(channel);

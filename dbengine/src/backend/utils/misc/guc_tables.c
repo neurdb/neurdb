@@ -216,7 +216,6 @@ static const struct config_enum_entry isolation_level_options[] = {
 
 static const struct config_enum_entry cc_strategy_options[] = {
 	{"ssi", LOCK_NONE, false},
-	{"learned", LOCK_LEARNED, false},
 	{NULL, 0}
 };
 

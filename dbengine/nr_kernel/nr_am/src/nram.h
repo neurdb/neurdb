@@ -4,8 +4,10 @@
 #include "nram_access/kv.h"
 // #include "nram_storage/rocksengine.h"
 #include "nram_xact/xact.h"
+#include "nram_xact/action.h"
 #include "test/kv_test.h"
 #include "test/channel_test.h"
+#include "test/action_test.h"
 
 #define NRAM_XACT_BEGIN_BLOCK refresh_nram_xact()
 

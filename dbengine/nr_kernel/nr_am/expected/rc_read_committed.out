@@ -1,0 +1,57 @@
+Parsed test spec with 3 sessions
+
+starting permutation: s1_begin s1_insert s2_begin s2_read s1_commit s2_commit
+step s1_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s1_insert: INSERT INTO rc_test VALUES (1, 'original');
+step s2_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s2_read: SELECT * FROM rc_test ORDER BY id;
+id|val
+--+---
+(0 rows)
+
+step s1_commit: COMMIT;
+step s2_commit: COMMIT;
+
+starting permutation: s1_begin s1_insert s1_commit s2_begin s3_begin s3_update s3_read s2_read s3_commit s2_commit
+step s1_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s1_insert: INSERT INTO rc_test VALUES (1, 'original');
+step s1_commit: COMMIT;
+step s2_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s3_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s3_update: UPDATE rc_test SET val = 'u1' WHERE id = 1;
+step s3_read: SELECT * FROM rc_test WHERE id = 1;
+id|val
+--+---
+ 1|u1 
+(1 row)
+
+step s2_read: SELECT * FROM rc_test ORDER BY id;
+id|val     
+--+--------
+ 1|original
+(1 row)
+
+step s3_commit: COMMIT;
+step s2_commit: COMMIT;
+
+starting permutation: s1_begin s1_insert s1_commit s3_begin s3_read s3_update s3_commit s2_begin s2_read s2_commit
+step s1_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s1_insert: INSERT INTO rc_test VALUES (1, 'original');
+step s1_commit: COMMIT;
+step s3_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s3_read: SELECT * FROM rc_test WHERE id = 1;
+id|val     
+--+--------
+ 1|original
+(1 row)
+
+step s3_update: UPDATE rc_test SET val = 'u1' WHERE id = 1;
+step s3_commit: COMMIT;
+step s2_begin: BEGIN ISOLATION LEVEL READ COMMITTED;
+step s2_read: SELECT * FROM rc_test ORDER BY id;
+id|val
+--+---
+ 1|u1 
+(1 row)
+
+step s2_commit: COMMIT;

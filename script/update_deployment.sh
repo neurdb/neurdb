@@ -48,6 +48,7 @@ $NR_PSQL_PATH/bin/initdb -D $NR_DBDATA_PATH
 # Re-append kernel extension
 echo "shared_preload_libraries = 'nr_ext, nram'" >> $NR_CONF_FILE
 echo "log_min_messages = debug1" >> $NR_CONF_FILE
+echo "max_prepared_transactions = 2" >> $NR_CONF_FILE
 
 # Start DB
 $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l logfile start
@@ -74,11 +75,11 @@ cd $NR_KERNEL_PATH
 sudo make clean
 sudo make install
 
-# Start AI service
-cd $NR_AIENGINE_PATH/runtime
-pkill -f "python -m hypercorn server:app -c app_config.toml" 2>/dev/null || true
-export NR_LOG_LEVEL=INFO
-nohup python -m hypercorn server:app -c app_config.toml &
-echo "Hypercorn restarted (PID $!)."
+# # Start AI service
+# cd $NR_AIENGINE_PATH/runtime
+# pkill -f "python server.py" 2>/dev/null || true
+# export NR_LOG_LEVEL=INFO
+# nohup python -m hypercorn server:app -c app_config.toml &
+# echo "Hypercorn restarted (PID $!)."
 
 tail -f /dev/null

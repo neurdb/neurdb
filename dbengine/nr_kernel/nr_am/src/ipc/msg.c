@@ -13,8 +13,6 @@ KVChannel* KVChannelInit(const char* name, bool create) {
     NRAM_TEST_INFO("Initializing channel %s from proc %d", name, MyProcPid);
 
     if (create) {
-        // if (found)
-        //     elog(WARNING, "[NRAM] shared memory segment %s has been created before", name);
         memset(shared, 0, sizeof(KVChannelShared));
         LWLockInitialize(&shared->lock, LWLockNewTrancheId());
         ConditionVariableInit(&shared->cv);
@@ -116,6 +114,7 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, long timeout_
 
         if (!block) {
             LWLockRelease(&channel->shared->lock);
+            NRAM_TEST_INFO("KVChannelPush non-blocking and full, push message failed");
             return false;
         }
 
@@ -145,6 +144,7 @@ bool KVChannelPush(KVChannel* channel, const void* data, Size len, long timeout_
         ConditionVariableCancelSleep();
     }
 
+    NRAM_TEST_INFO("KVChannelPush channel not running, push message failed");
     return false;
 }
 
@@ -346,8 +346,12 @@ void PrintKVMsg(const KVMsg* msg) {
         case kv_stop:
             op_str = "STOP";
             break;
+        case kv_range:
+            op_str = "RANGE";
+            break;
         default:
             op_str = "UNKNOWN_OP";
+            elog(ERROR, "PrintKVMsg: unknown op %d", msg->header.op);
             break;
     }
 
