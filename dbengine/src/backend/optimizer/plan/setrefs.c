@@ -1272,6 +1272,15 @@ set_plan_refs(PlannerInfo *root, Plan *plan, int rtoffset)
 				}
 			}
 			break;
+
+		case T_NeurDBPredict:
+			{
+				NeurDBPredict	   *pplan = (NeurDBPredict *) plan;
+
+				set_dummy_tlist_references(plan, rtoffset);
+				Assert(pplan->plan.qual == NIL);
+			}
+			break;
 		default:
 			elog(ERROR, "unrecognized node type: %d",
 				 (int) nodeTag(plan));

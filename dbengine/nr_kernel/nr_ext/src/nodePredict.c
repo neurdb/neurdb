@@ -1,10 +1,12 @@
 #include "postgres.h"
 
-#include "predict.h"
+#include "neurdb/guc.h"
+
+#include "executor/executor.h"
+#include "nodes/execnodes.h"
 
 #include "access/relation.h"
 #include "access/heapam.h"
-#include "executor/executor.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
 #include "parser/parse_target.h"
@@ -19,17 +21,17 @@
 /**
  * Static (fixed) look-up variables
  */
-char	   *modelLookupFuncName = "nr_model_lookup";
+static char *modelLookupFuncName = "nr_model_lookup";
 #define MODEL_LOOKUP_PARAMS_ARRAY_SIZE 3
-Oid			modelLookupArgTypes[MODEL_LOOKUP_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTARRAYOID, TEXTOID};
+static Oid	modelLookupArgTypes[MODEL_LOOKUP_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTARRAYOID, TEXTOID};
 
 #define TRAINING_PARAMS_ARRAY_SIZE 9
-char	   *trainingFuncName = "nr_train";
-Oid			trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
+static char *trainingFuncName = "nr_train";
+static Oid	trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
 
 #define INFERENCE_PARAMS_ARRAY_SIZE 9
-char	   *inferenceFuncName = "nr_inference";
-Oid			inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
+static char *inferenceFuncName = "nr_inference";
+static Oid	inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
 
 
 static List *
@@ -55,7 +57,7 @@ set_false_to_all_params(NullableDatum *args, int size)
 	}
 }
 
-void
+static void
 parseDoubles(const NeurDBInferenceResult * result,
 			 void (*callback) (TupOutputState *, double, List *, bool),
 			 TupOutputState *tstate,
@@ -111,7 +113,7 @@ parseDoubles(const NeurDBInferenceResult * result,
 	}
 }
 
-void
+static void
 insert_float8_to_tup_output(TupOutputState *tstate, float8 value, List *id_class_map, bool enable_debug)
 {
 	Datum		values[1];
@@ -121,7 +123,7 @@ insert_float8_to_tup_output(TupOutputState *tstate, float8 value, List *id_class
 	do_tup_output(tstate, values, nulls);
 }
 
-void
+static void
 insert_cstring_to_tup_output(TupOutputState *tstate, float8 value, List *id_class_map, bool enable_debug)
 {
 	Datum		values[2];
@@ -184,7 +186,7 @@ return_table(DestReceiver *dest, const NeurDBInferenceResult * result)
 
 }
 
-char	  **
+static char **
 get_column_names(const char *schema_name, const char *table_name, const char *exclude, int *num_included_out)
 {
 	int			max_num_columns = 100;
@@ -247,7 +249,7 @@ get_column_names(const char *schema_name, const char *table_name, const char *ex
 * will need to change this to adapt to the actual situation. This function
 * needs to be revamped to be more general.
 */
-void
+static void
 exec_udf(PredictType type,
 		 const char *model,
 		 const char *table,
@@ -417,12 +419,7 @@ exec_udf(PredictType type,
 	}
 }
 
-/*
-* ExecPredictStmt --- Execution for node NeurDBPredictStmt defined in include/nodes/parsenodes.h
-*
-* NeurDBPredictStmt: Node structure in include/nodes/parsenodes.h
-*/
-ObjectAddress
+static TupleTableSlot *
 ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString, DestReceiver *dest)
 {
 	elog(DEBUG1, "[ExecPredictStmt] In the ExecPredictStmt");
@@ -437,12 +434,6 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	initStringInfo(&targetColumn);
 	initStringInfo(&trainOnColumns);
 
-	/* if (stmt->kind == PREDICT_CLASS) */
-	/* { */
-	/* elog(ERROR, "PREDICT CLASS OF is not implemented"); */
-	/* return InvalidObjectAddress; */
-	/* } */
-
 	/*
 	 * Extract the column names from targetList and combine them into a single
 	 * string
@@ -454,14 +445,14 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 		if (res == NULL || res->val == NULL)
 		{
 			elog(ERROR, "Null target column in statement");
-			return InvalidObjectAddress;
+			return NULL;
 		}
 		char	   *colname = FigureColname(res->val);
 
 		if (colname == NULL)
 		{
 			elog(ERROR, "Null column name in target list");
-			return InvalidObjectAddress;
+			return NULL;
 		}
 		appendStringInfo(&targetColumn, "%s", colname);
 	}
@@ -475,7 +466,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 		if (rv == NULL)
 		{
 			elog(ERROR, "Null range variable in from clause");
-			return InvalidObjectAddress;
+			return NULL;
 		}
 		tableName = rv->relname;
 		elog(DEBUG1, "Extracted table name: %s", tableName);
@@ -483,7 +474,7 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	else
 	{
 		elog(ERROR, "No from clause in statement");
-		return InvalidObjectAddress;
+		return NULL;
 	}
 
 	/* Extract the TrainOnSpec */
@@ -528,5 +519,149 @@ ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereC
 	/* Execute the UDF with extracted columns, table name, and where clause */
 	exec_udf(stmt->kind, modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause, dest);
 
-	return InvalidObjectAddress;
+	return;
+}
+
+
+
+static TupleTableSlot *
+ExecNeurDBPredict(PlanState *pstate)
+{
+	NeurDBPredictState *predictstate = (NeurDBPredictState *) pstate;
+	PlanState  *outerPlan;
+	TupleTableSlot *slot;
+
+	outerPlan = outerPlanState(predictstate);
+
+	for (;;)
+	{
+		/* TEMP: Return dummy result */
+		slot = ExecProcNode(outerPlan);
+		if (TupIsNull(slot))
+		{
+			if (predictstate->nrpstate == NEURDBPREDICT_TRAIN)
+			{
+				/* TEMP: We simulate second pass for inference */
+				predictstate->nrpstate = NEURDBPREDICT_INFERENCE;
+				ExecReScan(outerPlan);
+				continue;
+			}
+			else
+			{
+				/* end inference */
+				return NULL;
+			}
+		}
+
+		predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
+		slot = ExecProject(predictstate->ps.ps_ProjInfo);
+
+		break;
+	}
+
+	return slot;
+
+#if 0
+	if (pstate == NULL)
+	{
+		elog(ERROR, "[NeurDB_ExecutePlanWrapper] planstate is NULL.");
+		return NULL;
+	}
+	else
+	{
+		elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] planstate: %p",
+			 (void *) pstate);
+	}
+
+	NeurDBPredictStmt *stmt = predictstate->stmt;
+
+	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] NeurDBPredictStmt extracted: %p",
+		 (void *) stmt);
+
+	const char *whereClauseString = "";
+
+	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt");
+	ExecPredictStmt(stmt, NULL, whereClauseString, pstate->ps_ResultTupleSlot);
+	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt Done");
+#endif
+}
+
+
+NeurDBPredictState *
+ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
+{
+	NeurDBPredictState *predictstate;
+	Plan	   *outerPlan;
+
+	predictstate = makeNode(NeurDBPredictState);
+	predictstate->ps.plan = (Plan *) node;
+	predictstate->ps.plan->targetlist = node->predictTargetList;
+	predictstate->ps.state = estate;
+	predictstate->ps.ExecProcNode = ExecNeurDBPredict;
+
+	/* predictstate->targetList = node->targetList; */
+	/* predictstate->fromClause = node->fromClause; */
+	predictstate->stmt = node->stmt;
+
+	/*
+	 * To use projection, need ExprContext
+	 */
+	ExecAssignExprContext(estate, &predictstate->ps);
+
+	/*
+	 * initialize outer plan
+	 */
+	outerPlan = outerPlan(node);
+	outerPlanState(predictstate) = ExecInitNode(outerPlan, estate, eflags);
+
+	/*
+	 * Initialize result tuple slot
+	 */
+	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
+
+	/*
+	 * initialize projection info
+	 */
+	predictstate->ps.ps_ProjInfo =
+		ExecBuildProjectionInfo(node->predictTargetList,
+								predictstate->ps.ps_ExprContext,
+								predictstate->ps.ps_ResultTupleSlot,
+								predictstate,
+								ExecTypeFromTL(node->predictTargetList));
+
+	/*
+	 * TEMP: We set the state to TRAIN in order to test rescan function.
+	 * In the real setup, the initial state will be decided by whether the
+	 * model is trained or not.
+	 */
+	predictstate->nrpstate = NEURDBPREDICT_TRAIN;
+
+	return predictstate;
+}
+
+/* ----------------------------------------------------------------
+ *		ExecEndNeurDBPredict
+ *
+ *		This shuts down the subplan and frees resources allocated
+ *		to this node.
+ * ----------------------------------------------------------------
+ */
+void
+ExecEndNeurDBPredict(NeurDBPredictState * node)
+{
+	ExecFreeExprContext(&node->ps);
+	ExecEndNode(outerPlanState(node));
+}
+
+void
+ExecReScanNeurDBPredict(NeurDBPredictState * node)
+{
+	PlanState  *outerPlan = outerPlanState(node);
+
+	/*
+	 * If chgParam of subnode is not null then plan will be re-scanned by
+	 * first ExecProcNode.
+	 */
+	if (outerPlan && outerPlan->chgParam == NULL)
+		ExecReScan(outerPlan);
 }

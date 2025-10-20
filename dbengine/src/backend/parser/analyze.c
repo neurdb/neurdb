@@ -3604,6 +3604,10 @@ static Query *
 transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 {
 	Query	   *qry = makeNode(Query);
+	RangeTblEntry *rte;
+	Query 		*subquery;
+	ListCell *l, *ptl;
+	TargetEntry *te, *pte;
 
 	qry->commandType = CMD_PREDICT;
 
@@ -3614,8 +3618,66 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	transformFromClause(pstate, stmt->fromClause);
 
 	/* transform targetlist */
-	qry->targetList = transformTargetList(pstate, stmt->targetList,
+	qry->predictTargetList = transformTargetList(pstate, stmt->targetList,
 										  EXPR_KIND_SELECT_TARGET);
+
+	foreach(l, qry->predictTargetList)
+	{
+		te = (TargetEntry *) lfirst(l);
+		Var *var = (Var *) te->expr;
+		if (IsA(var, Var))
+		{
+			var->varno = OUTER_VAR;
+		}
+	}
+
+	qry->trainOn = transformTargetList(pstate, stmt->trainOnSpec->trainOn,
+									  EXPR_KIND_SELECT_TARGET);
+
+	/* remove all elements in trainOn if they are in predictTargetList */
+	foreach(l, qry->trainOn)
+	{
+		te = (TargetEntry *)lfirst(l);
+		foreach (ptl, qry->predictTargetList) {
+			pte = (TargetEntry *)lfirst(ptl);
+			if (pg_strcasecmp(te->resname, pte->resname) == 0) {
+				qry->trainOn = list_delete_cell(qry->trainOn, l);
+				break;
+			}
+		}
+    }
+
+	/* assign range tables */
+	qry->rtable = pstate->p_rtable;
+	if (list_length(qry->rtable) != 1)
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_SYNTAX_ERROR),
+				 errmsg("PREDICT statement must have exactly one table")));
+	}
+
+	rte = linitial(qry->rtable);
+	if (rte->rtekind == RTE_RELATION)
+	{
+		/*
+		 * if statement is like: PREDICT ... OF r1, r2, ..., rn FROM t,
+		 * then the target list should be r1, r2, ..., rn (same as parsed
+		 * result from stmt->targetList)
+		 */
+		qry->targetList = qry->predictTargetList;
+	}
+	else if (rte->rtekind == RTE_SUBQUERY)
+	{
+		/* we perform a trick here. TODO: explain */
+		subquery = castNode(Query, rte->subquery);
+		qry->targetList = subquery->targetList;
+	}
+	else
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_SYNTAX_ERROR),
+				 errmsg("PREDICT statement must be on a table or a subquery")));
+	}
 
 	/* mark column origins */
 	markTargetListOrigins(pstate, qry->targetList);
@@ -3630,7 +3692,6 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	qry->returningList = NIL;
 
 	/* done building the range table and jointree */
-	qry->rtable = pstate->p_rtable;
 	qry->rteperminfos = pstate->p_rteperminfos;
 	qry->jointree = makeFromExpr(pstate->p_joinlist, NULL);
 
@@ -3651,7 +3712,7 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 	* Although we have already parsed and filled all necessary fields above, to
 	* simplify the later planning, we temporarily use the raw parse node.
 	*/
-	qry->utilityStmt = stmt;
+	qry->predictStmt = stmt;
 
 	return qry;
 }

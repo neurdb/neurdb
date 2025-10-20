@@ -1430,6 +1430,9 @@ ExplainNode(PlanState *planstate, List *ancestors,
 		case T_Hash:
 			pname = sname = "Hash";
 			break;
+		case T_NeurDBPredict:
+			pname = sname = "NeurDB Predict";
+			break;
 		default:
 			pname = sname = "???";
 			break;
