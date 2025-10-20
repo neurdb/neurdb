@@ -36,6 +36,7 @@ include_directories(${nr_pipeline_SOURCE_DIR}/src)
 find_package(OpenSSL REQUIRED)
 
 FILE(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp")
+LIST(REMOVE_ITEM SOURCES "src/interface.c", "src/interface.h") # use interface2.xxx as entry point
 add_library(nr_pipeline SHARED ${SOURCES})
 target_link_libraries(nr_pipeline ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES} ${LWS_LIBRARY} ${SIO_CLIENT} OpenSSL::SSL OpenSSL::Crypto)
 
