@@ -23,6 +23,17 @@
 #include "utils/network/task.h"
 
 
+PG_MODULE_MAGIC;
+
+PG_FUNCTION_INFO_V1(nr_pipeline_init);
+
+PG_FUNCTION_INFO_V1(nr_pipeline_push_slot);
+
+PG_FUNCTION_INFO_V1(nr_pipeline_state_change);
+
+PG_FUNCTION_INFO_V1(nr_pipeline_close);
+
+
 static PipelineSession PIPELINE_SESSION;
 
 char *NrAIEngineHost = "localhost";
@@ -525,4 +536,40 @@ void pipeline_close() {
         PIPELINE_SESSION.id_class_map = NIL;
     }
     memset(&PIPELINE_SESSION, 0, sizeof(PIPELINE_SESSION));
+}
+
+
+Datum nr_pipeline_init(PG_FUNCTION_ARGS) {
+    char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));
+    char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1));
+    int batch_size = PG_GETARG_INT32(2);
+    int epoch = PG_GETARG_INT32(3);
+    int nfeat = PG_GETARG_INT32(4);
+    char **feature_names = PG_GETARG_ARRAYTYPE_P(5);
+    int n_features = PG_GETARG_INT32(6);
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(7));
+    PredictType type = PG_GETARG_INT32(8);
+    TupleDesc tupdesc = (TupleDesc) PG_GETARG_DATUM(9);
+
+    pipeline_init(model_name, table_name, batch_size, epoch, nfeat, feature_names, n_features, target, type, tupdesc);
+    PG_RETURN_VOID();
+}
+
+Datum nr_pipeline_push_slot(PG_FUNCTION_ARGS) {
+    TupleTableSlot *slot = (TupleTableSlot *) PG_GETARG_POINTER(0);
+    char **infer_result_out = NULL;
+    bool flush = PG_GETARG_BOOL(1);
+    pipeline_push_slot(slot, infer_result_out, flush);
+    PG_RETURN_ARRAYTYPE_P(infer_result_out);
+}
+
+Datum nr_pipeline_state_change(PG_FUNCTION_ARGS) {
+    bool to_inference = PG_GETARG_BOOL(0);
+    pipeline_state_change(to_inference);
+    PG_RETURN_VOID();
+}
+
+Datum nr_pipeline_close(PG_FUNCTION_ARGS) {
+    pipeline_close();
+    PG_RETURN_VOID();
 }

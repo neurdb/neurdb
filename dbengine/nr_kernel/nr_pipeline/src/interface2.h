@@ -7,10 +7,12 @@
  *
  *-------------------------------------------------------------------------
  */
-#ifndef NEW_INTERFACE_H
-#define NEW_INTERFACE_H
+#ifndef INTERFACE2_H
+#define INTERFACE2_H
 
 #include <postgres.h>
+#include <fmgr.h>
+
 #include <executor/spi.h>
 
 #include "utils/network/websocket.h"
@@ -70,4 +72,10 @@ typedef struct {
     List *id_class_map;
 } PipelineSession;
 
-#endif //NEW_INTERFACE_H
+
+Datum nr_pipeline_init(PG_FUNCTION_ARGS);
+Datum nr_pipeline_push_slot(PG_FUNCTION_ARGS);
+Datum nr_pipeline_state_change(PG_FUNCTION_ARGS);
+Datum nr_pipeline_close(PG_FUNCTION_ARGS);
+
+#endif //INTERFACE2_H
