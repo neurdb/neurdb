@@ -199,7 +199,7 @@ connect_to_ai_engine() {
     return ws;
 }
 
-static int 
+static int
 _lookup_model(const char *table_name, char **feature_names, int n_features, const char *target) {
     char *hash_features = nr_md5_list(feature_names, n_features);
     char *hash_target = nr_md5_str(target);
@@ -236,7 +236,7 @@ _lookup_model(const char *table_name, char **feature_names, int n_features, cons
     return model_id;
 }
 
-static void 
+static void
 add_slot_to_batch(PipelineSession *session, TupleTableSlot *slot) {
     if (session->batch_vals == NULL) {
         session->batch_capacity = (session->batch_size > 0 ? session->batch_size : 1);
@@ -301,7 +301,7 @@ run_infer_batch(PipelineSession *session, bool flush) {
     return payload;
 }
 
-static void 
+static void
 run_train_batch(PipelineSession *session, bool flush) {
     if (session->batch_capacity > session->batch_count && !flush) {
         // not enough data to run training
@@ -338,7 +338,7 @@ run_train_batch(PipelineSession *session, bool flush) {
 }
 
 /* return true if model is found, false otherwise */
-static bool 
+static bool
 pipeline_init(
     const char *model_name,
     const char *table_name,
@@ -419,7 +419,7 @@ pipeline_init(
     } else {
         // model not found -> training mode
         /*
-         * TODO: we leave nb_tr to PIPELINE_SESSION.n_batches and other to 0 for now 
+         * TODO: we leave nb_tr to PIPELINE_SESSION.n_batches and other to 0 for now
          * meaning using all batches for training and no eval/test
          */
         PIPELINE_SESSION.nb_tr = PIPELINE_SESSION.n_batches;
@@ -454,22 +454,22 @@ pipeline_init(
         TrainTaskSpec *tt = malloc(sizeof(TrainTaskSpec));
         // TODO: we pass 0 for nb_tr/nb_ev/nb_te for now, need to fix
         init_train_task_spec(
-            tt, 
-            PIPELINE_SESSION.model_name, 
-            PIPELINE_SESSION.batch_size, 
+            tt,
+            PIPELINE_SESSION.model_name,
+            PIPELINE_SESSION.batch_size,
             1,
-            PIPELINE_SESSION.nb_tr, 
-            PIPELINE_SESSION.nb_ev, 
+            PIPELINE_SESSION.nb_tr,
+            PIPELINE_SESSION.nb_ev,
             PIPELINE_SESSION.nb_te,
-            0.001, 
-            "optimizer", 
-            "loss", 
-            "metrics", 
+            0.001,
+            "optimizer",
+            "loss",
+            "metrics",
             80,
             char_array2str(PIPELINE_SESSION.feature_names, PIPELINE_SESSION.n_features),
-            PIPELINE_SESSION.target, 
-            PIPELINE_SESSION.nfeat, 
-            PIPELINE_SESSION.n_features, 
+            PIPELINE_SESSION.target,
+            PIPELINE_SESSION.nfeat,
+            PIPELINE_SESSION.n_features,
             n_class
         );
         nws_send_task(PIPELINE_SESSION.ws, T_TRAIN, PIPELINE_SESSION.table_name, tt);
@@ -481,7 +481,7 @@ pipeline_init(
     }
 }
 
-static bool 
+static bool
 pipeline_push_slot(TupleTableSlot *slot, char **infer_result_out, bool flush) {
     if (PIPELINE_SESSION.state == PS_UNINIT) {
         elog(ERROR, "nr_state not initialized, please call pipeline_init first");
@@ -512,7 +512,7 @@ pipeline_push_slot(TupleTableSlot *slot, char **infer_result_out, bool flush) {
     }
 }
 
-static void 
+static void
 pipeline_state_change(bool to_inference) {
     if (to_inference) {
         // TRAIN -> INFER
@@ -529,18 +529,18 @@ pipeline_state_change(bool to_inference) {
                         ? hash_get_num_entries(PIPELINE_SESSION.class_id_map) : -1;
         InferenceTaskSpec *it = malloc(sizeof(InferenceTaskSpec));
         init_inference_task_spec(
-            it, 
-            PIPELINE_SESSION.model_name, 
+            it,
+            PIPELINE_SESSION.model_name,
             PIPELINE_SESSION.batch_size,
-            PIPELINE_SESSION.n_batches, 
-            "metrics", 
-            80, 
+            PIPELINE_SESSION.n_batches,
+            "metrics",
+            80,
             PIPELINE_SESSION.nfeat,
-            PIPELINE_SESSION.n_features, 
-            n_class, 
+            PIPELINE_SESSION.n_features,
+            n_class,
             PIPELINE_SESSION.model_id,
             char_array2str(
-                PIPELINE_SESSION.feature_names, 
+                PIPELINE_SESSION.feature_names,
                 PIPELINE_SESSION.n_features
             ),
             PIPELINE_SESSION.target
@@ -556,7 +556,7 @@ pipeline_state_change(bool to_inference) {
     }
 }
 
-static void 
+static void
 pipeline_close() {
     if (PIPELINE_SESSION.batch_vals) {
         for (int i = 0; i < PIPELINE_SESSION.batch_count; i++) {
@@ -624,7 +624,7 @@ _array_to_cstring_list(ArrayType *arr, int *out_nelems)
     return result;
 }
 
-Datum 
+Datum
 nr_pipeline_init(PG_FUNCTION_ARGS) {
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1));
@@ -641,21 +641,21 @@ nr_pipeline_init(PG_FUNCTION_ARGS) {
     TupleDesc tupdesc = (TupleDesc) PG_GETARG_DATUM(8);
 
     bool is_inference = pipeline_init(
-        model_name, 
-        table_name, 
-        batch_size, 
-        n_batches, 
-        nfeat, 
-        feature_names, 
-        n_features, 
-        target, 
-        type, 
+        model_name,
+        table_name,
+        batch_size,
+        n_batches,
+        nfeat,
+        feature_names,
+        n_features,
+        target,
+        type,
         tupdesc
     );
     PG_RETURN_BOOL(is_inference);
 }
 
-Datum 
+Datum
 nr_pipeline_push_slot(PG_FUNCTION_ARGS) {
     TupleTableSlot *slot = (TupleTableSlot *) PG_GETARG_POINTER(0);
     bool flush = PG_GETARG_BOOL(1);
@@ -678,14 +678,14 @@ nr_pipeline_push_slot(PG_FUNCTION_ARGS) {
     PG_RETURN_POINTER(result);
 }
 
-Datum 
+Datum
 nr_pipeline_state_change(PG_FUNCTION_ARGS) {
     bool to_inference = PG_GETARG_BOOL(0);
     pipeline_state_change(to_inference);
     PG_RETURN_VOID();
 }
 
-Datum 
+Datum
 nr_pipeline_close(PG_FUNCTION_ARGS) {
     pipeline_close();
     PG_RETURN_VOID();

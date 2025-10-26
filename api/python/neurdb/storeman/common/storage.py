@@ -298,7 +298,7 @@ class ModelStorage:
                     ]
                 ),
             )
-            
+
         @property
         def model_meta_pickled(self) -> bytes:
             return self._model_meta_pickled

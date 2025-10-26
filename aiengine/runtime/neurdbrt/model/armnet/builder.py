@@ -319,18 +319,20 @@ class ARMNetModelBuilder(BuilderBase):
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
                 logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
-                
+
                 asyncio.create_task(
-                    WebsocketSender.send(InferenceResultResponse(session_id, predictions).to_json())
+                    WebsocketSender.send(
+                        InferenceResultResponse(session_id, predictions).to_json()
+                    )
                 )
-                
+
                 predictions = []
-                
+
                 if batch_idx + 1 == inf_batch_num:
                     break
-                
-                # since now DB engine sends data and wait for current batch to be processed, 
-                # we need to return after each batch (technically there is only one input in 
+
+                # since now DB engine sends data and wait for current batch to be processed,
+                # we need to return after each batch (technically there is only one input in
                 # the batch now, but that will change in the future)
                 # if data_loader.remaining == 0:
                 #     break

@@ -402,7 +402,7 @@ exec_udf(PredictType type,
 #endif
 
 
-/** 
+/**
  * Fill the given slot with one tuple derived from a NeurDBInferenceResult.
  * The slot already has a valid TupleDesc matching the node’s output schema.
  * Returns the same slot pointer.
@@ -498,10 +498,10 @@ ExecNeurDBPredict(PlanState *pstate)
 
 				/* tell nr_pipeline to change state */
 				elog(DEBUG1, "change state to inference");
-				
+
 				Oid			funcOid = LookupFuncName(
-					list_make1(makeString(stateChangeFuncName)), 
-					STATECHANGE_PARAMS_ARRAY_SIZE, 
+					list_make1(makeString(stateChangeFuncName)),
+					STATECHANGE_PARAMS_ARRAY_SIZE,
 					stateChangeArgTypes,
 					false
 				);
@@ -529,7 +529,7 @@ ExecNeurDBPredict(PlanState *pstate)
 													pushSlotArgTypes,
 													PUSHSLOT_PARAMS_ARRAY_SIZE,
 													args, nulls);
-		
+
 		if (predictstate->nrpstate == NEURDBPREDICT_INFERENCE)
 		{
 			NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(pushSlotRes.value);
@@ -638,7 +638,7 @@ _temp_extract_model_name(NeurDBTrainOnSpec *trainOnSpec)
 	return trainOnSpec->modelName;
 }
 
-static StringInfoData 
+static StringInfoData
 _temp_extract_train_on_columns(List *trainOn)
 {
 	StringInfoData result;
@@ -801,7 +801,7 @@ ExecEndNeurDBPredict(NeurDBPredictState * node)
 	// 	elog(ERROR, "SPI_connect failed");
 
 	OidFunctionCall0(funcOid);
-	
+
 	// if (SPI_finish() != SPI_OK_FINISH)
 	// 	elog(ERROR, "SPI_finish failed");
 
