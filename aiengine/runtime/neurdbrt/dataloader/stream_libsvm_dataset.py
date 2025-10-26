@@ -72,6 +72,10 @@ class StreamingDataSet:
     def __len__(self):
         # max number of batches in current stage.
         return self.stage_counts[self.current_stage]
+    
+    @property
+    def remaining(self):
+        return self.data_cache.current_len()
 
     def setup_for_train_task(
         self, train_batch_num: int, eva_batch_num: int, test_batch_num: int

@@ -32,6 +32,7 @@ typedef struct {
     char *model_name;
     char *table_name;
     int batch_size; // call inferenc every batch_size
+    int n_batches;
     int epoch;
     int nfeat;
     PredictType type;

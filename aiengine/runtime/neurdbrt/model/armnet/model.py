@@ -122,7 +122,10 @@ class ARMNetModel(nn.Module):
             torch.einsum("bfe,bkof->bkoe", x_arm, arm_weight)
         )  # bsz*nhead*nhid*nemb
         x_arm = rearrange(x_arm, "b k o e -> b (k o) e")  # bsz*(nhead*nhid)*nemb
-        x_arm = self.arm_bn(x_arm)  # bsz*(nhead*nhid)*nemb
+        
+        if x_arm.shape[0] > 1: # apply batch norm only when batch size > 1
+            x_arm = self.arm_bn(x_arm)  # bsz*(nhead*nhid)*nemb
+        
         x_arm = rearrange(x_arm, "b h e -> b (h e)")  # bsz*(nhead*nhid*nemb)
 
         y = self.mlp(x_arm)  # bsz*noutput
@@ -133,5 +136,7 @@ class ARMNetModel(nn.Module):
 
             y = torch.cat([y, y_deep], dim=1)  # bsz*(2*noutput)
             y = self.ensemble_layer(y)  # bsz*noutput
+        
+        y = y.squeeze(1)  # bsz*noutput
 
-        return y.squeeze()  # bsz*noutput
+        return y

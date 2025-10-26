@@ -288,7 +288,9 @@ run_infer_batch(PipelineSession *session, bool flush) {
     );
     nws_send_batch_data(ws, 0, S_INFERENCE, libsvm.data);
     nws_wait_completion(ws);
-    char *payload = pstrdup(ws->result);
+    /* reset completion flag */
+    ws->completed = 0;
+    char* payload = pstrdup(ws->result);
 
     // clean up
     free(ws->result);
@@ -341,7 +343,7 @@ pipeline_init(
     const char *model_name,
     const char *table_name,
     int batch_size,
-    int epoch,
+    int n_batches,
     int nfeat,
     char **feature_names,
     int n_features,
@@ -355,7 +357,8 @@ pipeline_init(
     PIPELINE_SESSION.model_name = MemoryContextStrdup(TopMemoryContext, model_name);
     PIPELINE_SESSION.table_name = MemoryContextStrdup(TopMemoryContext, table_name);
     PIPELINE_SESSION.batch_size = batch_size;
-    PIPELINE_SESSION.epoch = epoch;
+    // PIPELINE_SESSION.epoch = epoch;
+    PIPELINE_SESSION.n_batches = n_batches;
     PIPELINE_SESSION.nfeat = nfeat;
     PIPELINE_SESSION.type = type;
     PIPELINE_SESSION.tupdesc = tupdesc;
@@ -399,7 +402,7 @@ pipeline_init(
             it,
             PIPELINE_SESSION.model_name,
             PIPELINE_SESSION.batch_size,
-            -1,
+            PIPELINE_SESSION.n_batches,
             "metrics",
             80,
             PIPELINE_SESSION.nfeat,
@@ -407,15 +410,19 @@ pipeline_init(
             n_class,
             PIPELINE_SESSION.model_id,
             char_array2str(PIPELINE_SESSION.feature_names, PIPELINE_SESSION.n_features),
-            PIPELINE_SESSION.target);
+            PIPELINE_SESSION.target
+        );
         nws_send_task(PIPELINE_SESSION.ws, T_INFERENCE, PIPELINE_SESSION.table_name, it);
         free_inference_task_spec(it);
 
         return true;
     } else {
         // model not found -> training mode
-        // TODO: we leave nb_tr/nb_ev/nb_te to 0 for now, meaning using all batches for training and no eval/test
-        PIPELINE_SESSION.nb_tr = 0;
+        /*
+         * TODO: we leave nb_tr to PIPELINE_SESSION.n_batches and other to 0 for now 
+         * meaning using all batches for training and no eval/test
+         */
+        PIPELINE_SESSION.nb_tr = PIPELINE_SESSION.n_batches;
         PIPELINE_SESSION.nb_ev = 0;
         PIPELINE_SESSION.nb_te = 0;
 
@@ -447,11 +454,24 @@ pipeline_init(
         TrainTaskSpec *tt = malloc(sizeof(TrainTaskSpec));
         // TODO: we pass 0 for nb_tr/nb_ev/nb_te for now, need to fix
         init_train_task_spec(
-            tt, PIPELINE_SESSION.model_name, PIPELINE_SESSION.batch_size, PIPELINE_SESSION.epoch,
-            PIPELINE_SESSION.nb_tr, PIPELINE_SESSION.nb_ev, PIPELINE_SESSION.nb_te,
-            0.001, "optimizer", "loss", "metrics", 80,
+            tt, 
+            PIPELINE_SESSION.model_name, 
+            PIPELINE_SESSION.batch_size, 
+            1,
+            PIPELINE_SESSION.nb_tr, 
+            PIPELINE_SESSION.nb_ev, 
+            PIPELINE_SESSION.nb_te,
+            0.001, 
+            "optimizer", 
+            "loss", 
+            "metrics", 
+            80,
             char_array2str(PIPELINE_SESSION.feature_names, PIPELINE_SESSION.n_features),
-            PIPELINE_SESSION.target, PIPELINE_SESSION.nfeat, PIPELINE_SESSION.n_features, n_class);
+            PIPELINE_SESSION.target, 
+            PIPELINE_SESSION.nfeat, 
+            PIPELINE_SESSION.n_features, 
+            n_class
+        );
         nws_send_task(PIPELINE_SESSION.ws, T_TRAIN, PIPELINE_SESSION.table_name, tt);
         free_train_task_spec(tt);
         // set to training state
@@ -508,11 +528,23 @@ pipeline_state_change(bool to_inference) {
         int n_class = (PIPELINE_SESSION.type == PREDICT_CLASS && PIPELINE_SESSION.class_id_map)
                         ? hash_get_num_entries(PIPELINE_SESSION.class_id_map) : -1;
         InferenceTaskSpec *it = malloc(sizeof(InferenceTaskSpec));
-        init_inference_task_spec(it, PIPELINE_SESSION.model_name, PIPELINE_SESSION.batch_size,
-                                 /*n_batches=*/-1, "metrics", 80, PIPELINE_SESSION.nfeat,
-                                 PIPELINE_SESSION.n_features, n_class, PIPELINE_SESSION.model_id,
-                                 char_array2str(PIPELINE_SESSION.feature_names, PIPELINE_SESSION.n_features),
-                                 PIPELINE_SESSION.target);
+        init_inference_task_spec(
+            it, 
+            PIPELINE_SESSION.model_name, 
+            PIPELINE_SESSION.batch_size,
+            PIPELINE_SESSION.n_batches, 
+            "metrics", 
+            80, 
+            PIPELINE_SESSION.nfeat,
+            PIPELINE_SESSION.n_features, 
+            n_class, 
+            PIPELINE_SESSION.model_id,
+            char_array2str(
+                PIPELINE_SESSION.feature_names, 
+                PIPELINE_SESSION.n_features
+            ),
+            PIPELINE_SESSION.target
+        );
         nws_send_task(PIPELINE_SESSION.ws, T_INFERENCE, PIPELINE_SESSION.table_name, it);
         free_inference_task_spec(it);
 
@@ -597,7 +629,7 @@ nr_pipeline_init(PG_FUNCTION_ARGS) {
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1));
     int batch_size = PG_GETARG_INT32(2);
-    int epoch = PG_GETARG_INT32(3);
+    int n_batches = PG_GETARG_INT32(3);
     int nfeat = PG_GETARG_INT32(4);
 
     ArrayType *arr = PG_GETARG_ARRAYTYPE_P(5);
@@ -612,7 +644,7 @@ nr_pipeline_init(PG_FUNCTION_ARGS) {
         model_name, 
         table_name, 
         batch_size, 
-        epoch, 
+        n_batches, 
         nfeat, 
         feature_names, 
         n_features, 
@@ -628,8 +660,7 @@ nr_pipeline_push_slot(PG_FUNCTION_ARGS) {
     TupleTableSlot *slot = (TupleTableSlot *) PG_GETARG_POINTER(0);
     bool flush = PG_GETARG_BOOL(1);
 
-    char **infer_result_out = NULL;
-
+    char **infer_result_out = (char **) palloc(sizeof(char *));
     pipeline_push_slot(slot, infer_result_out, flush);
 
     NeurDBInferenceResult *result = palloc(sizeof(NeurDBInferenceResult));
@@ -641,7 +672,7 @@ nr_pipeline_push_slot(PG_FUNCTION_ARGS) {
     } else {
         elog(ERROR, "Unsupported data type");
     }
-    result->result = &infer_result_out;
+    result->result = *infer_result_out;
     result->id_class_map = last_id_class_map;
 
     PG_RETURN_POINTER(result);

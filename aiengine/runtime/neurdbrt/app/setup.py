@@ -121,6 +121,7 @@ class Setup:
         inf_batch_num: int,
         feature_names: List[str],
         target_name: str,
+        session_id: str,
     ) -> Tuple[List[List[Any]], Error]:
         try:
             self.libsvm_data.setup_for_inference_task(inf_batch_num)
@@ -135,7 +136,7 @@ class Setup:
                 return [], f"model {self._model_name} not trained yet"
 
             infer_res = await builder.inference(
-                self.libsvm_data, inf_batch_num, feature_names, target_name
+                self.libsvm_data, inf_batch_num, feature_names, target_name, session_id
             )
             return infer_res, None
 

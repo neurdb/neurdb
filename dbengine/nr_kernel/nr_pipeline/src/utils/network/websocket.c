@@ -184,8 +184,15 @@ nws_send_batch_data(NrWebsocket * ws, const int batch_id,
 	cJSON_AddStringToObject(json, "byte", batch_data);
 	char	   *data = cJSON_PrintUnformatted(json);
 
-	enqueue(&ws->queue, data);
+	/* OLD: send data in queue */
+#if 0
 	/* enqueue the data */
+	enqueue(&ws->queue, data);
+#endif
+
+	/* NEW: send data directly */
+	send_json(ws, json);
+
 	/* clean up */
 	cJSON_Delete(json);
 	free(data);
@@ -353,7 +360,10 @@ callback(struct lws *wsi, enum lws_callback_reasons callback_reason,
 
 			if (strcmp(event->valuestring, "request_data") == 0)
 			{
+				/* NEW: We should not use queue to block ourselves */
+#if 0
 				handle_request_data(websocket, json);
+#endif
 			}
 			else if (strcmp(event->valuestring, "result") == 0)
 			{
@@ -424,12 +434,12 @@ handle_result(NrWebsocket * ws, const cJSON * json)
 	cJSON *result = cJSON_GetObjectItem(json, "byte");
 	if (result == NULL || !cJSON_IsString(result))
 	{
-		elog(NOTICE, "No 'byte' in response. Should be training/finetuning\n");
+		elog(DEBUG2, "No 'byte' in response. Should be training/finetuning\n");
 		int model_id = cJSON_GetObjectItem(json, "modelId")->valueint;
 		ws->model_id = model_id;
 		ws->result = NULL;
 	} else {
-		elog(NOTICE, "'byte' found in response. Should be inference\n");
+		elog(DEBUG2, "'byte' found in response. Should be inference\n");
 		ws->result = (char *) malloc(strlen(result->valuestring) + 1);
 		strcpy(ws->result, result->valuestring);
 	}

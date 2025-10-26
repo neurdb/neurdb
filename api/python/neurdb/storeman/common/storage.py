@@ -271,13 +271,13 @@ class ModelStorage:
             @note: This implementation is a roundabout way to support constructor overloading in Python
             """
             if isinstance(model, bytes) and layer_sequence_pickled is not None:
-                self.model_meta_pickled = model
-                self.layer_sequence_pickled = layer_sequence_pickled
+                self._model_meta_pickled = model
+                self._layer_sequence_pickled = layer_sequence_pickled
             elif isinstance(model, ModelStorage):
-                self.model_meta_pickled = pickle.dumps(
+                self._model_meta_pickled = pickle.dumps(
                     {"class": model.model_class, "init_params": model.init_params}
                 )
-                self.layer_sequence_pickled = model.layer_sequence.get_pickled()
+                self._layer_sequence_pickled = model.layer_sequence.get_pickled()
             else:
                 raise ValueError(
                     "Invalid arguments for ModelStorage.Pickled constructor"
@@ -298,6 +298,22 @@ class ModelStorage:
                     ]
                 ),
             )
+            
+        @property
+        def model_meta_pickled(self) -> bytes:
+            return self._model_meta_pickled
+
+        @model_meta_pickled.setter
+        def model_meta_pickled(self, value: bytes):
+            self._model_meta_pickled = value
+
+        @property
+        def layer_sequence_pickled(self) -> List[bytes]:
+            return self._layer_sequence_pickled
+
+        @layer_sequence_pickled.setter
+        def layer_sequence_pickled(self, value: List[bytes]):
+            self._layer_sequence_pickled = value
 
 
 class PickledList(Pickled):

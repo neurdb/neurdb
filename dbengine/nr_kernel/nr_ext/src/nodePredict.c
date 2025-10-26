@@ -178,7 +178,7 @@ insert_cstring_to_tup_output(TupOutputState *tstate, float8 value, List *id_clas
 	do_tup_output(tstate, values, nulls);
 }
 
-
+#if 0
 static void
 return_table(DestReceiver *dest, const NeurDBInferenceResult * result)
 {
@@ -214,6 +214,7 @@ return_table(DestReceiver *dest, const NeurDBInferenceResult * result)
 	end_tup_output(tstate);
 
 }
+#endif
 
 static char **
 get_column_names(const char *schema_name, const char *table_name, const char *exclude, int *num_included_out)
@@ -416,11 +417,17 @@ build_result_slot(const NeurDBInferenceResult *result, TupleTableSlot *slot)
     char *endptr = NULL;
     const char *s = result->result;
 
-    ExecClearTuple(slot);
+    // ExecClearTuple(slot);
 
     /* parse first number from result->result */
     if (s && *s)
-        parsed = strtod(s, &endptr);
+	{
+        parsed = atof(s);
+	}
+	else
+	{
+		elog(ERROR, "Failed to parse float");
+	}
 
     if (is_float)
     {
@@ -429,9 +436,10 @@ build_result_slot(const NeurDBInferenceResult *result, TupleTableSlot *slot)
         else
             values[0] = Float8GetDatum(parsed);
 
-        ExecStoreVirtualTuple(slot);
+        // ExecStoreVirtualTuple(slot);
         slot->tts_values[0] = values[0];
         slot->tts_isnull[0] = nulls[0];
+		slot->tts_tupleDescriptor->attrs[0].atttypid = FLOAT8OID;
     }
     else if (result->typeoid == TEXTOID)
     {
@@ -454,7 +462,7 @@ build_result_slot(const NeurDBInferenceResult *result, TupleTableSlot *slot)
         nulls[0] = false;
         nulls[1] = (endptr == s);
 
-        ExecStoreVirtualTuple(slot);
+        // ExecStoreVirtualTuple(slot);
         slot->tts_values[0] = values[0];
         slot->tts_values[1] = values[1];
         slot->tts_isnull[0] = nulls[0];
@@ -486,8 +494,22 @@ ExecNeurDBPredict(PlanState *pstate)
 		{
 			if (predictstate->nrpstate == NEURDBPREDICT_TRAIN)
 			{
-				/* TEMP: We simulate second pass for inference */
 				predictstate->nrpstate = NEURDBPREDICT_INFERENCE;
+
+				/* tell nr_pipeline to change state */
+				elog(DEBUG1, "change state to inference");
+				
+				Oid			funcOid = LookupFuncName(
+					list_make1(makeString(stateChangeFuncName)), 
+					STATECHANGE_PARAMS_ARRAY_SIZE, 
+					stateChangeArgTypes,
+					false
+				);
+				if (!OidIsValid(funcOid))
+					elog(ERROR, "Function %s not found", stateChangeFuncName);
+
+				OidFunctionCall1(funcOid, BoolGetDatum(true));
+
 				ExecReScan(outerPlan);
 				continue;
 			}
