@@ -18,25 +18,6 @@
 #include "utils/network/websocket.h"
 
 
-void pipeline_init(
-    const char *model_name,
-    const char *table_name,
-    int batch_size,
-    int epoch,
-    int nfeat,
-    char **feature_names,
-    int n_features,
-    const char *target,
-    PredictType type,
-    TupleDesc tupdesc
-);
-
-bool pipeline_push_slot(TupleTableSlot *slot, char **infer_result_out, bool flush);
-
-void pipeline_state_change(bool to_inference);
-
-void pipeline_close();
-
 typedef enum {
     PS_UNINIT = 0,
     PS_TRAIN = 1,

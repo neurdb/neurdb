@@ -404,6 +404,7 @@ NeurDB_planner(Query *parse, const char *query_string, int cursorOptions,
 	{
 		/* Add NeurDBPredict node to the top plan */
 		NeurDBPredict *top_plan_add_predict = makeNode(NeurDBPredict);
+
 		top_plan_add_predict->plan.targetlist = parse->targetList;
 		top_plan_add_predict->plan.qual = NIL;
 		top_plan_add_predict->plan.lefttree = top_plan;
@@ -417,6 +418,8 @@ NeurDB_planner(Query *parse, const char *query_string, int cursorOptions,
 
 		top_plan_add_predict->predictTargetList = parse->predictTargetList;
 		top_plan_add_predict->trainOn = parse->trainOn;
+
+		top_plan_add_predict->stmt = parse->predictStmt;
 
 		top_plan = top_plan_add_predict;
 	}

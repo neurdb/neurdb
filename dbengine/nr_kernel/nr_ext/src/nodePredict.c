@@ -3,6 +3,7 @@
 #include "neurdb/guc.h"
 
 #include "executor/executor.h"
+#include "executor/spi.h"
 #include "nodes/execnodes.h"
 
 #include "access/relation.h"
@@ -18,20 +19,48 @@
 #include "nodes/primnodes.h"
 #include "nodes/makefuncs.h"
 
-/**
- * Static (fixed) look-up variables
- */
-static char *modelLookupFuncName = "nr_model_lookup";
-#define MODEL_LOOKUP_PARAMS_ARRAY_SIZE 3
-static Oid	modelLookupArgTypes[MODEL_LOOKUP_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTARRAYOID, TEXTOID};
 
-#define TRAINING_PARAMS_ARRAY_SIZE 9
 static char *trainingFuncName = "nr_train";
+#define TRAINING_PARAMS_ARRAY_SIZE 9
 static Oid	trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
 
-#define INFERENCE_PARAMS_ARRAY_SIZE 9
 static char *inferenceFuncName = "nr_inference";
+#define INFERENCE_PARAMS_ARRAY_SIZE 9
 static Oid	inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
+
+static char *initFuncName = "nr_pipeline_init";
+#define INIT_PARAMS_ARRAY_SIZE 9
+static Oid	initArgTypes[INIT_PARAMS_ARRAY_SIZE] =
+{
+	TEXTOID, //model name
+	TEXTOID, //table name
+	INT4OID, //batch size
+	INT4OID, //epoch
+	INT4OID, //nfeat
+	TEXTARRAYOID, //feature names
+	TEXTOID, //target
+	INT4OID, //type
+	ANYELEMENTOID // tupdesc
+};
+
+static char *pushSlotFuncName = "nr_pipeline_push_slot";
+#define PUSHSLOT_PARAMS_ARRAY_SIZE 2
+static Oid	pushSlotArgTypes[PUSHSLOT_PARAMS_ARRAY_SIZE] =
+{
+	ANYELEMENTOID, //slot
+	BOOLOID // flush
+};
+
+static char *stateChangeFuncName = "nr_pipeline_state_change";
+#define STATECHANGE_PARAMS_ARRAY_SIZE 1
+static Oid	stateChangeArgTypes[STATECHANGE_PARAMS_ARRAY_SIZE] =
+{
+	BOOLOID // to inference
+};
+
+static char *closeFuncName = "nr_pipeline_close";
+#define CLOSE_PARAMS_ARRAY_SIZE 0
+static Oid	closeArgTypes[CLOSE_PARAMS_ARRAY_SIZE] = {};
 
 
 static List *
@@ -238,6 +267,49 @@ get_column_names(const char *schema_name, const char *table_name, const char *ex
 	return column_names;
 }
 
+
+typedef struct
+{
+	Datum		value;
+	bool		isnull;
+}			UdfResult;
+
+static UdfResult
+call_udf_function(const char *funcName,
+				  Oid *argTypes,
+				  int nargs,
+				  Datum *args,
+				  bool *nulls)
+{
+	FmgrInfo	fmgrInfo;
+
+	LOCAL_FCINFO(fcinfo, FUNC_MAX_ARGS);
+	Oid			funcOid;
+	UdfResult	result;
+
+	funcOid = LookupFuncName(list_make1(makeString(funcName)), nargs, argTypes, false);
+	if (!OidIsValid(funcOid))
+		elog(ERROR, "Function %s not found", funcName);
+
+	fmgr_info(funcOid, &fmgrInfo);
+	InitFunctionCallInfoData(*fcinfo, &fmgrInfo, nargs, InvalidOid, NULL, NULL);
+
+	for (int i = 0; i < nargs; i++)
+	{
+		fcinfo->args[i].value = args[i];
+		fcinfo->args[i].isnull = nulls ? nulls[i] : false;
+	}
+
+	result.value = FunctionCallInvoke(fcinfo);
+	result.isnull = fcinfo->isnull;
+
+	if (result.isnull)
+		elog(DEBUG2, "%s returned NULL", funcName);
+
+	return result;
+}
+
+#if 0
 /*
 * exec_udf --- Execute customer UDFs
 *
@@ -258,113 +330,33 @@ exec_udf(PredictType type,
 		 const char *whereClause,
 		 DestReceiver *dest)
 {
-	/* lookup function call infos */
-	FmgrInfo	modelLookupFmgrInfo;
-
-	/* fcinfo for lookup function */
-	LOCAL_FCINFO(modelLookupFCInfo, FUNC_MAX_ARGS);
-	Datum		modelLookupResult;
-
-	Oid			modelLookupFuncOid = LookupFuncName(list_make1(makeString(modelLookupFuncName)), 3, modelLookupArgTypes, false);
-
-	if (!OidIsValid(modelLookupFuncOid))
-	{
-		elog(ERROR, "Function %s not found", modelLookupFuncName);
-		return;
-	}
-
-	fmgr_info(modelLookupFuncOid, &modelLookupFmgrInfo);
-	InitFunctionCallInfoData(*modelLookupFCInfo, &modelLookupFmgrInfo, MODEL_LOOKUP_PARAMS_ARRAY_SIZE, InvalidOid, NULL, NULL);
-
-	/* split columns into an array of text */
-	List	   *trainColumnsList = split_columns(trainColumns);
-	Datum	   *trainColumnDatums;
-	int			nTrainColumns = 0;
-
-	if (strlen(trainColumns) == 0)
-	{
-		/* all columns are used for training */
-
-		/* get all column names */
-
-		char	  **allColumns = get_column_names("public", table, targetColumn, &nTrainColumns);
-
-		trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
-		for (int i = 0; i < nTrainColumns; i++)
-		{
-			trainColumnDatums[i] = CStringGetTextDatum(allColumns[i]);
-		}
-
-		for (int i = 0; i < nTrainColumns; i++)
-		{
-			pfree(allColumns[i]);
-		}
-	}
-	else
-	{
-		nTrainColumns = list_length(trainColumnsList);
-		trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
-		for (int i = 0; i < nTrainColumns; i++)
-		{
-			trainColumnDatums[i] = CStringGetTextDatum(strVal(list_nth(trainColumnsList, i)));
-		}
-
-	}
-	ArrayType  *trainColumnArray = construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
-
-	modelLookupFCInfo->args[0].value = CStringGetTextDatum(table);
-	modelLookupFCInfo->args[1].value = PointerGetDatum(trainColumnArray);
-	modelLookupFCInfo->args[2].value = CStringGetTextDatum(targetColumn);
-
-	modelLookupResult = FunctionCallInvoke(modelLookupFCInfo);
+	ArrayType  *trainColumnArray = get_train_columns_array(table, targetColumn, trainColumns);
 	int			modelId = 0;
-
-	/* modelLookupResult is a boolean */
-	if (!modelLookupFCInfo->isnull)
-	{
-		modelId = DatumGetInt32(modelLookupResult);
-	}
 
 	/* model does not exist, training first */
 	if (modelId == 0)
 	{
-		FmgrInfo	trainingFmgrInfo;
+		Datum		args[TRAINING_PARAMS_ARRAY_SIZE];
+		bool		nulls[TRAINING_PARAMS_ARRAY_SIZE] = {false};
 
-		/* fcinfo for training function */
-		LOCAL_FCINFO(trainingFCInfo, FUNC_MAX_ARGS);
-		Datum		trainingResult;
+		args[0] = CStringGetTextDatum(model);
+		args[1] = CStringGetTextDatum(table);
+		args[2] = Int32GetDatum(NrTaskBatchSize);
+		args[3] = Int32GetDatum(NrTaskNumBatches);
+		args[4] = Int32GetDatum(NrTaskEpoch);
+		args[5] = Int32GetDatum(NrTaskMaxFeatures);
+		args[6] = PointerGetDatum(trainColumnArray);
+		args[7] = CStringGetTextDatum(targetColumn);
+		args[8] = Int32GetDatum(type);
 
-		Oid			trainingFuncOid = LookupFuncName(list_make1(makeString(trainingFuncName)),
-													 TRAINING_PARAMS_ARRAY_SIZE, trainingArgTypes, false);
+		UdfResult	res = call_udf_function(trainingFuncName,
+											trainingArgTypes,
+											TRAINING_PARAMS_ARRAY_SIZE,
+											args, nulls);
 
-		if (!OidIsValid(trainingFuncOid))
+		if (!res.isnull)
 		{
-			elog(ERROR, "Function %s not found", trainingFuncName);
-			return;
-		}
-
-		/* rebuild trainColumnArray since it's freed in nr_train() */
-		ArrayType  *trainColumnArray = construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
-
-		fmgr_info(trainingFuncOid, &trainingFmgrInfo);
-		InitFunctionCallInfoData(*trainingFCInfo, &trainingFmgrInfo, TRAINING_PARAMS_ARRAY_SIZE, InvalidOid, NULL, NULL);
-
-		trainingFCInfo->args[0].value = CStringGetTextDatum(model);
-		trainingFCInfo->args[1].value = CStringGetTextDatum(table);
-		trainingFCInfo->args[2].value = Int32GetDatum(NrTaskBatchSize);
-		trainingFCInfo->args[3].value = Int32GetDatum(NrTaskNumBatches);
-		trainingFCInfo->args[4].value = Int32GetDatum(NrTaskEpoch);
-		trainingFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
-		trainingFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
-		trainingFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
-		trainingFCInfo->args[8].value = Int32GetDatum(type);
-
-		set_false_to_all_params(trainingFCInfo->args, TRAINING_PARAMS_ARRAY_SIZE);
-
-		trainingResult = FunctionCallInvoke(trainingFCInfo);
-		if (!trainingFCInfo->isnull)
-		{
-			int			result = DatumGetInt32(trainingResult);
+			int			result = DatumGetInt32(res.value);
 
 			elog(NOTICE, "Training result: %d", result);
 			modelId = result;
@@ -376,40 +368,28 @@ exec_udf(PredictType type,
 	}
 
 	/* inference */
-	FmgrInfo	inferenceFmgrInfo;
+	ArrayType  *trainColumnArray = get_train_columns_array(table, targetColumn, trainColumns);
+	Datum		args[INFERENCE_PARAMS_ARRAY_SIZE];
+	bool		nulls[INFERENCE_PARAMS_ARRAY_SIZE] = {false};
 
-	/* fcinfo for inference function */
-	LOCAL_FCINFO(inferenceFCInfo, FUNC_MAX_ARGS);
-	Datum		inferenceResult;
+	args[0] = CStringGetTextDatum(model);
+	args[1] = Int32GetDatum(modelId);
+	args[2] = CStringGetTextDatum(table);
+	args[3] = Int32GetDatum(NrTaskBatchSize);
+	args[4] = Int32GetDatum(NrTaskEpoch);
+	args[5] = Int32GetDatum(NrTaskMaxFeatures);
+	args[6] = PointerGetDatum(trainColumnArray);
+	args[7] = CStringGetTextDatum(targetColumn);
+	args[8] = Int32GetDatum(type);
 
-	Oid			inferenceFuncOid = LookupFuncName(list_make1(makeString(inferenceFuncName)),
-												  INFERENCE_PARAMS_ARRAY_SIZE, inferenceArgTypes, false);
+	UdfResult	inferRes = call_udf_function(inferenceFuncName,
+											 inferenceArgTypes,
+											 INFERENCE_PARAMS_ARRAY_SIZE,
+											 args, nulls);
 
-	if (!OidIsValid(inferenceFuncOid))
+	if (!inferRes.isnull)
 	{
-		elog(ERROR, "Function %s not found", inferenceFuncName);
-		return;
-	}
-
-	fmgr_info(inferenceFuncOid, &inferenceFmgrInfo);
-	InitFunctionCallInfoData(*inferenceFCInfo, &inferenceFmgrInfo, INFERENCE_PARAMS_ARRAY_SIZE, InvalidOid, NULL, NULL);
-
-	inferenceFCInfo->args[0].value = CStringGetTextDatum(model);
-	inferenceFCInfo->args[1].value = Int32GetDatum(modelId);
-	inferenceFCInfo->args[2].value = CStringGetTextDatum(table);
-	inferenceFCInfo->args[3].value = Int32GetDatum(NrTaskBatchSize);
-	inferenceFCInfo->args[4].value = Int32GetDatum(NrTaskNumBatches);
-	inferenceFCInfo->args[5].value = Int32GetDatum(NrTaskMaxFeatures);
-	inferenceFCInfo->args[6].value = PointerGetDatum(trainColumnArray);
-	inferenceFCInfo->args[7].value = CStringGetTextDatum(targetColumn);
-	inferenceFCInfo->args[8].value = Int32GetDatum(type);
-
-	set_false_to_all_params(inferenceFCInfo->args, INFERENCE_PARAMS_ARRAY_SIZE);
-
-	inferenceResult = FunctionCallInvoke(inferenceFCInfo);
-	if (!inferenceFCInfo->isnull)
-	{
-		NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(inferenceResult);
+		NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(inferRes.value);
 
 		return_table(dest, result);
 	}
@@ -418,110 +398,75 @@ exec_udf(PredictType type,
 		elog(DEBUG2, "Inference result is NULL");
 	}
 }
+#endif
 
+
+/** 
+ * Fill the given slot with one tuple derived from a NeurDBInferenceResult.
+ * The slot already has a valid TupleDesc matching the node’s output schema.
+ * Returns the same slot pointer.
+ */
 static TupleTableSlot *
-ExecPredictStmt(NeurDBPredictStmt * stmt, ParseState *pstate, const char *whereClauseString, DestReceiver *dest)
+build_result_slot(const NeurDBInferenceResult *result, TupleTableSlot *slot)
 {
-	elog(DEBUG1, "[ExecPredictStmt] In the ExecPredictStmt");
+    bool  is_float = (result->typeoid == FLOAT8OID);
+    Datum values[2];
+    bool  nulls[2] = {false, false};
+    double parsed = 0.0;
+    char *endptr = NULL;
+    const char *s = result->result;
 
-	ListCell   *cell;
-	StringInfoData targetColumn;
-	StringInfoData trainOnColumns;
-	char	   *modelName = NULL;
-	char	   *tableName = NULL;
-	char	   *whereClause = "<DEPRECATED>";
+    ExecClearTuple(slot);
 
-	initStringInfo(&targetColumn);
-	initStringInfo(&trainOnColumns);
+    /* parse first number from result->result */
+    if (s && *s)
+        parsed = strtod(s, &endptr);
 
-	/*
-	 * Extract the column names from targetList and combine them into a single
-	 * string
-	 */
-	foreach(cell, stmt->targetList)
-	{
-		ResTarget  *res = (ResTarget *) lfirst(cell);
+    if (is_float)
+    {
+        if (endptr == s)
+            nulls[0] = true;
+        else
+            values[0] = Float8GetDatum(parsed);
 
-		if (res == NULL || res->val == NULL)
-		{
-			elog(ERROR, "Null target column in statement");
-			return NULL;
-		}
-		char	   *colname = FigureColname(res->val);
+        ExecStoreVirtualTuple(slot);
+        slot->tts_values[0] = values[0];
+        slot->tts_isnull[0] = nulls[0];
+    }
+    else if (result->typeoid == TEXTOID)
+    {
+        /* derive label and debug value */
+        const char *label = NULL;
 
-		if (colname == NULL)
-		{
-			elog(ERROR, "Null column name in target list");
-			return NULL;
-		}
-		appendStringInfo(&targetColumn, "%s", colname);
-	}
-	targetColumn.data[targetColumn.len] = '\0';
+        if (endptr != s && result->id_class_map && list_length(result->id_class_map) >= 2)
+        {
+            label = (parsed > 0)
+                ? strVal(list_nth(result->id_class_map, 1))
+                : strVal(list_nth(result->id_class_map, 0));
+        }
+        else
+        {
+            label = result->result ? result->result : "";
+        }
 
-	/* Extract the table name from fromClause */
-	if (stmt->fromClause != NIL)
-	{
-		RangeVar   *rv = (RangeVar *) linitial(stmt->fromClause);
+        values[0] = CStringGetTextDatum(label);
+        values[1] = Float8GetDatum(parsed);
+        nulls[0] = false;
+        nulls[1] = (endptr == s);
 
-		if (rv == NULL)
-		{
-			elog(ERROR, "Null range variable in from clause");
-			return NULL;
-		}
-		tableName = rv->relname;
-		elog(DEBUG1, "Extracted table name: %s", tableName);
-	}
-	else
-	{
-		elog(ERROR, "No from clause in statement");
-		return NULL;
-	}
+        ExecStoreVirtualTuple(slot);
+        slot->tts_values[0] = values[0];
+        slot->tts_values[1] = values[1];
+        slot->tts_isnull[0] = nulls[0];
+        slot->tts_isnull[1] = nulls[1];
+    }
+    else
+    {
+        elog(ERROR, "Unsupported typeoid in build_result_slot: %u", result->typeoid);
+    }
 
-	/* Extract the TrainOnSpec */
-	if (stmt->trainOnSpec != NULL)
-	{
-		NeurDBTrainOnSpec *trainOnSpec = (NeurDBTrainOnSpec *) stmt->trainOnSpec;
-
-		foreach(cell, trainOnSpec->trainOn)
-		{
-			Node	   *columnName = (Node *) lfirst(cell);
-
-			if (columnName->type == T_A_Star)
-			{
-				elog(DEBUG1, "Train on all columns");
-				resetStringInfo(&trainOnColumns);
-				break;
-			}
-			appendStringInfo(&trainOnColumns, "%s,", strVal(columnName));
-		}
-
-		if (strlen(trainOnSpec->modelName) > 0)
-		{
-			elog(WARNING, "User specified model name: %s", trainOnSpec->modelName);
-			modelName = trainOnSpec->modelName;
-		}
-		else
-		{
-			elog(WARNING, "No model name provided. Use config NrModelName: %s", NrModelName);
-			modelName = NrModelName;
-		}
-	}
-	else
-	{
-		elog(DEBUG1, "No TrainOnSpec provided");
-	}
-
-	if (trainOnColumns.len > 0)
-	{
-		trainOnColumns.data[trainOnColumns.len - 1] = '\0';
-	}
-
-	/* Execute the UDF with extracted columns, table name, and where clause */
-	exec_udf(stmt->kind, modelName, tableName, trainOnColumns.data, targetColumn.data, whereClause, dest);
-
-	return;
+    return slot;
 }
-
 
 
 static TupleTableSlot *
@@ -553,37 +498,177 @@ ExecNeurDBPredict(PlanState *pstate)
 			}
 		}
 
-		predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
-		slot = ExecProject(predictstate->ps.ps_ProjInfo);
+		Datum		args[INFERENCE_PARAMS_ARRAY_SIZE];
+		bool		nulls[INFERENCE_PARAMS_ARRAY_SIZE] = {false};
 
-		break;
+		args[0] = PointerGetDatum(slot);
+
+		UdfResult	pushSlotRes = call_udf_function(pushSlotFuncName,
+													pushSlotArgTypes,
+													PUSHSLOT_PARAMS_ARRAY_SIZE,
+													args, nulls);
+		
+		if (predictstate->nrpstate == NEURDBPREDICT_INFERENCE)
+		{
+			NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(pushSlotRes.value);
+
+			/* apply projection early to manipulate the tupledesc */
+			predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
+			slot = ExecProject(predictstate->ps.ps_ProjInfo);
+
+			build_result_slot(result, slot);
+			break;
+		}
+
 	}
 
 	return slot;
+}
 
-#if 0
-	if (pstate == NULL)
+static ArrayType *
+get_train_columns_array(const char *table, const char *targetColumn, const char *trainColumns)
+{
+	List	   *trainColumnsList = split_columns(trainColumns);
+	Datum	   *trainColumnDatums;
+	int			nTrainColumns = 0;
+
+	if (strlen(trainColumns) == 0)
 	{
-		elog(ERROR, "[NeurDB_ExecutePlanWrapper] planstate is NULL.");
-		return NULL;
+		/* all columns are used for training */
+		/* get all column names */
+		char	  **allColumns = get_column_names("public", table, targetColumn, &nTrainColumns);
+
+		trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
+		for (int i = 0; i < nTrainColumns; i++)
+		{
+			trainColumnDatums[i] = CStringGetTextDatum(allColumns[i]);
+		}
+
+		for (int i = 0; i < nTrainColumns; i++)
+		{
+			pfree(allColumns[i]);
+		}
 	}
 	else
 	{
-		elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] planstate: %p",
-			 (void *) pstate);
+		nTrainColumns = list_length(trainColumnsList);
+		trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
+		for (int i = 0; i < nTrainColumns; i++)
+		{
+			trainColumnDatums[i] = CStringGetTextDatum(strVal(list_nth(trainColumnsList, i)));
+		}
+
 	}
 
-	NeurDBPredictStmt *stmt = predictstate->stmt;
+	return construct_array(trainColumnDatums, nTrainColumns, TEXTOID, -1, false, 'i');
+}
 
-	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] NeurDBPredictStmt extracted: %p",
-		 (void *) stmt);
 
-	const char *whereClauseString = "";
+static StringInfoData
+construct_target_columns(List *targetList)
+{
+	StringInfoData result;
+	ListCell   *cell;
 
-	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt");
-	ExecPredictStmt(stmt, NULL, whereClauseString, pstate->ps_ResultTupleSlot);
-	elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecPredictStmt Done");
-#endif
+	initStringInfo(&result);
+
+	foreach(cell, targetList)
+	{
+		ResTarget  *res = (ResTarget *) lfirst(cell);
+
+		if (res == NULL || res->val == NULL)
+		{
+			elog(ERROR, "Null target column in statement");
+		}
+
+		char	   *colname = FigureColname(res->val);
+
+		if (colname == NULL)
+		{
+			elog(ERROR, "Null column name in target list");
+		}
+
+		appendStringInfo(&result, "%s", colname);
+	}
+
+	result.data[result.len] = '\0';
+
+	return result;
+}
+
+static char *
+_temp_extract_model_name(NeurDBTrainOnSpec *trainOnSpec)
+{
+	if (trainOnSpec == NULL)
+	{
+		elog(DEBUG1, "No TrainOnSpec provided");
+		return NrModelName;
+	}
+
+	if (strlen(trainOnSpec->modelName) == 0)
+	{
+		elog(WARNING, "No model name provided. Use config NrModelName: %s", NrModelName);
+		return NrModelName;
+
+	}
+
+	elog(WARNING, "User specified model name: %s", trainOnSpec->modelName);
+	return trainOnSpec->modelName;
+}
+
+static StringInfoData 
+_temp_extract_train_on_columns(List *trainOn)
+{
+	StringInfoData result;
+	initStringInfo(&result);
+
+	ListCell   *cell;
+	foreach(cell, trainOn)
+	{
+		TargetEntry	   *column = (ResTarget *) lfirst(cell);
+		appendStringInfo(&result, "%s,", column->resname);
+	}
+
+	if (result.len > 0)
+	{
+		result.data[result.len - 1] = '\0';
+	}
+
+	return result;
+}
+
+
+static char *
+_temp_extract_table_name(List *fromClause)
+{
+	/* Extract the table name from fromClause */
+	if (fromClause == NIL)
+	{
+		elog(ERROR, "No from clause in statement");
+		return NULL;
+	}
+
+	RangeSubselect *rss = (RangeSubselect *) linitial(fromClause);
+
+	if (rss == NULL)
+	{
+		elog(ERROR, "Null range variable in from clause");
+		return NULL;
+	}
+	SelectStmt *selectStmt = (SelectStmt *) rss->subquery;
+
+	if (selectStmt == NULL || selectStmt->fromClause == NIL)
+	{
+		elog(ERROR, "No from clause in statement");
+		return NULL;
+	}
+
+	RangeVar   *rv = (RangeVar *) linitial(selectStmt->fromClause);
+	char	   *table = rv->relname;
+
+	elog(DEBUG1, "Extracted table name: %s", table);
+
+	return table;
 }
 
 
@@ -629,12 +714,45 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 								predictstate,
 								ExecTypeFromTL(node->predictTargetList));
 
-	/*
-	 * TEMP: We set the state to TRAIN in order to test rescan function.
-	 * In the real setup, the initial state will be decided by whether the
-	 * model is trained or not.
-	 */
-	predictstate->nrpstate = NEURDBPREDICT_TRAIN;
+	StringInfoData targetColumn = construct_target_columns(node->predictTargetList);
+
+	Datum		args[INFERENCE_PARAMS_ARRAY_SIZE];
+	bool		nulls[INFERENCE_PARAMS_ARRAY_SIZE] = {false};
+
+	char	   *table = _temp_extract_table_name(predictstate->stmt->fromClause);
+	char	   *model = _temp_extract_model_name(predictstate->stmt->trainOnSpec);
+	StringInfoData trainOnColumns = _temp_extract_train_on_columns(node->trainOn);
+
+	ArrayType  *trainColumnArray = get_train_columns_array(table, targetColumn.data, trainOnColumns.data);
+
+	args[0] = CStringGetTextDatum(model);
+	args[1] = CStringGetTextDatum(table);
+	args[2] = Int32GetDatum(NrTaskBatchSize);
+	args[3] = Int32GetDatum(NrTaskNumBatches);
+	args[4] = Int32GetDatum(NrTaskMaxFeatures);
+	args[5] = PointerGetDatum(trainColumnArray);
+	args[6] = CStringGetTextDatum(targetColumn.data);
+	args[7] = Int32GetDatum(predictstate->stmt->kind);
+	args[8] = PointerGetDatum(ExecTypeFromTL(node->trainOn));
+
+	UdfResult	initRes = call_udf_function(initFuncName,
+											initArgTypes,
+											INIT_PARAMS_ARRAY_SIZE,
+											args, nulls);
+
+	if (!initRes.isnull)
+	{
+		bool		is_inference = DatumGetBool(initRes.value);
+
+		if (is_inference)
+		{
+			predictstate->nrpstate = NEURDBPREDICT_INFERENCE;
+		}
+		else
+		{
+			predictstate->nrpstate = NEURDBPREDICT_TRAIN;
+		}
+	}
 
 	return predictstate;
 }
@@ -651,6 +769,21 @@ ExecEndNeurDBPredict(NeurDBPredictState * node)
 {
 	ExecFreeExprContext(&node->ps);
 	ExecEndNode(outerPlanState(node));
+
+	Oid			funcOid = LookupFuncName(list_make1(makeString(closeFuncName)), 0, NULL, false);
+	if (!OidIsValid(funcOid))
+		elog(ERROR, "Function %s not found", closeFuncName);
+
+	/* ensure SPI available */
+	// if (SPI_connect() != SPI_OK_CONNECT)
+	// 	elog(ERROR, "SPI_connect failed");
+
+	OidFunctionCall0(funcOid);
+	
+	// if (SPI_finish() != SPI_OK_FINISH)
+	// 	elog(ERROR, "SPI_finish failed");
+
+	elog(DEBUG1, "NeurDB prediction end");
 }
 
 void
