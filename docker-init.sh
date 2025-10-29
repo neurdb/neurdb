@@ -41,6 +41,19 @@ make -j
 make install
 echo 'Done! Now start the database'
 
+# Compile and install pg_hint_plan
+echo 'Installing pg_hint_plan...'
+cd $NR_DBENGINE_PATH/contrib
+if [ ! -d "pg_hint_plan" ]; then
+  git clone https://github.com/ossc-db/pg_hint_plan.git
+fi
+cd pg_hint_plan
+git checkout PG16
+make clean || true
+make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config
+make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config install
+echo 'pg_hint_plan installed!'
+
 # Crete DB engine if not exist
 if [ ! -d "$NR_DBDATA_PATH" ]; then
   mkdir -p $NR_DBDATA_PATH
@@ -103,7 +116,7 @@ sudo make clean
 sudo make install
 
 ## Register nr_kernel as preloaded library
-echo 'shared_preload_libraries = '\''nr_ext, nram, pg_neurstore'\''' >> $NR_DBDATA_PATH/postgresql.conf
+echo 'shared_preload_libraries = '\''pg_hint_plan, nr_molqo, nr_ext, nram, pg_neurstore'\''' >> $NR_DBDATA_PATH/postgresql.conf
 
 echo "Install NR Data Pipeline Extension & NR kernel extension Done"
 
