@@ -89,7 +89,7 @@ See NeurDB in action:
 
 NeurDB consists of three main components:
 
-![NeurDB arch](assets/neurdb-v0.5-arch.png)
+![NeurDB arch](assets/neurdb-v0.5-arch.jpg)
 
 1. **DBEngine**: An enhanced version of PostgreSQL 16.3, extended with AI-native execution and optimization capabilities.
 	-	*NeurQO* – A learned query optimizer that continuously adapts to workload changes through cost-estimation learning and reinforcement feedback.
