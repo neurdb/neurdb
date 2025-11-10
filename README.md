@@ -119,12 +119,12 @@ NeurDB is backed by rigorous academic research. Our work has been published in t
 ### Papers
 
 1. **NeurDB: An AI-powered Autonomous Data System** [[PDF]](http://scis.scichina.com/en/2024/200901.pdf)
-   *SCIENCE CHINA Information Sciences, 2024* 
+   *SCIENCE CHINA Information Sciences, 2024*
 
 2. **NeurDB: On the Design and Implementation of an AI-powered Autonomous Database** [[PDF]](https://vldb.org/cidrdb/papers/2025/p29-zhao.pdf)
    *CIDR 2025*
 
-3. **NeurStore: Efficient In-database Deep Learning Model Management System** 
+3. **NeurStore: Efficient In-database Deep Learning Model Management System**
    *SIGMOD 2026*
 
 
