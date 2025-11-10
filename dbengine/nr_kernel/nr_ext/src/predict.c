@@ -127,7 +127,7 @@ insert_cstring_to_tup_output(TupOutputState *tstate, float8 value, List *id_clas
 	Datum		values[2];
 	bool		nulls[2] = {0, 0};
 
-	String *str_value = NULL;
+	String	   *str_value = NULL;
 
 	/* TODO: support multiclass classification */
 	if (value > 0)

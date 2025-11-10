@@ -67,14 +67,17 @@ class MLP(nn.Module):
     def __init__(self, ninput, nlayers, nhid, dropout, noutput=1):
         super().__init__()
         layers = list()
+
         for i in range(nlayers):
             layers.append(nn.Linear(ninput, nhid))
-            layers.append(nn.BatchNorm1d(nhid))
+            # layers.append(nn.BatchNorm1d(nhid)) # TODO: find a better way for non-batched data
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(p=dropout))
             ninput = nhid
+
         if nlayers == 0:
             nhid = ninput
+
         layers.append(nn.Linear(nhid, noutput))
         self.mlp = nn.Sequential(*layers)
 

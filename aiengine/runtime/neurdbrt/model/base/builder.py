@@ -62,6 +62,7 @@ class BuilderBase(ABC):
         inf_batch_num: int,
         feature_names: List[str],
         target_name: str,
+        session_id: str,
     ) -> List[List[Any]]:
         """
 

@@ -265,10 +265,13 @@ async def on_inference(data: dict):
             table_name=data["table"],
             feature_names=data["features"].split(","),
             target_name=data["target"],
+            session_id=req.session_id,
         )
-    ).add_done_callback(
-        lambda task: inference_done_callback(task.result(), req.session_id)
     )
+    # NEW: result are sent in stream during the inference task
+    # .add_done_callback(
+    #     lambda task: inference_done_callback(task.result(), req.session_id)
+    # )
 
 
 def inference_done_callback(result, session_id):
@@ -284,6 +287,7 @@ async def inference_task(
     inf_batch_num: int,
     feature_names: List[str],
     target_name: str,
+    session_id: str,
 ) -> List[List[Any]]:
     logger.info(
         f"train_task called",
@@ -294,7 +298,7 @@ async def inference_task(
     )
 
     response, err = await setup.inference(
-        model_id, inf_batch_num, feature_names, target_name
+        model_id, inf_batch_num, feature_names, target_name, session_id
     )
     if err is not None:
         logger.error(f"inference failed with error: {err}")

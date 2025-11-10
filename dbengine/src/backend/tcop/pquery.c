@@ -181,6 +181,9 @@ ProcessQuery(PlannedStmt *plan,
 			case CMD_MERGE:
 				SetQueryCompletion(qc, CMDTAG_MERGE, queryDesc->estate->es_processed);
 				break;
+			case CMD_PREDICT:
+				SetQueryCompletion(qc, CMDTAG_PREDICT, queryDesc->estate->es_processed);
+				break;
 			default:
 				SetQueryCompletion(qc, CMDTAG_UNKNOWN, queryDesc->estate->es_processed);
 				break;
