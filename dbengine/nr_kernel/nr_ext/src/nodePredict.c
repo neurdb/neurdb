@@ -596,21 +596,14 @@ construct_target_columns(List *targetList)
 
 	foreach(cell, targetList)
 	{
-		ResTarget  *res = (ResTarget *) lfirst(cell);
+		TargetEntry  *tle= (TargetEntry *) lfirst(cell);
 
-		if (res == NULL || res->val == NULL)
+		if (tle == NULL || tle->resname == NULL)
 		{
 			elog(ERROR, "Null target column in statement");
 		}
-
-		char	   *colname = FigureColname(res->val);
-
-		if (colname == NULL)
-		{
-			elog(ERROR, "Null column name in target list");
-		}
-
-		appendStringInfo(&result, "%s", colname);
+		appendStringInfo(&result, "%s", tle->resname);
+		break;
 	}
 
 	result.data[result.len] = '\0';
@@ -647,7 +640,7 @@ _temp_extract_train_on_columns(List *trainOn)
 	ListCell   *cell;
 	foreach(cell, trainOn)
 	{
-		TargetEntry	   *column = (ResTarget *) lfirst(cell);
+		TargetEntry	   *column = (TargetEntry *) lfirst(cell);
 		appendStringInfo(&result, "%s,", column->resname);
 	}
 
