@@ -6,23 +6,23 @@ neural network architectures using genetic operations and proxy evaluation.
 """
 
 import random
-from typing import List, Tuple, Dict, Type
+from typing import Dict, List, Tuple, Type
 
 from neurdbrt.model.trails.search_space.space_base import BaseSearchSpace
 
 
 def evolutionary_algorithm(
-        model_class: Type[BaseSearchSpace],
-        evaluate_func,
-        population_size: int = 50,
-        generations: int = 20,
-        elite_size: int = 10,
-        mutation_rate: float = 0.3,
-        allowed_architectures: List[List[int]] = None,
+    model_class: Type[BaseSearchSpace],
+    evaluate_func,
+    population_size: int = 50,
+    generations: int = 20,
+    elite_size: int = 10,
+    mutation_rate: float = 0.3,
+    allowed_architectures: List[List[int]] = None,
 ) -> List[Tuple[List[int], float]]:
     """
     Run evolutionary algorithm to find best architectures
-    
+
     Args:
         model_class: Model class that inherits from BaseSearchSpace (e.g., TrailsMLP or TrailsResNet)
         evaluate_func: Callable function to evaluate architecture (arch: List[int]) -> float
@@ -31,7 +31,7 @@ def evolutionary_algorithm(
         elite_size: Number of elite individuals to keep
         mutation_rate: Probability of mutation
         allowed_architectures: Optional list of allowed architectures to constrain search
-    
+
     Returns:
         List of (architecture, score) tuples sorted by score
     """
@@ -83,11 +83,19 @@ def evolutionary_algorithm(
 
         # Keep only the best individuals (remove duplicates and keep top ones)
         # Convert to tuples for hashing, then back to lists
-        best_individuals_tuples = [(tuple(arch), score) for arch, score in best_individuals]
-        best_individuals_tuples = list(set(best_individuals_tuples))  # Remove duplicates
+        best_individuals_tuples = [
+            (tuple(arch), score) for arch, score in best_individuals
+        ]
+        best_individuals_tuples = list(
+            set(best_individuals_tuples)
+        )  # Remove duplicates
         best_individuals_tuples.sort(key=lambda x: x[1], reverse=True)
-        best_individuals_tuples = best_individuals_tuples[:population_size]  # Keep top population_size
-        best_individuals = [(list(arch), score) for arch, score in best_individuals_tuples]
+        best_individuals_tuples = best_individuals_tuples[
+            :population_size
+        ]  # Keep top population_size
+        best_individuals = [
+            (list(arch), score) for arch, score in best_individuals_tuples
+        ]
 
         # Use current generation scores for selection
         arch_scores = current_scores

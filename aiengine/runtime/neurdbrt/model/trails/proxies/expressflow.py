@@ -1,7 +1,7 @@
-import time
 import math
+import time
 from functools import partial
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 import torch
 from torch import nn
@@ -36,8 +36,10 @@ class IntegratedHook:
 
     def trajectory_lengths(self, epsilon: float) -> List[torch.Tensor]:
         # in case some nets have fewer ReLUs on one pass, zip limits to the shortest
-        return [(p - o).abs().norm() / epsilon
-                for o, p in zip(self.originals, self.perturbations)]
+        return [
+            (p - o).abs().norm() / epsilon
+            for o, p in zip(self.originals, self.perturbations)
+        ]
 
     def clear(self):
         self.originals.clear()
@@ -62,7 +64,9 @@ def _nonlinearize(model: nn.Module, signs: dict):
         p.mul_(signs[name])
 
 
-def _weighted_score_traj_width(traj: List[torch.Tensor], Vs: List[torch.Tensor]) -> torch.Tensor:
+def _weighted_score_traj_width(
+    traj: List[torch.Tensor], Vs: List[torch.Tensor]
+) -> torch.Tensor:
     # deeper layers get smaller weights via inverse trajectory length; also scale by width
     if not traj or not Vs:
         return torch.tensor(0.0, device=Vs[0].device) if Vs else torch.tensor(0.0)
@@ -75,7 +79,9 @@ def _weighted_score_traj_width(traj: List[torch.Tensor], Vs: List[torch.Tensor])
     return total
 
 
-def _weighted_score_traj_only(traj: List[torch.Tensor], Vs: List[torch.Tensor]) -> torch.Tensor:
+def _weighted_score_traj_only(
+    traj: List[torch.Tensor], Vs: List[torch.Tensor]
+) -> torch.Tensor:
     if not traj or not Vs:
         return torch.tensor(0.0, device=Vs[0].device) if Vs else torch.tensor(0.0)
     traj_rev = list(reversed(traj))
@@ -85,7 +91,9 @@ def _weighted_score_traj_only(traj: List[torch.Tensor], Vs: List[torch.Tensor]) 
     return sum(w * V.flatten().sum() for w, V in zip(weights, Vs))
 
 
-def _weighted_score_width_only(traj: List[torch.Tensor], Vs: List[torch.Tensor]) -> torch.Tensor:
+def _weighted_score_width_only(
+    traj: List[torch.Tensor], Vs: List[torch.Tensor]
+) -> torch.Tensor:
     if not Vs:
         return torch.tensor(0.0)
     return sum(V.flatten().sum() * V.shape[1] for V in Vs) / 10.0
@@ -98,15 +106,17 @@ def _assert_has_attr(obj, name: str):
 
 
 def express_flow_score(
-        arch: nn.Module,
-        batch_data: torch.Tensor,
-        device: str = "cpu",
-        *,
-        use_wo_embedding: bool = False,  # True:  arch.forward_wo_embedding；False:  arch.forward
-        linearize_target: Optional[nn.Module] = None,  # 指定只线性化哪个子模块；None 表示线性化整个 arch
-        epsilon: float = 1e-5,
-        weight_mode: str = "traj_width",  # "traj_width" | "traj" | "width"
-        use_fp64: bool = False,
+    arch: nn.Module,
+    batch_data: torch.Tensor,
+    device: str = "cpu",
+    *,
+    use_wo_embedding: bool = False,  # True:  arch.forward_wo_embedding；False:  arch.forward
+    linearize_target: Optional[
+        nn.Module
+    ] = None,  # 指定只线性化哪个子模块；None 表示线性化整个 arch
+    epsilon: float = 1e-5,
+    weight_mode: str = "traj_width",  # "traj_width" | "traj" | "width"
+    use_fp64: bool = False,
 ) -> Tuple[float, float]:
     """
     计算 ExpressFlow 分数（零成本代理）。
@@ -200,6 +210,7 @@ def express_flow_score(
             _nonlinearize(target, signs)
         except Exception:
             pass
+
 
 # ----------------------------- usage ---------------------------------
 # score, elapsed = express_flow_score(

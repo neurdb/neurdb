@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 import torch
+import torch_frame
+from neurdbrt.model.trails.search_space.space_base import BaseSearchSpace
 from torch import Tensor
 from torch.nn import (
     BatchNorm1d,
@@ -13,8 +15,6 @@ from torch.nn import (
     ReLU,
     Sequential,
 )
-
-import torch_frame
 from torch_frame import TensorFrame, stype
 from torch_frame.data.stats import StatType
 from torch_frame.nn.encoder.stype_encoder import (
@@ -23,14 +23,13 @@ from torch_frame.nn.encoder.stype_encoder import (
     StypeEncoder,
 )
 from torch_frame.nn.encoder.stypewise_encoder import StypeWiseFeatureEncoder
-from neurdbrt.model.trails.search_space.space_base import BaseSearchSpace
 
 
 class TrailsMLP(Module, BaseSearchSpace):
     r"""Modified From  torch_frame.nn.models.mlp
-        hidden_dims (list[int] | None): trails provided:Per-layer hidden sizes for the MLP.
-            If provided, it must have length == num_layers - 1.
-            If None, uses uniform `channels` per hidden layer (original behavior).
+    hidden_dims (list[int] | None): trails provided:Per-layer hidden sizes for the MLP.
+        If provided, it must have length == num_layers - 1.
+        If None, uses uniform `channels` per hidden layer (original behavior).
     """
 
     blocks_choices = [2, 3]
@@ -46,8 +45,7 @@ class TrailsMLP(Module, BaseSearchSpace):
         num_layers: int,
         col_stats: dict[str, dict[StatType, Any]],
         col_names_dict: dict[torch_frame.stype, list[str]],
-        stype_encoder_dict: dict[torch_frame.stype, StypeEncoder]
-        | None = None,
+        stype_encoder_dict: dict[torch_frame.stype, StypeEncoder] | None = None,
         normalization: str | None = "layer_norm",
         dropout_prob: float = 0.2,
         hidden_dims: list[int] | None = None,
@@ -98,7 +96,7 @@ class TrailsMLP(Module, BaseSearchSpace):
     def reset_parameters(self) -> None:
         self.encoder.reset_parameters()
         for param in self.mlp:
-            if hasattr(param, 'reset_parameters'):
+            if hasattr(param, "reset_parameters"):
                 param.reset_parameters()
 
     def forward(self, tf: TensorFrame) -> Tensor:
@@ -135,37 +133,41 @@ class TrailsMLP(Module, BaseSearchSpace):
         return n
 
     @staticmethod
-    def mutate_architecture(architecture: list[int], mutation_rate: float = 0.3) -> list[int]:
+    def mutate_architecture(
+        architecture: list[int], mutation_rate: float = 0.3
+    ) -> list[int]:
         """
         Mutate an architecture by randomly changing some channels
-        
+
         Args:
             architecture: Original architecture (list of channel sizes)
             mutation_rate: Probability of mutating each channel
-        
+
         Returns:
             Mutated architecture
         """
         import random
-        
+
         mutated = architecture.copy()
-        
+
         for i in range(len(mutated)):
             if random.random() < mutation_rate:
                 # Mutate this channel
                 mutated[i] = random.choice(TrailsMLP.channel_choices_large)
-        
+
         return mutated
 
     @staticmethod
-    def crossover_architectures(parent1: list[int], parent2: list[int]) -> tuple[list[int], list[int]]:
+    def crossover_architectures(
+        parent1: list[int], parent2: list[int]
+    ) -> tuple[list[int], list[int]]:
         """
         Crossover two architectures to create two children
-        
+
         Args:
             parent1: First parent architecture
             parent2: Second parent architecture
-        
+
         Returns:
             Two child architectures
         """
@@ -175,11 +177,10 @@ class TrailsMLP(Module, BaseSearchSpace):
 
         # Single-point crossover
         import random
+
         crossover_point = random.randint(1, len(parent1) - 1)
 
         child1 = parent1[:crossover_point] + parent2[crossover_point:]
         child2 = parent2[:crossover_point] + parent1[crossover_point:]
 
         return child1, child2
-
-

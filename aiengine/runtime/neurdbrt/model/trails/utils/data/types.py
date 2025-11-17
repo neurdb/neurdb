@@ -1,4 +1,5 @@
-from typing import Union, Optional, Dict
+from typing import Dict, Optional, Union
+
 from torch_frame.config import (
     ImageEmbedderConfig,
     TextEmbedderConfig,
@@ -6,7 +7,5 @@ from torch_frame.config import (
 )
 
 TextEmbedderCFG = Optional[TextEmbedderConfig]
-TextTokenizerCFG = Union[dict[str, TextTokenizerConfig],
-                         TextTokenizerConfig, None]
-ImageEmbedderCFG = Union[dict[str, ImageEmbedderConfig],
-                         ImageEmbedderConfig, None]
+TextTokenizerCFG = Union[dict[str, TextTokenizerConfig], TextTokenizerConfig, None]
+ImageEmbedderCFG = Union[dict[str, ImageEmbedderConfig], ImageEmbedderConfig, None]

@@ -1,18 +1,17 @@
 import gc
-import random
-import torch
 import os
 import pickle
+import random
+from typing import Any, Dict, Union
+
 import numpy as np
 import pandas as pd
-
-from relbench.base import Table
-from torch_frame import stype
+import torch
 from keybert import KeyBERT
 from keybert.backend import BaseEmbedder
+from relbench.base import Table
 from sentence_transformers import SentenceTransformer
-
-from typing import Dict, Union, Any
+from torch_frame import stype
 
 DEFAULT_COL_DICT_NAME = "col_types.pkl"
 
@@ -24,8 +23,7 @@ def get_default_text_embedder_cfg():
 
 
 def load_col_types(
-    cache_path: str,
-    file_name: str = DEFAULT_COL_DICT_NAME
+    cache_path: str, file_name: str = DEFAULT_COL_DICT_NAME
 ) -> ColTypeDictHint:
     """
     Load the column types from the cache.
@@ -38,9 +36,9 @@ def load_col_types(
 
 
 def save_col_types(
-        cache_path: str,
-        col_type_dict: ColTypeDictHint,
-        file_name: str = DEFAULT_COL_DICT_NAME
+    cache_path: str,
+    col_type_dict: ColTypeDictHint,
+    file_name: str = DEFAULT_COL_DICT_NAME,
 ) -> None:
     """
     Save the column types to the cache.

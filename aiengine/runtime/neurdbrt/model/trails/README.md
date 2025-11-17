@@ -11,17 +11,17 @@ tabular data. The module groups two key parts:
 
 ## Components
 
-- `search_space.mlp.TrailsMLP`  
+- `search_space.mlp.TrailsMLP`
   Torch Frame MLP that lets you control the hidden width of every layer via the
   `hidden_dims` list while keeping encoder and decoder logic intact. It exports a
   `forward_wo_embedding` helper so proxies can bypass the costly embedding step.
 
-- `search_space.resnet.TrailsResNet`  
+- `search_space.resnet.TrailsResNet`
   Residual MLP-style network that accepts per-block widths through `block_widths`
   and exposes the same `forward_wo_embedding` shortcut. It reuses
   `FCResidualBlock` from Torch Frame for stable training behaviour.
 
-- `proxies.expressflow.express_flow_score`  
+- `proxies.expressflow.express_flow_score`
   Implementation of the ExpressFlow zero-cost proxy. It linearises ReLU-backed
   modules, perturbs the inputs, backpropagates once, then aggregates activation–
   gradient products with configurable weighting (`traj_width`, `traj`, `width`).

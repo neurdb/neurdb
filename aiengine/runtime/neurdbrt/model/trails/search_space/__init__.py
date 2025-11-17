@@ -9,4 +9,3 @@ from .resnet import TrailsResNet
 from .space_base import BaseSearchSpace
 
 __all__ = ["TrailsMLP", "TrailsResNet", "BaseSearchSpace"]
-

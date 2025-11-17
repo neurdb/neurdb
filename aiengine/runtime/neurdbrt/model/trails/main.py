@@ -27,57 +27,57 @@ import os
 import random
 import time
 from datetime import datetime
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple
 
-from tqdm import tqdm
 import numpy as np
 import torch
-from torch.nn import L1Loss, BCEWithLogitsLoss
-from torch.utils.data import Subset
-from sklearn.metrics import mean_absolute_error, roc_auc_score
 import torch_frame.data
-
-from neurdbrt.model.trails.search_space import TrailsMLP, TrailsResNet
 from neurdbrt.model.trails.proxies.expressflow import express_flow_score
 from neurdbrt.model.trails.search_algorithm import evolutionary_algorithm
-from relbench.base import TaskType
-
+from neurdbrt.model.trails.search_space import TrailsMLP, TrailsResNet
 from neurdbrt.model.trails.utils.data import TableData
+from relbench.base import TaskType
+from sklearn.metrics import mean_absolute_error, roc_auc_score
+from torch.nn import BCEWithLogitsLoss, L1Loss
+from torch.utils.data import Subset
+from tqdm import tqdm
 
 
 class SimpleLogger:
     """Simple logger wrapper that supports info, warning, success, section, banner, error methods"""
-    
+
     def __init__(self, name: str = "trails", level: str = "INFO"):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-        
+
         # Create console handler if not exists
         if not self.logger.handlers:
             handler = logging.StreamHandler()
             handler.setLevel(getattr(logging, level.upper(), logging.INFO))
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
-    
+
     def info(self, msg: str):
         self.logger.info(msg)
-    
+
     def warning(self, msg: str):
         self.logger.warning(msg)
-    
+
     def error(self, msg: str):
         self.logger.error(msg)
-    
+
     def success(self, msg: str):
         self.logger.info(f"✓ {msg}")
-    
+
     def section(self, msg: str):
         self.logger.info("")
         self.logger.info("=" * 60)
         self.logger.info(f"  {msg}")
         self.logger.info("=" * 60)
-    
+
     def banner(self, title: str, subtitle: str = "", details: str = ""):
         self.logger.info("")
         self.logger.info("=" * 70)
@@ -85,7 +85,7 @@ class SimpleLogger:
         if subtitle:
             self.logger.info(f"  {subtitle}")
         if details:
-            for line in details.split('\n'):
+            for line in details.split("\n"):
                 if line.strip():
                     self.logger.info(f"  {line}")
         self.logger.info("=" * 70)
@@ -109,12 +109,10 @@ default_stype_encoder_cls_kwargs: Dict[torch_frame.stype, Any] = {
 
 
 def construct_stype_encoder_dict(
-        stype_encoder_cls_kwargs: Dict[torch_frame.stype, Any],
+    stype_encoder_cls_kwargs: Dict[torch_frame.stype, Any],
 ) -> Dict[torch_frame.stype, torch.nn.Module]:
     stype_encoder_dict = {
-        stype: stype_encoder_cls_kwargs[stype][0](
-            **stype_encoder_cls_kwargs[stype][1]
-        )
+        stype: stype_encoder_cls_kwargs[stype][0](**stype_encoder_cls_kwargs[stype][1])
         for stype in stype_encoder_cls_kwargs.keys()
     }
     return stype_encoder_dict
@@ -122,8 +120,7 @@ def construct_stype_encoder_dict(
 
 def deactivate_dropout(net: torch.nn.Module):
     """Deactivate dropout layers in the model for regression task"""
-    deactive_nn_instances = (
-        torch.nn.Dropout, torch.nn.Dropout2d, torch.nn.Dropout3d)
+    deactive_nn_instances = (torch.nn.Dropout, torch.nn.Dropout2d, torch.nn.Dropout3d)
     for module in net.modules():
         if isinstance(module, deactive_nn_instances):
             module.eval()
@@ -131,7 +128,12 @@ def deactivate_dropout(net: torch.nn.Module):
                 param.requires_grad = False
 
 
-def test(net: torch.nn.Module, loader: torch.utils.data.DataLoader, early_stop: int = -1, is_regression: bool = False):
+def test(
+    net: torch.nn.Module,
+    loader: torch.utils.data.DataLoader,
+    early_stop: int = -1,
+    is_regression: bool = False,
+):
     """Test function for model evaluation"""
     pred_list = []
     y_list = []
@@ -140,7 +142,9 @@ def test(net: torch.nn.Module, loader: torch.utils.data.DataLoader, early_stop: 
     if not is_regression:
         net.eval()
 
-    for idx, batch in tqdm(enumerate(loader), total=len(loader), leave=False, desc="Testing"):
+    for idx, batch in tqdm(
+        enumerate(loader), total=len(loader), leave=False, desc="Testing"
+    ):
         with torch.no_grad():
             batch = batch.to(device)
             y = batch.y.float()
@@ -158,13 +162,13 @@ def test(net: torch.nn.Module, loader: torch.utils.data.DataLoader, early_stop: 
 
 
 def create_evaluation_function(
-        sample_batch_x: torch.Tensor,
-        table_data: TableData,
-        col_stats: Dict,
-        col_names_dict: Dict,
-        stype_encoder_dict: Dict,
-        out_channels: int,
-        space_name: str,
+    sample_batch_x: torch.Tensor,
+    table_data: TableData,
+    col_stats: Dict,
+    col_names_dict: Dict,
+    stype_encoder_dict: Dict,
+    out_channels: int,
+    space_name: str,
 ):
     """
     Create an evaluation function with bound parameters
@@ -187,7 +191,7 @@ def create_evaluation_function(
         # Dynamically build model based on arch parameter
         try:
             num_cols = get_num_cols(table_data)
-            if space_name == 'mlp':
+            if space_name == "mlp":
                 # Create MLP with specific architecture
                 model = TrailsMLP(
                     channels=num_cols,
@@ -197,7 +201,7 @@ def create_evaluation_function(
                     col_names_dict=col_names_dict,
                     stype_encoder_dict=stype_encoder_dict,
                     hidden_dims=arch,
-                    normalization='layer_norm',
+                    normalization="layer_norm",
                     dropout_prob=0.2,
                 ).to(device)
                 net_for_proxy = model.mlp
@@ -211,7 +215,7 @@ def create_evaluation_function(
                     col_names_dict=col_names_dict,
                     stype_encoder_dict=stype_encoder_dict,
                     block_widths=arch,
-                    normalization='layer_norm',
+                    normalization="layer_norm",
                     dropout_prob=0.2,
                 ).to(device)
                 net_for_proxy = model.backbone
@@ -236,7 +240,7 @@ def create_evaluation_function(
             score = -1e10  # Very low score for failed architectures
         finally:
             # Clean up after each evaluation
-            if str(device).startswith('cuda'):
+            if str(device).startswith("cuda"):
                 torch.cuda.empty_cache()
                 torch.cuda.synchronize()
 
@@ -257,12 +261,18 @@ def set_seed(seed=42):
 def get_num_cols(table_data):
     """Get the number of columns from table_data"""
     # Try to get from col_stats first
-    if 'num_cols' in table_data.col_stats:
-        return table_data.col_stats['num_cols']
+    if "num_cols" in table_data.col_stats:
+        return table_data.col_stats["num_cols"]
 
     # If not available, calculate from the first batch
-    sample_batch = next(iter(torch_frame.data.DataLoader(table_data.train_tf, batch_size=1, shuffle=False)))
-    if hasattr(sample_batch, 'x'):
+    sample_batch = next(
+        iter(
+            torch_frame.data.DataLoader(
+                table_data.train_tf, batch_size=1, shuffle=False
+            )
+        )
+    )
+    if hasattr(sample_batch, "x"):
         return sample_batch.x.shape[1]
     else:
         # Sum up all feature dimensions
@@ -271,9 +281,9 @@ def get_num_cols(table_data):
 
 
 def prepare_sample_batch_for_proxy(
-        table_data: TableData,
-        space_name: str,
-        sample_size: int = 256,
+    table_data: TableData,
+    space_name: str,
+    sample_size: int = 256,
 ) -> torch.Tensor:
     """
     Prepare sample batch for proxy evaluation
@@ -291,7 +301,9 @@ def prepare_sample_batch_for_proxy(
     sample_size = min(sample_size, len(table_data.train_tf))
     sample_indices = random.sample(range(len(table_data.train_tf)), sample_size)
     sample_subset = Subset(table_data.train_tf, sample_indices)
-    sample_loader = torch_frame.data.DataLoader(sample_subset, batch_size=min(4, sample_size), shuffle=False)
+    sample_loader = torch_frame.data.DataLoader(
+        sample_subset, batch_size=min(4, sample_size), shuffle=False
+    )
 
     # Get one batch and encode it
     batch = next(iter(sample_loader)).to(device)
@@ -304,7 +316,7 @@ def prepare_sample_batch_for_proxy(
     # Get the number of columns
     num_cols = get_num_cols(table_data)
 
-    if space_name == 'mlp':
+    if space_name == "mlp":
         temp_model = TrailsMLP(
             channels=num_cols,
             out_channels=out_channels,
@@ -313,7 +325,7 @@ def prepare_sample_batch_for_proxy(
             col_names_dict=table_data.col_names_dict,
             stype_encoder_dict=stype_encoder_dict,
             hidden_dims=[num_cols],
-            normalization='layer_norm',
+            normalization="layer_norm",
             dropout_prob=0.2,
         ).to(device)
     else:
@@ -325,20 +337,20 @@ def prepare_sample_batch_for_proxy(
             col_names_dict=table_data.col_names_dict,
             stype_encoder_dict=stype_encoder_dict,
             block_widths=[num_cols, num_cols],
-            normalization='layer_norm',
+            normalization="layer_norm",
             dropout_prob=0.2,
         ).to(device)
 
     # Encode features
     with torch.no_grad():
         x_encoded, _ = temp_model.encoder(batch)
-        if space_name == 'mlp':
+        if space_name == "mlp":
             x_encoded = torch.mean(x_encoded, dim=1)
         else:
             x_encoded = x_encoded.view(x_encoded.size(0), -1)
 
     del temp_model
-    if str(device).startswith('cuda'):
+    if str(device).startswith("cuda"):
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
 
@@ -347,8 +359,8 @@ def prepare_sample_batch_for_proxy(
 
 
 def calculate_and_group_architectures(
-        space_name: str,
-        output_file: str = None,
+    space_name: str,
+    output_file: str = None,
 ) -> Tuple[Dict, float]:
     """
     Calculate model capacities and group architectures by size
@@ -373,17 +385,25 @@ def calculate_and_group_architectures(
     if os.path.exists(global_file):
         logger.info(f"Loading global results from {global_file}...")
         try:
-            with open(global_file, 'r') as f:
+            with open(global_file, "r") as f:
                 grouped_architectures = json.load(f)
             # Convert string representations back to lists
-            for group in ['small', 'medium', 'large']:
+            for group in ["small", "medium", "large"]:
                 if group in grouped_architectures:
-                    grouped_architectures[group] = [eval(arch) if isinstance(arch, str) else arch
-                                                    for arch in grouped_architectures[group]]
+                    grouped_architectures[group] = [
+                        eval(arch) if isinstance(arch, str) else arch
+                        for arch in grouped_architectures[group]
+                    ]
             logger.success(f"Loaded global results: {global_file}")
-            logger.info(f"   Small group: {len(grouped_architectures.get('small', []))} architectures")
-            logger.info(f"   Medium group: {len(grouped_architectures.get('medium', []))} architectures")
-            logger.info(f"   Large group: {len(grouped_architectures.get('large', []))} architectures")
+            logger.info(
+                f"   Small group: {len(grouped_architectures.get('small', []))} architectures"
+            )
+            logger.info(
+                f"   Medium group: {len(grouped_architectures.get('medium', []))} architectures"
+            )
+            logger.info(
+                f"   Large group: {len(grouped_architectures.get('large', []))} architectures"
+            )
             return grouped_architectures, 0.0  # No calculation time for loading
         except Exception as e:
             logger.warning(f"Failed to load global results: {e}")
@@ -414,20 +434,21 @@ def calculate_and_group_architectures(
 
         # Generate all combinations for this number of blocks
         from itertools import product
+
         for arch in product(all_channels, repeat=num_blocks):
             arch = list(arch)
 
             # Calculate capacity using minimal model (dataset-independent)
-            if space_name == 'mlp':
+            if space_name == "mlp":
                 model = TrailsMLP(
                     channels=10,  # Minimal input size
                     out_channels=1,
                     num_layers=len(arch) + 1,
-                    col_stats={'num_cols': 10},  # Minimal stats
+                    col_stats={"num_cols": 10},  # Minimal stats
                     col_names_dict={},
                     stype_encoder_dict={},
                     hidden_dims=arch,
-                    normalization='layer_norm',
+                    normalization="layer_norm",
                     dropout_prob=0.2,
                 )
             else:  # resnet
@@ -435,11 +456,11 @@ def calculate_and_group_architectures(
                     channels=10,  # Minimal input size
                     out_channels=1,
                     num_layers=len(arch),
-                    col_stats={'num_cols': 10},  # Minimal stats
+                    col_stats={"num_cols": 10},  # Minimal stats
                     col_names_dict={},
                     stype_encoder_dict={},
                     block_widths=arch,
-                    normalization='layer_norm',
+                    normalization="layer_norm",
                     dropout_prob=0.2,
                 )
 
@@ -466,9 +487,17 @@ def calculate_and_group_architectures(
     logger.info(f"   Large threshold: >= {large_threshold}")
 
     # Group architectures by size
-    small_archs = [arch for arch, cap in architectures_with_capacity if cap < small_threshold]
-    medium_archs = [arch for arch, cap in architectures_with_capacity if small_threshold <= cap < large_threshold]
-    large_archs = [arch for arch, cap in architectures_with_capacity if cap >= large_threshold]
+    small_archs = [
+        arch for arch, cap in architectures_with_capacity if cap < small_threshold
+    ]
+    medium_archs = [
+        arch
+        for arch, cap in architectures_with_capacity
+        if small_threshold <= cap < large_threshold
+    ]
+    large_archs = [
+        arch for arch, cap in architectures_with_capacity if cap >= large_threshold
+    ]
 
     logger.info(f"   Small group: {len(small_archs)} architectures")
     logger.info(f"   Medium group: {len(medium_archs)} architectures")
@@ -476,19 +505,19 @@ def calculate_and_group_architectures(
 
     # Prepare results
     grouped_architectures = {
-        'small': small_archs,
-        'medium': medium_archs,
-        'large': large_archs,
-        'thresholds': {
-            'small_threshold': small_threshold,
-            'large_threshold': large_threshold
+        "small": small_archs,
+        "medium": medium_archs,
+        "large": large_archs,
+        "thresholds": {
+            "small_threshold": small_threshold,
+            "large_threshold": large_threshold,
         },
-        'statistics': {
-            'total_architectures': total_archs,
-            'small_count': len(small_archs),
-            'medium_count': len(medium_archs),
-            'large_count': len(large_archs)
-        }
+        "statistics": {
+            "total_architectures": total_archs,
+            "small_count": len(small_archs),
+            "medium_count": len(medium_archs),
+            "large_count": len(large_archs),
+        },
     }
 
     calculation_time = time.time() - start_time
@@ -496,28 +525,35 @@ def calculate_and_group_architectures(
 
     # Save results to global file
     logger.info(f"Saving global results to {global_file}...")
-    with open(global_file, 'w') as f:
+    with open(global_file, "w") as f:
         json.dump(grouped_architectures, f, indent=2)
     logger.success(f"Global results saved to {global_file}")
 
     # Also save to specified output file if different
     if output_file and output_file != global_file:
         logger.info(f"Copying to {output_file}...")
-        if output_file.endswith('.json'):
-            with open(output_file, 'w') as f:
+        if output_file.endswith(".json"):
+            with open(output_file, "w") as f:
                 json.dump(grouped_architectures, f, indent=2)
-        elif output_file.endswith('.csv'):
+        elif output_file.endswith(".csv"):
             import pandas as pd
+
             # Create a DataFrame with all architectures and their groups
             data = []
-            for group_name, archs in [('small', small_archs), ('medium', medium_archs), ('large', large_archs)]:
+            for group_name, archs in [
+                ("small", small_archs),
+                ("medium", medium_archs),
+                ("large", large_archs),
+            ]:
                 for arch in archs:
-                    data.append({
-                        'architecture': str(arch),
-                        'group': group_name,
-                        'num_layers': len(arch),
-                        'total_channels': sum(arch)
-                    })
+                    data.append(
+                        {
+                            "architecture": str(arch),
+                            "group": group_name,
+                            "num_layers": len(arch),
+                            "total_channels": sum(arch),
+                        }
+                    )
             df = pd.DataFrame(data)
             df.to_csv(output_file, index=False)
         logger.success(f"Results also saved to {output_file}")
@@ -526,14 +562,14 @@ def calculate_and_group_architectures(
 
 
 def diversity_based_selection(
-        space_name: str,
-        table_data: TableData,
-        sample_batch_x: torch.Tensor,
-        col_stats: Dict,
-        col_names_dict: Dict,
-        stype_encoder_dict: Dict,
-        out_channels: int,
-        models_per_size: int = 5,
+    space_name: str,
+    table_data: TableData,
+    sample_batch_x: torch.Tensor,
+    col_stats: Dict,
+    col_names_dict: Dict,
+    stype_encoder_dict: Dict,
+    out_channels: int,
+    models_per_size: int = 5,
 ) -> List[Tuple[List[int], float, str, float]]:
     logger.section("Diversity-Based Selection")
     logger.info(f"   Pre-calculating capacities and grouping by size")
@@ -548,17 +584,17 @@ def diversity_based_selection(
     logger.info(f"   Capacity calculation time: {capacity_time:.2f}s")
 
     # Extract grouped architectures
-    small_archs = grouped_architectures['small']
-    medium_archs = grouped_architectures['medium']
-    large_archs = grouped_architectures['large']
+    small_archs = grouped_architectures["small"]
+    medium_archs = grouped_architectures["medium"]
+    large_archs = grouped_architectures["large"]
 
     all_results = []
 
     # Step 2: Run EA for each size group
     size_groups = [
-        ('small', small_archs),
-        ('medium', medium_archs),
-        ('large', large_archs)
+        ("small", small_archs),
+        ("medium", medium_archs),
+        ("large", large_archs),
     ]
 
     for size_group, group_architectures in size_groups:
@@ -581,7 +617,7 @@ def diversity_based_selection(
 
         # Run EA for this size group with constrained search space
         # Get the model class for EA
-        if space_name == 'mlp':
+        if space_name == "mlp":
             model_class = TrailsMLP
         else:  # resnet
             model_class = TrailsResNet
@@ -602,7 +638,9 @@ def diversity_based_selection(
 
         # Add size group info to results (with placeholder val_score for consistency)
         for arch, score in top_models:
-            all_results.append((arch, score, size_group, None))  # None as placeholder for val_score
+            all_results.append(
+                (arch, score, size_group, None)
+            )  # None as placeholder for val_score
 
         logger.info(f"     Found {len(ea_results)} models in {size_group} group")
         logger.info(f"     Selected top {len(top_models)} models")
@@ -613,12 +651,13 @@ def diversity_based_selection(
                 logger.info(f"       {i+1}. {arch} (score: {score:.4f})")
 
         # Clean up space_instance and force garbage collection
-        if str(device).startswith('cuda'):
+        if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
 
         # Force garbage collection
         import gc
+
         gc.collect()
 
     logger.info(f"Total selected models: {len(all_results)}")
@@ -640,8 +679,16 @@ def diversity_based_selection(
 
     # Print summary of all selected models by group
     logger.section("FINAL SELECTED MODELS SUMMARY")
-    for size_group, group_architectures in [('small', small_archs), ('medium', medium_archs), ('large', large_archs)]:
-        group_models = [(arch, score, group, val_score) for arch, score, group, val_score in deduplicated_results if group == size_group]
+    for size_group, group_architectures in [
+        ("small", small_archs),
+        ("medium", medium_archs),
+        ("large", large_archs),
+    ]:
+        group_models = [
+            (arch, score, group, val_score)
+            for arch, score, group, val_score in deduplicated_results
+            if group == size_group
+        ]
         logger.info(f"{size_group.upper()} GROUP ({len(group_models)} models):")
         for i, (arch, score, group, val_score) in enumerate(group_models):
             logger.info(f"     {i+1}. {arch} (proxy_score: {score:.4f})")
@@ -650,20 +697,24 @@ def diversity_based_selection(
 
 
 def successive_halving(
-        selected_models: List[Tuple[List[int], float, str, float]],
-        space_name: str,
-        table_data: TableData,
-        is_regression: bool,
-        max_epochs: int = 50,
-        min_epochs: int = 1,
+    selected_models: List[Tuple[List[int], float, str, float]],
+    space_name: str,
+    table_data: TableData,
+    is_regression: bool,
+    max_epochs: int = 50,
+    min_epochs: int = 1,
 ) -> Tuple[List[int], float]:
     logger.section("Successive Halving Selection")
     logger.info(f"   Candidates: {len(selected_models)}")
 
     # Prepare data loaders (use original train/val/test splits)
     # Use normal batch size for training
-    train_loader = torch_frame.data.DataLoader(table_data.train_tf, batch_size=256, shuffle=True)
-    val_loader = torch_frame.data.DataLoader(table_data.val_tf, batch_size=256, shuffle=False)
+    train_loader = torch_frame.data.DataLoader(
+        table_data.train_tf, batch_size=256, shuffle=True
+    )
+    val_loader = torch_frame.data.DataLoader(
+        table_data.val_tf, batch_size=256, shuffle=False
+    )
 
     # Successive halving
     candidates = selected_models.copy()
@@ -676,14 +727,18 @@ def successive_halving(
         candidate_scores = []
 
         for i, (arch, proxy_score, size_group, val_score) in enumerate(candidates):
-            logger.info(f"     Training candidate {i + 1}/{len(candidates)}: {arch} ({size_group})")
+            logger.info(
+                f"     Training candidate {i + 1}/{len(candidates)}: {arch} ({size_group})"
+            )
 
             # Create model
-            stype_encoder_dict = construct_stype_encoder_dict(default_stype_encoder_cls_kwargs)
+            stype_encoder_dict = construct_stype_encoder_dict(
+                default_stype_encoder_cls_kwargs
+            )
             out_channels = 1
 
             num_cols = get_num_cols(table_data)
-            if space_name == 'mlp':
+            if space_name == "mlp":
                 model = TrailsMLP(
                     channels=num_cols,
                     out_channels=out_channels,
@@ -692,7 +747,7 @@ def successive_halving(
                     col_names_dict=table_data.col_names_dict,
                     stype_encoder_dict=stype_encoder_dict,
                     hidden_dims=arch,
-                    normalization='layer_norm',
+                    normalization="layer_norm",
                     dropout_prob=0.2,
                 ).to(device)
             else:  # resnet
@@ -704,7 +759,7 @@ def successive_halving(
                     col_names_dict=table_data.col_names_dict,
                     stype_encoder_dict=stype_encoder_dict,
                     block_widths=arch,
-                    normalization='layer_norm',
+                    normalization="layer_norm",
                     dropout_prob=0.2,
                 ).to(device)
 
@@ -725,25 +780,30 @@ def successive_halving(
                 model=model,
                 test_loader=val_loader,
                 is_regression=is_regression,
-            )[0]  # Get metric, ignore inference time
+            )[
+                0
+            ]  # Get metric, ignore inference time
 
             candidate_scores.append((arch, proxy_score, size_group, val_score))
 
             # Clean up
             del model
-            if str(device).startswith('cuda'):
+            if str(device).startswith("cuda"):
                 torch.cuda.empty_cache()
                 torch.cuda.synchronize()
 
             # Force garbage collection
             import gc
+
             gc.collect()
 
         # Sort by validation score
         if is_regression:
             candidate_scores.sort(key=lambda x: x[3])  # Lower MAE is better
         else:
-            candidate_scores.sort(key=lambda x: x[3], reverse=True)  # Higher AUC is better
+            candidate_scores.sort(
+                key=lambda x: x[3], reverse=True
+            )  # Higher AUC is better
 
         # Keep top half
         keep_count = max(1, len(candidates) // 2)
@@ -775,14 +835,14 @@ def successive_halving(
 
 
 def train_model(
-        model: torch.nn.Module,
-        train_loader: torch_frame.data.DataLoader,
-        val_loader: torch_frame.data.DataLoader,
-        is_regression: bool,
-        num_epochs: int = 200,
-        lr: float = 0.001,
-        max_batches_per_epoch: int = 20,
-        early_stop_patience: int = 10,
+    model: torch.nn.Module,
+    train_loader: torch_frame.data.DataLoader,
+    val_loader: torch_frame.data.DataLoader,
+    is_regression: bool,
+    num_epochs: int = 200,
+    lr: float = 0.001,
+    max_batches_per_epoch: int = 20,
+    early_stop_patience: int = 10,
 ) -> Tuple[torch.nn.Module, float]:
     """Train model using the training logic from train_final_model"""
 
@@ -807,7 +867,8 @@ def train_model(
             higher_is_better = True
 
         optimizer = torch.optim.Adam(
-            filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
+            filter(lambda p: p.requires_grad, model.parameters()), lr=lr
+        )
 
         # Setup data loaders
         data_loaders = {
@@ -833,7 +894,7 @@ def train_model(
                     break
 
                 # Clear cache before each batch
-                if str(device).startswith('cuda'):
+                if str(device).startswith("cuda"):
                     torch.cuda.empty_cache()
 
                 optimizer.zero_grad()
@@ -849,15 +910,16 @@ def train_model(
                 count_accum += 1
 
                 # Clear cache after each batch
-                if str(device).startswith('cuda'):
+                if str(device).startswith("cuda"):
                     torch.cuda.empty_cache()
 
             # Validation
             val_logits, _, val_pred_hat = test(
-                model, data_loaders["val"], is_regression=is_regression)
+                model, data_loaders["val"], is_regression=is_regression
+            )
 
             # Clear cache after validation
-            if str(device).startswith('cuda'):
+            if str(device).startswith("cuda"):
                 torch.cuda.empty_cache()
 
             # Calculate metric
@@ -871,8 +933,9 @@ def train_model(
                     val_metric = 0.5
 
             # Early stopping
-            if (higher_is_better and val_metric > best_val_metric) or \
-                    (not higher_is_better and val_metric < best_val_metric):
+            if (higher_is_better and val_metric > best_val_metric) or (
+                not higher_is_better and val_metric < best_val_metric
+            ):
                 best_val_metric = val_metric
                 best_model_state = copy.deepcopy(model.state_dict())
                 patience = 0
@@ -895,25 +958,30 @@ def train_model(
 
         logger.success(f"Training completed!")
         logger.info(f"   Best validation metric: {best_val_metric:.6f}")
-        logger.info(f"   Training time: {train_time_seconds:.2f} seconds ({train_time_seconds / 3600:.2f} hours)")
+        logger.info(
+            f"   Training time: {train_time_seconds:.2f} seconds ({train_time_seconds / 3600:.2f} hours)"
+        )
 
         return model, train_time_seconds
 
     except Exception as e:
         logger.error(f"Training failed: {str(e)}")
         import traceback
+
         traceback.print_exc()
         raise
 
 
 def evaluate_model(
-        model: torch.nn.Module,
-        test_loader: torch_frame.data.DataLoader,
-        is_regression: bool,
+    model: torch.nn.Module,
+    test_loader: torch_frame.data.DataLoader,
+    is_regression: bool,
 ) -> Tuple[float, float]:
     """Evaluate model on test data"""
     start_time = time.time()
-    test_logits, test_pred_hat, test_y = test(model, test_loader, is_regression=is_regression)
+    test_logits, test_pred_hat, test_y = test(
+        model, test_loader, is_regression=is_regression
+    )
 
     inference_time = time.time() - start_time
 
@@ -931,12 +999,20 @@ def evaluate_model(
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Trails: Evolutionary Algorithm for Model Selection')
-    parser.add_argument('--data_dir', type=str, required=True, help='Data directory')
-    parser.add_argument('--space_name', type=str, required=True, choices=['mlp', 'resnet'], help='Search space')
-    parser.add_argument('--output_csv', type=str, required=True, help='Output CSV file')
-    parser.add_argument('--device', type=str, default='cuda:0', help='Device')
-    parser.add_argument('--seed', type=int, default=42, help='Random seed')
+    parser = argparse.ArgumentParser(
+        description="Trails: Evolutionary Algorithm for Model Selection"
+    )
+    parser.add_argument("--data_dir", type=str, required=True, help="Data directory")
+    parser.add_argument(
+        "--space_name",
+        type=str,
+        required=True,
+        choices=["mlp", "resnet"],
+        help="Search space",
+    )
+    parser.add_argument("--output_csv", type=str, required=True, help="Output CSV file")
+    parser.add_argument("--device", type=str, default="cuda:0", help="Device")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
 
     args = parser.parse_args()
 
@@ -949,7 +1025,7 @@ def main():
     logger.banner(
         "TRAILS",
         "Evolutionary Algorithm for Model Selection",
-        f"Data: {args.data_dir}\nSpace: {args.space_name}\nDevice: {args.device}\nOutput: {args.output_csv}"
+        f"Data: {args.data_dir}\nSpace: {args.space_name}\nDevice: {args.device}\nOutput: {args.output_csv}",
     )
 
     # Load data
@@ -1013,7 +1089,7 @@ def main():
 
     # Create final model
     num_cols = get_num_cols(table_data)
-    if args.space_name == 'mlp':
+    if args.space_name == "mlp":
         final_model = TrailsMLP(
             channels=num_cols,
             out_channels=out_channels,
@@ -1022,7 +1098,7 @@ def main():
             col_names_dict=table_data.col_names_dict,
             stype_encoder_dict=stype_encoder_dict,
             hidden_dims=best_arch,
-            normalization='layer_norm',
+            normalization="layer_norm",
             dropout_prob=0.2,
         ).to(args.device)
     else:
@@ -1034,7 +1110,7 @@ def main():
             col_names_dict=table_data.col_names_dict,
             stype_encoder_dict=stype_encoder_dict,
             block_widths=best_arch,
-            normalization='layer_norm',
+            normalization="layer_norm",
             dropout_prob=0.2,
         ).to(args.device)
 
@@ -1043,8 +1119,12 @@ def main():
         deactivate_dropout(final_model)
 
     # Train final model (use original train/val splits)
-    train_loader = torch_frame.data.DataLoader(table_data.train_tf, batch_size=256, shuffle=True)
-    val_loader = torch_frame.data.DataLoader(table_data.val_tf, batch_size=256, shuffle=False)
+    train_loader = torch_frame.data.DataLoader(
+        table_data.train_tf, batch_size=256, shuffle=True
+    )
+    val_loader = torch_frame.data.DataLoader(
+        table_data.val_tf, batch_size=256, shuffle=False
+    )
 
     final_model, train_time = train_model(
         model=final_model,
@@ -1062,7 +1142,9 @@ def main():
     # Step 4: Test final model
     logger.section("Step 4: Testing final model")
 
-    test_loader = torch_frame.data.DataLoader(table_data.test_tf, batch_size=256, shuffle=False)
+    test_loader = torch_frame.data.DataLoader(
+        table_data.test_tf, batch_size=256, shuffle=False
+    )
 
     test_metric, inference_time = evaluate_model(
         model=final_model,
@@ -1086,23 +1168,23 @@ def main():
 
     # Prepare result row
     result_row = {
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'dataset': os.path.basename(args.data_dir),
-        'data_source': data_source,
-        'architecture': args.space_name,
-        'selection_time_seconds': selection_time,
-        'final_train_time_seconds': train_time,
-        'inference_time_seconds': inference_time,
-        'total_time_seconds': total_time,
-        'best_val_metric': best_val_score,
-        'final_best_val_metric': best_val_score,
-        'final_test_metric': test_metric,
-        'best_params': str(best_arch),
-        'metric': 'mae' if is_regression else 'roc_auc',
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "dataset": os.path.basename(args.data_dir),
+        "data_source": data_source,
+        "architecture": args.space_name,
+        "selection_time_seconds": selection_time,
+        "final_train_time_seconds": train_time,
+        "inference_time_seconds": inference_time,
+        "total_time_seconds": total_time,
+        "best_val_metric": best_val_score,
+        "final_best_val_metric": best_val_score,
+        "final_test_metric": test_metric,
+        "best_params": str(best_arch),
+        "metric": "mae" if is_regression else "roc_auc",
     }
 
     # Write to CSV
-    with open(args.output_csv, 'a', newline='') as f:
+    with open(args.output_csv, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=result_row.keys())
         if not csv_exists:
             writer.writeheader()

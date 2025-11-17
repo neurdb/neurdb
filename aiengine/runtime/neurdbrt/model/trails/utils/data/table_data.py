@@ -1,14 +1,14 @@
 import os
-import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+import pandas as pd
 import torch_frame
-from torch_frame import stype
-from relbench.base import TaskType
-
 from neurdbrt.model.trails.utils.util import load_col_types, save_col_types
-from .types import TextEmbedderCFG, TextTokenizerCFG, ImageEmbedderCFG
+from relbench.base import TaskType
+from torch_frame import stype
+
+from .types import ImageEmbedderCFG, TextEmbedderCFG, TextTokenizerCFG
 
 
 @dataclass
@@ -26,7 +26,7 @@ class TableData(object):
 
     def materilize(
         self,
-        col_to_sep: Optional[dict[str,  Optional[str]]] = None,
+        col_to_sep: Optional[dict[str, Optional[str]]] = None,
         col_to_text_embedder_cfg: Optional[TextEmbedderCFG] = None,
         col_to_text_tokenizer_cfg: TextEmbedderCFG = None,
         col_to_image_embedder_cfg: TextTokenizerCFG = None,
@@ -48,17 +48,12 @@ class TableData(object):
 
         self._train_tf = train_dataset.tensor_frame
         self._col_stats = train_dataset.col_stats
-        self._val_tf = train_dataset.convert_to_tensor_frame(
-            self.val_df)
-        self._test_tf = train_dataset.convert_to_tensor_frame(
-            self.test_df)
+        self._val_tf = train_dataset.convert_to_tensor_frame(self.val_df)
+        self._test_tf = train_dataset.convert_to_tensor_frame(self.test_df)
 
         self.is_materialize = True
 
-    def save_to_dir(
-        self,
-        dir_path: str
-    ):
+    def save_to_dir(self, dir_path: str):
         if not os.path.exists(dir_path):
             os.makedirs(dir_path, exist_ok=True)
 
@@ -71,8 +66,8 @@ class TableData(object):
         save_col_types(dir_path, self.col_to_stype)
 
         with open(os.path.join(dir_path, "target_col.txt"), "w") as f:
-            f.write(self.target_col+"\n")
-            f.write(self.task_type.name+"\n")
+            f.write(self.target_col + "\n")
+            f.write(self.task_type.name + "\n")
 
         # check if is materialize
         if self.is_materialize:
@@ -120,14 +115,14 @@ class TableData(object):
             table_data.is_materialize = True
             # update the train_tf, val_tf, test_tf, col_stats
             table_data._train_tf, table_data._col_stats = torch_frame.load(
-                path=train_tf_path)
+                path=train_tf_path
+            )
             table_data._val_tf, _ = torch_frame.load(path=val_tf_path)
             table_data._test_tf, _ = torch_frame.load(path=test_tf_path)
             print(f" ==> load material dataset from {dir_path}")
         else:
             table_data.is_materialize = False
-            print(
-                f" ==> load raw dataset from {dir_path}, need material first")
+            print(f" ==> load raw dataset from {dir_path}, need material first")
         return table_data
 
     @property
