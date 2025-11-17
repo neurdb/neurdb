@@ -1,4 +1,3 @@
 """
 Encoders for HybridQO expert.
 """
-

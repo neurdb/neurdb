@@ -1,36 +1,38 @@
 import collections
 import time
-import torch
+
 import numpy as np
+import torch
 
 
 def LoadBestCheckpointForEval(model, trainer):
     """Loads the checkpoint with the best validation loss."""
     best_path = trainer.checkpoint_callback.best_model_path
     if len(best_path) > 0:
-        print('Loading best checkpoint: {} (current_epoch={})'.format(
-            best_path, trainer.current_epoch))
-        old_sum = sum(
-            [weight.sum().item() for _, weight in model.named_parameters()])
+        print(
+            "Loading best checkpoint: {} (current_epoch={})".format(
+                best_path, trainer.current_epoch
+            )
+        )
+        old_sum = sum([weight.sum().item() for _, weight in model.named_parameters()])
         ckpt = torch.load(best_path, map_location=lambda storage, loc: storage)
-        model.load_state_dict(ckpt['state_dict'])
-        new_sum = sum(
-            [weight.sum().item() for _, weight in model.named_parameters()])
-        best_epoch = best_path.split('epoch=')[-1].split('.')[0]
-        if '_v' in best_epoch:
+        model.load_state_dict(ckpt["state_dict"])
+        new_sum = sum([weight.sum().item() for _, weight in model.named_parameters()])
+        best_epoch = best_path.split("epoch=")[-1].split(".")[0]
+        if "_v" in best_epoch:
             # E.g., '99_v0'
-            best_epoch = best_epoch.split('_v')[0]
+            best_epoch = best_epoch.split("_v")[0]
         best_epoch = int(best_epoch)
     else:
-        print('No best checkpoint found (run validaiton yet?); model left unchanged.')
+        print("No best checkpoint found (run validaiton yet?); model left unchanged.")
 
 
 def GetLrSchedule(p):
     if p.lr_decay_rate is not None:
         assert p.lr_decay_iters is not None
-        return ExponentialDecay(init_value=p.lr,
-                                decay_rate=p.lr_decay_rate,
-                                decay_steps=p.lr_decay_iters)
+        return ExponentialDecay(
+            init_value=p.lr, decay_rate=p.lr_decay_rate, decay_steps=p.lr_decay_iters
+        )
     if p.lr_piecewise is not None:
         return Piecewise(p.lr_piecewise, final_decay_rate=p.final_decay_rate)
     return Constant(p.lr)
@@ -125,8 +127,9 @@ class Piecewise(Schedule):
         if len(self.schedule_values) == 1:
             # Treat as constant LR.
             return self.schedule_values[0][1]
-        for (l_step, l), (r_step, r) in zip(self.schedule_values[:-1],
-                                            self.schedule_values[1:]):
+        for (l_step, l), (r_step, r) in zip(
+            self.schedule_values[:-1], self.schedule_values[1:]
+        ):
             if l_step <= step < r_step:
                 return l
         # Last stage.
@@ -136,7 +139,7 @@ class Piecewise(Schedule):
         if self.final_decay_rate:
             t = self.curr_step - self.last_stage_start_t
             lr_start = self.schedule_values[-1][1]
-            return lr_start * (self.final_decay_rate ** t)
+            return lr_start * (self.final_decay_rate**t)
         return r
 
     def Step(self):
@@ -166,11 +169,9 @@ class AdaptiveMetricPiecewise(Piecewise):
 
 class AdaptiveMetricPiecewiseDecayToZero(AdaptiveMetricPiecewise):
 
-    def __init__(self,
-                 schedule_values,
-                 metric_max_value,
-                 total_steps,
-                 final_decay_rate=None):
+    def __init__(
+        self, schedule_values, metric_max_value, total_steps, final_decay_rate=None
+    ):
         super().__init__(schedule_values, metric_max_value)
 
         self.last_stage_start_t = None
@@ -191,7 +192,7 @@ class AdaptiveMetricPiecewiseDecayToZero(AdaptiveMetricPiecewise):
         lr_start = self.schedule_values[-1][1]
 
         if self.final_decay_rate is not None:
-            return lr_start * (self.final_decay_rate ** t)
+            return lr_start * (self.final_decay_rate**t)
 
         return lr_start * (1 - t / T)
 
@@ -214,18 +215,18 @@ class Timer(object):
         self.curr_stage = stage
 
     def Stop(self, stage):
-        assert self.curr_stage == stage, 'curr_stage={} != {}'.format(
-            self.curr_stage, stage)
-        self.stage_timing_dict[stage].append(time.time() -
-                                             self.curr_stage_start)
+        assert self.curr_stage == stage, "curr_stage={} != {}".format(
+            self.curr_stage, stage
+        )
+        self.stage_timing_dict[stage].append(time.time() - self.curr_stage_start)
         self.curr_stage = None
 
     def GetLatestTiming(self, stage):
-        assert self.stage_timing_dict[stage], 'No timing info yet: ' + stage
+        assert self.stage_timing_dict[stage], "No timing info yet: " + stage
         return self.stage_timing_dict[stage][-1]
 
     def GetTotalTiming(self, stage):
-        assert self.stage_timing_dict[stage], 'No timing info yet: ' + stage
+        assert self.stage_timing_dict[stage], "No timing info yet: " + stage
         return sum(self.stage_timing_dict[stage])
 
 
@@ -239,7 +240,7 @@ class RunningStats:
         print(rs.Mean(), rs.Std())
     """
 
-    def __init__(self, n=0., m=None, s=None):
+    def __init__(self, n=0.0, m=None, s=None):
         self.n = n
         self.m = m
         self.s = s
@@ -248,7 +249,7 @@ class RunningStats:
         self.n += 1
         if self.n == 1:
             self.m = x
-            self.s = 0.
+            self.s = 0.0
         else:
             prev_m = self.m.copy()
             self.m += (x - self.m) / self.n
@@ -275,10 +276,14 @@ def report_model(model, blacklist=None):
             ps.append(np.prod(p.size()))
     num_params = sum(ps)
     mb = num_params * 4 / 1024 / 1024
-    print('number of model parameters: {} (~= {:.1f}MB)'.format(num_params, mb))
+    print("number of model parameters: {} (~= {:.1f}MB)".format(num_params, mb))
     print(model)
     return mb
 
 
-def QErrorLoss(outputs: torch.Tensor, targets: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
-    return torch.where(outputs > targets, outputs / (targets + eps), targets / outputs).mean()
+def QErrorLoss(
+    outputs: torch.Tensor, targets: torch.Tensor, eps: float = 1e-8
+) -> torch.Tensor:
+    return torch.where(
+        outputs > targets, outputs / (targets + eps), targets / outputs
+    ).mean()

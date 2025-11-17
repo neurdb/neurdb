@@ -1,6 +1,6 @@
 # Standard library imports
 import json
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
 
 # Local/project imports
@@ -28,12 +28,12 @@ class MoQOEHandler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
 
         # Read request body
-        content_length = int(self.headers['Content-Length'])
+        content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
-        request_json = json.loads(post_data.decode('utf-8'))
+        request_json = json.loads(post_data.decode("utf-8"))
 
         # Get SQL query
-        sql = request_json.get('sql', '').strip()
+        sql = request_json.get("sql", "").strip()
 
         try:
             print("=" * 80)
@@ -62,30 +62,31 @@ class MoQOEHandler(BaseHTTPRequestHandler):
                 "optimized_sql": optimized_sql,
                 "optimization_applied": optimized_sql != sql,
                 "expert_name": expert_name if expert_name else "none",
-                "endpoint": path
+                "endpoint": path,
             }
 
             # Send response
             self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps(response).encode('utf-8'))
+            self.wfile.write(json.dumps(response).encode("utf-8"))
 
         except Exception as e:
             print(f"Error: {e}")
             import traceback
+
             traceback.print_exc()
             error_response = {
                 "error": str(e),
-                "original_sql": sql if 'sql' in locals() else "",
-                "optimized_sql": sql if 'sql' in locals() else "",
+                "original_sql": sql if "sql" in locals() else "",
+                "optimized_sql": sql if "sql" in locals() else "",
                 "optimization_applied": False,
-                "expert_name": "cost-based optimizer"  # Fallback to cost-based optimizer on error
+                "expert_name": "cost-based optimizer",  # Fallback to cost-based optimizer on error
             }
             self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps(error_response).encode('utf-8'))
+            self.wfile.write(json.dumps(error_response).encode("utf-8"))
 
 
 if __name__ == "__main__":
@@ -100,7 +101,7 @@ if __name__ == "__main__":
         buffer_path=buffer_path,
         config=config,
         DATASET=DATASET,
-        database_name=database_name
+        database_name=database_name,
     )
 
     # Set MoQOE instance to Handler
@@ -108,7 +109,7 @@ if __name__ == "__main__":
 
     # Create HTTP server
     port = 8666
-    server = HTTPServer(('0.0.0.0', port), MoQOEHandler)
+    server = HTTPServer(("0.0.0.0", port), MoQOEHandler)
 
     print("MoQOE Inference Server Started")
     print(f"Listening on port: {port}")

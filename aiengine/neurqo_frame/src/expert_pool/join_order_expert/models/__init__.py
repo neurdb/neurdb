@@ -1,4 +1,3 @@
 """
 Models for HybridQO expert.
 """
-

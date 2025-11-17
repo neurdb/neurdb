@@ -6,8 +6,8 @@ from common import workload
 class SimQueryFeaturizer:
     """Implements the query featurizer.
 
-        Query node -> [ multi-hot of what tables are present ]
-                    * [ each-table's selectivities ]
+    Query node -> [ multi-hot of what tables are present ]
+                * [ each-table's selectivities ]
     """
 
     def __init__(self, workload_info: workload.WorkloadInfo):
@@ -23,9 +23,9 @@ class SimQueryFeaturizer:
             vec[idx] = 1.0
 
         # Filtered tables.
-        table_id_to_name = lambda table_id: table_id.split(' ')[0]  # Hack.
+        table_id_to_name = lambda table_id: table_id.split(" ")[0]  # Hack.
 
-        for rel_id, est_rows in node.info['all_filters_est_rows'].items():
+        for rel_id, est_rows in node.info["all_filters_est_rows"].items():
             if rel_id not in joined:
                 # Due to the way we copy Nodes and populate this info field,
                 # leaf_ids() might be a subset of info['all_filters_est_rows'].
@@ -69,14 +69,17 @@ class SimQueryFeaturizer:
         # "Default": chance = 0.25, unif = [0.5, 2].
         chance, unif = distribution
 
-        should_scale = torch.rand(selectivities.shape,
-                                  device=selectivities.device) < chance
+        should_scale = (
+            torch.rand(selectivities.shape, device=selectivities.device) < chance
+        )
         # The non-zero entries are joined tables.
-        should_scale *= (selectivities > 0)
+        should_scale *= selectivities > 0
         # Sample multipliers ~ Unif[l, r].
-        multipliers = torch.rand(
-            selectivities.shape,
-            device=selectivities.device) * (unif[1] - unif[0]) + unif[0]
+        multipliers = (
+            torch.rand(selectivities.shape, device=selectivities.device)
+            * (unif[1] - unif[0])
+            + unif[0]
+        )
         multipliers *= should_scale
         # Now, the 0 entries mean "should not scale", which needs to be
         # translated into using a multiplier of 1.

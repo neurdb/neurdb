@@ -14,12 +14,15 @@ from utils.plan_utils import PlanHelper
 @dataclass
 class PlanRecord:
     """Single-table unified plan buffer record"""
+
     id: Optional[int] = None
     query_hash: str = ""
     query: str = ""
     actual_plan_json: Dict[str, Any] = None
     actual_plan_hash: Optional[str] = None
-    hint_json: Optional[Dict[str, Any]] = None  # parsed to dict for convenient consumption
+    hint_json: Optional[Dict[str, Any]] = (
+        None  # parsed to dict for convenient consumption
+    )
     join_order_hint: Optional[str] = None
     actual_latency: Optional[float] = None
     plan_time: Optional[float] = None
@@ -42,7 +45,8 @@ class ExperienceBuffer:
         cursor = conn.cursor()
 
         # Single table: plan_buffer
-        cursor.execute("""
+        cursor.execute(
+            """
         CREATE TABLE IF NOT EXISTS plan_buffer (
             id INTEGER PRIMARY KEY,
             query_hash TEXT NOT NULL,
@@ -53,12 +57,19 @@ class ExperienceBuffer:
             plan_time REAL,
             hint_json TEXT,
             join_order_hint TEXT
-        )""")
+        )"""
+        )
 
         # Indexes for better performance
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_plan_buffer_query_hash ON plan_buffer(query_hash)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_plan_buffer_actual_plan_hash ON plan_buffer(actual_plan_hash)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_plan_buffer_latency ON plan_buffer(actual_latency)")
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_plan_buffer_query_hash ON plan_buffer(query_hash)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_plan_buffer_actual_plan_hash ON plan_buffer(actual_plan_hash)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_plan_buffer_latency ON plan_buffer(actual_latency)"
+        )
 
         conn.commit()
         conn.close()
@@ -82,7 +93,7 @@ class ExperienceBuffer:
             lines = []
             for line in sql.splitlines():
                 # keep portion before comment
-                part = line.split('--', 1)[0]
+                part = line.split("--", 1)[0]
                 if part is not None:
                     lines.append(part)
             sql_no_comments = "\n".join(lines)
@@ -90,7 +101,7 @@ class ExperienceBuffer:
             collapsed = " ".join(sql_no_comments.split())
             # trim and remove trailing semicolon
             trimmed = collapsed.strip()
-            if trimmed.endswith(';'):
+            if trimmed.endswith(";"):
                 trimmed = trimmed[:-1].strip()
             return trimmed
         except Exception:
@@ -101,36 +112,41 @@ class ExperienceBuffer:
     def _default_query_hash(sql: str) -> str:
         """Generate a stable query hash (compatible with RoutingHelper approach)."""
         normalized = ExperienceBuffer._normalize_sql(sql or "")
-        compressed = zlib.compress(normalized.encode('utf-8'))
-        encoded = base64.urlsafe_b64encode(compressed).decode('utf-8')
+        compressed = zlib.compress(normalized.encode("utf-8"))
+        encoded = base64.urlsafe_b64encode(compressed).decode("utf-8")
         return encoded
 
-    def save_plan(self,
-                  sql: str,
-                  actual_plan_json: Dict[str, Any],
-                  actual_latency: float,
-                  actual_plan_time: Optional[float] = None,
-                  hint_json: Optional[List[str]] = None,
-                  join_order_hint: Optional[str] = None) -> int:
+    def save_plan(
+        self,
+        sql: str,
+        actual_plan_json: Dict[str, Any],
+        actual_latency: float,
+        actual_plan_time: Optional[float] = None,
+        hint_json: Optional[List[str]] = None,
+        join_order_hint: Optional[str] = None,
+    ) -> int:
         """Save a plan record and return the ID.
         The method computes query_hash and actual_plan_hash internally."""
         conn = self._get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
-        INSERT INTO plan_buffer 
+        cursor.execute(
+            """
+        INSERT INTO plan_buffer
         (query_hash, query, actual_plan_json, actual_plan_hash, actual_latency, plan_time, hint_json, join_order_hint)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            self._default_query_hash(sql),
-            sql,
-            json.dumps(actual_plan_json),
-            PlanHelper.compute_plan_hash(actual_plan_json),
-            actual_latency,
-            actual_plan_time,
-            json.dumps(hint_json) if hint_json else None,
-            join_order_hint
-        ))
+        """,
+            (
+                self._default_query_hash(sql),
+                sql,
+                json.dumps(actual_plan_json),
+                PlanHelper.compute_plan_hash(actual_plan_json),
+                actual_latency,
+                actual_plan_time,
+                json.dumps(hint_json) if hint_json else None,
+                join_order_hint,
+            ),
+        )
 
         rec_id = cursor.lastrowid
         conn.commit()
@@ -187,7 +203,12 @@ class ExperienceBuffer:
         )
 
     # -------- Existence check --------
-    def exists(self, sql: str, hints: Optional[List[str]] = None, join_order_hint: Optional[str] = None) -> Optional[int]:
+    def exists(
+        self,
+        sql: str,
+        hints: Optional[List[str]] = None,
+        join_order_hint: Optional[str] = None,
+    ) -> Optional[int]:
         """
         Return existing record id matching (query_hash, hint_json, join_order_hint), or None if not found.
         """
@@ -196,7 +217,8 @@ class ExperienceBuffer:
         stored_join = join_order_hint
         conn = self._get_connection()
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             SELECT id
             FROM plan_buffer
             WHERE query_hash = ?
@@ -204,7 +226,9 @@ class ExperienceBuffer:
               AND COALESCE(join_order_hint, '') = COALESCE(?, '')
             ORDER BY id DESC
             LIMIT 1
-        """, (qhash, stored_hint, stored_join))
+        """,
+            (qhash, stored_hint, stored_join),
+        )
         row = cur.fetchone()
         conn.close()
         return int(row["id"]) if row is not None else None
@@ -252,6 +276,7 @@ class ExperienceBuffer:
         rows = cursor.fetchall()
         conn.close()
         from collections import defaultdict
+
         groups = defaultdict(list)
         for r in rows:
             pr = self._row_to_plan_record(r)
@@ -261,23 +286,31 @@ class ExperienceBuffer:
             if len(g) >= 2:
                 yield g
 
-    def get_by_query_hash(self, query_hash: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def get_by_query_hash(
+        self, query_hash: str, limit: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
         conn = self._get_connection()
         cursor = conn.cursor()
 
         if limit:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM plan_buffer
                 WHERE query_hash = ?
                 ORDER BY id DESC
                 LIMIT ?
-            """, (query_hash, limit))
+            """,
+                (query_hash, limit),
+            )
         else:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM plan_buffer
                 WHERE query_hash = ?
                 ORDER BY id DESC
-            """, (query_hash,))
+            """,
+                (query_hash,),
+            )
         rows = cursor.fetchall()
         results = [dict(row) for row in rows]
         conn.close()

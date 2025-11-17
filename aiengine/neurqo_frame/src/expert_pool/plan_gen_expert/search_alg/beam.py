@@ -1,13 +1,12 @@
 import time
-import numpy as np
-import torch
+from parser import sql_parser
 from typing import List, Tuple
 
+import numpy as np
+import torch
 import torch.nn as nn
-
-from parser import sql_parser
-from common.workload import Node, NodeOps, WorkloadInfo
 from common.base_config import BaseConfig
+from common.workload import Node, NodeOps, WorkloadInfo
 
 # Import from local package
 from ..encoders import plan_graph_encoder
@@ -53,13 +52,15 @@ class Fringe:
 class PlanEnumerator:
 
     @staticmethod
-    def get_possible_plans(query_node: Node,
-                           state,
-                           join_graph,
-                           planner_config=None,
-                           avoid_eq_filters=False,
-                           workload_info=None,
-                           use_plan_restrictions=True):
+    def get_possible_plans(
+        query_node: Node,
+        state,
+        join_graph,
+        planner_config=None,
+        avoid_eq_filters=False,
+        workload_info=None,
+        use_plan_restrictions=True,
+    ):
         # if not bushy:
         #     if planner_config and planner_config.search_space == 'leftdeep':
         #         return PlanEnumerator._get_left_deep(
@@ -71,15 +72,25 @@ class PlanEnumerator:
         #         raise
         # else:
         return PlanEnumerator._get_bushy_join_plans(
-            query_node, state, join_graph,
-            planner_config, avoid_eq_filters,
-            workload_info, use_plan_restrictions
+            query_node,
+            state,
+            join_graph,
+            planner_config,
+            avoid_eq_filters,
+            workload_info,
+            use_plan_restrictions,
         )
 
     @staticmethod
-    def _get_bushy_join_plans(query_node, state: List[Node], join_graph,
-                              planner_config=None, avoid_eq_filters=False,
-                              workload_info=None, use_plan_restrictions=True) -> List[Tuple[Node, int, int]]:
+    def _get_bushy_join_plans(
+        query_node,
+        state: List[Node],
+        join_graph,
+        planner_config=None,
+        avoid_eq_filters=False,
+        workload_info=None,
+        use_plan_restrictions=True,
+    ) -> List[Tuple[Node, int, int]]:
         """
         enumerates all valid binary join extensions (covering join algorithms and scan variants) from the current state,
         producing the next-level candidate plans
@@ -94,8 +105,12 @@ class PlanEnumerator:
                 if not NodeOps.exists_join_edge_in_graph(l, r, join_graph):
                     continue
                 for plan in PlanEnumerator._enumerate_ops(
-                        l, r, workload_info, use_plan_restrictions,
-                        planner_config, avoid_eq_filters
+                    l,
+                    r,
+                    workload_info,
+                    use_plan_restrictions,
+                    planner_config,
+                    avoid_eq_filters,
                 ):
                     possible_joins.append((plan, i, j))
         return possible_joins
@@ -146,33 +161,43 @@ class PlanEnumerator:
     #     return possible_joins
 
     @staticmethod
-    def _enumerate_ops(left, right, workload_info: WorkloadInfo, use_plan_restrictions,
-                       planner_config=None, avoid_eq_filters=False):
+    def _enumerate_ops(
+        left,
+        right,
+        workload_info: WorkloadInfo,
+        use_plan_restrictions,
+        planner_config=None,
+        avoid_eq_filters=False,
+    ):
         # Equivalent to original: get join/scan types from BMOptimizer.workload_info, and pass use_plan_restrictions
         join_ops = workload_info.join_types
         scan_ops = workload_info.scan_types
         # if planner_config:
         #     join_ops = planner_config.KeepEnabledJoinOps(join_ops)
         return NodeOps.enumerate_join_with_ops(
-            left, right,
-            join_ops=join_ops, scan_ops=scan_ops,
+            left,
+            right,
+            join_ops=join_ops,
+            scan_ops=scan_ops,
             avoid_eq_filters=avoid_eq_filters,
-            use_plan_restrictions=use_plan_restrictions
+            use_plan_restrictions=use_plan_restrictions,
         )
 
 
 class BMOptimizer:
     """Creates query execution plans using learned model. (Equivalent behavior to original)"""
 
-    def __init__(self,
-                 workload_info: WorkloadInfo,
-                 plan_featurizer,
-                 parent_pos_featurizer,
-                 query_featurizer,
-                 inverse_label_transform_fn,
-                 model: nn.Module,
-                 plan_physical=False,
-                 use_plan_restrictions=True):
+    def __init__(
+        self,
+        workload_info: WorkloadInfo,
+        plan_featurizer,
+        parent_pos_featurizer,
+        query_featurizer,
+        inverse_label_transform_fn,
+        model: nn.Module,
+        plan_physical=False,
+        use_plan_restrictions=True,
+    ):
 
         # tree_conv = True
         # Same defaults for beam and termination as original
@@ -190,9 +215,9 @@ class BMOptimizer:
         # Equivalent defensive assertions as original (only 'Join' / 'Scan' in logical mode)
         if not plan_physical:
             jts = workload_info.join_types
-            assert np.array_equal(jts, ['Join']), jts
+            assert np.array_equal(jts, ["Join"]), jts
             sts = workload_info.scan_types
-            assert np.array_equal(sts, ['Scan']), sts
+            assert np.array_equal(sts, ["Scan"]), sts
 
         self.plan_physical = plan_physical
         self.beam_size = beam_size
@@ -214,7 +239,9 @@ class BMOptimizer:
         self.label_cache = {}
 
     # @profile
-    def infer(self, query_node: Node, sub_plan_nodes: List[Node], set_model_eval: bool = False):
+    def infer(
+        self, query_node: Node, sub_plan_nodes: List[Node], set_model_eval: bool = False
+    ):
         """
         Forward inference fully consistent with original:
         - Supports label cache
@@ -225,7 +252,10 @@ class BMOptimizer:
         plans, idx, lookup_keys = [], [], []
 
         if self.use_label_cache:
-            lookup_keys = [(query_node.info['query_name'], p.to_str(with_cost=False)) for p in sub_plan_nodes]
+            lookup_keys = [
+                (query_node.info["query_name"], p.to_str(with_cost=False))
+                for p in sub_plan_nodes
+            ]
             for i, key in enumerate(lookup_keys):
                 cached = self.label_cache.get(key)
                 if cached is not None:
@@ -246,7 +276,8 @@ class BMOptimizer:
             all_query_vecs = [query_enc] * len(plans)
 
             all_plans, all_indexes = plan_graph_encoder.make_and_featurize_trees(
-                node_featurizer=self.plan_featurizer, trees=plans)
+                node_featurizer=self.plan_featurizer, trees=plans
+            )
 
             # all_plans = []
             # all_indexes = []
@@ -261,9 +292,15 @@ class BMOptimizer:
             #             all_indexes.append(self.parent_pos_featurizer(p))
 
             # Three-arg path (consistent with original, non_blocking=True)
-            query_feat = torch.from_numpy(np.asarray(all_query_vecs)).to(BaseConfig.DEVICE, non_blocking=True)
-            plan_feat = torch.from_numpy(np.asarray(all_plans)).to(BaseConfig.DEVICE, non_blocking=True)
-            pos_feat = torch.from_numpy(np.asarray(all_indexes)).to(BaseConfig.DEVICE, non_blocking=True)
+            query_feat = torch.from_numpy(np.asarray(all_query_vecs)).to(
+                BaseConfig.DEVICE, non_blocking=True
+            )
+            plan_feat = torch.from_numpy(np.asarray(all_plans)).to(
+                BaseConfig.DEVICE, non_blocking=True
+            )
+            pos_feat = torch.from_numpy(np.asarray(all_indexes)).to(
+                BaseConfig.DEVICE, non_blocking=True
+            )
             cost = self.value_network(query_feat, plan_feat, pos_feat).cpu().numpy()
 
             # if self.tree_conv or hasattr(self.plan_featurizer, 'pad'):
@@ -289,7 +326,9 @@ class BMOptimizer:
             #     cost = self.value_network(query_feat, plan_feat).cpu().numpy()
 
             cost = self.inverse_label_transform_fn(cost)
-            plan_labels = cost.reshape(-1, ).tolist()
+            plan_labels = cost.reshape(
+                -1,
+            ).tolist()
 
         if self.use_label_cache:
             for i, label in enumerate(plan_labels):
@@ -299,7 +338,12 @@ class BMOptimizer:
         else:
             return plan_labels
 
-    def _make_new_states(self, state: List[Node], costs: List[float], possible_joins: List[Tuple[Node, int, int]]):
+    def _make_new_states(
+        self,
+        state: List[Node],
+        costs: List[float],
+        possible_joins: List[Tuple[Node, int, int]],
+    ):
         """
         Consistent with original:
         - Apply (join,i,j) to state, merging two subtrees
@@ -319,13 +363,15 @@ class BMOptimizer:
             valid_states.append(new_state)
         return valid_costs, valid_states
 
-    def plan(self,
-             query_node: Node,
-             return_all_found=False,
-             planner_config=None,
-             verbose=False,
-             avoid_eq_filters=False,
-             epsilon_greedy=0) -> Tuple[float, Node, float, list]:
+    def plan(
+        self,
+        query_node: Node,
+        return_all_found=False,
+        planner_config=None,
+        verbose=False,
+        avoid_eq_filters=False,
+        epsilon_greedy=0,
+    ) -> Tuple[float, Node, float, list]:
         """
         return_all_found： Return all complete plans, not just the cheapest one.
         verbose： Enable detailed debug logging of search and plans.
@@ -343,7 +389,9 @@ class BMOptimizer:
         planning_start_t = time.time()
 
         # Build join graph
-        join_graph, _ = query_node.get_parse_update_sql(sql_parse_func=sql_parser.simple_parse_sql)
+        join_graph, _ = query_node.get_parse_update_sql(
+            sql_parse_func=sql_parser.simple_parse_sql
+        )
         # Leaves as initial state
         query_leaves = query_node.GetLeaves()
         init_state = query_leaves
@@ -355,7 +403,9 @@ class BMOptimizer:
         terminal_states = []
         is_eps_greedy_triggered = False
 
-        while len(terminal_states) < self.search_until_n_complete_plans and fringe.fringe:
+        while (
+            len(terminal_states) < self.search_until_n_complete_plans and fringe.fringe
+        ):
             state_cost, state = fringe.pop_best()
 
             if len(state) == 1:
@@ -370,10 +420,14 @@ class BMOptimizer:
                 planner_config=planner_config,
                 avoid_eq_filters=avoid_eq_filters,
                 workload_info=self.workload_info,
-                use_plan_restrictions=self.use_plan_restrictions
+                use_plan_restrictions=self.use_plan_restrictions,
             )
-            costs = self.infer(query_node, [join_node for join_node, _, _ in possible_plans])
-            valid_costs, valid_states = self._make_new_states(state, costs, possible_plans)
+            costs = self.infer(
+                query_node, [join_node for join_node, _, _ in possible_plans]
+            )
+            valid_costs, valid_states = self._make_new_states(
+                state, costs, possible_plans
+            )
 
             for c, new_state in zip(valid_costs, valid_states):
                 fringe.add(c, new_state)
@@ -395,23 +449,30 @@ class BMOptimizer:
                 is_eps_greedy_triggered = True
 
             # Beam truncation, only keep the top few of the BFS
-            fringe.fringe = sorted(fringe.fringe, key=lambda x: x[0])[:self.beam_size]
+            fringe.fringe = sorted(fringe.fringe, key=lambda x: x[0])[: self.beam_size]
 
         planning_time = (time.time() - planning_start_t) * 1e3
-        print('Planning took {:.1f}ms'.format(planning_time))
+        print("Planning took {:.1f}ms".format(planning_time))
 
         # Select optimal
         all_found = []
         min_cost = np.min([c for c, s in terminal_states])
         min_cost_idx = np.argmin([c for c, s in terminal_states])
-        for (cost, state) in terminal_states:
+        for cost, state in terminal_states:
             all_found.append((cost, state[0]))
             if verbose:
-                tag = '  <-- cheapest' if cost == min_cost else ''
-                print('  {:.1f} {}{}'.format(
-                    cost, str([s.hint_str(self.plan_physical) for s in state]), tag))
+                tag = "  <-- cheapest" if cost == min_cost else ""
+                print(
+                    "  {:.1f} {}{}".format(
+                        cost, str([s.hint_str(self.plan_physical) for s in state]), tag
+                    )
+                )
 
-        ret = [planning_time, terminal_states[min_cost_idx][1][0], terminal_states[min_cost_idx][0]]
+        ret = [
+            planning_time,
+            terminal_states[min_cost_idx][1][0],
+            terminal_states[min_cost_idx][0],
+        ]
         if return_all_found:
             ret.append(all_found)
         else:
@@ -426,7 +487,9 @@ class BMOptimizer:
     def SampleRandomPlan(self, query_node, bushy=True):
         """Equivalent random sampling to original."""
         planning_start_t = time.time()
-        join_graph, _ = query_node.get_parse_update_sql(sql_parse_func=sql_parser.simple_parse_sql)
+        join_graph, _ = query_node.get_parse_update_sql(
+            sql_parse_func=sql_parser.simple_parse_sql
+        )
         query_leaves = query_node.CopyLeaves()
         num_rels = len(query_leaves)
         num_random_plans = 1000  # Same final setting as original
@@ -434,14 +497,17 @@ class BMOptimizer:
         def _SampleOne(state):
             while len(state) > 1:
                 possible_plans = PlanEnumerator.get_possible_plans(
-                    query_node, state, join_graph,
+                    query_node,
+                    state,
+                    join_graph,
                     planner_config=None,
                     avoid_eq_filters=False,
                     workload_info=self.workload_info,
-                    use_plan_restrictions=self.use_plan_restrictions
+                    use_plan_restrictions=self.use_plan_restrictions,
                 )
                 _, valid_new_states = self._make_new_states(
-                    state, [0.0] * len(possible_plans), possible_plans)
+                    state, [0.0] * len(possible_plans), possible_plans
+                )
                 rand_idx = np.random.randint(len(valid_new_states))
                 state = valid_new_states[rand_idx]
             predicted = self.infer(query_node, [state[0]])
@@ -460,7 +526,11 @@ class BMOptimizer:
         planning_time = (time.time() - planning_start_t) * 1e3
         predicted = best_predicted
         state = best_state
-        print('Found best random plan out of {}:'.format(num_random_plans))
-        print('  {:.1f} {}'.format(predicted[0], str([s.hint_str(self.plan_physical) for s in state])))
-        print('Planning took {:.1f}ms'.format(planning_time))
+        print("Found best random plan out of {}:".format(num_random_plans))
+        print(
+            "  {:.1f} {}".format(
+                predicted[0], str([s.hint_str(self.plan_physical) for s in state])
+            )
+        )
+        print("Planning took {:.1f}ms".format(planning_time))
         return predicted[0], state[0]

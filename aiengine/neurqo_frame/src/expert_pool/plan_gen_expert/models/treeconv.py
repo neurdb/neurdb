@@ -1,8 +1,9 @@
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
-from typing import Optional, Tuple, Any, Union, List, Dict
 
-DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class TreeConvolution(nn.Module):
@@ -52,7 +53,7 @@ class TreeConvolution(nn.Module):
             if p.dim() > 1:
                 # Weights/embeddings.
                 nn.init.normal_(p, std=0.02)
-            elif 'bias' in name:
+            elif "bias" in name:
                 # Layer norm bias; linear bias, etc.
                 nn.init.zeros_(p)
             else:
@@ -77,7 +78,9 @@ class TreeConvolution(nn.Module):
 
         query_embs = query_embs.transpose(1, 2)
         max_subtrees = trees.shape[-1]
-        query_embs = query_embs.expand(query_embs.shape[0], query_embs.shape[1], max_subtrees)
+        query_embs = query_embs.expand(
+            query_embs.shape[0], query_embs.shape[1], max_subtrees
+        )
         concat = torch.cat((query_embs, trees), axis=1)
 
         _tree = (concat, indexes)
@@ -98,7 +101,9 @@ class TreeConv1d(nn.Module):
     def forward(self, trees: Tuple[torch.Tensor, torch.Tensor]):
         # trees: Tuple of (data, indexes)
         data, indexes = trees
-        feats = self.weights(torch.gather(data, 2, indexes.expand(-1, -1, self._in_dims).transpose(1, 2)))
+        feats = self.weights(
+            torch.gather(data, 2, indexes.expand(-1, -1, self._in_dims).transpose(1, 2))
+        )
 
         zeros = torch.zeros((data.shape[0], self._out_dims), device=DEVICE).unsqueeze(2)
         feats = torch.cat((zeros, feats), dim=2)

@@ -1,30 +1,33 @@
 import os
-import random
 import pickle
-from datetime import datetime
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Tuple
-import torch
-from torch.utils.data import Dataset, DataLoader
-from collections import namedtuple
-from math import log
+import random
 import traceback
+from collections import namedtuple
+from dataclasses import dataclass, field
+from datetime import datetime
+from math import log
+from typing import Any, Dict, List, Literal, Optional, Tuple
+
+import torch
+from db.pg_conn import PostgresConnector
 from exp_buffer.buffer_mngr import BufferManager
 from exp_buffer.sqllite import PlanRecord
-from db.pg_conn import PostgresConnector
 
 # Import from local package
 from expert_pool.join_order_expert.encoders.mcts_encoder import TreeBuilder
 from expert_pool.join_order_expert.encoders.sql_to_vec import Sql2Vec
 from expert_pool.join_order_expert.KNN import KNN
+from expert_pool.join_order_expert.mcts import MCTSHinterSearch
 from expert_pool.join_order_expert.models.mcts_net import TreeSQLNet, TreeSQLNetBuilder
 from expert_pool.join_order_expert.tools.normalize import LatencyNormalizer
-from expert_pool.join_order_expert.mcts import MCTSHinterSearch
+from torch.utils.data import DataLoader, Dataset
 
 
 class ReplayMemory:
-    Transition = namedtuple('Transition',
-                            ('tree_feature', 'sql_feature', 'target_feature', 'mask', 'weight'))
+    Transition = namedtuple(
+        "Transition",
+        ("tree_feature", "sql_feature", "target_feature", "mask", "weight"),
+    )
 
     """Replay memory for training. Based on hybrid_qo/NET.py ReplayMemory."""
 
@@ -34,10 +37,10 @@ class ReplayMemory:
             capacity (int): Maximum number of transitions to store in memory.
         """
         self.capacity = capacity
-        self.memory: List[Optional['ReplayMemory.Transition']] = []
+        self.memory: List[Optional["ReplayMemory.Transition"]] = []
         self.position: int = 0
 
-    def push(self, transition: 'ReplayMemory.Transition') -> None:
+    def push(self, transition: "ReplayMemory.Transition") -> None:
         """
         Save a new transition.
 
@@ -67,12 +70,12 @@ class ReplayMemory:
         for idx in range(len(self.memory)):
             weight[idx] = weight[idx] / current_weight
         return random.choices(
-            population=list(range(len(self.memory))),
-            weights=weight,
-            k=batch_size
+            population=list(range(len(self.memory))), weights=weight, k=batch_size
         )
 
-    def sample(self, batch_size: int) -> Tuple[List['ReplayMemory.Transition'], List[int]]:
+    def sample(
+        self, batch_size: int
+    ) -> Tuple[List["ReplayMemory.Transition"], List[int]]:
         """
         Randomly sample a batch of transitions.
 
@@ -84,7 +87,9 @@ class ReplayMemory:
         """
         if len(self.memory) > batch_size:
             normal_batch = batch_size // 2
-            idx_list1 = [random.randint(0, normal_batch - 1) for _ in range(normal_batch)]
+            idx_list1 = [
+                random.randint(0, normal_batch - 1) for _ in range(normal_batch)
+            ]
             idx_list2 = self.weight_sample(batch_size=batch_size - normal_batch)
             idx_list = idx_list1 + idx_list2
             res = [self.memory[idx] for idx in idx_list]
@@ -125,8 +130,7 @@ class ReplayMemory:
 
 
 class MCTSMemory:
-    MCTSSample = namedtuple('MCTSSample',
-                            ('sql_feature', 'order_feature', 'label'))
+    MCTSSample = namedtuple("MCTSSample", ("sql_feature", "order_feature", "label"))
 
     def __init__(self, capacity: int):
         """
@@ -139,7 +143,7 @@ class MCTSMemory:
         self.memory: List[MCTSMemory.MCTSSample] = []
         self.position = 0
 
-    def push(self, sample: 'MCTSMemory.MCTSSample'):
+    def push(self, sample: "MCTSMemory.MCTSSample"):
         """
         Save a transition into memory.
 
@@ -165,6 +169,7 @@ class MCTSMemory:
             List[MCTSSample]: A batch of randomly selected transitions.
         """
         import random
+
         if len(self.memory) > batch_size:
             return random.sample(self.memory, batch_size)
         else:
@@ -183,7 +188,9 @@ class MCTSMemory:
 @dataclass
 class MCTSConfig:
     device: torch.device = field(
-        default_factory=lambda: torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        default_factory=lambda: torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
     )
 
     # 1) MCTS search hyperparameters
@@ -249,7 +256,8 @@ class MCTSDataset(Dataset):
         self.sql_plan = sql_plan
         self.exe_time = exe_time
 
-    def __len__(self): return len(self.sql_plan)
+    def __len__(self):
+        return len(self.sql_plan)
 
     def __getitem__(self, idx):
         sql_feature, tree_feature, alias, mask = self.sql_plan[idx]
@@ -259,19 +267,30 @@ class MCTSDataset(Dataset):
 
 class MCTSOptimizerExpert:
 
-    def __init__(self, config: MCTSConfig, buffer_mngr: BufferManager, db_cli: PostgresConnector = None):
+    def __init__(
+        self,
+        config: MCTSConfig,
+        buffer_mngr: BufferManager,
+        db_cli: PostgresConnector = None,
+    ):
         self.config = config
         self.buffer_mngr = buffer_mngr
 
         # normalizer
         self.latency_normalizer = LatencyNormalizer(
-            offset=self.config.offset, max_time_out=self.config.max_time_out, max_value=self.config.max_value)
+            offset=self.config.offset,
+            max_time_out=self.config.max_time_out,
+            max_value=self.config.max_value,
+        )
 
         # --- encoders
         self.plan_builder = TreeBuilder(
-            id2aliasname=config.id2aliasname, aliasname2id=config.aliasname2id,
-            input_size=config.input_size, hidden_size=config.hidden_size,
-            latency_normalizer=self.latency_normalizer)
+            id2aliasname=config.id2aliasname,
+            aliasname2id=config.aliasname2id,
+            input_size=config.input_size,
+            hidden_size=config.hidden_size,
+            latency_normalizer=self.latency_normalizer,
+        )
 
         self.sql2vec = Sql2Vec(db_cli=db_cli, config=self.config)
 
@@ -281,10 +300,11 @@ class MCTSOptimizerExpert:
             input_size=config.input_size,
             hidden_size=config.hidden_size,
             table_num=config.table_num,
-            sql_size=config.max_alias_num * config.max_alias_num + config.max_column
+            sql_size=config.max_alias_num * config.max_alias_num + config.max_column,
         ).to(config.device)
         self.tree_sql_builder = TreeSQLNetBuilder(
-            value_network=self.value_network, var_weight=config.var_weight)
+            value_network=self.value_network, var_weight=config.var_weight
+        )
 
         # --- MCTS searcher
         self.mcts_searcher = MCTSHinterSearch(
@@ -304,7 +324,7 @@ class MCTSOptimizerExpert:
         self.knn = KNN(10)
 
         # bookkeeping
-        self.run_name = datetime.now().strftime('%Y_%m_%d__%H%M%S')
+        self.run_name = datetime.now().strftime("%Y_%m_%d__%H%M%S")
 
         # --- Memory to assist the training.
         self.experience_memory = ReplayMemory(config.mem_size)
@@ -334,7 +354,13 @@ class MCTSOptimizerExpert:
         # for each sql, train twice
         # here the batch_size is always to 1
         num_sql_executed = 0
-        for batch_sql_feature, batch_plan_feature, batch_alias, batch_mask, batch_y in train_data_loader:
+        for (
+            batch_sql_feature,
+            batch_plan_feature,
+            batch_alias,
+            batch_mask,
+            batch_y,
+        ) in train_data_loader:
             num_sql_executed += 1
             print(f"   Trainig by sample with sql number {num_sql_executed}")
 
@@ -343,28 +369,50 @@ class MCTSOptimizerExpert:
 
             # 0. predict based on current model, save to KNN
             plan_time_triple = self.tree_sql_builder.predict_with_uncertainty_batch(
-                tree_features=[batch_plan_feature], sql_feature=batch_sql_feature, device=self.config.device)
+                tree_features=[batch_plan_feature],
+                sql_feature=batch_sql_feature,
+                device=self.config.device,
+            )
             self.knn.insertAValue(
-                (plan_time_triple[0], self.latency_normalizer.encode(batch_y) - plan_time_triple[0][0]))
+                (
+                    plan_time_triple[0],
+                    self.latency_normalizer.encode(batch_y) - plan_time_triple[0][0],
+                )
+            )
 
             # 1. train the TreeSQLNet, and add features to the memory
-            loss, plan_sql_vec_mean, plan_sql_vec_variance, target_fea_model = self.tree_sql_builder.train_on_sample(
-                tree_feature=batch_plan_feature, sql_feature=batch_sql_feature, target_value_ms=batch_y,
-                mask=batch_mask)
+            loss, plan_sql_vec_mean, plan_sql_vec_variance, target_fea_model = (
+                self.tree_sql_builder.train_on_sample(
+                    tree_feature=batch_plan_feature,
+                    sql_feature=batch_sql_feature,
+                    target_value_ms=batch_y,
+                    mask=batch_mask,
+                )
+            )
             self.experience_memory.push(
                 ReplayMemory.Transition(
-                    tree_feature=batch_plan_feature, sql_feature=batch_sql_feature, target_feature=target_fea_model,
-                    mask=batch_mask, weight=abs(plan_sql_vec_mean - batch_y)
+                    tree_feature=batch_plan_feature,
+                    sql_feature=batch_sql_feature,
+                    target_feature=target_fea_model,
+                    mask=batch_mask,
+                    weight=abs(plan_sql_vec_mean - batch_y),
                 )
             )
 
             # 2. train the MCTSHinterSearch
             train_on_sample_res = self.mcts_searcher.train_on_sample(
-                tree_feature=batch_plan_feature, sql_feature=batch_sql_feature, target_value_ms=batch_y,
-                alias_set=batch_alias)
+                tree_feature=batch_plan_feature,
+                sql_feature=batch_sql_feature,
+                target_value_ms=batch_y,
+                alias_set=batch_alias,
+            )
             if train_on_sample_res:
                 search_loss, order_feature, target_fea_search = train_on_sample_res
-                self.mcts_memory.push(MCTSMemory.MCTSSample(batch_sql_feature, order_feature, target_fea_search))
+                self.mcts_memory.push(
+                    MCTSMemory.MCTSSample(
+                        batch_sql_feature, order_feature, target_fea_search
+                    )
+                )
 
             # 3. train by batch on experience history
             if num_sql_executed < 1000 or num_sql_executed % 10 == 0:
@@ -372,8 +420,12 @@ class MCTSOptimizerExpert:
 
                 for _ in range(repeat):
                     # Train network
-                    net_samples, samples_idx = self.experience_memory.sample(self.config.batch_size)
-                    loss_value, new_weight = self.tree_sql_builder.train_on_batch(net_samples, self.config.device)
+                    net_samples, samples_idx = self.experience_memory.sample(
+                        self.config.batch_size
+                    )
+                    loss_value, new_weight = self.tree_sql_builder.train_on_batch(
+                        net_samples, self.config.device
+                    )
                     self.experience_memory.update_weight(samples_idx, new_weight)
 
                     # Train MCTS search
@@ -387,18 +439,20 @@ class MCTSOptimizerExpert:
     def sql_enhancement(self, sql: str, db_cli: PostgresConnector):
         """
         Optimize SQL query using MCTS-based join order search.
-        
+
         Args:
             sql: SQL query string
             db_cli: PostgreSQL connector
-            
+
         Returns:
             Tuple of (optimized_sql, join_order_hint)
             - optimized_sql: SQL with join order hint prepended (if hint is used)
             - join_order_hint: Join order hint string (e.g., "/*+Leading(...)*/") or None
         """
         try:
-            sql_vec, alias, join_list_with_predicate, join_list = self.sql2vec.to_vec(sql)
+            sql_vec, alias, join_list_with_predicate, join_list = self.sql2vec.to_vec(
+                sql
+            )
 
             sql_feature = torch.tensor(sql_vec, dtype=torch.float32).reshape(1, -1)
 
@@ -407,39 +461,60 @@ class MCTSOptimizerExpert:
             tree_feature = self.plan_builder.plan_to_feature_tree(plan_json_pg)
 
             plan_time_triple = self.tree_sql_builder.predict_with_uncertainty_batch(
-                tree_features=[tree_feature], sql_feature=sql_feature, device=self.config.device)
+                tree_features=[tree_feature],
+                sql_feature=sql_feature,
+                device=self.config.device,
+            )
 
             # 2. search the join-order-hint with value network.
             chosen_leading_pair = self.search_best_join_order(
                 db_cli=db_cli,
-                plan_json_PG=plan_json_pg, alias=alias, sql_vec=sql_vec, sql=sql,
-                join_list_with_predicate=join_list_with_predicate, join_lis=join_list,
+                plan_json_PG=plan_json_pg,
+                alias=alias,
+                sql_vec=sql_vec,
+                sql=sql,
+                join_list_with_predicate=join_list_with_predicate,
+                join_lis=join_list,
             )
 
             # 3. decide hint or default plan
             knn_plan = abs(self.knn.kNeightboursSample(plan_time_triple[0]))
             should_try_hint = (
-                    chosen_leading_pair[0][0] < plan_time_triple[0][0] and
-                    abs(knn_plan) < self.config.threshold and
-                    self.latency_normalizer.decode(plan_time_triple[0][0]) > 100
+                chosen_leading_pair[0][0] < plan_time_triple[0][0]
+                and abs(knn_plan) < self.config.threshold
+                and self.latency_normalizer.decode(plan_time_triple[0][0]) > 100
             )
 
             if should_try_hint:
                 # timeout window from predicted hinted time (×3), capped
-                max_time_out = min(int(self.latency_normalizer.decode(chosen_leading_pair[0][0]) * 3),
-                                   self.config.max_time_out)
+                max_time_out = min(
+                    int(self.latency_normalizer.decode(chosen_leading_pair[0][0]) * 3),
+                    self.config.max_time_out,
+                )
                 join_order_hint = chosen_leading_pair[1]  # e.g., "/*+Leading(...)*/"
                 optimized_sql = join_order_hint + " " + sql
                 hinted_plan_json, _ = db_cli.explain(query=optimized_sql)
-                hinted_tree_feature = self.plan_builder.plan_to_feature_tree(hinted_plan_json)
+                hinted_tree_feature = self.plan_builder.plan_to_feature_tree(
+                    hinted_plan_json
+                )
 
-                hinted_plan_time_triple = self.tree_sql_builder.predict_with_uncertainty_batch(
-                    tree_features=[hinted_tree_feature], sql_feature=sql_feature, device=self.config.device)
+                hinted_plan_time_triple = (
+                    self.tree_sql_builder.predict_with_uncertainty_batch(
+                        tree_features=[hinted_tree_feature],
+                        sql_feature=sql_feature,
+                        device=self.config.device,
+                    )
+                )
 
-                predicted_time_ms = self.latency_normalizer.decode(hinted_plan_time_triple[0][0]) * 1000.0  # seconds -> ms
+                predicted_time_ms = (
+                    self.latency_normalizer.decode(hinted_plan_time_triple[0][0])
+                    * 1000.0
+                )  # seconds -> ms
 
             else:
-                predicted_time_ms = self.latency_normalizer.decode(plan_time_triple[0][0])
+                predicted_time_ms = self.latency_normalizer.decode(
+                    plan_time_triple[0][0]
+                )
                 optimized_sql = sql
                 join_order_hint = None
 
@@ -451,8 +526,16 @@ class MCTSOptimizerExpert:
         # Return optimized SQL and join order hint (consistent with hint_plan_sel_expert interface)
         return optimized_sql, join_order_hint
 
-    def search_best_join_order(self, db_cli: PostgresConnector, plan_json_PG, alias, sql_vec, sql,
-                               join_list_with_predicate, join_lis):
+    def search_best_join_order(
+        self,
+        db_cli: PostgresConnector,
+        plan_json_PG,
+        alias,
+        sql_vec,
+        sql,
+        join_list_with_predicate,
+        join_lis,
+    ):
         """Run MCTS to generate join hints, predict them, and pick the best one."""
         alias_id = [self.config.aliasname2id[a] for a in alias]
 
@@ -470,37 +553,55 @@ class MCTSOptimizerExpert:
             leading_length = len(alias)
 
         join_list_with_predicate = self.mcts_searcher.find_hints(
-            40, len(alias), sql_vec, id_joins, id_joins_with_predicate, alias_id,
-            depth=leading_length
+            40,
+            len(alias),
+            sql_vec,
+            id_joins,
+            id_joins_with_predicate,
+            alias_id,
+            depth=leading_length,
         )
 
         leading_list = []
         tree_features = []
         leadings_utility_list = []
         for join in join_list_with_predicate:
-            leading_hint = '/*+Leading(' + " ".join(
-                [self.config.id2aliasname[x] for x in join[0][:leading_length]]
-            ) + ')*/'
+            leading_hint = (
+                "/*+Leading("
+                + " ".join(
+                    [self.config.id2aliasname[x] for x in join[0][:leading_length]]
+                )
+                + ")*/"
+            )
             leading_list.append(leading_hint)
             leadings_utility_list.append(join[1])
             plan_json, _ = db_cli.explain(leading_hint + sql)
             tree_feature = self.plan_builder.plan_to_feature_tree(plan_json)
             tree_features.append(tree_feature)
 
-        sql_feature = torch.tensor(sql_vec, device=self.config.device, dtype=torch.float32).reshape(1, -1)
+        sql_feature = torch.tensor(
+            sql_vec, device=self.config.device, dtype=torch.float32
+        ).reshape(1, -1)
         plan_times = self.tree_sql_builder.predict_with_uncertainty_batch(
-            tree_features=tree_features, sql_feature=sql_feature, device=self.config.device)
+            tree_features=tree_features,
+            sql_feature=sql_feature,
+            device=self.config.device,
+        )
 
         chosen_leading_pair = sorted(
-            zip(plan_times[:self.config.max_hint_num], leading_list, leadings_utility_list),
-            key=lambda x: x[0][0] + self.knn.kNeightboursSample(x[0])
+            zip(
+                plan_times[: self.config.max_hint_num],
+                leading_list,
+                leadings_utility_list,
+            ),
+            key=lambda x: x[0][0] + self.knn.kNeightboursSample(x[0]),
         )[0]
         return chosen_leading_pair
 
     def save(self, path_prefix: Optional[str] = None):
         """
         Save model to directory.
-        
+
         Args:
             path_prefix: Optional directory path (defaults to config.cur_model_path)
         """
@@ -510,7 +611,9 @@ class MCTSOptimizerExpert:
         # Save model checkpoint
         checkpoint = {
             "tree_net_state_dict": self.value_network.state_dict(),  # TreeSQLNet
-            "mcts_searcher_state_dict": self.mcts_searcher.prediction_net.to("cpu").state_dict(),  # ValueNet
+            "mcts_searcher_state_dict": self.mcts_searcher.prediction_net.to(
+                "cpu"
+            ).state_dict(),  # ValueNet
         }
         checkpoint_path = os.path.join(target_dir, "model.pt")
         torch.save(checkpoint, checkpoint_path)
@@ -527,7 +630,7 @@ class MCTSOptimizerExpert:
     def load(self, model_dir: Optional[str] = None):
         """
         Load model from directory.
-        
+
         Args:
             model_dir: Optional directory path (defaults to config.cur_model_path)
         """
@@ -576,7 +679,7 @@ class MCTSOptimizerExpert:
     def _get_data_loader(self, training_data: List[PlanRecord]):
         """
         Load PlanRecords and convert to training format.
-        
+
         Args:
             training_data: List of PlanRecord objects
         """
@@ -589,7 +692,9 @@ class MCTSOptimizerExpert:
                 sql_str = rec.query
                 # actual_plan_json is already a dict, not JSON string
                 plan_json = rec.actual_plan_json
-                actual_latency = min(rec.actual_latency, float(self.config.max_time_out))
+                actual_latency = min(
+                    rec.actual_latency, float(self.config.max_time_out)
+                )
 
                 actual_latency = self.latency_normalizer.encode(actual_latency)
                 sql_vec, alias, _, _ = self.sql2vec.to_vec(sql_str)
@@ -624,10 +729,10 @@ class MCTSOptimizerExpert:
         return batch[0]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
-    from exp_buffer.buffer_mngr import read_sql_files
 
+    from exp_buffer.buffer_mngr import read_sql_files
 
     def _train(dbname: str, db_path: str, config: MCTSConfig):
 
@@ -635,37 +740,43 @@ if __name__ == '__main__':
 
         # Create and train expert
         with PostgresConnector(dbname) as conn:
-            expert = MCTSOptimizerExpert(config=config, buffer_mngr=buffer_mngr, db_cli=conn)
+            expert = MCTSOptimizerExpert(
+                config=config, buffer_mngr=buffer_mngr, db_cli=conn
+            )
             expert.train_and_save()
             print("Training completed!")
             print("Save expert training completed successfully!")
-
 
     def _predict(db_path: str, input_sql_dir: str, dbname: str, config: MCTSConfig):
         buffer_mngr = BufferManager(db_path)
 
         query_w_name = read_sql_files(input_sql_dir)
         with PostgresConnector(dbname) as conn:
-            expert = MCTSOptimizerExpert(config=config, buffer_mngr=buffer_mngr, db_cli=conn)
+            expert = MCTSOptimizerExpert(
+                config=config, buffer_mngr=buffer_mngr, db_cli=conn
+            )
             expert.load()
             for sql_name, sql in query_w_name:
-                optimized_sql, join_order_hint = expert.sql_enhancement(sql=sql, db_cli=conn)
+                optimized_sql, join_order_hint = expert.sql_enhancement(
+                    sql=sql, db_cli=conn
+                )
                 print(f"join_order_hint = {join_order_hint}")
                 # Execute the sql with hint, save
                 execution_id = buffer_mngr.run_log_query_exec(
-                    conn=conn, sql=sql, hints=None, join_order_hint=join_order_hint)
+                    conn=conn, sql=sql, hints=None, join_order_hint=join_order_hint
+                )
 
                 print(f"✓ Saved execution {execution_id} for {sql_name}: {sql[:60]}...")
                 print(execution_id)
 
-
     parser = argparse.ArgumentParser(description="Train Expert from Unified Data")
-    parser.add_argument('--dbname', type=str, default='imdb_ori', help='Database name')
+    parser.add_argument("--dbname", type=str, default="imdb_ori", help="Database name")
     parser.add_argument(
-        '--input_sql_dir',
+        "--input_sql_dir",
         type=str,
         default="/Users/kevin/project_python/AI4QueryOptimizer/lqo_benchmark/workloads/bao/join_unique",
-        help='Input SQL dir (one query per file)')
+        help="Input SQL dir (one query per file)",
+    )
     args = parser.parse_args()
 
     # ---------- JOB ----------
@@ -673,19 +784,89 @@ if __name__ == '__main__':
         max_alias_num=40,
         max_column=100,
         id2aliasname={
-            0: 'start', 1: 'chn', 2: 'ci', 3: 'cn', 4: 'ct', 5: 'mc', 6: 'rt', 7: 't', 8: 'k', 9: 'lt',
-            10: 'mk', 11: 'ml', 12: 'it1', 13: 'it2', 14: 'mi', 15: 'mi_idx', 16: 'it', 17: 'kt',
-            18: 'miidx', 19: 'at', 20: 'an', 21: 'n', 22: 'cc', 23: 'cct1', 24: 'cct2', 25: 'it3',
-            26: 'pi', 27: 't1', 28: 't2', 29: 'cn1', 30: 'cn2', 31: 'kt1', 32: 'kt2', 33: 'mc1',
-            34: 'mc2', 35: 'mi_idx1', 36: 'mi_idx2', 37: 'an1', 38: 'n1', 39: 'a1'
+            0: "start",
+            1: "chn",
+            2: "ci",
+            3: "cn",
+            4: "ct",
+            5: "mc",
+            6: "rt",
+            7: "t",
+            8: "k",
+            9: "lt",
+            10: "mk",
+            11: "ml",
+            12: "it1",
+            13: "it2",
+            14: "mi",
+            15: "mi_idx",
+            16: "it",
+            17: "kt",
+            18: "miidx",
+            19: "at",
+            20: "an",
+            21: "n",
+            22: "cc",
+            23: "cct1",
+            24: "cct2",
+            25: "it3",
+            26: "pi",
+            27: "t1",
+            28: "t2",
+            29: "cn1",
+            30: "cn2",
+            31: "kt1",
+            32: "kt2",
+            33: "mc1",
+            34: "mc2",
+            35: "mi_idx1",
+            36: "mi_idx2",
+            37: "an1",
+            38: "n1",
+            39: "a1",
         },
         aliasname2id={
-            'kt1': 31, 'chn': 1, 'cn1': 29, 'mi_idx2': 36, 'cct1': 23, 'n': 21, 'a1': 39, 'kt2': 32,
-            'miidx': 18, 'it': 16, 'mi_idx1': 35, 'kt': 17, 'lt': 9, 'ci': 2, 't': 7, 'k': 8,
-            'start': 0, 'ml': 11, 'ct': 4, 't2': 28, 'rt': 6, 'it2': 13, 'an1': 37, 'at': 19,
-            'mc2': 34, 'pi': 26, 'mc': 5, 'mi_idx': 15, 'n1': 38, 'cn2': 30, 'mi': 14, 'it1': 12,
-            'cc': 22, 'cct2': 24, 'an': 20, 'mk': 10, 'cn': 3, 'it3': 25, 't1': 27, 'mc1': 33
-        }
+            "kt1": 31,
+            "chn": 1,
+            "cn1": 29,
+            "mi_idx2": 36,
+            "cct1": 23,
+            "n": 21,
+            "a1": 39,
+            "kt2": 32,
+            "miidx": 18,
+            "it": 16,
+            "mi_idx1": 35,
+            "kt": 17,
+            "lt": 9,
+            "ci": 2,
+            "t": 7,
+            "k": 8,
+            "start": 0,
+            "ml": 11,
+            "ct": 4,
+            "t2": 28,
+            "rt": 6,
+            "it2": 13,
+            "an1": 37,
+            "at": 19,
+            "mc2": 34,
+            "pi": 26,
+            "mc": 5,
+            "mi_idx": 15,
+            "n1": 38,
+            "cn2": 30,
+            "mi": 14,
+            "it1": 12,
+            "cc": 22,
+            "cct2": 24,
+            "an": 20,
+            "mk": 10,
+            "cn": 3,
+            "it3": 25,
+            "t1": 27,
+            "mc1": 33,
+        },
     )
 
     # ---------- STACK ----------
@@ -693,18 +874,70 @@ if __name__ == '__main__':
         max_alias_num=29,
         max_column=66,
         id2aliasname={
-            0: 'start', 1: 'a1', 2: 'acc', 3: 'account', 4: 'b', 5: 'b1', 6: 'b2', 7: 'c1', 8: 'c2',
-            9: 'pl', 10: 'q', 11: 'q1', 12: 'q2', 13: 'question', 14: 's', 15: 's1', 16: 's2',
-            17: 'site', 18: 'so_user', 19: 't', 20: 't1', 21: 't2', 22: 'tag', 23: 'tag_question',
-            24: 'tq', 25: 'tq1', 26: 'tq2', 27: 'u1', 28: 'u2'
+            0: "start",
+            1: "a1",
+            2: "acc",
+            3: "account",
+            4: "b",
+            5: "b1",
+            6: "b2",
+            7: "c1",
+            8: "c2",
+            9: "pl",
+            10: "q",
+            11: "q1",
+            12: "q2",
+            13: "question",
+            14: "s",
+            15: "s1",
+            16: "s2",
+            17: "site",
+            18: "so_user",
+            19: "t",
+            20: "t1",
+            21: "t2",
+            22: "tag",
+            23: "tag_question",
+            24: "tq",
+            25: "tq1",
+            26: "tq2",
+            27: "u1",
+            28: "u2",
         },
         aliasname2id={
-            'start': 0, 'a1': 1, 'acc': 2, 'account': 3, 'b': 4, 'b1': 5, 'b2': 6, 'c1': 7, 'c2': 8,
-            'pl': 9, 'q': 10, 'q1': 11, 'q2': 12, 'question': 13, 's': 14, 's1': 15, 's2': 16,
-            'site': 17, 'so_user': 18, 't': 19, 't1': 20, 't2': 21, 'tag': 22, 'tag_question': 23,
-            'tq': 24, 'tq1': 25, 'tq2': 26, 'u1': 27, 'u2': 28
-        }
+            "start": 0,
+            "a1": 1,
+            "acc": 2,
+            "account": 3,
+            "b": 4,
+            "b1": 5,
+            "b2": 6,
+            "c1": 7,
+            "c2": 8,
+            "pl": 9,
+            "q": 10,
+            "q1": 11,
+            "q2": 12,
+            "question": 13,
+            "s": 14,
+            "s1": 15,
+            "s2": 16,
+            "site": 17,
+            "so_user": 18,
+            "t": 19,
+            "t1": 20,
+            "t2": 21,
+            "tag": 22,
+            "tag_question": 23,
+            "tq": 24,
+            "tq1": 25,
+            "tq2": 26,
+            "u1": 27,
+            "u2": 28,
+        },
     )
 
     # _train(dbname=args.dbname, db_path=f"buffer_{args.dbname}.db", config=config_job)
-    _predict(f"buffer_{args.dbname}.db", args.input_sql_dir, args.dbname, config=config_job)
+    _predict(
+        f"buffer_{args.dbname}.db", args.input_sql_dir, args.dbname, config=config_job
+    )

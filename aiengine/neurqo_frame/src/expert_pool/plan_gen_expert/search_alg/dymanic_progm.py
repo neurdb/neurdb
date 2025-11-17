@@ -1,12 +1,13 @@
 import collections
 import copy
+from parser import sql_parser
+from typing import DefaultDict, Dict, List, Tuple
+
+import networkx as nx
 import numpy as np
 from common import hyperparams
-from typing import List, Dict, Tuple, DefaultDict
-import networkx as nx
-from parser import sql_parser
-from db.pg_conn import PostgresConnector
 from common.workload import Node, NodeOps
+from db.pg_conn import PostgresConnector
 
 # Import from local package
 from expert_pool.plan_gen_expert.models import cost_model
@@ -24,10 +25,24 @@ class DynamicProgramming:
             hyperparams.InstantiableParams: Configured parameters for the class.
         """
         p = hyperparams.InstantiableParams(cls)
-        p.define('cost_model', cost_model.NullCost.Params(), 'Parameters for the cost model.')
-        p.define('search_space', 'bushy', 'Search space options: bushy, dbmsx, bushy_norestrict.')
-        p.define('plan_physical_ops', False, 'Whether to plan physical join and scan operations.')
-        p.define('collect_data_include_suboptimal', True, 'Whether to call enumeration hooks on suboptimal plans.')
+        p.define(
+            "cost_model", cost_model.NullCost.Params(), "Parameters for the cost model."
+        )
+        p.define(
+            "search_space",
+            "bushy",
+            "Search space options: bushy, dbmsx, bushy_norestrict.",
+        )
+        p.define(
+            "plan_physical_ops",
+            False,
+            "Whether to plan physical join and scan operations.",
+        )
+        p.define(
+            "collect_data_include_suboptimal",
+            True,
+            "Whether to call enumeration hooks on suboptimal plans.",
+        )
         return p
 
     def __init__(self, params, cursor: PostgresConnector):
@@ -41,11 +56,15 @@ class DynamicProgramming:
         p = self.params
         self.cost_model = p.cost_model.cls(p.cost_model, cursor)
         self.on_enumerated_hooks = []
-        assert p.search_space in ('bushy', 'dbmsx', 'bushy_norestrict'), 'Invalid search space.'
+        assert p.search_space in (
+            "bushy",
+            "dbmsx",
+            "bushy_norestrict",
+        ), "Invalid search space."
         # those are only for tesitng
-        self.join_ops = ['Join']
-        self.scan_ops = ['Scan']
-        self.use_plan_restrictions = (p.search_space != 'bushy_norestrict')
+        self.join_ops = ["Join"]
+        self.scan_ops = ["Scan"]
+        self.use_plan_restrictions = p.search_space != "bushy_norestrict"
 
     def set_physical_ops(self, join_ops, scan_ops):
         """
@@ -56,7 +75,7 @@ class DynamicProgramming:
             scan_ops (list): List of scan operations to use.
         """
         p = self.params
-        assert p.plan_physical_ops, 'Physical ops planning must be enabled.'
+        assert p.plan_physical_ops, "Physical ops planning must be enabled."
         self.join_ops = copy.deepcopy(join_ops)
         self.scan_ops = copy.deepcopy(scan_ops)
 
@@ -89,21 +108,25 @@ class DynamicProgramming:
                 - best_node (Node): The optimal query plan.
                 - dp_tables (dict): Dictionary mapping relation set sizes to plans and costs.
         """
-        join_graph, all_join_conds = query_node.get_parse_update_sql(sql_parse_func=sql_parser.simple_parse_sql)
+        join_graph, all_join_conds = query_node.get_parse_update_sql(
+            sql_parse_func=sql_parser.simple_parse_sql
+        )
         query_leaves = query_node.CopyLeaves()
 
         dp_tables = collections.defaultdict(dict)
         for leaf_node in query_leaves:
             dp_tables[1][leaf_node.table_alias] = (0, leaf_node)
-        return self._dp_bushy_search_space(query_node, join_graph, all_join_conds, query_leaves, dp_tables)
+        return self._dp_bushy_search_space(
+            query_node, join_graph, all_join_conds, query_leaves, dp_tables
+        )
 
     def _dp_bushy_search_space(
-            self,
-            original_node: Node,
-            join_graph: nx.Graph,
-            all_join_conds: List[str],
-            query_leaves: List[Node],
-            dp_tables: DefaultDict[int, Dict[str, Tuple[float, Node]]]
+        self,
+        original_node: Node,
+        join_graph: nx.Graph,
+        all_join_conds: List[str],
+        query_leaves: List[Node],
+        dp_tables: DefaultDict[int, Dict[str, Tuple[float, Node]]],
     ) -> Tuple[Node, DefaultDict[int, Dict[str, Tuple[float, Node]]], int]:
         """
         Implements bushy search space for dynamic programming.
@@ -134,14 +157,19 @@ class DynamicProgramming:
                         r: Node = r_tup[1]
                         if not NodeOps.exists_join_edge_in_graph(l, r, join_graph):
                             continue
-                        l_ids_splits = l_ids.split(',')
-                        r_ids_splits = r_ids.split(',')
+                        l_ids_splits = l_ids.split(",")
+                        r_ids_splits = r_ids.split(",")
                         if len(np.intersect1d(l_ids_splits, r_ids_splits)) > 0:
                             continue
-                        join_ids = ','.join(sorted(l_ids_splits + r_ids_splits))
+                        join_ids = ",".join(sorted(l_ids_splits + r_ids_splits))
 
                         for join in NodeOps.enumerate_join_with_ops(
-                                l, r, self.join_ops, self.scan_ops, use_plan_restrictions=self.use_plan_restrictions):
+                            l,
+                            r,
+                            self.join_ops,
+                            self.scan_ops,
+                            use_plan_restrictions=self.use_plan_restrictions,
+                        ):
                             join_conds = join.KeepRelevantJoins(all_join_conds)
                             cost = self.cost_model(join, join_conds)
 
@@ -163,11 +191,11 @@ class DynamicProgramming:
         return list(dp_tables[num_rels].values())[0][1], dp_tables, _cost_model_num
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     p = DynamicProgramming.Params()
     print(p)
     dp = p.cls(p)
     print(dp)
-    node = Node('Scan', table_name='title').with_alias('t')
-    node.info['sql_str'] = 'SELECT * FROM title t;'
+    node = Node("Scan", table_name="title").with_alias("t")
+    node.info["sql_str"] = "SELECT * FROM title t;"
     print(dp.run(node))

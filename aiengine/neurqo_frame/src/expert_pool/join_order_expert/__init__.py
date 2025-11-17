@@ -10,7 +10,9 @@ Contains:
 - utils/: Utility functions (LatencyNormalizer, etc.)
 """
 
-from expert_pool.join_order_expert.mcts_based_expert import MCTSOptimizerExpert, MCTSConfig
+from expert_pool.join_order_expert.mcts_based_expert import (
+    MCTSConfig,
+    MCTSOptimizerExpert,
+)
 
-__all__ = ['MCTSOptimizerExpert', 'MCTSConfig']
-
+__all__ = ["MCTSOptimizerExpert", "MCTSConfig"]

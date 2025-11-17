@@ -92,7 +92,7 @@ void _PG_init(void) {
 void _PG_fini(void) {
 	/* Restore previous hook */
 	post_parse_analyze_hook = prev_post_parse_analyze_hook;
-	
+
     elog(LOG, "MoLQO (Mixture of Learned Query Optimizer) extension unloaded");
 }
 
@@ -103,7 +103,7 @@ static void query_optimizer_post_parse_analyze(ParseState *pstate, Query *query,
                                                JumbleState *jstate) {
     const char *original_sql;
 	char *optimized_sql;
-	
+
 	/* Call previous hook if exists */
 	if (prev_post_parse_analyze_hook)
 		prev_post_parse_analyze_hook(pstate, query, jstate);
@@ -129,7 +129,7 @@ static void query_optimizer_post_parse_analyze(ParseState *pstate, Query *query,
 	PG_TRY();
 	{
 		optimized_sql = call_external_optimizer(original_sql);
-		
+
         /* If optimization failed, log fallback to cost-based optimizer */
         if (!optimized_sql) {
             elog(INFO, "MoLQO: sql -> moqoe -> cost-based optimizer");  // Fallback on HTTP error
@@ -138,7 +138,7 @@ static void query_optimizer_post_parse_analyze(ParseState *pstate, Query *query,
         if (optimized_sql && strcmp(optimized_sql, original_sql) != 0) {
             /* Check format and process accordingly */
             if (strstr(optimized_sql, "/*+")) {
-                /* 
+                /*
                  * pg_hint_plan format: Replace source text
                  * Since our hook runs before planner_hook, pg_hint_plan will
                  * read the modified p_sourcetext and parse the hints!
@@ -151,12 +151,12 @@ static void query_optimizer_post_parse_analyze(ParseState *pstate, Query *query,
                     char *hint_text = palloc(hint_len + 1);
                     memcpy(hint_text, hint_start, hint_len);
                     hint_text[hint_len] = '\0';
-                    
+
                     elog(INFO, "┌─────────────────────────────────────────────────");
                     elog(INFO, "│ MoLQO Optimization Applied");
                     elog(INFO, "│ Server: %s", molqo_server_url);
                     elog(INFO, "└─────────────────────────────────────────────────");
-                    
+
                     pfree(hint_text);
                 }
                 pstate->p_sourcetext = optimized_sql;
@@ -166,11 +166,11 @@ static void query_optimizer_post_parse_analyze(ParseState *pstate, Query *query,
                 elog(INFO, "│ MoLQO Optimization Applied");
                 elog(INFO, "│ Server: %s", molqo_server_url);
                 elog(INFO, "└─────────────────────────────────────────────────");
-                
+
 			execute_optimized_sql(optimized_sql);
 		}
 		}
-		
+
         if (optimized_sql) pfree(optimized_sql);
 	}
 	PG_CATCH();
@@ -186,12 +186,12 @@ static void query_optimizer_post_parse_analyze(ParseState *pstate, Query *query,
  */
 static char *call_external_optimizer(const char *original_sql) {
 	char *result;
-	
+
     if (!original_sql) return NULL;
-		
+
 	/* Send HTTP request to MoLQO server */
 	result = send_http_request(molqo_server_url, original_sql);
-	
+
 	return result;
 }
 
@@ -207,7 +207,7 @@ static char *send_http_request(const char *url, const char *sql_data) {
     FILE *fp;
     char response_buf[8192];
     size_t response_len = 0;
-    
+
     /* Escape SQL for JSON (replace " with \") */
 	size_t sql_len = strlen(sql_data);
     escaped_sql = palloc(sql_len * 2 + 1);
@@ -224,16 +224,16 @@ static char *send_http_request(const char *url, const char *sql_data) {
         }
     }
     *out = '\0';
-    
+
     /* Build JSON payload */
     json_payload = palloc(strlen(escaped_sql) + 256);
     snprintf(json_payload, strlen(escaped_sql) + 256, "{\"sql\":\"%s\"}", escaped_sql);
-    
+
     /* Use temporary file to avoid shell escaping issues with single quotes in SQL */
     char tmp_file[256];
-    snprintf(tmp_file, sizeof(tmp_file), "/tmp/molqo_%d_%lu.json", 
+    snprintf(tmp_file, sizeof(tmp_file), "/tmp/molqo_%d_%lu.json",
              getpid(), (unsigned long)time(NULL));
-    
+
     FILE *tmp_fp = fopen(tmp_file, "w");
     if (!tmp_fp) {
         elog(WARNING, "MoLQO: Failed to create temporary file: %s", tmp_file);
@@ -243,13 +243,13 @@ static char *send_http_request(const char *url, const char *sql_data) {
     }
     fwrite(json_payload, 1, strlen(json_payload), tmp_fp);
     fclose(tmp_fp);
-    
+
     /* Build curl command using temporary file (@filename syntax) */
     curl_cmd = palloc(strlen(url) + strlen(tmp_file) + 256);
     snprintf(curl_cmd, strlen(url) + strlen(tmp_file) + 256,
              "curl -s -X POST -H 'Content-Type: application/json' -d @%s '%s' 2>&1",
              tmp_file, url);
-    
+
     /* Execute curl command and capture output */
     fp = popen(curl_cmd, "r");
     if (!fp) {
@@ -260,14 +260,14 @@ static char *send_http_request(const char *url, const char *sql_data) {
         pfree(curl_cmd);
         return NULL;
     }
-    
+
     response_len = fread(response_buf, 1, sizeof(response_buf) - 1, fp);
     response_buf[response_len] = '\0';
     int curl_status = pclose(fp);
-    
+
     /* Clean up temporary file */
     unlink(tmp_file);
-    
+
     if (curl_status != 0) {
         elog(WARNING, "MoLQO: Curl failed with status %d: %s", curl_status, response_buf);
         pfree(escaped_sql);
@@ -275,7 +275,7 @@ static char *send_http_request(const char *url, const char *sql_data) {
         pfree(curl_cmd);
         return NULL;
     }
-    
+
     if (response_len == 0) {
         elog(WARNING, "MoLQO: Empty response from server");
         pfree(escaped_sql);
@@ -283,7 +283,7 @@ static char *send_http_request(const char *url, const char *sql_data) {
         pfree(curl_cmd);
         return NULL;
     }
-    
+
     /* Parse JSON response to extract optimized_sql and expert_name */
     char *expert_name = NULL;
     char *opt_sql_start = strstr(response_buf, "\"optimized_sql\"");
@@ -303,7 +303,7 @@ static char *send_http_request(const char *url, const char *sql_data) {
             }
         }
     }
-    
+
     /* Extract expert_name from JSON response */
     char *expert_start = strstr(response_buf, "\"expert_name\"");
     if (expert_start) {
@@ -322,19 +322,19 @@ static char *send_http_request(const char *url, const char *sql_data) {
             }
         }
     }
-    
+
     /* Log concise message: sql -> moqoe -> expertname */
     if (expert_name && strlen(expert_name) > 0) {
         elog(INFO, "MoLQO: sql -> moqoe -> %s", expert_name);
     } else {
             elog(INFO, "MoLQO: sql -> moqoe -> cost-based optimizer");  // Fallback to cost-based optimizer on error
     }
-    
+
     /* Fallback: return original SQL if extraction failed */
     if (!result) {
         result = pstrdup(sql_data);
     }
-    
+
     /* Clean up */
     pfree(escaped_sql);
     pfree(json_payload);
@@ -342,7 +342,7 @@ static char *send_http_request(const char *url, const char *sql_data) {
     if (expert_name) {
         pfree(expert_name);
 	}
-	
+
 	return result;
 }
 
@@ -354,44 +354,44 @@ static void execute_optimized_sql(const char *optimized_sql) {
 	char *sql_copy;
 	char *current_pos;
     char *set_start, *set_end;
-	
+
     if (!optimized_sql) return;
-		
+
 	sql_copy = pstrdup(optimized_sql);
 	current_pos = sql_copy;
-	
+
     /* Parse and execute SET commands */
     while ((set_start = strstr(current_pos, "SET ")) != NULL) {
         char *param_name, *param_value;
         char *eq_pos;
-        
+
 		/* Find the end of the SET command (semicolon) */
         set_end = strchr(set_start, ';');
         if (!set_end) break;
-        
+
         *set_end = '\0';
-        
+
         /* Parse: SET parameter_name = value or SET parameter_name TO value */
         param_name = set_start + 4; /* Skip "SET " */
-        
+
         /* Skip whitespace */
         while (*param_name == ' ' || *param_name == '\t') param_name++;
-        
+
         /* Find = or TO */
         eq_pos = strstr(param_name, " TO ");
         if (!eq_pos) eq_pos = strstr(param_name, " = ");
         if (!eq_pos) eq_pos = strchr(param_name, '=');
-        
+
         if (eq_pos) {
             *eq_pos = '\0';
             param_value = eq_pos + 1;
-            
+
             /* Skip " TO " or " = " or "=" */
-            while (*param_value == ' ' || *param_value == '=' || 
+            while (*param_value == ' ' || *param_value == '=' ||
                    *param_value == 'T' || *param_value == 'O') {
                 param_value++;
             }
-            
+
             /* Remove quotes if present */
             if (*param_value == '\'' || *param_value == '"') {
                 param_value++;
@@ -399,21 +399,21 @@ static void execute_optimized_sql(const char *optimized_sql) {
                 if (!quote_end) quote_end = strchr(param_value, '"');
                 if (quote_end) *quote_end = '\0';
             }
-            
+
             /* Trim trailing whitespace */
             char *end = param_value + strlen(param_value) - 1;
             while (end > param_value && (*end == ' ' || *end == '\t')) {
                 *end = '\0';
                 end--;
             }
-            
+
             /* Apply the setting using GUC API - no SPI needed! */
             SetConfigOption(param_name, param_value, PGC_USERSET, PGC_S_SESSION);
         }
-        
+
         current_pos = set_end + 1;
 	}
-	
+
 	pfree(sql_copy);
 }
 
@@ -426,14 +426,14 @@ Datum optimize_query(PG_FUNCTION_ARGS) {
 	text *sql_text;
 	char *sql_string;
 	char *optimized_sql;
-	
+
     if (PG_ARGISNULL(0)) PG_RETURN_NULL();
-		
+
 	sql_text = PG_GETARG_TEXT_PP(0);
 	sql_string = text_to_cstring(sql_text);
-	
+
 	optimized_sql = call_external_optimizer(sql_string);
-	
+
     if (optimized_sql) {
 		text *result = cstring_to_text(optimized_sql);
 		pfree(optimized_sql);

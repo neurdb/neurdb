@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Tuple, Any, Union, List, Dict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -36,7 +36,7 @@ class Featurizer:
 class SimPlanFeaturizer(Featurizer):
     """Implements the plan featurizer.
 
-        plan node -> [ multi-hot of tables on LHS ] [ same for RHS ]
+    plan node -> [ multi-hot of tables on LHS ] [ same for RHS ]
     """
 
     def __init__(self, workload_info):
@@ -76,8 +76,10 @@ class TreeNodeFeaturizer(Featurizer):
         self.ops = workload_info.all_ops
         self.one_ops = np.eye(self.ops.shape[0], dtype=np.float32)
         self.rel_ids = workload_info.rel_ids
-        assert not workload_info.HasPhysicalOps(), 'Physical ops found; use a ' \
-                                                   'featurizer that supports them (PhysicalTreeNodeFeaturizer).'
+        assert not workload_info.HasPhysicalOps(), (
+            "Physical ops found; use a "
+            "featurizer that supports them (PhysicalTreeNodeFeaturizer)."
+        )
 
     def __call__(self, node: workload.Node):
         num_ops = len(self.ops)
@@ -106,8 +108,7 @@ class TreeNodeFeaturizer(Featurizer):
         # The relations under 'node' and their scan types.  Merging <=> summing.
         vec = left_vec + right_vec
         # Make sure the first part is correct.
-        vec[:len_join_enc] = self.one_ops[np.where(
-            self.ops == node.node_type)[0][0]]
+        vec[:len_join_enc] = self.one_ops[np.where(self.ops == node.node_type)[0][0]]
         return vec
 
 
@@ -132,19 +133,20 @@ class PhysicalTreeNodeFeaturizer(Featurizer):
     def __call__(self, node):
         # Join op of this node.
         if node.IsJoin():
-            join_encoding = self.join_one_hot[np.where(
-                self.join_ops == node.node_type)[0][0]]
+            join_encoding = self.join_one_hot[
+                np.where(self.join_ops == node.node_type)[0][0]
+            ]
         else:
             join_encoding = np.zeros(len(self.join_ops), dtype=np.float32)
         # For each table: [ one-hot of scan ops ].  Concat across tables.
-        scan_encoding = np.zeros(len(self.scan_ops) * len(self.rel_ids),
-                                 dtype=np.float32)
+        scan_encoding = np.zeros(
+            len(self.scan_ops) * len(self.rel_ids), dtype=np.float32
+        )
         joined = node.CopyLeaves()
         for rel_node in joined:
             rel_id = rel_node.get_table_id()
             rel_idx = np.where(self.rel_ids == rel_id)[0][0]
-            scan_operator_idx = np.where(
-                self.scan_ops == rel_node.node_type)[0][0]
+            scan_operator_idx = np.where(self.scan_ops == rel_node.node_type)[0][0]
             idx = rel_idx * len(self.scan_ops) + scan_operator_idx
             scan_encoding[idx] = 1.0
         # Concatenate to create final node encoding.
@@ -153,9 +155,10 @@ class PhysicalTreeNodeFeaturizer(Featurizer):
 
     def FeaturizeLeaf(self, node):
         assert node.IsScan()
-        vec = np.zeros(len(self.join_ops) +
-                       len(self.scan_ops) * len(self.rel_ids),
-                       dtype=np.float32)  # here is [table num * scan num + join number]
+        vec = np.zeros(
+            len(self.join_ops) + len(self.scan_ops) * len(self.rel_ids),
+            dtype=np.float32,
+        )  # here is [table num * scan num + join number]
         rel_id = node.get_table_id()
         rel_idx = np.where(self.rel_ids == rel_id)[0][0]
         scan_operator_idx = np.where(self.scan_ops == node.node_type)[0][0]
@@ -169,8 +172,9 @@ class PhysicalTreeNodeFeaturizer(Featurizer):
         # The relations under 'node' and their scan types.  Merging <=> summing.
         vec = left_vec + right_vec
         # Make sure the first part is correct.
-        vec[:len_join_enc] = self.join_one_hot[np.where(
-            self.join_ops == node.node_type)[0][0]]
+        vec[:len_join_enc] = self.join_one_hot[
+            np.where(self.join_ops == node.node_type)[0][0]
+        ]
         return vec
 
 
@@ -180,10 +184,9 @@ class PreOrderSequenceFeaturizer(Featurizer):
         self.workload_info = workload_info
 
         # Union of all relation names and operator types.
-        self.vocab = np.concatenate(
-            (workload_info.all_ops, workload_info.rel_names))
+        self.vocab = np.concatenate((workload_info.all_ops, workload_info.rel_names))
 
-        print('PreOrderSequenceFeaturizer vocab', self.vocab)
+        print("PreOrderSequenceFeaturizer vocab", self.vocab)
 
     def pad(self):
         return len(self.vocab)
@@ -234,8 +237,8 @@ def make_and_featurize_trees(node_featurizer, trees: List[workload.Node]):
     t1 = time.time()
     indexes = torch.from_numpy(_batch([_make_indexes(x) for x in trees])).long()
     trees = torch.from_numpy(
-        _batch([_featurize_tree(x, node_featurizer) for x in trees
-                ])).transpose(1, 2)
+        _batch([_featurize_tree(x, node_featurizer) for x in trees])
+    ).transpose(1, 2)
     # print('took {:.1f}s'.format(time.time() - t1))
     return trees, indexes
 
@@ -243,7 +246,7 @@ def make_and_featurize_trees(node_featurizer, trees: List[workload.Node]):
 def _featurize_tree(curr_node: workload.Node, node_featurizer):
     def _bottom_up(curr):
         """Calls node_featurizer on each node exactly once, bottom-up."""
-        if hasattr(curr, '__node_feature_vec'):
+        if hasattr(curr, "__node_feature_vec"):
             return curr.__node_feature_vec
         if not curr.children:
             vec = node_featurizer.FeaturizeLeaf(curr)
@@ -258,8 +261,9 @@ def _featurize_tree(curr_node: workload.Node, node_featurizer):
 
     _bottom_up(curr_node)
     vecs = []
-    workload.NodeOps.map_node(curr_node,
-                              lambda node: vecs.append(node.__node_feature_vec))
+    workload.NodeOps.map_node(
+        curr_node, lambda node: vecs.append(node.__node_feature_vec)
+    )
 
     # Add a zero-vector at index 0.
     ret = np.zeros((len(vecs) + 1, vecs[0].shape[0]), dtype=np.float32)
@@ -274,7 +278,7 @@ def _batch(data):
         return np.asarray(data)
     xs = np.zeros((len(data), np.max(lens), data[0].shape[1]), dtype=np.float32)
     for i, vec in enumerate(data):
-        xs[i, :vec.shape[0], :] = vec
+        xs[i, : vec.shape[0], :] = vec
     return xs
 
 
@@ -322,13 +326,15 @@ def _make_preorder_ids_tree(curr: workload.Node, root_index=1):
     # Under every Bitmap Heap Scan is a Bitmap Index Scan, these do not need to be
     # considered seperately -> directly act as if the Bitmap Heap Scan was the leaf node
     #
-    if curr.node_type == 'Bitmap Heap Scan':
+    if curr.node_type == "Bitmap Heap Scan":
         return (root_index, 0, 0), root_index
 
-    lhs, lhs_max_id = _make_preorder_ids_tree(curr.children[0],
-                                              root_index=root_index + 1)
-    rhs, rhs_max_id = _make_preorder_ids_tree(curr.children[1],
-                                              root_index=lhs_max_id + 1)
+    lhs, lhs_max_id = _make_preorder_ids_tree(
+        curr.children[0], root_index=root_index + 1
+    )
+    rhs, rhs_max_id = _make_preorder_ids_tree(
+        curr.children[1], root_index=lhs_max_id + 1
+    )
     return (root_index, lhs, rhs), rhs_max_id
 
 

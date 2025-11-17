@@ -23,17 +23,19 @@ class PostgresConnector:
     def __init__(self, database_name: str):
         # Get connection config from config-file
         self.config = configparser.ConfigParser()
-        config_path = os.path.dirname(__file__) + '/../../configs/postgres.cfg'
+        config_path = os.path.dirname(__file__) + "/../../configs/postgres.cfg"
         print(f"Reading config path from {config_path}")
         self.config.read(config_path)
-        defaults = self.config['DEFAULT']
-        user = defaults['DB_USER']
+        defaults = self.config["DEFAULT"]
+        user = defaults["DB_USER"]
         database = database_name
-        password = defaults['DB_PASSWORD']
-        host = defaults['DB_HOST']
-        port = defaults['DB_PORT']
-        self.timeout = defaults['TIMEOUT_MS']
-        self.postgres_connection_string = f'postgresql://{user}:{password}@{host}:{port}/{database}'
+        password = defaults["DB_PASSWORD"]
+        host = defaults["DB_HOST"]
+        port = defaults["DB_PORT"]
+        self.timeout = defaults["TIMEOUT_MS"]
+        self.postgres_connection_string = (
+            f"postgresql://{user}:{password}@{host}:{port}/{database}"
+        )
         self.connection = None
         self.cursor = None
         self.database_name = database_name
@@ -42,9 +44,9 @@ class PostgresConnector:
 
     def _default_setting(self):
         """Apply default database settings."""
-        self.cursor.execute(f'SET statement_timeout TO {self.timeout};')
-        self.cursor.execute('ALTER SYSTEM SET autovacuum TO off;')
-        self.cursor.execute('SELECT pg_reload_conf();')
+        self.cursor.execute(f"SET statement_timeout TO {self.timeout};")
+        self.cursor.execute("ALTER SYSTEM SET autovacuum TO off;")
+        self.cursor.execute("SELECT pg_reload_conf();")
 
     def connect(self) -> None:
         """Establish database connection."""
@@ -75,7 +77,7 @@ class PostgresConnector:
 
     def get_server_config(self):
         """Returns all live configs as [(param, value, help)]."""
-        self.cursor.execute('show all;')
+        self.cursor.execute("show all;")
         return self.cursor.fetchall()
 
     # -------------------- GEQO Management --------------------
@@ -83,29 +85,31 @@ class PostgresConnector:
     def set_geqo(self, flag: str) -> None:
         """
         Set GEQO (Genetic Query Optimizer) state.
-        
+
         Args:
             flag: 'on', 'off', or 'default'
         """
-        assert flag in ['on', 'off', 'default'], f"Invalid flag: {flag}"
-        self.cursor.execute(f'SET geqo = {flag};')
-        if flag == 'on':
+        assert flag in ["on", "off", "default"], f"Invalid flag: {flag}"
+        self.cursor.execute(f"SET geqo = {flag};")
+        if flag == "on":
             self.cursor.execute("SET geqo_threshold = 12;")
 
     def set_geqo_exp(self, flag: str) -> None:
         """
         Set GEQO (alias for set_geqo, kept for backward compatibility).
-        
+
         Args:
             flag: 'on', 'off', or 'default'
         """
         self.set_geqo(flag)
 
     # -------------------- Parallelism Controls --------------------
-    def set_parallel(self,
-                     workers: Optional[int] = None,
-                     workers_per_gather: Optional[int] = None,
-                     maintenance_workers: Optional[int] = None) -> None:
+    def set_parallel(
+        self,
+        workers: Optional[int] = None,
+        workers_per_gather: Optional[int] = None,
+        maintenance_workers: Optional[int] = None,
+    ) -> None:
         """
         Adjust session parallelism settings via SET statements.
         Pass integers you want to change; leave None to keep unchanged.
@@ -115,11 +119,15 @@ class PostgresConnector:
             if workers is not None:
                 stmts.append(f"SET max_parallel_workers = {int(workers)};")
             if workers_per_gather is not None:
-                stmts.append(f"SET max_parallel_workers_per_gather = {int(workers_per_gather)};")
+                stmts.append(
+                    f"SET max_parallel_workers_per_gather = {int(workers_per_gather)};"
+                )
             if maintenance_workers is not None:
-                stmts.append(f"SET max_parallel_maintenance_workers = {int(maintenance_workers)};")
+                stmts.append(
+                    f"SET max_parallel_maintenance_workers = {int(maintenance_workers)};"
+                )
             if stmts:
-                self.cursor.execute(''.join(stmts))
+                self.cursor.execute("".join(stmts))
         except psycopg2.Error as e:
             print(f"Error setting parallelism: {e}")
             self.connection.rollback()
@@ -139,11 +147,11 @@ class PostgresConnector:
     def explain(self, query: str, geqo: str = "on"):
         """
         Explain (estimate only) a SQL query and return the plan JSON.
-        
+
         Args:
             query: SQL statement to EXPLAIN
             geqo: GEQO setting ('on', 'off', or 'default')
-            
+
         Returns:
             Dict containing the plan JSON (estimates only)
         """
@@ -173,11 +181,11 @@ class PostgresConnector:
     def explain_analysis(self, query: str, geqo_off: bool = False):
         """
         Explain ANALYZE (execute) a SQL query, returning plan JSON and actual latency.
-        
+
         Args:
             query: SQL statement to EXPLAIN
             geqo_off: If True, disable GEQO
-            
+
         Returns:
             Tuple of (plan_json, latency_ms)
         """
@@ -187,7 +195,14 @@ class PostgresConnector:
             # Set GEQO
             self.set_geqo(geqo)
             # Build EXPLAIN ANALYZE query
-            options = ["ANALYZE", "BUFFERS", "VERBOSE", "COSTS", "FORMAT JSON", "SUMMARY"]
+            options = [
+                "ANALYZE",
+                "BUFFERS",
+                "VERBOSE",
+                "COSTS",
+                "FORMAT JSON",
+                "SUMMARY",
+            ]
             explain_query = f"EXPLAIN ({', '.join(options)}) {query}"
             self.cursor.execute(explain_query)
             row = self.cursor.fetchone()
@@ -209,11 +224,11 @@ class PostgresConnector:
         """
         Get selectivity for a given table and where condition.
         Uses caching to avoid repeated calculations.
-        
+
         Args:
             table: Table name
             whereCondition: WHERE condition string
-            
+
         Returns:
             float: Negative log of selectivity (-log(select_rows / total_rows))
         """
@@ -239,9 +254,11 @@ class PostgresConnector:
             select_rows = int(rows.split("rows=")[-1].split(" ")[0])
 
             selectivity = select_rows / total_rows if total_rows > 0 else 0
-            result = -log(selectivity) if selectivity > 0 else float('inf')
-            print(f"select_rows for {whereCondition}: {select_rows}, "
-                  f"selectivity: {selectivity}, logresult: {result}")
+            result = -log(selectivity) if selectivity > 0 else float("inf")
+            print(
+                f"select_rows for {whereCondition}: {select_rows}, "
+                f"selectivity: {selectivity}, logresult: {result}"
+            )
 
             # Cache the result
             self.latency_record_dict[whereCondition] = result
@@ -254,7 +271,7 @@ class PostgresConnector:
     def parse_database_schema(self) -> Optional[Dict[str, Any]]:
         """
         Parse all tables, their columns, and row counts from the current database.
-        
+
         Returns:
             dict: A dictionary containing:
                 - table_no_map: Mapping of table names to IDs
@@ -264,7 +281,7 @@ class PostgresConnector:
         # Check if cached schema info exists
         cache_file = f"./experiment/{self.database_name}_schema_info.json"
         if os.path.exists(cache_file):
-            with open(cache_file, 'r') as f:
+            with open(cache_file, "r") as f:
                 loaded_db_info = json.load(f)
             print(f"Loaded existing table info from {cache_file}")
             return loaded_db_info
@@ -275,12 +292,14 @@ class PostgresConnector:
 
         try:
             # Get all table names from the current database
-            self.cursor.execute("""
-                SELECT table_name 
-                FROM information_schema.tables 
+            self.cursor.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_type = 'BASE TABLE';
-            """)
+            """
+            )
             tables = self.cursor.fetchall()
 
             # Assign IDs and process each table
@@ -289,13 +308,16 @@ class PostgresConnector:
                 table_no_map[table_name] = table_idx
 
                 # Get column information for this table
-                self.cursor.execute("""
+                self.cursor.execute(
+                    """
                     SELECT column_name
                     FROM information_schema.columns
                     WHERE table_schema = 'public'
                     AND table_name = %s
                     ORDER BY ordinal_position;
-                """, (table_name,))
+                """,
+                    (table_name,),
+                )
                 columns = self.cursor.fetchall()
 
                 # Create column mapping for this table
@@ -310,7 +332,9 @@ class PostgresConnector:
                 self.cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
                 row_count = self.cursor.fetchone()[0]
                 table_size_list.append(row_count)
-                print(f"Table: {table_name}, ID: {table_idx}, Rows: {row_count}, Columns: {len(column_map)}")
+                print(
+                    f"Table: {table_name}, ID: {table_idx}, Rows: {row_count}, Columns: {len(column_map)}"
+                )
 
         except psycopg2.Error as e:
             print(f"Database error: {e}")
@@ -322,11 +346,11 @@ class PostgresConnector:
         updated_db_info = {
             "table_no_map": table_no_map,
             "attr_no_map_list": attr_no_map_list,
-            "table_size_list": table_size_list
+            "table_size_list": table_size_list,
         }
 
         # Write the updated dictionary to a JSON file
-        with open(cache_file, 'w') as f:
+        with open(cache_file, "w") as f:
             json.dump(updated_db_info, f, indent=4)
 
         return updated_db_info
@@ -336,4 +360,4 @@ class PostgresConnector:
         Drop buffer cache (DISCARD ALL).
         This will discard everythig, including SET.. etc
         """
-        self.cursor.execute('DISCARD ALL;')
+        self.cursor.execute("DISCARD ALL;")

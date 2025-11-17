@@ -1,8 +1,12 @@
+import numpy as np
 from db.pg_conn import PostgresConnector
 
 # Import from local package
-from expert_pool.join_order_expert.encoders.job_parser import TargetTable, FromTable, Comparison
-import numpy as np
+from expert_pool.join_order_expert.encoders.job_parser import (
+    Comparison,
+    FromTable,
+    TargetTable,
+)
 
 
 class Sql2Vec:
@@ -11,6 +15,7 @@ class Sql2Vec:
     - No global state: per-instance caches (e.g., column_id) live here.
     - External dependencies (pg_runner, config) are provided via __init__.
     """
+
     def __init__(self, db_cli: PostgresConnector, config=None):
         self.db_cli = db_cli
         self.config = config
@@ -42,7 +47,9 @@ class Sql2Vec:
         from psqlparse import parse_dict
 
         parse_result = parse_dict(sql)[0]["SelectStmt"]
-        target_table_list = [TargetTable(x["ResTarget"]) for x in parse_result["targetList"]]
+        target_table_list = [
+            TargetTable(x["ResTarget"]) for x in parse_result["targetList"]
+        ]
         from_table_list = [FromTable(x["RangeVar"]) for x in parse_result["fromClause"]]
 
         if len(from_table_list) < 2:
@@ -63,7 +70,9 @@ class Sql2Vec:
             aliasname2fromtable[table.getAliasName()] = table
             aliasname2fullname[table.getAliasName()] = table.getFullName()
 
-        comparison_list = [Comparison(x) for x in parse_result["whereClause"]["BoolExpr"]["args"]]
+        comparison_list = [
+            Comparison(x) for x in parse_result["whereClause"]["BoolExpr"]["args"]
+        ]
 
         join_matrix = np.zeros((len(id2aliasname), len(id2aliasname)), dtype=float)
         count_selectivity = np.asarray([0.0] * self.config.max_column, dtype=float)
@@ -76,13 +85,19 @@ class Sql2Vec:
                 left_aliasname, right_aliasname = comparison.aliasname_list
                 idx0 = aliasname2id[left_aliasname]
                 idx1 = aliasname2id[right_aliasname]
-                edge = (left_aliasname, right_aliasname) if idx0 < idx1 else (right_aliasname, left_aliasname)
+                edge = (
+                    (left_aliasname, right_aliasname)
+                    if idx0 < idx1
+                    else (right_aliasname, left_aliasname)
+                )
                 join_set.add(edge)
                 join_matrix[idx0][idx1] = 1.0
                 join_matrix[idx1][idx0] = 1.0
             else:
                 left_aliasname = comparison.aliasname_list[0]
-                sel = self.db_cli.get_selectivity(str(aliasname2fromtable[left_aliasname]), str(comparison))
+                sel = self.db_cli.get_selectivity(
+                    str(aliasname2fromtable[left_aliasname]), str(comparison)
+                )
                 alias_selectivity[aliasname2id[left_aliasname]] += sel
                 has_predicate.add(left_aliasname)
 
@@ -101,7 +116,11 @@ class Sql2Vec:
 
         # ---- make everything collatable & deterministic ----
         alias_list = sorted(aliasnames_root_set, key=lambda a: aliasname2id[a])
-        join_list = sorted(join_set, key=lambda e: (aliasname2id[e[0]], aliasname2id[e[1]]))
-        join_list_with_predicate = sorted(join_with_pred_set, key=lambda e: (aliasname2id[e[0]], aliasname2id[e[1]]))
+        join_list = sorted(
+            join_set, key=lambda e: (aliasname2id[e[0]], aliasname2id[e[1]])
+        )
+        join_list_with_predicate = sorted(
+            join_with_pred_set, key=lambda e: (aliasname2id[e[0]], aliasname2id[e[1]])
+        )
 
         return vec, alias_list, join_list_with_predicate, join_list

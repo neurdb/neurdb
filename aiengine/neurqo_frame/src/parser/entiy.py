@@ -20,14 +20,15 @@ DBTableInfo = namedtuple(
 )
 
 
-WorkloadQueryInfo = namedtuple('WorkloadQueryInfo', [
-    # List of possible join attributes N * 4 numpy int matrx with each row looks
-    # like [table_no1, table_no1.attr_no, table_no2, table_no2.attr_no]
-    'possible_join_attrs',
-    'join_conds_list',  # List of join conditions
-    'filter_attr_range_conds_list',  # List of attribute range conditions
-    'join_type_list',  # List of join types
-    'relevant_tables_list',  # List of relevant tables
-])
-
-
+WorkloadQueryInfo = namedtuple(
+    "WorkloadQueryInfo",
+    [
+        # List of possible join attributes N * 4 numpy int matrx with each row looks
+        # like [table_no1, table_no1.attr_no, table_no2, table_no2.attr_no]
+        "possible_join_attrs",
+        "join_conds_list",  # List of join conditions
+        "filter_attr_range_conds_list",  # List of attribute range conditions
+        "join_type_list",  # List of join types
+        "relevant_tables_list",  # List of relevant tables
+    ],
+)

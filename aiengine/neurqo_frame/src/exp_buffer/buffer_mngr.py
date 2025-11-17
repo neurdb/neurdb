@@ -12,29 +12,35 @@ class BufferManager:
     def __init__(self, db_name: str):
         self.storage = ExperienceBuffer(db_name)
         self.stats = {
-            'total_queries': 0,
-            'successful_executions': 0,
-            'failed_executions': 0,
-            'unique_queries': set(),
+            "total_queries": 0,
+            "successful_executions": 0,
+            "failed_executions": 0,
+            "unique_queries": set(),
         }
 
     def run_log_query_exec(
-            self,
-            conn: PostgresConnector,
-            sql: str,
-            hints: Optional[List[str]] = None,
-            join_order_hint: str = None
+        self,
+        conn: PostgresConnector,
+        sql: str,
+        hints: Optional[List[str]] = None,
+        join_order_hint: str = None,
     ):
-        self.stats['total_queries'] += 1
+        self.stats["total_queries"] += 1
 
         # Normalize inputs to a single canonical form
         # hints: non-empty list or None
         # join_order_hint: no-empty str or None
         hints = hints if isinstance(hints, list) and len(hints) > 0 else None
-        join_order_hint = (join_order_hint.strip() or None) if isinstance(join_order_hint, str) else None
+        join_order_hint = (
+            (join_order_hint.strip() or None)
+            if isinstance(join_order_hint, str)
+            else None
+        )
 
         # Skip if already exists in buffer; exists returns existing id or None
-        existing_id = self.storage.exists(sql=sql, hints=hints, join_order_hint=join_order_hint)
+        existing_id = self.storage.exists(
+            sql=sql, hints=hints, join_order_hint=join_order_hint
+        )
         if existing_id is not None:
             print("already exist, skip !")
             return existing_id
@@ -52,10 +58,10 @@ class BufferManager:
         plan_json, actual_latency, plan_time = conn.explain_analysis(exe_sql)
 
         if not plan_json or actual_latency is None:
-            self.stats['failed_executions'] += 1
+            self.stats["failed_executions"] += 1
             return None
 
-        self.stats['successful_executions'] += 1
+        self.stats["successful_executions"] += 1
 
         rec_id = self.storage.save_plan(
             sql=sql,
@@ -63,7 +69,7 @@ class BufferManager:
             actual_latency=actual_latency,
             actual_plan_time=plan_time,
             hint_json=hints,  # None or non-empty list
-            join_order_hint=join_order_hint
+            join_order_hint=join_order_hint,
         )
         return rec_id
 
@@ -88,11 +94,16 @@ def read_sql_files(input_dir) -> List[Tuple]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Unified Data Collection for LQO Systems')
-    parser.add_argument('--input_sql_dir', type=str,
-                        default='../datasets/query_on_imdb/job-light-mini',
-                        help='Input SQL dir (one query per file)')
-    parser.add_argument('--dbname', type=str, default='imdb_ori', help='Database name')
+    parser = argparse.ArgumentParser(
+        description="Unified Data Collection for LQO Systems"
+    )
+    parser.add_argument(
+        "--input_sql_dir",
+        type=str,
+        default="../datasets/query_on_imdb/job-light-mini",
+        help="Input SQL dir (one query per file)",
+    )
+    parser.add_argument("--dbname", type=str, default="imdb_ori", help="Database name")
 
     args = parser.parse_args()
 
@@ -114,5 +125,5 @@ def main():
     print(f"All data stored in: {collector.storage.db_path}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

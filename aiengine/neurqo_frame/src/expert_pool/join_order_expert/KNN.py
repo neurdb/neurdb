@@ -2,7 +2,13 @@ import random
 
 
 class KNN:
-    def __init__(self, k_neighbours, method='brute', max_distance=0.05 ** 2 + 0.05 ** 2 + 0.05 ** 2 + 10, max_v=4):
+    def __init__(
+        self,
+        k_neighbours,
+        method="brute",
+        max_distance=0.05**2 + 0.05**2 + 0.05**2 + 10,
+        max_v=4,
+    ):
         """[summary]
 
         Args:
@@ -13,9 +19,9 @@ class KNN:
         self.max_distance = max_distance
         self.max_v = max_v
         self.method = method
-        if method == 'brute':
+        if method == "brute":
             self.kvs = []
-        if method == 'kd-tree':
+        if method == "kd-tree":
             pass
 
     def distance(self, v1, v2):
@@ -28,7 +34,7 @@ class KNN:
         Args:
             data ([list]): [description]
         """
-        if self.method == 'brute':
+        if self.method == "brute":
             self.kvs.extend(data)
 
     def insertAValue(self, data):
@@ -43,7 +49,9 @@ class KNN:
     def kNeighbours(self, v, k_neighbours=0):
         if k_neighbours == 0:
             k_neighbours = self.k_neighbours
-        chosen_data = sorted([(self.distance(v, x[0]), x[1]) for x in self.kvs], key=lambda x: x[0])[:k_neighbours]
+        chosen_data = sorted(
+            [(self.distance(v, x[0]), x[1]) for x in self.kvs], key=lambda x: x[0]
+        )[:k_neighbours]
         if len(self.kvs) < k_neighbours:
             return []
         return chosen_data

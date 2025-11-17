@@ -2,29 +2,40 @@
 import copy
 import os
 import random
+from parser.table_parser import load_db_info_json
 from typing import List, Tuple
 
 # Third-party imports
 import torch
 import torch.optim as optim
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
 
 # Local/project imports
 from common import BaseConfig
-from parser.table_parser import load_db_info_json
+from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 from utils.io import save_per_train_plot_data
 
 from .encoder import Sql2VecEmbeddingV2
-from .loss import HybridLossReg
 from .logger import plogger
+from .loss import HybridLossReg
 from .model import QueryOptMHSASuperNode
 
 
 class ModelBuilder:
-    def __init__(self, num_columns, output_dim, model_path_prefix, embedding_path, num_heads,
-                 embedding_dim, is_fix_emb, num_layers, dataset, cfg: BaseConfig,
-                 num_tables=None):
+    def __init__(
+        self,
+        num_columns,
+        output_dim,
+        model_path_prefix,
+        embedding_path,
+        num_heads,
+        embedding_dim,
+        is_fix_emb,
+        num_layers,
+        dataset,
+        cfg: BaseConfig,
+        num_tables=None,
+    ):
 
         db_profile_res = load_db_info_json(cfg.DB_INFO_DICT)
         num_tables = len(set(db_profile_res.table_no_map.values()))
@@ -43,7 +54,7 @@ class ModelBuilder:
             is_fix_emb=is_fix_emb,
             num_layers=num_layers,
             dataset=dataset,
-            cfg=cfg
+            cfg=cfg,
         ).to(self.cfg.DEVICE)
 
         # self.saved_model_name = model_path_prefix + f"_mlp_multi_head_label_embed_atten4_time_best_{self.dataset}.pth"
@@ -55,20 +66,25 @@ class ModelBuilder:
         log_dir = os.path.join(parent_directory_os, "tensorboard_logs")
         self.writer = SummaryWriter(log_dir=log_dir)
 
-        self.sql_encoder = Sql2VecEmbeddingV2(db_profile_res=db_profile_res,
-                                              checkpoint_file=cfg.EMBED_FILE)
+        self.sql_encoder = Sql2VecEmbeddingV2(
+            db_profile_res=db_profile_res, checkpoint_file=cfg.EMBED_FILE
+        )
 
         self.strategies = None
 
     def save_model(self, epoch, evl_method: str):
         """Save the model weights."""
         torch.save(self.model.state_dict(), f"{self.saved_model_name}_{evl_method}")
-        plogger.info(f"Model saved to {self.saved_model_name}_{evl_method}, epoch={epoch}")
+        plogger.info(
+            f"Model saved to {self.saved_model_name}_{evl_method}, epoch={epoch}"
+        )
 
     def load_model(self, evl_method: str):
         """Load the model weights."""
         # self.model.load_state_dict(torch.load(f"{self.saved_model_name}_{evl_method}", map_location=self.cfg.DEVICE))
-        self.model.load_state_dict(torch.load(self.saved_model_name, map_location=self.cfg.DEVICE))
+        self.model.load_state_dict(
+            torch.load(self.saved_model_name, map_location=self.cfg.DEVICE)
+        )
         self.model.to(self.cfg.DEVICE)
         print(f"Model loaded from {self.saved_model_name}")
         plogger.info(f"Model loaded from {self.saved_model_name}")
@@ -77,7 +93,11 @@ class ModelBuilder:
         self.model.train()
         total_loss = 0
         for X_batch, y_batch_multi, y_times, query_id in loader:
-            X_batch, y_batch_multi, y_times = X_batch, y_batch_multi.to(self.cfg.DEVICE), y_times.to(self.cfg.DEVICE)
+            X_batch, y_batch_multi, y_times = (
+                X_batch,
+                y_batch_multi.to(self.cfg.DEVICE),
+                y_times.to(self.cfg.DEVICE),
+            )
             optimizer.zero_grad()
             class_logits, reg_times, _ = self.model(X_batch)
             loss = criterion(class_logits, reg_times, y_batch_multi, y_times)
@@ -87,7 +107,9 @@ class ModelBuilder:
             total_loss += loss.item()
         return total_loss / len(loader)
 
-    def _evaluate_strategy_batch(self, probs, reg_times, y_times, y_batch_multi, q_batch_ids, strategy: str):
+    def _evaluate_strategy_batch(
+        self, probs, reg_times, y_times, y_batch_multi, q_batch_ids, strategy: str
+    ):
         w = 0.7
         k = 3
         """Helper to evaluate a single strategy."""
@@ -95,11 +117,17 @@ class ModelBuilder:
         total_time = 0
         best_action_set = {}
 
-        EXECUTION_TIME_OUT_tensor = torch.tensor(self.cfg.EXECUTION_TIME_OUT, device=probs.device)
+        EXECUTION_TIME_OUT_tensor = torch.tensor(
+            self.cfg.EXECUTION_TIME_OUT, device=probs.device
+        )
 
-        for i, (prob_row, reg_row, y_time_row, q_id) in enumerate(zip(probs, reg_times, y_times, q_batch_ids)):
+        for i, (prob_row, reg_row, y_time_row, q_id) in enumerate(
+            zip(probs, reg_times, y_times, q_batch_ids)
+        ):
             # Ground-truth correct indices
-            correct_index = [idx for idx, val in enumerate(y_batch_multi[i]) if val == 1]
+            correct_index = [
+                idx for idx, val in enumerate(y_batch_multi[i]) if val == 1
+            ]
 
             # Pick predicted index based on strategy
             if strategy == "class_only":
@@ -111,7 +139,7 @@ class ModelBuilder:
                 if valid_mask.sum() == 0:
                     pred_idx = torch.argmin(reg_row)
                 else:
-                    valid_times = reg_row.masked_fill(~valid_mask, float('inf'))
+                    valid_times = reg_row.masked_fill(~valid_mask, float("inf"))
                     pred_idx = torch.argmin(valid_times)
             elif strategy == "hypered_2":  # Our usage
                 norm_times = reg_row / EXECUTION_TIME_OUT_tensor
@@ -126,7 +154,9 @@ class ModelBuilder:
             elif strategy == "thresh_reg":
                 threshold = reg_row.median()
                 valid_mask = reg_row < threshold
-                pred_idx = torch.argmax(prob_row.masked_fill(~valid_mask, float('-inf')))
+                pred_idx = torch.argmax(
+                    prob_row.masked_fill(~valid_mask, float("-inf"))
+                )
             else:
                 raise ValueError(f"Strategy '{strategy}' is not supported")
 
@@ -137,12 +167,10 @@ class ModelBuilder:
 
         return correct_any, total_time, best_action_set
 
-    def evaluate_metric_batch(self, probs, reg_times, y_times, q_batch_ids, y_batch_multi):
-        results = {
-            "correct_any": {},
-            "total_time": {},
-            "best_action_set": {}
-        }
+    def evaluate_metric_batch(
+        self, probs, reg_times, y_times, q_batch_ids, y_batch_multi
+    ):
+        results = {"correct_any": {}, "total_time": {}, "best_action_set": {}}
 
         for strategy in self.strategies:
             correct_any, total_time, best_action_set = self._evaluate_strategy_batch(
@@ -172,8 +200,10 @@ class ModelBuilder:
                 probs = torch.sigmoid(class_logits)
 
                 # Evaluate all strategies for this batch
-                correct_any_map_cur, best_action_set_cur, total_time_cur = self.evaluate_metric_batch(
-                    probs, reg_times, y_times, q_batch_ids, y_batch_multi
+                correct_any_map_cur, best_action_set_cur, total_time_cur = (
+                    self.evaluate_metric_batch(
+                        probs, reg_times, y_times, q_batch_ids, y_batch_multi
+                    )
                 )
 
                 # Accumulate results
@@ -185,33 +215,60 @@ class ModelBuilder:
                 total_samples += len(q_batch_ids)
 
         # Compute accuracies
-        accuracy_map = {strategy: val / total_samples for strategy, val in correct_any_map.items()}
+        accuracy_map = {
+            strategy: val / total_samples for strategy, val in correct_any_map.items()
+        }
         return accuracy_map, best_action_set, total_time_all_test_query
 
-    def run(self, train_loader, test_loaders: dict, epochs, lr, step_size, gamma, alpha, loss_gamma, workload_name):
+    def run(
+        self,
+        train_loader,
+        test_loaders: dict,
+        epochs,
+        lr,
+        step_size,
+        gamma,
+        alpha,
+        loss_gamma,
+        workload_name,
+    ):
         class_weights = train_loader.dataset.get_class_weights().to(
-            self.cfg.DEVICE)  # Assume this method exists in your dataset
+            self.cfg.DEVICE
+        )  # Assume this method exists in your dataset
 
-        self.strategies = ["class_only", "reg_only", "hypered_1", "hypered_2",
-                           "weighted_score", "topk_class", "thresh_reg"]
+        self.strategies = [
+            "class_only",
+            "reg_only",
+            "hypered_1",
+            "hypered_2",
+            "weighted_score",
+            "topk_class",
+            "thresh_reg",
+        ]
 
-        criterion = HybridLossReg(cfg=self.cfg, alpha=alpha, gamma=loss_gamma, class_weights=class_weights)
+        criterion = HybridLossReg(
+            cfg=self.cfg, alpha=alpha, gamma=loss_gamma, class_weights=class_weights
+        )
 
         if self.embedding_path:
-            optimizer = optim.Adam([
-                {"params": self.model.embedding_model.parameters(), "lr": 5e-5},
-                {"params": self.model.shared.parameters(), "lr": lr},
-                {"params": self.model.class_head.parameters(), "lr": lr},
-                {"params": self.model.reg_head.parameters(), "lr": lr}
-            ])
+            optimizer = optim.Adam(
+                [
+                    {"params": self.model.embedding_model.parameters(), "lr": 5e-5},
+                    {"params": self.model.shared.parameters(), "lr": lr},
+                    {"params": self.model.class_head.parameters(), "lr": lr},
+                    {"params": self.model.reg_head.parameters(), "lr": lr},
+                ]
+            )
         else:
             optimizer = optim.Adam(self.model.parameters(), lr=lr)
 
         # Learning rate scheduler now takes step_size and gamma from the arguments
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(
+            optimizer, step_size=step_size, gamma=gamma
+        )
 
         # In run():
-        global_best_time = {strategy: float('inf') for strategy in self.strategies}
+        global_best_time = {strategy: float("inf") for strategy in self.strategies}
         final_log_to_print = {strategy: "" for strategy in self.strategies}
         running_history = []
         for epoch in tqdm(range(epochs), desc=f"Training {workload_name}"):
@@ -223,7 +280,9 @@ class ModelBuilder:
             # Log training loss to TensorBoard
             self.writer.add_scalar("Loss/Train", train_loss, epoch)
 
-            accuracy_map, best_action_set, total_time_all_test_query = self.evaluate_topk(test_loaders["test"])
+            accuracy_map, best_action_set, total_time_all_test_query = (
+                self.evaluate_topk(test_loaders["test"])
+            )
 
             # Log each epoch
             plogger.info(f"Epoch {epoch + 1}/{epochs}, Info: ")
@@ -268,7 +327,9 @@ class ModelBuilder:
         query_count = 0  # Total number of queries processed
 
         embeddings, latencies, query_ids = [], [], []
-        EXECUTION_TIME_OUT_tensor = torch.tensor(self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE)
+        EXECUTION_TIME_OUT_tensor = torch.tensor(
+            self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE
+        )
 
         with torch.no_grad():  # Disable gradient computation for inference
             for X_batch, _, y_execution_times, q_batch_ids in loader:
@@ -291,10 +352,13 @@ class ModelBuilder:
 
                 probs = torch.sigmoid(class_logits)  # Convert logits to probabilities
 
-                actions = torch.zeros(batch_size, dtype=torch.long, device=self.cfg.DEVICE)
+                actions = torch.zeros(
+                    batch_size, dtype=torch.long, device=self.cfg.DEVICE
+                )
 
                 for i, (prob_row, reg_row, y_time_row, q_id) in enumerate(
-                        zip(probs, reg_times, y_execution_times, q_batch_ids)):
+                    zip(probs, reg_times, y_execution_times, q_batch_ids)
+                ):
                     # Select optimizers using 'hyper_2' strategy
                     # valid_mask = prob_row > 0.5
                     # if valid_mask.sum() == 0:
@@ -321,63 +385,78 @@ class ModelBuilder:
                 total_regret += batch_regret
 
                 # Log batch-level information
-                plogger.info(f"Batch processed, Actions: {actions.tolist()}, "
-                             f"Rewards: {rewards.tolist()}")
+                plogger.info(
+                    f"Batch processed, Actions: {actions.tolist()}, "
+                    f"Rewards: {rewards.tolist()}"
+                )
 
         # Compute average metrics
         avg_reward = total_reward / query_count if query_count > 0 else 0
         avg_regret = total_regret / query_count if query_count > 0 else 0
 
         # Log final inference results
-        plogger.info(f"Total Reward: {total_reward:.4f}, Avg Reward: {avg_reward:.4f}, "
-                     f"Total Regret: {total_regret:.4f}, Avg Regret: {avg_regret:.4f}, "
-                     f"Queries: {query_count}")
+        plogger.info(
+            f"Total Reward: {total_reward:.4f}, Avg Reward: {avg_reward:.4f}, "
+            f"Total Regret: {total_regret:.4f}, Avg Regret: {avg_regret:.4f}, "
+            f"Queries: {query_count}"
+        )
 
-        save_per_train_plot_data(embeddings, latencies, [], query_ids,
-                                 output_file=f"{self.cfg.RESULT_DATA_BASE}/inference_res_collection_{self.dataset}{save_name}.data")
+        save_per_train_plot_data(
+            embeddings,
+            latencies,
+            [],
+            query_ids,
+            output_file=f"{self.cfg.RESULT_DATA_BASE}/inference_res_collection_{self.dataset}{save_name}.data",
+        )
 
         return predictions_dict, predictions_time
 
-    def inference_single_sql(self, sql: str, query_id: str, db_cli) -> List[Tuple[int, float]]:
+    def inference_single_sql(
+        self, sql: str, query_id: str, db_cli
+    ) -> List[Tuple[int, float]]:
         """
         Perform inference on a single SQL query without using DataLoader.
         This follows the same preprocessing as QueryFeatureDataset to ensure consistency.
-        
+
         Args:
             sql: SQL query string to optimize
             query_id: Unique identifier for the query
             db_cli: Database connection (PostgresConnector)
 
         Returns:
-            List[Tuple[int, float]]: Sorted list of (optimizer_index, score) tuples, 
+            List[Tuple[int, float]]: Sorted list of (optimizer_index, score) tuples,
                                      ordered by score descending (highest first)
         """
         self.model.eval()  # Set model to evaluation mode
 
         # Encode SQL query to get features (returns raw features with IDs starting from 0)
         sql_feature = self.sql_encoder.encode_query(
-            query_id=query_id, sql=sql, train_database=self.cfg.DB_NAME, pg_runner=db_cli)
+            query_id=query_id,
+            sql=sql,
+            train_database=self.cfg.DB_NAME,
+            pg_runner=db_cli,
+        )
 
         # Apply global shift (+1) as done in QueryFeatureDataset
         # This shifts table_ids and col_ids to avoid 0 padding conflicts
         sql_feature_shifted = copy.deepcopy(sql_feature)
 
         # Shift join_conditions: table1_id, col1_id, table2_id, col2_id
-        if len(sql_feature_shifted['join_conditions']) > 0:
-            sql_feature_shifted['join_conditions'][:, 0] += 1  # table1_id
-            sql_feature_shifted['join_conditions'][:, 1] += 1  # col1_id
-            sql_feature_shifted['join_conditions'][:, 2] += 1  # table2_id
-            sql_feature_shifted['join_conditions'][:, 3] += 1  # col2_id
+        if len(sql_feature_shifted["join_conditions"]) > 0:
+            sql_feature_shifted["join_conditions"][:, 0] += 1  # table1_id
+            sql_feature_shifted["join_conditions"][:, 1] += 1  # col1_id
+            sql_feature_shifted["join_conditions"][:, 2] += 1  # table2_id
+            sql_feature_shifted["join_conditions"][:, 3] += 1  # col2_id
 
         # Shift filter_conditions: table_id, col_id, ...
-        if len(sql_feature_shifted['filter_conditions']) > 0:
-            sql_feature_shifted['filter_conditions'][:, 0] += 1  # table_id
-            sql_feature_shifted['filter_conditions'][:, 1] += 1  # col_id
+        if len(sql_feature_shifted["filter_conditions"]) > 0:
+            sql_feature_shifted["filter_conditions"][:, 0] += 1  # table_id
+            sql_feature_shifted["filter_conditions"][:, 1] += 1  # col_id
 
         # Convert to tensors and add batch dimension (batch_size=1)
         # Ensure correct shape for empty arrays (should be (0, 4) or (0, 3), not (0,))
-        join_conditions_array = sql_feature_shifted['join_conditions']
-        filter_conditions_array = sql_feature_shifted['filter_conditions']
+        join_conditions_array = sql_feature_shifted["join_conditions"]
+        filter_conditions_array = sql_feature_shifted["filter_conditions"]
 
         if join_conditions_array.size == 0:
             join_conditions_array = join_conditions_array.reshape(0, 4)
@@ -386,7 +465,7 @@ class ModelBuilder:
 
         join_conditions = torch.from_numpy(join_conditions_array).float()
         filter_conditions = torch.from_numpy(filter_conditions_array).float()
-        table_sizes = torch.from_numpy(sql_feature_shifted['table_sizes']).float()
+        table_sizes = torch.from_numpy(sql_feature_shifted["table_sizes"]).float()
 
         # No padding needed for single query, but we still need batch dimension
         # Shape: [1, num_joins, 4] for join_conditions (even if num_joins=0)
@@ -398,9 +477,9 @@ class ModelBuilder:
 
         # Format as batch (single sample)
         X_batch = {
-            'join_conditions': join_conditions.to(self.cfg.DEVICE),
-            'filter_conditions': filter_conditions.to(self.cfg.DEVICE),
-            'table_sizes': table_sizes.to(self.cfg.DEVICE)
+            "join_conditions": join_conditions.to(self.cfg.DEVICE),
+            "filter_conditions": filter_conditions.to(self.cfg.DEVICE),
+            "table_sizes": table_sizes.to(self.cfg.DEVICE),
         }
 
         # Perform inference
@@ -412,7 +491,9 @@ class ModelBuilder:
         reg_row = reg_times[0]  # Remove batch dimension: [output_dim]
 
         # Use 'hyper_2' strategy: score = prob - (normalized_time)
-        EXECUTION_TIME_OUT_tensor = torch.tensor(self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE)
+        EXECUTION_TIME_OUT_tensor = torch.tensor(
+            self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE
+        )
         norm_times = reg_row / EXECUTION_TIME_OUT_tensor
         score = probs - norm_times
 
@@ -421,7 +502,10 @@ class ModelBuilder:
         sorted_scores = score[sorted_indices]
 
         # Return list of (optimizer_index, score) tuples
-        result = [(idx.item(), score_val.item()) for idx, score_val in zip(sorted_indices, sorted_scores)]
+        result = [
+            (idx.item(), score_val.item())
+            for idx, score_val in zip(sorted_indices, sorted_scores)
+        ]
 
         return result
 
@@ -431,7 +515,9 @@ class ModelBuilder:
         removable_experts = list(set(option_experts) & set(cur_active_experts))
 
         # check addable ones
-        addable_experts = [ele for ele in option_experts if ele not in cur_active_experts]
+        addable_experts = [
+            ele for ele in option_experts if ele not in cur_active_experts
+        ]
 
         if len(addable_experts) > 0 and len(removable_experts) > 0:
             if random.random() < 0.5:  # add
@@ -441,7 +527,9 @@ class ModelBuilder:
             else:  # remove
                 expert_to_remove = random.choice(removable_experts)
                 cur_active_experts.remove(expert_to_remove)
-                print(f"------> remove {expert_to_remove}, current {cur_active_experts}")
+                print(
+                    f"------> remove {expert_to_remove}, current {cur_active_experts}"
+                )
             return cur_active_experts
 
         elif len(addable_experts) > 0:  # add
@@ -471,8 +559,12 @@ class ModelBuilder:
         all_results = []  # Store results from each run
 
         # Assuming ALL_METHODS is defined globally or as a class attribute
-        postgresql_idx = self.cfg.ALL_METHODS.index('PostgreSQL')  # Index for PostgreSQL
-        EXECUTION_TIME_OUT_tensor = torch.tensor(self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE)
+        postgresql_idx = self.cfg.ALL_METHODS.index(
+            "PostgreSQL"
+        )  # Index for PostgreSQL
+        EXECUTION_TIME_OUT_tensor = torch.tensor(
+            self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE
+        )
         global_inf_id = 0
         for run in range(num_runs):
             print("next run --------------------> \n")
@@ -495,7 +587,9 @@ class ModelBuilder:
 
                     # Reconfigure experts for 4 samples
                     if global_inf_id % 4 == 0:
-                        active_experts = self.reconfigure_experts(option_experts, active_experts)
+                        active_experts = self.reconfigure_experts(
+                            option_experts, active_experts
+                        )
                     global_inf_id += 1
 
                     query_count += 1  # Since batch_size=1, each iteration is 1 query
@@ -503,7 +597,9 @@ class ModelBuilder:
                     # Get model predictions: class logits and regression times
                     class_logits, reg_times, emb_output = self.model(X_batch)
 
-                    probs = torch.sigmoid(class_logits)  # Convert logits to probabilities
+                    probs = torch.sigmoid(
+                        class_logits
+                    )  # Convert logits to probabilities
 
                     # Since batch_size=1, we only have one row to process
                     prob_row = probs[0]
@@ -511,8 +607,12 @@ class ModelBuilder:
                     y_time_row = y_execution_times[0]
                     q_id = q_batch_ids[0]
 
-                    print(f"all methos is {self.cfg.ALL_METHODS}, current methods are {active_experts}")
-                    active_indices = [self.cfg.ALL_METHODS.index(exp) for exp in active_experts]
+                    print(
+                        f"all methos is {self.cfg.ALL_METHODS}, current methods are {active_experts}"
+                    )
+                    active_indices = [
+                        self.cfg.ALL_METHODS.index(exp) for exp in active_experts
+                    ]
 
                     # Select optimizers using 'hyper_1' strategy
                     norm_times = reg_row / EXECUTION_TIME_OUT_tensor
@@ -540,13 +640,13 @@ class ModelBuilder:
 
             # Store results for this run
             run_result = {
-                'run': run + 1,
-                'predictions': predictions_dict,
-                'total_time': predictions_time,
-                'postgresql_total_time': postgresql_time,
-                'cumulative_system_times': cumulative_system_times,
-                'cumulative_postgresql_times': cumulative_postgresql_times,
-                'query_count': query_count
+                "run": run + 1,
+                "predictions": predictions_dict,
+                "total_time": predictions_time,
+                "postgresql_total_time": postgresql_time,
+                "cumulative_system_times": cumulative_system_times,
+                "cumulative_postgresql_times": cumulative_postgresql_times,
+                "query_count": query_count,
             }
             all_results.append(run_result)
 
@@ -556,11 +656,15 @@ class ModelBuilder:
         self.model.eval()  # Set model to evaluation mode
 
         all_results = []  # Store results from each run
-        EXECUTION_TIME_OUT_tensor = torch.tensor(self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE)
+        EXECUTION_TIME_OUT_tensor = torch.tensor(
+            self.cfg.EXECUTION_TIME_OUT, device=self.cfg.DEVICE
+        )
         for run in range(num_runs):
             print("next run --------------------> \n")
 
-            predictions_dict = {}  # Store query label to optimizer predictions (hypered_1)
+            predictions_dict = (
+                {}
+            )  # Store query label to optimizer predictions (hypered_1)
             predictions_dict_random = {}  # Store random predictions separately
             predictions_time = 0  # Total time for hypered_1 predictions
             random_time = 0  # Total time for random predictions
@@ -576,7 +680,9 @@ class ModelBuilder:
                     # Get model predictions: class logits and regression times
                     class_logits, reg_times, emb_output = self.model(X_batch)
 
-                    probs = torch.sigmoid(class_logits)  # Convert logits to probabilities
+                    probs = torch.sigmoid(
+                        class_logits
+                    )  # Convert logits to probabilities
 
                     # Since batch_size=1, we only have one row to process
                     prob_row = probs[0]
@@ -584,7 +690,9 @@ class ModelBuilder:
                     y_time_row = y_execution_times[0]
                     q_id = q_batch_ids[0]
 
-                    active_indices = [self.cfg.ALL_METHODS.index(exp) for exp in active_experts]
+                    active_indices = [
+                        self.cfg.ALL_METHODS.index(exp) for exp in active_experts
+                    ]
 
                     # Filter probabilities and regression times for active experts only
                     active_probs = prob_row[active_indices]
@@ -604,7 +712,9 @@ class ModelBuilder:
 
                     # Update times for both hypered_1 and random
                     system_time = y_time_row[original_pred_idx].item()  # hypered_1 time
-                    random_system_time = y_time_row[random_pred_idx].item()  # random time
+                    random_system_time = y_time_row[
+                        random_pred_idx
+                    ].item()  # random time
 
                     cumulative_system_times.append(system_time)
                     cumulative_random_times.append(random_system_time)
@@ -614,43 +724,60 @@ class ModelBuilder:
 
                 # Store results for this run
                 run_result = {
-                    'run': run + 1,
-                    'predictions_hypered_1': predictions_dict,  # hypered_1 predictions
-                    'predictions_random': predictions_dict_random,  # Random predictions
-                    'total_time_hypered_1': predictions_time,  # Total time for hypered_1
-                    'total_time_random': random_time,  # Total time for random
-                    'cumulative_system_times': cumulative_system_times,  # Times for hypered_1
-                    'cumulative_random_times': cumulative_random_times,  # Times for random
-                    'query_count': query_count
+                    "run": run + 1,
+                    "predictions_hypered_1": predictions_dict,  # hypered_1 predictions
+                    "predictions_random": predictions_dict_random,  # Random predictions
+                    "total_time_hypered_1": predictions_time,  # Total time for hypered_1
+                    "total_time_random": random_time,  # Total time for random
+                    "cumulative_system_times": cumulative_system_times,  # Times for hypered_1
+                    "cumulative_random_times": cumulative_random_times,  # Times for random
+                    "query_count": query_count,
                 }
                 all_results.append(run_result)
 
         return all_results, predictions_dict, predictions_dict_random
 
-    def run_with_varios_alpha(self, train_loader, test_loaders: dict, epochs, lr, step_size, gamma, alpha, loss_gamma,
-                              workload_name):
+    def run_with_varios_alpha(
+        self,
+        train_loader,
+        test_loaders: dict,
+        epochs,
+        lr,
+        step_size,
+        gamma,
+        alpha,
+        loss_gamma,
+        workload_name,
+    ):
         # todo, this is only to test the labmda_effects
         self.saved_model_name = f"{self.saved_model_name}_{alpha}"
         # update model path name
         class_weights = train_loader.dataset.get_class_weights().to(
-            self.cfg.DEVICE)  # Assume this method exists in your dataset
+            self.cfg.DEVICE
+        )  # Assume this method exists in your dataset
         self.strategies = ["hypered_2"]
-        criterion = HybridLossReg(alpha=alpha, gamma=loss_gamma, class_weights=class_weights)
+        criterion = HybridLossReg(
+            alpha=alpha, gamma=loss_gamma, class_weights=class_weights
+        )
         if self.embedding_path:
-            optimizer = optim.Adam([
-                {"params": self.model.embedding_model.parameters(), "lr": 5e-5},
-                {"params": self.model.shared.parameters(), "lr": lr},
-                {"params": self.model.class_head.parameters(), "lr": lr},
-                {"params": self.model.reg_head.parameters(), "lr": lr}
-            ])
+            optimizer = optim.Adam(
+                [
+                    {"params": self.model.embedding_model.parameters(), "lr": 5e-5},
+                    {"params": self.model.shared.parameters(), "lr": lr},
+                    {"params": self.model.class_head.parameters(), "lr": lr},
+                    {"params": self.model.reg_head.parameters(), "lr": lr},
+                ]
+            )
         else:
             optimizer = optim.Adam(self.model.parameters(), lr=lr)
 
         # Learning rate scheduler now takes step_size and gamma from the arguments
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(
+            optimizer, step_size=step_size, gamma=gamma
+        )
 
         # In run():
-        global_best_time = {strategy: float('inf') for strategy in self.strategies}
+        global_best_time = {strategy: float("inf") for strategy in self.strategies}
         final_log_to_print = {strategy: "" for strategy in self.strategies}
 
         running_history = []
@@ -664,7 +791,9 @@ class ModelBuilder:
             # Log training loss to TensorBoard
             self.writer.add_scalar("Loss/Train", train_loss, epoch)
 
-            accuracy_map, best_action_set, total_time_all_test_query = self.evaluate_topk(test_loaders["test"])
+            accuracy_map, best_action_set, total_time_all_test_query = (
+                self.evaluate_topk(test_loaders["test"])
+            )
 
             # Log each epoch
             plogger.info(f"Epoch {epoch + 1}/{epochs}, Info: ")

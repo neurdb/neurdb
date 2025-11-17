@@ -1,14 +1,16 @@
-import numpy as np
 import json
 import os
-import joblib
-from typing import List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
+import joblib
+import numpy as np
 
 
 @dataclass
 class PlanNode:
     """Represents a node in the query plan tree"""
+
     node_type: str
     relation_name: Optional[str] = None
     index_name: Optional[str] = None
@@ -16,7 +18,7 @@ class PlanNode:
     total_cost: Optional[float] = None
     plan_rows: Optional[float] = None
     buffers: Optional[float] = None
-    children: List['PlanNode'] = None
+    children: List["PlanNode"] = None
 
     def __post_init__(self):
         if self.children is None:
@@ -125,11 +127,11 @@ class OneHotPlanEncoder:
 
         # Save encoder state
         encoder_state = {
-            'is_fitted': self.is_fitted,
-            'relations': self.relations,
-            'join_types': self.JOIN_TYPES,
-            'leaf_types': self.LEAF_TYPES,
-            'all_types': self.ALL_TYPES
+            "is_fitted": self.is_fitted,
+            "relations": self.relations,
+            "join_types": self.JOIN_TYPES,
+            "leaf_types": self.LEAF_TYPES,
+            "all_types": self.ALL_TYPES,
         }
 
         with open(os.path.join(path, "encoder_state.json"), "w") as f:
@@ -153,8 +155,8 @@ class OneHotPlanEncoder:
         with open(encoder_state_path, "r") as f:
             encoder_state = json.load(f)
 
-        self.is_fitted = encoder_state['is_fitted']
-        self.relations = encoder_state['relations']
+        self.is_fitted = encoder_state["is_fitted"]
+        self.relations = encoder_state["relations"]
 
         # Load stats extractor if it exists
         stats_extractor_path = os.path.join(path, "stats_extractor.pkl")
@@ -215,13 +217,13 @@ class OneHotPlanEncoder:
             return StatExtractor(
                 ["Buffers", "Total Cost", "Plan Rows"],
                 [bufs_min, costs_min, rows_min],
-                [bufs_max, costs_max, rows_max]
+                [bufs_max, costs_max, rows_max],
             )
         else:
             return StatExtractor(
                 ["Total Cost", "Plan Rows"],
                 [costs_min, rows_min],
-                [costs_max, rows_max]
+                [costs_max, rows_max],
             )
 
     def _attach_buffer_data(self, plan: Dict[str, Any]):
@@ -242,7 +244,9 @@ class OneHotPlanEncoder:
 
         recurse(plan["Plan"])
 
-    def _get_buffer_count_for_leaf(self, leaf: Dict[str, Any], buffers: Dict[str, int]) -> int:
+    def _get_buffer_count_for_leaf(
+        self, leaf: Dict[str, Any], buffers: Dict[str, int]
+    ) -> int:
         """Get buffer count for a leaf node."""
         total = 0
         if "Relation Name" in leaf:
@@ -306,7 +310,9 @@ class OneHotPlanEncoder:
             # Find the first (longest) relation name that appears in the index name
             name_key = "Index Name" if "Index Name" in node else "Relation Name"
             if name_key not in node:
-                raise ValueError("Bitmap operator did not have an index name or a relation name")
+                raise ValueError(
+                    "Bitmap operator did not have an index name or a relation name"
+                )
 
             for rel in self.relations:
                 if rel in node[name_key]:
@@ -334,5 +340,5 @@ def encode_plan_from_json(plan_json: str) -> Dict[str, Any]:
 
     return {
         "plan": plan,
-        "plan_json": plan_json if isinstance(plan_json, str) else json.dumps(plan_json)
+        "plan_json": plan_json if isinstance(plan_json, str) else json.dumps(plan_json),
     }

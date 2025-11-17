@@ -29,15 +29,15 @@ write_callback(void *contents, size_t size, size_t nmemb, struct http_response *
 {
     size_t realsize = size * nmemb;
     char *ptr = repalloc(response->data, response->size + realsize + 1);
-    
+
     if (!ptr)
         return 0; /* out of memory */
-    
+
     response->data = ptr;
     memcpy(&(response->data[response->size]), contents, realsize);
     response->size += realsize;
     response->data[response->size] = 0; /* null terminate */
-    
+
     return realsize;
 }
 
@@ -57,21 +57,21 @@ send_optimization_request(const char *server_url, const char *sql_query, int tim
     json_object *json_optimized_sql = NULL;
     const char *json_string;
     char *result = NULL;
-    
+
     /* Initialize response buffer */
     response.data = palloc(1);
     response.size = 0;
-    
+
     /* Initialize libcurl */
     curl = curl_easy_init();
     if (!curl)
     {
-        ereport(WARNING, 
+        ereport(WARNING,
                 (errmsg("Failed to initialize HTTP client")));
         pfree(response.data);
         return NULL;
     }
-    
+
     PG_TRY();
     {
         /* Create JSON request payload */
@@ -79,10 +79,10 @@ send_optimization_request(const char *server_url, const char *sql_query, int tim
         json_sql = json_object_new_string(sql_query);
         json_object_object_add(json_request, "sql", json_sql);
         json_string = json_object_to_json_string(json_request);
-        
+
         /* Set HTTP headers */
         headers = curl_slist_append(headers, "Content-Type: application/json");
-        
+
         /* Configure curl options */
         curl_easy_setopt(curl, CURLOPT_URL, server_url);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_string);
@@ -91,10 +91,10 @@ send_optimization_request(const char *server_url, const char *sql_query, int tim
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
         curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout_ms);
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "PostgreSQL-QueryOptimizer/1.0");
-        
+
         /* Perform the request */
         res = curl_easy_perform(curl);
-        
+
         if (res != CURLE_OK)
         {
             ereport(WARNING,
@@ -104,7 +104,7 @@ send_optimization_request(const char *server_url, const char *sql_query, int tim
         {
             long response_code;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-            
+
             if (response_code == 200 && response.data && response.size > 0)
             {
                 /* Parse JSON response */
@@ -148,7 +148,7 @@ send_optimization_request(const char *server_url, const char *sql_query, int tim
         PG_RE_THROW();
     }
     PG_END_TRY();
-    
+
     /* Clean up */
     if (json_response)
         json_object_put(json_response);
@@ -159,7 +159,7 @@ send_optimization_request(const char *server_url, const char *sql_query, int tim
     curl_easy_cleanup(curl);
     if (response.data)
         pfree(response.data);
-    
+
     return result;
 }
 

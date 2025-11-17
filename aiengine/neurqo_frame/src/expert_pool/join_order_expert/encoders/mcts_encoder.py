@@ -1,6 +1,7 @@
+from typing import Dict, List, Tuple
+
 import numpy as np
 import torch
-from typing import List, Tuple, Dict
 from expert_pool.join_order_expert.tools.normalize import LatencyNormalizer
 
 
@@ -11,10 +12,21 @@ class TreeBuilder:
     - No global constants; JOIN/SCAN types live on the instance.
     """
 
-    def __init__(self, id2aliasname: Dict, aliasname2id: Dict, input_size: int, hidden_size: int,
-                 latency_normalizer: LatencyNormalizer = None):
+    def __init__(
+        self,
+        id2aliasname: Dict,
+        aliasname2id: Dict,
+        input_size: int,
+        hidden_size: int,
+        latency_normalizer: LatencyNormalizer = None,
+    ):
         self.JOIN_TYPES = ["Nested Loop", "Hash Join", "Merge Join"]
-        self.LEAF_TYPES = ["Seq Scan", "Index Scan", "Index Only Scan", "Bitmap Index Scan"]
+        self.LEAF_TYPES = [
+            "Seq Scan",
+            "Index Scan",
+            "Index Only Scan",
+            "Bitmap Index Scan",
+        ]
         self.ALL_TYPES = self.JOIN_TYPES + self.LEAF_TYPES
 
         self.id2aliasname = id2aliasname
@@ -94,7 +106,9 @@ class TreeBuilder:
             if "Alias" in node and node.get("Node Type") == "Bitmap Heap Scan":
                 alias_idx_np = np.asarray([self.aliasname2id[node["Alias"]]])
                 if isinstance(child_value[1], tuple):
-                    raise Exception("Unexpected child tuple for transparent node: " + str(node))
+                    raise Exception(
+                        "Unexpected child tuple for transparent node: " + str(node)
+                    )
                 return (child_value[0], torch.tensor(alias_idx_np, dtype=torch.long))
             return child_value
 

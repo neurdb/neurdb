@@ -8,14 +8,16 @@ class Expr:
         self.isInt = False
         self.val = 0
 
-    def isCol(self, ):
+    def isCol(
+        self,
+    ):
         return isinstance(self.expr, dict) and "ColumnRef" in self.expr
 
     def getValue(self, value_expr):
         if "A_Const" in value_expr:
             value = value_expr["A_Const"]["val"]
             if "String" in value:
-                return "'" + value["String"]["str"].replace("'", "''") + "\'"
+                return "'" + value["String"]["str"].replace("'", "''") + "'"
             elif "Integer" in value:
                 self.isInt = True
                 self.val = value["Integer"]["ival"]
@@ -23,40 +25,76 @@ class Expr:
             else:
                 raise "unknown Value in Expr"
         elif "TypeCast" in value_expr:
-            if len(value_expr["TypeCast"]['typeName']['TypeName']['names']) == 1:
-                return value_expr["TypeCast"]['typeName']['TypeName']['names'][0]['String']['str'] + " '" + \
-                       value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str'] + "'"
+            if len(value_expr["TypeCast"]["typeName"]["TypeName"]["names"]) == 1:
+                return (
+                    value_expr["TypeCast"]["typeName"]["TypeName"]["names"][0][
+                        "String"
+                    ]["str"]
+                    + " '"
+                    + value_expr["TypeCast"]["arg"]["A_Const"]["val"]["String"]["str"]
+                    + "'"
+                )
             else:
                 try:
                     # Case: WHERE (...) INTERVAL '1' year
-                    if value_expr["TypeCast"]['typeName']['TypeName']['typmods'][0]['A_Const']['val']['Integer'][
-                        'ival'] == 2:
-                        return value_expr["TypeCast"]['typeName']['TypeName']['names'][1]['String']['str'] + " '" + \
-                               value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str'] + "' month"
+                    if (
+                        value_expr["TypeCast"]["typeName"]["TypeName"]["typmods"][0][
+                            "A_Const"
+                        ]["val"]["Integer"]["ival"]
+                        == 2
+                    ):
+                        return (
+                            value_expr["TypeCast"]["typeName"]["TypeName"]["names"][1][
+                                "String"
+                            ]["str"]
+                            + " '"
+                            + value_expr["TypeCast"]["arg"]["A_Const"]["val"]["String"][
+                                "str"
+                            ]
+                            + "' month"
+                        )
                     else:
-                        return value_expr["TypeCast"]['typeName']['TypeName']['names'][1]['String']['str'] + " '" + \
-                               value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str'] + "' year"
+                        return (
+                            value_expr["TypeCast"]["typeName"]["TypeName"]["names"][1][
+                                "String"
+                            ]["str"]
+                            + " '"
+                            + value_expr["TypeCast"]["arg"]["A_Const"]["val"]["String"][
+                                "str"
+                            ]
+                            + "' year"
+                        )
                 except KeyError:
                     # Case: WHERE (...) '1 year'::interval
                     # --> Breaks the above condition, as the 'typmods' key is not present
                     #
                     # 'interval'
-                    casted_type = value_expr["TypeCast"]['typeName']['TypeName']['names'][1]['String']['str']
+                    casted_type = value_expr["TypeCast"]["typeName"]["TypeName"][
+                        "names"
+                    ][1]["String"]["str"]
                     # value: '1 year'
-                    string_value = value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str']
+                    string_value = value_expr["TypeCast"]["arg"]["A_Const"]["val"][
+                        "String"
+                    ]["str"]
                     return f"'{string_value}'::{casted_type}"
 
         else:
             print(value_expr.keys())
             raise "unknown Value in Expr"
 
-    def getAliasName(self, ):
+    def getAliasName(
+        self,
+    ):
         return self.expr["ColumnRef"]["fields"][0]["String"]["str"]
 
-    def getColumnName(self, ):
+    def getColumnName(
+        self,
+    ):
         return self.expr["ColumnRef"]["fields"][1]["String"]["str"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         if self.isCol():
             return self.getAliasName() + "." + self.getColumnName()
         elif isinstance(self.expr, dict) and "A_Const" in self.expr:
@@ -76,23 +114,33 @@ class Expr:
 
 
 class SpecialSTACKPlusExpr(Expr):
-    def isCol(self, ):
+    def isCol(
+        self,
+    ):
         return True
 
     def getValue(self, value_expr=None):
         alias = self.getAliasName()
         column = self.getColumnName()
 
-        interval_size = self.expr["A_Expr"]["rexpr"]["TypeCast"]["arg"]["A_Const"]["val"]["String"]["str"]
+        interval_size = self.expr["A_Expr"]["rexpr"]["TypeCast"]["arg"]["A_Const"][
+            "val"
+        ]["String"]["str"]
         return f"{alias}.{column} + '{interval_size}'::interval"
 
-    def getAliasName(self, ):
+    def getAliasName(
+        self,
+    ):
         return self.expr["A_Expr"]["lexpr"]["ColumnRef"]["fields"][0]["String"]["str"]
 
-    def getColumnName(self, ):
+    def getColumnName(
+        self,
+    ):
         return self.expr["A_Expr"]["lexpr"]["ColumnRef"]["fields"][1]["String"]["str"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         return self.getValue()
 
 
@@ -105,14 +153,24 @@ class TargetTable:
 
     #         print(self.target)
 
-    def getValue(self, ):
+    def getValue(
+        self,
+    ):
         columnRef = self.target["val"]["FuncCall"]["args"][0]["ColumnRef"]["fields"]
         return columnRef[0]["String"]["str"] + "." + columnRef[1]["String"]["str"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         try:
-            return self.target["val"]["FuncCall"]["funcname"][0]["String"][
-                       "str"] + "(" + self.getValue() + ")" + " AS " + self.target['name']
+            return (
+                self.target["val"]["FuncCall"]["funcname"][0]["String"]["str"]
+                + "("
+                + self.getValue()
+                + ")"
+                + " AS "
+                + self.target["name"]
+            )
         except:
             if "FuncCall" in self.target["val"]:
                 return "count(*)"
@@ -126,16 +184,22 @@ class FromTable:
         {'alias': {'Alias': {'aliasname': 'an'}}, 'location': 168, 'inhOpt': 2, 'relpersistence': 'p', 'relname': 'aka_name'}
         """
         self.from_table = from_table
-        if not 'alias' in self.from_table:
-            self.from_table['alias'] = {'Alias': {'aliasname': from_table['relname']}}
+        if not "alias" in self.from_table:
+            self.from_table["alias"] = {"Alias": {"aliasname": from_table["relname"]}}
 
-    def getFullName(self, ):
+    def getFullName(
+        self,
+    ):
         return self.from_table["relname"]
 
-    def getAliasName(self, ):
+    def getAliasName(
+        self,
+    ):
         return self.from_table["alias"]["Alias"]["aliasname"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         try:
             return self.getFullName() + " AS " + self.getAliasName()
         except:
@@ -153,8 +217,13 @@ class Comparison:
             self.kind = comparison["A_Expr"]["kind"]
             if not "A_Expr" in comparison["A_Expr"]["rexpr"]:
                 self.rexpr = Expr(comparison["A_Expr"]["rexpr"], self.kind)
-            elif comparison['A_Expr']['rexpr']['A_Expr']['name'][0]['String']['str'] == '+':
-                self.rexpr = SpecialSTACKPlusExpr(comparison['A_Expr']['rexpr'], self.kind)
+            elif (
+                comparison["A_Expr"]["rexpr"]["A_Expr"]["name"][0]["String"]["str"]
+                == "+"
+            ):
+                self.rexpr = SpecialSTACKPlusExpr(
+                    comparison["A_Expr"]["rexpr"], self.kind
+                )
 
             else:
                 self.rexpr = Comparison(comparison["A_Expr"]["rexpr"])
@@ -184,8 +253,7 @@ class Comparison:
         else:
             #             "boolop"
             self.kind = comparison["BoolExpr"]["boolop"]
-            self.comp_list = [Comparison(x)
-                              for x in comparison["BoolExpr"]["args"]]
+            self.comp_list = [Comparison(x) for x in comparison["BoolExpr"]["args"]]
             self.aliasname_list = []
             for comp in self.comp_list:
                 if comp.lexpr.isCol():
@@ -196,10 +264,14 @@ class Comparison:
                     break
             self.comp_kind = 2
 
-    def isCol(self, ):
+    def isCol(
+        self,
+    ):
         return False
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
 
         if self.comp_kind == 0:
             Op = ""
@@ -221,6 +293,7 @@ class Comparison:
                 Op = "BETWEEN"
             else:
                 import json
+
                 print(json.dumps(self.comparison, sort_keys=True, indent=4))
                 raise "Operation ERROR"
             return str(self.lexpr) + " " + Op + " " + str(self.rexpr)
@@ -252,14 +325,19 @@ class Table:
         self.column2type = {}
         for idx, columndef in enumerate(table_tree["tableElts"]):
             self.column2idx[columndef["ColumnDef"]["colname"]] = idx
-            self.column2type[columndef["ColumnDef"]["colname"]] = \
-            columndef["ColumnDef"]["typeName"]['TypeName']['names'][-1]['String']['str']
+            self.column2type[columndef["ColumnDef"]["colname"]] = columndef[
+                "ColumnDef"
+            ]["typeName"]["TypeName"]["names"][-1]["String"]["str"]
             # print(columndef["ColumnDef"]["typeName"]['TypeName']['names'],self.column2type[columndef["ColumnDef"]["colname"]],self.column2type[columndef["ColumnDef"]["colname"]] in ['int4','text','varchar'])
-            assert self.column2type[columndef["ColumnDef"]["colname"]] in ['int4', 'text', 'varchar']
-            if self.column2type[columndef["ColumnDef"]["colname"]] == 'int4':
-                self.column2type[columndef["ColumnDef"]["colname"]] = 'int'
+            assert self.column2type[columndef["ColumnDef"]["colname"]] in [
+                "int4",
+                "text",
+                "varchar",
+            ]
+            if self.column2type[columndef["ColumnDef"]["colname"]] == "int4":
+                self.column2type[columndef["ColumnDef"]["colname"]] = "int"
             else:
-                self.column2type[columndef["ColumnDef"]["colname"]] = 'str'
+                self.column2type[columndef["ColumnDef"]["colname"]] = "str"
             self.idx2column[idx] = columndef["ColumnDef"]["colname"]
 
     def oneHotAll(self):
@@ -269,6 +347,7 @@ class Table:
 class DB:
     def __init__(self, schema, TREE_NUM_IN_NET=40):
         from psqlparse import parse_dict
+
         parse_tree = parse_dict(schema)
 
         self.tables = []
@@ -292,15 +371,21 @@ class DB:
 
     def is_str(self, table, column):
         table = self.name2table[table]
-        return table.column2type[column] == 'str'
+        return table.column2type[column] == "str"
 
-    def __len__(self, ):
+    def __len__(
+        self,
+    ):
         if self.size == 0:
             self.size = len(self.table_names)
         return self.size
 
-    def oneHotAll(self, ):
+    def oneHotAll(
+        self,
+    ):
         return np.zeros((1, self.size))
 
-    def network_size(self, ):
+    def network_size(
+        self,
+    ):
         return self.TREE_NUM_IN_NET * self.size

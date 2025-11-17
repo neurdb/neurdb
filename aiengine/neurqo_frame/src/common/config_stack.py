@@ -7,7 +7,14 @@ from common.base_config import BaseConfig
 
 class StackConfig(BaseConfig):
     DB_NAME = "stack"
-    ALL_METHODS = ['HintPlanSel', 'PlanGenSim', 'PlanGen', 'PostgreSQL', 'JoinOrder', 'CostAdj']
+    ALL_METHODS = [
+        "HintPlanSel",
+        "PlanGenSim",
+        "PlanGen",
+        "PostgreSQL",
+        "JoinOrder",
+        "CostAdj",
+    ]
     FIXED_LABEL_MAPPING = {m: i for i, m in enumerate(ALL_METHODS)}
     EXECUTION_TIME_OUT = 3 * 60 * 1000.0
 
@@ -23,9 +30,17 @@ class StackConfig(BaseConfig):
     def load_sql_query(query_ident: str) -> str:
         path = os.path.join(StackConfig.QUERY_DIR, f"{query_ident}.sql")
         with open(path) as f:
-            lines = [l.strip() for l in f if l.strip() and not l.strip().startswith('--')]
+            lines = [
+                l.strip() for l in f if l.strip() and not l.strip().startswith("--")
+            ]
             return " ".join(lines)
 
     @staticmethod
     def get_all_queries():
-        return sorted([f.replace('.sql', '') for f in os.listdir(StackConfig.QUERY_DIR) if f.endswith('.sql')])
+        return sorted(
+            [
+                f.replace(".sql", "")
+                for f in os.listdir(StackConfig.QUERY_DIR)
+                if f.endswith(".sql")
+            ]
+        )

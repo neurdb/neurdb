@@ -35,7 +35,7 @@ def pad_rel_pos_unsqueeze(x, padlen):
 def pad_attn_bias_unsqueeze(x, padlen):
     xlen = x.size(0)
     if xlen < padlen:
-        new_x = x.new_zeros([padlen, padlen], dtype=x.dtype).fill_(float('-inf'))
+        new_x = x.new_zeros([padlen, padlen], dtype=x.dtype).fill_(float("-inf"))
         new_x[:xlen, :xlen] = x
         new_x[xlen:, :xlen] = 0
         x = new_x
@@ -45,7 +45,7 @@ def pad_attn_bias_unsqueeze(x, padlen):
 def floyd_warshall_rewrite(adjacency_matrix):
     (nrows, ncols) = adjacency_matrix.shape
     assert nrows == ncols
-    M = adjacency_matrix.copy().astype('long')
+    M = adjacency_matrix.copy().astype("long")
     for i in range(nrows):
         for j in range(ncols):
             if i == j:
@@ -62,12 +62,12 @@ def floyd_warshall_rewrite(adjacency_matrix):
 
 def collator(small_set):
     y = small_set[1]
-    xs = [s['x'] for s in small_set[0]]
+    xs = [s["x"] for s in small_set[0]]
 
     num_graph = len(y)
     x = torch.cat(xs)
-    attn_bias = torch.cat([s['attn_bias'] for s in small_set[0]])
-    rel_pos = torch.cat([s['rel_pos'] for s in small_set[0]])
-    heights = torch.cat([s['heights'] for s in small_set[0]])
+    attn_bias = torch.cat([s["attn_bias"] for s in small_set[0]])
+    rel_pos = torch.cat([s["rel_pos"] for s in small_set[0]])
+    heights = torch.cat([s["heights"] for s in small_set[0]])
 
     return Batch(attn_bias, rel_pos, heights, x), y

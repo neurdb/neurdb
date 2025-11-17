@@ -1,15 +1,16 @@
-import torch.optim as optim
-import torch
-import torch.nn as nn
-from torch import Tensor
-from typing import List, Tuple
-from torch.nn import init
 import sys
 from pathlib import Path
+from typing import List, Tuple
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from expert_pool.join_order_expert.models.torchfold import Fold
 
 # Import from local package
 from expert_pool.join_order_expert.models.tree_lstm import TreeLSTM
-from expert_pool.join_order_expert.models.torchfold import Fold
+from torch import Tensor
+from torch.nn import init
 
 
 class Head(nn.Module):
@@ -32,8 +33,14 @@ class Head(nn.Module):
 class TreeSQLNet(nn.Module):
     """Trained network"""
 
-    def __init__(self, head_num: int, input_size: int, hidden_size: int,
-                 table_num: int, sql_size: int):
+    def __init__(
+        self,
+        head_num: int,
+        input_size: int,
+        hidden_size: int,
+        table_num: int,
+        sql_size: int,
+    ):
         super(TreeSQLNet, self).__init__()
 
         self.table_num = table_num
@@ -53,7 +60,9 @@ class TreeSQLNet(nn.Module):
         )
 
         self.table_embeddings = nn.Embedding(table_num, hidden_size)
-        self.heads = nn.ModuleList([Head(self.hidden_size) for _ in range(self.head_num + 1)])
+        self.heads = nn.ModuleList(
+            [Head(self.hidden_size) for _ in range(self.head_num + 1)]
+        )
         self.relu = nn.ReLU()
 
     def leaf(self, alias_id: Tensor) -> Tuple[Tensor, Tensor]:
@@ -61,7 +70,7 @@ class TreeSQLNet(nn.Module):
         table_embedding = self.table_embeddings(alias_id)
         return (
             table_embedding,
-            torch.zeros(table_embedding.shape, dtype=torch.float32)
+            torch.zeros(table_embedding.shape, dtype=torch.float32),
         )
 
     def input_feature(self, feature: list) -> Tensor:
@@ -75,19 +84,24 @@ class TreeSQLNet(nn.Module):
     def target_vec(self, target: float) -> Tensor:
         """Repeat scalar target across all heads → (1, head_num)"""
         return torch.tensor([target] * self.head_num, dtype=torch.float32).reshape(
-            1, -1)
+            1, -1
+        )
 
-    def tree_node(self,
-                  h_left: Tensor,
-                  c_left: Tensor,
-                  h_right: Tensor,
-                  c_right: Tensor,
-                  feature: Tensor) -> Tuple[Tensor, Tensor]:
+    def tree_node(
+        self,
+        h_left: Tensor,
+        c_left: Tensor,
+        h_right: Tensor,
+        c_right: Tensor,
+        feature: Tensor,
+    ) -> Tuple[Tensor, Tensor]:
         """Apply tree LSTM node merge"""
         h, c = self.tree_lstm(h_left, c_left, h_right, c_right, feature)
         return (h, c)
 
-    def logits(self, encoding: Tensor, sql_feature: Tensor, prt: bool = False) -> Tensor:
+    def logits(
+        self, encoding: Tensor, sql_feature: Tensor, prt: bool = False
+    ) -> Tensor:
         """Concatenate encoding and sql_feature and output logits"""
         sql_hidden = self.relu(self.sql_layer(sql_feature))
         out_encoding = torch.cat([encoding, sql_hidden], dim=1)
@@ -98,7 +112,7 @@ class TreeSQLNet(nn.Module):
         """Return zero-initialized hidden and cell state"""
         return (
             torch.zeros(input_dim, self.hidden_size),
-            torch.zeros(input_dim, self.hidden_size)
+            torch.zeros(input_dim, self.hidden_size),
         )
 
 
@@ -112,13 +126,17 @@ class TreeSQLNetBuilder:
             else:
                 init.uniform_(p)
 
-        self.optimizer = optim.Adam(value_network.parameters(), lr=3e-4, betas=(0.9, 0.999))
+        self.optimizer = optim.Adam(
+            value_network.parameters(), lr=3e-4, betas=(0.9, 0.999)
+        )
         self.loss_function = MSEVAR(var_weight)
         self.var_weight = var_weight
 
     def _train_step(self, multi_value: torch.tensor, target_feature: torch.tensor, var):
         # 1. forward + backpropagate
-        loss_value = self.loss_function(multi_value=multi_value, target=target_feature, var=var)
+        loss_value = self.loss_function(
+            multi_value=multi_value, target=target_feature, var=var
+        )
         self.optimizer.zero_grad()
         loss_value.backward()
 
@@ -130,23 +148,37 @@ class TreeSQLNetBuilder:
         self.optimizer.step()
         return loss_value
 
-    def train_on_sample(self, tree_feature: torch.tensor, sql_feature: torch.tensor,
-                        target_value_ms: float,
-                        mask: torch.tensor) -> Tuple[float, float, float, torch.tensor]:
+    def train_on_sample(
+        self,
+        tree_feature: torch.tensor,
+        sql_feature: torch.tensor,
+        target_value_ms: float,
+        mask: torch.tensor,
+    ) -> Tuple[float, float, float, torch.tensor]:
 
-        target_feature = torch.tensor([target_value_ms] * self.value_network.head_num,
-                                      dtype=torch.float32).reshape(1, -1)
+        target_feature = torch.tensor(
+            [target_value_ms] * self.value_network.head_num, dtype=torch.float32
+        ).reshape(1, -1)
 
-        multi_value = self.plan_to_value(tree_feature=tree_feature, sql_feature=sql_feature)
+        multi_value = self.plan_to_value(
+            tree_feature=tree_feature, sql_feature=sql_feature
+        )
         loss_value = self._train_step(
-            multi_value=multi_value[:, :self.value_network.head_num] * mask,
+            multi_value=multi_value[:, : self.value_network.head_num] * mask,
             target_feature=target_feature * mask,
-            var=multi_value[:, self.value_network.head_num])
+            var=multi_value[:, self.value_network.head_num],
+        )
 
         plan_sql_vec_mean, plan_sql_vec_variance = self.mean_and_std(
-            multi_value=multi_value[:, :self.value_network.head_num])
+            multi_value=multi_value[:, : self.value_network.head_num]
+        )
 
-        return loss_value.item(), plan_sql_vec_mean[0], plan_sql_vec_variance[0], target_feature
+        return (
+            loss_value.item(),
+            plan_sql_vec_mean[0],
+            plan_sql_vec_variance[0],
+            target_feature,
+        )
 
     def train_on_batch(self, samples: List, device: torch.device):
         if not samples:
@@ -161,7 +193,8 @@ class TreeSQLNetBuilder:
             multi_value = self.plan_to_value_fold(
                 tree_feature=one_sample.tree_feature,
                 sql_feature=one_sample.sql_feature,
-                fold=fold)
+                fold=fold,
+            )
 
             # Collect all the pieces
             masks.append(one_sample.mask)
@@ -175,19 +208,29 @@ class TreeSQLNetBuilder:
         mask = torch.cat(masks, dim=0)
         target_feature = torch.cat(target_features, dim=0)
 
-        loss_value = self._train_step(multi_value=multi_value[:, :self.value_network.head_num] * mask,
-                                      target_feature=target_feature * mask,
-                                      var=multi_value[:, self.value_network.head_num])
+        loss_value = self._train_step(
+            multi_value=multi_value[:, : self.value_network.head_num] * mask,
+            target_feature=target_feature * mask,
+            var=multi_value[:, self.value_network.head_num],
+        )
 
         plan_sql_vec_mean, plan_sql_vec_variance = self.mean_and_std(
-            multi_value=multi_value[:, :self.value_network.head_num])
+            multi_value=multi_value[:, : self.value_network.head_num]
+        )
 
-        new_weight = [abs(x - target_values[idx]) * target_values[idx] for idx, x in enumerate(plan_sql_vec_mean)]
+        new_weight = [
+            abs(x - target_values[idx]) * target_values[idx]
+            for idx, x in enumerate(plan_sql_vec_mean)
+        ]
 
         return loss_value, new_weight
 
-    def predict_with_uncertainty_batch(self, tree_features: List[torch.tensor], sql_feature: torch.tensor,
-                                       device: torch.device):
+    def predict_with_uncertainty_batch(
+        self,
+        tree_features: List[torch.tensor],
+        sql_feature: torch.tensor,
+        device: torch.device,
+    ):
         fold = Fold(cuda=(device.type == "cuda"))
 
         nodes = []
@@ -198,9 +241,11 @@ class TreeSQLNetBuilder:
         multi_value = fold.apply(self.value_network, [nodes])[0]
 
         mean, variance = self.mean_and_std(
-            multi_value=multi_value[:, :self.value_network.head_num]
+            multi_value=multi_value[:, : self.value_network.head_num]
         )
-        uncertainty = torch.exp(multi_value[:, self.value_network.head_num] * self.var_weight).data.reshape(-1)
+        uncertainty = torch.exp(
+            multi_value[:, self.value_network.head_num] * self.var_weight
+        ).data.reshape(-1)
 
         return list(zip(mean, variance, uncertainty.tolist()))
 
@@ -210,71 +255,87 @@ class TreeSQLNetBuilder:
                 feature = tree_feature[0]
                 h_left, c_left = recursive(tree_feature=tree_feature[1])
                 h_right, c_right = recursive(tree_feature=tree_feature[2])
-                return self.value_network.tree_node(h_left, c_left, h_right, c_right, feature)
+                return self.value_network.tree_node(
+                    h_left, c_left, h_right, c_right, feature
+                )
             else:
                 feature = tree_feature[0]
                 h_left, c_left = self.value_network.leaf(tree_feature[1])
                 h_right, c_right = self.value_network.zero_hc()
-                return self.value_network.tree_node(h_left, c_left, h_right, c_right, feature)
+                return self.value_network.tree_node(
+                    h_left, c_left, h_right, c_right, feature
+                )
 
         plan_feature = recursive(tree_feature=tree_feature)
         multi_value = self.value_network.logits(plan_feature[0], sql_feature)
         return multi_value
 
-    def plan_to_value_fold(self, tree_feature: torch.Tensor, sql_feature: torch.Tensor, fold: Fold):
+    def plan_to_value_fold(
+        self, tree_feature: torch.Tensor, sql_feature: torch.Tensor, fold: Fold
+    ):
         def recursive(tree_feature):
             if isinstance(tree_feature[1], tuple):
                 # This is a join node - process left and right children
                 feature = tree_feature[0]
                 h_left, c_left = recursive(tree_feature=tree_feature[1]).split(2)
                 h_right, c_right = recursive(tree_feature=tree_feature[2]).split(2)
-                return fold.add('tree_node', h_left, c_left, h_right, c_right, feature)
+                return fold.add("tree_node", h_left, c_left, h_right, c_right, feature)
             else:
                 # This is a leaf node (table scan)
                 feature = tree_feature[0]
-                h_left, c_left = fold.add('leaf', tree_feature[1]).split(2)
-                h_right, c_right = fold.add('zero_hc', 1).split(2)
-                return fold.add('tree_node', h_left, c_left, h_right, c_right, feature)
+                h_left, c_left = fold.add("leaf", tree_feature[1]).split(2)
+                h_right, c_right = fold.add("zero_hc", 1).split(2)
+                return fold.add("tree_node", h_left, c_left, h_right, c_right, feature)
 
         plan_feature, c = recursive(tree_feature=tree_feature).split(2)
-        multi_value = fold.add('logits', plan_feature, sql_feature)
+        multi_value = fold.add("logits", plan_feature, sql_feature)
         return multi_value
 
     def plan_to_value_linear_fold(self, tree_feature, sql_feature, fold):
         def recursive(tree_feature, depth=1):
             if isinstance(tree_feature[1], tuple):
                 feature = tree_feature[0]
-                h_left, c_left = recursive(tree_feature=tree_feature[1], depth=depth + 1).split(2)
-                h_right, c_right = recursive(tree_feature=tree_feature[2], depth=depth + 1).split(2)
-                return fold.add('tree_node', h_left, c_left, h_right, c_right, feature)
+                h_left, c_left = recursive(
+                    tree_feature=tree_feature[1], depth=depth + 1
+                ).split(2)
+                h_right, c_right = recursive(
+                    tree_feature=tree_feature[2], depth=depth + 1
+                ).split(2)
+                return fold.add("tree_node", h_left, c_left, h_right, c_right, feature)
             else:
                 feature = tree_feature[0]
-                h_left, c_left = fold.add('leaf', tree_feature[1]).split(2)
-                h_right, c_right = fold.add('zero_hc', 1).split(2)
-                return fold.add('tree_node', h_left, c_left, h_right, c_right, feature)
+                h_left, c_left = fold.add("leaf", tree_feature[1]).split(2)
+                h_right, c_right = fold.add("zero_hc", 1).split(2)
+                return fold.add("tree_node", h_left, c_left, h_right, c_right, feature)
 
         plan_feature = recursive(tree_feature=tree_feature)
-        multi_value = fold.add('logits', plan_feature, sql_feature)
+        multi_value = fold.add("logits", plan_feature, sql_feature)
         return multi_value
 
     def plan_to_value_mlp_fold(self, tree_feature, sql_feature, fold):
         def recursive(tree_feature, depth=1):
             if isinstance(tree_feature[1], tuple):
                 feature = tree_feature[0]
-                h_left, c_left = recursive(tree_feature=tree_feature[1], depth=depth + 1).split(2)
-                h_right, c_right = recursive(tree_feature=tree_feature[2], depth=depth + 1).split(2)
-                return fold.add('tree_node', h_left, c_left, h_right, c_right, feature)
+                h_left, c_left = recursive(
+                    tree_feature=tree_feature[1], depth=depth + 1
+                ).split(2)
+                h_right, c_right = recursive(
+                    tree_feature=tree_feature[2], depth=depth + 1
+                ).split(2)
+                return fold.add("tree_node", h_left, c_left, h_right, c_right, feature)
             else:
                 feature = tree_feature[0]
-                h_left, c_left = fold.add('leaf', tree_feature[1]).split(2)
-                h_right, c_right = fold.add('zero_hc', 1).split(2)
-                return fold.add('tree_node', h_left, c_left, h_right, c_right, feature)
+                h_left, c_left = fold.add("leaf", tree_feature[1]).split(2)
+                h_right, c_right = fold.add("zero_hc", 1).split(2)
+                return fold.add("tree_node", h_left, c_left, h_right, c_right, feature)
 
         plan_feature = recursive(tree_feature=tree_feature)
-        multi_value = fold.add('logits', plan_feature, sql_feature)
+        multi_value = fold.add("logits", plan_feature, sql_feature)
         return multi_value
 
-    def mean_and_std(self, multi_value: torch.Tensor) -> Tuple[List[float], List[float]]:
+    def mean_and_std(
+        self, multi_value: torch.Tensor
+    ) -> Tuple[List[float], List[float]]:
         mean_value = multi_value.mean(dim=1)  # [B]
         std_value = multi_value.std(dim=1, unbiased=False)  # [B]
         return mean_value.detach().cpu().tolist(), std_value.detach().cpu().tolist()
@@ -311,7 +372,7 @@ class MSEVAR(nn.Module):
         loss3 = 0
 
         # total loss: expected NLL of Gaussian with mean=multi_value, var=exp(var_wei)
-        loss = (loss1 + loss2 + loss3)
+        loss = loss1 + loss2 + loss3
         return loss.mean()
 
 
@@ -337,7 +398,9 @@ class ValueNet(nn.Module):
       - value: Float tensor of shape (B, 1)
     """
 
-    def __init__(self, max_hint_num: int, in_dim: int, n_words: int = 40, hidden_size: int = 64) -> None:
+    def __init__(
+        self, max_hint_num: int, in_dim: int, n_words: int = 40, hidden_size: int = 64
+    ) -> None:
         super(ValueNet, self).__init__()
         self.dim = in_dim
         self.max_hint_num = max_hint_num
@@ -356,12 +419,20 @@ class ValueNet(nn.Module):
         # 3) Temporal CNN over embedded join-order sequence.
         #    Input to Conv1d is (B, C=self.hs, T=config.max_hint_num).
         self.cnn = nn.Sequential(
-            nn.Conv1d(in_channels=self.hs, out_channels=self.hs, kernel_size=5, padding=2),
+            nn.Conv1d(
+                in_channels=self.hs, out_channels=self.hs, kernel_size=5, padding=2
+            ),
             nn.ReLU(),
-            nn.Conv1d(in_channels=self.hs, out_channels=self.hs, kernel_size=5, padding=2),
+            nn.Conv1d(
+                in_channels=self.hs, out_channels=self.hs, kernel_size=5, padding=2
+            ),
             nn.ReLU(),
-            nn.Conv1d(in_channels=self.hs, out_channels=self.hs, kernel_size=5, padding=2),
-            nn.MaxPool1d(kernel_size=self.max_hint_num),  # pools over full time to (B, C, 1)
+            nn.Conv1d(
+                in_channels=self.hs, out_channels=self.hs, kernel_size=5, padding=2
+            ),
+            nn.MaxPool1d(
+                kernel_size=self.max_hint_num
+            ),  # pools over full time to (B, C, 1)
         )
 
         # 4) Final MLP head on concatenated [query_vec ; jo_vec] -> scalar

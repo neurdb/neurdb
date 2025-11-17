@@ -7,15 +7,21 @@ from common.base_config import BaseConfig
 
 
 class EmbedSuperNode(nn.Module):
-    def __init__(self, num_tables, num_columns, embedding_dim, num_heads, num_layers, dataset):
+    def __init__(
+        self, num_tables, num_columns, embedding_dim, num_heads, num_layers, dataset
+    ):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.num_layers = num_layers
         self.dataset = dataset
 
         # Embeddings for tables and columns
-        self.table_embeddings = nn.Embedding(num_tables + 1, embedding_dim, padding_idx=0)
-        self.column_embeddings = nn.Embedding(num_columns + 1, embedding_dim, padding_idx=0)
+        self.table_embeddings = nn.Embedding(
+            num_tables + 1, embedding_dim, padding_idx=0
+        )
+        self.column_embeddings = nn.Embedding(
+            num_columns + 1, embedding_dim, padding_idx=0
+        )
 
         # Projection layers for join and filter vectors
         self.join_projection = nn.Linear(4 * embedding_dim, embedding_dim)
@@ -26,9 +32,11 @@ class EmbedSuperNode(nn.Module):
             d_model=embedding_dim,
             nhead=num_heads,
             dim_feedforward=embedding_dim * 4,
-            batch_first=True
+            batch_first=True,
         )
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.transformer_encoder = nn.TransformerEncoder(
+            encoder_layer, num_layers=num_layers
+        )
 
         # Super token
         self.super_token = nn.Embedding(1, embedding_dim)
@@ -45,8 +53,8 @@ class EmbedSuperNode(nn.Module):
         table_sizes = x["table_sizes"].to(BaseConfig.DEVICE, torch.float32)
 
         # Create masks for padded positions
-        join_mask = (join_conditions[:, :, 0] == 0)
-        filter_mask = (filter_conditions[:, :, 0] == 0)
+        join_mask = join_conditions[:, :, 0] == 0
+        filter_mask = filter_conditions[:, :, 0] == 0
         sequence_mask = torch.cat([join_mask, filter_mask], dim=1)
 
         # Process Join Conditions
@@ -60,7 +68,9 @@ class EmbedSuperNode(nn.Module):
         table2_emb = self.table_embeddings(table2_id)
         col2_emb = self.column_embeddings(col2_id)
 
-        join_vector_raw = torch.cat([table1_emb, col1_emb, table2_emb, col2_emb], dim=-1)
+        join_vector_raw = torch.cat(
+            [table1_emb, col1_emb, table2_emb, col2_emb], dim=-1
+        )
         join_vector = self.join_projection(join_vector_raw)
 
         # Process Filter Conditions
@@ -75,23 +85,30 @@ class EmbedSuperNode(nn.Module):
         filter_vector = self.filter_projection(filter_vector)
 
         # Combine into Sequence
-        sequence = torch.cat([join_vector, filter_vector],
-                             dim=1)  # [batch_size, max_joins + max_filters, embedding_dim]
+        sequence = torch.cat(
+            [join_vector, filter_vector], dim=1
+        )  # [batch_size, max_joins + max_filters, embedding_dim]
 
         # Add Super Token
         batch_size = sequence.size(0)
-        super_token = self.super_token.weight.unsqueeze(0).repeat(batch_size, 1, 1)  # [batch_size, 1, embedding_dim]
-        sequence_with_super = torch.cat([super_token, sequence],
-                                        dim=1)  # [batch_size, max_joins + max_filters + 1, embedding_dim]
+        super_token = self.super_token.weight.unsqueeze(0).repeat(
+            batch_size, 1, 1
+        )  # [batch_size, 1, embedding_dim]
+        sequence_with_super = torch.cat(
+            [super_token, sequence], dim=1
+        )  # [batch_size, max_joins + max_filters + 1, embedding_dim]
 
         # Update Mask for Super Token
-        super_mask = torch.zeros(batch_size, 1, device=BaseConfig.DEVICE, dtype=torch.bool)  # Super token is not masked
-        sequence_mask = torch.cat([super_mask, sequence_mask], dim=1)  # [batch_size, max_joins + max_filters + 1]
+        super_mask = torch.zeros(
+            batch_size, 1, device=BaseConfig.DEVICE, dtype=torch.bool
+        )  # Super token is not masked
+        sequence_mask = torch.cat(
+            [super_mask, sequence_mask], dim=1
+        )  # [batch_size, max_joins + max_filters + 1]
 
         # Apply Transformer Encoder
         attn_output = self.transformer_encoder(
-            sequence_with_super,
-            src_key_padding_mask=sequence_mask
+            sequence_with_super, src_key_padding_mask=sequence_mask
         )  # [batch_size, max_joins + max_filters + 1, embedding_dim]
 
         # Extract Super Token Output
@@ -104,7 +121,9 @@ class EmbedSuperNode(nn.Module):
         # table_sizes_normalized[mask] = torch.log1p(table_sizes[mask])
         # x_full = torch.cat([super_output, table_sizes_normalized], dim=-1)  # [batch_size, embedding_dim + num_tables]
 
-        x_full = torch.cat([super_output, table_sizes], dim=-1)  # [batch_size, embedding_dim + num_tables]
+        x_full = torch.cat(
+            [super_output, table_sizes], dim=-1
+        )  # [batch_size, embedding_dim + num_tables]
 
         return x_full, super_output
 
@@ -118,25 +137,45 @@ class EmbedSuperNode(nn.Module):
                 nn.init.normal_(module.weight, mean=0, std=0.02)
 
     def save(self, best_model_state, model_path_prefix):
-        torch.save(best_model_state, model_path_prefix + f"/model_pre_train_superNode_{self.dataset}.pth")
+        torch.save(
+            best_model_state,
+            model_path_prefix + f"/model_pre_train_superNode_{self.dataset}.pth",
+        )
 
     def load(self, model_path_prefix):
-        print(f"loading embedding from " + model_path_prefix + f"/model_pre_train_superNode_{self.dataset}.pth")
-        state_dict = torch.load(model_path_prefix + f"/model_pre_train_superNode_{self.dataset}.pth",
-                                map_location=torch.device(BaseConfig.DEVICE))
+        print(
+            f"loading embedding from "
+            + model_path_prefix
+            + f"/model_pre_train_superNode_{self.dataset}.pth"
+        )
+        state_dict = torch.load(
+            model_path_prefix + f"/model_pre_train_superNode_{self.dataset}.pth",
+            map_location=torch.device(BaseConfig.DEVICE),
+        )
         return state_dict
 
 
 class QueryOptMHSASuperNode(nn.Module):
-    def __init__(self, num_tables, num_columns, output_dim, embedding_dim, num_heads,
-                 embedding_path, is_fix_emb: bool, dataset, num_layers,
-                 cfg: BaseConfig):
+    def __init__(
+        self,
+        num_tables,
+        num_columns,
+        output_dim,
+        embedding_dim,
+        num_heads,
+        embedding_path,
+        is_fix_emb: bool,
+        dataset,
+        num_layers,
+        cfg: BaseConfig,
+    ):
         super(QueryOptMHSASuperNode, self).__init__()
 
         self.cfg = cfg
         self.output_dim = output_dim
         self.embedding_model = EmbedSuperNode(
-            num_tables, num_columns, embedding_dim, num_heads, num_layers, dataset)
+            num_tables, num_columns, embedding_dim, num_heads, num_layers, dataset
+        )
         if embedding_path:
             state_dict = self.embedding_model.load(embedding_path)
             self.embedding_model.load_state_dict(state_dict)
@@ -160,7 +199,7 @@ class QueryOptMHSASuperNode(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.1),
             nn.Linear(64, 32),
-            nn.ReLU()
+            nn.ReLU(),
         )
 
         # Output heads
@@ -175,7 +214,10 @@ class QueryOptMHSASuperNode(nn.Module):
         for module in self.modules():
 
             # Skip embedding_model and its submodules, if we load it from pre-trained result
-            if module is self.embedding_model or module in self.embedding_model.modules():
+            if (
+                module is self.embedding_model
+                or module in self.embedding_model.modules()
+            ):
                 continue
 
             if isinstance(module, nn.Linear):
@@ -201,7 +243,9 @@ class QueryOptMHSASuperNode(nn.Module):
 
         # Regression head with scaled sigmoid
         max_value = self.cfg.EXECUTION_TIME_OUT
-        reg_times = torch.sigmoid(self.reg_head(shared_output)) * max_value  # [0, max_value]
+        reg_times = (
+            torch.sigmoid(self.reg_head(shared_output)) * max_value
+        )  # [0, max_value]
 
         return class_logits, reg_times, x_full
         # return class_logits, reg_times, super_output

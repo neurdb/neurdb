@@ -29,11 +29,11 @@ class TrainingLogger:
         # Configure logging
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
+            format="%(asctime)s - %(levelname)s - %(message)s",
             handlers=[
                 logging.FileHandler(self.log_file),  # Save to file
                 # logging.StreamHandler()  # Also print to console
-            ]
+            ],
         )
         self.logger = logging.getLogger(__name__)
         self.logger.info(f"Logging initialized. Logs will be saved to {self.log_file}")

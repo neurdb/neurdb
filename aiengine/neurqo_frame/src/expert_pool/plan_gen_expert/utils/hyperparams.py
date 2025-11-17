@@ -1,13 +1,16 @@
-import copy
-import re
-from typing import Any, Dict, Iterator, Tuple, List, Optional, Union
-import numpy as np
 import ast
-import sys
+import copy
 import enum
+import re
+import sys
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+
+import numpy as np
 
 
-def to_flattened_text_dict(params: Any, quote_all: bool = True) -> Tuple[Dict[str, str], Dict[str, str]]:
+def to_flattened_text_dict(
+    params: Any, quote_all: bool = True
+) -> Tuple[Dict[str, str], Dict[str, str]]:
     """Flattens entries in 'params' (dict or Params) into a textual format.
 
     Args:
@@ -45,17 +48,19 @@ def to_flattened_text_dict(params: Any, quote_all: bool = True) -> Tuple[Dict[st
         elif isinstance(param, Params):
             for key, val in param.iter_params():
                 traverse(val, f"{prefix}.{key}" if prefix else key, kv)
-        elif isinstance(param, (list, tuple)) and all(isinstance(x, Params) for x in param):
+        elif isinstance(param, (list, tuple)) and all(
+            isinstance(x, Params) for x in param
+        ):
             for i, val in enumerate(param):
                 traverse(val, f"{prefix}[{i}]", kv)
         elif isinstance(param, str):
             kv[prefix] = quote_string(param) if quote_all else param
-            types[prefix[1:] if prefix else prefix] = 'str'
+            types[prefix[1:] if prefix else prefix] = "str"
         else:
             kv[prefix] = str(get_repr(param)) if quote_all else str(get_repr(param))
             types[prefix[1:] if prefix else prefix] = type(param).__name__
 
-    traverse(params, '', kv)
+    traverse(params, "", kv)
     return kv, types
 
 
@@ -74,7 +79,7 @@ def quote_string(s: str) -> str:
     single_quote_count = s.count("'")
     double_quote_count = s.count('"')
     quote_delim = "'" if single_quote_count <= double_quote_count else '"'
-    encoded = re.sub(r'([%s\\])' % quote_delim, r'\\\1', s)
+    encoded = re.sub(r"([%s\\])" % quote_delim, r"\\\1", s)
     return quote_delim + encoded + quote_delim
 
 
@@ -91,7 +96,7 @@ def unquote_string(quoted: str) -> str:
     """
     if quoted and quoted[0] in ['"', "'"]:
         contents = quoted.strip(quoted[0])
-        return re.sub(r"""\\([\\'"])""", r'\1', contents)
+        return re.sub(r"""\\([\\'"])""", r"\1", contents)
     return quoted
 
 
@@ -105,7 +110,7 @@ def ends_with_terminal_quote(s: str, quote_char: str) -> bool:
     Returns:
         True if the string ends with an unescaped quote, False otherwise.
     """
-    endm = re.search(r'(\\*)%s$' % quote_char, s)
+    endm = re.search(r"(\\*)%s$" % quote_char, s)
     if not endm:
         return False
     backslashes = endm.group(1)
@@ -120,10 +125,10 @@ class _Param:
         self._value = default_value
         self._description = description
 
-    def __eq__(self, other: '_Param') -> bool:
+    def __eq__(self, other: "_Param") -> bool:
         return self._name == other._name and self._value == other._value
 
-    def __deepcopy__(self, memo: Dict) -> '_Param':
+    def __deepcopy__(self, memo: Dict) -> "_Param":
         value = copy.deepcopy(self._value, memo)
         p = _Param(self._name, value, self._description)
         memo[id(self)] = p
@@ -138,6 +143,7 @@ class _Param:
         Returns:
             A string representation of the parameter.
         """
+
         def get_repr(val: Any) -> Any:
             if isinstance(val, Params):
                 return {k: get_repr(v) for k, v in val.iter_params()}
@@ -145,18 +151,18 @@ class _Param:
                 return {k: get_repr(v) for k, v in val.items()}
             if isinstance(val, (list, tuple)):
                 return type(val)([get_repr(v) for v in val])
-            if hasattr(val, 'Repr'):
+            if hasattr(val, "Repr"):
                 return val.Repr()
             return val
 
-        nested_indent = '  ' * nested_depth
+        nested_indent = "  " * nested_depth
         if isinstance(self._value, Params):
             value_str = self._value._to_string(nested_depth)  # Call _to_string directly
         elif isinstance(self._value, str):
             return f'{nested_indent}{self._name}: "{self._value}"'
         else:
             value_str = str(get_repr(self._value))
-        return f'{nested_indent}{self._name}: {value_str}'
+        return f"{nested_indent}{self._name}: {value_str}"
 
     def set(self, value: Any) -> None:
         self._value = value
@@ -165,7 +171,9 @@ class _Param:
         return self._value
 
 
-def copy_fields_to(from_params: 'Params', to_params: 'Params', skip: Optional[List[str]] = None) -> 'Params':
+def copy_fields_to(
+    from_params: "Params", to_params: "Params", skip: Optional[List[str]] = None
+) -> "Params":
     """Copy fields from one Params to another, with optional skipped params.
 
     Args:
@@ -195,14 +203,14 @@ class Params:
     """
 
     def __init__(self) -> None:
-        self.__dict__['_immutable'] = False
-        self._params: Dict[str, '_Param'] = {}  # name => _Param
+        self.__dict__["_immutable"] = False
+        self._params: Dict[str, "_Param"] = {}  # name => _Param
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Sets an attribute or parameter value."""
         if self._immutable:
-            raise TypeError('This Params instance is immutable.')
-        if name in ('_params', '_immutable'):
+            raise TypeError("This Params instance is immutable.")
+        if name in ("_params", "_immutable"):
             self.__dict__[name] = value
         else:
             try:
@@ -212,7 +220,7 @@ class Params:
 
     def __getattr__(self, name: str) -> Any:
         """Gets an attribute or parameter value."""
-        if name in ('_params', '_immutable'):
+        if name in ("_params", "_immutable"):
             return self.__dict__[name]
         try:
             return self._params[name].get()
@@ -248,10 +256,10 @@ class Params:
         sorted_param_strs = [
             v.to_string(nested_depth + 1) for (_, v) in sorted(self._params.items())
         ]
-        nested_indent = '  ' * nested_depth
-        return '{\n%s\n%s}' % ('\n'.join(sorted_param_strs), nested_indent)
+        nested_indent = "  " * nested_depth
+        return "{\n%s\n%s}" % ("\n".join(sorted_param_strs), nested_indent)
 
-    def __deepcopy__(self, unused_memo: Dict) -> 'Params':
+    def __deepcopy__(self, unused_memo: Dict) -> "Params":
         """Creates a deep copy of the Params instance."""
         return self.copy()
 
@@ -264,11 +272,11 @@ class Params:
             trials = 0
             for i in range(len(name) - 3):
                 trials += 1
-                if name[i:i + 3] in key:
+                if name[i : i + 3] in key:
                     matches += 1
             return float(matches) / trials if trials else 0
 
-        if '_params' in self.__dict__:
+        if "_params" in self.__dict__:
             return [key for key in self._params if _overlaps(name, key) > 0.5]
         return []
 
@@ -279,11 +287,11 @@ class Params:
             return f"{name} (did you mean: [{','.join(sorted(similar))}]"
         return name
 
-    def copy(self) -> 'Params':
+    def copy(self) -> "Params":
         """Creates a deep copy of the Params instance."""
         return self.copy_to(type(self)())
 
-    def copy_to(self, res: 'Params') -> 'Params':
+    def copy_to(self, res: "Params") -> "Params":
         """Copies the current Params instance to another instance."""
         res._params = copy.deepcopy(self._params)
         res._immutable = self._immutable
@@ -302,10 +310,14 @@ class Params:
             AttributeError: If parameter 'name' is already defined.
         """
         if self._immutable:
-            raise TypeError('This Params instance is immutable.')
-        assert name is not None and isinstance(name, str) and re.match('^[a-z][a-z0-9_]*$', name)
+            raise TypeError("This Params instance is immutable.")
+        assert (
+            name is not None
+            and isinstance(name, str)
+            and re.match("^[a-z][a-z0-9_]*$", name)
+        )
         if name in self._params:
-            raise AttributeError(f'Parameter {name} is already defined')
+            raise AttributeError(f"Parameter {name} is already defined")
         self._params[name] = _Param(name, default_value, description)
 
     def freeze(self) -> None:
@@ -316,13 +328,13 @@ class Params:
         """Returns whether this Params instance is immutable."""
         return self._immutable
 
-    def _get_nested(self, name: str) -> Tuple['Params', str]:
+    def _get_nested(self, name: str) -> Tuple["Params", str]:
         """Returns the nested Params object and key for a dotted name."""
-        parts = name.split('.')
+        parts = name.split(".")
         curr = self
         for i, part in enumerate(parts[:-1]):
             try:
-                is_list = re.match(r'^(.+)\[(.+)\]$', part)
+                is_list = re.match(r"^(.+)\[(.+)\]$", part)
                 if is_list:
                     part = is_list.group(1)
                     list_index = int(is_list.group(2))
@@ -330,12 +342,13 @@ class Params:
                 if is_list:
                     curr = curr[list_index]
             except KeyError:
-                raise AttributeError('.'.join(parts[:i + 1]))
-            assert isinstance(curr, Params), (
-                f'Cannot introspect {type(curr)} for {",".join(parts[:i + 1])}')
+                raise AttributeError(".".join(parts[: i + 1]))
+            assert isinstance(
+                curr, Params
+            ), f'Cannot introspect {type(curr)} for {",".join(parts[:i + 1])}'
         return curr, parts[-1]
 
-    def set(self, **kwargs: Any) -> 'Params':
+    def set(self, **kwargs: Any) -> "Params":
         """Sets multiple parameters using keyword arguments.
 
         Args:
@@ -343,7 +356,7 @@ class Params:
                 into nested Params objects.
         """
         if self._immutable:
-            raise TypeError(f'This Params instance is immutable: {self}')
+            raise TypeError(f"This Params instance is immutable: {self}")
         for name, value in kwargs.items():
             param, key = self._get_nested(name)
             try:
@@ -370,7 +383,7 @@ class Params:
         except KeyError:
             raise AttributeError(self._key_error_string(name))
 
-    def delete(self, *args: str) -> 'Params':
+    def delete(self, *args: str) -> "Params":
         """Deletes multiple parameters.
 
         Args:
@@ -378,7 +391,7 @@ class Params:
                 into nested Params.
         """
         if self._immutable:
-            raise TypeError('This Params instance is immutable.')
+            raise TypeError("This Params instance is immutable.")
         for name in args:
             param, key = self._get_nested(name)
             try:
@@ -396,7 +409,9 @@ class Params:
         """Allows treating this class as a Python dict."""
         return self.iter_params()
 
-    def to_text(self, include_types: bool = False) -> Union[str, Tuple[str, Dict[str, str]]]:
+    def to_text(
+        self, include_types: bool = False
+    ) -> Union[str, Tuple[str, Dict[str, str]]]:
         """Encodes parameters into a simple text format.
 
         Args:
@@ -407,12 +422,14 @@ class Params:
             The encoded text or a tuple of (text, types dict) if include_types is True.
         """
         kv, types = to_flattened_text_dict(self)
-        ret = ''
-        for (k, v) in sorted(kv.items()):
-            ret += k + ' : ' + v + '\n'
+        ret = ""
+        for k, v in sorted(kv.items()):
+            ret += k + " : " + v + "\n"
         return (ret, types) if include_types else ret
 
-    def from_text(self, text: str, type_overrides: Optional[Dict[str, str]] = None) -> None:
+    def from_text(
+        self, text: str, type_overrides: Optional[Dict[str, str]] = None
+    ) -> None:
         """Merges parameters from a text representation into this instance.
 
         Args:
@@ -424,84 +441,89 @@ class Params:
             ValueError: If the text contains an invalid parameter value or format.
         """
         if self._immutable:
-            raise TypeError('This Params instance is immutable.')
+            raise TypeError("This Params instance is immutable.")
         kv: Dict[str, str] = {}
         type_overrides = type_overrides or {}
         string_continue = None  # None or (key, quote, value)
-        for line in text.split('\n'):
+        for line in text.split("\n"):
             if string_continue:
                 value_stripped = line.rstrip()
                 if not ends_with_terminal_quote(value_stripped, string_continue[1]):
-                    string_continue = (string_continue[0], string_continue[1],
-                                       string_continue[2] + '\n' + line)
+                    string_continue = (
+                        string_continue[0],
+                        string_continue[1],
+                        string_continue[2] + "\n" + line,
+                    )
                     continue
-                kv[string_continue[0]] = string_continue[2] + '\n' + value_stripped
+                kv[string_continue[0]] = string_continue[2] + "\n" + value_stripped
                 string_continue = None
                 continue
 
             line = line.strip()
-            if not line or line[0] == '#':
+            if not line or line[0] == "#":
                 continue
-            pair = line.split(':', 1)
+            pair = line.split(":", 1)
             if len(pair) == 2:
                 key = pair[0].strip()
                 value = pair[1].lstrip()
                 value_stripped = value.rstrip()
-                if value and value[0] in ['"', '\'']:
+                if value and value[0] in ['"', "'"]:
                     quote_char = value[0]
                     if not ends_with_terminal_quote(value[1:], quote_char):
                         string_continue = (key, quote_char, value)
                         continue
                 kv[key] = value_stripped
             else:
-                raise ValueError(f'Line {line} is not in <key>:<value> format')
+                raise ValueError(f"Line {line} is not in <key>:<value> format")
 
         def _value_from_text(key: str, old_val: Any, val: str) -> Any:
             """Converts a text value to the appropriate type based on the existing value."""
             val_type = type(old_val).__name__
             if isinstance(old_val, str):
-                val_type = 'str'
+                val_type = "str"
             if key in type_overrides:
                 val_type = type_overrides[key]
-            if val_type == 'bool':
-                return val and val not in ('False', 'false')
-            elif val_type == 'int':
+            if val_type == "bool":
+                return val and val not in ("False", "false")
+            elif val_type == "int":
                 return int(val)
-            elif val_type == 'float':
+            elif val_type == "float":
                 return float(val)
-            elif val_type in ['list', 'tuple']:
+            elif val_type in ["list", "tuple"]:
                 return ast.literal_eval(val)
-            elif val_type == 'dict':
-                return ast.literal_eval(val) if val != 'dict' else {}
-            elif val_type == 'str':
+            elif val_type == "dict":
+                return ast.literal_eval(val) if val != "dict" else {}
+            elif val_type == "str":
                 val = unquote_string(val)
-                if val.startswith('[') and val.endswith(']'):
+                if val.startswith("[") and val.endswith("]"):
                     try:
                         return ast.literal_eval(val)
                     except ValueError:
                         pass
                 return val
             elif isinstance(old_val, enum.Enum):
-                cls, _, name = val.rpartition('.')
+                cls, _, name = val.rpartition(".")
                 if val_type != cls:
-                    raise ValueError(f'Expected enum of class {val_type} but got {cls}')
+                    raise ValueError(f"Expected enum of class {val_type} but got {cls}")
                 return type(old_val)[name]
             elif isinstance(old_val, type) or old_val is None:
-                if val == 'NoneType':
+                if val == "NoneType":
                     return None
-                elif old_val is None and val in ('False', 'false'):
+                elif old_val is None and val in ("False", "false"):
                     return False
-                elif old_val is None and val in ('True', 'true'):
+                elif old_val is None and val in ("True", "true"):
                     return True
                 else:
                     try:
-                        val_type, pkg, cls = val.split('/', 2)
-                        if val_type == 'type':
+                        val_type, pkg, cls = val.split("/", 2)
+                        if val_type == "type":
                             return getattr(sys.modules[pkg], cls)
                     except ValueError as e:
-                        raise ValueError(f'Error processing {key!r} : {val!r} with {e!r}')
+                        raise ValueError(
+                            f"Error processing {key!r} : {val!r} with {e!r}"
+                        )
             else:
-                raise ValueError(f'Failed to read a parameter: {key!r} : {val!r}')
+                raise ValueError(f"Failed to read a parameter: {key!r} : {val!r}")
 
         for key, val in kv.items():
             old_val = self.get(key)
@@ -511,23 +533,23 @@ class Params:
     def to_text_with_types(self) -> str:
         """Encodes parameters and their types into a text format."""
         text, types = self.to_text(include_types=True)
-        text += '\n\n'
-        for (k, v) in sorted(types.items()):
-            text += k + ' : ' + v + '\n'
+        text += "\n\n"
+        for k, v in sorted(types.items()):
+            text += k + " : " + v + "\n"
         return text
 
     def from_text_with_types(self, text: str) -> None:
         """Merges parameters and types from a text representation."""
-        text, types_str = text.split('\n\n')
+        text, types_str = text.split("\n\n")
         types: Dict[str, str] = {}
-        for row in types_str.split('\n'):
+        for row in types_str.split("\n"):
             if not row:
                 continue
-            k, v = row.split(':')
+            k, v = row.split(":")
             types[k.strip()] = v.strip()
         self.from_text(text, type_overrides=types)
 
-    def text_diff(self, other: 'Params') -> str:
+    def text_diff(self, other: "Params") -> str:
         """Returns a string describing differences between this and another Params instance.
 
         Args:
@@ -537,27 +559,27 @@ class Params:
             A string of differences.
         """
 
-        def text_diff_helper(a: 'Params', b: 'Params', spaces: str) -> str:
+        def text_diff_helper(a: "Params", b: "Params", spaces: str) -> str:
             """Helper to compute differences between two Params instances."""
             a_keys = set([key for key, _ in a.iter_params()])
             b_keys = set([key for key, _ in b.iter_params()])
             all_keys = a_keys.union(b_keys)
-            diff = ''
+            diff = ""
             for key in sorted(all_keys):
                 if key in a_keys and key not in b_keys:
-                    diff += '>' + spaces + key + ': ' + str(a.get(key)) + '\n'
+                    diff += ">" + spaces + key + ": " + str(a.get(key)) + "\n"
                 elif key in b_keys and key not in a_keys:
-                    diff += '<' + spaces + key + ': ' + str(b.get(key)) + '\n'
+                    diff += "<" + spaces + key + ": " + str(b.get(key)) + "\n"
                 elif a.get(key) != b.get(key):
                     if isinstance(a.get(key), Params):
-                        diff += '?' + spaces + key + ':\n'
-                        diff += text_diff_helper(a.get(key), b.get(key), spaces + '  ')
+                        diff += "?" + spaces + key + ":\n"
+                        diff += text_diff_helper(a.get(key), b.get(key), spaces + "  ")
                     else:
-                        diff += '>' + spaces + key + ': ' + str(a.get(key)) + '\n'
-                        diff += '<' + spaces + key + ': ' + str(b.get(key)) + '\n'
+                        diff += ">" + spaces + key + ": " + str(a.get(key)) + "\n"
+                        diff += "<" + spaces + key + ": " + str(b.get(key)) + "\n"
             return diff
 
-        return text_diff_helper(self, other, spaces=' ')
+        return text_diff_helper(self, other, spaces=" ")
 
 
 class InstantiableParams(Params):
@@ -572,7 +594,7 @@ class InstantiableParams(Params):
 
     def __init__(self, cls=None):
         super().__init__()
-        self.define('cls', cls, 'Cls that this param object is associated with.')
+        self.define("cls", cls, "Cls that this param object is associated with.")
 
     def instantiate(self, **args):
         """Instantiate an instance that this Params is configured for.

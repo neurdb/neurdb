@@ -8,7 +8,7 @@ class LatencyNormalizer:
         self.max_value = max_value
 
     def encode(self, v):
-        return int(np.log(2 + v) / np.log(self.max_time_out) * 200) / 200.
+        return int(np.log(2 + v) / np.log(self.max_time_out) * 200) / 200.0
 
     def decode(self, v):
         return np.exp(v * np.log(self.max_time_out))

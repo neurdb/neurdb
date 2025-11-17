@@ -72,35 +72,35 @@ def load_str_str_map(filepath, delim="||", key_pos=0, val_pos=1):
 
 
 def read_all_lines(path):
-    with open(path, 'r') as reader:
+    with open(path, "r") as reader:
         lines = reader.readlines()
     return lines
 
 
 def read_first_line(path):
-    with open(path, 'r') as reader:
+    with open(path, "r") as reader:
         line = reader.readline()
     return line
 
 
 def read_all(path):
-    with open(path, 'r') as reader:
+    with open(path, "r") as reader:
         s = reader.read()
     return s
 
 
 def write_all(path, s):
-    with open(path, 'w') as writer:
+    with open(path, "w") as writer:
         writer.write(s)
 
 
 def write_all_lines(path, lines):
-    with open(path, 'w') as writer:
+    with open(path, "w") as writer:
         writer.writelines(lines)
 
 
 def find_start_line(lines):
     for i, line in enumerate(lines):
-        if line.startswith('--'):
+        if line.startswith("--"):
             return i + 1
     return 0

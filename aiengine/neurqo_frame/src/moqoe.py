@@ -14,7 +14,6 @@ from expert_pool.hint_plan_sel_expert import TreeCNNConfig, TreeCNNRegExpert
 from expert_pool.join_order_expert import MCTSConfig, MCTSOptimizerExpert
 from expert_router.controller_offline import ModelBuilder
 
-
 # Constants
 DEFAULT_NUM_COLUMNS = 108
 DEFAULT_NUM_HEADS = 4
@@ -28,7 +27,7 @@ DEFAULT_TRAIN_DATA_LIMIT = 100
 class RoutingHelper:
     """
     Router that selects the best optimizer expert for a given SQL query.
-    
+
     Uses a learned routing model to predict which expert (optimizer) will perform
     best for a given query based on query features and historical performance.
     """
@@ -36,7 +35,7 @@ class RoutingHelper:
     def __init__(self, cfg: BaseConfig, model_path: str, dataset: str):
         """
         Initialize the routing helper.
-        
+
         Args:
             cfg: Base configuration object
             model_path: Path to the directory containing router models
@@ -53,19 +52,21 @@ class RoutingHelper:
             is_fix_emb=None,
             num_layers=DEFAULT_NUM_LAYERS,
             dataset=dataset,
-            cfg=cfg
+            cfg=cfg,
         )
         self.model_builder.load_model(ROUTER_MODEL_NAME)
-        self.id_to_method = {idx: method for method, idx in cfg.FIXED_LABEL_MAPPING.items()}
+        self.id_to_method = {
+            idx: method for method, idx in cfg.FIXED_LABEL_MAPPING.items()
+        }
 
     def optimizer_selection(self, sql: str, db_cli: PostgresConnector) -> list:
         """
         Select the best optimizer(s) for a given SQL query.
-        
+
         Args:
             sql: SQL query string
             db_cli: PostgreSQL connector instance
-            
+
         Returns:
             List of optimizer method names, ranked by predicted performance
         """
@@ -94,15 +95,15 @@ class RoutingHelper:
 
     @staticmethod
     def _encode_sql_to_id(sql_string: str) -> str:
-        compressed = zlib.compress(sql_string.encode('utf-8'))
-        encoded = base64.urlsafe_b64encode(compressed).decode('utf-8')
+        compressed = zlib.compress(sql_string.encode("utf-8"))
+        encoded = base64.urlsafe_b64encode(compressed).decode("utf-8")
         return encoded
 
 
 class MoQOEController:
     """
     Main controller for Mixture of Query Optimizer Experts (MoQOE).
-    
+
     Manages a pool of expert optimizers and routes queries to the best expert
     based on learned routing decisions. Supports online learning and expert
     fine-tuning.
@@ -115,11 +116,11 @@ class MoQOEController:
         DATASET: str = "imdb",
         database_name: str = "imdb_ori",
         model_path: str = "./models/router_models",
-        online_update_trigger: int = DEFAULT_ONLINE_UPDATE_TRIGGER
+        online_update_trigger: int = DEFAULT_ONLINE_UPDATE_TRIGGER,
     ):
         """
         Initialize MoQOE controller.
-        
+
         Args:
             buffer_path: Path to the buffer database file
             config: Base configuration object
@@ -131,39 +132,34 @@ class MoQOEController:
         self.config = config
         self.buffer_mngr = BufferManager(buffer_path)
         self.routing_network = RoutingHelper(
-            cfg=self.config,
-            model_path=model_path,
-            dataset=DATASET
+            cfg=self.config, model_path=model_path, dataset=DATASET
         )
-        
+
         self.db_cli = PostgresConnector(database_name)
         self.db_cli.connect()
         self.current_database: Optional[str] = None
-        
+
         # Expert pool management
         self.expert_pools: Dict[str, object] = {}
         self.expert_chosen_count: Dict[str, int] = {}
         self.online_update_sql_trigger = online_update_trigger
-        
+
         self.load_experts()
 
     def load_experts(self) -> None:
         """
         Load and initialize all expert optimizers.
-        
+
         Currently loads:
         - HintPlanSel: Expert for hint plan selection
         - JoinOrder: Expert for join order optimization
         """
         # Configure HintPlanSel expert
         hint_plan_sel_expert_config = TreeCNNConfig(
-            train_epochs=100,
-            batch_size=16,
-            device=torch.device("cpu")
+            train_epochs=100, batch_size=16, device=torch.device("cpu")
         )
         hint_plan_sel_expert = TreeCNNRegExpert(
-            config=hint_plan_sel_expert_config,
-            buffer_mngr=self.buffer_mngr
+            config=hint_plan_sel_expert_config, buffer_mngr=self.buffer_mngr
         )
         hint_plan_sel_expert.load()
         self._add_expert("HintPlanSel", hint_plan_sel_expert)
@@ -173,22 +169,24 @@ class MoQOEController:
             max_alias_num=40,
             max_column=100,
             id2aliasname=self.config.id2aliasname,
-            aliasname2id=self.config.aliasname2id
+            aliasname2id=self.config.aliasname2id,
         )
         join_order_expert = MCTSOptimizerExpert(
             config=join_order_expert_config,
             buffer_mngr=self.buffer_mngr,
-            db_cli=self.db_cli
+            db_cli=self.db_cli,
         )
         join_order_expert.load()
         self._add_expert("JoinOrder", join_order_expert)
 
-        print("\n === [MoQOEController.load_experts] Experts loaded successfully === \n")
+        print(
+            "\n === [MoQOEController.load_experts] Experts loaded successfully === \n"
+        )
 
     def _online_train(self, e_id: str) -> None:
         """
         Fine-tune a single expert online using recent query performance data.
-        
+
         Args:
             e_id: Expert identifier
         """
@@ -199,22 +197,22 @@ class MoQOEController:
 
         print(f"\n === [MoQOEController._online_train] Training expert: {e_id} === \n")
         performance = expert.train_and_save(train_data_limit=DEFAULT_TRAIN_DATA_LIMIT)
-        
+
         # Update router based on expert performance feedback
         self.routing_network.online_update(performance)
 
     def inference(self, sql: str) -> tuple:
         """
         Optimize a SQL query by routing to the best expert.
-        
+
         The process:
         1. Route query to best expert using routing network
         2. Get optimized SQL from selected expert
         3. Track expert usage and trigger online training when needed
-        
+
         Args:
             sql: SQL query string to optimize
-            
+
         Returns:
             Tuple of (optimized_sql, expert_name)
         """
@@ -224,16 +222,23 @@ class MoQOEController:
 
         # Route query to best expert
         try:
-            exp_rank = self.routing_network.optimizer_selection(sql=sql, db_cli=self.db_cli)
+            exp_rank = self.routing_network.optimizer_selection(
+                sql=sql, db_cli=self.db_cli
+            )
         except Exception as e:
-            print(f"Warning: Error in optimizer selection: {e}, falling back to cost-based optimizer")
-            return (sql, "cost-based optimizer")  # Fallback to cost-based optimizer on error
+            print(
+                f"Warning: Error in optimizer selection: {e}, falling back to cost-based optimizer"
+            )
+            return (
+                sql,
+                "cost-based optimizer",
+            )  # Fallback to cost-based optimizer on error
 
         # Select expert with highest rank (lower index = higher rank)
         selected_exp_id = min(
             (x for x in self.expert_pools.keys() if x in exp_rank),
             key=lambda x: exp_rank.index(x),
-            default=None
+            default=None,
         )
 
         if selected_exp_id is None:
@@ -241,34 +246,47 @@ class MoQOEController:
             return (sql, "cost-based optimizer")  # Fallback to cost-based optimizer
 
         selected_expert = self.expert_pools[selected_exp_id]
-        print(f"\n === [MoQOEController.inference] Selected expert: {selected_exp_id} === \n")
+        print(
+            f"\n === [MoQOEController.inference] Selected expert: {selected_exp_id} === \n"
+        )
 
         # Get optimized SQL from expert
         try:
             updated_sql, expert_hint = selected_expert.sql_enhancement(
                 sql=sql, db_cli=self.db_cli
             )
-            print(f"\n === [MoQOEController.inference] Optimized SQL: {updated_sql} === \n")
+            print(
+                f"\n === [MoQOEController.inference] Optimized SQL: {updated_sql} === \n"
+            )
             print(f" === [MoQOEController.inference] Expert hint: {expert_hint} === \n")
 
             # Update usage counter and trigger online training if needed
             self.expert_chosen_count[selected_exp_id] = (
                 self.expert_chosen_count.get(selected_exp_id, 0) + 1
             )
-            if self.expert_chosen_count[selected_exp_id] % self.online_update_sql_trigger == 0:
+            if (
+                self.expert_chosen_count[selected_exp_id]
+                % self.online_update_sql_trigger
+                == 0
+            ):
                 self._online_train(selected_exp_id)
 
             return (updated_sql, selected_exp_id)
         except Exception as e:
-            print(f"Warning: Error in expert {selected_exp_id}: {e}, falling back to cost-based optimizer")
-            return (sql, "cost-based optimizer")  # Fallback to cost-based optimizer on error
+            print(
+                f"Warning: Error in expert {selected_exp_id}: {e}, falling back to cost-based optimizer"
+            )
+            return (
+                sql,
+                "cost-based optimizer",
+            )  # Fallback to cost-based optimizer on error
 
     # ---------- Expert Pool Management ----------
-    
+
     def _add_expert(self, e_id: str, expert: object) -> None:
         """
         Add or replace an expert in the pool.
-        
+
         Args:
             e_id: Expert identifier
             expert: Expert instance
@@ -279,7 +297,7 @@ class MoQOEController:
     def _remove_expert(self, e_id: str) -> None:
         """
         Remove an expert from the pool.
-        
+
         Args:
             e_id: Expert identifier
         """
@@ -289,10 +307,10 @@ class MoQOEController:
     def _get_expert_by_id(self, e_id: str) -> Optional[object]:
         """
         Get expert by ID.
-        
+
         Args:
             e_id: Expert identifier
-            
+
         Returns:
             Expert instance or None if not found
         """
@@ -301,7 +319,7 @@ class MoQOEController:
 
 def main():
     # Configuration
-    DATASET = 'imdb'
+    DATASET = "imdb"
 
     TEST_SQL = """
     SELECT MIN(mc.note) AS production_note,
@@ -325,8 +343,12 @@ def main():
     """
     cfg = get_config(DATASET)
     print("Initializing RoutingHelper...")
-    routing_cntr = MoQOEController(buffer_path="./models/buffer_imdb_ori.db", config=cfg, DATASET="imdb",
-                                   database_name="imdb_ori")
+    routing_cntr = MoQOEController(
+        buffer_path="./models/buffer_imdb_ori.db",
+        config=cfg,
+        DATASET="imdb",
+        database_name="imdb_ori",
+    )
     res = routing_cntr.inference(sql=TEST_SQL)
     print(res)
 

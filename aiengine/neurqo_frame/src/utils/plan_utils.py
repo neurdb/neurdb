@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional, Tuple, Iterable, Union
-import json
 import hashlib
+import json
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 PlanDict = Dict[str, Any]
 
@@ -107,28 +107,34 @@ class PlanHelper:
         return order
 
     @classmethod
-    def extract_operator_sequence(cls, plan: Union[List[PlanDict], PlanDict],
-                                  order: str = "pre") -> List[str]:
-        """Operator sequence. order ∈ {'pre','post'}. """
+    def extract_operator_sequence(
+        cls, plan: Union[List[PlanDict], PlanDict], order: str = "pre"
+    ) -> List[str]:
+        """Operator sequence. order ∈ {'pre','post'}."""
         root = _normalize_root(plan)
         out: List[str] = []
 
         def pre(node: PlanDict):
             nt = node.get("Node Type")
-            if nt: out.append(nt)
-            for c in _children(node): pre(c)
+            if nt:
+                out.append(nt)
+            for c in _children(node):
+                pre(c)
 
         def post(node: PlanDict):
-            for c in _children(node): post(c)
+            for c in _children(node):
+                post(c)
             nt = node.get("Node Type")
-            if nt: out.append(nt)
+            if nt:
+                out.append(nt)
 
         (pre if order == "pre" else post)(root)
         return out
 
     @classmethod
-    def extract_subplan_latencies(cls, plan: Union[List[PlanDict], PlanDict],
-                                  mode: str = "inclusive") -> Dict[str, float]:
+    def extract_subplan_latencies(
+        cls, plan: Union[List[PlanDict], PlanDict], mode: str = "inclusive"
+    ) -> Dict[str, float]:
         """
         Subplan latencies with loop-aware timing.
         mode: 'inclusive' or 'exclusive'
@@ -166,16 +172,16 @@ class PlanHelper:
             if not isinstance(node, dict):
                 return node
             structure = {
-                'node_type': node.get('Node Type'),
-                'relation_name': node.get('Relation Name'),
-                'alias': node.get('Alias'),
-                'index_name': node.get('Index Name'),
-                'join_type': node.get('Join Type'),
+                "node_type": node.get("Node Type"),
+                "relation_name": node.get("Relation Name"),
+                "alias": node.get("Alias"),
+                "index_name": node.get("Index Name"),
+                "join_type": node.get("Join Type"),
             }
             # Collect children through unified iterator (_children handles Plans/Workers/InitPlan)
             children = list(_children(node))
             if children:
-                structure['plans'] = [extract_structure(child) for child in children]
+                structure["plans"] = [extract_structure(child) for child in children]
                 return structure
 
         structure = extract_structure(root)

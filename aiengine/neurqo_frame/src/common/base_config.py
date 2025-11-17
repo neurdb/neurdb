@@ -11,14 +11,14 @@ class BaseConfig:
     # --- Utility Functions ---
     def query_file_to_ident(file_name: str) -> str:
         """Convert query filename to identifier (e.g., '1a.sql' -> '01a')."""
-        ident = file_name.split('.sql')[0]
+        ident = file_name.split(".sql")[0]
         return f"{ident[:-1].zfill(2)}{ident[-1]}"
 
     # --- Utility Functions ---
     @staticmethod
     def query_file_to_ident_stack(file_name: str) -> str:
         """Convert query filename to identifier (e.g., '1a.sql' -> '01a')."""
-        ident = file_name.split('.sql')[0]
+        ident = file_name.split(".sql")[0]
         return ident
 
     @staticmethod

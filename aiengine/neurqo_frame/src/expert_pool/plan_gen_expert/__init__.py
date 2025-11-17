@@ -10,5 +10,4 @@ Contains:
 
 from .plan_gen_expert import GraphOptimizerExpert
 
-__all__ = ['GraphOptimizerExpert']
-
+__all__ = ["GraphOptimizerExpert"]

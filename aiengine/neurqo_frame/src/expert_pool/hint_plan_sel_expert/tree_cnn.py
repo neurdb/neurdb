@@ -1,5 +1,6 @@
+from typing import Any, Callable, List, Optional, Tuple, Union
+
 import numpy as np
-from typing import List, Union, Tuple, Optional, Callable, Any
 import torch
 import torch.nn as nn
 
@@ -29,7 +30,7 @@ class TreeCNN(nn.Module):
             DynamicPooling(),
             nn.Linear(64, 32),
             nn.LeakyReLU(),
-            nn.Linear(32, 1)
+            nn.Linear(32, 1),
         )
 
         if USE_CUDA:
@@ -37,14 +38,19 @@ class TreeCNN(nn.Module):
 
     def forward(self, x: List[Tuple]) -> torch.Tensor:
         """Forward pass through the network."""
-        flat_trees = [_flatten(tree, self._features, self._left_child, self._right_child) for tree in x]
+        flat_trees = [
+            _flatten(tree, self._features, self._left_child, self._right_child)
+            for tree in x
+        ]
         flat_trees = _pad_and_combine(flat_trees)
         flat_trees = torch.Tensor(flat_trees)
         # flat trees is now batch x max tree nodes x channels
         flat_trees = flat_trees.transpose(1, 2)
         if USE_CUDA:
             flat_trees = flat_trees.cuda()
-        indexes = [_tree_conv_indexes(tree, self._left_child, self._right_child) for tree in x]
+        indexes = [
+            _tree_conv_indexes(tree, self._left_child, self._right_child) for tree in x
+        ]
         indexes = _pad_and_combine(indexes)
         indexes = torch.Tensor(indexes).long()
         if USE_CUDA:
@@ -79,7 +85,9 @@ class BinaryTreeConv(nn.Module):
         # that we "drag" across the tree.
         self.weights = nn.Conv1d(in_channels, out_channels, stride=3, kernel_size=3)
 
-    def forward(self, flat_data: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, flat_data: Tuple[torch.Tensor, torch.Tensor]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         trees, idxes = flat_data
         orig_idxes = idxes
         idxes = idxes.expand(-1, -1, self.__in_channels).transpose(1, 2)
@@ -99,12 +107,16 @@ class TreeActivation(nn.Module):
         super(TreeActivation, self).__init__()
         self.activation = activation
 
-    def forward(self, x: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, x: Tuple[torch.Tensor, torch.Tensor]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         return (self.activation(x[0]), x[1])
 
 
 class TreeLayerNorm(nn.Module):
-    def forward(self, x: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, x: Tuple[torch.Tensor, torch.Tensor]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         data, idxes = x
         mean = torch.mean(data, dim=(1, 2)).unsqueeze(1).unsqueeze(1)
         std = torch.std(data, dim=(1, 2)).unsqueeze(1).unsqueeze(1)
@@ -124,8 +136,10 @@ def _is_leaf(x: Tuple, left_child: Callable, right_child: Callable) -> bool:
     return not has_left
 
 
-def _flatten(root: Tuple, transformer: Callable, left_child: Callable, right_child: Callable) -> np.ndarray:
-    """ turns a tree into a flattened vector, preorder """
+def _flatten(
+    root: Tuple, transformer: Callable, left_child: Callable, right_child: Callable
+) -> np.ndarray:
+    """turns a tree into a flattened vector, preorder"""
 
     if not callable(transformer):
         raise Exception(
@@ -154,20 +168,20 @@ def _flatten(root: Tuple, transformer: Callable, left_child: Callable, right_chi
     try:
         accum = [np.zeros(accum[0].shape)] + accum
     except:
-        raise Exception(
-            "Output of transformer must have a .shape (e.g., numpy array)"
-        )
+        raise Exception("Output of transformer must have a .shape (e.g., numpy array)")
 
     return np.array(accum)
 
 
-def _preorder_indexes(root: Tuple, left_child: Callable, right_child: Callable, idx: int = 1) -> Union[int, Tuple]:
-    """ transforms a tree into a tree of preorder indexes """
+def _preorder_indexes(
+    root: Tuple, left_child: Callable, right_child: Callable, idx: int = 1
+) -> Union[int, Tuple]:
+    """transforms a tree into a tree of preorder indexes"""
 
     if not callable(left_child) or not callable(right_child):
         raise Exception(
-            "left_child and right_child must be a function mapping a " +
-            "tree node to its child, or None"
+            "left_child and right_child must be a function mapping a "
+            + "tree node to its child, or None"
         )
 
     if _is_leaf(root, left_child, right_child):
@@ -179,17 +193,21 @@ def _preorder_indexes(root: Tuple, left_child: Callable, right_child: Callable, 
             return rightmost(tree[2])
         return tree
 
-    left_subtree = _preorder_indexes(left_child(root), left_child, right_child,
-                                     idx=idx + 1)
+    left_subtree = _preorder_indexes(
+        left_child(root), left_child, right_child, idx=idx + 1
+    )
 
     max_index_in_left = rightmost(left_subtree)
-    right_subtree = _preorder_indexes(right_child(root), left_child, right_child,
-                                      idx=max_index_in_left + 1)
+    right_subtree = _preorder_indexes(
+        right_child(root), left_child, right_child, idx=max_index_in_left + 1
+    )
 
     return (idx, left_subtree, right_subtree)
 
 
-def _tree_conv_indexes(root: Tuple, left_child: Callable, right_child: Callable) -> np.ndarray:
+def _tree_conv_indexes(
+    root: Tuple, left_child: Callable, right_child: Callable
+) -> np.ndarray:
     """
     Create indexes that, when used as indexes into the output of `flatten`,
     create an array such that a stride-3 1D convolution is the same as a
@@ -239,7 +257,7 @@ def _pad_and_combine(x: List[np.ndarray]) -> np.ndarray:
     vecs: List[np.ndarray] = []
     for arr in x:
         padded = np.zeros((max_first_dim, second_dim))
-        padded[0:arr.shape[0]] = arr
+        padded[0 : arr.shape[0]] = arr
         vecs.append(padded)
 
     return np.array(vecs)

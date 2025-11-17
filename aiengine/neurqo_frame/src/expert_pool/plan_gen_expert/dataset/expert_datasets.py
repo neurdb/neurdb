@@ -1,8 +1,9 @@
-import numpy as np
-import torch.utils.data
-import torch
-from typing import Optional, Tuple, Any, Union, List, Dict
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+import torch
+import torch.utils.data
 from common.workload import Node
 
 
@@ -21,17 +22,19 @@ class SubPlanTrainingPoint:
 
 class GraphExpPlansDataset(torch.utils.data.Dataset):
 
-    def __init__(self,
-                 query_feats,
-                 plans,
-                 indexes,
-                 costs,
-                 tree_conv=True,
-                 transform_cost=True,
-                 label_mean=None,
-                 label_std=None,
-                 cross_entropy=False,
-                 return_indexes=True):
+    def __init__(
+        self,
+        query_feats,
+        plans,
+        indexes,
+        costs,
+        tree_conv=True,
+        transform_cost=True,
+        label_mean=None,
+        label_std=None,
+        cross_entropy=False,
+        return_indexes=True,
+    ):
         """Dataset of plans/parent positions/costs.
 
         Args:
@@ -83,9 +86,9 @@ class GraphExpPlansDataset(torch.utils.data.Dataset):
             # where transform_eps is a param.
             self.TRANSFORM_EPS = 1e-3
 
-            costs = np.sqrt(costs + 1.) - 1 + self.TRANSFORM_EPS * costs
+            costs = np.sqrt(costs + 1.0) - 1 + self.TRANSFORM_EPS * costs
             self.costs = torch.as_tensor(costs).to(torch.float32)
-            print('transformed costs, min', costs.min(), 'max', costs.max())
+            print("transformed costs, min", costs.min(), "max", costs.max())
         else:
             # Regression.
             for t in transform_cost:
@@ -106,24 +109,23 @@ class GraphExpPlansDataset(torch.utils.data.Dataset):
             else:
                 self.mean = self.label_mean
                 self.std = self.label_std
-            print('costs stats mean {} std {}'.format(self.mean, self.std))
+            print("costs stats mean {} std {}".format(self.mean, self.std))
             return (xs - self.mean) / (self.std + self._EPS)
 
         def min_max(xs):
             self.label_min = np.min(xs)
             self.label_max = np.max(xs)
             self.label_range = self.label_max - self.label_min
-            print('costs stats min {} max {}'.format(self.label_min,
-                                                     self.label_max))
+            print("costs stats min {} max {}".format(self.label_min, self.label_max))
             return (xs - self.label_min) / self.label_range
 
         transforms = {
-            'log1p': log1p,
+            "log1p": log1p,
             True: standardize,
-            'standardize': standardize,
+            "standardize": standardize,
             False: (lambda xs: xs),
-            'min_max': min_max,
-            'sqrt': lambda xs: (np.sqrt(1 + np.asarray(xs))),
+            "min_max": min_max,
+            "sqrt": lambda xs: (np.sqrt(1 + np.asarray(xs))),
         }
         return transforms[transform_name]
 
@@ -142,15 +144,15 @@ class GraphExpPlansDataset(torch.utils.data.Dataset):
             return xs * self.label_range + self.label_min
 
         transforms = {
-            'log1p': log1p_inverse,
+            "log1p": log1p_inverse,
             True: standardize_inverse,
-            'standardize': standardize_inverse,
+            "standardize": standardize_inverse,
             False: (lambda xs: xs),
-            'min_max': min_max_inverse,
-            'sqrt': lambda xs: (xs ** 2 - 1),
+            "min_max": min_max_inverse,
+            "sqrt": lambda xs: (xs**2 - 1),
         }
         if use_torch:
-            transforms['log1p'] = log1p_inverse_torch
+            transforms["log1p"] = log1p_inverse_torch
         return transforms[transform_name]
 
     def InvertCost(self, cost):
@@ -176,7 +178,7 @@ class GraphExpPlansDataset(torch.utils.data.Dataset):
 
     def TorchInvertCost(self, cost):
         """Convert model outputs back to latency space."""
-        assert not self.cross_entropy, 'Not implemented'
+        assert not self.cross_entropy, "Not implemented"
         for t in reversed(self.transform_cost):
             fn = self._inverse_transform_fn(t, use_torch=True)
             cost = fn(cost)
@@ -187,8 +189,12 @@ class GraphExpPlansDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         if self.return_indexes:
-            return self.query_feats[idx], self.plans[idx], self.indexes[
-                idx], self.costs[idx]
+            return (
+                self.query_feats[idx],
+                self.plans[idx],
+                self.indexes[idx],
+                self.costs[idx],
+            )
         return self.query_feats[idx], self.plans[idx], self.costs[idx]
 
     def FreeData(self):
@@ -219,7 +225,9 @@ class GraphExpInputBatch:
         self.costs = torch.stack(data[3], 0)
 
     @staticmethod
-    def collate_tokens(values, pad_idx, eos_idx=None, left_pad=False, move_eos_to_beginning=False):
+    def collate_tokens(
+        values, pad_idx, eos_idx=None, left_pad=False, move_eos_to_beginning=False
+    ):
         """Convert a list of 1d tensors into a padded 2d tensor."""
         size = max(v.size(0) for v in values)
         res = values[0].new(len(values), size).fill_(pad_idx)
@@ -234,11 +242,13 @@ class GraphExpInputBatch:
                 dst.copy_(src)
 
         for i, v in enumerate(values):
-            copy_tensor(v, res[i][size - len(v):] if left_pad else res[i][:len(v)])
+            copy_tensor(v, res[i][size - len(v) :] if left_pad else res[i][: len(v)])
         return res
 
 
-def graphexp_make_dataloader(data: List, label_transforms: List, validate_fraction: float, batch_size: int):
+def graphexp_make_dataloader(
+    data: List, label_transforms: List, validate_fraction: float, batch_size: int
+):
     all_query_vecs = data[0]
     all_plan_feat_vecs = data[1]
     all_costs = data[3]
@@ -261,7 +271,8 @@ def graphexp_make_dataloader(data: List, label_transforms: List, validate_fracti
     num_validation = len(dataset) - num_train
     assert num_train > 0 and num_validation >= 0, len(dataset)
     train_ds, val_ds = torch.utils.data.random_split(
-        dataset, [num_train, num_validation])
+        dataset, [num_train, num_validation]
+    )
     train_loader = torch.utils.data.DataLoader(
         train_ds,
         batch_size=batch_size,

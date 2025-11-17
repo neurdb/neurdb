@@ -1,16 +1,17 @@
+from parser import plan_node, plan_parser
+
 from common import hyperparams
-from parser import plan_parser, plan_node
 from db.pg_conn import PostgresConnector
 
 
 def ContainsPhysicalHints(hint_str):
     HINTS = [
-        'SeqScan',
-        'IndexScan',
-        'IndexOnlyScan',
-        'NestLoop',
-        'HashJoin',
-        'MergeJoin',
+        "SeqScan",
+        "IndexScan",
+        "IndexOnlyScan",
+        "NestLoop",
+        "HashJoin",
+        "MergeJoin",
     ]
     for hint in HINTS:
         if hint in hint_str:
@@ -20,17 +21,22 @@ def ContainsPhysicalHints(hint_str):
 
 def get_pg_estimated_cost(cursor, sql, hint, check_hint_used=False):
     # GEQO must be disabled for hinting larger joins to work.
-    cursor.set_geqo_exp('off')
-    node0, _ = plan_node.PGToNodeHelper.sql_to_plan_node(cursor=cursor, sql=sql, comment=hint)
+    cursor.set_geqo_exp("off")
+    node0, _ = plan_node.PGToNodeHelper.sql_to_plan_node(
+        cursor=cursor, sql=sql, comment=hint
+    )
     # This copies top-level node's cost (e.g., Aggregate) to the new top level node (a Join).
     node = node0.filter_scans_joins()
 
-    cursor.set_geqo_exp('default')
+    cursor.set_geqo_exp("default")
     if check_hint_used:
         expected = hint
         actual = node.hint_str(with_physical_hints=ContainsPhysicalHints(hint))
-        assert expected == actual, 'Expected={}\nActual={}, actual node:\n{}\nSQL=\n{}'.format(expected, actual, node,
-                                                                                               sql)
+        assert (
+            expected == actual
+        ), "Expected={}\nActual={}, actual node:\n{}\nSQL=\n{}".format(
+            expected, actual, node, sql
+        )
 
     return node.cost
 
@@ -57,8 +63,8 @@ class PostgresCardEst(CardEst):
         when all being equal but just the FROM list ordering tables
         differently.  Here, we ignore this slight difference.
         """
-        sorted_filters = '\n'.join(sorted(node.GetFilters()))
-        sorted_leaves = '\n'.join(sorted(node.leaf_ids()))
+        sorted_filters = "\n".join(sorted(node.GetFilters()))
+        sorted_leaves = "\n".join(sorted(node.leaf_ids()))
         return sorted_leaves + sorted_filters
 
     def __call__(self, node, join_conds):
@@ -67,7 +73,7 @@ class PostgresCardEst(CardEst):
         if card is None:
             sql_str = node.to_sql(join_conds)
             _, json_dict = plan_node.sql_to_plan_node(self.cursor, sql_str)
-            card = json_dict['Plan']['Plan Rows']
+            card = json_dict["Plan"]["Plan Rows"]
             self._cache[key] = card
         return card
 
@@ -86,7 +92,11 @@ class CostModelBase:
         Original method name: Params
         """
         p = hyperparams.InstantiableParams(cls)
-        p.define('cost_physical_ops', False, 'Whether to cost physical operators or only join orders.')
+        p.define(
+            "cost_physical_ops",
+            False,
+            "Whether to cost physical operators or only join orders.",
+        )
         return p
 
     def __init__(self, params):
@@ -112,7 +122,7 @@ class CostModelBase:
 
         Original method name: __call__
         """
-        raise NotImplementedError('Abstract method')
+        raise NotImplementedError("Abstract method")
 
     def score_with_sql(self, node, sql):
         """
@@ -127,7 +137,7 @@ class CostModelBase:
 
         Original method name: ScoreWithSql
         """
-        raise NotImplementedError('Abstract method')
+        raise NotImplementedError("Abstract method")
 
 
 class NullCost(CostModelBase):
@@ -316,6 +326,7 @@ class MinCardCost(CostModelBase):
             node._card = card + c_t1 + c_t2
 
         return node._card
+
 
 # def GetCardinalityEstimateFromPg(sql):
 #     _, json_dict = plan_node.SqlToPlanNode(sql)

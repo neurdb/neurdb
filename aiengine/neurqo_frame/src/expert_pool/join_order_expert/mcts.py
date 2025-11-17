@@ -1,16 +1,18 @@
 from __future__ import annotations
+
 import math
 import random
 import time
 from copy import copy
 from math import log
-from typing import List, Tuple, Iterable
+from typing import Iterable, List, Tuple
+
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.nn import init
 from expert_pool.join_order_expert.models.mcts_net import ValueNet
+from torch.nn import init
 
 
 class TreeNode:
@@ -30,14 +32,14 @@ class PlanState:
     """
 
     def __init__(
-            self,
-            max_hint_num: int,
-            total_num_tables: int,
-            num_tables_in_query: int,
-            query_vec: Iterable[float],
-            all_joins: List[Tuple[int, int]],
-            joins_with_predicate: List[Tuple[int, int]],
-            nodes: object,  # kept for parity; not used here
+        self,
+        max_hint_num: int,
+        total_num_tables: int,
+        num_tables_in_query: int,
+        query_vec: Iterable[float],
+        all_joins: List[Tuple[int, int]],
+        joins_with_predicate: List[Tuple[int, int]],
+        nodes: object,  # kept for parity; not used here
     ):
         self.tableNumber = total_num_tables
         self.numberOfTables = num_tables_in_query
@@ -52,7 +54,9 @@ class PlanState:
         self.order_list = np.zeros(max_hint_num, dtype=int)
 
         # join lists normalized so (a,b) with a<b
-        self.joins: List[Tuple[int, int]] = [(min(a, b), max(a, b)) for a, b in all_joins]
+        self.joins: List[Tuple[int, int]] = [
+            (min(a, b), max(a, b)) for a, b in all_joins
+        ]
         self.joins_with_predicate: List[Tuple[int, int]] = [
             (min(a, b), max(a, b)) for a, b in joins_with_predicate
         ]
@@ -153,7 +157,9 @@ class MCTS:
             if action not in node.children:
                 newNode = TreeNode(node.state.take_action(action), node)
                 node.children[action] = newNode
-                node.isFullyExpanded = len(node.state.get_possible_actions()) == len(node.children)
+                node.isFullyExpanded = len(node.state.get_possible_actions()) == len(
+                    node.children
+                )
                 return newNode
         # Should not happen
         return node
@@ -181,17 +187,18 @@ class MCTS:
 
 class MCTSHinterSearch:
     def __init__(
-            self,
-            device: torch.device,
-            max_alias_num: int,
-            hidden_size: int,
-            mcts_input_size: int,
-            offset: float,
-            max_time_out: float,
-            mcts_v: float,
-            searchFactor: int,
-            try_hint_num: int,
-            max_hint_num: int):
+        self,
+        device: torch.device,
+        max_alias_num: int,
+        hidden_size: int,
+        mcts_input_size: int,
+        offset: float,
+        max_time_out: float,
+        mcts_v: float,
+        searchFactor: int,
+        try_hint_num: int,
+        max_hint_num: int,
+    ):
 
         # unpack config into attributes
         self.device = device
@@ -213,7 +220,7 @@ class MCTSHinterSearch:
             max_hint_num=self.max_hint_num,
             in_dim=self.mcts_input_size,
             n_words=self.max_alias_num,
-            hidden_size=self.hidden_size
+            hidden_size=self.hidden_size,
         ).to(self.device)
 
         # init weights
@@ -223,7 +230,9 @@ class MCTSHinterSearch:
             else:
                 init.uniform_(param)
 
-        self.optimizer = optim.Adam(self.prediction_net.parameters(), lr=3e-4, betas=(0.9, 0.999))
+        self.optimizer = optim.Adam(
+            self.prediction_net.parameters(), lr=3e-4, betas=(0.9, 0.999)
+        )
 
     # ----- value transforms -----
     def _flog(self, x: float) -> float:
@@ -237,7 +246,9 @@ class MCTSHinterSearch:
         return math.e ** (z * scale * log(self.mcts_v)) * self.max_time_out
 
     # ----- prediction helpers -----
-    def _predict_value(self, inputState1: torch.Tensor, inputState2: torch.Tensor) -> Tuple[float, float]:
+    def _predict_value(
+        self, inputState1: torch.Tensor, inputState2: torch.Tensor
+    ) -> Tuple[float, float]:
         t0 = time.time()
         with torch.no_grad():
             pred = self.prediction_net(inputState1, inputState2)
@@ -260,19 +271,21 @@ class MCTSHinterSearch:
 
         # terminal: evaluate
         inputState1 = node.state.inputState1
-        order_list = torch.tensor(node.state.order_list, dtype=torch.long, device=self.device)
+        order_list = torch.tensor(
+            node.state.order_list, dtype=torch.long, device=self.device
+        )
         reward, model_dt = self._predict_value(inputState1, order_list)
         return node, reward, model_dt
 
     def find_hints(
-            self,
-            total_num_tables: int,
-            num_tables_in_query: int,
-            query_vec: Iterable[float],
-            all_joins: List[Tuple[int, int]],
-            joins_with_predicate: List[Tuple[int, int]],
-            nodes,
-            depth: int = 2,
+        self,
+        total_num_tables: int,
+        num_tables_in_query: int,
+        query_vec: Iterable[float],
+        all_joins: List[Tuple[int, int]],
+        joins_with_predicate: List[Tuple[int, int]],
+        nodes,
+        depth: int = 2,
     ) -> List[Tuple[np.ndarray, float]]:
         """
         Returns top-N (order_list, utility) pairs.
@@ -294,21 +307,30 @@ class MCTSHinterSearch:
         mcts = MCTS(iteration_limit=iters)
 
         self.Utility = []
-        mcts.search(initialState=init_state, rollout_fn=self.rollout, prediction_net=self.prediction_net)
+        mcts.search(
+            initialState=init_state,
+            rollout_fn=self.rollout,
+            prediction_net=self.prediction_net,
+        )
         self._collect_depth(mcts.root, depth)
         benefit_top = sorted(self.Utility, key=lambda x: x[1], reverse=True)
         return benefit_top[: self.try_hint_num]
 
     def _collect_depth(self, node: TreeNode, depth: int):
         if node.state.currentStep == depth:
-            nodeValue = (node.totalReward / max(1, node.numVisits))
+            nodeValue = node.totalReward / max(1, node.numVisits)
             self.Utility.append((node.state.order_list.copy(), self._eflog(nodeValue)))
             return
         for child in node.children.values():
             self._collect_depth(child, depth)
 
     # ----- training -----
-    def _train_step(self, sql_feature: torch.Tensor, order_features: torch.Tensor, target: torch.Tensor) -> float:
+    def _train_step(
+        self,
+        sql_feature: torch.Tensor,
+        order_features: torch.Tensor,
+        target: torch.Tensor,
+    ) -> float:
         pred = self.prediction_net(sql_feature, order_features)
         loss_value = F.smooth_l1_loss(pred, target)
         self.optimizer.zero_grad()
@@ -320,8 +342,13 @@ class MCTSHinterSearch:
         self.optimizer.step()
         return float(loss_value.item())
 
-    def train_on_sample(self, tree_feature: torch.Tensor, sql_feature: torch.Tensor,
-                        target_value_ms: float, alias_set: List[int]):
+    def train_on_sample(
+        self,
+        tree_feature: torch.Tensor,
+        sql_feature: torch.Tensor,
+        target_value_ms: float,
+        alias_set: List[int],
+    ):
         def plan_to_alias_list(tree_feature):
             def recursive(tree_feature):
                 if isinstance(tree_feature[1], tuple):
@@ -346,7 +373,11 @@ class MCTSHinterSearch:
 
         padded = aliases + [0] * (self.max_hint_num - len(aliases))
         order_features = torch.tensor(padded, dtype=torch.long, device=self.device)
-        label = torch.tensor([(self._flog(target_value_ms)) * 10.0], device=self.device, dtype=torch.float32)
+        label = torch.tensor(
+            [(self._flog(target_value_ms)) * 10.0],
+            device=self.device,
+            dtype=torch.float32,
+        )
 
         loss_value = self._train_step(sql_feature, order_features, label)
         return loss_value, order_features, label
@@ -356,6 +387,10 @@ class MCTSHinterSearch:
             return None
         sql_features = torch.stack([s.sql_feature for s in samples]).to(self.device)
         order_features = torch.stack([s.order_feature for s in samples]).to(self.device)
-        labels = torch.stack([s.label for s in samples], dim=0).reshape(-1, 1).to(self.device)
+        labels = (
+            torch.stack([s.label for s in samples], dim=0)
+            .reshape(-1, 1)
+            .to(self.device)
+        )
         self._train_step(sql_features, order_features, labels)
         return

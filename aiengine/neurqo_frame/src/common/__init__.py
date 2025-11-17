@@ -5,9 +5,9 @@ from common.config_stack import StackConfig
 
 
 def get_config(name: str):
-    if name == 'imdb':
+    if name == "imdb":
         return IMDBConfig()
-    elif name == 'stack':
+    elif name == "stack":
         return StackConfig()
     else:
         raise ValueError(f"Unknown dataset: {name}")

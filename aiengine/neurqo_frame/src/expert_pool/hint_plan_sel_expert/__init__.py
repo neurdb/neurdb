@@ -8,7 +8,6 @@ Contains:
 - tree_cnn.py: Neural network model (TreeCNN)
 """
 
-from expert_pool.hint_plan_sel_expert.model import TreeCNNRegExpert, TreeCNNConfig
+from expert_pool.hint_plan_sel_expert.model import TreeCNNConfig, TreeCNNRegExpert
 
-__all__ = ['TreeCNNRegExpert', 'TreeCNNConfig']
-
+__all__ = ["TreeCNNRegExpert", "TreeCNNConfig"]

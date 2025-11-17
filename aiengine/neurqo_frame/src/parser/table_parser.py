@@ -4,14 +4,14 @@ import json
 import os
 import re
 from collections import defaultdict
+
+# Local/project imports
+from parser.entiy import DBTableInfo
 from typing import Dict, List, Tuple
 
 # Third-party imports
 import numpy as np
 import pandas as pd
-
-# Local/project imports
-from parser.entiy import DBTableInfo
 from utils import file_utils
 
 
@@ -23,7 +23,7 @@ def get_index_table(create_index_path: str) -> dict:
         if line.startswith("create index"):
             parts = line.split()
             index_name = parts[2]
-            table_name = parts[4].split('(')[0]
+            table_name = parts[4].split("(")[0]
             index_table[index_name] = table_name
 
     return index_table
@@ -41,7 +41,9 @@ def get_all_table_attr_infos(create_tables_path: str) -> (List, Dict, Dict):
     for _line in lines:
         line = _line.lower()
         if line.startswith("create table"):
-            table_name, attr_names, attr_type_list = _get_attr_infos_from_create_sql(line.strip())
+            table_name, attr_names, attr_type_list = _get_attr_infos_from_create_sql(
+                line.strip()
+            )
             table_attr_infos_list.append((table_name, attr_names, attr_type_list))
             table_attr_types_map[table_name] = attr_type_list
             table_attr_map[table_name] = attr_names
@@ -53,19 +55,20 @@ def get_all_table_attr_infos(create_tables_path: str) -> (List, Dict, Dict):
 
 
 def retrieve_db_info(
-        table_names: List[str],
-        table_attr_types_map: Dict,
-        table_attr_map: Dict,
-        index_table_map: Dict,
-        data_dir: str,
-        tables_info_path: str,
-        all_sql_path: str
+    table_names: List[str],
+    table_attr_types_map: Dict,
+    table_attr_map: Dict,
+    index_table_map: Dict,
+    data_dir: str,
+    tables_info_path: str,
+    all_sql_path: str,
 ) -> DBTableInfo:
     """
     Summarize and save the data info to tables_info_path
     """
     if not os.path.exists(tables_info_path):
         from parser import sql_parser
+
         print("tables_info not exist, summarizing....")
         table_info_json = _gen_db_info_json(
             table_names, table_attr_types_map, table_attr_map, index_table_map, data_dir
@@ -77,7 +80,9 @@ def retrieve_db_info(
             short_full_table_name_map, _, _, _ = sql_parser.simple_parse(sql)
             for short_name in short_full_table_name_map:
                 full_name = short_full_table_name_map[short_name]
-                table_info_json["table_no_map"][short_name] = table_info_json["table_no_map"][full_name]
+                table_info_json["table_no_map"][short_name] = table_info_json[
+                    "table_no_map"
+                ][full_name]
         print(f"tables_info is saved into {tables_info_path}")
         with open(tables_info_path, "w") as writer:
 
@@ -113,7 +118,7 @@ def _parse_create_sql(create_sql: str):
     lidx = info.find("(")
     table_name = info[0:lidx].strip()
     ridx = info.rfind(")")
-    attr_infos_str = info[lidx + 1: ridx].strip()
+    attr_infos_str = info[lidx + 1 : ridx].strip()
 
     # use regex to clean attr_infos_str, since it may contains '(' and ')'
     attr_infos_str = re.sub(r"\([^)]*\)", "", attr_infos_str)
@@ -143,11 +148,11 @@ def _parse_create_sql(create_sql: str):
 
 
 def _gen_db_info_json(
-        table_names: List[str],
-        table_attr_types_map: Dict,
-        table_attr_map: Dict,
-        index_table_map: Dict,
-        data_dir: str,
+    table_names: List[str],
+    table_attr_types_map: Dict,
+    table_attr_map: Dict,
+    index_table_map: Dict,
+    data_dir: str,
 ):
     """
     Summarizes and dumps database table information into a JSON file.
@@ -189,13 +194,17 @@ def _gen_db_info_json(
         attr_no_types, table_attr_ranges, table_size = _get_table_info_csv(
             table_attributes, table_file_path, attr_type_list
         )
-        attr_no_map_list.append({table_attributes[i]: int(i) for i in range(len(table_attributes))})
+        attr_no_map_list.append(
+            {table_attributes[i]: int(i) for i in range(len(table_attributes))}
+        )
         attr_no_types_list.append(attr_no_types)
         attr_ranges_list.append(table_attr_ranges)
         table_size_list.append(table_size)
         db_num_attrs += len(table_attributes)
 
-    attr_no_types_list = [attr_no_types.tolist() for attr_no_types in attr_no_types_list]
+    attr_no_types_list = [
+        attr_no_types.tolist() for attr_no_types in attr_no_types_list
+    ]
     attr_ranges_list = [attr_ranges.tolist() for attr_ranges in attr_ranges_list]
 
     table_info_json = {
@@ -240,7 +249,7 @@ def load_db_info_json(tables_info_path) -> DBTableInfo:
         ]
 
     db_num_attrs = {}
-    index_table_map= {}
+    index_table_map = {}
     if "db_num_attrs" in table_info:
         db_num_attrs = table_info["db_num_attrs"]
     if "index_table_map" in table_info:
@@ -249,7 +258,9 @@ def load_db_info_json(tables_info_path) -> DBTableInfo:
     value_to_keys = defaultdict(list)
     for key, value in table_no_map.items():
         value_to_keys[value].append(key)
-    no_table_map = {value: keys for value, keys in value_to_keys.items() if len(keys) > 1}
+    no_table_map = {
+        value: keys for value, keys in value_to_keys.items() if len(keys) > 1
+    }
 
     result = DBTableInfo(
         table_no_map,
@@ -267,7 +278,7 @@ def load_db_info_json(tables_info_path) -> DBTableInfo:
 
 
 def _get_table_info_csv(
-        attr_names: list, table_path: str, attr_type_list
+    attr_names: list, table_path: str, attr_type_list
 ) -> (dict, np.ndarray, np.ndarray, int):
     """
     Summarize the attribute id, types, range, and size of the table.
@@ -275,21 +286,24 @@ def _get_table_info_csv(
     """
     # attr_type_list: the list of the attribute types, 0 for int, 1 for float, -1 for string
     assert attr_type_list is not None
-    assert len(attr_names) == len(attr_type_list), "The number of attribute names must match the attribute types."
+    assert len(attr_names) == len(
+        attr_type_list
+    ), "The number of attribute names must match the attribute types."
 
     df = pd.read_csv(
         table_path,
         quotechar='"',
         quoting=csv.QUOTE_ALL,
-        on_bad_lines='skip',
+        on_bad_lines="skip",
         header=None,
         names=attr_names,
-        low_memory=False
+        low_memory=False,
     )
 
     if len(attr_names) != len(df.columns):
         raise ValueError(
-            f"{table_path}: Number of columns in CSV does not match the number of attribute names provided.")
+            f"{table_path}: Number of columns in CSV does not match the number of attribute names provided."
+        )
 
     card = len(df)
 
@@ -307,10 +321,13 @@ def _get_table_info_csv(
 
     for i, col in enumerate(df.columns):
         if attr_type_list[i] != -1:
-            numeric_data = pd.to_numeric(df[col], errors='coerce').dropna().to_numpy()
+            numeric_data = pd.to_numeric(df[col], errors="coerce").dropna().to_numpy()
 
             if len(numeric_data) > 0:
-                minv, maxv = np.min(numeric_data) - epsilons[i], np.max(numeric_data) + epsilons[i]
+                minv, maxv = (
+                    np.min(numeric_data) - epsilons[i],
+                    np.max(numeric_data) + epsilons[i],
+                )
             else:
                 minv, maxv = 0, 0
             table_attr_ranges.append([minv, maxv])

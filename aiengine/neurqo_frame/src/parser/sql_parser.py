@@ -2,6 +2,9 @@
 import json
 import re
 import traceback
+
+# Local/project imports
+from parser.entiy import DBTableInfo, WorkloadQueryInfo
 from typing import Any, Dict, List, Tuple
 
 # Third-party imports
@@ -11,9 +14,6 @@ import pglast
 from pglast import ast
 from pglast.visitors import Visitor
 from scipy.cluster.hierarchy import DisjointSet
-
-# Local/project imports
-from parser.entiy import DBTableInfo, WorkloadQueryInfo
 from utils import date_utils, file_utils
 
 epsilon_for_float = 1e-6
@@ -33,13 +33,15 @@ class SQLInfoExtractor(Visitor):
         if isinstance(node, ast.RangeVar):
             table_name = node.relname
             self.tables.add(table_name)
-            if hasattr(node, 'alias') and node.alias is not None:
+            if hasattr(node, "alias") and node.alias is not None:
                 alias_name = node.alias.aliasname
                 self.aliasname_fullname[alias_name] = table_name
 
         # Extract explicit join information
         if isinstance(node, ast.JoinExpr):
-            if isinstance(node.larg, ast.RangeVar) and isinstance(node.rarg, ast.RangeVar):
+            if isinstance(node.larg, ast.RangeVar) and isinstance(
+                node.rarg, ast.RangeVar
+            ):
                 left_table = node.larg.relname
                 right_table = node.rarg.relname
                 if node.larg.alias:
@@ -47,44 +49,71 @@ class SQLInfoExtractor(Visitor):
                 if node.rarg.alias:
                     right_table = node.rarg.alias.aliasname
                 if node.quals and isinstance(node.quals, ast.A_Expr):
-                    lexpr = node.quals.lexpr.fields if hasattr(node.quals.lexpr, 'fields') else []
-                    rexpr = node.quals.rexpr.fields if hasattr(node.quals.rexpr, 'fields') else []
+                    lexpr = (
+                        node.quals.lexpr.fields
+                        if hasattr(node.quals.lexpr, "fields")
+                        else []
+                    )
+                    rexpr = (
+                        node.quals.rexpr.fields
+                        if hasattr(node.quals.rexpr, "fields")
+                        else []
+                    )
                     if len(lexpr) == 2 and len(rexpr) == 2:
-                        self.joins.add(((lexpr[0].sval, lexpr[1].sval), (rexpr[0].sval, rexpr[1].sval)))
+                        self.joins.add(
+                            (
+                                (lexpr[0].sval, lexpr[1].sval),
+                                (rexpr[0].sval, rexpr[1].sval),
+                            )
+                        )
 
         # Extract implicit join conditions from WHERE clause
         if isinstance(node, ast.A_Expr):
-            if node.name[0].sval == '=':
-                lexpr = node.lexpr.fields if hasattr(node.lexpr, 'fields') else []
-                rexpr = node.rexpr.fields if hasattr(node.rexpr, 'fields') else []
+            if node.name[0].sval == "=":
+                lexpr = node.lexpr.fields if hasattr(node.lexpr, "fields") else []
+                rexpr = node.rexpr.fields if hasattr(node.rexpr, "fields") else []
                 # for join, both have values
                 if len(lexpr) == 2 and len(rexpr) == 2:
-                    self.joins.add(((lexpr[0].sval, lexpr[1].sval), (rexpr[0].sval, rexpr[1].sval)))
+                    self.joins.add(
+                        ((lexpr[0].sval, lexpr[1].sval), (rexpr[0].sval, rexpr[1].sval))
+                    )
                 elif len(lexpr) == 1 and len(rexpr) == 1:
                     self.joins.add((("", lexpr[0].sval), ("", rexpr[0].sval)))
 
             # Extract other predicates
-            if node.name[0].sval in ('>', '=', '<', '<=', '>='):
-                lexpr = node.lexpr.fields if hasattr(node.lexpr, 'fields') else []
-                if hasattr(node.rexpr, 'val'):
-                    if hasattr(node.rexpr.val, 'ival'):
+            if node.name[0].sval in (">", "=", "<", "<=", ">="):
+                lexpr = node.lexpr.fields if hasattr(node.lexpr, "fields") else []
+                if hasattr(node.rexpr, "val"):
+                    if hasattr(node.rexpr.val, "ival"):
                         rexpr = node.rexpr.val.ival
-                    elif hasattr(node.rexpr.val, 'sval'):
+                    elif hasattr(node.rexpr.val, "sval"):
                         rexpr = node.rexpr.val.sval
                     else:
                         rexpr = None
                     if len(lexpr) == 2:
-                        self.predicates.add(((lexpr[0].sval, lexpr[1].sval), node.name[0].sval, rexpr))
+                        self.predicates.add(
+                            ((lexpr[0].sval, lexpr[1].sval), node.name[0].sval, rexpr)
+                        )
                     elif len(lexpr) == 1:
-                        self.predicates.add((("", lexpr[0].sval), node.name[0].sval, rexpr))
-                elif hasattr(node.rexpr, 'arg'):
-                    if hasattr(node.rexpr.arg, 'val'):
-                        if hasattr(node.rexpr.arg.val, 'sval'):
+                        self.predicates.add(
+                            (("", lexpr[0].sval), node.name[0].sval, rexpr)
+                        )
+                elif hasattr(node.rexpr, "arg"):
+                    if hasattr(node.rexpr.arg, "val"):
+                        if hasattr(node.rexpr.arg.val, "sval"):
                             rexpr = node.rexpr.arg.val.sval
                             if len(lexpr) == 2:
-                                self.predicates.add(((lexpr[0].sval, lexpr[1].sval), node.name[0].sval, rexpr))
+                                self.predicates.add(
+                                    (
+                                        (lexpr[0].sval, lexpr[1].sval),
+                                        node.name[0].sval,
+                                        rexpr,
+                                    )
+                                )
                             elif len(lexpr) == 1:
-                                self.predicates.add((("", lexpr[0].sval), node.name[0].sval, rexpr))
+                                self.predicates.add(
+                                    (("", lexpr[0].sval), node.name[0].sval, rexpr)
+                                )
 
         # Handle subqueries and additional join conditions
         if isinstance(node, ast.SubLink):
@@ -99,7 +128,9 @@ class SQLInfoExtractor(Visitor):
                 self(arg)
 
 
-def parse_queries_on_batch(file_path: str, table_info: DBTableInfo) -> WorkloadQueryInfo:
+def parse_queries_on_batch(
+    file_path: str, table_info: DBTableInfo
+) -> WorkloadQueryInfo:
     # read queries from file
     # lines: list of query strings
     # table_no_map: {table_name: table_no}
@@ -119,8 +150,9 @@ def parse_queries_on_batch(file_path: str, table_info: DBTableInfo) -> WorkloadQ
     for line in sql_lines:
         # in some file, the label is added after the sql
         sql = line.strip()
-        join_conds, relevant_tables, equi_classes, attr_range_conds, join_type = \
+        join_conds, relevant_tables, equi_classes, attr_range_conds, join_type = (
             parse_one_sql(sql, table_info)
+        )
 
         equi_classes_list.append(equi_classes)
         join_conds_list.append(join_conds)
@@ -136,11 +168,19 @@ def parse_queries_on_batch(file_path: str, table_info: DBTableInfo) -> WorkloadQ
             for i, l_table_attr in enumerate(table_attr_list):
                 for j in range(i + 1, len(table_attr_list)):
                     r_table_attr = table_attr_list[j]
-                    l_table_no, l_attr_no = get_table_no_and_attr_no(l_table_attr, table_info.table_no_map,
-                                                                     table_info.attr_no_map_list)
-                    r_table_no, r_attr_no = get_table_no_and_attr_no(r_table_attr, table_info.table_no_map,
-                                                                     table_info.attr_no_map_list)
-                    possible_join_attrs.append([l_table_no, l_attr_no, r_table_no, r_attr_no])
+                    l_table_no, l_attr_no = get_table_no_and_attr_no(
+                        l_table_attr,
+                        table_info.table_no_map,
+                        table_info.attr_no_map_list,
+                    )
+                    r_table_no, r_attr_no = get_table_no_and_attr_no(
+                        r_table_attr,
+                        table_info.table_no_map,
+                        table_info.attr_no_map_list,
+                    )
+                    possible_join_attrs.append(
+                        [l_table_no, l_attr_no, r_table_no, r_attr_no]
+                    )
     possible_join_attrs = np.array(possible_join_attrs, dtype=np.int64)
 
     result = WorkloadQueryInfo(
@@ -148,7 +188,7 @@ def parse_queries_on_batch(file_path: str, table_info: DBTableInfo) -> WorkloadQ
         join_conds_list,
         filter_attr_range_conds_list,
         join_type_list,
-        relevant_tables_list
+        relevant_tables_list,
     )
 
     return result
@@ -180,14 +220,16 @@ def parse_one_sql(_sql, table_info: DBTableInfo):
     :return:
     """
     sql = _sql.lower().strip()
-    idx = sql.find('select')
-    assert (idx >= 0)
+    idx = sql.find("select")
+    assert idx >= 0
     sql = sql[idx:]
 
     join_type = None
 
     # Parse the SQL query and get join predicates and filter predicates
-    short_full_table_name_map, join_predicates, filter_predicates, used_tables = simple_parse(sql)
+    short_full_table_name_map, join_predicates, filter_predicates, used_tables = (
+        simple_parse(sql)
+    )
     # # update table_info
     # for short_name in short_full_table_name_map:
     #     full_name = short_full_table_name_map[short_name]
@@ -209,11 +251,19 @@ def parse_one_sql(_sql, table_info: DBTableInfo):
         for i, l_table_attr in enumerate(table_attr_list):
             for j, r_table_attr in enumerate(table_attr_list):
                 if i != j:
-                    l_table_no, l_attr_no = get_table_no_and_attr_no(l_table_attr, table_info.table_no_map,
-                                                                     table_info.attr_no_map_list)
-                    r_table_no, r_attr_no = get_table_no_and_attr_no(r_table_attr, table_info.table_no_map,
-                                                                     table_info.attr_no_map_list)
-                    all_possible_join_conds.append((l_table_no, l_attr_no, r_table_no, r_attr_no))
+                    l_table_no, l_attr_no = get_table_no_and_attr_no(
+                        l_table_attr,
+                        table_info.table_no_map,
+                        table_info.attr_no_map_list,
+                    )
+                    r_table_no, r_attr_no = get_table_no_and_attr_no(
+                        r_table_attr,
+                        table_info.table_no_map,
+                        table_info.attr_no_map_list,
+                    )
+                    all_possible_join_conds.append(
+                        (l_table_no, l_attr_no, r_table_no, r_attr_no)
+                    )
     all_possible_join_conds.sort()
     if len(all_possible_join_conds) == 0:
         join_conds = None
@@ -225,11 +275,13 @@ def parse_one_sql(_sql, table_info: DBTableInfo):
 
     for filter_predicate in filter_predicates:
         (lhs, op, rhs) = filter_predicate
-        lhs_table_no, lhs_attr_no = parse_predicate_lhs(lhs, table_info.table_no_map, table_info.attr_no_map_list)
+        lhs_table_no, lhs_attr_no = parse_predicate_lhs(
+            lhs, table_info.table_no_map, table_info.attr_no_map_list
+        )
         try:
             parsed_filter_value = parse_predicate_rhs(rhs)
         except Exception as e:
-            print('filter_predicate =', filter_predicate, 'sql =', sql)
+            print("filter_predicate =", filter_predicate, "sql =", sql)
             traceback.print_exc()
             raise Exception()
 
@@ -242,17 +294,29 @@ def parse_one_sql(_sql, table_info: DBTableInfo):
             epsilon = 0.5
         else:
             epsilon = epsilon_for_float
-        if op == '=':
-            attr_range_conds[lhs_table_no][lhs_attr_no][0] = parsed_filter_value - epsilon
-            attr_range_conds[lhs_table_no][lhs_attr_no][1] = parsed_filter_value + epsilon
-        elif op == '<=':
-            attr_range_conds[lhs_table_no][lhs_attr_no][1] = parsed_filter_value + epsilon
-        elif op == '<':
-            attr_range_conds[lhs_table_no][lhs_attr_no][1] = parsed_filter_value - epsilon
-        elif op == '>=':
-            attr_range_conds[lhs_table_no][lhs_attr_no][0] = parsed_filter_value - epsilon
+        if op == "=":
+            attr_range_conds[lhs_table_no][lhs_attr_no][0] = (
+                parsed_filter_value - epsilon
+            )
+            attr_range_conds[lhs_table_no][lhs_attr_no][1] = (
+                parsed_filter_value + epsilon
+            )
+        elif op == "<=":
+            attr_range_conds[lhs_table_no][lhs_attr_no][1] = (
+                parsed_filter_value + epsilon
+            )
+        elif op == "<":
+            attr_range_conds[lhs_table_no][lhs_attr_no][1] = (
+                parsed_filter_value - epsilon
+            )
+        elif op == ">=":
+            attr_range_conds[lhs_table_no][lhs_attr_no][0] = (
+                parsed_filter_value - epsilon
+            )
         else:  # '>'
-            attr_range_conds[lhs_table_no][lhs_attr_no][0] = parsed_filter_value + epsilon
+            attr_range_conds[lhs_table_no][lhs_attr_no][0] = (
+                parsed_filter_value + epsilon
+            )
 
     assert len(relevant_tables) > 0
 
@@ -266,7 +330,7 @@ def parse_one_sql(_sql, table_info: DBTableInfo):
 def parse_predicate_lhs(lhs: Tuple, table_no_map: Dict, attr_no_map_list: Dict):
     if len(lhs) == 2:
         table_name = lhs[0]
-        attr = lhs[1].strip().strip('()')
+        attr = lhs[1].strip().strip("()")
         if table_name in table_no_map:
             table_no = table_no_map[table_name]
             attr_no_map = attr_no_map_list[table_no]
@@ -274,7 +338,7 @@ def parse_predicate_lhs(lhs: Tuple, table_no_map: Dict, attr_no_map_list: Dict):
             attr_no = attr_no_map[attr]
             return table_no, attr_no
     else:
-        print('this is not table.col format, lhs =', lhs)
+        print("this is not table.col format, lhs =", lhs)
         raise Exception()
 
 
@@ -291,7 +355,9 @@ def parse_predicate_rhs(rhs: Any):
     return val
 
 
-def get_table_no_and_attr_no(table_attr: Tuple, table_no_map: Dict, attr_no_map_list: Dict):
+def get_table_no_and_attr_no(
+    table_attr: Tuple, table_no_map: Dict, attr_no_map_list: Dict
+):
     table_name, attr_name = table_attr[0], table_attr[1]
     # if table_name not in table_no_map:
     #     raise f"{table_name} is not in {table_no_map}"
@@ -315,6 +381,7 @@ def _get_equi_classes(join_conds: List[Tuple]):
 
 # ------------------------ for read sqls ------------------------
 
+
 def parse_value_from_update_sql(sql: str):
     # Regular expression to extract the values from the SET clause
     set_pattern = re.compile(r"set\s*\((.*?)\)\s*=\s*\((.*?)\)", re.IGNORECASE)
@@ -325,7 +392,7 @@ def parse_value_from_update_sql(sql: str):
     set_match = set_pattern.search(sql)
     if set_match:
         # Extract the values inside the parentheses in the SET clause
-        set_values = set_match.group(2).split(',')
+        set_values = set_match.group(2).split(",")
         # Convert them to float
         set_values = [float(val) for val in set_values]
     else:
@@ -371,8 +438,11 @@ def extract_insert_values(sql: str):
     return set_values
 
 
-def update_table_aliases_with_psqlparse(db_info_dic: Dict, queries: List[str],
-                                        output_file: str = "./experiment/ori_table_info_stack.json") -> Dict:
+def update_table_aliases_with_psqlparse(
+    db_info_dic: Dict,
+    queries: List[str],
+    output_file: str = "./experiment/ori_table_info_stack.json",
+) -> Dict:
     from psqlparse import parse_dict
 
     final_alias_map = {}
@@ -414,7 +484,7 @@ def update_table_aliases_with_psqlparse(db_info_dic: Dict, queries: List[str],
     db_info_dic["table_no_map"].update(final_alias_id_map)
 
     # Write the updated dictionary to a JSON file
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         json.dump(db_info_dic, f, indent=4)
 
     print(f"Updated table info with aliases saved to {output_file}")
@@ -449,7 +519,9 @@ def _GetJoinConds(sql):
         (\w+)  # 2nd table
         \.     # the dot "."
         (\w+)  # 2nd table column
-        """, re.VERBOSE)
+        """,
+        re.VERBOSE,
+    )
     join_conds = join_cond_pat.findall(sql)
     return _DedupJoinConds(join_conds)
 

@@ -1,10 +1,10 @@
 # Standard library imports
 import copy
+from parser import sql_parser, table_parser
+from parser.table_parser import *
 
 # Local/project imports
 from db.pg_conn import PostgresConnector
-from parser import sql_parser, table_parser
-from parser.table_parser import *
 from utils import sql_utils
 
 
@@ -15,14 +15,16 @@ class Expr:
         self.isInt = False
         self.val = 0
 
-    def isCol(self, ):
+    def isCol(
+        self,
+    ):
         return isinstance(self.expr, dict) and "ColumnRef" in self.expr
 
     def getValue(self, value_expr):
         if "A_Const" in value_expr:
             value = value_expr["A_Const"]["val"]
             if "String" in value:
-                return "'" + value["String"]["str"].replace("'", "''") + "\'"
+                return "'" + value["String"]["str"].replace("'", "''") + "'"
             elif "Integer" in value:
                 self.isInt = True
                 self.val = value["Integer"]["ival"]
@@ -30,40 +32,76 @@ class Expr:
             else:
                 raise "unknown Value in Expr"
         elif "TypeCast" in value_expr:
-            if len(value_expr["TypeCast"]['typeName']['TypeName']['names']) == 1:
-                return value_expr["TypeCast"]['typeName']['TypeName']['names'][0]['String']['str'] + " '" + \
-                       value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str'] + "'"
+            if len(value_expr["TypeCast"]["typeName"]["TypeName"]["names"]) == 1:
+                return (
+                    value_expr["TypeCast"]["typeName"]["TypeName"]["names"][0][
+                        "String"
+                    ]["str"]
+                    + " '"
+                    + value_expr["TypeCast"]["arg"]["A_Const"]["val"]["String"]["str"]
+                    + "'"
+                )
             else:
                 try:
                     # Case: WHERE (...) INTERVAL '1' year
-                    if value_expr["TypeCast"]['typeName']['TypeName']['typmods'][0]['A_Const']['val']['Integer'][
-                        'ival'] == 2:
-                        return value_expr["TypeCast"]['typeName']['TypeName']['names'][1]['String']['str'] + " '" + \
-                               value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str'] + "' month"
+                    if (
+                        value_expr["TypeCast"]["typeName"]["TypeName"]["typmods"][0][
+                            "A_Const"
+                        ]["val"]["Integer"]["ival"]
+                        == 2
+                    ):
+                        return (
+                            value_expr["TypeCast"]["typeName"]["TypeName"]["names"][1][
+                                "String"
+                            ]["str"]
+                            + " '"
+                            + value_expr["TypeCast"]["arg"]["A_Const"]["val"]["String"][
+                                "str"
+                            ]
+                            + "' month"
+                        )
                     else:
-                        return value_expr["TypeCast"]['typeName']['TypeName']['names'][1]['String']['str'] + " '" + \
-                               value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str'] + "' year"
+                        return (
+                            value_expr["TypeCast"]["typeName"]["TypeName"]["names"][1][
+                                "String"
+                            ]["str"]
+                            + " '"
+                            + value_expr["TypeCast"]["arg"]["A_Const"]["val"]["String"][
+                                "str"
+                            ]
+                            + "' year"
+                        )
                 except KeyError:
                     # Case: WHERE (...) '1 year'::interval
                     # --> Breaks the above condition, as the 'typmods' key is not present
                     #
                     # 'interval'
-                    casted_type = value_expr["TypeCast"]['typeName']['TypeName']['names'][1]['String']['str']
+                    casted_type = value_expr["TypeCast"]["typeName"]["TypeName"][
+                        "names"
+                    ][1]["String"]["str"]
                     # value: '1 year'
-                    string_value = value_expr["TypeCast"]['arg']['A_Const']['val']['String']['str']
+                    string_value = value_expr["TypeCast"]["arg"]["A_Const"]["val"][
+                        "String"
+                    ]["str"]
                     return f"'{string_value}'::{casted_type}"
 
         else:
             print(value_expr.keys())
             raise "unknown Value in Expr"
 
-    def getAliasName(self, ):
+    def getAliasName(
+        self,
+    ):
         return self.expr["ColumnRef"]["fields"][0]["String"]["str"]
 
-    def getColumnName(self, ):
+    def getColumnName(
+        self,
+    ):
         return self.expr["ColumnRef"]["fields"][1]["String"]["str"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         if self.isCol():
             return self.getAliasName() + "." + self.getColumnName()
         elif isinstance(self.expr, dict) and "A_Const" in self.expr:
@@ -83,23 +121,33 @@ class Expr:
 
 
 class SpecialSTACKPlusExpr(Expr):
-    def isCol(self, ):
+    def isCol(
+        self,
+    ):
         return True
 
     def getValue(self, value_expr=None):
         alias = self.getAliasName()
         column = self.getColumnName()
 
-        interval_size = self.expr["A_Expr"]["rexpr"]["TypeCast"]["arg"]["A_Const"]["val"]["String"]["str"]
+        interval_size = self.expr["A_Expr"]["rexpr"]["TypeCast"]["arg"]["A_Const"][
+            "val"
+        ]["String"]["str"]
         return f"{alias}.{column} + '{interval_size}'::interval"
 
-    def getAliasName(self, ):
+    def getAliasName(
+        self,
+    ):
         return self.expr["A_Expr"]["lexpr"]["ColumnRef"]["fields"][0]["String"]["str"]
 
-    def getColumnName(self, ):
+    def getColumnName(
+        self,
+    ):
         return self.expr["A_Expr"]["lexpr"]["ColumnRef"]["fields"][1]["String"]["str"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         return self.getValue()
 
 
@@ -112,14 +160,24 @@ class TargetTable:
 
     #         print(self.target)
 
-    def getValue(self, ):
+    def getValue(
+        self,
+    ):
         columnRef = self.target["val"]["FuncCall"]["args"][0]["ColumnRef"]["fields"]
         return columnRef[0]["String"]["str"] + "." + columnRef[1]["String"]["str"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         try:
-            return self.target["val"]["FuncCall"]["funcname"][0]["String"][
-                       "str"] + "(" + self.getValue() + ")" + " AS " + self.target['name']
+            return (
+                self.target["val"]["FuncCall"]["funcname"][0]["String"]["str"]
+                + "("
+                + self.getValue()
+                + ")"
+                + " AS "
+                + self.target["name"]
+            )
         except:
             if "FuncCall" in self.target["val"]:
                 return "count(*)"
@@ -133,16 +191,22 @@ class FromTable:
         {'alias': {'Alias': {'aliasname': 'an'}}, 'location': 168, 'inhOpt': 2, 'relpersistence': 'p', 'relname': 'aka_name'}
         """
         self.from_table = from_table
-        if not 'alias' in self.from_table:
-            self.from_table['alias'] = {'Alias': {'aliasname': from_table['relname']}}
+        if not "alias" in self.from_table:
+            self.from_table["alias"] = {"Alias": {"aliasname": from_table["relname"]}}
 
-    def getFullName(self, ):
+    def getFullName(
+        self,
+    ):
         return self.from_table["relname"]
 
-    def getAliasName(self, ):
+    def getAliasName(
+        self,
+    ):
         return self.from_table["alias"]["Alias"]["aliasname"]
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
         try:
             return self.getFullName() + " AS " + self.getAliasName()
         except:
@@ -160,8 +224,13 @@ class Comparison:
             self.kind = comparison["A_Expr"]["kind"]
             if not "A_Expr" in comparison["A_Expr"]["rexpr"]:
                 self.rexpr = Expr(comparison["A_Expr"]["rexpr"], self.kind)
-            elif comparison['A_Expr']['rexpr']['A_Expr']['name'][0]['String']['str'] == '+':
-                self.rexpr = SpecialSTACKPlusExpr(comparison['A_Expr']['rexpr'], self.kind)
+            elif (
+                comparison["A_Expr"]["rexpr"]["A_Expr"]["name"][0]["String"]["str"]
+                == "+"
+            ):
+                self.rexpr = SpecialSTACKPlusExpr(
+                    comparison["A_Expr"]["rexpr"], self.kind
+                )
 
             else:
                 self.rexpr = Comparison(comparison["A_Expr"]["rexpr"])
@@ -191,8 +260,7 @@ class Comparison:
         else:
             #             "boolop"
             self.kind = comparison["BoolExpr"]["boolop"]
-            self.comp_list = [Comparison(x)
-                              for x in comparison["BoolExpr"]["args"]]
+            self.comp_list = [Comparison(x) for x in comparison["BoolExpr"]["args"]]
             self.aliasname_list = []
             for comp in self.comp_list:
                 if comp.lexpr.isCol():
@@ -203,10 +271,14 @@ class Comparison:
                     break
             self.comp_kind = 2
 
-    def isCol(self, ):
+    def isCol(
+        self,
+    ):
         return False
 
-    def __str__(self, ):
+    def __str__(
+        self,
+    ):
 
         if self.comp_kind == 0:
             Op = ""
@@ -228,6 +300,7 @@ class Comparison:
                 Op = "BETWEEN"
             else:
                 import json
+
                 print(json.dumps(self.comparison, sort_keys=True, indent=4))
                 raise "Operation ERROR"
             return str(self.lexpr) + " " + Op + " " + str(self.rexpr)
@@ -259,14 +332,19 @@ class Table:
         self.column2type = {}
         for idx, columndef in enumerate(table_tree["tableElts"]):
             self.column2idx[columndef["ColumnDef"]["colname"]] = idx
-            self.column2type[columndef["ColumnDef"]["colname"]] = \
-                columndef["ColumnDef"]["typeName"]['TypeName']['names'][-1]['String']['str']
+            self.column2type[columndef["ColumnDef"]["colname"]] = columndef[
+                "ColumnDef"
+            ]["typeName"]["TypeName"]["names"][-1]["String"]["str"]
             # print(columndef["ColumnDef"]["typeName"]['TypeName']['names'],self.column2type[columndef["ColumnDef"]["colname"]],self.column2type[columndef["ColumnDef"]["colname"]] in ['int4','text','varchar'])
-            assert self.column2type[columndef["ColumnDef"]["colname"]] in ['int4', 'text', 'varchar']
-            if self.column2type[columndef["ColumnDef"]["colname"]] == 'int4':
-                self.column2type[columndef["ColumnDef"]["colname"]] = 'int'
+            assert self.column2type[columndef["ColumnDef"]["colname"]] in [
+                "int4",
+                "text",
+                "varchar",
+            ]
+            if self.column2type[columndef["ColumnDef"]["colname"]] == "int4":
+                self.column2type[columndef["ColumnDef"]["colname"]] = "int"
             else:
-                self.column2type[columndef["ColumnDef"]["colname"]] = 'str'
+                self.column2type[columndef["ColumnDef"]["colname"]] = "str"
             self.idx2column[idx] = columndef["ColumnDef"]["colname"]
 
     def oneHotAll(self):
@@ -276,6 +354,7 @@ class Table:
 class DB:
     def __init__(self, schema, TREE_NUM_IN_NET=40):
         from psqlparse import parse_dict
+
         parse_tree = parse_dict(schema)
 
         self.tables = []
@@ -299,17 +378,23 @@ class DB:
 
     def is_str(self, table, column):
         table = self.name2table[table]
-        return table.column2type[column] == 'str'
+        return table.column2type[column] == "str"
 
-    def __len__(self, ):
+    def __len__(
+        self,
+    ):
         if self.size == 0:
             self.size = len(self.table_names)
         return self.size
 
-    def oneHotAll(self, ):
+    def oneHotAll(
+        self,
+    ):
         return np.zeros((1, self.size))
 
-    def network_size(self, ):
+    def network_size(
+        self,
+    ):
         return self.TREE_NUM_IN_NET * self.size
 
 
@@ -322,9 +407,8 @@ class Sql2VecEmbeddingV2:
 
         # Normalize table sizes
         self.table_sizes = np.log1p(np.array(self.db_profile_res.table_size_list))
-        self.table_sizes = (
-                (self.table_sizes - self.table_sizes.min()) /
-                (self.table_sizes.max() - self.table_sizes.min())
+        self.table_sizes = (self.table_sizes - self.table_sizes.min()) / (
+            self.table_sizes.max() - self.table_sizes.min()
         )
 
     def encode_query(self, query_id, sql: str, train_database: str, pg_runner=None):
@@ -339,9 +423,13 @@ class Sql2VecEmbeddingV2:
         else:
             self.pg_runner = pg_runner
         from psqlparse import parse_dict
+
         # Parse SQL query
         parse_result = parse_dict(sql)[0]["SelectStmt"]
-        from_tables = [FromTable(from_clause["RangeVar"]) for from_clause in parse_result["fromClause"]]
+        from_tables = [
+            FromTable(from_clause["RangeVar"])
+            for from_clause in parse_result["fromClause"]
+        ]
 
         # Extract table information
         table_ids = []
@@ -353,7 +441,9 @@ class Sql2VecEmbeddingV2:
             table_alias_fullname[alias] = fullname
 
         # Parse where clause comparisons
-        comparisons = [Comparison(comp) for comp in parse_result["whereClause"]["BoolExpr"]["args"]]
+        comparisons = [
+            Comparison(comp) for comp in parse_result["whereClause"]["BoolExpr"]["args"]
+        ]
 
         join_conditions = []
         filter_conditions = []
@@ -390,7 +480,7 @@ class Sql2VecEmbeddingV2:
         encoded = {
             "join_conditions": np.array(join_conditions, dtype=np.float32),
             "filter_conditions": np.array(filter_conditions, dtype=np.float32),
-            "table_sizes": table_sizes.astype(np.float32)
+            "table_sizes": table_sizes.astype(np.float32),
         }
 
         self.query_encodings[query_id] = encoded
@@ -401,14 +491,19 @@ class Sql2VecEmbeddingV2:
         """Load encoded queries from checkpoint file."""
         if os.path.exists(self.checkpoint_file):
             print(f"Loading from the checkpoint {self.checkpoint_file}")
-            with open(self.checkpoint_file, 'r') as f:
+            with open(self.checkpoint_file, "r") as f:
                 data = json.load(f)
                 return {
                     query_id: {
-                        "join_conditions": np.array(enc["join_conditions"], dtype=np.float32),
-                        "filter_conditions": np.array(enc["filter_conditions"], dtype=np.float32),
-                        "table_sizes": np.array(enc["table_sizes"], dtype=np.float32)
-                    } for query_id, enc in data.items()
+                        "join_conditions": np.array(
+                            enc["join_conditions"], dtype=np.float32
+                        ),
+                        "filter_conditions": np.array(
+                            enc["filter_conditions"], dtype=np.float32
+                        ),
+                        "table_sizes": np.array(enc["table_sizes"], dtype=np.float32),
+                    }
+                    for query_id, enc in data.items()
                 }
         else:
             print(f"Cannot find the file from the checkpoint {self.checkpoint_file}")
@@ -420,45 +515,62 @@ class Sql2VecEmbeddingV2:
             query_id: {
                 "join_conditions": enc["join_conditions"].tolist(),
                 "filter_conditions": enc["filter_conditions"].tolist(),
-                "table_sizes": enc["table_sizes"].tolist()
-            } for query_id, enc in self.query_encodings.items()
+                "table_sizes": enc["table_sizes"].tolist(),
+            }
+            for query_id, enc in self.query_encodings.items()
         }
-        with open(self.checkpoint_file, 'w') as f:
+        with open(self.checkpoint_file, "w") as f:
             json.dump(serializable_data, f, indent=2)
 
 
 class QueryFeatureBuilder:
-    def __init__(self, table_info: table_parser.DBTableInfo, possible_join_attrs: np.ndarray):
+    def __init__(
+        self, table_info: table_parser.DBTableInfo, possible_join_attrs: np.ndarray
+    ):
 
         self.table_info = table_info
         self.n_tables = len(table_info.attr_ranges_list)
-        self.maxn_attrs_single_table = max(table_columns.shape[0] for table_columns in table_info.attr_ranges_list)
+        self.maxn_attrs_single_table = max(
+            table_columns.shape[0] for table_columns in table_info.attr_ranges_list
+        )
 
         # min max for each column
-        self.attr_ranges_all = np.concatenate(table_info.attr_ranges_list, axis=0, dtype=np.float64)
-        self.attr_types_all = np.concatenate(table_info.attr_no_types_list, dtype=np.int64)
+        self.attr_ranges_all = np.concatenate(
+            table_info.attr_ranges_list, axis=0, dtype=np.float64
+        )
+        self.attr_types_all = np.concatenate(
+            table_info.attr_no_types_list, dtype=np.int64
+        )
 
         self.n_attrs_total = self.attr_types_all.shape[0]
 
         # for feature calc only
-        self.attr_lbds = np.zeros_like(self.attr_ranges_all, dtype=self.attr_ranges_all.dtype)
+        self.attr_lbds = np.zeros_like(
+            self.attr_ranges_all, dtype=self.attr_ranges_all.dtype
+        )
         self.attr_lbds[:, 0] = self.attr_ranges_all[:, 0]
         self.attr_lbds[:, 1] = self.attr_ranges_all[:, 0]
         # flatten 2D into 1D
         self.attr_lbds = np.reshape(self.attr_lbds, [-1])
 
         # used for the min-max normalization that rescales the values into the range [−1, 1]
-        self.attr_norm_base = np.zeros_like(self.attr_ranges_all, dtype=self.attr_ranges_all.dtype)
+        self.attr_norm_base = np.zeros_like(
+            self.attr_ranges_all, dtype=self.attr_ranges_all.dtype
+        )
         attr_range_differ = self.attr_ranges_all[:, 1] - self.attr_ranges_all[:, 0]
         self.attr_norm_base[:, 0] = attr_range_differ
         self.attr_norm_base[:, 1] = attr_range_differ
         # flatten 2D into 1D
         self.attr_norm_base = np.reshape(self.attr_norm_base, [-1])
         # Add a small value to any zero entries to prevent division by zero
-        self.attr_norm_base = np.where(self.attr_norm_base == 0, self.attr_norm_base + 1e-8, self.attr_norm_base)
+        self.attr_norm_base = np.where(
+            self.attr_norm_base == 0, self.attr_norm_base + 1e-8, self.attr_norm_base
+        )
 
         # this is got from the base.sql not a specific workload
-        self.join_id_no_map, self.n_possible_joins = self._build_join_id_no_map(possible_join_attrs)
+        self.join_id_no_map, self.n_possible_joins = self._build_join_id_no_map(
+            possible_join_attrs
+        )
 
     def encode_query(self, sql: str) -> np.ndarray:
         """
@@ -468,23 +580,30 @@ class QueryFeatureBuilder:
         if not sql_utils.is_read_sql(sql):
             raise
         # init the features result
-        feature = np.zeros(self.n_tables + self.n_possible_joins + self.n_attrs_total * 2, dtype=np.float64)
+        feature = np.zeros(
+            self.n_tables + self.n_possible_joins + self.n_attrs_total * 2,
+            dtype=np.float64,
+        )
 
         # parser sql and fill the feature
-        join_conds, relevant_tables, equi_classes, attr_range_conds, join_type = \
+        join_conds, relevant_tables, equi_classes, attr_range_conds, join_type = (
             sql_parser.parse_one_sql(sql, self.table_info)
+        )
 
         feature[relevant_tables] = 1
         if join_conds is not None:
             # Encode conjunctive join conds
             join_idx_in_feature = self.calc_join_nos(join_conds)
-            join_idx_in_feature += self.n_tables  # Shift the join position in feature vector
+            join_idx_in_feature += (
+                self.n_tables
+            )  # Shift the join position in feature vector
             feature[join_idx_in_feature] = 1
 
         cursor = self.n_tables + self.n_possible_joins
         attr_range_conds_array = np.array(attr_range_conds, dtype=np.float64)
-        feature[cursor: cursor + self.n_attrs_total * 2] = \
-            ((attr_range_conds_array - self.attr_lbds) / self.attr_norm_base) * 2.0 - 1
+        feature[cursor : cursor + self.n_attrs_total * 2] = (
+            (attr_range_conds_array - self.attr_lbds) / self.attr_norm_base
+        ) * 2.0 - 1
 
         return feature
 
@@ -494,8 +613,12 @@ class QueryFeatureBuilder:
         join_attrs_trans = possible_join_attrs.transpose()
 
         # It uses table_id * max_attr_num + attr_id to create a unique identifier for each attribute.
-        table1, t1_attr, table2, t2_attr = join_attrs_trans[0], join_attrs_trans[1], join_attrs_trans[2], \
-                                           join_attrs_trans[3]
+        table1, t1_attr, table2, t2_attr = (
+            join_attrs_trans[0],
+            join_attrs_trans[1],
+            join_attrs_trans[2],
+            join_attrs_trans[3],
+        )
         table_attr_id_1 = table1 * self.maxn_attrs_single_table + t1_attr
         table_attr_id_2 = table2 * self.maxn_attrs_single_table + t2_attr
         # total number of possible attributes in all tables, table.attribute

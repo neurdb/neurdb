@@ -2,11 +2,11 @@
 import json
 import time
 from collections import Counter
+from parser.table_parser import load_db_info_json
 from typing import Tuple
 
 # Local/project imports
 from common import BaseConfig, get_config
-from parser.table_parser import load_db_info_json
 from utils.io import set_global_seed
 
 from .controller_offline import ModelBuilder
@@ -24,26 +24,34 @@ def map_back_to_method(predictions: dict, cfg: BaseConfig) -> dict:
     return predicted_methods
 
 
-def compute_total_time_for_predictions(df_processed, query_method: dict, workload_name: str,
-                                       avg_inference_time_per_query_cpu) -> Tuple[float, dict]:
-    df_workload = df_processed[df_processed['experiment'] == workload_name].copy()
+def compute_total_time_for_predictions(
+    df_processed,
+    query_method: dict,
+    workload_name: str,
+    avg_inference_time_per_query_cpu,
+) -> Tuple[float, dict]:
+    df_workload = df_processed[df_processed["experiment"] == workload_name].copy()
     total_time_sum = 0.0
     per_query_time = {}
     for query_id, predicted_method in query_method.items():
         # Find the row in df_workload for this query_id and predicted_method
         query_method_row = df_workload[
-            (df_workload['query_ident'] == query_id) &
-            (df_workload['method'] == predicted_method)]
+            (df_workload["query_ident"] == query_id)
+            & (df_workload["method"] == predicted_method)
+        ]
 
-        total_time = query_method_row['total_time'].iloc[0]
-        inference_time = query_method_row['inference_time'].iloc[0]
-        planning_time = query_method_row['planning_time'].iloc[0]
-        execution_time = query_method_row['execution_time'].iloc[0]
+        total_time = query_method_row["total_time"].iloc[0]
+        inference_time = query_method_row["inference_time"].iloc[0]
+        planning_time = query_method_row["planning_time"].iloc[0]
+        execution_time = query_method_row["execution_time"].iloc[0]
 
         total_time_sum += total_time
         per_query_time[query_id] = {
-            "prepare_time": inference_time + planning_time + avg_inference_time_per_query_cpu,
-            "execution_time": execution_time}
+            "prepare_time": inference_time
+            + planning_time
+            + avg_inference_time_per_query_cpu,
+            "execution_time": execution_time,
+        }
         # print(f"Query: {query_id}, Method: {predicted_method}, Total Time: {total_time}")
 
     print(f"Total time for workload '{workload_name}': {total_time_sum}")
@@ -51,8 +59,13 @@ def compute_total_time_for_predictions(df_processed, query_method: dict, workloa
 
 
 def inference_single_workload(
-        df_processed, model_path, test_data_path: str, batch_size: int, dataset: str,
-        cfg: BaseConfig):
+    df_processed,
+    model_path,
+    test_data_path: str,
+    batch_size: int,
+    dataset: str,
+    cfg: BaseConfig,
+):
     SysOnworkloadCollector = {}
     query_per_workload = {}
 
@@ -65,9 +78,9 @@ def inference_single_workload(
 
     # feature instance
     db_profile_res = load_db_info_json(cfg.DB_INFO_DICT)
-    sql_vec = Sql2VecEmbeddingV2(config=cfg.CONFIG,
-                                 db_profile_res=db_profile_res,
-                                 checkpoint_file=cfg.EMBED_FILE)
+    sql_vec = Sql2VecEmbeddingV2(
+        config=cfg.CONFIG, db_profile_res=db_profile_res, checkpoint_file=cfg.EMBED_FILE
+    )
 
     fq_instance = sql_vec
 
@@ -83,7 +96,7 @@ def inference_single_workload(
             datasets={"test": test_df},
             batch_size=batch_size,
             fq_instance=fq_instance,
-            threshold=None
+            threshold=None,
         )
 
         builder = ModelBuilder(
@@ -97,13 +110,14 @@ def inference_single_workload(
             is_fix_emb=None,
             num_layers=2,
             dataset=dataset,
-            cfg=cfg
-
+            cfg=cfg,
         )
 
         builder.load_model("hypered_2")
         start_time = time.time()  # Start timing
-        predictions_dict, predictions_time = builder.inference(data_loaders['test'], save_embedding=True)
+        predictions_dict, predictions_time = builder.inference(
+            data_loaders["test"], save_embedding=True
+        )
         end_time = time.time()  # End timing
 
         total_inference_time = end_time - start_time
@@ -113,8 +127,9 @@ def inference_single_workload(
         print(predictions_time)
         print(predictions_dict)
         query_method = map_back_to_method(predictions_dict, cfg=cfg)
-        total_time_sum, per_query_time = compute_total_time_for_predictions(df_processed, query_method, workload_name,
-                                                                            avg_inference_time_per_query_cpu)
+        total_time_sum, per_query_time = compute_total_time_for_predictions(
+            df_processed, query_method, workload_name, avg_inference_time_per_query_cpu
+        )
 
         # single query
         query_per_workload[workload_name] = per_query_time
@@ -162,5 +177,5 @@ if __name__ == "__main__":
         test_data_path=cfg.TESTPATH,
         batch_size=160,
         dataset=args.dataset,
-        cfg=cfg
+        cfg=cfg,
     )

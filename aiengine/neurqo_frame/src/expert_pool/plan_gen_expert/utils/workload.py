@@ -1,10 +1,11 @@
-import numpy as np
 import collections
 import copy
-from typing import Callable, Tuple, Any, List, Dict
 import functools
-import networkx as nx
 import re
+from typing import Any, Callable, Dict, List, Tuple
+
+import networkx as nx
+import numpy as np
 from common import BaseConfig
 
 
@@ -21,53 +22,60 @@ class Node:
     @classmethod
     def plan_json_to_node(cls, json_dict: Dict):
         """Takes JSON dict, parses into a Node."""
-        curr = json_dict['Plan']
+        curr = json_dict["Plan"]
 
         def _parse_pg(json_dict, select_exprs=None, indent=0):
-            op = json_dict['Node Type']
-            cost = json_dict['Total Cost']
-            if op == 'Aggregate':
-                op = json_dict['Partial Mode'] + op
+            op = json_dict["Node Type"]
+            cost = json_dict["Total Cost"]
+            if op == "Aggregate":
+                op = json_dict["Partial Mode"] + op
                 if select_exprs is None:
                     # Record the SELECT <select_exprs> at the topmost Aggregate.
                     # E.g., ['min(mi.info)', 'min(miidx.info)', 'min(t.title)'].
-                    select_exprs = json_dict['Output']
+                    select_exprs = json_dict["Output"]
 
             # Record relevant info.
             curr_node = cls(op)
             curr_node.cost = cost
             # Only available if 'analyze' is set (actual execution).
-            curr_node.actual_time_ms = json_dict.get('Actual Total Time')
-            if 'Relation Name' in json_dict:
-                curr_node.table_name = json_dict['Relation Name']
-                curr_node.table_alias = json_dict['Alias']
+            curr_node.actual_time_ms = json_dict.get("Actual Total Time")
+            if "Relation Name" in json_dict:
+                curr_node.table_name = json_dict["Relation Name"]
+                curr_node.table_alias = json_dict["Alias"]
 
             # Unary predicate on a table.
-            if 'Filter' in json_dict:
-                assert 'Scan' in op, json_dict
-                assert 'Relation Name' in json_dict, json_dict
-                curr_node.info['filter'] = json_dict['Filter']
+            if "Filter" in json_dict:
+                assert "Scan" in op, json_dict
+                assert "Relation Name" in json_dict, json_dict
+                curr_node.info["filter"] = json_dict["Filter"]
 
-            if 'Scan' in op and select_exprs:
+            if "Scan" in op and select_exprs:
                 # Record select exprs that belong to this leaf.
                 # Assume: SELECT <exprs> are all expressed in terms of aliases.
-                filtered = NodeOps.filter_exprs_by_alias(select_exprs, json_dict['Alias'])
+                filtered = NodeOps.filter_exprs_by_alias(
+                    select_exprs, json_dict["Alias"]
+                )
                 if filtered:
-                    curr_node.info['select_exprs'] = filtered
+                    curr_node.info["select_exprs"] = filtered
 
             # Recurse.
-            if 'Plans' in json_dict:
-                for next_plan in json_dict['Plans']:
+            if "Plans" in json_dict:
+                for next_plan in json_dict["Plans"]:
                     # Treating Bitmap Heap Scans as the leaf node, since there is always just
                     # a single Bitmap Index Scan node below
-                    if (curr_node.node_type != 'Bitmap Heap Scan') or (next_plan['Node Type'] != 'Bitmap Index Scan'):
+                    if (curr_node.node_type != "Bitmap Heap Scan") or (
+                        next_plan["Node Type"] != "Bitmap Index Scan"
+                    ):
                         curr_node.children.append(
-                            _parse_pg(next_plan, select_exprs=select_exprs, indent=indent + 2))
+                            _parse_pg(
+                                next_plan, select_exprs=select_exprs, indent=indent + 2
+                            )
+                        )
 
             # Special case.
-            if op == 'Bitmap Heap Scan':
+            if op == "Bitmap Heap Scan":
                 for c in curr_node.children:
-                    if c.node_type == 'Bitmap Index Scan':
+                    if c.node_type == "Bitmap Index Scan":
                         # 'Bitmap Index Scan' doesn't have the field 'Relation Name'.
                         c.table_name = curr_node.table_name
                         c.table_alias = curr_node.table_alias
@@ -117,24 +125,25 @@ class Node:
         if with_alias and self.table_alias:
             if alias_only:
                 return self.table_alias
-            return self.table_name + ' AS ' + self.table_alias
+            return self.table_name + " AS " + self.table_alias
         assert self.table_name is not None
         return self.table_name
 
     @functools.lru_cache(maxsize=128)
     def to_str(self, with_cost=True, indent=0):
-        s = '' if indent == 0 else ' ' * indent
+        s = "" if indent == 0 else " " * indent
         if self.table_name is None:
             if with_cost:
-                s += '{} cost={}\n'.format(self.node_type, self.cost)
+                s += "{} cost={}\n".format(self.node_type, self.cost)
             else:
-                s += '{}\n'.format(self.node_type)
+                s += "{}\n".format(self.node_type)
         else:
             if with_cost:
-                s += '{} [{}] cost={}\n'.format(self.node_type,
-                                                self.get_table_id(), self.cost)
+                s += "{} [{}] cost={}\n".format(
+                    self.node_type, self.get_table_id(), self.cost
+                )
             else:
-                s += '{} [{}]\n'.format(
+                s += "{} [{}]\n".format(
                     self.node_type,
                     self.get_table_id(),
                 )
@@ -142,7 +151,9 @@ class Node:
             s += c.to_str(with_cost=with_cost, indent=indent + 2)
         return s
 
-    def get_parse_update_sql(self, sql_parse_func: Callable[[str], Dict[str, Any]]) -> Tuple[nx.MultiGraph, List]:
+    def get_parse_update_sql(
+        self, sql_parse_func: Callable[[str], Dict[str, Any]]
+    ) -> Tuple[nx.MultiGraph, List]:
         """Parses the join graph of this node into (nx.Graph, join conds).
 
         If self.info['sql_str'] exists, parses this SQL string. Otherwise
@@ -151,32 +162,35 @@ class Node:
 
         Internally, try to read from a cached pickle file if it exists.
         """
-        graph = self.info.get('parsed_join_graph')
-        join_conds = self.info.get('parsed_join_conds')
+        graph = self.info.get("parsed_join_graph")
+        join_conds = self.info.get("parsed_join_conds")
         if graph is None or join_conds is None:
-            sql_str = self.info.get('sql_str') or self.to_sql(self.info['overall_join_conds'], with_filters=False)
+            sql_str = self.info.get("sql_str") or self.to_sql(
+                self.info["overall_join_conds"], with_filters=False
+            )
 
             graph, join_conds = sql_parse_func(sql_str)
 
             assert graph is not None, sql_str
-            assert len(graph.edges) == len(join_conds), 'Join graph and conditions mismatch.'
+            assert len(graph.edges) == len(
+                join_conds
+            ), "Join graph and conditions mismatch."
 
-            self.info['parsed_join_graph'] = graph
-            self.info['parsed_join_conds'] = join_conds
+            self.info["parsed_join_graph"] = graph
+            self.info["parsed_join_conds"] = join_conds
         return graph, join_conds
 
     def GetOrParseJoinGraph(self):
         """Returns this Node's join graph as a networkx.Graph."""
-        graph = self.info.get('parsed_join_graph')
+        graph = self.info.get("parsed_join_graph")
         if graph is None:
             # Restricting an overall graph onto this Node's leaf IDs.
-            overall_graph = self.info.get('overall_join_graph')
+            overall_graph = self.info.get("overall_join_graph")
             if overall_graph is not None:
-                subgraph_view = overall_graph.subgraph(
-                    self.leaf_ids(alias_only=True))
+                subgraph_view = overall_graph.subgraph(self.leaf_ids(alias_only=True))
                 assert len(subgraph_view) > 0
                 graph = subgraph_view
-                self.info['parsed_join_graph'] = subgraph_view
+                self.info["parsed_join_graph"] = subgraph_view
                 return graph
             return self.get_parse_update_sql()[0]
         return graph
@@ -191,7 +205,7 @@ class Node:
         select_exprs = []
 
         def _Fn(l):
-            exprs = l.info.get('select_exprs')
+            exprs = l.info.get("select_exprs")
             if exprs:
                 select_exprs.extend(exprs)
 
@@ -205,7 +219,7 @@ class Node:
         pushed-down predicates associated with that table.
         """
         filters = []
-        NodeOps.map_leaves(self, lambda l: filters.append(l.info.get('filter')))
+        NodeOps.map_leaves(self, lambda l: filters.append(l.info.get("filter")))
         filters = list(filter(lambda s: s is not None, filters))
         return filters
 
@@ -214,29 +228,29 @@ class Node:
 
         These expressions are of the form rel.attr = VALUE.
         """
-        eq_filters = self.info.get('eq_filters')
+        eq_filters = self.info.get("eq_filters")
         if eq_filters is None:
             filters = self.GetFilters()
-            pattern = re.compile('[a-z][\da-z_]*\.[\da-z_]*\ = [\da-z_]+')
+            pattern = re.compile("[a-z][\da-z_]*\.[\da-z_]*\ = [\da-z_]+")
             equality_conds = []
             for clause in filters:
                 equality_conds.extend(pattern.findall(clause))
             eq_filters = list(set(equality_conds))
-            self.info['eq_filters'] = eq_filters
+            self.info["eq_filters"] = eq_filters
         return eq_filters
 
     def GetFilteredAttributes(self):
         """Returns the list of filtered attributes ([<alias>.<attr>])."""
-        attrs = self.info.get('filtered_attributes')
+        attrs = self.info.get("filtered_attributes")
         if attrs is None:
             attrs = []
             filters = self.GetFilters()
             # Look for <alias>.<attr>.
-            pattern = re.compile('[a-z][\da-z_]*\.[\da-z_]+')
+            pattern = re.compile("[a-z][\da-z_]*\.[\da-z_]+")
             for clause in filters:
                 attrs.extend(pattern.findall(clause))
             attrs = list(set(attrs))
-            self.info['filtered_attributes'] = attrs
+            self.info["filtered_attributes"] = attrs
         return attrs
 
     def KeepRelevantJoins(self, all_join_conds):
@@ -244,10 +258,10 @@ class Node:
         aliases = self.leaf_ids(alias_only=True)
 
         def _KeepRelevantJoins(s):
-            splits = s.split('=')
+            splits = s.split("=")
             l, r = splits[0].strip(), splits[1].strip()
-            l_alias = l.split('.')[0]
-            r_alias = r.split('.')[0]
+            l_alias = l.split(".")[0]
+            r_alias = r.split(".")[0]
             return l_alias in aliases and r_alias in aliases
 
         joins = list(filter(_KeepRelevantJoins, all_join_conds))
@@ -273,8 +287,8 @@ class Node:
         ids = []
         if not return_depths:
             NodeOps.map_leaves(
-                self,
-                lambda l: ids.append(l.get_table_id(with_alias, alias_only)))
+                self, lambda l: ids.append(l.get_table_id(with_alias, alias_only))
+            )
             return ids
 
         depths = []
@@ -303,17 +317,17 @@ class Node:
         return leaves
 
     def IsJoin(self):
-        return 'Join' in self.node_type or self.node_type == 'Nested Loop'
+        return "Join" in self.node_type or self.node_type == "Nested Loop"
 
     def IsScan(self):
-        return 'Scan' in self.node_type
+        return "Scan" in self.node_type
 
     def HasEqualityFilters(self):
         return len(self.GetEqualityFilters()) > 0
 
     def ToScanOp(self, scan_op):
         """Retrieves a deep copy of self with scan_op assigned."""
-        assert not self.children, 'This node must be a leaf.'
+        assert not self.children, "This node must be a leaf."
         copied = self._leaf_scan_op_copies.get(scan_op)
         if copied is None:
             copied = copy.deepcopy(self)
@@ -321,10 +335,7 @@ class Node:
             self._leaf_scan_op_copies[scan_op] = copied
         return copied
 
-    def to_sql(self,
-               all_join_conds,
-               with_filters=True,
-               with_select_exprs=False):
+    def to_sql(self, all_join_conds, with_filters=True, with_select_exprs=False):
         # Join and filter predicates.
         joins = self.KeepRelevantJoins(all_join_conds)
         if with_filters:
@@ -333,26 +344,28 @@ class Node:
             filters = []
         # FROM.
         from_str = self.leaf_ids()
-        from_str = ', '.join(from_str)
+        from_str = ", ".join(from_str)
         # SELECT.
         if with_select_exprs:
             select_exprs = self.GetSelectExprs()
         else:
             select_exprs = []
-        select_str = '*' if len(select_exprs) == 0 else ','.join(select_exprs)
+        select_str = "*" if len(select_exprs) == 0 else ",".join(select_exprs)
 
         if len(filters) > 0 and len(joins) > 0:
-            sql = 'SELECT {} FROM {} WHERE {} AND {};'.format(
-                select_str, from_str, ' AND '.join(joins),
-                ' AND '.join(filters))
+            sql = "SELECT {} FROM {} WHERE {} AND {};".format(
+                select_str, from_str, " AND ".join(joins), " AND ".join(filters)
+            )
         elif len(joins) > 0:
-            sql = 'SELECT {} FROM {} WHERE {};'.format(select_str, from_str,
-                                                       ' AND '.join(joins))
+            sql = "SELECT {} FROM {} WHERE {};".format(
+                select_str, from_str, " AND ".join(joins)
+            )
         elif len(filters) > 0:
-            sql = 'SELECT {} FROM {} WHERE {};'.format(select_str, from_str,
-                                                       ' AND '.join(filters))
+            sql = "SELECT {} FROM {} WHERE {};".format(
+                select_str, from_str, " AND ".join(filters)
+            )
         else:
-            sql = 'SELECT {} FROM {};'.format(select_str, from_str)
+            sql = "SELECT {} FROM {};".format(select_str, from_str)
         return sql
 
     @functools.lru_cache(maxsize=2)
@@ -362,13 +375,13 @@ class Node:
         joins = []
 
         def helper(t):
-            node_type = t.node_type.replace(' ', '')
+            node_type = t.node_type.replace(" ", "")
             # PG uses the former & the extension expects the latter.
-            node_type = node_type.replace('NestedLoop', 'NestLoop')
-            node_type = node_type.replace('BitmapHeapScan', 'BitmapScan')
-            node_type = node_type.replace('BitmapIndexScan', 'BitmapScan')
+            node_type = node_type.replace("NestedLoop", "NestLoop")
+            node_type = node_type.replace("BitmapHeapScan", "BitmapScan")
+            node_type = node_type.replace("BitmapIndexScan", "BitmapScan")
             if t.IsScan():
-                scans.append(node_type + '(' + t.table_alias + ')')
+                scans.append(node_type + "(" + t.table_alias + ")")
                 return [t.table_alias], t.table_alias
             rels = []  # Flattened
             leading = []  # Hierarchical
@@ -376,23 +389,27 @@ class Node:
                 a, b = helper(child)
                 rels.extend(a)
                 leading.append(b)
-            joins.append(node_type + '(' + ' '.join(rels) + ')')
+            joins.append(node_type + "(" + " ".join(rels) + ")")
             return rels, leading
 
         _, leading_hierarchy = helper(self)
 
-        leading = 'Leading(' + str(leading_hierarchy) \
-            .replace('\'', '') \
-            .replace('[', '(') \
-            .replace(']', ')') \
-            .replace(',', '') + ')'
+        leading = (
+            "Leading("
+            + str(leading_hierarchy)
+            .replace("'", "")
+            .replace("[", "(")
+            .replace("]", ")")
+            .replace(",", "")
+            + ")"
+        )
         if with_physical_hints:
             # Reverse the join hints to print largest/outermost joins first.
             atoms = joins[::-1] + scans + [leading]
         else:
             atoms = [leading]  # Join order hint only.
-        query_hint = '\n '.join(atoms)
-        return '/*+ ' + query_hint + ' */'
+        query_hint = "\n ".join(atoms)
+        return "/*+ " + query_hint + " */"
 
     def filter_scans_joins(self):
         """
@@ -421,13 +438,13 @@ class Node:
         d = {}
 
         def f(leaf):
-            if 'filter' in leaf.info:
+            if "filter" in leaf.info:
                 table_id = leaf.get_table_id(with_alias, alias_only)
                 assert table_id not in d, (leaf.info, table_id, d)
-                d[table_id] = leaf.info['filter']
+                d[table_id] = leaf.info["filter"]
 
         NodeOps.map_leaves(self, f)
-        self.info['all_filters'] = d
+        self.info["all_filters"] = d
 
     def is_filter_scan(self):
         """
@@ -441,7 +458,7 @@ class Node:
         Currently uses a heuristic treating tables ending in '_type' as small.
         A more robust approach would involve analyzing Postgres source code for row count or cost thresholds.
         """
-        return self.table_name.endswith('_type')
+        return self.table_name.endswith("_type")
 
     def __str__(self):
         return self.to_str()
@@ -517,10 +534,10 @@ class NodeOps:
 
         def f(node: Node):
             op = node.node_type
-            if 'Scan' in op:
-                node.node_type = 'Scan'
-            elif 'Join' in op or op == 'Nested Loop':
-                node.node_type = 'Join'
+            if "Scan" in op:
+                node.node_type = "Scan"
+            elif "Join" in op or op == "Nested Loop":
+                node.node_type = "Join"
 
         for node in nodes:
             NodeOps.map_node(node, f)
@@ -534,7 +551,9 @@ class NodeOps:
             trees.append(node)
             for c in node.children:
                 # Skip Bitmap Index Scans under Bitmap Heap Scan
-                if (node.node_type != 'Bitmap Heap Scan') or (c.node_type != 'Bitmap Index Scan'):
+                if (node.node_type != "Bitmap Heap Scan") or (
+                    c.node_type != "Bitmap Index Scan"
+                ):
                     _fn(c, trees)
 
         if isinstance(nodes, Node):
@@ -549,7 +568,7 @@ class NodeOps:
         trees = []
 
         def _fn(node: Node, trees):
-            if len(node.children) and (node.node_type != 'Bitmap Heap Scan'):
+            if len(node.children) and (node.node_type != "Bitmap Heap Scan"):
                 trees.append(node)
                 for c in node.children:
                     _fn(c, trees)
@@ -563,12 +582,13 @@ class NodeOps:
     @staticmethod
     def filter_exprs_by_alias(exprs, table_alias):
         """Filters expressions by a given table alias."""
-        pattern = re.compile(r'.*\(?\b{}\b\..*\)?'.format(table_alias))
+        pattern = re.compile(r".*\(?\b{}\b\..*\)?".format(table_alias))
         return list(filter(pattern.match, exprs))
 
     @staticmethod
-    def is_join_combination_ok(join_type, left, right, avoid_eq_filters=False,
-                               use_plan_restrictions=True):
+    def is_join_combination_ok(
+        join_type, left, right, avoid_eq_filters=False, use_plan_restrictions=True
+    ):
         """
         Checks if a hinted join is likely to be accepted by Postgres.
         Postgres may silently reject or rewrite hints due to internal implementation constraints.
@@ -588,15 +608,15 @@ class NodeOps:
         """
         if not use_plan_restrictions:
             return True
-        if join_type == 'Nested Loop':
+        if join_type == "Nested Loop":
             return NodeOps.is_nest_loop_legal(left, right)
         # Avoid problematic info_type + equality filter combinations for Ext-JOB hints
         if avoid_eq_filters:
-            if right.table_name == 'info_type' and right.is_filter_scan():
+            if right.table_name == "info_type" and right.is_filter_scan():
                 return False
-            if left.table_name == 'info_type' and left.is_filter_scan():
+            if left.table_name == "info_type" and left.is_filter_scan():
                 return False
-        if join_type == 'Hash Join':
+        if join_type == "Hash Join":
             return NodeOps.is_hash_join_ok(left, right)
         return True
 
@@ -619,9 +639,9 @@ class NodeOps:
         if (l_op, r_op) not in BaseConfig.NestedLoop_WHITE_LIST:
             return False
         # Ensure Seq Scan side is small for specific combinations
-        if (l_op, r_op) == ('Seq Scan', 'Nested Loop'):
+        if (l_op, r_op) == ("Seq Scan", "Nested Loop"):
             return left.is_small_scan()
-        if (l_op, r_op) in [('Index Scan', 'Seq Scan'), ('Nested Loop', 'Seq Scan')]:
+        if (l_op, r_op) in [("Index Scan", "Seq Scan"), ("Nested Loop", "Seq Scan")]:
             return right.is_small_scan()
         return True
 
@@ -641,7 +661,7 @@ class NodeOps:
         """
         l_op = left.node_type
         r_op = right.node_type
-        if (l_op, r_op) == ('Index Scan', 'Hash Join'):
+        if (l_op, r_op) == ("Index Scan", "Hash Join"):
             l_exprs = left.GetSelectExprs()
             r_exprs = right.GetSelectExprs()
             return left.is_small_scan() and (len(l_exprs) or len(r_exprs))
@@ -665,13 +685,19 @@ class NodeOps:
             yield node
         else:
             for scan_op in scan_ops:
-                if scan_op == 'Index Only Scan':
+                if scan_op == "Index Only Scan":
                     continue
                 yield node.ToScanOp(scan_op)
 
     @staticmethod
-    def enumerate_join_with_ops(left, right, join_ops, scan_ops, avoid_eq_filters=False,
-                                use_plan_restrictions=True):
+    def enumerate_join_with_ops(
+        left,
+        right,
+        join_ops,
+        scan_ops,
+        avoid_eq_filters=False,
+        use_plan_restrictions=True,
+    ):
         """
         Yields all valid join operations combining scan operations on left and right nodes.
 
@@ -689,7 +715,9 @@ class NodeOps:
         for join_op in join_ops:
             for l in NodeOps.enumerate_scan_ops(left, scan_ops):
                 for r in NodeOps.enumerate_scan_ops(right, scan_ops):
-                    if not NodeOps.is_join_combination_ok(join_op, l, r, avoid_eq_filters, use_plan_restrictions):
+                    if not NodeOps.is_join_combination_ok(
+                        join_op, l, r, avoid_eq_filters, use_plan_restrictions
+                    ):
                         continue
                     join = Node(join_op)
                     join.children = [l, r]
@@ -750,17 +778,17 @@ class WorkloadInfo:
             self.rel_names_set.add(node.table_name)
             self.rel_ids_set.add(node.get_table_id())
 
-        if node.info and 'filter' in node.info:
+        if node.info and "filter" in node.info:
             table_id = node.get_table_id()
-            self.all_filters[table_id].add(node.info['filter'])
+            self.all_filters[table_id].add(node.info["filter"])
 
-        if node.info and 'sql_str' in node.info:
+        if node.info and "sql_str" in node.info:
             # We want "all" attributes but as an optimization, we keep the
             # attributes that are known to be filter-able.
             attrs = node.GetFilteredAttributes()
             self.all_attributes_set.update(attrs)
 
-        if 'Scan' in node.node_type:
+        if "Scan" in node.node_type:
             self.scan_types_set.add(node.node_type)
         elif node.IsJoin():
             self.join_types_set.add(node.node_type)
@@ -776,15 +804,15 @@ class WorkloadInfo:
         if join_ops is not None:
             self.join_types = np.asarray(sorted(list(join_ops)))
         new_all_ops = [
-            op for op in self.all_ops
-            if op not in old_scans and op not in old_joins
+            op for op in self.all_ops if op not in old_scans and op not in old_joins
         ]
-        new_all_ops = new_all_ops + list(self.scan_types) + list(
-            self.join_types)
+        new_all_ops = new_all_ops + list(self.scan_types) + list(self.join_types)
         if len(self.all_ops) != len(new_all_ops):
-            print('Search space (old=parsed from query nodes; new=manually set in search space):')
-            print('old:', old_scans, old_joins, self.all_ops)
-            print('new:', self.scan_types, self.join_types, self.all_ops)
+            print(
+                "Search space (old=parsed from query nodes; new=manually set in search space):"
+            )
+            print("old:", old_scans, old_joins, self.all_ops)
+            print("new:", self.scan_types, self.join_types, self.all_ops)
         self.all_ops = np.asarray(sorted(list(set(new_all_ops))))
 
     def WithJoinGraph(self, join_graph: Dict):
@@ -799,33 +827,39 @@ class WorkloadInfo:
         return copy.deepcopy(self)
 
     def HasPhysicalOps(self):
-        if not np.array_equal(self.scan_types, ['Scan']):
+        if not np.array_equal(self.scan_types, ["Scan"]):
             return True
-        if not np.array_equal(self.join_types, ['Join']):
+        if not np.array_equal(self.join_types, ["Join"]):
             return True
         return False
 
     def __repr__(self):
-        fmt = 'rel_names: {}\nrel_ids: {}\nscan_types: {}\n' \
-              'join_types: {}\nall_ops: {}\nall_attributes: {}'
-        return fmt.format(self.rel_names, self.rel_ids, self.scan_types,
-                          self.join_types, self.all_ops, self.all_attributes)
+        fmt = (
+            "rel_names: {}\nrel_ids: {}\nscan_types: {}\n"
+            "join_types: {}\nall_ops: {}\nall_attributes: {}"
+        )
+        return fmt.format(
+            self.rel_names,
+            self.rel_ids,
+            self.scan_types,
+            self.join_types,
+            self.all_ops,
+            self.all_attributes,
+        )
 
 
 def MakeTestQuery():
-    a_join_b = Node('Join')
+    a_join_b = Node("Join")
     a_join_b.children = [
-        Node('Scan', table_name='A').with_alias('a'),
-        Node('Scan', table_name='B').with_alias('b'),
+        Node("Scan", table_name="A").with_alias("a"),
+        Node("Scan", table_name="B").with_alias("b"),
     ]
-    query_node = Node('Join')
-    query_node.children = [
-        a_join_b,
-        Node('Scan', table_name='C').with_alias('c')
-    ]
-    query_node.info['query_name'] = 'test'
-    query_node.info[
-        'sql_str'] = 'SELECT * FROM a, b, c WHERE a.id = b.id AND a.id = c.id;'
+    query_node = Node("Join")
+    query_node.children = [a_join_b, Node("Scan", table_name="C").with_alias("c")]
+    query_node.info["query_name"] = "test"
+    query_node.info["sql_str"] = (
+        "SELECT * FROM a, b, c WHERE a.id = b.id AND a.id = c.id;"
+    )
 
     # Simple check: Copy() deep-copies the children nodes.
     copied = query_node.Copy()

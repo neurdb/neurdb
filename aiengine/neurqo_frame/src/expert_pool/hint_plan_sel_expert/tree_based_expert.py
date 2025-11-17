@@ -1,21 +1,21 @@
 import json
+import os
+import shutil
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from dataclasses import field
-import numpy as np
+from db.pg_conn import PostgresConnector
+from exp_buffer.buffer_mngr import BufferManager
+from exp_buffer.sqllite import PlanRecord
 from expert_pool.hint_plan_sel_expert.plan_encoder import OneHotPlanEncoder
 from expert_pool.hint_plan_sel_expert.tree_cnn import TreeCNN
-from sklearn.preprocessing import FunctionTransformer, MinMaxScaler
 from sklearn.pipeline import Pipeline
-from torch.utils.data import Dataset, DataLoader
-from db.pg_conn import PostgresConnector
-from typing import List, Optional, Tuple
-from exp_buffer.sqllite import PlanRecord
-from dataclasses import dataclass
-import os
-import shutil
-from exp_buffer.buffer_mngr import BufferManager
+from sklearn.preprocessing import FunctionTransformer, MinMaxScaler
+from torch.utils.data import DataLoader, Dataset
 
 
 def _arm_idx_to_hints(arm_idx: int) -> List[str]:
@@ -29,8 +29,12 @@ def _arm_idx_to_hints(arm_idx: int) -> List[str]:
         List of hint SQL statements
     """
     _ALL_OPTIONS = [
-        "enable_nestloop", "enable_hashjoin", "enable_mergejoin",
-        "enable_seqscan", "enable_indexscan", "enable_indexonlyscan"
+        "enable_nestloop",
+        "enable_hashjoin",
+        "enable_mergejoin",
+        "enable_seqscan",
+        "enable_indexscan",
+        "enable_indexonlyscan",
     ]
 
     # Start by turning all off
@@ -41,34 +45,42 @@ def _arm_idx_to_hints(arm_idx: int) -> List[str]:
         # All on
         hints.extend([f"SET {option} TO on" for option in _ALL_OPTIONS])
     elif arm_idx == 1:
-        hints.extend([
-            "SET enable_hashjoin TO on",
-            "SET enable_indexonlyscan TO on",
-            "SET enable_indexscan TO on",
-            "SET enable_mergejoin TO on",
-            "SET enable_seqscan TO on"
-        ])
+        hints.extend(
+            [
+                "SET enable_hashjoin TO on",
+                "SET enable_indexonlyscan TO on",
+                "SET enable_indexscan TO on",
+                "SET enable_mergejoin TO on",
+                "SET enable_seqscan TO on",
+            ]
+        )
     elif arm_idx == 2:
-        hints.extend([
-            "SET enable_hashjoin TO on",
-            "SET enable_indexonlyscan TO on",
-            "SET enable_nestloop TO on",
-            "SET enable_seqscan TO on"
-        ])
+        hints.extend(
+            [
+                "SET enable_hashjoin TO on",
+                "SET enable_indexonlyscan TO on",
+                "SET enable_nestloop TO on",
+                "SET enable_seqscan TO on",
+            ]
+        )
     elif arm_idx == 3:
-        hints.extend([
-            "SET enable_hashjoin TO on",
-            "SET enable_indexonlyscan TO on",
-            "SET enable_seqscan TO on"
-        ])
+        hints.extend(
+            [
+                "SET enable_hashjoin TO on",
+                "SET enable_indexonlyscan TO on",
+                "SET enable_seqscan TO on",
+            ]
+        )
     elif arm_idx == 4:
-        hints.extend([
-            "SET enable_hashjoin TO on",
-            "SET enable_indexonlyscan TO on",
-            "SET enable_indexscan TO on",
-            "SET enable_nestloop TO on",
-            "SET enable_seqscan TO on"
-        ])
+        hints.extend(
+            [
+                "SET enable_hashjoin TO on",
+                "SET enable_indexonlyscan TO on",
+                "SET enable_indexscan TO on",
+                "SET enable_nestloop TO on",
+                "SET enable_seqscan TO on",
+            ]
+        )
 
     return hints
 
@@ -84,7 +96,8 @@ class TreeCNNRegDataset(Dataset):
         self.trees = trees
         self.y = torch.tensor(y_scaled, dtype=torch.float32)
 
-    def __len__(self): return len(self.trees)
+    def __len__(self):
+        return len(self.trees)
 
     def __getitem__(self, idx):
         return self.trees[idx], self.y[idx]
@@ -95,7 +108,9 @@ class TreeCNNConfig:
     train_epochs: int = 100
     batch_size: int = 16
     device: torch.device = field(
-        default_factory=lambda: torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        default_factory=lambda: torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
     )
     cur_model_path = "./models/tree_expert_models/current"
     temp_model_path = "./models/tree_expert_models/temp"
@@ -112,12 +127,19 @@ class TreeCNNRegExpert:
         self.buffer_mngr = buffer_mngr
         self.config = config
         # Auto-select device at runtime
-        self.config.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.config.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
 
-        self.pipeline = Pipeline([
-            ("log", FunctionTransformer(np.log1p, inverse_func=np.expm1, validate=True)),
-            ("scale", MinMaxScaler())
-        ])
+        self.pipeline = Pipeline(
+            [
+                (
+                    "log",
+                    FunctionTransformer(np.log1p, inverse_func=np.expm1, validate=True),
+                ),
+                ("scale", MinMaxScaler()),
+            ]
+        )
 
         self.encoder = OneHotPlanEncoder()
         self.net: Optional[TreeCNN] = None
@@ -145,14 +167,18 @@ class TreeCNNRegExpert:
                 print("[train] No current model; promoted temp to current.")
                 break
             # Compare new(temp) vs old(current)
-            if self.should_replace_model(self.config.cur_model_path, self.config.temp_model_path):
+            if self.should_replace_model(
+                self.config.cur_model_path, self.config.temp_model_path
+            ):
                 self._promote_temp_to_current()
                 print("[train] temp model accepted and promoted to current.")
                 break
             if attempt >= max_retries:
                 print("[train] Could not train model with better regression profile.")
                 break
-            print("New model rejected when compared with old model. Trying to retrain with emphasis.")
+            print(
+                "New model rejected when compared with old model. Trying to retrain with emphasis."
+            )
             print("Retry #", attempt)
             attempt += 1
 
@@ -178,14 +204,18 @@ class TreeCNNRegExpert:
             selected_plan_latency = float(plan_group[selection].actual_latency)
             if selected_plan_latency > best_latency * 1.01:
                 total_regressed += 1
-            total_regression += (selected_plan_latency - best_latency)
+            total_regression += selected_plan_latency - best_latency
         return total_regressed, total_regression
 
     def should_replace_model(self, old_prefix: Optional[str], new_prefix: str) -> bool:
         new_num_reg, new_reg_amnt = self.compute_regressions(new_prefix)
         cur_num_reg, cur_reg_amnt = self.compute_regressions(old_prefix)
-        print("Old model # regressions:", cur_num_reg, "regression amount:", cur_reg_amnt)
-        print("New model # regressions:", new_num_reg, "regression amount:", new_reg_amnt)
+        print(
+            "Old model # regressions:", cur_num_reg, "regression amount:", cur_reg_amnt
+        )
+        print(
+            "New model # regressions:", new_num_reg, "regression amount:", new_reg_amnt
+        )
         if new_num_reg == 0:
             print("New model had no regressions.")
             return True
@@ -209,10 +239,9 @@ class TreeCNNRegExpert:
         if os.path.exists(tmp_dir):
             shutil.copytree(tmp_dir, cur_dir)
 
-    def _run_train_epochs(self,
-                          loader: DataLoader,
-                          optimizer: optim.Optimizer,
-                          loss_fn: nn.Module) -> float:
+    def _run_train_epochs(
+        self, loader: DataLoader, optimizer: optim.Optimizer, loss_fn: nn.Module
+    ) -> float:
         """Run epochs and return final avg loss; supports simple early stopping."""
         losses = []
         for epoch in range(self.config.train_epochs):
@@ -244,14 +273,16 @@ class TreeCNNRegExpert:
             print("Stopped training after max epochs")
         return losses[-1] if losses else np.inf
 
-    def _load_eval_bundle(self, model_dir: str) -> Tuple[TreeCNN, OneHotPlanEncoder, Pipeline]:
+    def _load_eval_bundle(
+        self, model_dir: str
+    ) -> Tuple[TreeCNN, OneHotPlanEncoder, Pipeline]:
         """Load model+encoder+pipeline from a directory for evaluation (non-mutating)."""
         model_path = os.path.join(model_dir, "model.pt")
         data = torch.load(model_path, map_location=self.config.device)
-        in_channels = data['in_channels']
-        pipeline = data['pipeline']
+        in_channels = data["in_channels"]
+        pipeline = data["pipeline"]
         model = TreeCNN(in_channels).to(self.config.device)
-        model.load_state_dict(data['weights'])
+        model.load_state_dict(data["weights"])
         model.eval()
         encoder = OneHotPlanEncoder()
         encoder.load(model_dir)
@@ -276,7 +307,9 @@ class TreeCNNRegExpert:
         assert len(plans) > 0
 
         # Parse and encode plans
-        parsed_plans = [json.loads(plan) if isinstance(plan, str) else plan for plan in plans]
+        parsed_plans = [
+            json.loads(plan) if isinstance(plan, str) else plan for plan in plans
+        ]
         # self.encoder.fit(parsed_plans)
         trees = self.encoder.transform(parsed_plans)
 
@@ -284,7 +317,9 @@ class TreeCNNRegExpert:
         self.net.eval()
         with torch.no_grad():
             scaled = self.net(trees).cpu().numpy()
-            predicted_costs = self.pipeline.inverse_transform(scaled.reshape(-1, 1)).flatten()
+            predicted_costs = self.pipeline.inverse_transform(
+                scaled.reshape(-1, 1)
+            ).flatten()
 
         # Find the best plan and hint
         best_plan_idx = np.argmin(predicted_costs)
@@ -304,12 +339,15 @@ class TreeCNNRegExpert:
         os.makedirs(target_dir, exist_ok=True)
         # Save model as model.pt in the directory
         model_path = os.path.join(target_dir, "model.pt")
-        torch.save({
-            'weights': self.net.state_dict(),
-            'in_channels': self.in_channels,
-            'n_trained': self.n_trained,
-            'pipeline': self.pipeline
-        }, model_path)
+        torch.save(
+            {
+                "weights": self.net.state_dict(),
+                "in_channels": self.in_channels,
+                "n_trained": self.n_trained,
+                "pipeline": self.pipeline,
+            },
+            model_path,
+        )
         # Save encoder to the same directory
         self.encoder.save(target_dir)
         print(f"Saved to {target_dir}")
@@ -318,12 +356,12 @@ class TreeCNNRegExpert:
         model_dir = self.config.cur_model_path
         model_path = os.path.join(model_dir, "model.pt")
         data = torch.load(model_path, map_location=self.config.device)
-        self.in_channels = data['in_channels']
-        self.n_trained = data.get('n_trained', 0)
-        self.pipeline = data['pipeline']
+        self.in_channels = data["in_channels"]
+        self.n_trained = data.get("n_trained", 0)
+        self.pipeline = data["pipeline"]
 
         self.net = TreeCNN(self.in_channels).to(self.config.device)
-        self.net.load_state_dict(data['weights'])
+        self.net.load_state_dict(data["weights"])
         self.net.eval()
         self.encoder.load(model_dir)
         print(f"Loaded from {model_dir}")
@@ -371,13 +409,11 @@ class TreeCNNRegExpert:
 
 if __name__ == "__main__":
     import argparse
+
     from exp_buffer.buffer_mngr import read_sql_files
 
-
     def _train(db_path: str):
-        config = TreeCNNConfig(
-            train_epochs=100,
-            batch_size=16)
+        config = TreeCNNConfig(train_epochs=100, batch_size=16)
 
         buffer_mngr = BufferManager(db_path)
         expert = TreeCNNRegExpert(config=config, buffer_mngr=buffer_mngr)
@@ -385,11 +421,8 @@ if __name__ == "__main__":
         print("Training completed!")
         print("Save expert training completed successfully!")
 
-
     def _predict(db_path: str, input_sql_dir: str, dbname: str):
-        config = TreeCNNConfig(
-            train_epochs=100,
-            batch_size=16)
+        config = TreeCNNConfig(train_epochs=100, batch_size=16)
 
         buffer_mngr = BufferManager(db_path)
         expert = TreeCNNRegExpert(config=config, buffer_mngr=buffer_mngr)
@@ -404,19 +437,20 @@ if __name__ == "__main__":
 
                 # new_sql only used in integration with PG not offline
                 execution_id = buffer_mngr.run_log_query_exec(
-                    conn=conn, sql=sql, hints=hints)
+                    conn=conn, sql=sql, hints=hints
+                )
 
                 print(f"✓ Saved execution {execution_id} for {query_id}: {sql[:60]}...")
                 print(execution_id)
 
-
     parser = argparse.ArgumentParser(description="Train Bao Expert from Unified Data")
-    parser.add_argument('--dbname', type=str, default='imdb_ori', help='Database name')
+    parser.add_argument("--dbname", type=str, default="imdb_ori", help="Database name")
     parser.add_argument(
-        '--input_sql_dir',
+        "--input_sql_dir",
         type=str,
         default="/Users/kevin/project_python/AI4QueryOptimizer/lqo_benchmark/workloads/bao/join_unique",
-        help='Input SQL dir (one query per file)')
+        help="Input SQL dir (one query per file)",
+    )
 
     args = parser.parse_args()
 

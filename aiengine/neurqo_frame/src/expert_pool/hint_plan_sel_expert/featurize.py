@@ -1,12 +1,14 @@
-import numpy as np
 import json
-from typing import List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 
 @dataclass
 class PlanNode:
     """Represents a node in the query plan tree"""
+
     node_type: str
     relation_name: Optional[str] = None
     index_name: Optional[str] = None
@@ -14,7 +16,7 @@ class PlanNode:
     total_cost: Optional[float] = None
     plan_rows: Optional[float] = None
     buffers: Optional[float] = None
-    children: List['PlanNode'] = None
+    children: List["PlanNode"] = None
 
     def __post_init__(self):
         if self.children is None:
@@ -66,7 +68,7 @@ def is_scan(node):
 
 class TreeBuilder:
     """TreeBuilder class for compatibility with Bao's TreeFeaturizer."""
-    
+
     def __init__(self, stats_extractor, relations):
         self.__stats = stats_extractor
         self.__relations = sorted(relations, key=lambda x: len(x), reverse=True)
@@ -80,7 +82,9 @@ class TreeBuilder:
             name_key = "Index Name" if "Index Name" in node else "Relation Name"
             if name_key not in node:
                 print(node)
-                raise TreeBuilderError("Bitmap operator did not have an index name or a relation name")
+                raise TreeBuilderError(
+                    "Bitmap operator did not have an index name or a relation name"
+                )
             for rel in self.__relations:
                 if rel in node[name_key]:
                     return rel
@@ -88,7 +92,7 @@ class TreeBuilder:
             raise TreeBuilderError("Could not find relation name for bitmap index scan")
 
         raise TreeBuilderError("Cannot extract relation type from node")
-                
+
     def __featurize_join(self, node):
         assert is_join(node)
         arr = np.zeros(len(ALL_TYPES))
@@ -99,8 +103,7 @@ class TreeBuilder:
         assert is_scan(node)
         arr = np.zeros(len(ALL_TYPES))
         arr[ALL_TYPES.index(node["Node Type"])] = 1
-        return (np.concatenate((arr, self.__stats(node))),
-                self.__relation_name(node))
+        return (np.concatenate((arr, self.__stats(node))), self.__relation_name(node))
 
     def plan_to_feature_tree(self, plan):
         children = plan["Plans"] if "Plans" in plan else []
@@ -119,7 +122,9 @@ class TreeBuilder:
             assert not children
             return self.__featurize_scan(plan)
 
-        raise TreeBuilderError("Node wasn't transparent, a join, or a scan: " + str(plan))
+        raise TreeBuilderError(
+            "Node wasn't transparent, a join, or a scan: " + str(plan)
+        )
 
 
 def _attach_buf_data(tree):
@@ -134,7 +139,7 @@ def _attach_buf_data(tree):
             for child in n["Plans"]:
                 recurse(child)
             return
-        
+
         # it is a leaf
         n["Buffers"] = get_buffer_count_for_leaf(n, buffers)
 
@@ -154,7 +159,7 @@ def get_buffer_count_for_leaf(leaf, buffers):
 def get_all_relations(data):
     """Get all relations from plans (Bao-compatible function)."""
     all_rels = []
-    
+
     def recurse(plan):
         if "Relation Name" in plan:
             yield plan["Relation Name"]
@@ -164,7 +169,7 @@ def get_all_relations(data):
 
     for plan in data:
         all_rels.extend(list(recurse(plan)))
-        
+
     return set(all_rels)
 
 
@@ -173,7 +178,7 @@ def get_plan_stats(data):
     costs = []
     rows = []
     bufs = []
-    
+
     def recurse(n, buffers=None):
         costs.append(n["Total Cost"])
         rows.append(n["Plan Rows"])
@@ -189,7 +194,7 @@ def get_plan_stats(data):
     costs = np.array(costs)
     rows = np.array(rows)
     bufs = np.array(bufs) if bufs else np.array([])
-    
+
     costs = np.log(costs + 1)
     rows = np.log(rows + 1)
     bufs = np.log(bufs + 1) if len(bufs) > 0 else np.array([])
@@ -205,13 +210,11 @@ def get_plan_stats(data):
         return StatExtractor(
             ["Buffers", "Total Cost", "Plan Rows"],
             [bufs_min, costs_min, rows_min],
-            [bufs_max, costs_max, rows_max]
+            [bufs_max, costs_max, rows_max],
         )
     else:
         return StatExtractor(
-            ["Total Cost", "Plan Rows"],
-            [costs_min, rows_min],
-            [costs_max, rows_max]
+            ["Total Cost", "Plan Rows"], [costs_min, rows_min], [costs_max, rows_max]
         )
 
 
@@ -247,10 +250,10 @@ class TreeFeaturizer:
 def encode_plan_from_json(plan_json: str) -> Dict[str, Any]:
     """
     Utility function to encode a plan from JSON string.
-    
+
     Args:
         plan_json: JSON string of EXPLAIN ANALYZE output
-        
+
     Returns:
         Dictionary with encoded plan information
     """
@@ -261,6 +264,5 @@ def encode_plan_from_json(plan_json: str) -> Dict[str, Any]:
 
     return {
         "plan": plan,
-        "plan_json": plan_json if isinstance(plan_json, str) else json.dumps(plan_json)
+        "plan_json": plan_json if isinstance(plan_json, str) else json.dumps(plan_json),
     }
-

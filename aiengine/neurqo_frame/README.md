@@ -14,12 +14,12 @@ imdb_ori=# SET enable_molqo = on; SET molqo.server_url = 'http://localhost:8666/
 SET
 SET
 imdb_ori=# SHOW enable_molqo; SHOW molqo.server_url;
- enable_molqo 
+ enable_molqo
 --------------
  on
 (1 row)
 
-        molqo.server_url        
+        molqo.server_url
 --------------------------------
  http://localhost:8666/optimize
 (1 row)
@@ -55,7 +55,7 @@ INFO:  ┌───────────────────────�
 INFO:  │ MoLQO Optimization Applied
 INFO:  │ Server: http://localhost:8666/optimize
 INFO:  └─────────────────────────────────────────────────
-            production_note            |  movie_title   | movie_year 
+            production_note            |  movie_title   | movie_year
 ---------------------------------------+----------------+------------
  (Set Decoration Rentals) (uncredited) | Disaster Movie |       2004
 (1 row)
@@ -88,7 +88,7 @@ export PGPORT=5432
 Start NeurQO server
 
 ```bash
-sudo bash run_moqoe_server.sh 
+sudo bash run_moqoe_server.sh
 ```
 
 # Offline Pretrain
@@ -116,8 +116,3 @@ python ./src/expert_router/router_offline_pretrain.py --epochs 2000 --embedding_
 # Dev Extension
 
 Check the [README.md](./dbengine/nr_kernel/nr_molqo/README.md)
-
-
-
-
-
