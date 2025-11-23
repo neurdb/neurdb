@@ -1,6 +1,6 @@
 # NeurDB Kernel
 
-This is the kernel of NeurDB that extends the original implementation of PostgreSQL, including planner, executor, etc.
+This is the kernel of NeurDB that extends the original implementation of PostgreSQL, including parser planner, executor, etc.
 
 ## Installation
 
