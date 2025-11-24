@@ -482,11 +482,13 @@ pipeline_init(
 }
 
 static bool
-pipeline_push_slot(TupleTableSlot *slot, char **infer_result_out, bool flush) {
+pipeline_push_slot(TupleTableSlot **slot, int num_slot, char **infer_result_out, bool flush) {
     if (PIPELINE_SESSION.state == PS_UNINIT) {
         elog(ERROR, "nr_state not initialized, please call pipeline_init first");
     }
-    add_slot_to_batch(&PIPELINE_SESSION, slot);
+    for (int i = 0; i < num_slot; i++) {
+        add_slot_to_batch(&PIPELINE_SESSION, slot[i]);
+    }
     if (PIPELINE_SESSION.batch_count < PIPELINE_SESSION.batch_size && !flush) {
         if (infer_result_out) *infer_result_out = NULL;
         return false; // not enough data yet
@@ -657,11 +659,12 @@ nr_pipeline_init(PG_FUNCTION_ARGS) {
 
 Datum
 nr_pipeline_push_slot(PG_FUNCTION_ARGS) {
-    TupleTableSlot *slot = (TupleTableSlot *) PG_GETARG_POINTER(0);
-    bool flush = PG_GETARG_BOOL(1);
+    TupleTableSlot **slot = (TupleTableSlot **) PG_GETARG_POINTER(0);
+    int num_slot = PG_GETARG_INT32(1);
+    bool flush = PG_GETARG_BOOL(2);
 
     char **infer_result_out = (char **) palloc(sizeof(char *));
-    pipeline_push_slot(slot, infer_result_out, flush);
+    pipeline_push_slot(slot, num_slot, infer_result_out, flush);
 
     NeurDBInferenceResult *result = palloc(sizeof(NeurDBInferenceResult));
     // TODO: infer the type of the result

@@ -11,7 +11,7 @@ CREATE FUNCTION nr_pipeline_init (
 ) RETURNS boolean AS 'MODULE_PATHNAME',
 'nr_pipeline_init' LANGUAGE C STRICT VOLATILE;
 
-CREATE FUNCTION nr_pipeline_push_slot (slot anyelement, flush boolean) RETURNS anyelement AS 'MODULE_PATHNAME',
+CREATE FUNCTION nr_pipeline_push_slot (slot anyelement, num_slot int, flush boolean) RETURNS anyelement AS 'MODULE_PATHNAME',
 'nr_pipeline_push_slot' LANGUAGE C STRICT VOLATILE;
 
 CREATE FUNCTION nr_pipeline_state_change (to_inference boolean) RETURNS VOID AS 'MODULE_PATHNAME',
