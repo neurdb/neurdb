@@ -2771,9 +2771,13 @@ typedef struct LimitState
 
 typedef enum
 {
-	NEURDBPREDICT_TRAIN,			/* in training */
-	NEURDBPREDICT_INFERENCE,		/* in inference */
-	NEURDBPREDICT_END,				/* end of inference */
+	NEURDBPREDICT_TRAIN_COLLECT,
+	NEURDBPREDICT_TRAIN_SEND,
+	NEURDBPREDICT_TRAIN_END,
+	NEURDBPREDICT_INFERENCE_COLLECT,
+	NEURDBPREDICT_INFERENCE_SEND,
+	NEURDBPREDICT_INFERENCE_RETURN,
+	NEURDBPREDICT_INFERENCE_END,
 } NeurDBPredictStateCond;
 
 typedef struct NeurDBPredictState
@@ -2783,6 +2787,7 @@ typedef struct NeurDBPredictState
 	NeurDBPredictStateCond nrpstate;
 	TupleTableSlot **slot_cache;	/* result cache */
 	int	slot_cache_size;	/* result cache size */
+	bool is_final;
 	int num_consumed;
 	dclist_head	result_cache;
 	List *id_class_map;

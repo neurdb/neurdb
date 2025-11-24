@@ -98,15 +98,16 @@ static void
 insert_result_to_cache(NeurDBPredictState * pstate, double value)
 {
 	result_node *node = palloc(sizeof(result_node));
+
 	node->value = value;
 	dclist_push_tail(&pstate->result_cache, &node->node);
 }
 
 
 static void
-parseDoubles(const NeurDBInferenceResult * result,
-			 NeurDBPredictState * pstate,
-			 bool enable_debug)
+parse_result_to_cache(const NeurDBInferenceResult * result,
+					  NeurDBPredictState * pstate,
+					  bool enable_debug)
 {
 	char		buffer[64];
 
@@ -173,7 +174,7 @@ return_table(DestReceiver *dest, const NeurDBInferenceResult * result)
 
 		tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
 
-		parseDoubles(result, &insert_float8_to_tup_output, tstate, false);
+		parse_result_to_cache(result, &insert_float8_to_tup_output, tstate, false);
 	}
 	else if (result->typeoid == TEXTOID)
 	{
@@ -184,7 +185,7 @@ return_table(DestReceiver *dest, const NeurDBInferenceResult * result)
 
 		tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
 
-		parseDoubles(result, &insert_cstring_to_tup_output, tstate, true);
+		parse_result_to_cache(result, &insert_cstring_to_tup_output, tstate, true);
 	}
 	else
 	{
@@ -445,6 +446,16 @@ reset_slot_cache(NeurDBPredictState * predictstate)
 	predictstate->slot_cache_size = 0;
 }
 
+static void
+add_slot_to_cache(NeurDBPredictState * predictstate, TupleTableSlot *slot)
+{
+	TupleTableSlot *slot_copy = MakeTupleTableSlot(slot->tts_tupleDescriptor, &TTSOpsVirtual);
+
+	ExecCopySlot(slot_copy, slot);
+	predictstate->slot_cache[predictstate->slot_cache_size++] = slot_copy;
+	ReleaseTupleDesc(slot->tts_tupleDescriptor);
+}
+
 
 static TupleTableSlot *
 ExecNeurDBPredict(PlanState *pstate)
@@ -455,39 +466,49 @@ ExecNeurDBPredict(PlanState *pstate)
 
 	outerPlan = outerPlanState(predictstate);
 
+	predictstate->is_final = false;
+
 	for (;;)
 	{
-		/*
-		 * if there is result in cache, this means we are in inference mode.
-		 * Then, we need to return the result from cache
-		 */
-		if (!dclist_is_empty(&predictstate->result_cache))
+		switch (predictstate->nrpstate)
 		{
-			slot = predictstate->slot_cache[predictstate->num_consumed];
-			predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
-			slot = ExecProject(predictstate->ps.ps_ProjInfo);
-
-			result_node *node = dclist_pop_head_node(&predictstate->result_cache);
-			build_result_slot(node->value, predictstate->is_float, predictstate->id_class_map, slot);
-			predictstate->num_consumed += 1;
-			return slot;
-		}
-
-		if (predictstate->num_consumed >= NrTaskBatchSize) 
-		{
-			reset_slot_cache(predictstate);
-			predictstate->num_consumed = 0;
-		}
-
-		/* execute the outer plan to get new input */
-		slot = ExecProcNode(outerPlan);
-		if (TupIsNull(slot))
-		{
-			if (predictstate->nrpstate == NEURDBPREDICT_TRAIN)
-			{
-				if (predictstate->slot_cache_size > 0)
+			case NEURDBPREDICT_TRAIN_COLLECT:
 				{
-					/* final slot */
+					/* if slot is full, send it to nr_pipeline */
+					if (predictstate->slot_cache_size >= NrTaskBatchSize)
+					{
+						predictstate->nrpstate = NEURDBPREDICT_TRAIN_SEND;
+						continue;
+					}
+
+					/* execute the outer plan to get new input */
+					slot = ExecProcNode(outerPlan);
+					if (TupIsNull(slot))
+					{
+						predictstate->is_final = true;
+						predictstate->nrpstate = NEURDBPREDICT_TRAIN_SEND;
+						continue;
+					}
+
+					/* cache not full, add slot to slot_cache */
+					add_slot_to_cache(predictstate, slot);
+				}
+				break;
+
+			case NEURDBPREDICT_TRAIN_SEND:
+				{
+					/*
+					 * if slot_cache is empty, it means that the number of
+					 * tuples is divisible by NrTaskBatchSize, and
+					 * TupIsNull(slot) is true when the cache is empty.
+					 */
+					if (predictstate->slot_cache_size <= 0)
+					{
+						predictstate->nrpstate = NEURDBPREDICT_TRAIN_END;
+						continue;
+					}
+
+					/* if slot_cache is not empty, send it to AI engine */
 					Datum		args[PUSHSLOT_PARAMS_ARRAY_SIZE];
 					bool		nulls[PUSHSLOT_PARAMS_ARRAY_SIZE] = {false};
 
@@ -500,82 +521,147 @@ ExecNeurDBPredict(PlanState *pstate)
 																PUSHSLOT_PARAMS_ARRAY_SIZE,
 																args, nulls);
 
-					reset_slot_cache(predictstate);
+					/* the current batch is the last one */
+					if (predictstate->is_final)
+					{
+						predictstate->nrpstate = NEURDBPREDICT_TRAIN_END;
+						continue;
+					}
 				}
+				break;
 
-				predictstate->nrpstate = NEURDBPREDICT_INFERENCE;
+			case NEURDBPREDICT_TRAIN_END:
+				{
+					/* tell nr_pipeline to change state */
+					elog(DEBUG1, "change state to inference");
 
-				/* tell nr_pipeline to change state */
-				elog(DEBUG1, "change state to inference");
+					Oid			funcOid = LookupFuncName(list_make1(makeString(stateChangeFuncName)),
+														 STATECHANGE_PARAMS_ARRAY_SIZE,
+														 stateChangeArgTypes,
+														 false);
 
-				Oid			funcOid = LookupFuncName(
-													 list_make1(makeString(stateChangeFuncName)),
-													 STATECHANGE_PARAMS_ARRAY_SIZE,
-													 stateChangeArgTypes,
-													 false
-					);
+					if (!OidIsValid(funcOid))
+						elog(ERROR, "Function %s not found", stateChangeFuncName);
 
-				if (!OidIsValid(funcOid))
-					elog(ERROR, "Function %s not found", stateChangeFuncName);
+					OidFunctionCall1(funcOid, BoolGetDatum(true));
 
-				OidFunctionCall1(funcOid, BoolGetDatum(true));
+					/* rescan from the beginning */
+					ExecReScan(outerPlan);
 
-				ExecReScan(outerPlan);
-				continue;
-			}
-			else if (predictstate->nrpstate == NEURDBPREDICT_END)
-			{
-				/* end inference */
+					/* go to inference */
+					predictstate->nrpstate = NEURDBPREDICT_INFERENCE_COLLECT;
+				}
+				break;
+
+			case NEURDBPREDICT_INFERENCE_COLLECT:
+				{
+					/* if slot is full, send it to nr_pipeline */
+					if (predictstate->slot_cache_size >= NrTaskBatchSize)
+					{
+						predictstate->nrpstate = NEURDBPREDICT_INFERENCE_SEND;
+						continue;
+					}
+
+					/* execute the outer plan to get new input */
+					slot = ExecProcNode(outerPlan);
+					if (TupIsNull(slot))
+					{
+						predictstate->is_final = true;
+						predictstate->nrpstate = NEURDBPREDICT_INFERENCE_SEND;
+						continue;
+					}
+
+					/* cache not full, add slot to slot_cache */
+					add_slot_to_cache(predictstate, slot);
+				}
+				break;
+
+			case NEURDBPREDICT_INFERENCE_SEND:
+				{
+					/*
+					 * if slot_cache is empty, it means that the number of
+					 * tuples is divisible by NrTaskBatchSize, and
+					 * TupIsNull(slot) is true when the cache is empty.
+					 */
+					if (predictstate->slot_cache_size <= 0)
+					{
+						predictstate->nrpstate = NEURDBPREDICT_INFERENCE_RETURN;
+						continue;
+					}
+
+					Datum		args[PUSHSLOT_PARAMS_ARRAY_SIZE];
+					bool		nulls[PUSHSLOT_PARAMS_ARRAY_SIZE] = {false};
+
+					args[0] = PointerGetDatum(predictstate->slot_cache);
+					args[1] = Int32GetDatum(predictstate->slot_cache_size);
+					args[2] = BoolGetDatum(true);
+
+					UdfResult	pushSlotRes = call_udf_function(pushSlotFuncName,
+																pushSlotArgTypes,
+																PUSHSLOT_PARAMS_ARRAY_SIZE,
+																args, nulls);
+
+
+					NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(pushSlotRes.value);
+
+					parse_result_to_cache(result, predictstate, false);
+
+					predictstate->is_float = result->typeoid == FLOAT8OID;
+					predictstate->id_class_map = result->id_class_map;
+
+					predictstate->nrpstate = NEURDBPREDICT_INFERENCE_RETURN;
+				}
+				break;
+
+			case NEURDBPREDICT_INFERENCE_RETURN:
+				{
+					if (dclist_is_empty(&predictstate->result_cache))
+					{
+						if (predictstate->is_final)
+						{
+							/* is the last batch */
+							predictstate->nrpstate = NEURDBPREDICT_INFERENCE_END;
+							continue;
+						}
+						else
+						{
+							/* reset slot cache */
+							reset_slot_cache(predictstate);
+							predictstate->num_consumed = 0;
+
+							/* go back to retrieve the next batch */
+							predictstate->nrpstate = NEURDBPREDICT_INFERENCE_COLLECT;
+							continue;
+						}
+					}
+
+					/* get the next slot from the cache */
+					slot = predictstate->slot_cache[predictstate->num_consumed];
+
+					/* project the slot */
+					predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
+					slot = ExecProject(predictstate->ps.ps_ProjInfo);
+
+					/* get the next result from the cache */
+					result_node *node = (result_node *) dclist_pop_head_node(&predictstate->result_cache);
+
+					/* build the returning slot */
+					build_result_slot(node->value, predictstate->is_float, predictstate->id_class_map, slot);
+					
+					predictstate->num_consumed += 1;
+					return slot;
+				}
+				break;
+
+			case NEURDBPREDICT_INFERENCE_END:
+				{
+					return NULL;
+				}
+			default:
+				elog(ERROR, "unrecognized NeurDBPredictStateCond: %d", predictstate->nrpstate);
 				return NULL;
-			}
-			else
-			{
-				/*
-				 * final inference slot. set to end state and let it pass
-				 * through to the inference. In next loop it will directly
-				 * return.
-				 */
-				predictstate->nrpstate = NEURDBPREDICT_END;
-			}
-		}
-
-		/* add slot to slot_cache if not full */
-		if (slot != NULL && predictstate->slot_cache_size < NrTaskBatchSize)
-		{
-			TupleTableSlot *slot_copy = MakeTupleTableSlot(slot->tts_tupleDescriptor, &TTSOpsVirtual);
-			ExecCopySlot(slot_copy, slot);
-			predictstate->slot_cache[predictstate->slot_cache_size++] = slot_copy;
-			ReleaseTupleDesc(slot->tts_tupleDescriptor);
-			continue;
-		}
-
-		Datum		args[PUSHSLOT_PARAMS_ARRAY_SIZE];
-		bool		nulls[PUSHSLOT_PARAMS_ARRAY_SIZE] = {false};
-
-		args[0] = PointerGetDatum(predictstate->slot_cache);
-		args[1] = Int32GetDatum(predictstate->slot_cache_size);
-		args[2] = BoolGetDatum(true);
-
-		UdfResult	pushSlotRes = call_udf_function(pushSlotFuncName,
-													pushSlotArgTypes,
-													PUSHSLOT_PARAMS_ARRAY_SIZE,
-													args, nulls);
-
-		if (predictstate->nrpstate == NEURDBPREDICT_INFERENCE)
-		{
-			NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(pushSlotRes.value);
-
-			parseDoubles(result, predictstate, false);
-
-			predictstate->is_float = result->typeoid == FLOAT8OID;
-			predictstate->id_class_map = result->id_class_map;
-
-			continue;
 		}
 	}
-
-	elog(ERROR, "this should not happen");
-	return NULL;
 }
 
 static ArrayType *
@@ -760,7 +846,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 		ExecBuildProjectionInfo(node->predictTargetList,
 								predictstate->ps.ps_ExprContext,
 								predictstate->ps.ps_ResultTupleSlot,
-								predictstate,
+								(PlanState *) predictstate,
 								ExecTypeFromTL(node->predictTargetList));
 
 	StringInfoData targetColumn = construct_target_columns(node->predictTargetList);
@@ -795,11 +881,11 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 
 		if (is_inference)
 		{
-			predictstate->nrpstate = NEURDBPREDICT_INFERENCE;
+			predictstate->nrpstate = NEURDBPREDICT_INFERENCE_COLLECT;
 		}
 		else
 		{
-			predictstate->nrpstate = NEURDBPREDICT_TRAIN;
+			predictstate->nrpstate = NEURDBPREDICT_TRAIN_COLLECT;
 		}
 	}
 
