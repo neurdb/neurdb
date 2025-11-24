@@ -647,7 +647,7 @@ ExecNeurDBPredict(PlanState *pstate)
 
 					/* build the returning slot */
 					build_result_slot(node->value, predictstate->is_float, predictstate->id_class_map, slot);
-					
+
 					predictstate->num_consumed += 1;
 					return slot;
 				}
