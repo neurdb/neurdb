@@ -678,12 +678,10 @@ ExecNeurDBPredict(PlanState *pstate)
 				break;
 
 			case NEURDBPREDICT_INFERENCE_END:
-				_call_pipeline_close();
 				return NULL;
 
 			default:
 				elog(ERROR, "unrecognized NeurDBPredictStateCond: %d", predictstate->nrpstate);
-				_call_pipeline_close();
 				return NULL;
 		}
 	}
@@ -936,21 +934,7 @@ ExecEndNeurDBPredict(NeurDBPredictState * node)
 {
 	ExecFreeExprContext(&node->ps);
 	ExecEndNode(outerPlanState(node));
-
-	Oid			funcOid = LookupFuncName(list_make1(makeString(closeFuncName)), 0, NULL, false);
-
-	if (!OidIsValid(funcOid))
-		elog(ERROR, "Function %s not found", closeFuncName);
-
-	/* ensure SPI available */
-	/* if (SPI_connect() != SPI_OK_CONNECT) */
-	/* elog(ERROR, "SPI_connect failed"); */
-
-	OidFunctionCall0(funcOid);
-
-	/* if (SPI_finish() != SPI_OK_FINISH) */
-	/* elog(ERROR, "SPI_finish failed"); */
-
+	_call_pipeline_close();
 	elog(DEBUG1, "NeurDB prediction end");
 }
 
