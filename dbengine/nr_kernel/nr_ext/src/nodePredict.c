@@ -8,6 +8,8 @@
 
 #include "access/relation.h"
 #include "access/heapam.h"
+#include "funcapi.h"
+#include "nodes/nodeFuncs.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
 #include "parser/parse_target.h"
@@ -391,17 +393,12 @@ exec_udf(PredictType type,
 static TupleTableSlot *
 build_result_slot(double value, bool is_float, List *id_class_map, TupleTableSlot *slot)
 {
-	Datum		values[2];
-	bool		nulls[2] = {false, false};
+	ExecClearTuple(slot);
 
-	/* ExecClearTuple(slot); */
 	if (is_float)
 	{
-		values[0] = Float8GetDatum(value);
-
-		/* ExecStoreVirtualTuple(slot); */
-		slot->tts_values[0] = values[0];
-		slot->tts_isnull[0] = nulls[0];
+		slot->tts_values[0] = Float8GetDatum(value);
+		slot->tts_isnull[0] = false;
 		slot->tts_tupleDescriptor->attrs[0].atttypid = FLOAT8OID;
 	}
 	else
@@ -420,17 +417,14 @@ build_result_slot(double value, bool is_float, List *id_class_map, TupleTableSlo
 			label = "";
 		}
 
-		values[0] = CStringGetTextDatum(label);
-		values[1] = Float8GetDatum(value);
-		nulls[0] = false;
-		nulls[1] = false;
-
-		/* ExecStoreVirtualTuple(slot); */
-		slot->tts_values[0] = values[0];
-		slot->tts_values[1] = values[1];
-		slot->tts_isnull[0] = nulls[0];
-		slot->tts_isnull[1] = nulls[1];
+		slot->tts_values[0] = CStringGetTextDatum(label);
+		slot->tts_values[1] = Float8GetDatum(value);
+		slot->tts_isnull[0] = false;
+		slot->tts_isnull[1] = false;
+		slot->tts_tupleDescriptor->attrs[0].atttypid = TEXTOID;
 	}
+
+	ExecStoreVirtualTuple(slot);
 
 	return slot;
 }
@@ -463,9 +457,9 @@ _call_pipeline_close()
 	elog(DEBUG1, "close connection");
 
 	Oid			funcOid = LookupFuncName(list_make1(makeString(closeFuncName)),
-											CLOSE_PARAMS_ARRAY_SIZE,
-											closeArgTypes,
-											false);
+										 CLOSE_PARAMS_ARRAY_SIZE,
+										 closeArgTypes,
+										 false);
 
 	if (!OidIsValid(funcOid))
 		elog(ERROR, "Function %s not found", stateChangeFuncName);
@@ -857,10 +851,64 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	outerPlan = outerPlan(node);
 	outerPlanState(predictstate) = ExecInitNode(outerPlan, estate, eflags);
 
+#if 0
+
 	/*
 	 * Initialize result tuple slot
 	 */
 	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
+#endif
+
+	/*
+	 * Initialize result tuple slot with FIXED descriptor Need to determine
+	 * upfront if we're doing classification or regression
+	 */
+	TupleDesc	resultDesc;
+	int			natts = list_length(node->predictTargetList);
+
+	/* Determine if we need the debug column (for classification) */
+	/* You may need to determine this from node->stmt->kind or other metadata */
+	bool		needsDebugColumn = (node->stmt->kind == PREDICT_CLASS);
+
+	if (needsDebugColumn)
+	{
+		/* Classification: add debug column */
+		resultDesc = CreateTemplateTupleDesc(natts + 1);
+
+		int			i = 1;
+		ListCell   *lc;
+
+		foreach(lc, node->predictTargetList)
+		{
+			TargetEntry *tle = (TargetEntry *) lfirst(lc);
+
+			TupleDescInitEntry(resultDesc,
+							   (AttrNumber) i,
+							   tle->resname,
+							   exprType((Node *) tle->expr),
+							   exprTypmod((Node *) tle->expr),
+							   0);
+			i++;
+		}
+
+		/* Add debug column */
+		TupleDescInitEntry(resultDesc,
+						   (AttrNumber) (natts + 1),
+						   "_dbg_value",
+						   FLOAT8OID,
+						   -1,
+						   0);
+	}
+	else
+	{
+		/* Regression: no debug column */
+		resultDesc = ExecTypeFromTL(node->predictTargetList);
+	}
+
+	resultDesc = BlessTupleDesc(resultDesc);
+	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
+	predictstate->ps.ps_ResultTupleSlot = MakeSingleTupleTableSlot(resultDesc, &TTSOpsVirtual);
+	predictstate->ps.ps_ResultTupleDesc = resultDesc;
 
 	/*
 	 * initialize projection info
