@@ -515,7 +515,7 @@ pipeline_push_slot(TupleTableSlot **slot, int num_slot, char **infer_result_out,
     }
 }
 
-static void 
+static void
 _clean_up_conn(NrWebsocket *ws) {
   // close the connection
   nws_disconnect(ws);
