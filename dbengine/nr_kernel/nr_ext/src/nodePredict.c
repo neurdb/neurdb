@@ -456,6 +456,23 @@ add_slot_to_cache(NeurDBPredictState * predictstate, TupleTableSlot *slot)
 	ReleaseTupleDesc(slot->tts_tupleDescriptor);
 }
 
+static void
+_call_pipeline_close()
+{
+	/* tell nr_pipeline to close the connection */
+	elog(DEBUG1, "close connection");
+
+	Oid			funcOid = LookupFuncName(list_make1(makeString(closeFuncName)),
+											CLOSE_PARAMS_ARRAY_SIZE,
+											closeArgTypes,
+											false);
+
+	if (!OidIsValid(funcOid))
+		elog(ERROR, "Function %s not found", stateChangeFuncName);
+
+	OidFunctionCall0(funcOid);
+}
+
 
 static TupleTableSlot *
 ExecNeurDBPredict(PlanState *pstate)
@@ -527,6 +544,13 @@ ExecNeurDBPredict(PlanState *pstate)
 						predictstate->nrpstate = NEURDBPREDICT_TRAIN_END;
 						continue;
 					}
+
+					/* reset slot cache */
+					reset_slot_cache(predictstate);
+					predictstate->num_consumed = 0;
+
+					/* go back to retrieve the next batch */
+					predictstate->nrpstate = NEURDBPREDICT_TRAIN_COLLECT;
 				}
 				break;
 
@@ -654,11 +678,12 @@ ExecNeurDBPredict(PlanState *pstate)
 				break;
 
 			case NEURDBPREDICT_INFERENCE_END:
-				{
-					return NULL;
-				}
+				_call_pipeline_close();
+				return NULL;
+
 			default:
 				elog(ERROR, "unrecognized NeurDBPredictStateCond: %d", predictstate->nrpstate);
+				_call_pipeline_close();
 				return NULL;
 		}
 	}

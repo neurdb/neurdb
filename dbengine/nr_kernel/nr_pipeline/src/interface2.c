@@ -267,6 +267,8 @@ run_infer_batch(PipelineSession *session, bool flush) {
 
     NrWebsocket *ws = session->ws;
 
+    SPI_connect();
+
     SPITupleTable fake_table = {0};
     fake_table.tupdesc = session->tupdesc;
     fake_table.vals = session->batch_vals;
@@ -291,6 +293,8 @@ run_infer_batch(PipelineSession *session, bool flush) {
     /* reset completion flag */
     ws->completed = 0;
     char* payload = pstrdup(ws->result);
+
+    SPI_finish();
 
     // clean up
     free(ws->result);
@@ -495,9 +499,6 @@ pipeline_push_slot(TupleTableSlot **slot, int num_slot, char **infer_result_out,
     }
 
     if (PIPELINE_SESSION.state == PS_TRAIN) {
-        if (!PIPELINE_SESSION.ws) {
-            PIPELINE_SESSION.ws = connect_to_ai_engine();
-        }
         run_train_batch(&PIPELINE_SESSION, flush);
         if (infer_result_out) {
             // no inference result during training
@@ -514,6 +515,13 @@ pipeline_push_slot(TupleTableSlot **slot, int num_slot, char **infer_result_out,
     }
 }
 
+static void 
+_clean_up_conn(NrWebsocket *ws) {
+  // close the connection
+  nws_disconnect(ws);
+  nws_free_websocket(ws);
+}
+
 static void
 pipeline_state_change(bool to_inference) {
     if (to_inference) {
@@ -522,9 +530,8 @@ pipeline_state_change(bool to_inference) {
         nws_wait_completion(PIPELINE_SESSION.ws);
         PIPELINE_SESSION.model_id = PIPELINE_SESSION.ws->model_id;
 
-        // reset websocket connection
-        nws_disconnect(PIPELINE_SESSION.ws);
-        nws_free_websocket(PIPELINE_SESSION.ws);
+        /* reset websocket with a new connection */
+        _clean_up_conn(PIPELINE_SESSION.ws);
         PIPELINE_SESSION.ws = connect_to_ai_engine();
 
         int n_class = (PIPELINE_SESSION.type == PREDICT_CLASS && PIPELINE_SESSION.class_id_map)
@@ -560,16 +567,18 @@ pipeline_state_change(bool to_inference) {
 
 static void
 pipeline_close() {
+    if (PIPELINE_SESSION.ws) {
+        _clean_up_conn(PIPELINE_SESSION.ws);
+        PIPELINE_SESSION.ws = NULL;
+    }
+
     if (PIPELINE_SESSION.batch_vals) {
         for (int i = 0; i < PIPELINE_SESSION.batch_count; i++) {
             heap_freetuple(PIPELINE_SESSION.batch_vals[i]);
         }
         pfree(PIPELINE_SESSION.batch_vals);
     }
-    if (PIPELINE_SESSION.ws) {
-        nws_disconnect(PIPELINE_SESSION.ws);
-        nws_free_websocket(PIPELINE_SESSION.ws);
-    }
+
     if (PIPELINE_SESSION.feature_names) {
         for (int i = 0; i < PIPELINE_SESSION.n_features; i++) pfree(PIPELINE_SESSION.feature_names[i]);
         pfree(PIPELINE_SESSION.feature_names);
