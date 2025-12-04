@@ -6,7 +6,7 @@
 #define ROCKSDB_CHANNEL_DEFAULT_TIMEOUT 1 // (ms)
 #define MAX_PROC_COUNT 16
 
-#define NRAM_UNSUPPORTED() elog(WARNING, "[NRAM] calling unsupported function %s", __func__)
+#define NRAM_UNSUPPORTED() elog(ERROR, "[NRAM] calling unsupported function %s", __func__)
 
 // PHX: use the following two debug macros when debugging the code.
 // #define NRAM_TEST_INFO(fmt, ...) elog(INFO, "[NRAM] [%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)

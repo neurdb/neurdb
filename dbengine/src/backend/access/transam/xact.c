@@ -61,7 +61,6 @@
 #include "storage/md.h"
 #include "storage/predicate.h"
 #include "storage/proc.h"
-#include "storage/policy.h"
 #include "storage/procarray.h"
 #include "storage/sinvaladt.h"
 #include "storage/smgr.h"
@@ -2016,9 +2015,6 @@ AdjustTransaction()
     if (tb != TBLOCK_INPROGRESS && tb != TBLOCK_PARALLEL_INPROGRESS)
         return;
 
-    Assert((!IsolationIsSerializable() && !IsolationNeedLock()) || IsolationLearnCC()
-           || XactLockStrategy == DefaultXactLockStrategy || IsolationIsSerializable());
-
     if (XactLockStrategy == LOCK_ASSERT_ABORT)
     {
         ereport(ERROR,
@@ -2144,18 +2140,9 @@ StartTransaction(void)
 	Assert(MyProc->backendId == vxid.backendId);
 	MyProc->lxid = vxid.localTransactionId;
 
-    if (!IsolationLearnCC())
-    {
-        if (IsolationIsSerializable())
-            // In case of SSI, disable locking based methods.
-            XactLockStrategy = LOCK_NONE;
-        if (!(IsolationNeedLock() || IsolationIsSerializable()))
-            elog(DEBUG2, "[debug] xact%d is not running in serializable mode (iso:%d, lock:%d).\n", MyProc->lxid , XactIsoLevel, XactLockStrategy);
-    }
-    else {
-		// elog(INFO, "CC learning triggered");
-		init_rl_state(vxid.localTransactionId);
-	}
+	if (IsolationIsSerializable())
+		// In case of SSI, disable locking based methods.
+		XactLockStrategy = LOCK_NONE;
 
 	TRACE_POSTGRESQL_TRANSACTION_START(vxid.localTransactionId);
 
@@ -2386,7 +2373,6 @@ CommitTransaction(void)
 	AtEOXact_Inval(true);
 
 	AtEOXact_MultiXact();
-    report_xact_result(true, tid);
 
 	ResourceOwnerRelease(TopTransactionResourceOwner,
 						 RESOURCE_RELEASE_LOCKS,

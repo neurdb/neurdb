@@ -4436,13 +4436,6 @@ static void
 FlagRWConflict(SERIALIZABLEXACT *reader, SERIALIZABLEXACT *writer)
 {
 	Assert(reader != writer);
-    // In case of lock-based, the add of rw conflict is not accepted at all.
-    if (IsolationNeedLock())
-        ereport(ERROR,
-                (errcode(ERRCODE_T_R_SERIALIZATION_FAILURE),
-                        errmsg("could not serialize access due to lock violation"),
-                        errdetail_internal("Reason code: Canceled on conflict due to read write lock conflict (case 1)."),
-                        errhint("The transaction might succeed if retried.")));
 
     /* First, see if this conflict causes failure. */
 	OnConflict_CheckForSerializationFailure(reader, writer);
@@ -4483,7 +4476,6 @@ OnConflict_CheckForSerializationFailure(const SERIALIZABLEXACT *reader,
 	Assert(LWLockHeldByMe(SerializableXactHashLock));
 
 	failure = false;
-    Assert(!IsolationNeedLock());
 
 	/*------------------------------------------------------------------------
 	 * Check for already-committed writer with rw-conflict out flagged

@@ -1,6 +1,11 @@
 Parsed test spec with 2 sessions
 
 starting permutation: s1_r s2_r s1_w s2_w s1_c s2_c
+nram_load_policy
+----------------
+                
+(1 row)
+
 step s1_r: SELECT balance FROM accounts WHERE id = 1;
 balance
 -------

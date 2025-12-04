@@ -5,3 +5,4 @@ DROP EXTENSION IF EXISTS nram CASCADE;
 DROP ACCESS METHOD IF EXISTS nram;
 DROP FUNCTION IF EXISTS nram_tableam_handler(internal);
 DROP FUNCTION IF EXISTS run_nram_tests();
+DROP FUNCTION IF EXISTS nram_load_policy();

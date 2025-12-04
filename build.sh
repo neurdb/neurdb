@@ -29,15 +29,18 @@ else
     docker build -t neurdbimg . -f Dockerfile.cuda11 --progress=plain --no-cache
 fi
 
+# This to solve the permission problems
+# chmod -R a+rwX .; \
+
 # Run the Docker container
 # You may replace or delete the port mapping
 if [ "$MODE" == "cpu" ]; then
-    docker run -d --name neurdb_dev \
-        -v $(pwd):/code/neurdb-dev \
-        -p 5432:5432 \
-        -p 1234:1234 \
-        --cap-add=SYS_PTRACE \
-        neurdbimg
+    docker run -d --name neurdb_dev_opt \
+      -v "$(pwd)":/code/neurdb-dev \
+      -p 15432:5432 \
+      -p 11234:1234 \
+      --cap-add=SYS_PTRACE \
+      neurdbimg-opt
 else
     docker run -d --name neurdb_dev \
         -v $(pwd):/code/neurdb-dev \
@@ -50,3 +53,6 @@ fi
 
 # Follow the Docker container logs
 docker logs -f neurdb_dev
+
+
+/code/neurdb-dev/psql/bin/psql -h localhost -U neurdb -d neurdb

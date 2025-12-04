@@ -8,6 +8,7 @@ setup
   CREATE EXTENSION nram;
   CREATE TABLE accounts (id INT PRIMARY KEY, balance INT) USING nram;
   INSERT INTO accounts VALUES (1, 100);
+  SELECT nram_load_policy('occ');
 }
 
 teardown
