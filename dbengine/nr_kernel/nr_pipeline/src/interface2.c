@@ -328,6 +328,20 @@ run_infer_batch(PipelineSession *session, bool flush) {
     return payload;
 }
 
+static int 
+_label_col_id(TupleDesc tupdesc, const char *label_col) {
+    // or directly inspect attributes:
+    for (int i = 0; i < tupdesc->natts; i++)
+    {
+        Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
+        if (strncmp(attr->attname.data, label_col, strlen(label_col)) == 0) {
+            return i + 1;
+        }
+    }
+
+    return -1;
+}
+
 static void
 run_train_batch(PipelineSession *session, bool flush) {
     if (session->batch_capacity > session->batch_count && !flush) {
@@ -351,7 +365,7 @@ run_train_batch(PipelineSession *session, bool flush) {
         session->table_name,
         &libsvm,
         true,
-        session->n_features+1,
+        session->label_col_id,
         session->model_name
     );
 
@@ -396,6 +410,10 @@ pipeline_init(
         PIPELINE_SESSION.feature_names[i] = MemoryContextStrdup(TopMemoryContext, feature_names[i]);
     }
     PIPELINE_SESSION.target = MemoryContextStrdup(TopMemoryContext, target);
+    PIPELINE_SESSION.label_col_id = _label_col_id(tupdesc, target);
+    if (PIPELINE_SESSION.label_col_id < 0) {
+        elog(ERROR, "label column %s not found", target);
+    }
 
     // look up for existing model
     int model_id = _lookup_model(PIPELINE_SESSION.table_name, PIPELINE_SESSION.feature_names,

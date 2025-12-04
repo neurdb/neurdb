@@ -781,6 +781,9 @@ _temp_extract_model_name(NeurDBTrainOnSpec * trainOnSpec)
 	return trainOnSpec->modelName;
 }
 
+/*
+ * create a string of feature columns.
+ */
 static StringInfoData
 _temp_extract_train_on_columns(List *trainOn)
 {
@@ -956,7 +959,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	args[6] = PointerGetDatum(trainColumnArray);
 	args[7] = CStringGetTextDatum(targetColumn.data);
 	args[8] = Int32GetDatum(predictstate->stmt->kind);
-	args[9] = PointerGetDatum(ExecTypeFromTL(node->trainOn));
+	args[9] = PointerGetDatum(ExecTypeFromTL(outerPlan->targetlist));
 
 	UdfResult	initRes = call_udf_function(initFuncName,
 											initArgTypes,

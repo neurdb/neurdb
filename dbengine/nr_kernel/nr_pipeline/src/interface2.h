@@ -41,6 +41,7 @@ typedef struct {
     char **feature_names;
     char *target;
     TupleDesc tupdesc;
+    int label_col_id;
 
     // number of batches for train, eval, test
     int nb_tr, nb_ev, nb_te;
