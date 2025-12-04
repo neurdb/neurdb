@@ -1599,6 +1599,8 @@ typedef struct NeurDBPredict
 {
 	Plan 		plan;
 	NeurDBPredictStmt *stmt;
+	List		*trainOn;
+    List 		*predictTargetList;
 } NeurDBPredict;
 
 #endif							/* PLANNODES_H */

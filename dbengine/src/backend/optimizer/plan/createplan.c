@@ -7239,3 +7239,22 @@ is_projection_capable_plan(Plan *plan)
 	}
 	return true;
 }
+
+
+/*
+ * make_neurdbpredict
+ *	  Build a Limit plan node
+ */
+NeurDBPredict *
+make_neurdbpredict(Plan *lefttree)
+{
+	NeurDBPredict	   *node = makeNode(NeurDBPredict);
+	Plan	   *plan = &node->plan;
+
+	plan->targetlist = lefttree->targetlist;
+	plan->qual = NIL;
+	plan->lefttree = lefttree;
+	plan->righttree = NULL;
+
+	return node;
+}

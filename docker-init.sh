@@ -104,8 +104,7 @@ sudo make install
 
 ## Register nr_kernel as preloaded library
 echo 'shared_preload_libraries = '\''nr_ext, nram'\''' >> $NR_DBDATA_PATH/postgresql.conf
-
-echo "Install NR Data Pipeline Extension & NR kernel extension Done"
+echo "Install NR kernel extension Done"
 
 # Run python server
 cd $NR_AIENGINE_PATH/runtime
@@ -136,3 +135,6 @@ else
   # Exit normally
   exit 0
 fi
+
+$NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U neurdb -c 'CREATE EXTENSION nr_pipeline;'
+echo 'Install NR Data Pipeline Extension Done'
