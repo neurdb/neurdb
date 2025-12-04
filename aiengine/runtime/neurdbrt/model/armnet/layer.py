@@ -70,7 +70,7 @@ class MLP(nn.Module):
 
         for i in range(nlayers):
             layers.append(nn.Linear(ninput, nhid))
-            # layers.append(nn.BatchNorm1d(nhid)) # TODO: find a better way for non-batched data
+            layers.append(nn.BatchNorm1d(nhid)) # NOTE: for non-batched data, comment out this line
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(p=dropout))
             ninput = nhid
