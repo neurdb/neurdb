@@ -64,7 +64,7 @@ static void make_class_id_map(
     memset(&ctl, 0, sizeof(ctl));
     ctl.keysize = sizeof(char *);
     ctl.entrysize = sizeof(ClassIdHashEntry);
-    
+
     PIPELINE_SESSION.hash_ctx = AllocSetContextCreate(
         TopMemoryContext,
         "neurdb class map ctx",
@@ -328,7 +328,7 @@ run_infer_batch(PipelineSession *session, bool flush) {
     return payload;
 }
 
-static int 
+static int
 _label_col_id(TupleDesc tupdesc, const char *label_col) {
     // or directly inspect attributes:
     for (int i = 0; i < tupdesc->natts; i++)
