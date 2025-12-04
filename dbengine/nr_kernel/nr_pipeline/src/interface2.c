@@ -45,6 +45,12 @@ int NrAIEnginePort = 8090;
 HTAB *last_class_id_map;
 List *last_id_class_map;
 
+typedef struct ClassIdHashEntry
+{
+    char *key;     /* must be first for HASH_STRINGS */
+    int   id;
+} ClassIdHashEntry;
+
 // ------------------------ Util Functions ------------------------
 
 static void make_class_id_map(
@@ -53,6 +59,31 @@ static void make_class_id_map(
     HTAB **class_id_map,
     List **id_class_map
 ) {
+    MemoryContext oldcxt;
+    HASHCTL ctl;
+    memset(&ctl, 0, sizeof(ctl));
+    ctl.keysize = sizeof(char *);
+    ctl.entrysize = sizeof(ClassIdHashEntry);
+    
+    PIPELINE_SESSION.hash_ctx = AllocSetContextCreate(
+        TopMemoryContext,
+        "neurdb class map ctx",
+        ALLOCSET_DEFAULT_SIZES
+    );
+    oldcxt = MemoryContextSwitchTo(PIPELINE_SESSION.hash_ctx);
+
+    HTAB *cimap = hash_create(
+        "neurdb class id map",
+        1024,
+        &ctl,
+        HASH_ELEM | HASH_STRINGS
+    );
+    List *icmap = NIL;
+
+    MemoryContextSwitchTo(oldcxt);
+
+    bool found = 0;
+
     SPI_connect();
 
     StringInfoData query;
@@ -67,20 +98,6 @@ static void make_class_id_map(
     );
     SPI_execute(query.data, true, 0);
 
-    HASHCTL ctl;
-    memset(&ctl, 0, sizeof(ctl));
-    ctl.keysize = sizeof(char *);
-    ctl.entrysize = sizeof(int);
-
-    HTAB *cimap = hash_create(
-        "neurdb class id map",
-        1024,
-        &ctl,
-        HASH_ELEM | HASH_STRINGS
-    );
-    List *icmap = NIL;
-    bool found = 0;
-    MemoryContext oldcxt;
     if (SPI_processed > 0) {
         for (int i = 0; i < SPI_processed; i++) {
             char *label = SPI_getvalue(
@@ -88,17 +105,22 @@ static void make_class_id_map(
                 SPI_tuptable->tupdesc,
                 1
             );
-            int *id = hash_search(cimap, (void *) label, HASH_ENTER, &found);
+            oldcxt = MemoryContextSwitchTo(PIPELINE_SESSION.hash_ctx);
+            char *label_copy = pstrdup(label);
+            ClassIdHashEntry *entry = hash_search(cimap, (void *) label_copy, HASH_ENTER, &found);
             if (!found) {
-                *id = i;
+                entry->id = i;
+            } else {
+                /* free label_copy because key already existed */
+                pfree(label_copy);
             }
-            oldcxt = MemoryContextSwitchTo(TopMemoryContext);
             icmap = lappend(icmap, makeString(pstrdup(label)));
             MemoryContextSwitchTo(oldcxt);
         }
     }
     *class_id_map = cimap;
     *id_class_map = icmap;
+
     SPI_finish();
 }
 
@@ -586,15 +608,14 @@ pipeline_close() {
     if (PIPELINE_SESSION.target) pfree(PIPELINE_SESSION.target);
     if (PIPELINE_SESSION.model_name) pfree(PIPELINE_SESSION.model_name);
     if (PIPELINE_SESSION.table_name) pfree(PIPELINE_SESSION.table_name);
-    if (PIPELINE_SESSION.class_id_map) {
-        hash_destroy(PIPELINE_SESSION.class_id_map);
-        PIPELINE_SESSION.class_id_map = NULL;
+
+    if (PIPELINE_SESSION.hash_ctx) {
+        MemoryContextDelete(PIPELINE_SESSION.hash_ctx);
+        PIPELINE_SESSION.hash_ctx = NULL;
     }
-    if (PIPELINE_SESSION.id_class_map) {
-        list_free_deep(PIPELINE_SESSION.id_class_map);
-        PIPELINE_SESSION.id_class_map = NIL;
-    }
+
     memset(&PIPELINE_SESSION, 0, sizeof(PIPELINE_SESSION));
+
 }
 
 static char **

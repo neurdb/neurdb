@@ -50,6 +50,7 @@ typedef struct {
     int batch_count;
     int batch_capacity;
 
+    MemoryContext hash_ctx;
     HTAB *class_id_map;
     List *id_class_map;
 } PipelineSession;
