@@ -48,8 +48,8 @@ class AutoPipelineBuilder(BuilderBase):
         data = []
 
         # consume all data so that it does not block the event loop
-        for epoch in range(self._args.epoch):
-            logger.info("Epoch start", curr_epoch=epoch, end_at_epoch=self._args.epoch)
+        for e in range(epoch):
+            logger.info("Epoch start", curr_epoch=e, end_at_epoch=epoch)
 
             batch_idx = -1
             async for batch in train_loader:

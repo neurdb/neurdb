@@ -32,13 +32,14 @@ static char *inferenceFuncName = "nr_inference";
 static Oid	inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
 
 static char *initFuncName = "nr_pipeline_init";
-#define INIT_PARAMS_ARRAY_SIZE 9
+#define INIT_PARAMS_ARRAY_SIZE 10
 static Oid	initArgTypes[INIT_PARAMS_ARRAY_SIZE] =
 {
 	TEXTOID, //model name
 	TEXTOID, //table name
 	INT4OID, //batch size
-	INT4OID, //epoch
+	INT4OID, //epoch (number of training epochs)
+	INT4OID, //n_batches
 	INT4OID, //nfeat
 	TEXTARRAYOID, //feature names
 	TEXTOID, //target
@@ -532,42 +533,57 @@ ExecNeurDBPredict(PlanState *pstate)
 																PUSHSLOT_PARAMS_ARRAY_SIZE,
 																args, nulls);
 
-					/* the current batch is the last one */
-					if (predictstate->is_final)
-					{
-						predictstate->nrpstate = NEURDBPREDICT_TRAIN_END;
-						continue;
-					}
-
 					/* reset slot cache */
 					reset_slot_cache(predictstate);
 					predictstate->num_consumed = 0;
 
-					/* go back to retrieve the next batch */
-					predictstate->nrpstate = NEURDBPREDICT_TRAIN_COLLECT;
+					if (predictstate->is_final)
+					{
+						/* the current batch is the last one */
+						predictstate->nrpstate = NEURDBPREDICT_TRAIN_END;
+					}
+					else
+					{
+						/* go back to retrieve the next batch */
+						predictstate->nrpstate = NEURDBPREDICT_TRAIN_COLLECT;
+					}
 				}
 				break;
 
 			case NEURDBPREDICT_TRAIN_END:
 				{
-					/* tell nr_pipeline to change state */
-					elog(DEBUG1, "change state to inference");
-
-					Oid			funcOid = LookupFuncName(list_make1(makeString(stateChangeFuncName)),
-														 STATECHANGE_PARAMS_ARRAY_SIZE,
-														 stateChangeArgTypes,
-														 false);
-
-					if (!OidIsValid(funcOid))
-						elog(ERROR, "Function %s not found", stateChangeFuncName);
-
-					OidFunctionCall1(funcOid, BoolGetDatum(true));
+					predictstate->curr_epoch += 1;
+					elog(DEBUG1, "[NeurDBPredictState] Epoch: %d", predictstate->curr_epoch);
 
 					/* rescan from the beginning */
 					ExecReScan(outerPlan);
 
-					/* go to inference */
-					predictstate->nrpstate = NEURDBPREDICT_INFERENCE_COLLECT;
+					if (predictstate->curr_epoch < NrTaskEpoch)
+					{
+						/* go back to collect */
+						predictstate->is_final = false;
+						predictstate->nrpstate = NEURDBPREDICT_TRAIN_COLLECT;
+					}
+					else
+					{
+						/* all epochs are done, go to inference */
+
+						/* tell nr_pipeline to change state */
+						elog(DEBUG1, "change state to inference");
+
+						Oid			funcOid = LookupFuncName(list_make1(makeString(stateChangeFuncName)),
+															STATECHANGE_PARAMS_ARRAY_SIZE,
+															stateChangeArgTypes,
+															false);
+
+						if (!OidIsValid(funcOid))
+							elog(ERROR, "Function %s not found", stateChangeFuncName);
+
+						OidFunctionCall1(funcOid, BoolGetDatum(true));
+
+						/* go to inference */
+						predictstate->nrpstate = NEURDBPREDICT_INFERENCE_COLLECT;
+					}
 				}
 				break;
 
@@ -922,8 +938,8 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 
 	StringInfoData targetColumn = construct_target_columns(node->predictTargetList);
 
-	Datum		args[INFERENCE_PARAMS_ARRAY_SIZE];
-	bool		nulls[INFERENCE_PARAMS_ARRAY_SIZE] = {false};
+	Datum		args[INIT_PARAMS_ARRAY_SIZE];
+	bool		nulls[INIT_PARAMS_ARRAY_SIZE] = {false};
 
 	char	   *table = _temp_extract_table_name(predictstate->stmt->fromClause);
 	char	   *model = _temp_extract_model_name(predictstate->stmt->trainOnSpec);
@@ -934,12 +950,13 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	args[0] = CStringGetTextDatum(model);
 	args[1] = CStringGetTextDatum(table);
 	args[2] = Int32GetDatum(NrTaskBatchSize);
-	args[3] = Int32GetDatum(NrTaskNumBatches);
-	args[4] = Int32GetDatum(NrTaskMaxFeatures);
-	args[5] = PointerGetDatum(trainColumnArray);
-	args[6] = CStringGetTextDatum(targetColumn.data);
-	args[7] = Int32GetDatum(predictstate->stmt->kind);
-	args[8] = PointerGetDatum(ExecTypeFromTL(node->trainOn));
+	args[3] = Int32GetDatum(NrTaskEpoch);
+	args[4] = Int32GetDatum(NrTaskNumBatches);
+	args[5] = Int32GetDatum(NrTaskMaxFeatures);
+	args[6] = PointerGetDatum(trainColumnArray);
+	args[7] = CStringGetTextDatum(targetColumn.data);
+	args[8] = Int32GetDatum(predictstate->stmt->kind);
+	args[9] = PointerGetDatum(ExecTypeFromTL(node->trainOn));
 
 	UdfResult	initRes = call_udf_function(initFuncName,
 											initArgTypes,
@@ -964,8 +981,9 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	predictstate->slot_cache = palloc(sizeof(TupleTableSlot *) * NrTaskBatchSize);
 	predictstate->slot_cache_size = 0;
 	predictstate->num_consumed = 0;
-
 	dclist_init(&predictstate->result_cache);
+
+	predictstate->curr_epoch = 0;
 
 	return predictstate;
 }

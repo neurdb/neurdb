@@ -100,8 +100,8 @@ class ARMNetModelBuilder(BuilderBase):
 
         logger.info("start training...")
 
-        for epoch in range(self._args.epoch):
-            logger.info("Epoch start", curr_epoch=epoch, end_at_epoch=self._args.epoch)
+        for e in range(epoch):
+            logger.info("Epoch start", curr_epoch=e, end_at_epoch=epoch)
 
             # Training phase
             self._model.train()
@@ -149,7 +149,7 @@ class ARMNetModelBuilder(BuilderBase):
                 if batch_idx % self._args.report_freq == 0:
                     logger.info(
                         "%s",
-                        f"Epoch [{epoch:3d}/{self._args.epoch}][{batch_idx:3d}/{len(train_loader)}]\t"
+                        f"Epoch [{e:3d}/{epoch}][{batch_idx:3d}/{len(train_loader)}]\t"
                         f"{train_time_avg.val:.3f} ({train_time_avg.avg:.3f}) "
                         f"AUC {train_auc_avg.val:4f} ({train_auc_avg.avg:4f}) "
                         f"Loss {train_loss_avg.val:8.4f} ({train_loss_avg.avg:8.4f})",
@@ -271,7 +271,7 @@ class ARMNetModelBuilder(BuilderBase):
 
                 if batch_idx % self._args.report_freq == 0:
                     logger.info(
-                        f"Epoch [{batch_idx:3d}/{len(data_loader)}]\t"
+                        f"Batch [{batch_idx:3d}/{len(data_loader)}]\t"
                         f"{time_avg.val:.3f} ({time_avg.avg:.3f}) AUC {auc_avg.val:4f} ({auc_avg.avg:4f}) "
                         f"Loss {loss_avg.val:8.4f} ({loss_avg.avg:8.4f})"
                     )

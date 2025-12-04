@@ -2792,6 +2792,7 @@ typedef struct NeurDBPredictState
 	dclist_head	result_cache;
 	List *id_class_map;
 	bool is_float;
+	int curr_epoch;
 } NeurDBPredictState;
 
 #endif							/* EXECNODES_H */

@@ -161,7 +161,8 @@ static void build_libsvm_data(
                 label_col,
                 &is_null
             );
-            appendStringInfo(&row_data, "%d", DatumGetInt32(value));
+            int v = DatumGetInt32(value);
+            appendStringInfo(&row_data, "%d", v);
         } else {
             appendStringInfoString(&row_data, "0"); // Default for inference
         }
@@ -369,6 +370,7 @@ pipeline_init(
     const char *model_name,
     const char *table_name,
     int batch_size,
+    int epoch,
     int n_batches,
     int nfeat,
     char **feature_names,
@@ -383,7 +385,7 @@ pipeline_init(
     PIPELINE_SESSION.model_name = MemoryContextStrdup(TopMemoryContext, model_name);
     PIPELINE_SESSION.table_name = MemoryContextStrdup(TopMemoryContext, table_name);
     PIPELINE_SESSION.batch_size = batch_size;
-    // PIPELINE_SESSION.epoch = epoch;
+    PIPELINE_SESSION.epoch = epoch;
     PIPELINE_SESSION.n_batches = n_batches;
     PIPELINE_SESSION.nfeat = nfeat;
     PIPELINE_SESSION.type = type;
@@ -483,7 +485,7 @@ pipeline_init(
             tt,
             PIPELINE_SESSION.model_name,
             PIPELINE_SESSION.batch_size,
-            1,
+            epoch,
             PIPELINE_SESSION.nb_tr,
             PIPELINE_SESSION.nb_ev,
             PIPELINE_SESSION.nb_te,
@@ -661,21 +663,23 @@ nr_pipeline_init(PG_FUNCTION_ARGS) {
     char *model_name = text_to_cstring(PG_GETARG_TEXT_P(0));
     char *table_name = text_to_cstring(PG_GETARG_TEXT_P(1));
     int batch_size = PG_GETARG_INT32(2);
-    int n_batches = PG_GETARG_INT32(3);
-    int nfeat = PG_GETARG_INT32(4);
+    int epoch = PG_GETARG_INT32(3);
+    int n_batches = PG_GETARG_INT32(4);
+    int nfeat = PG_GETARG_INT32(5);
 
-    ArrayType *arr = PG_GETARG_ARRAYTYPE_P(5);
+    ArrayType *arr = PG_GETARG_ARRAYTYPE_P(6);
     int n_features = 0;
     char **feature_names = _array_to_cstring_list(arr, &n_features);
 
-    char *target = text_to_cstring(PG_GETARG_TEXT_P(6));
-    PredictType type = PG_GETARG_INT32(7);
-    TupleDesc tupdesc = (TupleDesc) PG_GETARG_DATUM(8);
+    char *target = text_to_cstring(PG_GETARG_TEXT_P(7));
+    PredictType type = PG_GETARG_INT32(8);
+    TupleDesc tupdesc = (TupleDesc) PG_GETARG_DATUM(9);
 
     bool is_inference = pipeline_init(
         model_name,
         table_name,
         batch_size,
+        epoch,
         n_batches,
         nfeat,
         feature_names,

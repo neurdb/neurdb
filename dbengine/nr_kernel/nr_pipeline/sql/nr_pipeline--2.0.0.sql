@@ -3,6 +3,7 @@ CREATE FUNCTION nr_pipeline_init (
     table_name text,
     batch_size int,
     epoch int,
+    n_batches int,
     nfeat int,
     feature_names text[],
     target text,
