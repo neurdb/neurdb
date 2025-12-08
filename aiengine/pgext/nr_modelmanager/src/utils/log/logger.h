@@ -26,7 +26,7 @@ typedef struct {
  * @field timer - the timer for the log message
  */
 typedef struct {
-    char *message;
+    char* message;
     Timer timer;
 } LogRecord;
 
@@ -37,25 +37,25 @@ typedef struct {
  * @field capacity - the capacity of the log records
  */
 typedef struct {
-    LogRecord *records;
+    LogRecord* records;
     int size;
     int capacity;
 } Logger;
 
 // ******** Logger APIs ********
 
-void logger_init(Logger *logger, int capacity);
+void logger_init(Logger* logger, int capacity);
 
-void logger_start(Logger *logger, char *message);
+void logger_start(Logger* logger, char* message);
 
-void logger_end(Logger *logger);
+void logger_end(Logger* logger);
 
 // print the log records
-void logger_print(Logger *logger);
+void logger_print(Logger* logger);
 
 // export the log records to a file
-void logger_export(Logger *logger, const char *filename);
+void logger_export(Logger* logger, const char* filename);
 
-void logger_free(Logger *logger);
+void logger_free(Logger* logger);
 
 #endif

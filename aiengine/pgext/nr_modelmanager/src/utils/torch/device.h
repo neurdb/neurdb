@@ -9,7 +9,7 @@ extern "C" {
 
 // global variable to store the device, use void* to avoid including torch
 // header file
-extern void *device;  // torch::Device
+extern void* device;  // torch::Device
 
 /**
  * @description: Initialize the device to be used

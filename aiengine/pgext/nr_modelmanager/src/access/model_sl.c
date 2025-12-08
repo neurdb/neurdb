@@ -122,9 +122,9 @@
 //     serialized_length); return model;
 // }
 
-ModelWrapper *load_model_by_id(const int model_id) {
+ModelWrapper* load_model_by_id(const int model_id) {
     // prepare the query to load the model metadata
-    const char *model_query =
+    const char* model_query =
         "SELECT model_meta FROM model WHERE model_id = $1";  // model_meta is of
                                                              // type bytea
     Oid arg_types[1] = {INT4OID};
@@ -143,9 +143,9 @@ ModelWrapper *load_model_by_id(const int model_id) {
     if (!spi_execute_query(&conn, model_query, 1, arg_types, values, nulls)) {
         ereport(ERROR, (errmsg("load_model_by_id: unable to execute query")));
     }
-    const bytea *model_meta = DatumGetByteaP(*spi_get_single_result(&conn));
+    const bytea* model_meta = DatumGetByteaP(*spi_get_single_result(&conn));
 
-    const char *layer_query =
+    const char* layer_query =
         "SELECT model_id, layer_id, create_time, layer_data FROM layer WHERE "
         "model_id = $1";
     if (!spi_execute_query(&conn, layer_query, 1, arg_types, values, nulls)) {
