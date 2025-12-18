@@ -604,9 +604,6 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 {
 	elog(DEBUG1, "In NeurDB's executor start");
 
-	if (original_executorstart_hook)
-		original_executorstart_hook(queryDesc, eflags);
-
 	EState	   *estate;
 	MemoryContext oldcontext;
 
@@ -752,9 +749,6 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 {
 	elog(DEBUG1, "[NeurDB_ExecutorRun] start");
 
-	if (original_executorrun_hook)
-		original_executorrun_hook(queryDesc, direction, count, execute_once);
-
 	EState	   *estate;
 	CmdType		operation;
 	DestReceiver *dest;
@@ -846,9 +840,6 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 void
 NeurDB_ExecutorEnd(QueryDesc *queryDesc)
 {
-	if (original_executorend_hook)
-		original_executorend_hook(queryDesc);
-
 	EState	   *estate;
 	MemoryContext oldcontext;
 
@@ -899,9 +890,6 @@ NeurDB_ExecutorEnd(QueryDesc *queryDesc)
 void
 NeurDB_ExecutorFinish(QueryDesc *queryDesc)
 {
-	if (original_executorfinish_hook)
-		original_executorfinish_hook(queryDesc);
-
 	EState	   *estate;
 	MemoryContext oldcontext;
 
