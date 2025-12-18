@@ -20,7 +20,7 @@ if (PG_ROOT)
 endif ()
 
 ############ Find packages ############
-set(PostgreSQL_ROOT /code/neurdb-dev/psql)
+set(PostgreSQL_ROOT /code/neurdb-dev/build/psql)
 set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
 set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")
 set(PostgreSQL_LIBDIR "${PostgreSQL_ROOT}/lib")
@@ -59,7 +59,7 @@ include_directories(${PROTOBUF_DIR}/include)
 set(ONNX_PROTOBUF_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/onnx/onnx_protobuf/build")
 include_directories(${ONNX_PROTOBUF_DIR})
 
-# hnswlib (header-only INTERFACE library)
+# hnswlib (header-only INTERFACE library, EXCLUDE_FROM_ALL to skip its install)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/hnswlib)
 
 # openmp
@@ -91,6 +91,8 @@ file(GLOB_RECURSE NEURSTORE_CORE
         ${ONNX_PROTO_SOURCE}
 )
 add_library(neurstore_core SHARED ${NEURSTORE_CORE})
+
+set_target_properties(neurstore_core PROPERTIES PREFIX "")
 
 target_include_directories(
         neurstore_core
@@ -145,6 +147,7 @@ add_library(pg_neurstore SHARED ${NEURSTORE_PG})
 #set_target_properties(pg_neurstore PROPERTIES
 #        OUTPUT_NAME "pg_neurstore"
 #)
+set_target_properties(pg_neurstore PROPERTIES PREFIX "")
 
 target_include_directories(
         pg_neurstore

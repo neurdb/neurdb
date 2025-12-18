@@ -23,19 +23,19 @@ external: cargo
 
 configure: external
 	mkdir -p $(BUILD_DIR)
-	cd $(BUILD_DIR) && $(CMAKE) -DCMAKE_INSTALL_PREFIX=$(PREFIX) ..
+	cd $(BUILD_DIR) && $(CMAKE) ..
 
 build: configure
 	$(CMAKE) --build $(BUILD_DIR)
 
 install: build
-	cd $(BUILD_DIR) && $(CMAKE) --build . --target install
-	cp $(EXT_NAME).control $(NEURDBPATH)/psql/share/postgresql/extension
-	cp sql/pg_neurstore--1.0.0.sql $(NEURDBPATH)/psql/share/postgresql/extension
-	cp build/lib$(EXT_NAME).so $(NEURDBPATH)/psql/lib
-	cp build/lib$(EXT_NAME).so $(NEURDBPATH)/psql/lib/postgresql
-	cp build/lib$(EXT_NAME_CORE).so $(NEURDBPATH)/psql/lib
-	cp build/lib$(EXT_NAME_CORE).so $(NEURDBPATH)/psql/lib/postgresql
+	cd $(BUILD_DIR) && $(CMAKE) --build .
+	cp $(EXT_NAME).control $(NEURDBPATH)/build/psql/share/postgresql/extension
+	cp sql/pg_neurstore--1.0.0.sql $(NEURDBPATH)/build/psql/share/postgresql/extension
+	cp build/$(EXT_NAME).so $(NEURDBPATH)/build/psql/lib
+	cp build/$(EXT_NAME).so $(NEURDBPATH)/build/psql/lib/postgresql
+	cp build/$(EXT_NAME_CORE).so $(NEURDBPATH)/build/psql/lib
+	cp build/$(EXT_NAME_CORE).so $(NEURDBPATH)/build/psql/lib/postgresql
 
 clean:
 	rm -rf $(BUILD_DIR)

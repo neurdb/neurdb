@@ -11,12 +11,12 @@ cd /code/neurdb-dev/dbengine/nr_kernel/nr_molqo
 make clean && make debug && make install
 
 # Configure postgresql.conf
-vi /code/neurdb-dev/psql/data/postgresql.conf
+vi /code/neurdb-dev/build/psql/data/postgresql.conf
 # Add: shared_preload_libraries = 'pg_hint_plan,nr_molqo'
 
 # Restart PostgreSQL
 su - neurdb
-/code/neurdb-dev/psql/bin/pg_ctl -D /code/neurdb-dev/psql/data restart
+/code/neurdb-dev/build/psql/bin/pg_ctl -D /code/neurdb-dev/build/psql/data restart
 
 # Create extension
 psql -c "CREATE EXTENSION nr_molqo;"

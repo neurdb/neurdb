@@ -7,6 +7,12 @@ TOKENIZERS_SRC="${PROJECT_ROOT}/external/tokenizers-cpp"
 TOKENIZERS_BUILD="${TOKENIZERS_SRC}/build"
 TOKENIZERS_INSTALL="${TOKENIZERS_SRC}/install"
 
+# Skip if already built
+if [ -f "${TOKENIZERS_BUILD}/libtokenizers_cpp.a" ]; then
+  echo "tokenizers-cpp already exists at ${TOKENIZERS_BUILD}, skipping build"
+  exit 0
+fi
+
 echo ">>> Cloning tokenizers-cpp ..."
 rm -rf "${TOKENIZERS_SRC}"
 git clone --depth 1 --recursive https://github.com/mlc-ai/tokenizers-cpp.git "${TOKENIZERS_SRC}"

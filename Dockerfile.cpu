@@ -33,6 +33,7 @@ RUN apt-get install -y \
     vim \
     wget \
     unzip \
+    rsync \
     pkg-config \
     build-essential \
     libssl-dev \
@@ -112,13 +113,6 @@ USER neurdb
 COPY aiengine/runtime/requirements.cpu.txt /usr/local/bin/requirements.txt
 RUN pip install -r /usr/local/bin/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Copy the build script into the container
-USER root
-COPY docker-init.sh /usr/local/bin/docker-init.sh
-
-# Ensure the build script is executable
-RUN chmod +x /usr/local/bin/docker-init.sh
-
 # Change to non-root user 'neurdb' for database compilation and running the init script
 USER neurdb
 
@@ -126,5 +120,5 @@ USER neurdb
 ENV PATH="/home/neurdb/.local/bin:${PATH}"
 RUN git config --global --add safe.directory /code/neurdb-dev
 
-# Command to run the init.sh script
-CMD ["bash", "/usr/local/bin/docker-init.sh"]
+# Command to run the init script from mounted volume
+CMD ["bash", "/code/neurdb-dev/docker-init.sh"]

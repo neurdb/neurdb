@@ -28,3 +28,7 @@ dbengine/nr_kernel/nr_am/results/*
 dbengine/nr_kernel/nr_am/optimizer/bo-all
 dbengine/nr_kernel/nr_am/optimizer/bo-steps
 dbengine/nr_kernel/nr_am/optimizer/__pycache__
+
+build/
+dbengine/nr_kernel/nr_store/external/*
+dbengine/nr_kernel/nr_store/external/hnswlib/
