@@ -1,6 +1,6 @@
-NEURDBPATH=/code/neurdb-dev
-EXTPATH = /code/neurdb-dev/dbengine/nr_kernel/nr_am
-ENGINEPATH = /code/neurdb-dev/dbengine/
+NEURDBPATH ?= /code/neurdb-dev
+EXTPATH = $(CURDIR)
+ENGINEPATH = $(CURDIR)/../..
 MODULE_big = nram
 OBJS = \
 	${EXTPATH}/src/nram.o \
@@ -43,20 +43,20 @@ ROCKSDB_LIB_PATH = /usr/local/lib
 ROCKSDB_INC_PATH = /usr/local/include
 
 
-PG_CONFIG = ${NEURDBPATH}/psql/bin/pg_config
+PG_CONFIG = $(NEURDBPATH)/build/psql/bin/pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
 .PHONY: debug test
 
-debug:#
-	$(MAKE) PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" \
+debug:
+	$(MAKE) PG_CPPFLAGS="-I/usr/local/include -I./src/ -DDEBUG" \
 	        SHLIB_LINK="$(SHLIB_LINK)" \
 	        CFLAGS="-g -O0 -Wall"
 
 test:
 	rm -rf ../logfile
-	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
+	rm -rf "$(NEURDBPATH)/build/psql/data/pg_rocksdb/"
 	make clean
 	make debug -j
 	sudo make install
@@ -68,7 +68,7 @@ test:
 
 unit-test:
 	rm -rf ../logfile
-	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
+	rm -rf "$(NEURDBPATH)/build/psql/data/pg_rocksdb/"
 	make clean
 	make debug -j
 	sudo make install
@@ -81,7 +81,7 @@ unit-test:
 
 setup:
 	rm -rf ../logfile
-	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
+	rm -rf "$(NEURDBPATH)/build/psql/data/pg_rocksdb/"
 	make clean
 	make debug -j
 	sudo make install

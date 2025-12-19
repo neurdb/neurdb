@@ -2769,16 +2769,30 @@ typedef struct LimitState
 	TupleTableSlot *last_slot;	/* slot for evaluation of ties */
 } LimitState;
 
-/*
-* TEMP: NeurDBPredictState
-*
-* A temp dummy execution-state node for NeurDBPredict. Should copy all info
-* in NeurDBPredictStmt.
-*/
+typedef enum
+{
+	NEURDBPREDICT_TRAIN_COLLECT,
+	NEURDBPREDICT_TRAIN_SEND,
+	NEURDBPREDICT_TRAIN_END,
+	NEURDBPREDICT_INFERENCE_COLLECT,
+	NEURDBPREDICT_INFERENCE_SEND,
+	NEURDBPREDICT_INFERENCE_RETURN,
+	NEURDBPREDICT_INFERENCE_END,
+} NeurDBPredictStateCond;
+
 typedef struct NeurDBPredictState
 {
-	PlanState	ps;				/* its first field is NodeTag */
+	PlanState ps;						/* its first field is NodeTag */
 	NeurDBPredictStmt *stmt;
+	NeurDBPredictStateCond nrpstate;
+	TupleTableSlot **slot_cache;	/* result cache */
+	int	slot_cache_size;	/* result cache size */
+	bool is_final;
+	int num_consumed;
+	dclist_head	result_cache;
+	List *id_class_map;
+	bool is_float;
+	int curr_epoch;
 } NeurDBPredictState;
 
 #endif							/* EXECNODES_H */

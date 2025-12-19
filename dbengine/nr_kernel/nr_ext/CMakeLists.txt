@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_FLAGS "-Werror=implicit-function-declaration")
 
 # Set PostgreSQL paths
-set(PostgreSQL_ROOT /code/neurdb-dev/psql)
+set(PostgreSQL_ROOT /code/neurdb-dev/build/psql)
 set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
 set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")
 set(PostgreSQL_LIBDIR "${PostgreSQL_ROOT}/lib")

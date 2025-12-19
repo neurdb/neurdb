@@ -660,8 +660,10 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 				json_object_constructor_null_clause_opt
 				json_array_constructor_null_clause_opt
 
-%type <node>	neurdb_target neurdb_from opt_neurdb_train_on opt_neurdb_with opt_neurdb_values
-%type <list> 	neurdb_train_on_columns
+%type <node>	neurdb_target neurdb_from opt_neurdb_train_on opt_neurdb_with
+				opt_neurdb_values neurdb_table_ref
+%type <list> 	neurdb_train_on_columns neurdb_train_on_list neurdb_from_list
+%type <target>	neurdb_train_on_el
 %type <str>		opt_neurdb_model_name
 /* %type <boolean> opt_allow_train */
 
@@ -16970,7 +16972,44 @@ opt_allow_train:
 */
 
 neurdb_from:
-			FROM from_list
+		FROM relation_expr
+			where_clause
+			group_clause having_clause window_clause
+			opt_sort_clause opt_select_limit opt_for_locking_clause
+			{
+				/*
+					* Syntactic sugar:
+					* FROM <table>
+					* becomes
+					* FROM (SELECT * FROM <table>)
+					*/
+
+				/* SELECT * */
+				ColumnRef  *star = makeNode(ColumnRef);
+				star->fields = list_make1(makeNode(A_Star));
+				star->location = @1;
+
+				ResTarget   *t = makeNode(ResTarget);
+				t->name = NULL;
+				t->indirection = NIL;
+				t->val = (Node *) star;
+				t->location = @1;
+
+				SelectStmt *s = makeNode(SelectStmt);
+				s->targetList = list_make1(t);
+				/* FROM <RangeVar> */
+				s->fromClause = list_make1($2);
+
+				RangeSubselect *rss = makeNode(RangeSubselect);
+				rss->lateral = false;
+				rss->subquery = (Node *) s;
+				rss->alias = NULL;
+
+				NeurDBPredictStmt *n = makeNode(NeurDBPredictStmt);
+				n->fromClause = list_make1(rss); /* same type as “from_list” */
+				$$ = (Node *) n;
+			}
+		| FROM neurdb_from_list
 			where_clause
 			group_clause having_clause window_clause
 			opt_sort_clause opt_select_limit opt_for_locking_clause
@@ -16982,8 +17021,70 @@ neurdb_from:
 				}
 		;
 
+neurdb_from_list:
+			neurdb_table_ref								{ $$ = list_make1($1); }
+			| neurdb_from_list ',' neurdb_table_ref			{ $$ = lappend($1, $3); }
+		;
+
+/*
+ * NeurDB: remove all single table references
+ */
+neurdb_table_ref:	func_table func_alias_clause
+				{
+					RangeFunction *n = (RangeFunction *) $1;
+
+					n->alias = linitial($2);
+					n->coldeflist = lsecond($2);
+					$$ = (Node *) n;
+				}
+			| LATERAL_P func_table func_alias_clause
+				{
+					RangeFunction *n = (RangeFunction *) $2;
+
+					n->lateral = true;
+					n->alias = linitial($3);
+					n->coldeflist = lsecond($3);
+					$$ = (Node *) n;
+				}
+			| xmltable opt_alias_clause
+				{
+					RangeTableFunc *n = (RangeTableFunc *) $1;
+
+					n->alias = $2;
+					$$ = (Node *) n;
+				}
+			| LATERAL_P xmltable opt_alias_clause
+				{
+					RangeTableFunc *n = (RangeTableFunc *) $2;
+
+					n->lateral = true;
+					n->alias = $3;
+					$$ = (Node *) n;
+				}
+			| select_with_parens opt_alias_clause
+				{
+					RangeSubselect *n = makeNode(RangeSubselect);
+
+					n->lateral = false;
+					n->subquery = $1;
+					n->alias = $2;
+					$$ = (Node *) n;
+				}
+			| LATERAL_P select_with_parens opt_alias_clause
+				{
+					RangeSubselect *n = makeNode(RangeSubselect);
+
+					n->lateral = true;
+					n->subquery = $2;
+					n->alias = $3;
+					$$ = (Node *) n;
+				}
+		;
+
+
+
 opt_neurdb_train_on:
-			TRAIN opt_neurdb_model_name ON neurdb_train_on_columns opt_neurdb_with
+			TRAIN opt_neurdb_model_name ON neurdb_train_on_list opt_neurdb_with
 				{
 					NeurDBTrainOnSpec *n = makeNode(NeurDBTrainOnSpec);
 					n->modelName = $2;
@@ -17001,6 +17102,39 @@ opt_neurdb_model_name:
 neurdb_train_on_columns:
 			columnList								{ $$ = $1; }
 			| '*'									{ $$ = list_make1(makeNode(A_Star)); }
+		;
+
+/*****************************************************************************
+ *
+ *	target list for SELECT
+ *
+ *****************************************************************************/
+neurdb_train_on_list:
+			neurdb_train_on_el								{ $$ = list_make1($1); }
+			| neurdb_train_on_list ',' neurdb_train_on_el	{ $$ = lappend($1, $3); }
+		;
+
+neurdb_train_on_el: a_expr
+				{
+					$$ = makeNode(ResTarget);
+					$$->name = NULL;
+					$$->indirection = NIL;
+					$$->val = (Node *) $1;
+					$$->location = @1;
+				}
+			| '*'
+				{
+					ColumnRef  *n = makeNode(ColumnRef);
+
+					n->fields = list_make1(makeNode(A_Star));
+					n->location = @1;
+
+					$$ = makeNode(ResTarget);
+					$$->name = NULL;
+					$$->indirection = NIL;
+					$$->val = (Node *) n;
+					$$->location = @1;
+				}
 		;
 
 opt_neurdb_with:

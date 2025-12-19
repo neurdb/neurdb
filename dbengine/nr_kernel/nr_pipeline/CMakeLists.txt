@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(PostgreSQL_ROOT /code/neurdb-dev/psql)
+set(PostgreSQL_ROOT /code/neurdb-dev/build/psql)
 set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
 set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")
 set(PostgreSQL_LIBDIR "${PostgreSQL_ROOT}/lib")
@@ -36,9 +36,10 @@ include_directories(${nr_pipeline_SOURCE_DIR}/src)
 find_package(OpenSSL REQUIRED)
 
 FILE(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp")
+LIST(FILTER SOURCES EXCLUDE REGEX ".*src/interface.[ch]$") # use interface2.xxx as entry point
 add_library(nr_pipeline SHARED ${SOURCES})
 target_link_libraries(nr_pipeline ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES} ${LWS_LIBRARY} ${SIO_CLIENT} OpenSSL::SSL OpenSSL::Crypto)
 
 # Install
 install(TARGETS nr_pipeline DESTINATION ${PostgreSQL_LIBDIR})
-install(FILES sql/nr_pipeline--1.0.0.sql DESTINATION ${PostgreSQL_SHAREDIR}/extension)
+install(FILES sql/nr_pipeline--2.0.0.sql DESTINATION ${PostgreSQL_SHAREDIR}/extension)

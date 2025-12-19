@@ -25,13 +25,13 @@ buildext: build
 
 install: buildext
 	cd build; make install; cd ..
-	cp $(EXT_NAME).control $(NEURDBPATH)/psql/share/postgresql/extension
-	cp sql/nr_pipeline--1.0.0.sql $(NEURDBPATH)/psql/share/postgresql/extension
+	cp $(EXT_NAME).control $(NEURDBPATH)/build/psql/share/postgresql/extension
+	cp sql/nr_pipeline--2.0.0.sql $(NEURDBPATH)/build/psql/share/postgresql/extension
 	# only works when in psql/lib/postgresql
-	rm -f $(NEURDBPATH)/psql/lib/$(EXT_NAME).so
-	rm -f $(NEURDBPATH)/psql/lib/postgresql/$(EXT_NAME).so
-	cp build/$(EXT_NAME).so $(NEURDBPATH)/psql/lib
-	cp build/$(EXT_NAME).so $(NEURDBPATH)/psql/lib/postgresql
+	rm -f $(NEURDBPATH)/build/psql/lib/$(EXT_NAME).so
+	rm -f $(NEURDBPATH)/build/psql/lib/postgresql/$(EXT_NAME).so
+	cp build/$(EXT_NAME).so $(NEURDBPATH)/build/psql/lib
+	cp build/$(EXT_NAME).so $(NEURDBPATH)/build/psql/lib/postgresql
 
 clean:
 	rm -rf build

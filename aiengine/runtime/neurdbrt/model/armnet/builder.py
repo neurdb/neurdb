@@ -1,9 +1,12 @@
+import asyncio
 import time
 from typing import List
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from neurdbrt.app.msg import InferenceResultResponse
+from neurdbrt.app.ws import WebsocketSender
 from neurdbrt.config import DEVICE
 from neurdbrt.dataloader import StreamingDataSet
 from neurdbrt.log import logger
@@ -97,8 +100,8 @@ class ARMNetModelBuilder(BuilderBase):
 
         logger.info("start training...")
 
-        for epoch in range(self._args.epoch):
-            logger.info("Epoch start", curr_epoch=epoch, end_at_epoch=self._args.epoch)
+        for e in range(epoch):
+            logger.info("Epoch start", curr_epoch=e, end_at_epoch=epoch)
 
             # Training phase
             self._model.train()
@@ -132,7 +135,11 @@ class ARMNetModelBuilder(BuilderBase):
                 loss.backward()
                 optimizer.step()
 
-                auc = roc_auc_compute_fn(y, target)
+                if len(y.shape) > 1:
+                    auc = roc_auc_compute_fn(y, target)
+                else:
+                    auc = 0.0
+
                 train_loss_avg.update(loss.item(), target.size(0))
                 train_auc_avg.update(auc, target.size(0))
 
@@ -142,7 +149,7 @@ class ARMNetModelBuilder(BuilderBase):
                 if batch_idx % self._args.report_freq == 0:
                     logger.info(
                         "%s",
-                        f"Epoch [{epoch:3d}/{self._args.epoch}][{batch_idx:3d}/{len(train_loader)}]\t"
+                        f"Epoch [{e:3d}/{epoch}][{batch_idx:3d}/{len(train_loader)}]\t"
                         f"{train_time_avg.val:.3f} ({train_time_avg.avg:.3f}) "
                         f"AUC {train_auc_avg.val:4f} ({train_auc_avg.avg:4f}) "
                         f"Loss {train_loss_avg.val:8.4f} ({train_loss_avg.avg:8.4f})",
@@ -162,54 +169,54 @@ class ARMNetModelBuilder(BuilderBase):
             # )
 
             # Validation phase
-            valid_auc = await self._evaluate(
-                val_loader, opt_metric, "val", eva_batch_num
-            )
-            test_auc = await self._evaluate(
-                test_loader, opt_metric, "test", test_batch_num
-            )
+            # valid_auc = await self._evaluate(
+            #     val_loader, opt_metric, "val", eva_batch_num
+            # )
+            # test_auc = await self._evaluate(
+            #     test_loader, opt_metric, "test", test_batch_num
+            # )
 
             # record best auc and save checkpoint
-            if valid_auc >= best_valid_auc:
-                patience_cnt = 0
-                best_valid_auc, best_test_auc = valid_auc, test_auc
+            # if valid_auc >= best_valid_auc:
+            #     patience_cnt = 0
+            #     best_valid_auc, best_test_auc = valid_auc, test_auc
 
-                logger.info(
-                    "New best valid auc",
-                    epoch=epoch,
-                    valid_auc=valid_auc,
-                    test_auc=test_auc,
-                )
-                # logger.info(
-                #     f"best valid auc: valid {valid_auc:.4f}, test {test_auc:.4f}"
-                # )
-            else:
-                patience_cnt += 1
+            #     logger.info(
+            #         "New best valid auc",
+            #         epoch=epoch,
+            #         valid_auc=valid_auc,
+            #         test_auc=test_auc,
+            #     )
+            #     # logger.info(
+            #     #     f"best valid auc: valid {valid_auc:.4f}, test {test_auc:.4f}"
+            #     # )
+            # else:
+            #     patience_cnt += 1
 
-                logger.info(
-                    "Evaluation early stopped",
-                    epoch=epoch - 1,
-                    patience_cnt=patience_cnt,
-                    valid_auc=valid_auc,
-                    test_auc=test_auc,
-                )
-                # logger.info(f"valid {valid_auc:.4f}, test {test_auc:.4f}")
-                # logger.info(
-                #     f"Early stopped, {patience_cnt}-th best auc at epoch {epoch - 1}"
-                # )
+            #     logger.info(
+            #         "Evaluation early stopped",
+            #         epoch=epoch - 1,
+            #         patience_cnt=patience_cnt,
+            #         valid_auc=valid_auc,
+            #         test_auc=test_auc,
+            #     )
+            #     # logger.info(f"valid {valid_auc:.4f}, test {test_auc:.4f}")
+            #     # logger.info(
+            #     #     f"Early stopped, {patience_cnt}-th best auc at epoch {epoch - 1}"
+            #     # )
 
-            if patience_cnt >= self._args.patience:
-                self._logger.info(
-                    "Evaluation end",
-                    epoch=epoch,
-                    valid_auc=best_valid_auc,
-                    test_auc=best_test_auc,
-                )
+            # if patience_cnt >= self._args.patience:
+            #     self._logger.info(
+            #         "Evaluation end",
+            #         epoch=epoch,
+            #         valid_auc=best_valid_auc,
+            #         test_auc=best_test_auc,
+            #     )
 
-                # logger.info(
-                #     f"Final best valid auc {best_valid_auc:.4f}, with test auc {best_test_auc:.4f}"
-                # )
-                # break
+            #     # logger.info(
+            #     #     f"Final best valid auc {best_valid_auc:.4f}, with test auc {best_test_auc:.4f}"
+            #     # )
+            #     # break
 
         self._model.eval()
 
@@ -251,7 +258,11 @@ class ARMNetModelBuilder(BuilderBase):
                 y = self._model(batch)
                 loss = opt_metric(y, target)
 
-                auc = roc_auc_compute_fn(y, target)
+                if len(y.shape) > 1:
+                    auc = roc_auc_compute_fn(y, target)
+                else:
+                    auc = 0.0
+
                 loss_avg.update(loss.item(), target.size(0))
                 auc_avg.update(auc, target.size(0))
 
@@ -260,7 +271,7 @@ class ARMNetModelBuilder(BuilderBase):
 
                 if batch_idx % self._args.report_freq == 0:
                     logger.info(
-                        f"Epoch [{batch_idx:3d}/{len(data_loader)}]\t"
+                        f"Batch [{batch_idx:3d}/{len(data_loader)}]\t"
                         f"{time_avg.val:.3f} ({time_avg.avg:.3f}) AUC {auc_avg.val:4f} ({auc_avg.avg:4f}) "
                         f"Loss {loss_avg.val:8.4f} ({loss_avg.avg:8.4f})"
                     )
@@ -281,6 +292,7 @@ class ARMNetModelBuilder(BuilderBase):
         inf_batch_num: int,
         feature_names: List[str],
         target_name: str,
+        session_id: str,
     ):
         logger = self._logger.bind(task="inference")
         print(f"begin inference for {inf_batch_num} batches ")
@@ -307,9 +319,24 @@ class ARMNetModelBuilder(BuilderBase):
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
                 logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
+
+                asyncio.create_task(
+                    WebsocketSender.send(
+                        InferenceResultResponse(session_id, predictions).to_json()
+                    )
+                )
+
+                predictions = []
+
                 if batch_idx + 1 == inf_batch_num:
                     break
 
-        logger.info("Done inference for {inf_batch_num} batches ")
-        logger.info("---- Inference end ---- ", time=time_since(since=start_time))
+                # since now DB engine sends data and wait for current batch to be processed,
+                # we need to return after each batch (technically there is only one input in
+                # the batch now, but that will change in the future)
+                # if data_loader.remaining == 0:
+                #     break
+
+        # logger.info("Done inference for {inf_batch_num} batches ")
+        # logger.info("---- Inference end ---- ", time=time_since(since=start_time))
         return predictions

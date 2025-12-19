@@ -18,31 +18,27 @@
 #include "catalog/pg_attribute.h"
 #include "nodes/pg_list.h"
 
-
-typedef struct AttrDefault
-{
-	AttrNumber	adnum;
-	char	   *adbin;			/* nodeToString representation of expr */
+typedef struct AttrDefault {
+    AttrNumber adnum;
+    char* adbin; /* nodeToString representation of expr */
 } AttrDefault;
 
-typedef struct ConstrCheck
-{
-	char	   *ccname;
-	char	   *ccbin;			/* nodeToString representation of expr */
-	bool		ccvalid;
-	bool		ccnoinherit;	/* this is a non-inheritable constraint */
+typedef struct ConstrCheck {
+    char* ccname;
+    char* ccbin; /* nodeToString representation of expr */
+    bool ccvalid;
+    bool ccnoinherit; /* this is a non-inheritable constraint */
 } ConstrCheck;
 
 /* This structure contains constraints of a tuple */
-typedef struct TupleConstr
-{
-	AttrDefault *defval;		/* array */
-	ConstrCheck *check;			/* array */
-	struct AttrMissing *missing;	/* missing attributes values, NULL if none */
-	uint16		num_defval;
-	uint16		num_check;
-	bool		has_not_null;
-	bool		has_generated_stored;
+typedef struct TupleConstr {
+    AttrDefault* defval;         /* array */
+    ConstrCheck* check;          /* array */
+    struct AttrMissing* missing; /* missing attributes values, NULL if none */
+    uint16 num_defval;
+    uint16 num_check;
+    bool has_not_null;
+    bool has_generated_stored;
 } TupleConstr;
 
 /*
@@ -76,79 +72,72 @@ typedef struct TupleConstr
  * field of such a descriptor to -1, while reference-counted descriptors
  * always have tdrefcount >= 0.
  */
-typedef struct TupleDescData
-{
-	int			natts;			/* number of attributes in the tuple */
-	Oid			tdtypeid;		/* composite type ID for tuple type */
-	int32		tdtypmod;		/* typmod for tuple type */
-	int			tdrefcount;		/* reference count, or -1 if not counting */
-	TupleConstr *constr;		/* constraints, or NULL if none */
-	/* attrs[N] is the description of Attribute Number N+1 */
-	FormData_pg_attribute attrs[FLEXIBLE_ARRAY_MEMBER];
-}			TupleDescData;
-typedef struct TupleDescData *TupleDesc;
+typedef struct TupleDescData {
+    int natts;           /* number of attributes in the tuple */
+    Oid tdtypeid;        /* composite type ID for tuple type */
+    int32 tdtypmod;      /* typmod for tuple type */
+    int tdrefcount;      /* reference count, or -1 if not counting */
+    TupleConstr* constr; /* constraints, or NULL if none */
+    /* attrs[N] is the description of Attribute Number N+1 */
+    FormData_pg_attribute attrs[FLEXIBLE_ARRAY_MEMBER];
+} TupleDescData;
+typedef struct TupleDescData* TupleDesc;
 
 /* Accessor for the i'th attribute of tupdesc. */
 #define TupleDescAttr(tupdesc, i) (&(tupdesc)->attrs[(i)])
 
 extern TupleDesc CreateTemplateTupleDesc(int natts);
 
-extern TupleDesc CreateTupleDesc(int natts, Form_pg_attribute *attrs);
+extern TupleDesc CreateTupleDesc(int natts, Form_pg_attribute* attrs);
 
 extern TupleDesc CreateTupleDescCopy(TupleDesc tupdesc);
 
 extern TupleDesc CreateTupleDescCopyConstr(TupleDesc tupdesc);
 
-#define TupleDescSize(src) \
-	(offsetof(struct TupleDescData, attrs) + \
-	 (src)->natts * sizeof(FormData_pg_attribute))
+#define TupleDescSize(src)                   \
+    (offsetof(struct TupleDescData, attrs) + \
+     (src)->natts * sizeof(FormData_pg_attribute))
 
 extern void TupleDescCopy(TupleDesc dst, TupleDesc src);
 
 extern void TupleDescCopyEntry(TupleDesc dst, AttrNumber dstAttno,
-							   TupleDesc src, AttrNumber srcAttno);
+                               TupleDesc src, AttrNumber srcAttno);
 
 extern void FreeTupleDesc(TupleDesc tupdesc);
 
 extern void IncrTupleDescRefCount(TupleDesc tupdesc);
 extern void DecrTupleDescRefCount(TupleDesc tupdesc);
 
-#define PinTupleDesc(tupdesc) \
-	do { \
-		if ((tupdesc)->tdrefcount >= 0) \
-			IncrTupleDescRefCount(tupdesc); \
-	} while (0)
+#define PinTupleDesc(tupdesc)                                           \
+    do {                                                                \
+        if ((tupdesc)->tdrefcount >= 0) IncrTupleDescRefCount(tupdesc); \
+    } while (0)
 
-#define ReleaseTupleDesc(tupdesc) \
-	do { \
-		if ((tupdesc)->tdrefcount >= 0) \
-			DecrTupleDescRefCount(tupdesc); \
-	} while (0)
+#define ReleaseTupleDesc(tupdesc)                                       \
+    do {                                                                \
+        if ((tupdesc)->tdrefcount >= 0) DecrTupleDescRefCount(tupdesc); \
+    } while (0)
 
 extern bool equalTupleDescs(TupleDesc tupdesc1, TupleDesc tupdesc2);
 
 extern uint32 hashTupleDesc(TupleDesc desc);
 
-extern void TupleDescInitEntry(TupleDesc desc,
-							   AttrNumber attributeNumber,
-							   const char *attributeName,
-							   Oid oidtypeid,
-							   int32 typmod,
-							   int attdim);
+extern void TupleDescInitEntry(TupleDesc desc, AttrNumber attributeNumber,
+                               const char* attributeName, Oid oidtypeid,
+                               int32 typmod, int attdim);
 
 extern void TupleDescInitBuiltinEntry(TupleDesc desc,
-									  AttrNumber attributeNumber,
-									  const char *attributeName,
-									  Oid oidtypeid,
-									  int32 typmod,
-									  int attdim);
+                                      AttrNumber attributeNumber,
+                                      const char* attributeName, Oid oidtypeid,
+                                      int32 typmod, int attdim);
 
 extern void TupleDescInitEntryCollation(TupleDesc desc,
-										AttrNumber attributeNumber,
-										Oid collationid);
+                                        AttrNumber attributeNumber,
+                                        Oid collationid);
 
-extern TupleDesc BuildDescForRelation(List *schema);
+extern TupleDesc BuildDescForRelation(List* schema);
 
-extern TupleDesc BuildDescFromLists(List *names, List *types, List *typmods, List *collations);
+extern TupleDesc BuildDescFromLists(List* names, List* types, List* typmods,
+                                    List* collations);
 
-#endif							/* TUPDESC_H */
+#endif /* TUPDESC_H */
