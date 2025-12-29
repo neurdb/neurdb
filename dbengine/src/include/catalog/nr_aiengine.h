@@ -11,7 +11,7 @@ CATALOG(nr_aiengine,9600,NrAiengineRelationId)
 	int32		aieport BKI_DEFAULT(0);
 	Oid			aieconn BKI_DEFAULT(0);
 #ifdef CATALOG_VARLEN			/* variable-length fields start here */
-	text		aieaddr BKI_FORCE_NOT_NULL; /* aiengine address */
+	text		aieaddr BKI_DEFAULT(_null_); /* aiengine address */
 #endif
 } FormData_nr_aiengine;
 
