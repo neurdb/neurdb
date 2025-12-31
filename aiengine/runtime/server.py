@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from threading import Thread
 from typing import Any, List
 
@@ -421,5 +422,9 @@ async def init_database(req: TaskRequest, in_libsvm_format: bool = True):
 
 app = quart_app
 
+if "NR_PORT" in os.environ:
+    port = int(os.environ["NR_PORT"])
+else:
+    port = 8090
 
-uvicorn.run(app, host="0.0.0.0", port=8090, log_level="debug")
+uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
