@@ -22,10 +22,10 @@
 #define NrAiengineOidIndexId 9601
 
 #define Anum_nr_aiengine_oid 1
-#define Anum_nr_aiengine_aiename 2
-#define Anum_nr_aiengine_aieport 3
-#define Anum_nr_aiengine_aieconn 4
-#define Anum_nr_aiengine_aieaddr 5
+#define Anum_nr_aiengine_aieport 2
+#define Anum_nr_aiengine_aieaddr 3
+#define Anum_nr_aiengine_aiename 4
+#define Anum_nr_aiengine_aieconn 5
 
 #define Natts_nr_aiengine 5
 
