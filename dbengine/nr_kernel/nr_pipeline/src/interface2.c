@@ -39,9 +39,6 @@ static void pipeline_close();
 
 static PipelineSession PIPELINE_SESSION;
 
-char *NrAIEngineHost = "localhost";
-int NrAIEnginePort = 8090;
-
 HTAB *last_class_id_map;
 List *last_id_class_map;
 
@@ -217,8 +214,56 @@ static void build_libsvm_data(
 
 static NrWebsocket *
 connect_to_ai_engine() {
-    NrWebsocket *ws = nws_initialize(NrAIEngineHost, NrAIEnginePort, "/ws", 10);
+    int         ret;
+    bool        isnull;
+    Datum       datum;
+
+    char       *aieaddr = NULL;
+    int32       aieport = 0;
+
+    NrWebsocket *ws;
+
+    ret = SPI_connect();
+    if (ret != SPI_OK_CONNECT)
+        elog(ERROR, "SPI_connect failed: %d", ret);
+
+    /*
+     * TEMP: read first row from pg_catalog.nr_aiengine
+     * TODO: we should read all rows and distribute the batches in parallel
+     */
+    ret = SPI_execute(
+        "SELECT aieaddr, aieport "
+        "FROM pg_catalog.nr_aiengine "
+        "LIMIT 1",
+        true,   /* read-only */
+        1
+    );
+
+    if (ret != SPI_OK_SELECT || SPI_processed == 0)
+    {
+        SPI_finish();
+        elog(ERROR, "nr_aiengine catalog is empty");
+    }
+
+    datum = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
+    if (!isnull)
+    {
+        aieaddr = text_to_cstring(DatumGetTextPP(datum));
+    }
+
+    datum = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 2, &isnull);
+    if (!isnull)
+    {
+        aieport = DatumGetInt32(datum);
+    }
+
+    SPI_finish();
+
+    elog(DEBUG1, "connecting to AI engine at: %s:%d", aieaddr, aieport);
+
+    ws = nws_initialize(aieaddr, aieport, "/ws", 10);
     nws_connect(ws);
+
     return ws;
 }
 
