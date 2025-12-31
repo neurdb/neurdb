@@ -37,6 +37,7 @@ find_package(OpenSSL REQUIRED)
 
 FILE(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp")
 LIST(FILTER SOURCES EXCLUDE REGEX ".*src/interface.[ch]$") # use interface2.xxx as entry point
+LIST(FILTER SOURCES EXCLUDE REGEX ".*src/utils/network/http.c$")
 add_library(nr_pipeline SHARED ${SOURCES})
 target_link_libraries(nr_pipeline ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES} ${LWS_LIBRARY} ${SIO_CLIENT} OpenSSL::SSL OpenSSL::Crypto)
 
