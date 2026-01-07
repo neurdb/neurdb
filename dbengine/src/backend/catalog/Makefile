@@ -21,6 +21,7 @@ OBJS = \
 	index.o \
 	indexing.o \
 	namespace.o \
+	nr_aiengine.o \
 	objectaccess.o \
 	objectaddress.o \
 	partition.o \
@@ -72,7 +73,8 @@ CATALOG_HEADERS := \
 	pg_collation.h pg_parameter_acl.h pg_partitioned_table.h \
 	pg_range.h pg_transform.h \
 	pg_sequence.h pg_publication.h pg_publication_namespace.h \
-	pg_publication_rel.h pg_subscription.h pg_subscription_rel.h
+	pg_publication_rel.h pg_subscription.h pg_subscription_rel.h \
+	nr_aiengine.h
 
 GENERATED_HEADERS := $(CATALOG_HEADERS:%.h=%_d.h) schemapg.h system_fk_info.h
 
