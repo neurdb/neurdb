@@ -22,14 +22,7 @@
 #include "nodes/primnodes.h"
 #include "nodes/makefuncs.h"
 
-
-static char *trainingFuncName = "nr_train";
-#define TRAINING_PARAMS_ARRAY_SIZE 9
-static Oid	trainingArgTypes[TRAINING_PARAMS_ARRAY_SIZE] = {TEXTOID, TEXTOID, INT4OID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
-
-static char *inferenceFuncName = "nr_inference";
-#define INFERENCE_PARAMS_ARRAY_SIZE 9
-static Oid	inferenceArgTypes[INFERENCE_PARAMS_ARRAY_SIZE] = {TEXTOID, INT4OID, TEXTOID, INT4OID, INT4OID, INT4OID, TEXTARRAYOID, TEXTOID, INT4OID};
+#include "util.h"
 
 static char *initFuncName = "nr_pipeline_init";
 #define INIT_PARAMS_ARRAY_SIZE 10
@@ -38,7 +31,7 @@ static Oid	initArgTypes[INIT_PARAMS_ARRAY_SIZE] =
 	TEXTOID, //model name
 	TEXTOID, //table name
 	INT4OID, //batch size
-	INT4OID, //epoch (number of training epochs)
+	INT4OID, //epoch(number of training epochs)
 	INT4OID, //n_batches
 	INT4OID, //nfeat
 	TEXTARRAYOID, //feature names
@@ -68,28 +61,7 @@ static char *closeFuncName = "nr_pipeline_close";
 static Oid	closeArgTypes[CLOSE_PARAMS_ARRAY_SIZE] = {};
 
 
-static List *
-split_columns(const char *columns)
-{
-	List	   *result = NIL;
-	char	   *token = strtok(columns, ",");
-
-	while (token != NULL)
-	{
-		result = lappend(result, makeString(token));
-		token = strtok(NULL, ",");
-	}
-	return result;
-}
-
-static void
-set_false_to_all_params(NullableDatum *args, int size)
-{
-	for (int i = 0; i < size; i++)
-	{
-		args[i].isnull = false;
-	}
-}
+/* ------------------------ Result Cache Linked List ------------------------ */
 
 typedef struct result_node
 {
@@ -98,13 +70,23 @@ typedef struct result_node
 }			result_node;
 
 static void
-insert_result_to_cache(NeurDBPredictState * pstate, double value)
+push_result_to_cache(dclist_head *head, double value)
 {
 	result_node *node = palloc(sizeof(result_node));
 
 	node->value = value;
-	dclist_push_tail(&pstate->result_cache, &node->node);
+	dclist_push_tail(head, &node->node);
 }
+
+static double
+pop_result_from_cache(dclist_head *head)
+{
+	result_node *node = (result_node *) dclist_pop_head_node(head);
+
+	return node->value;
+}
+
+/* ------------------------ Result Cache Linked List End ------------------------ */
 
 
 static void
@@ -133,7 +115,7 @@ parse_result_to_cache(const NeurDBInferenceResult * result,
 
 				/* Convert to double */
 				/* printf("Found double: %f\n", value); */
-				insert_result_to_cache(pstate, value);
+				push_result_to_cache(&pstate->result_cache, value);
 
 				/* Reset buffer index */
 				bufIndex = 0;
@@ -158,50 +140,16 @@ parse_result_to_cache(const NeurDBInferenceResult * result,
 		double		value = atof(buffer);
 
 		/* printf("Found double: %f\n", value); */
-		insert_result_to_cache(pstate, value);
+		push_result_to_cache(&pstate->result_cache, value);
 	}
 }
 
-#if 0
-static void
-return_table(DestReceiver *dest, const NeurDBInferenceResult * result)
-{
-	TupOutputState *tstate;
-	TupleDesc	tupdesc;
-	ListCell   *lc;
-
-	if (result->typeoid == FLOAT8OID)
-	{
-		tupdesc = CreateTemplateTupleDesc(1);
-		TupleDescInitEntry(tupdesc, (AttrNumber) 1, "result", result->typeoid, -1, 0);
-
-		tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
-
-		parse_result_to_cache(result, &insert_float8_to_tup_output, tstate, false);
-	}
-	else if (result->typeoid == TEXTOID)
-	{
-		tupdesc = CreateTemplateTupleDesc(2);
-		TupleDescInitEntry(tupdesc, (AttrNumber) 1, "result", result->typeoid, -1, 0);
-		TupleDescInitEntry(tupdesc, (AttrNumber) 2, "_dbg_value", FLOAT8OID, -1, 0);
-
-
-		tstate = begin_tup_output_tupdesc(dest, tupdesc, &TTSOpsVirtual);
-
-		parse_result_to_cache(result, &insert_cstring_to_tup_output, tstate, true);
-	}
-	else
-	{
-		elog(ERROR, "Unsupported data type");
-	}
-
-	end_tup_output(tstate);
-
-}
-#endif
 
 static char **
-get_column_names(const char *schema_name, const char *table_name, const char *exclude, int *num_included_out)
+get_column_names(const char *schema_name,
+				 const char *table_name,
+				 const char *exclude,
+				 int *num_included_out)
 {
 	int			max_num_columns = 100;
 
@@ -252,147 +200,16 @@ get_column_names(const char *schema_name, const char *table_name, const char *ex
 	return column_names;
 }
 
-
-typedef struct
-{
-	Datum		value;
-	bool		isnull;
-}			UdfResult;
-
-static UdfResult
-call_udf_function(const char *funcName,
-				  Oid *argTypes,
-				  int nargs,
-				  Datum *args,
-				  bool *nulls)
-{
-	FmgrInfo	fmgrInfo;
-
-	LOCAL_FCINFO(fcinfo, FUNC_MAX_ARGS);
-	Oid			funcOid;
-	UdfResult	result;
-
-	funcOid = LookupFuncName(list_make1(makeString(funcName)), nargs, argTypes, false);
-	if (!OidIsValid(funcOid))
-		elog(ERROR, "Function %s not found", funcName);
-
-	fmgr_info(funcOid, &fmgrInfo);
-	InitFunctionCallInfoData(*fcinfo, &fmgrInfo, nargs, InvalidOid, NULL, NULL);
-
-	for (int i = 0; i < nargs; i++)
-	{
-		fcinfo->args[i].value = args[i];
-		fcinfo->args[i].isnull = nulls ? nulls[i] : false;
-	}
-
-	result.value = FunctionCallInvoke(fcinfo);
-	result.isnull = fcinfo->isnull;
-
-	if (result.isnull)
-		elog(DEBUG2, "%s returned NULL", funcName);
-
-	return result;
-}
-
-#if 0
-/*
-* exec_udf --- Execute customer UDFs
-*
-* columns: columns names.
-* table: table used.
-* whereClause: where condition.
-*
-* @note: parameters in exec_udf are all hard-coded for now. In the future, we
-* will need to change this to adapt to the actual situation. This function
-* needs to be revamped to be more general.
-*/
-static void
-exec_udf(PredictType type,
-		 const char *model,
-		 const char *table,
-		 const char *trainColumns,
-		 const char *targetColumn,
-		 const char *whereClause,
-		 DestReceiver *dest)
-{
-	ArrayType  *trainColumnArray = get_train_columns_array(table, targetColumn, trainColumns);
-	int			modelId = 0;
-
-	/* model does not exist, training first */
-	if (modelId == 0)
-	{
-		Datum		args[TRAINING_PARAMS_ARRAY_SIZE];
-		bool		nulls[TRAINING_PARAMS_ARRAY_SIZE] = {false};
-
-		args[0] = CStringGetTextDatum(model);
-		args[1] = CStringGetTextDatum(table);
-		args[2] = Int32GetDatum(NrTaskBatchSize);
-		args[3] = Int32GetDatum(NrTaskNumBatches);
-		args[4] = Int32GetDatum(NrTaskEpoch);
-		args[5] = Int32GetDatum(NrTaskMaxFeatures);
-		args[6] = PointerGetDatum(trainColumnArray);
-		args[7] = CStringGetTextDatum(targetColumn);
-		args[8] = Int32GetDatum(type);
-
-		UdfResult	res = call_udf_function(trainingFuncName,
-											trainingArgTypes,
-											TRAINING_PARAMS_ARRAY_SIZE,
-											args, nulls);
-
-		if (!res.isnull)
-		{
-			int			result = DatumGetInt32(res.value);
-
-			elog(NOTICE, "Training result: %d", result);
-			modelId = result;
-		}
-		else
-		{
-			elog(NOTICE, "Training result is NULL");
-		}
-	}
-
-	/* inference */
-	ArrayType  *trainColumnArray = get_train_columns_array(table, targetColumn, trainColumns);
-	Datum		args[INFERENCE_PARAMS_ARRAY_SIZE];
-	bool		nulls[INFERENCE_PARAMS_ARRAY_SIZE] = {false};
-
-	args[0] = CStringGetTextDatum(model);
-	args[1] = Int32GetDatum(modelId);
-	args[2] = CStringGetTextDatum(table);
-	args[3] = Int32GetDatum(NrTaskBatchSize);
-	args[4] = Int32GetDatum(NrTaskEpoch);
-	args[5] = Int32GetDatum(NrTaskMaxFeatures);
-	args[6] = PointerGetDatum(trainColumnArray);
-	args[7] = CStringGetTextDatum(targetColumn);
-	args[8] = Int32GetDatum(type);
-
-	UdfResult	inferRes = call_udf_function(inferenceFuncName,
-											 inferenceArgTypes,
-											 INFERENCE_PARAMS_ARRAY_SIZE,
-											 args, nulls);
-
-	if (!inferRes.isnull)
-	{
-		NeurDBInferenceResult *result = (NeurDBInferenceResult *) DatumGetPointer(inferRes.value);
-
-		return_table(dest, result);
-	}
-	else
-	{
-		elog(DEBUG2, "Inference result is NULL");
-	}
-}
-#endif
-
-
 /**
  * Fill the given slot with one tuple derived from a NeurDBInferenceResult.
  * The slot already has a valid TupleDesc matching the node’s output schema.
  * Returns the same slot pointer.
  */
 static TupleTableSlot *
-build_result_slot(double value, bool is_float, List *id_class_map, TupleTableSlot *slot)
+build_result_slot(double value,
+				  bool is_float,
+				  List *id_class_map,
+				  TupleTableSlot *slot)
 {
 	ExecClearTuple(slot);
 
@@ -450,24 +267,6 @@ add_slot_to_cache(NeurDBPredictState * predictstate, TupleTableSlot *slot)
 	predictstate->slot_cache[predictstate->slot_cache_size++] = slot_copy;
 	ReleaseTupleDesc(slot->tts_tupleDescriptor);
 }
-
-static void
-_call_pipeline_close()
-{
-	/* tell nr_pipeline to close the connection */
-	elog(DEBUG1, "close connection");
-
-	Oid			funcOid = LookupFuncName(list_make1(makeString(closeFuncName)),
-										 CLOSE_PARAMS_ARRAY_SIZE,
-										 closeArgTypes,
-										 false);
-
-	if (!OidIsValid(funcOid))
-		elog(ERROR, "Function %s not found", stateChangeFuncName);
-
-	OidFunctionCall0(funcOid);
-}
-
 
 static TupleTableSlot *
 ExecNeurDBPredict(PlanState *pstate)
@@ -572,9 +371,9 @@ ExecNeurDBPredict(PlanState *pstate)
 						elog(DEBUG1, "change state to inference");
 
 						Oid			funcOid = LookupFuncName(list_make1(makeString(stateChangeFuncName)),
-															STATECHANGE_PARAMS_ARRAY_SIZE,
-															stateChangeArgTypes,
-															false);
+															 STATECHANGE_PARAMS_ARRAY_SIZE,
+															 stateChangeArgTypes,
+															 false);
 
 						if (!OidIsValid(funcOid))
 							elog(ERROR, "Function %s not found", stateChangeFuncName);
@@ -677,10 +476,10 @@ ExecNeurDBPredict(PlanState *pstate)
 					slot = ExecProject(predictstate->ps.ps_ProjInfo);
 
 					/* get the next result from the cache */
-					result_node *node = (result_node *) dclist_pop_head_node(&predictstate->result_cache);
+					double		value = pop_result_from_cache(&predictstate->result_cache);
 
 					/* build the returning slot */
-					build_result_slot(node->value, predictstate->is_float, predictstate->id_class_map, slot);
+					build_result_slot(value, predictstate->is_float, predictstate->id_class_map, slot);
 
 					predictstate->num_consumed += 1;
 					return slot;
@@ -698,9 +497,11 @@ ExecNeurDBPredict(PlanState *pstate)
 }
 
 static ArrayType *
-get_train_columns_array(const char *table, const char *targetColumn, const char *trainColumns)
+build_train_columns_array(const char *table,
+						  const char *targetColumns,
+						  const char *trainColumns)
 {
-	List	   *trainColumnsList = split_columns(trainColumns);
+	List	   *trainColumnsList = split_comma_c_string(trainColumns);
 	Datum	   *trainColumnDatums;
 	int			nTrainColumns = 0;
 
@@ -708,7 +509,7 @@ get_train_columns_array(const char *table, const char *targetColumn, const char 
 	{
 		/* all columns are used for training */
 		/* get all column names */
-		char	  **allColumns = get_column_names("public", table, targetColumn, &nTrainColumns);
+		char	  **allColumns = get_column_names("public", table, targetColumns, &nTrainColumns);
 
 		trainColumnDatums = (Datum *) palloc(sizeof(Datum) * nTrainColumns);
 		for (int i = 0; i < nTrainColumns; i++)
@@ -737,7 +538,7 @@ get_train_columns_array(const char *table, const char *targetColumn, const char 
 
 
 static StringInfoData
-construct_target_columns(List *targetList)
+build_target_columns(List *targetList)
 {
 	StringInfoData result;
 	ListCell   *cell;
@@ -870,14 +671,6 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	outerPlan = outerPlan(node);
 	outerPlanState(predictstate) = ExecInitNode(outerPlan, estate, eflags);
 
-#if 0
-
-	/*
-	 * Initialize result tuple slot
-	 */
-	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
-#endif
-
 	/*
 	 * Initialize result tuple slot with FIXED descriptor Need to determine
 	 * upfront if we're doing classification or regression
@@ -939,7 +732,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 								(PlanState *) predictstate,
 								ExecTypeFromTL(node->predictTargetList));
 
-	StringInfoData targetColumn = construct_target_columns(node->predictTargetList);
+	StringInfoData targetColumns = build_target_columns(node->predictTargetList);
 
 	Datum		args[INIT_PARAMS_ARRAY_SIZE];
 	bool		nulls[INIT_PARAMS_ARRAY_SIZE] = {false};
@@ -948,7 +741,9 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	char	   *model = _temp_extract_model_name(predictstate->stmt->trainOnSpec);
 	StringInfoData trainOnColumns = _temp_extract_train_on_columns(node->trainOn);
 
-	ArrayType  *trainColumnArray = get_train_columns_array(table, targetColumn.data, trainOnColumns.data);
+	ArrayType  *trainColumnArray = build_train_columns_array(table,
+															 targetColumns.data,
+															 trainOnColumns.data);
 
 	args[0] = CStringGetTextDatum(model);
 	args[1] = CStringGetTextDatum(table);
@@ -957,7 +752,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	args[4] = Int32GetDatum(NrTaskNumBatches);
 	args[5] = Int32GetDatum(NrTaskMaxFeatures);
 	args[6] = PointerGetDatum(trainColumnArray);
-	args[7] = CStringGetTextDatum(targetColumn.data);
+	args[7] = CStringGetTextDatum(targetColumns.data);
 	args[8] = Int32GetDatum(predictstate->stmt->kind);
 	args[9] = PointerGetDatum(ExecTypeFromTL(outerPlan->targetlist));
 
@@ -991,6 +786,24 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	return predictstate;
 }
 
+
+static void
+call_pipeline_close()
+{
+	/* tell nr_pipeline to close the connection */
+	elog(DEBUG1, "close connection");
+
+	Oid			funcOid = LookupFuncName(list_make1(makeString(closeFuncName)),
+										 CLOSE_PARAMS_ARRAY_SIZE,
+										 closeArgTypes,
+										 false);
+
+	if (!OidIsValid(funcOid))
+		elog(ERROR, "Function %s not found", stateChangeFuncName);
+
+	OidFunctionCall0(funcOid);
+}
+
 /* ----------------------------------------------------------------
  *		ExecEndNeurDBPredict
  *
@@ -1003,7 +816,7 @@ ExecEndNeurDBPredict(NeurDBPredictState * node)
 {
 	ExecFreeExprContext(&node->ps);
 	ExecEndNode(outerPlanState(node));
-	_call_pipeline_close();
+	call_pipeline_close();
 	elog(DEBUG1, "NeurDB prediction end");
 }
 
