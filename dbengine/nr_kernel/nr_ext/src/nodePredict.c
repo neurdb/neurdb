@@ -6,6 +6,7 @@
 #include "executor/spi.h"
 #include "nodes/execnodes.h"
 
+#include "access/genam.h"
 #include "access/relation.h"
 #include "access/heapam.h"
 #include "funcapi.h"
@@ -245,6 +246,12 @@ build_result_slot(double value,
 	ExecStoreVirtualTuple(slot);
 
 	return slot;
+}
+
+static TupleTableSlot *
+expand_primary_key_to_tuple_slot(TupleTableSlot *slot, TupleDesc tupdesc)
+{
+
 }
 
 static void
@@ -644,6 +651,83 @@ _temp_extract_table_name(List *fromClause)
 }
 
 
+static TupleDesc
+_copy_tuple_desc(List *targetList, TupleDesc resultDesc)
+{
+	int			i = 1;
+	ListCell   *lc;
+
+	foreach(lc, targetList)
+	{
+		TargetEntry *tle = (TargetEntry *) lfirst(lc);
+
+		TupleDescInitEntry(resultDesc,
+						   (AttrNumber) i,
+						   tle->resname,
+						   exprType((Node *) tle->expr),
+						   exprTypmod((Node *) tle->expr),
+						   0);
+		i++;
+	}
+
+	return resultDesc;
+}
+
+static TupleDesc
+_append_primary_key_tuple_desc(TupleDesc resultDesc,
+							   Relation rel,
+							   int nkeys,
+							   AttrNumber *keys,
+							   List *predictTargetList,
+							   int start_i)
+{
+	/* get tuple desc of the table */
+	TupleDesc	tableDesc;
+
+	tableDesc = RelationGetDescr(rel);
+
+	for (int k = 0; k < nkeys; k++)
+	{
+		Form_pg_attribute attr;
+
+		attr = TupleDescAttr(tableDesc, keys[k] - 1);
+
+		const char *name = NameStr(attr->attname);
+
+		/* check if the name is in the predict target list */
+		ListCell   *lc;
+		bool		skip = false;
+
+		foreach(lc, predictTargetList)
+		{
+			TargetEntry *tle = (TargetEntry *) lfirst(lc);
+
+			if (strcmp(name, tle->resname) == 0)
+			{
+				/* skip this attribute */
+				skip = true;
+				break;
+			}
+		}
+		if (skip)
+		{
+			continue;
+		}
+
+		TupleDescInitEntry(resultDesc,
+						   (AttrNumber) (start_i),
+						   name,
+						   attr->atttypid,
+						   attr->atttypmod,
+						   attr->attcollation);
+
+		start_i++;
+	}
+
+	return resultDesc;
+}
+
+
 NeurDBPredictState *
 ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 {
@@ -678,44 +762,107 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	TupleDesc	resultDesc;
 	int			natts = list_length(node->predictTargetList);
 
+	char	   *table = _temp_extract_table_name(predictstate->stmt->fromClause);
+
+	bool		add_primary_key = node->stmt->withPrimaryKey;
+	bool		use_full = false;
+	int			nkeys = 0;
+	AttrNumber *keys = NULL;
+
+	int			i;
+
+	RangeVar   *rv = makeRangeVar(NULL, table, -1);
+	Oid			relid = RangeVarGetRelid(rv, NoLock, false);
+	Relation	rel = relation_open(relid, AccessShareLock);
+
+	if (add_primary_key)
+	{
+		Oid			ident_index;
+
+		ident_index = RelationGetReplicaIndex(rel);
+
+		if (OidIsValid(ident_index))
+		{
+			Relation	idxrel;
+			Form_pg_index idx;
+
+			idxrel = index_open(ident_index, AccessShareLock);
+			idx = idxrel->rd_index;
+
+			nkeys = idx->indnatts;
+			keys = (AttrNumber *) palloc(sizeof(AttrNumber) * nkeys);
+
+			for (i = 0; i < nkeys; i++)
+			{
+				if (idx->indkey.values[i] == 0)
+					ereport(ERROR,
+							(errmsg("replica identity index contains expressions")));
+
+				keys[i] = idx->indkey.values[i];
+			}
+
+			index_close(idxrel, AccessShareLock);
+		}
+		else
+		{
+			/* no primary key, use full table */
+			TupleDesc	tableDesc;
+
+			tableDesc = RelationGetDescr(rel);
+
+			nkeys = tableDesc->natts;
+			keys = (AttrNumber *) palloc(sizeof(AttrNumber) * nkeys);
+			for (int i = 0; i < nkeys; i++)
+			{
+				keys[i] = i + 1;
+			}
+		}
+	}
+
 	/* Determine if we need the debug column (for classification) */
 	/* You may need to determine this from node->stmt->kind or other metadata */
 	bool		needsDebugColumn = (node->stmt->kind == PREDICT_CLASS);
 
+	if (add_primary_key)
+	{
+		int temp = natts;
+		natts += nkeys;
+		natts -= temp;
+	}
+
 	if (needsDebugColumn)
 	{
-		/* Classification: add debug column */
-		resultDesc = CreateTemplateTupleDesc(natts + 1);
+		natts++;
+	}
 
-		int			i = 1;
-		ListCell   *lc;
+	resultDesc = CreateTemplateTupleDesc(natts);
+	resultDesc = _copy_tuple_desc(node->predictTargetList, resultDesc);
 
-		foreach(lc, node->predictTargetList)
-		{
-			TargetEntry *tle = (TargetEntry *) lfirst(lc);
+	i = list_length(node->predictTargetList) + 1;
 
-			TupleDescInitEntry(resultDesc,
-							   (AttrNumber) i,
-							   tle->resname,
-							   exprType((Node *) tle->expr),
-							   exprTypmod((Node *) tle->expr),
-							   0);
-			i++;
-		}
-
+	if (needsDebugColumn)
+	{
 		/* Add debug column */
 		TupleDescInitEntry(resultDesc,
-						   (AttrNumber) (natts + 1),
+						   (AttrNumber) (i),
 						   "_dbg_value",
 						   FLOAT8OID,
 						   -1,
 						   0);
+		i++;
 	}
-	else
+
+	if (add_primary_key)
 	{
-		/* Regression: no debug column */
-		resultDesc = ExecTypeFromTL(node->predictTargetList);
+		resultDesc = _append_primary_key_tuple_desc(resultDesc,
+													rel,
+													nkeys,
+													keys,
+													node->predictTargetList,
+													i);
 	}
+
+	relation_close(rel, AccessShareLock);
 
 	resultDesc = BlessTupleDesc(resultDesc);
 	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
@@ -737,7 +884,6 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	Datum		args[INIT_PARAMS_ARRAY_SIZE];
 	bool		nulls[INIT_PARAMS_ARRAY_SIZE] = {false};
 
-	char	   *table = _temp_extract_table_name(predictstate->stmt->fromClause);
 	char	   *model = _temp_extract_model_name(predictstate->stmt->trainOnSpec);
 	StringInfoData trainOnColumns = _temp_extract_train_on_columns(node->trainOn);
 
