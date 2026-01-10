@@ -249,9 +249,25 @@ build_result_slot(double value,
 }
 
 static TupleTableSlot *
-expand_primary_key_to_tuple_slot(TupleTableSlot *slot, TupleDesc tupdesc)
+append_primary_values_to_tuple_slot(TupleTableSlot *proj_slot,
+									AttrNumber *primkeyindexes,
+									int nkeys,
+									TupleTableSlot *slot_copy,
+									int start_i)
 {
+	for (int i = 0; i < nkeys; i++)
+	{
+		Datum		value;
+		bool		isNull;
 
+		value = slot_copy->tts_values[primkeyindexes[i]];
+		isNull = slot_copy->tts_isnull[primkeyindexes[i]];
+
+		proj_slot->tts_values[start_i + i] = value;
+		proj_slot->tts_isnull[start_i + i] = isNull;
+	}
+
+	return proj_slot;
 }
 
 static void
@@ -478,6 +494,15 @@ ExecNeurDBPredict(PlanState *pstate)
 					/* get the next slot from the cache */
 					slot = predictstate->slot_cache[predictstate->num_consumed];
 
+					TupleTableSlot *slot_copy;
+
+					if (predictstate->stmt->withPrimaryKey)
+					{
+						/* copy the primary key to a new slot */
+						slot_copy = MakeTupleTableSlot(slot->tts_tupleDescriptor, &TTSOpsVirtual);
+						ExecCopySlot(slot_copy, slot);
+					}
+
 					/* project the slot */
 					predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
 					slot = ExecProject(predictstate->ps.ps_ProjInfo);
@@ -487,6 +512,17 @@ ExecNeurDBPredict(PlanState *pstate)
 
 					/* build the returning slot */
 					build_result_slot(value, predictstate->is_float, predictstate->id_class_map, slot);
+
+					if (predictstate->stmt->withPrimaryKey)
+					{
+						slot = append_primary_values_to_tuple_slot(slot,
+																   predictstate->primkeyindexes,
+																   predictstate->nkeys,
+																   slot_copy,
+																   predictstate->is_float ? 1 : 2);
+
+						ReleaseTupleDesc(slot_copy->tts_tupleDescriptor);
+					}
 
 					predictstate->num_consumed += 1;
 					return slot;
@@ -690,29 +726,9 @@ _append_primary_key_tuple_desc(TupleDesc resultDesc,
 	{
 		Form_pg_attribute attr;
 
-		attr = TupleDescAttr(tableDesc, keys[k] - 1);
+		attr = TupleDescAttr(tableDesc, keys[k]);
 
 		const char *name = NameStr(attr->attname);
-
-		/* check if the name is in the predict target list */
-		ListCell   *lc;
-		bool		skip = false;
-
-		foreach(lc, predictTargetList)
-		{
-			TargetEntry *tle = (TargetEntry *) lfirst(lc);
-
-			if (strcmp(name, tle->resname) == 0)
-			{
-				/* skip this attribute */
-				skip = true;
-				break;
-			}
-		}
-		if (skip)
-		{
-			continue;
-		}
 
 		TupleDescInitEntry(resultDesc,
 						   (AttrNumber) (start_i),
@@ -807,14 +823,44 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 		{
 			/* no primary key, use full table */
 			TupleDesc	tableDesc;
+			Form_pg_attribute attr;
+			bool		skip;
 
 			tableDesc = RelationGetDescr(rel);
 
-			nkeys = tableDesc->natts;
+			nkeys = tableDesc->natts - natts;
 			keys = (AttrNumber *) palloc(sizeof(AttrNumber) * nkeys);
-			for (int i = 0; i < nkeys; i++)
+
+			i = 0;
+
+			for (int k = 0; k < tableDesc->natts; k++)
 			{
-				keys[i] = i + 1;
+				attr = TupleDescAttr(tableDesc, k);
+
+				const char *name = NameStr(attr->attname);
+
+				/* check if the name is in the predict target list */
+				ListCell   *lc;
+
+				skip = false;
+				foreach(lc, node->predictTargetList)
+				{
+					TargetEntry *tle = (TargetEntry *) lfirst(lc);
+
+					if (strcmp(name, tle->resname) == 0)
+					{
+						/* skip this attribute */
+						skip = true;
+						break;
+					}
+				}
+				if (skip)
+				{
+					continue;
+				}
+
+				keys[i] = k;
+				i++;
 			}
 		}
 	}
@@ -825,9 +871,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 
 	if (add_primary_key)
 	{
-		int temp = natts;
 		natts += nkeys;
-		natts -= temp;
 	}
 
 	if (needsDebugColumn)
@@ -860,6 +904,9 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 													keys,
 													node->predictTargetList,
 													i);
+
+		predictstate->primkeyindexes = keys;
+		predictstate->nkeys = nkeys;
 	}
 
 	relation_close(rel, AccessShareLock);

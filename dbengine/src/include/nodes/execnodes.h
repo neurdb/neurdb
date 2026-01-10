@@ -2778,21 +2778,23 @@ typedef enum
 	NEURDBPREDICT_INFERENCE_SEND,
 	NEURDBPREDICT_INFERENCE_RETURN,
 	NEURDBPREDICT_INFERENCE_END,
-} NeurDBPredictStateCond;
+}			NeurDBPredictStateCond;
 
 typedef struct NeurDBPredictState
 {
-	PlanState ps;						/* its first field is NodeTag */
+	PlanState	ps;				/* its first field is NodeTag */
 	NeurDBPredictStmt *stmt;
 	NeurDBPredictStateCond nrpstate;
 	TupleTableSlot **slot_cache;	/* result cache */
-	int	slot_cache_size;	/* result cache size */
-	bool is_final;
-	int num_consumed;
-	dclist_head	result_cache;
-	List *id_class_map;
-	bool is_float;
-	int curr_epoch;
-} NeurDBPredictState;
+	int			slot_cache_size;	/* result cache size */
+	bool		is_final;
+	int			num_consumed;
+	dclist_head result_cache;
+	List	   *id_class_map;
+	bool		is_float;
+	int			curr_epoch;
+	AttrNumber *primkeyindexes;
+	int			nkeys;
+}			NeurDBPredictState;
 
 #endif							/* EXECNODES_H */
