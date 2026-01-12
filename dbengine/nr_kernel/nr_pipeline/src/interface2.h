@@ -17,6 +17,7 @@
 
 #include "utils/network/websocket.h"
 
+struct DistributedInfer;
 
 typedef enum {
     PS_UNINIT = 0,
@@ -54,6 +55,7 @@ typedef struct {
     MemoryContext hash_ctx;
     HTAB *class_id_map;
     List *id_class_map;
+    struct DistributedInfer *dist_infer;
 } PipelineSession;
 
 

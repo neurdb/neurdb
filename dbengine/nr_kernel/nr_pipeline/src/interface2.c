@@ -48,7 +48,304 @@ typedef struct ClassIdHashEntry
     int   id;
 } ClassIdHashEntry;
 
+typedef struct EngineEndpoint {
+    char *host;
+    int port;
+} EngineEndpoint;
+
+typedef struct InferJob {
+    int job_id;
+    char *payload;
+} InferJob;
+
+typedef struct InferResult {
+    int job_id;
+    char *payload;
+} InferResult;
+
+// ------------------------ Queue Structures ------------------------
+
+typedef struct InferJobNode {
+    InferJob job;
+    struct InferJobNode *next;
+} InferJobNode;
+
+typedef struct InferResultNode {
+    InferResult result;
+    struct InferResultNode *next;
+} InferResultNode;
+
+typedef struct InferJobQueue {
+    InferJobNode *head;
+    InferJobNode *tail;
+    size_t size;
+    bool closed;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+} InferJobQueue;
+
+typedef struct InferResultQueue {
+    InferResultNode *head;
+    InferResultNode *tail;
+    size_t size;
+    bool closed;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+} InferResultQueue;
+
+typedef struct InferResultState {
+    int active;
+    int expected;
+    int collected;
+    int capacity;
+    char **results;
+    pthread_mutex_t mutex;
+    pthread_cond_t active_cond;
+    pthread_cond_t done_cond;
+} InferResultState;
+
+typedef struct DistributedInfer DistributedInfer;
+
+/*-------------------------------------------------------------
+ * |                     DistributedInfer                     |
+ * | InferWorker[0] | InferWorker[1] | ... | InferWorker[N-1] |
+ * |                      InferCollector                      |
+ *-------------------------------------------------------------*/
+
+typedef struct InferWorker {
+    pthread_t thread;
+    NrWebsocket *ws;
+    DistributedInfer *dist;
+} InferWorker;
+
+struct DistributedInfer {
+    int worker_count;
+    InferWorker *workers;
+    InferJobQueue job_queue;
+    InferResultQueue result_queue;
+    pthread_t collector_thread;
+    InferResultState result_state;
+    int shutting_down;
+};
+
+
 // ------------------------ Util Functions ------------------------
+
+static void
+init_infer_job_queue(InferJobQueue *queue) {
+    memset(queue, 0, sizeof(*queue));
+    pthread_mutex_init(&queue->mutex, NULL);
+    pthread_cond_init(&queue->cond, NULL);
+}
+
+static void
+destroy_infer_job_queue(InferJobQueue *queue) {
+    pthread_mutex_lock(&queue->mutex);
+    queue->closed = true;
+    InferJobNode *node = queue->head;
+    while (node) {
+        InferJobNode *next = node->next;
+        free(node->job.payload);
+        free(node);
+        node = next;
+    }
+    queue->head = queue->tail = NULL;
+    queue->size = 0;
+    pthread_mutex_unlock(&queue->mutex);
+    pthread_mutex_destroy(&queue->mutex);
+    pthread_cond_destroy(&queue->cond);
+}
+
+static void
+close_infer_job_queue(InferJobQueue *queue) {
+    pthread_mutex_lock(&queue->mutex);
+    queue->closed = true;
+    pthread_cond_broadcast(&queue->cond);
+    pthread_mutex_unlock(&queue->mutex);
+}
+
+static bool
+enqueue_infer_job(InferJobQueue *queue, InferJob job) {
+    InferJobNode *node = (InferJobNode *) malloc(sizeof(*node));
+    if (!node) {
+        return false;
+    }
+    node->job = job;
+    node->next = NULL;
+
+    pthread_mutex_lock(&queue->mutex);
+    if (queue->closed) {
+        // free resources
+        pthread_mutex_unlock(&queue->mutex);
+        free(node->job.payload);
+        free(node);
+        return false;
+    }
+    if (queue->tail) {
+        queue->tail->next = node;
+    } else {
+        queue->head = node;
+    }
+    queue->tail = node;
+    queue->size++;
+    pthread_cond_signal(&queue->cond);
+    pthread_mutex_unlock(&queue->mutex);
+    return true;
+}
+
+static bool
+dequeue_infer_job(InferJobQueue *queue, InferJob *out) {
+    pthread_mutex_lock(&queue->mutex);
+    while (!queue->head && !queue->closed) {
+        pthread_cond_wait(&queue->cond, &queue->mutex);
+    }
+    if (!queue->head) {
+        pthread_mutex_unlock(&queue->mutex);
+        return false;
+    }
+    InferJobNode *node = queue->head;
+    queue->head = node->next;
+    if (!queue->head) {
+        queue->tail = NULL;
+    }
+    queue->size--;
+    *out = node->job;
+    free(node);
+    pthread_mutex_unlock(&queue->mutex);
+    return true;
+}
+
+static void
+init_infer_result_queue(InferResultQueue *queue) {
+    memset(queue, 0, sizeof(*queue));
+    pthread_mutex_init(&queue->mutex, NULL);
+    pthread_cond_init(&queue->cond, NULL);
+}
+
+static void
+destroy_infer_result_queue(InferResultQueue *queue) {
+    pthread_mutex_lock(&queue->mutex);
+    queue->closed = true;
+    InferResultNode *node = queue->head;
+    while (node) {
+        InferResultNode *next = node->next;
+        free(node->result.payload);
+        free(node);
+        node = next;
+    }
+    queue->head = queue->tail = NULL;
+    queue->size = 0;
+    pthread_mutex_unlock(&queue->mutex);
+    pthread_mutex_destroy(&queue->mutex);
+    pthread_cond_destroy(&queue->cond);
+}
+
+static void
+close_infer_result_queue(InferResultQueue *queue) {
+    pthread_mutex_lock(&queue->mutex);
+    queue->closed = true;
+    pthread_cond_broadcast(&queue->cond);
+    pthread_mutex_unlock(&queue->mutex);
+}
+
+static bool
+enqueue_infer_result(InferResultQueue *queue, InferResult result) {
+    InferResultNode *node = (InferResultNode *) malloc(sizeof(*node));
+    if (!node) {
+        return false;
+    }
+    node->result = result;
+    node->next = NULL;
+
+    pthread_mutex_lock(&queue->mutex);
+    if (queue->closed) {
+        pthread_mutex_unlock(&queue->mutex);
+        free(node->result.payload);
+        free(node);
+        return false;
+    }
+    if (queue->tail) {
+        queue->tail->next = node;
+    } else {
+        queue->head = node;
+    }
+    queue->tail = node;
+    queue->size++;
+    pthread_cond_signal(&queue->cond);
+    pthread_mutex_unlock(&queue->mutex);
+    return true;
+}
+
+static bool
+dequeue_infer_result(InferResultQueue *queue, InferResult *out) {
+    pthread_mutex_lock(&queue->mutex);
+    while (!queue->head && !queue->closed) {
+        pthread_cond_wait(&queue->cond, &queue->mutex);
+    }
+    if (!queue->head) {
+        pthread_mutex_unlock(&queue->mutex);
+        return false;
+    }
+    InferResultNode *node = queue->head;
+    queue->head = node->next;
+    if (!queue->head) {
+        queue->tail = NULL;
+    }
+    queue->size--;
+    *out = node->result;
+    free(node);
+    pthread_mutex_unlock(&queue->mutex);
+    return true;
+}
+
+static void
+init_result_state(InferResultState *state) {
+    memset(state, 0, sizeof(*state));
+    pthread_mutex_init(&state->mutex, NULL);
+    pthread_cond_init(&state->active_cond, NULL);
+    pthread_cond_init(&state->done_cond, NULL);
+}
+
+static void
+destroy_result_state(InferResultState *state) {
+    if (state->results) {
+        for (int i = 0; i < state->capacity; i++) {
+            free(state->results[i]);
+        }
+        free(state->results);
+        state->results = NULL;
+    }
+    pthread_mutex_destroy(&state->mutex);
+    pthread_cond_destroy(&state->active_cond);
+    pthread_cond_destroy(&state->done_cond);
+}
+
+static void
+set_result_state_active(InferResultState *state, int expected, int capacity) {
+    pthread_mutex_lock(&state->mutex);
+    if (state->results) {
+        for (int i = 0; i < state->capacity; i++) {
+            free(state->results[i]);
+        }
+        free(state->results);
+    }
+    state->capacity = capacity;
+    state->expected = expected;
+    state->collected = 0;
+    state->results = (char **) calloc(capacity, sizeof(char *));
+    state->active = 1;
+    pthread_cond_broadcast(&state->active_cond);
+    pthread_mutex_unlock(&state->mutex);
+}
+
+static void
+wait_result_state_done(InferResultState *state) {
+    pthread_mutex_lock(&state->mutex);
+    while (state->active && state->collected < state->expected) {
+        pthread_cond_wait(&state->done_cond, &state->mutex);
+    }
+    pthread_mutex_unlock(&state->mutex);
+}
 
 static void make_class_id_map(
     const char *table_name,
@@ -133,6 +430,208 @@ static char *char_array2str(char **char_array, int n_elements) {
     return str.data;
 }
 
+static EngineEndpoint *
+load_ai_engines(int *out_count) {
+    int ret = SPI_connect();
+    if (ret != SPI_OK_CONNECT) {
+        elog(ERROR, "SPI_connect failed: %d", ret);
+    }
+
+    ret = SPI_execute(
+        "SELECT aieaddr, aieport "
+        "FROM pg_catalog.nr_aiengine",
+        true,
+        0
+    );
+
+    if (ret != SPI_OK_SELECT || SPI_processed == 0) {
+        SPI_finish();
+        elog(ERROR, "nr_aiengine catalog is empty");
+    }
+
+    // allocate endpoints
+    int count = (int) SPI_processed;
+    EngineEndpoint *endpoints = (EngineEndpoint *) malloc(sizeof(*endpoints) * count);
+    if (!endpoints) {
+        SPI_finish();
+        elog(ERROR, "failed to allocate ai engine endpoints");
+    }
+    memset(endpoints, 0, sizeof(*endpoints) * count);
+
+    // construct AIEngine endpoints
+    for (int i = 0; i < count; i++) {
+        bool isnull = false;
+        Datum addr_datum = SPI_getbinval(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1, &isnull);
+        if (!isnull) {
+            char *addr = text_to_cstring(DatumGetTextPP(addr_datum));
+            endpoints[i].host = strdup(addr);
+            pfree(addr);
+        }
+
+        Datum port_datum = SPI_getbinval(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 2, &isnull);
+        if (!isnull) {
+            endpoints[i].port = DatumGetInt32(port_datum);
+        }
+    }
+    SPI_finish();
+
+    *out_count = count;
+    return endpoints;
+}
+
+static void
+free_ai_engines(EngineEndpoint *endpoints, int count) {
+    if (!endpoints) {
+        return;
+    }
+    for (int i = 0; i < count; i++) {
+        free(endpoints[i].host);
+    }
+    free(endpoints);
+}
+
+static void
+send_inference_task(NrWebsocket *ws, const PipelineSession *session) {
+    int n_class = (session->type == PREDICT_CLASS && session->class_id_map)
+                      ? hash_get_num_entries(session->class_id_map)
+                      : -1;
+    InferenceTaskSpec *it = malloc(sizeof(InferenceTaskSpec));
+    init_inference_task_spec(
+        it,
+        session->model_name,
+        session->batch_size,
+        session->n_batches,
+        "metrics",
+        80,
+        session->nfeat,
+        session->n_features,
+        n_class,
+        session->model_id,
+        char_array2str(session->feature_names, session->n_features),
+        session->target
+    );
+    nws_send_task(ws, T_INFERENCE, session->table_name, it);
+    free_inference_task_spec(it);
+}
+
+static void *
+infer_worker_main(void *arg) {
+    InferWorker *worker = (InferWorker *) arg;
+    DistributedInfer *dist = worker->dist;
+
+    for (;;) {
+        InferJob job;
+        if (!dequeue_infer_job(&dist->job_queue, &job)) {
+            break;
+        }
+        nws_send_batch_data(worker->ws, job.job_id, S_INFERENCE, job.payload);
+        nws_wait_completion(worker->ws);
+        worker->ws->completed = 0;
+
+        char *result_copy = NULL;
+        if (worker->ws->result) {
+            result_copy = strdup(worker->ws->result);
+            free(worker->ws->result);
+            worker->ws->result = NULL;
+        }
+
+        InferResult result = {
+            .job_id = job.job_id,
+            .payload = result_copy
+        };
+        enqueue_infer_result(&dist->result_queue, result);
+        free(job.payload);
+    }
+    return NULL;
+}
+
+static void *
+infer_collector_main(void *arg) {
+    DistributedInfer *dist = (DistributedInfer *) arg;
+
+    for (;;) {
+        InferResult result;
+        if (!dequeue_infer_result(&dist->result_queue, &result)) {
+            break;
+        }
+
+        pthread_mutex_lock(&dist->result_state.mutex);
+        while (!dist->result_state.active && !dist->shutting_down) {
+            pthread_cond_wait(&dist->result_state.active_cond, &dist->result_state.mutex);
+        }
+        if (dist->shutting_down) {
+            pthread_mutex_unlock(&dist->result_state.mutex);
+            free(result.payload);
+            break;
+        }
+        if (result.job_id >= 0 && result.job_id < dist->result_state.capacity) {
+            dist->result_state.results[result.job_id] = result.payload;
+            dist->result_state.collected++;
+            if (dist->result_state.collected >= dist->result_state.expected) {
+                dist->result_state.active = 0;
+                pthread_cond_broadcast(&dist->result_state.done_cond);
+            }
+        } else {
+            free(result.payload);
+        }
+        pthread_mutex_unlock(&dist->result_state.mutex);
+    }
+    return NULL;
+}
+
+static DistributedInfer *
+distributed_infer_create(const PipelineSession *session) {
+    int engine_count = 0;
+    EngineEndpoint *engines = load_ai_engines(&engine_count);
+    if (engine_count <= 0) {
+        free_ai_engines(engines, engine_count);
+        return NULL;
+    }
+
+    DistributedInfer *dist = (DistributedInfer *) malloc(sizeof(*dist));
+    if (!dist) {
+        free_ai_engines(engines, engine_count);
+        elog(ERROR, "failed to allocate distributed inference state");
+    }
+    memset(dist, 0, sizeof(*dist));
+
+    init_infer_job_queue(&dist->job_queue);
+    init_infer_result_queue(&dist->result_queue);
+    init_result_state(&dist->result_state);
+
+    dist->worker_count = engine_count;
+    dist->workers = (InferWorker *) malloc(sizeof(*dist->workers) * engine_count);
+    if (!dist->workers) {
+        free_ai_engines(engines, engine_count);
+        destroy_infer_job_queue(&dist->job_queue);
+        destroy_infer_result_queue(&dist->result_queue);
+        destroy_result_state(&dist->result_state);
+        free(dist);
+        elog(ERROR, "failed to allocate distributed inference workers");
+    }
+    memset(dist->workers, 0, sizeof(*dist->workers) * engine_count);
+
+    for (int i = 0; i < engine_count; i++) {
+        dist->workers[i].dist = dist;
+        dist->workers[i].ws = nws_initialize(engines[i].host, engines[i].port, "/ws", 10);
+        nws_connect(dist->workers[i].ws);
+        send_inference_task(dist->workers[i].ws, session);
+    }
+
+    for (int i = 0; i < engine_count; i++) {
+        if (pthread_create(&dist->workers[i].thread, NULL, infer_worker_main, &dist->workers[i]) != 0) {
+            elog(ERROR, "failed to create inference worker thread");
+        }
+    }
+
+    if (pthread_create(&dist->collector_thread, NULL, infer_collector_main, dist) != 0) {
+        elog(ERROR, "failed to create inference collector thread");
+    }
+
+    free_ai_engines(engines, engine_count);
+    return dist;
+}
+
 static void build_libsvm_data(
     SPITupleTable *tuptable,
     TupleDesc tupdesc,
@@ -214,55 +713,19 @@ static void build_libsvm_data(
 
 static NrWebsocket *
 connect_to_ai_engine() {
-    int         ret;
-    bool        isnull;
-    Datum       datum;
-
-    char       *aieaddr = NULL;
-    int32       aieport = 0;
-
-    NrWebsocket *ws;
-
-    ret = SPI_connect();
-    if (ret != SPI_OK_CONNECT)
-        elog(ERROR, "SPI_connect failed: %d", ret);
-
-    /*
-     * TEMP: read first row from pg_catalog.nr_aiengine
-     * TODO: we should read all rows and distribute the batches in parallel
-     */
-    ret = SPI_execute(
-        "SELECT aieaddr, aieport "
-        "FROM pg_catalog.nr_aiengine "
-        "LIMIT 1",
-        true,   /* read-only */
-        1
-    );
-
-    if (ret != SPI_OK_SELECT || SPI_processed == 0)
-    {
-        SPI_finish();
+    int engine_count = 0;
+    EngineEndpoint *engines = load_ai_engines(&engine_count);
+    if (engine_count <= 0) {
+        free_ai_engines(engines, engine_count);
         elog(ERROR, "nr_aiengine catalog is empty");
     }
 
-    datum = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
-    if (!isnull)
-    {
-        aieaddr = text_to_cstring(DatumGetTextPP(datum));
-    }
+    elog(DEBUG1, "connecting to AI engine at: %s:%d", engines[0].host, engines[0].port);
 
-    datum = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 2, &isnull);
-    if (!isnull)
-    {
-        aieport = DatumGetInt32(datum);
-    }
-
-    SPI_finish();
-
-    elog(DEBUG1, "connecting to AI engine at: %s:%d", aieaddr, aieport);
-
-    ws = nws_initialize(aieaddr, aieport, "/ws", 10);
+    NrWebsocket *ws = nws_initialize(engines[0].host, engines[0].port, "/ws", 10);
     nws_connect(ws);
+
+    free_ai_engines(engines, engine_count);
 
     return ws;
 }
@@ -333,8 +796,6 @@ run_infer_batch(PipelineSession *session, bool flush) {
         return NULL;
     }
 
-    NrWebsocket *ws = session->ws;
-
     SPI_connect();
 
     SPITupleTable fake_table = {0};
@@ -356,16 +817,121 @@ run_infer_batch(PipelineSession *session, bool flush) {
         0,
         session->model_name
     );
-    nws_send_batch_data(ws, 0, S_INFERENCE, libsvm.data);
-    nws_wait_completion(ws);
-    /* reset completion flag */
-    ws->completed = 0;
-    char* payload = pstrdup(ws->result);
+    char *payload = NULL;
+    if (session->dist_infer) {
+        int total_lines = 0;
+        bool in_line = false;
+        for (const char *p = libsvm.data; *p; p++) {
+            if (*p == '\n') {
+                if (in_line) {
+                    total_lines++;
+                }
+                in_line = false;
+            } else {
+                in_line = true;
+            }
+        }
+        if (in_line) {
+            total_lines++;
+        }
+
+        int worker_count = session->dist_infer->worker_count;
+        if (total_lines > 0 && worker_count > 0) {
+            int chunk_size = (total_lines + worker_count - 1) / worker_count;
+            StringInfoData *chunks = (StringInfoData *) palloc(sizeof(*chunks) * worker_count);
+            for (int i = 0; i < worker_count; i++) {
+                initStringInfo(&chunks[i]);
+            }
+
+            const char *start = libsvm.data;
+            int line_idx = 0;
+            for (const char *p = libsvm.data; ; p++) {
+                if (*p == '\n' || *p == '\0') {
+                    size_t len = p - start;
+                    if (len > 0) {
+                        int chunk_idx = line_idx / chunk_size;
+                        if (chunk_idx >= worker_count) {
+                            chunk_idx = worker_count - 1;
+                        }
+                        appendBinaryStringInfo(&chunks[chunk_idx], start, len);
+                        appendStringInfoChar(&chunks[chunk_idx], '\n');
+                        line_idx++;
+                    }
+                    if (*p == '\0') {
+                        break;
+                    }
+                    start = p + 1;
+                }
+            }
+
+            int expected = 0;
+            for (int i = 0; i < worker_count; i++) {
+                if (chunks[i].len > 0) {
+                    expected++;
+                }
+            }
+
+            if (expected > 0) {
+                set_result_state_active(&session->dist_infer->result_state, expected, worker_count);
+                for (int i = 0; i < worker_count; i++) {
+                    if (chunks[i].len == 0) {
+                        continue;
+                    }
+                    InferJob job = {
+                        .job_id = i,
+                        .payload = strdup(chunks[i].data)
+                    };
+                    enqueue_infer_job(&session->dist_infer->job_queue, job);
+                }
+
+                wait_result_state_done(&session->dist_infer->result_state);
+
+                StringInfoData combined;
+                initStringInfo(&combined);
+                pthread_mutex_lock(&session->dist_infer->result_state.mutex);
+                for (int i = 0; i < session->dist_infer->result_state.capacity; i++) {
+                    char *piece = session->dist_infer->result_state.results[i];
+                    if (!piece || piece[0] == '\0') {
+                        continue;
+                    }
+                    if (combined.len > 0 && combined.data[combined.len - 1] != ' ') {
+                        appendStringInfoChar(&combined, ' ');
+                    }
+                    appendStringInfoString(&combined, piece);
+                }
+                for (int i = 0; i < session->dist_infer->result_state.capacity; i++) {
+                    free(session->dist_infer->result_state.results[i]);
+                    session->dist_infer->result_state.results[i] = NULL;
+                }
+                free(session->dist_infer->result_state.results);
+                session->dist_infer->result_state.results = NULL;
+                session->dist_infer->result_state.capacity = 0;
+                session->dist_infer->result_state.expected = 0;
+                session->dist_infer->result_state.collected = 0;
+                pthread_mutex_unlock(&session->dist_infer->result_state.mutex);
+
+                payload = pstrdup(combined.data);
+                pfree(combined.data);
+            }
+
+            for (int i = 0; i < worker_count; i++) {
+                pfree(chunks[i].data);
+            }
+            pfree(chunks);
+        }
+    } else {
+        NrWebsocket *ws = session->ws;
+        nws_send_batch_data(ws, 0, S_INFERENCE, libsvm.data);
+        nws_wait_completion(ws);
+        /* reset completion flag */
+        ws->completed = 0;
+        payload = pstrdup(ws->result);
+        free(ws->result);
+    }
 
     SPI_finish();
 
     // clean up
-    free(ws->result);
     for (int i = 0; i < session->batch_count; i++) {
         heap_freetuple(session->batch_vals[i]);
     }
@@ -456,6 +1022,7 @@ pipeline_init(
     }
     PIPELINE_SESSION.target = MemoryContextStrdup(TopMemoryContext, target);
     PIPELINE_SESSION.label_col_id = _label_col_id(tupdesc, target);
+    PIPELINE_SESSION.dist_infer = NULL;
     if (PIPELINE_SESSION.label_col_id < 0) {
         elog(ERROR, "label column %s not found", target);
     }
@@ -481,30 +1048,12 @@ pipeline_init(
             PIPELINE_SESSION.id_class_map = last_id_class_map;
         }
         PIPELINE_SESSION.state = PS_INFER;
-        PIPELINE_SESSION.ws = connect_to_ai_engine();
-
-        int n_class = (PIPELINE_SESSION.type == PREDICT_CLASS && PIPELINE_SESSION.class_id_map)
-                          ? hash_get_num_entries(PIPELINE_SESSION.class_id_map)
-                          : -1;
-
-        // send inference task to AI engine
-        InferenceTaskSpec *it = malloc(sizeof(InferenceTaskSpec));
-        init_inference_task_spec(
-            it,
-            PIPELINE_SESSION.model_name,
-            PIPELINE_SESSION.batch_size,
-            PIPELINE_SESSION.n_batches,
-            "metrics",
-            80,
-            PIPELINE_SESSION.nfeat,
-            PIPELINE_SESSION.n_features,
-            n_class,
-            PIPELINE_SESSION.model_id,
-            char_array2str(PIPELINE_SESSION.feature_names, PIPELINE_SESSION.n_features),
-            PIPELINE_SESSION.target
-        );
-        nws_send_task(PIPELINE_SESSION.ws, T_INFERENCE, PIPELINE_SESSION.table_name, it);
-        free_inference_task_spec(it);
+        PIPELINE_SESSION.ws = NULL;
+        PIPELINE_SESSION.dist_infer = distributed_infer_create(&PIPELINE_SESSION);
+        if (!PIPELINE_SESSION.dist_infer) {
+            PIPELINE_SESSION.ws = connect_to_ai_engine();
+            send_inference_task(PIPELINE_SESSION.ws, &PIPELINE_SESSION);
+        }
 
         return true;
     } else {
@@ -619,30 +1168,13 @@ pipeline_state_change(bool to_inference) {
 
         /* reset websocket with a new connection */
         _clean_up_conn(PIPELINE_SESSION.ws);
-        PIPELINE_SESSION.ws = connect_to_ai_engine();
+        PIPELINE_SESSION.ws = NULL;
 
-        int n_class = (PIPELINE_SESSION.type == PREDICT_CLASS && PIPELINE_SESSION.class_id_map)
-                        ? hash_get_num_entries(PIPELINE_SESSION.class_id_map) : -1;
-        InferenceTaskSpec *it = malloc(sizeof(InferenceTaskSpec));
-        init_inference_task_spec(
-            it,
-            PIPELINE_SESSION.model_name,
-            PIPELINE_SESSION.batch_size,
-            PIPELINE_SESSION.n_batches,
-            "metrics",
-            80,
-            PIPELINE_SESSION.nfeat,
-            PIPELINE_SESSION.n_features,
-            n_class,
-            PIPELINE_SESSION.model_id,
-            char_array2str(
-                PIPELINE_SESSION.feature_names,
-                PIPELINE_SESSION.n_features
-            ),
-            PIPELINE_SESSION.target
-        );
-        nws_send_task(PIPELINE_SESSION.ws, T_INFERENCE, PIPELINE_SESSION.table_name, it);
-        free_inference_task_spec(it);
+        PIPELINE_SESSION.dist_infer = distributed_infer_create(&PIPELINE_SESSION);
+        if (!PIPELINE_SESSION.dist_infer) {
+            PIPELINE_SESSION.ws = connect_to_ai_engine();
+            send_inference_task(PIPELINE_SESSION.ws, &PIPELINE_SESSION);
+        }
 
         PIPELINE_SESSION.state = PS_INFER;
     } else {
@@ -652,8 +1184,51 @@ pipeline_state_change(bool to_inference) {
     }
 }
 
+
+static void
+distributed_infer_shutdown(DistributedInfer *dist) {
+    if (!dist) {
+        return;
+    }
+
+    dist->shutting_down = 1;
+    close_infer_job_queue(&dist->job_queue);
+    close_infer_result_queue(&dist->result_queue);
+
+    pthread_mutex_lock(&dist->result_state.mutex);
+    dist->result_state.active = 0;
+    pthread_cond_broadcast(&dist->result_state.active_cond);
+    pthread_cond_broadcast(&dist->result_state.done_cond);
+    pthread_mutex_unlock(&dist->result_state.mutex);
+
+    for (int i = 0; i < dist->worker_count; i++) {
+        if (dist->workers[i].thread) {
+            pthread_join(dist->workers[i].thread, NULL);
+        }
+    }
+    if (dist->collector_thread) {
+        pthread_join(dist->collector_thread, NULL);
+    }
+
+    for (int i = 0; i < dist->worker_count; i++) {
+        if (dist->workers[i].ws) {
+            _clean_up_conn(dist->workers[i].ws);
+        }
+    }
+
+    destroy_infer_job_queue(&dist->job_queue);
+    destroy_infer_result_queue(&dist->result_queue);
+    destroy_result_state(&dist->result_state);
+    free(dist->workers);
+    free(dist);
+}
+
 static void
 pipeline_close() {
+    if (PIPELINE_SESSION.dist_infer) {
+        distributed_infer_shutdown(PIPELINE_SESSION.dist_infer);
+        PIPELINE_SESSION.dist_infer = NULL;
+    }
     if (PIPELINE_SESSION.ws) {
         _clean_up_conn(PIPELINE_SESSION.ws);
         PIPELINE_SESSION.ws = NULL;
@@ -680,7 +1255,6 @@ pipeline_close() {
     }
 
     memset(&PIPELINE_SESSION, 0, sizeof(PIPELINE_SESSION));
-
 }
 
 static char **
