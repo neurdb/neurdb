@@ -54,6 +54,8 @@ typedef struct {
     MemoryContext hash_ctx;
     HTAB *class_id_map;
     List *id_class_map;
+
+    List *primary_key_ids;
 } PipelineSession;
 
 

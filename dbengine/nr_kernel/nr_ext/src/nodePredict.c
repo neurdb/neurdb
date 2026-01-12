@@ -814,7 +814,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 					ereport(ERROR,
 							(errmsg("replica identity index contains expressions")));
 
-				keys[i] = idx->indkey.values[i];
+				keys[i] = idx->indkey.values[i] - 1;
 			}
 
 			index_close(idxrel, AccessShareLock);
