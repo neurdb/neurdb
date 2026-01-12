@@ -222,7 +222,7 @@ static void build_libsvm_data(
                 // skip primary key
                 continue;
             }
-            
+
             int type = SPI_gettypeid(tupdesc, col + 1);
             switch (type) {
                 case INT2OID:
