@@ -9,6 +9,12 @@
  */
 #include "interface2.h"
 
+#include <access/heapam.h>
+#include <access/htup.h>
+#include <access/table.h>
+#include <access/genam.h>
+#include <catalog/indexing.h>
+#include <catalog/nr_aiengine.h>
 #include <utils/builtins.h>
 #include <utils/array.h>
 #include <utils/hsearch.h>
@@ -1363,4 +1369,166 @@ Datum
 nr_pipeline_close(PG_FUNCTION_ARGS) {
     pipeline_close();
     PG_RETURN_VOID();
+}
+
+
+
+PG_FUNCTION_INFO_V1(insert_ai_engine);
+
+PG_FUNCTION_INFO_V1(delete_ai_engine);
+
+
+static Oid
+_assign_oid(Relation rel)
+{
+	return GetNewOidWithIndex(rel,
+							  NrAiengineOidIndexId,
+							  Anum_nr_aiengine_oid);
+}
+
+static HeapTuple
+_build_ai_engine_tuple(const char *addr, int port, Relation rel)
+{
+	Datum		values[Natts_nr_aiengine];
+	bool		nulls[Natts_nr_aiengine];
+
+	for (int i = 0; i < Natts_nr_aiengine; i++)
+	{
+		nulls[i] = true;
+	}
+
+	values[Anum_nr_aiengine_oid - 1] = ObjectIdGetDatum(_assign_oid(rel));
+	nulls[Anum_nr_aiengine_oid - 1] = false;
+
+	values[Anum_nr_aiengine_aieaddr - 1] = CStringGetTextDatum(addr);
+	nulls[Anum_nr_aiengine_aieaddr - 1] = false;
+
+	values[Anum_nr_aiengine_aieport - 1] = Int32GetDatum(port);
+	nulls[Anum_nr_aiengine_aieport - 1] = false;
+
+	return heap_form_tuple(RelationGetDescr(rel), values, nulls);
+}
+
+Datum
+insert_ai_engine(PG_FUNCTION_ARGS)
+{
+	Relation	rel;
+	HeapTuple	tup;
+
+	char	   *addr = text_to_cstring(PG_GETARG_TEXT_P(0));
+	int			port = PG_GETARG_INT32(1);
+
+	elog(DEBUG1, "In NeurDB's insert_ai_engine");
+
+	/* Open system catalog nr_aiengine */
+	rel = table_open(NrAiengineRelationId, RowExclusiveLock);
+
+	/* add a new tuple into the relation */
+	tup = _build_ai_engine_tuple(addr, port, rel);
+
+	Datum		values[2];
+	bool		isnull;
+	TableScanDesc scan;
+	int32		tup_port;
+	char        *tup_addr;
+
+	scan = table_beginscan_catalog(rel, 0, NULL);
+
+    bool success = true;
+
+	HeapTuple	curr_tup;
+	while ((curr_tup = heap_getnext(scan, ForwardScanDirection)) != NULL)
+	{
+		values[0] = heap_getattr(curr_tup, Anum_nr_aiengine_aieaddr, rel->rd_att, &isnull);
+		if (isnull)
+			continue;
+
+		values[1] = heap_getattr(curr_tup, Anum_nr_aiengine_aieport, rel->rd_att, &isnull);
+		if (isnull)
+			continue;
+
+		tup_addr = text_to_cstring(DatumGetTextPP(values[0]));
+		tup_port = DatumGetInt32(values[1]);
+
+		if (tup_port == port &&
+			pg_strcasecmp(tup_addr, addr) == 0)
+		{
+			success = false;
+            break;
+		}
+	}
+
+    if (success)
+    {
+        CatalogTupleInsert(rel, tup);
+        CommandCounterIncrement();
+        table_endscan(scan);
+        table_close(rel, RowExclusiveLock);
+    }
+    else
+    {
+        table_endscan(scan);
+        table_close(rel, RowExclusiveLock);
+        ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+                        errmsg("aiengine %s:%d already exists", addr, port)));
+    }
+
+	PG_RETURN_VOID();
+}
+
+Datum
+delete_ai_engine(PG_FUNCTION_ARGS)
+{
+	char	   *addr = text_to_cstring(PG_GETARG_TEXT_P(0));
+	int			port = PG_GETARG_INT32(1);
+
+	Relation	rel;
+	Datum		values[2];
+	bool		isnull;
+	char		query[1024];
+
+	elog(DEBUG1, "In NeurDB's delete_ai_engine");
+
+	rel = table_open(NrAiengineRelationId, RowExclusiveLock);
+
+	HeapTuple	tup;
+	TableScanDesc scan;
+	int32		tup_port;
+	char        *tup_addr;
+
+	scan = table_beginscan_catalog(rel, 0, NULL);
+
+	bool success = false;
+
+	while ((tup = heap_getnext(scan, ForwardScanDirection)) != NULL)
+	{
+		values[0] = heap_getattr(tup, Anum_nr_aiengine_aieaddr, rel->rd_att, &isnull);
+		if (isnull)
+			continue;
+
+		values[1] = heap_getattr(tup, Anum_nr_aiengine_aieport, rel->rd_att, &isnull);
+		if (isnull)
+			continue;
+
+		tup_addr = text_to_cstring(DatumGetTextPP(values[0]));
+		tup_port = DatumGetInt32(values[1]);
+
+		if (tup_port == port &&
+			pg_strcasecmp(tup_addr, addr) == 0)
+		{
+			CatalogTupleDelete(rel, &tup->t_self);
+			success = true;
+            break;
+		}
+	}
+
+	table_endscan(scan);
+
+	table_close(rel, RowExclusiveLock);
+
+	if (success)
+		PG_RETURN_VOID();
+	else
+		ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
+						errmsg("aiengine %s:%d not found", addr, port)));
 }

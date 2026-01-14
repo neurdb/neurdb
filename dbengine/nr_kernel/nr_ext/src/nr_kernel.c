@@ -80,8 +80,8 @@ _clear_all_tuples(Relation rel)
 void
 aiengineworker_main(Datum main_arg)
 {
-	HeapTuple	tup;
 	Relation	rel;
+	HeapTuple	tup;
 
 	elog(DEBUG1, "In NeurDB's aiengineworker_main");
 
