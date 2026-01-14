@@ -318,7 +318,9 @@ class ARMNetModelBuilder(BuilderBase):
 
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
-                logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
+                logger.info(
+                    f"done batch for {batch_idx}, total {inf_batch_num}. Batch size: {len(batch['id'])}"
+                )
 
                 asyncio.create_task(
                     WebsocketSender.send(
