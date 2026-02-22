@@ -20,3 +20,15 @@ CREATE FUNCTION nr_pipeline_state_change (to_inference boolean) RETURNS VOID AS 
 
 CREATE FUNCTION nr_pipeline_close () RETURNS VOID AS 'MODULE_PATHNAME',
 'nr_pipeline_close' LANGUAGE C STRICT VOLATILE;
+
+CREATE FUNCTION insert_ai_engine (
+    addr text,
+    port int
+) RETURNS VOID AS 'MODULE_PATHNAME',
+'insert_ai_engine' LANGUAGE C STRICT VOLATILE;
+
+CREATE FUNCTION delete_ai_engine (
+    addr text,
+    port int
+) RETURNS VOID AS 'MODULE_PATHNAME',
+'delete_ai_engine' LANGUAGE C STRICT VOLATILE;
