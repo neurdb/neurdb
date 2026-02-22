@@ -7,17 +7,13 @@ BUILD_DIR ?= $(NEURDBPATH)/build/nr_kernel
 SRC_DIR := $(CURDIR)
 
 # Default target: build all subprojects
-.PHONY: all $(SUBDIRS) install debug clean help sync
+.PHONY: all $(SUBDIRS) install debug clean help sync distclean
 
 # Sync source to build directory
 sync:
 	@echo "Syncing source to build directory..."
 	@mkdir -p $(BUILD_DIR)
 	@rsync -a --delete --exclude='*.o' --exclude='*.so' --exclude='build/' $(SRC_DIR)/ $(BUILD_DIR)/
-	@echo "Cleaning CMake caches..."
-	@find $(BUILD_DIR) -name "CMakeCache.txt" -delete 2>/dev/null || true
-	@find $(BUILD_DIR) -name "cmake_install.cmake" -delete 2>/dev/null || true
-	@find $(BUILD_DIR) -type d -name "CMakeFiles" -exec rm -rf {} + 2>/dev/null || true
 
 # Default 'all' target: sync then build in build dir
 all: sync
@@ -62,13 +58,20 @@ clean:
 		done \
 	fi
 
+distclean:
+	@echo "Cleaning CMake caches..."
+	@find $(BUILD_DIR) -name "CMakeCache.txt" -delete
+	@find $(BUILD_DIR) -name "cmake_install.cmake" -delete
+	@find $(BUILD_DIR) -type d -name "CMakeFiles" -exec rm -rf {} +
+
 # Help target to list available commands
 help:
 	@echo "Available targets:"
-	@echo "  all      - Sync and build all subprojects"
-	@echo "  install  - Sync and install all subprojects"
-	@echo "  debug    - Sync and debug all subprojects"
-	@echo "  clean    - Clean all subprojects"
-	@echo "  sync     - Sync source to build directory"
+	@echo "  all       - Sync and build all subprojects"
+	@echo "  install   - Sync and install all subprojects"
+	@echo "  debug     - Sync and debug all subprojects"
+	@echo "  clean     - Clean all subprojects"
+	@echo "  sync      - Sync source to build directory"
+	@echo "  distclean - Clean build directory"
 	@echo ""
 	@echo "Build directory: $(BUILD_DIR)"
