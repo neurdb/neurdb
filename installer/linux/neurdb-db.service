@@ -1,0 +1,13 @@
+[Unit]
+Description=NeurDB Database Server
+After=network.target
+
+[Service]
+Type=forking
+User=neurdb
+ExecStart=/opt/neurdb/bin/pg_ctl -D /var/lib/neurdb/data -l /var/log/neurdb/postgres.log start
+ExecStop=/opt/neurdb/bin/pg_ctl -D /var/lib/neurdb/data stop
+ExecReload=/opt/neurdb/bin/pg_ctl -D /var/lib/neurdb/data reload
+
+[Install]
+WantedBy=multi-user.target

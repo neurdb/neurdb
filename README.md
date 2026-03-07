@@ -15,9 +15,50 @@ NeurDB is an AI-powered autonomous data system.
 
 ## Installation
 
+### Quick Install (Docker)
+
+NeurDB can be installed with a single command using Docker.
+
+**Prerequisites:**
+
+| Requirement | Version |
+|---|---|
+| Docker Engine | 20.10+ |
+| OS | Linux (x86_64), Windows 10/11 with Docker Desktop |
+| GPU drivers (optional) | NVIDIA 470+ with CUDA 11.8 |
+
+**Linux:**
+```bash
+curl -fsSL https://github.com/neurdb/neurdb/releases/latest/download/install.sh | bash
+```
+
+**Windows (PowerShell as Administrator):**
+```powershell
+irm https://github.com/neurdb/neurdb/releases/latest/download/install.ps1 | iex
+```
+
+**Manual Docker install:**
+```bash
+# GPU (auto-detected if nvidia-smi is available)
+bash installer/linux/install.sh --gpu
+
+# CPU only
+bash installer/linux/install.sh --cpu
+
+# Custom port and persistent data
+bash installer/linux/install.sh --port 15432 --data-dir /data/neurdb
+```
+
+**Python client library:**
+```bash
+pip install neurdb
+```
+
+### Build from Source (Development)
+
 Our database is based on the PostgreSQL 16.3 with [doc](https://www.postgresql.org/docs/16/)
 
-### Clone the latest code
+#### Clone the latest code
 
 ```bash
 git clone https://github.com/neurdb/neurdb.git
@@ -29,6 +70,11 @@ chmod -R 777 .
 ### Build Dockerfile
 
 ```bash
+# Release build (optimized, no debug tools)
+bash build.sh --release --cpu
+bash build.sh --release --gpu
+
+# Development build (with source mounting and debug port)
 bash build.sh --gpu
 bash build.sh --cpu
 ```

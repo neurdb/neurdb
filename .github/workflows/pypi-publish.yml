@@ -1,0 +1,46 @@
+name: Publish Python package to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # Required for Trusted Publisher
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify VERSION matches release tag
+        working-directory: api/python
+        run: |
+          FILE_VERSION=$(cat VERSION | tr -d '[:space:]')
+          # Strip leading 'v' from tag if present (e.g. v0.2.0 -> 0.2.0)
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$FILE_VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: api/python/VERSION ($FILE_VERSION) does not match release tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "Version check passed: $FILE_VERSION"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        working-directory: api/python
+        run: python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: api/python/dist/

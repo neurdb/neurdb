@@ -1,0 +1,14 @@
+[Unit]
+Description=NeurDB AI Runtime Server
+After=neurdb-db.service
+Requires=neurdb-db.service
+
+[Service]
+Type=simple
+User=neurdb
+WorkingDirectory=/opt/neurdb/aiengine/runtime
+ExecStart=/opt/neurdb/aiengine/venv/bin/python server.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
