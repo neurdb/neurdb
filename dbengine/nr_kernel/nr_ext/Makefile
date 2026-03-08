@@ -3,7 +3,9 @@
 
 EXT_NAME = nr_ext
 
-NEURDBPATH ?= /code/neurdb-dev
+PG_CONFIG ?= pg_config
+PG_SHAREDIR  := $(shell $(PG_CONFIG) --sharedir)
+PG_PKGLIBDIR := $(shell $(PG_CONFIG) --pkglibdir)
 
 .PHONY: all cmake buildext install clean
 
@@ -11,26 +13,21 @@ all: build buildext
 
 build:
 	mkdir -p build
-	cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
+	cd build && cmake -DPG_CONFIG=$(PG_CONFIG) -DCMAKE_BUILD_TYPE=Release ..
 
 debug: builddbg buildextdbg
 
 builddbg:
 	mkdir -p build
-	cd build && cmake -DCMAKE_BUILD_TYPE=Debug ..
+	cd build && cmake -DPG_CONFIG=$(PG_CONFIG) -DCMAKE_BUILD_TYPE=Debug ..
 
 buildextdbg: buildext
-buildext:
-	cd build; make -j; cd ..
+buildext: build
+	$(MAKE) -j -C build
 
 install: buildext
-	cd build; make install; cd ..
-	cp $(EXT_NAME).control $(NEURDBPATH)/build/psql/share/postgresql/extension
-	# only works when in psql/lib/postgresql
-	rm -f $(NEURDBPATH)/build/psql/lib/$(EXT_NAME).so
-	rm -f $(NEURDBPATH)/build/psql/lib/postgresql/$(EXT_NAME).so
-	cp build/$(EXT_NAME).so $(NEURDBPATH)/build/psql/lib
-	cp build/$(EXT_NAME).so $(NEURDBPATH)/build/psql/lib/postgresql
+	$(MAKE) -C build install
+	cp $(EXT_NAME).control $(PG_SHAREDIR)/extension
 
 clean:
 	rm -rf build

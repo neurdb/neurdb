@@ -11,8 +11,10 @@ PG_BIN="/opt/neurdb/bin"
 VENV_DIR="/opt/neurdb-venv"
 RUNTIME_DIR="${VENV_DIR}/runtime"
 
-# 1. Run initdb if data directory does not exist (first-run only)
-if [ ! -d "$NEURDB_DATA" ]; then
+# 1. Run initdb if the cluster has not been initialised yet (first-run only).
+# Check for PG_VERSION rather than the directory itself, because the directory
+# may have been pre-created (e.g. by the Dockerfile) without initdb having run.
+if [ ! -f "$NEURDB_DATA/PG_VERSION" ]; then
     mkdir -p "$NEURDB_DATA"
     "$PG_BIN/initdb" -D "$NEURDB_DATA" -U neurdb
 fi

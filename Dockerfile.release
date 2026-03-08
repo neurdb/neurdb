@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake pkg-config \
     librocksdb-dev libwebsockets-dev libcjson-dev \
     libcurl4-openssl-dev libpqxx-dev libopencv-dev \
-    # Source fetch (pg_hint_plan) and Makefile sync
-    git rsync \
+    # Source fetch (pg_hint_plan, protobuf, tokenizers-cpp) and Makefile sync
+    git rsync curl wget \
     # Python venv creation
     python3 python3-pip python3-dev python3-venv \
     && rm -rf /var/lib/apt/lists/*
@@ -35,6 +35,9 @@ RUN git clone --depth=1 -b PG16 \
     make -C /tmp/pg_hint_plan PG_CONFIG=/opt/neurdb/bin/pg_config install
 
 # 3. Compile nr_kernel extensions
+# Install Rust (needed by nr_store to build neurstore_core)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
 RUN cd /src/dbengine/nr_kernel && \
     make PG_CONFIG=/opt/neurdb/bin/pg_config && \
     make PG_CONFIG=/opt/neurdb/bin/pg_config install
@@ -89,8 +92,11 @@ ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 COPY --from=builder /opt/neurdb      /opt/neurdb
 COPY --from=builder /opt/neurdb-venv /opt/neurdb-venv
 
-# Create neurdb user, lock root account
-RUN useradd -m -s /bin/bash neurdb && passwd -l root
+# Create neurdb user, lock root account, and pre-create the data directory
+# with correct ownership so the container starts correctly as a non-root user.
+RUN useradd -m -s /bin/bash neurdb && passwd -l root && \
+    mkdir -p /var/lib/neurdb/data /var/log/neurdb && \
+    chown -R neurdb:neurdb /var/lib/neurdb /var/log/neurdb
 
 # Set environment variables for the neurdb user
 ENV PATH="/opt/neurdb/bin:/opt/neurdb-venv/bin:${PATH}"

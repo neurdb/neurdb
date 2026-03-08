@@ -39,16 +39,34 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+# Returns an available host port: uses the given default if free, otherwise
+# picks a random ephemeral port in 49152-65535.
+find_available_port() {
+    local preferred=$1
+    if ! ss -tlnH "sport = :${preferred}" 2>/dev/null | grep -q .; then
+        echo "$preferred"
+        return
+    fi
+    local port
+    while true; do
+        port=$(( RANDOM % 16383 + 49152 ))
+        if ! ss -tlnH "sport = :${port}" 2>/dev/null | grep -q .; then
+            echo "$port"
+            return
+        fi
+    done
+}
+
 # Set default ports based on mode if not specified
 if [ "$RELEASE" = true ]; then
-    DB_PORT=${DB_PORT:-5432}
+    DB_PORT=$(find_available_port "${DB_PORT:-5432}")
 else
     if [ "$MODE" == "cpu" ]; then
-        DB_PORT=${DB_PORT:-15432}
-        DEBUG_PORT=${DEBUG_PORT:-11234}
+        DB_PORT=$(find_available_port "${DB_PORT:-15432}")
+        DEBUG_PORT=$(find_available_port "${DEBUG_PORT:-11234}")
     else
-        DB_PORT=${DB_PORT:-5432}
-        DEBUG_PORT=${DEBUG_PORT:-1234}
+        DB_PORT=$(find_available_port "${DB_PORT:-5432}")
+        DEBUG_PORT=$(find_available_port "${DEBUG_PORT:-1234}")
     fi
 fi
 

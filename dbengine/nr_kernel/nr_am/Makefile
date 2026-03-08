@@ -43,7 +43,7 @@ ROCKSDB_LIB_PATH = /usr/local/lib
 ROCKSDB_INC_PATH = /usr/local/include
 
 
-PG_CONFIG = $(NEURDBPATH)/build/psql/bin/pg_config
+PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
