@@ -100,11 +100,11 @@ else
 
     if [ "$MODE" == "cpu" ]; then
         docker run -d -e CLEAN_BUILD=1 --name neurdb_dev_opt \
-          -v "$(pwd)":/code/neurdb-dev \
-          -p ${DB_PORT}:5432 \
-          -p ${DEBUG_PORT}:1234 \
-          --cap-add=SYS_PTRACE \
-          neurdbimg-opt
+            -v "$(pwd)":/code/neurdb-dev \
+            -p ${DB_PORT}:5432 \
+            -p ${DEBUG_PORT}:1234 \
+            --cap-add=SYS_PTRACE \
+            neurdbimg
     else
         docker run -d -e CLEAN_BUILD=1 --name neurdb_dev \
             -v $(pwd):/code/neurdb-dev \
