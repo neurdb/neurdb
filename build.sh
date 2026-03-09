@@ -26,9 +26,9 @@ while [[ "$#" -gt 0 ]]; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --cpu           Build and run in CPU mode"
-            echo "  --gpu           Build and run in GPU mode (default)"
-            echo "  --release       Build and run the release image (Dockerfile.release)"
+            echo "  --cpu           Build and run in CPU mode (dev)"
+            echo "  --gpu           Build and run in GPU mode (dev, default)"
+            echo "  --release       Build both CPU and GPU release images (Dockerfile.release)"
             echo "  --db-port PORT  Specify the host port for database (default: 5432 for GPU, 15432 for CPU)"
             echo "  --debug-port PORT  Specify the host port for debug server (default: 1234 for GPU, 11234 for CPU)"
             echo "  -h, --help      Show this help message"
@@ -57,10 +57,8 @@ find_available_port() {
     done
 }
 
-# Set default ports based on mode if not specified
-if [ "$RELEASE" = true ]; then
-    DB_PORT=$(find_available_port "${DB_PORT:-5432}")
-else
+# Set default ports based on mode if not specified (only needed for dev builds)
+if [ "$RELEASE" != true ]; then
     if [ "$MODE" == "cpu" ]; then
         DB_PORT=$(find_available_port "${DB_PORT:-15432}")
         DEBUG_PORT=$(find_available_port "${DEBUG_PORT:-11234}")
@@ -71,26 +69,20 @@ else
 fi
 
 if [ "$RELEASE" = true ]; then
-    # Release build: uses Dockerfile.release, selects variant via build arg
-    VARIANT="cpu"
-    [ "$MODE" == "gpu" ] && VARIANT="cuda11"
-    IMAGE_NAME="neurdb:latest-${VARIANT}"
-    docker build \
-        -f Dockerfile.release \
-        --target release \
-        --build-arg VARIANT=${VARIANT} \
-        --progress=plain \
-        -t ${IMAGE_NAME} .
-
-    # Release run: no source mount, no debug port, no CLEAN_BUILD
-    CONTAINER_NAME="neurdb"
-    docker rm -f ${CONTAINER_NAME} || true
-    docker run -d \
-        --name ${CONTAINER_NAME} \
-        -p ${DB_PORT}:5432 \
-        --restart unless-stopped \
-        ${IMAGE_NAME}
-    docker logs -f ${CONTAINER_NAME}
+    # Release build: build both CPU and GPU (cuda11) variants
+    for VARIANT in cpu cuda11; do
+        IMAGE_NAME="neurdb:latest-${VARIANT}"
+        echo "==> Building release image: ${IMAGE_NAME}"
+        docker build \
+            -f Dockerfile.release \
+            --target release \
+            --build-arg VARIANT=${VARIANT} \
+            --progress=plain \
+            -t ${IMAGE_NAME} .
+    done
+    echo "Release images built successfully:"
+    echo "  neurdb:latest-cpu"
+    echo "  neurdb:latest-cuda11"
 else
     # Dev build: existing behaviour, unchanged
     docker rm -f neurdb_dev || true

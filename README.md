@@ -70,9 +70,8 @@ chmod -R 777 .
 ### Build Dockerfile
 
 ```bash
-# Release build (optimized, no debug tools)
-bash build.sh --release --cpu
-bash build.sh --release --gpu
+# Release build (builds both CPU and GPU variants, optimized, no debug tools)
+bash build.sh --release
 
 # Development build (with source mounting and debug port)
 bash build.sh --gpu
