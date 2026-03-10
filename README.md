@@ -58,7 +58,7 @@ pip install neurdb
 
 ### Building from Source
 
-For building from source (Docker or native on Linux/Windows), see **[INSTALL.md](./INSTALL.md)**.
+For building from source (Docker or native on Linux/Windows), see **[INSTALL.md](./INSTALL.md#build-from-source-development)**.
 
 ## Usage
 

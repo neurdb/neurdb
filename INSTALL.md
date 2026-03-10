@@ -101,13 +101,22 @@ sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 **2. Set environment variables:**
 
 ```bash
-export NEURDBPATH=$(pwd)                  # root of the neurdb repo
+# Change to the root of the neurdb repo
+cd neurdb
+
+# Set environment variables
+export NEURDBPATH=$(pwd)
 export NR_BUILD_PATH=$NEURDBPATH/build
 export NR_PSQL_PATH=$NR_BUILD_PATH/psql
 export NR_DBDATA_PATH=$NR_BUILD_PATH/data
-export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
-export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}
+export MULTIARCH_LIBDIR=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)
+export PKG_CONFIG_PATH=$MULTIARCH_LIBDIR/pkgconfig
+export LD_LIBRARY_PATH=$MULTIARCH_LIBDIR:$LD_LIBRARY_PATH
 export LIBCLANG_PATH=$(llvm-config --libdir)
+export NR_DBENGINE_PATH=$NEURDBPATH/dbengine
+export NR_KERNEL_PATH=$NR_DBENGINE_PATH/nr_kernel
+export NR_AIENGINE_PATH=$NEURDBPATH/aiengine
+export NR_API_PATH=$NEURDBPATH/api
 ```
 
 **3. Build the DB engine (PostgreSQL):**
@@ -116,8 +125,9 @@ export LIBCLANG_PATH=$(llvm-config --libdir)
 mkdir -p $NR_BUILD_PATH/dbengine $NR_PSQL_PATH
 cd $NR_BUILD_PATH/dbengine
 
-$NEURDBPATH/dbengine/configure --prefix=$NR_PSQL_PATH --enable-debug
-make -j$(nproc)
+# Configure and build (out-of-source build)
+$NR_DBENGINE_PATH/configure --prefix=$NR_PSQL_PATH --enable-debug
+make -j
 make install
 ```
 
@@ -125,8 +135,11 @@ make install
 
 ```bash
 mkdir -p $NR_BUILD_PATH/contrib && cd $NR_BUILD_PATH/contrib
-git clone https://github.com/ossc-db/pg_hint_plan.git
+if [ ! -d "pg_hint_plan" ]; then
+  git clone https://github.com/ossc-db/pg_hint_plan.git
+fi
 cd pg_hint_plan && git checkout PG16
+make clean || true
 make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config
 make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config install
 ```
@@ -134,18 +147,35 @@ make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config install
 **5. Initialize and start the database:**
 
 ```bash
-mkdir -p $NR_DBDATA_PATH
-$NR_PSQL_PATH/bin/initdb -D $NR_DBDATA_PATH
+# Initialize data directory (skip if already exists)
+if [ ! -d "$NR_DBDATA_PATH" ]; then
+  mkdir -p $NR_DBDATA_PATH
+  $NR_PSQL_PATH/bin/initdb -D $NR_DBDATA_PATH
+else
+  chmod 0750 $NR_DBDATA_PATH
+fi
+
+# Start the database server
 $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l $NR_BUILD_PATH/logfile start
 
-# Wait for the server, then create the neurdb database
-$NR_PSQL_PATH/bin/createdb -h localhost -p 5432 neurdb
+# Wait for the server to be ready, then create the neurdb database
+until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U $USER -c '\q' 2>/dev/null; do
+  echo 'NeurDB is unavailable - sleeping'
+  sleep 1
+  $NR_PSQL_PATH/bin/createdb -h localhost -p 5432 neurdb 2>/dev/null || true
+done
 ```
+
+> [!TIP]
+> If the server fails to start with `could not start server`, check the log with
+> `cat $NR_BUILD_PATH/logfile`. Common causes:
+> - **Port 5432 already in use**: stop the other PostgreSQL instance (`sudo systemctl stop postgresql`) or change the port in `$NR_DBDATA_PATH/postgresql.conf`.
+> - **Permission denied on data directory**: run `chmod 0750 $NR_DBDATA_PATH`.
 
 **6. Build NR kernel extensions:**
 
 ```bash
-cd $NEURDBPATH/dbengine/nr_kernel
+cd $NR_KERNEL_PATH
 export PG_CONFIG=$NR_PSQL_PATH/bin/pg_config
 make clean || true
 make
@@ -158,35 +188,54 @@ Register extensions and restart:
 sed -i '/^#*shared_preload_libraries/d' $NR_DBDATA_PATH/postgresql.conf
 echo "shared_preload_libraries = 'pg_hint_plan, nr_molqo, nr_ext, nram, pg_neurstore'" >> $NR_DBDATA_PATH/postgresql.conf
 $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l $NR_BUILD_PATH/logfile restart
+
+# Wait for the server to be ready after restart
+until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U $USER -c '\q' 2>/dev/null; do
+  echo 'NeurDB is unavailable - sleeping'
+  sleep 1
+done
 ```
 
 **7. Install AI engine dependencies and start the server:**
 
 ```bash
 # CPU only
-pip install -r $NEURDBPATH/aiengine/runtime/requirements.cpu.txt \
+pip install -r $NR_AIENGINE_PATH/runtime/requirements.cpu.txt \
     --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Or GPU (CUDA 11.x)
-pip install -r $NEURDBPATH/aiengine/runtime/requirements.txt \
+pip install -r $NR_AIENGINE_PATH/runtime/requirements.txt \
     --extra-index-url https://download.pytorch.org/whl/cu116
 
 # Start AI engine server
-cd $NEURDBPATH/aiengine/runtime
-NR_LOG_LEVEL=INFO python server.py &
+cd $NR_AIENGINE_PATH/runtime
+export NR_LOG_LEVEL=INFO
+nohup python server.py &
+
+# Wait for the AI engine to be ready
+echo -n 'Waiting for AI engine to start '
+until curl --output /dev/null --silent --head --fail http://127.0.0.1:8090/; do
+  printf '.'
+  sleep 1
+done
+echo ' OK'
 ```
 
 **8. Install the NeurDB Python client API:**
 
 ```bash
-cd $NEURDBPATH/api/python
+mkdir -p $NR_BUILD_PATH/api/python
+cp -r $NR_API_PATH/python/* $NR_BUILD_PATH/api/python/
+cd $NR_BUILD_PATH/api/python
+touch setup.cfg
 pip install -e .
+rm setup.cfg
 ```
 
 **9. Create the pipeline extension:**
 
 ```bash
-$NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U $(whoami) -d neurdb \
+$NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U $USER -d neurdb \
     -c 'CREATE EXTENSION IF NOT EXISTS nr_pipeline;'
 ```
 
