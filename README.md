@@ -27,17 +27,19 @@ NeurDB can be installed with a single command using Docker.
 | OS | Linux (x86_64), Windows 10/11 with Docker Desktop |
 | GPU drivers (optional) | NVIDIA 470+ with CUDA 11.8 |
 
-**Linux:**
+**Using pre-built Docker images:**
+
+*Linux:*
 ```bash
 curl -fsSL https://github.com/neurdb/neurdb/releases/latest/download/install.sh | bash
 ```
 
-**Windows (PowerShell as Administrator):**
+*Windows (PowerShell as Administrator):*
 ```powershell
 irm https://github.com/neurdb/neurdb/releases/latest/download/install.ps1 | iex
 ```
 
-**Manual Docker install:**
+**Manually Build from Docker:**
 ```bash
 # GPU (auto-detected if nvidia-smi is available)
 bash installer/linux/install.sh --gpu
@@ -54,43 +56,76 @@ bash installer/linux/install.sh --port 15432 --data-dir /data/neurdb
 pip install neurdb
 ```
 
-### Build from Source (Development)
+### Building from Source
 
-Our database is based on the PostgreSQL 16.3 with [doc](https://www.postgresql.org/docs/16/)
+For building from source (Docker or native on Linux/Windows), see **[INSTALL.md](./INSTALL.md)**.
 
-#### Clone the latest code
+## Usage
+
+### Connecting to NeurDB
+
+NeurDB is PostgreSQL-compatible, so you can connect using any PostgreSQL client. The default port is `5432`.
+
+**Using `psql`:**
+```bash
+psql -h localhost -p 5432 -U neurdb -d neurdb
+```
+
+### In-Database AI with SQL
+
+NeurDB extends SQL with a `PREDICT` statement for in-database AI inference:
+
+```sql
+-- Create a table and load data
+CREATE TABLE frappe_test (
+    click_rate INT, feature1 INT, feature2 INT,
+    feature3 INT, feature4 INT, feature5 INT,
+    feature6 INT, feature7 INT, feature8 INT,
+    feature9 INT, feature10 INT
+);
+
+COPY frappe_test FROM '/path/to/data.csv' DELIMITER ',' CSV HEADER;
+
+-- Configure training parameters
+SET nr_task_batch_size TO 60;
+SET nr_task_num_batches TO 100;
+
+-- Train and predict in a single statement
+PREDICT VALUE OF click_rate FROM frappe_test TRAIN ON *;
+```
+
+### Python Client
+
+Install the NeurDB Python client and use it to manage models programmatically:
 
 ```bash
-git clone https://github.com/neurdb/neurdb.git
-cd neurdb
-# Give Docker container write permission
-chmod -R 777 .
+pip install neurdb
 ```
 
-### Build Dockerfile
+```python
+from neurdb import NeurDB, ModelSerializer
+import torch
 
-```bash
-# Release build (builds both CPU and GPU variants, optimized, no debug tools)
-bash build.sh --release
+# Connect to a running NeurDB instance
+db = NeurDB(db_host="localhost", db_port="5432")
 
-# Development build (with source mounting and debug port)
-bash build.sh --gpu
-bash build.sh --cpu
+# Serialize and save a PyTorch model
+model = torch.nn.Linear(10, 2)
+pickled = ModelSerializer.serialize_model(model)
+model_id = db.save_model(pickled)
+
+# Load and restore the model
+loaded = db.load_model(model_id)
+restored_model = ModelSerializer.deserialize_model(loaded)
+
+# Register the model for in-database inference
+db.register_model(model_id, "my_table", ["feat1", "feat2"], ["target"])
+
+# Clean up
+db.close()
 ```
 
-Wait until the following prompt shows:
-
-```
-Please use 'control + c' to exit the logging print
-...
-Press CTRL+C to quit
-```
-
-### Development
-
-[DB engine dev](./doc/db_dev.md)
-
-[AI engine dev](./doc/ai_dev.md)
+For more details, see the [Python client documentation](./api/python/README.md).
 
 ## Citation
 
