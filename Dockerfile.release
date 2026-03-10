@@ -39,6 +39,7 @@ RUN git clone --depth=1 -b PG16 \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN cd /src/dbengine/nr_kernel && \
+    make clean && \
     make PG_CONFIG=/opt/neurdb/bin/pg_config && \
     make PG_CONFIG=/opt/neurdb/bin/pg_config install
 
@@ -76,6 +77,10 @@ ARG VARIANT
 FROM base-${VARIANT} AS release
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Accept the host user's UID/GID so file ownership on bind-mounts matches
+ARG HOST_UID=1000
+ARG HOST_GID=1000
+
 # Runtime libraries only — no compilers, no -dev headers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     librocksdb6.11 libwebsockets16 libcjson1 \
@@ -94,7 +99,9 @@ COPY --from=builder /opt/neurdb-venv /opt/neurdb-venv
 
 # Create neurdb user, lock root account, and pre-create the data directory
 # with correct ownership so the container starts correctly as a non-root user.
-RUN useradd -m -s /bin/bash neurdb && passwd -l root && \
+RUN groupadd -g ${HOST_GID} neurdb || true && \
+    useradd -m -s /bin/bash -u ${HOST_UID} -g ${HOST_GID} neurdb && \
+    passwd -l root && \
     mkdir -p /var/lib/neurdb/data /var/log/neurdb && \
     chown -R neurdb:neurdb /var/lib/neurdb /var/log/neurdb
 

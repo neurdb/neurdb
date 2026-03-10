@@ -7,6 +7,10 @@ EXPOSE 5432
 # Set environment variables to avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Accept the host user's UID/GID so file ownership on bind-mounts matches
+ARG HOST_UID=1000
+ARG HOST_GID=1000
+
 # Upgrade pip
 RUN apt-get update
 
@@ -68,7 +72,8 @@ RUN apt-get install -y \
 RUN echo "root:rootpassword" | chpasswd
 
 # Create a non-root user 'neurdb' with an empty password and add to sudoers
-RUN useradd -m -s /bin/bash neurdb && \
+RUN groupadd -g ${HOST_GID} neurdb || true && \
+    useradd -m -s /bin/bash -u ${HOST_UID} -g ${HOST_GID} neurdb && \
     passwd -d neurdb && \
     echo "neurdb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 

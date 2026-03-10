@@ -77,6 +77,8 @@ if [ "$RELEASE" = true ]; then
             -f Dockerfile.release \
             --target release \
             --build-arg VARIANT=${VARIANT} \
+            --build-arg HOST_UID=$(id -u) \
+            --build-arg HOST_GID=$(id -g) \
             --progress=plain \
             -t ${IMAGE_NAME} .
     done
@@ -99,7 +101,10 @@ else
         DOCKERFILE="Dockerfile.cpu"
     fi
 
-    docker build -t neurdbimg . -f ${DOCKERFILE} --progress=plain --no-cache
+    docker build -t neurdbimg . -f ${DOCKERFILE} \
+        --build-arg HOST_UID=$(id -u) \
+        --build-arg HOST_GID=$(id -g) \
+        --progress=plain --no-cache
 
     # Dev run: existing behaviour, unchanged
     # Clean build directory based on CLEAN_BUILD env var
