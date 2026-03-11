@@ -58,7 +58,20 @@ pip install neurdb
 
 ### Building from Source
 
-For building from source (Docker or native on Linux/Windows), see **[INSTALL.md](./INSTALL.md#build-from-source-development)**.
+For native Linux builds, you can simply use the top-level `Makefile` to install prerequisites, build the engine, and start the services:
+
+```bash
+# 1. Install prerequisites (Requires sudo)
+make deps
+
+# 2. Build and install DB, AI engine, and Python client
+make install
+
+# 3. Start PostgreSQL and the AI Server
+make start
+```
+
+For detailed instructions spanning Docker builds, custom ports, GPU support, and Windows development, please see **[INSTALL.md](./INSTALL.md#build-from-source-development)**.
 
 ## Usage
 

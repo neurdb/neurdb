@@ -35,6 +35,9 @@ help:
 	@echo "  make distclean     - Remove the entire build directory (including data)"
 
 deps:
+	@echo "========================================"
+	@echo "==> Running target: deps"
+	@echo "========================================"
 	sudo apt-get update
 	sudo apt-get install -y \
 		python3-dev python3-pip python-is-python3 \
@@ -49,15 +52,24 @@ deps:
 	sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 build:
+	@echo "========================================"
+	@echo "==> Running target: build"
+	@echo "========================================"
 	mkdir -p $(NR_BUILD_PATH)/dbengine $(NR_PSQL_PATH)
 	cd $(NR_BUILD_PATH)/dbengine && \
 		$(NR_DBENGINE_PATH)/configure --prefix=$(NR_PSQL_PATH) --enable-debug && \
 		$(MAKE) -j
 
 install-dbengine: build
+	@echo "========================================"
+	@echo "==> Running target: install-dbengine"
+	@echo "========================================"
 	cd $(NR_BUILD_PATH)/dbengine && $(MAKE) install
 
 pg_hint_plan: install-dbengine
+	@echo "========================================"
+	@echo "==> Running target: pg_hint_plan"
+	@echo "========================================"
 	mkdir -p $(NR_BUILD_PATH)/contrib
 	cd $(NR_BUILD_PATH)/contrib && \
 		if [ ! -d "pg_hint_plan" ]; then \
@@ -69,17 +81,26 @@ pg_hint_plan: install-dbengine
 		$(MAKE) PG_CONFIG=$(NR_PSQL_PATH)/bin/pg_config install
 
 kernel_ext: install-dbengine
+	@echo "========================================"
+	@echo "==> Running target: kernel_ext"
+	@echo "========================================"
 	cd $(NR_KERNEL_PATH) && \
 		PG_CONFIG=$(NR_PSQL_PATH)/bin/pg_config $(MAKE) clean || true && \
 		PG_CONFIG=$(NR_PSQL_PATH)/bin/pg_config $(MAKE) && \
 		PG_CONFIG=$(NR_PSQL_PATH)/bin/pg_config $(MAKE) install
 
 install-api:
+	@echo "========================================"
+	@echo "==> Running target: install-api"
+	@echo "========================================"
 	mkdir -p $(NR_BUILD_PATH)/api/python
 	cp -r $(NR_API_PATH)/python/* $(NR_BUILD_PATH)/api/python/
 	cd $(NR_BUILD_PATH)/api/python && touch setup.cfg && pip install -e . && rm setup.cfg
 
 install-aiengine:
+	@echo "========================================"
+	@echo "==> Running target: install-aiengine"
+	@echo "========================================"
 ifeq ($(AI_ENGINE_MODE),cpu)
 	pip install -r $(NR_AIENGINE_PATH)/runtime/requirements.cpu.txt --extra-index-url https://download.pytorch.org/whl/cpu
 else
@@ -87,8 +108,14 @@ else
 endif
 
 install: install-dbengine pg_hint_plan kernel_ext install-api install-aiengine
+	@echo "========================================"
+	@echo "==> Finished target: install"
+	@echo "========================================"
 
 initdb: install-dbengine
+	@echo "========================================"
+	@echo "==> Running target: initdb"
+	@echo "========================================"
 	@if [ ! -d "$(NR_DBDATA_PATH)" ]; then \
 		mkdir -p $(NR_DBDATA_PATH); \
 		$(NR_PSQL_PATH)/bin/initdb -D $(NR_DBDATA_PATH); \
@@ -97,6 +124,9 @@ initdb: install-dbengine
 	fi
 
 start-db: initdb
+	@echo "========================================"
+	@echo "==> Running target: start-db"
+	@echo "========================================"
 	$(NR_PSQL_PATH)/bin/pg_ctl -D $(NR_DBDATA_PATH) -l $(NR_BUILD_PATH)/logfile start || true
 	@echo "Waiting for PostgreSQL to start..."
 	@until $(NR_PSQL_PATH)/bin/psql -h localhost -p 5432 -U $(USER) -c '\q' 2>/dev/null; do \
@@ -117,6 +147,9 @@ start-db: initdb
 	$(NR_PSQL_PATH)/bin/psql -h localhost -p 5432 -U $(USER) -d neurdb -c 'CREATE EXTENSION IF NOT EXISTS nr_pipeline;'
 
 start-ai:
+	@echo "========================================"
+	@echo "==> Running target: start-ai"
+	@echo "========================================"
 	cd $(NR_AIENGINE_PATH)/runtime && NR_LOG_LEVEL=INFO nohup python server.py > $(NR_BUILD_PATH)/ai_engine.log 2>&1 &
 	@echo -n 'Waiting for AI engine to start '
 	@until curl --output /dev/null --silent --head --fail http://127.0.0.1:8090/; do \
@@ -126,17 +159,35 @@ start-ai:
 	@echo ' OK'
 
 start: start-db start-ai
+	@echo "========================================"
+	@echo "==> Finished target: start"
+	@echo "========================================"
 
 stop-db:
+	@echo "========================================"
+	@echo "==> Running target: stop-db"
+	@echo "========================================"
 	$(NR_PSQL_PATH)/bin/pg_ctl -D $(NR_DBDATA_PATH) stop || true
 
 stop-ai:
+	@echo "========================================"
+	@echo "==> Running target: stop-ai"
+	@echo "========================================"
 	pkill -f "python server.py" || true
 
 stop: stop-db stop-ai
+	@echo "========================================"
+	@echo "==> Finished target: stop"
+	@echo "========================================"
 
 clean:
+	@echo "========================================"
+	@echo "==> Running target: clean"
+	@echo "========================================"
 	rm -rf $(NR_BUILD_PATH)/dbengine $(NR_BUILD_PATH)/contrib $(NR_BUILD_PATH)/api
 
 distclean:
+	@echo "========================================"
+	@echo "==> Running target: distclean"
+	@echo "========================================"
 	rm -rf $(NR_BUILD_PATH)
