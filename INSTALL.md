@@ -73,6 +73,10 @@ Press CTRL+C to quit
 
 ### Native Build on Linux
 
+> [!WARNING]
+> If you have previously compiled using Docker (`bash build.sh`), the source tree will contain leftover build artifacts with absolute symlinks pointing to Docker container paths. You **MUST** completely clean the repository before attempting a native build:
+> `git clean -xfd` (Warning: this deletes all untracked files)
+
 > [!NOTE]
 > Tested on Ubuntu 22.04 (x86_64). Other Debian-based distributions should also work.
 
