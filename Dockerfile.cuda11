@@ -96,7 +96,7 @@ USER root
 
 # Set environment variables for both root and other users
 ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig"
-ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 ENV NEURDBPATH="/code/neurdb-dev"
 
 # Set the working directory

@@ -105,18 +105,18 @@ sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 cd neurdb
 
 # Set environment variables
-export NEURDBPATH=$(pwd)
-export NR_BUILD_PATH=$NEURDBPATH/build
-export NR_PSQL_PATH=$NR_BUILD_PATH/psql
-export NR_DBDATA_PATH=$NR_BUILD_PATH/data
-export MULTIARCH_LIBDIR=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)
-export PKG_CONFIG_PATH=$MULTIARCH_LIBDIR/pkgconfig
-export LD_LIBRARY_PATH=$MULTIARCH_LIBDIR:$LD_LIBRARY_PATH
-export LIBCLANG_PATH=$(llvm-config --libdir)
-export NR_DBENGINE_PATH=$NEURDBPATH/dbengine
-export NR_KERNEL_PATH=$NR_DBENGINE_PATH/nr_kernel
-export NR_AIENGINE_PATH=$NEURDBPATH/aiengine
-export NR_API_PATH=$NEURDBPATH/api
+export NEURDBPATH="$(pwd)"
+export NR_BUILD_PATH="$NEURDBPATH/build"
+export NR_PSQL_PATH="$NR_BUILD_PATH/psql"
+export NR_DBDATA_PATH="$NR_BUILD_PATH/data"
+export MULTIARCH_LIBDIR="/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)"
+export PKG_CONFIG_PATH="$MULTIARCH_LIBDIR/pkgconfig"
+export LD_LIBRARY_PATH="$MULTIARCH_LIBDIR:$LD_LIBRARY_PATH"
+export LIBCLANG_PATH="$(llvm-config --libdir)"
+export NR_DBENGINE_PATH="$NEURDBPATH/dbengine"
+export NR_KERNEL_PATH="$NR_DBENGINE_PATH/nr_kernel"
+export NR_AIENGINE_PATH="$NEURDBPATH/aiengine"
+export NR_API_PATH="$NEURDBPATH/api"
 ```
 
 **3. Build the DB engine (PostgreSQL):**
@@ -128,6 +128,10 @@ cd $NR_BUILD_PATH/dbengine
 # Configure and build (out-of-source build)
 $NR_DBENGINE_PATH/configure --prefix=$NR_PSQL_PATH --enable-debug
 make -j
+
+# If buidl errors, clean previous build artifacts and try again
+# rm -rf $NR_BUILD_PATH/dbengine/*
+
 make install
 ```
 
@@ -139,7 +143,7 @@ if [ ! -d "pg_hint_plan" ]; then
   git clone https://github.com/ossc-db/pg_hint_plan.git
 fi
 cd pg_hint_plan && git checkout PG16
-make clean || true
+make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config clean || true
 make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config
 make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config install
 ```
@@ -157,6 +161,9 @@ fi
 
 # Start the database server
 $NR_PSQL_PATH/bin/pg_ctl -D $NR_DBDATA_PATH -l $NR_BUILD_PATH/logfile start
+
+# If the server fails to start with "could not start server", port 5432 already in use, then stop the postgresql instance or change the port
+# sudo systemctl stop postgresql
 
 # Wait for the server to be ready, then create the neurdb database
 until $NR_PSQL_PATH/bin/psql -h localhost -p 5432 -U $USER -c '\q' 2>/dev/null; do

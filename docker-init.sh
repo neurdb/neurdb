@@ -27,15 +27,15 @@ NR_KERNEL_PATH=$NR_DBENGINE_PATH/nr_kernel
 # CLEAN_BUILD=compile  : clean compile only, keep data
 if [ "$CLEAN_BUILD" = "1" ]; then
   echo "Cleaning entire build directory..."
-  rm -rf $NR_BUILD_PATH
+  sudo rm -rf $NR_BUILD_PATH
 elif [ "$CLEAN_BUILD" = "compile" ]; then
   echo "Cleaning compile artifacts, keeping data..."
-  rm -rf $NR_BUILD_PATH/dbengine
-  rm -rf $NR_BUILD_PATH/psql
-  rm -rf $NR_BUILD_PATH/nr_kernel
-  rm -rf $NR_BUILD_PATH/contrib
-  rm -rf $NR_BUILD_PATH/api
-  rm -f $NEURDBPATH/psql
+  sudo rm -rf $NR_BUILD_PATH/dbengine
+  sudo rm -rf $NR_BUILD_PATH/psql
+  sudo rm -rf $NR_BUILD_PATH/nr_kernel
+  sudo rm -rf $NR_BUILD_PATH/contrib
+  sudo rm -rf $NR_BUILD_PATH/api
+  sudo rm -f $NEURDBPATH/psql
 fi
 
 # # Install external lib.
@@ -52,7 +52,7 @@ mkdir -p $NR_PSQL_PATH
 
 # Create symlink for backward compatibility
 if [ "$NR_PSQL_PATH" != "$NEURDBPATH/psql" ]; then
-  rm -rf $NEURDBPATH/psql
+  sudo rm -rf $NEURDBPATH/psql
   ln -sf $NR_PSQL_PATH $NEURDBPATH/psql
 fi
 
@@ -73,7 +73,7 @@ if [ ! -d "pg_hint_plan" ]; then
 fi
 cd pg_hint_plan
 git checkout PG16
-make clean || true
+make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config clean || true
 make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config
 make PG_CONFIG=$NR_PSQL_PATH/bin/pg_config install
 echo 'pg_hint_plan installed!'
