@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <any>
+#include <filesystem>
 
 #include "compress/compressor.h"
 #include "inference/inference_utils.h"

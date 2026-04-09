@@ -1,0 +1,15 @@
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/neurstore_core.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/neurstore_microservice.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/pg_neurstore.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/edit_cache.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/rebuild_cache.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/list_install_components.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/install.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/install/local.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/CMakeFiles/install/strip.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/external/hnswlib/CMakeFiles/edit_cache.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/external/hnswlib/CMakeFiles/rebuild_cache.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/external/hnswlib/CMakeFiles/list_install_components.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/external/hnswlib/CMakeFiles/install.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/external/hnswlib/CMakeFiles/install/local.dir
+/code/neurdb-dev/dbengine/nr_kernel/nr_store/build/external/hnswlib/CMakeFiles/install/strip.dir
