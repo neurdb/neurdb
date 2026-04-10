@@ -12,14 +12,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(PostgreSQL_ROOT /code/neurdb-dev/build/psql)
-set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
-set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")
-set(PostgreSQL_LIBDIR "${PostgreSQL_ROOT}/lib")
-set(PostgreSQL_SHAREDIR "${PostgreSQL_ROOT}/share")
+# Discover PostgreSQL paths via pg_config
+if(NOT DEFINED PG_CONFIG)
+    find_program(PG_CONFIG pg_config REQUIRED)
+endif()
+execute_process(COMMAND ${PG_CONFIG} --includedir-server OUTPUT_VARIABLE PostgreSQL_INCLUDE_DIRS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --pkglibdir       OUTPUT_VARIABLE PostgreSQL_LIBDIR        OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --sharedir        OUTPUT_VARIABLE PostgreSQL_SHAREDIR      OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --libdir          OUTPUT_VARIABLE PostgreSQL_LIBRARY_DIRS  OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --libs            OUTPUT_VARIABLE PostgreSQL_LIBRARIES     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-# PostgreSQL
-find_package(PostgreSQL REQUIRED)
 include_directories(${PostgreSQL_INCLUDE_DIRS})
 
 # CURL
@@ -39,7 +41,7 @@ FILE(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp")
 LIST(FILTER SOURCES EXCLUDE REGEX ".*src/interface.[ch]$") # use interface2.xxx as entry point
 LIST(FILTER SOURCES EXCLUDE REGEX ".*src/utils/network/http.c$")
 add_library(nr_pipeline SHARED ${SOURCES})
-target_link_libraries(nr_pipeline ${PostgreSQL_LIBRARIES} ${CURL_LIBRARIES} ${LWS_LIBRARY} ${SIO_CLIENT} OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(nr_pipeline ${CURL_LIBRARIES} ${LWS_LIBRARY} ${SIO_CLIENT} OpenSSL::SSL OpenSSL::Crypto)
 
 # Install
 install(TARGETS nr_pipeline DESTINATION ${PostgreSQL_LIBDIR})

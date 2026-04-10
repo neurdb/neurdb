@@ -20,26 +20,38 @@ if (PG_ROOT)
 endif ()
 
 ############ Find packages ############
-set(PostgreSQL_ROOT /code/neurdb-dev/build/psql)
-set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
-set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")
-set(PostgreSQL_LIBDIR "${PostgreSQL_ROOT}/lib")
-set(PostgreSQL_SHAREDIR "${PostgreSQL_ROOT}/share")
+# Discover PostgreSQL paths via pg_config
+if(NOT DEFINED PG_CONFIG)
+    find_program(PG_CONFIG pg_config REQUIRED)
+endif()
+execute_process(COMMAND ${PG_CONFIG} --includedir-server OUTPUT_VARIABLE PostgreSQL_INCLUDE_DIRS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --includedir        OUTPUT_VARIABLE PostgreSQL_CLIENT_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --pkglibdir       OUTPUT_VARIABLE PostgreSQL_LIBDIR        OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --sharedir        OUTPUT_VARIABLE PostgreSQL_SHAREDIR      OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --libdir          OUTPUT_VARIABLE PostgreSQL_LIBRARY_DIRS  OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --libs            OUTPUT_VARIABLE PostgreSQL_LIBRARIES     OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# pg_config --libs returns -lpgcommon and -lpgport which are non-PIC static
+# archives and cannot be linked into shared objects.  PostgreSQL ships PIC-safe
+# variants (_shlib) specifically for use by extensions and shared libraries.
+string(REPLACE "-lpgcommon" "-lpgcommon_shlib" PostgreSQL_LIBRARIES "${PostgreSQL_LIBRARIES}")
+string(REPLACE "-lpgport"   "-lpgport_shlib"   PostgreSQL_LIBRARIES "${PostgreSQL_LIBRARIES}")
 
 # postgresql
-find_package(PostgreSQL REQUIRED)
-if (NOT PostgreSQL_FOUND)
-    message(FATAL_ERROR "PostgreSQL not found")
+if (NOT PostgreSQL_INCLUDE_DIRS)
+    message(FATAL_ERROR "PostgreSQL server include directory not found (pg_config --includedir-server)")
 endif ()
 
-find_path(PostgreSQL_SERVER_INCLUDE_DIR
-        NAMES postgres.h
-        HINTS ${PostgreSQL_INCLUDE_DIRS}
-        PATH_SUFFIXES server 16/server
-)
-if (NOT PostgreSQL_SERVER_INCLUDE_DIR)
-    message(FATAL_ERROR "Could not find PostgreSQL server include directory (postgres.h)")
-endif ()
+# Add PostgreSQL library directory to linker search path so that internal
+# libraries (libpgcommon, libpgport) are found when PostgreSQL is installed
+# at a non-default prefix (e.g. /opt/neurdb/lib).
+link_directories(${PostgreSQL_LIBRARY_DIRS})
+
+# pg_config --includedir-server already points directly to the server include dir
+set(PostgreSQL_SERVER_INCLUDE_DIR ${PostgreSQL_INCLUDE_DIRS})
+
+# libpq-fe.h lives in the client include dir
+include_directories(${PostgreSQL_CLIENT_INCLUDE_DIR})
 
 # eigen
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/eigen)
