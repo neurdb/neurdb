@@ -12,7 +12,7 @@ extern "C" {
 #include "storage/itemptr.h"
 }
 
-#include "SELIX/src/core/selix.h"
+#include "selix/include/lit/lit.h"
 #include <map>
 #include <vector>
 #include <algorithm>
@@ -84,7 +84,7 @@ static inline void decompress_heap_tid(uint64_t compressed, ItemPointer tid) {
  */
 class SELIXIndexEngine {
 private:
-    std::map<Oid, alex::Alex<int64_t, uint64_t>*> indexes;
+    std::map<Oid, lit::Lit<int64_t, uint64_t>*> indexes;
 
 public:
     SELIXIndexEngine() {
@@ -98,10 +98,10 @@ public:
         indexes.clear();
     }
 
-    alex::Alex<int64_t, uint64_t>* getIndex(Oid indexOid) {
+    lit::Lit<int64_t, uint64_t>* getIndex(Oid indexOid) {
         auto it = indexes.find(indexOid);
         if (it == indexes.end()) {
-            alex::Alex<int64_t, uint64_t>* idx = new alex::Alex<int64_t, uint64_t>();
+            lit::Lit<int64_t, uint64_t>* idx = new lit::Lit<int64_t, uint64_t>();
             indexes[indexOid] = idx;
             return idx;
         }
@@ -109,7 +109,7 @@ public:
     }
 
     void put(Oid indexOid, int64_t val, uint64_t tid) {
-        alex::Alex<int64_t, uint64_t>* idx = getIndex(indexOid);
+        lit::Lit<int64_t, uint64_t>* idx = getIndex(indexOid);
         int64_t key = (int64_t)encode_key_64(val);
         idx->insert(key, tid);
     }
@@ -118,7 +118,7 @@ public:
         auto it = indexes.find(indexOid);
         if (it == indexes.end()) return false;
 
-        alex::Alex<int64_t, uint64_t>* idx = it->second;
+        lit::Lit<int64_t, uint64_t>* idx = it->second;
         int64_t key = (int64_t)encode_key_64(val);
         auto iter = idx->find(key);
         if (!iter.is_end()) {
@@ -132,7 +132,7 @@ public:
         auto it = indexes.find(indexOid);
         if (it == indexes.end()) return false;
 
-        alex::Alex<int64_t, uint64_t>* idx = it->second;
+        lit::Lit<int64_t, uint64_t>* idx = it->second;
         int64_t key = (int64_t)encode_key_64(val);
         auto iter = idx->find(key);
         return !iter.is_end();
@@ -162,7 +162,7 @@ public:
                                 [](const KVPair& a, const KVPair& b) { return a.first == b.first; });
         pairs.erase(last, pairs.end());
 
-        alex::Alex<int64_t, uint64_t>* idx = getIndex(indexOid);
+        lit::Lit<int64_t, uint64_t>* idx = getIndex(indexOid);
         idx->bulk_load(pairs.data(), pairs.size());
 
         auto stats = idx->get_stats();

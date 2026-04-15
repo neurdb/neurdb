@@ -34,7 +34,3 @@ build/
 dbengine/nr_kernel/nr_store/external/*
 dbengine/nr_kernel/nr_store/external/hnswlib/
 
-# Third-party learned index libraries (provided locally)
-dbengine/nr_kernel/nr_am/src/nram_storage/SELIX
-dbengine/nr_kernel/nr_am/src/nram_storage/GRE
-dbengine/nr_kernel/nr_am/src/nram_storage/lipp
