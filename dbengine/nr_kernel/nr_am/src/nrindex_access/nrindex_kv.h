@@ -59,7 +59,7 @@ typedef NRIndexValueData *NRIndexValue;
  */
 
 /* Create an index key from index relation and key values */
-extern NRIndexKey nrindex_key_create(Oid indexOid, Datum *values, bool *isnull, 
+extern NRIndexKey nrindex_key_create(Oid indexOid, Datum *values, bool *isnull,
                                      int nkeys, TupleDesc indexTupDesc);
 
 /* Serialize index key to byte array for RocksDB storage */

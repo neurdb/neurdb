@@ -475,7 +475,7 @@ KVMsg *handle_kv_index_get(KVMsg *msg) {
 
     NRAM_TEST_INFO("[IndexEngine] handle_kv_index_get, key_len=%lu, indexOid=%u", key_len, ikey->indexOid);
     Assert(key_len > 0 && msg->entity != NULL);
-    
+
     if (ivalue) {
         resp->entity = nrindex_value_serialize(ivalue, &val_len);
         resp->header.entitySize = val_len;
@@ -505,12 +505,12 @@ KVMsg *handle_kv_index_put(KVMsg *msg) {
     /* Parse key length and value length */
     memcpy(&key_len, buf, sizeof(Size));
     buf += sizeof(Size);
-    
+
     if (total_len < sizeof(Size) + key_len + sizeof(Size)) {
         NRAM_TEST_INFO("[Rocks] Invalid kv_index_put message: insufficient data");
         return NULL;
     }
-    
+
     memcpy(&value_len, buf + key_len, sizeof(Size));
 
     /* Deserialize key and value */

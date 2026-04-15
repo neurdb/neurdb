@@ -29,11 +29,11 @@ NRIndexValue indexengine_get(IndexEngine* engine, NRIndexKey ikey);
 void indexengine_delete(IndexEngine* engine, NRIndexKey ikey);
 
 /* Range scan operations */
-void indexengine_range_scan(IndexEngine* engine, 
-                           NRIndexKey start_key, 
+void indexengine_range_scan(IndexEngine* engine,
+                           NRIndexKey start_key,
                            NRIndexKey end_key,
-                           uint32_t* out_count, 
-                           NRIndexKey** keys, 
+                           uint32_t* out_count,
+                           NRIndexKey** keys,
                            NRIndexValue** values);
 
 /* Utility functions */

@@ -234,10 +234,10 @@ nrindex_key_copy(NRIndexKey src)
 {
     NRIndexKey dst;
     Size size = offsetof(NRIndexKeyData, key_data) + src->key_size;
-    
+
     dst = (NRIndexKey)palloc0(size);
     memcpy(dst, src, size);
-    
+
     return dst;
 }
 
@@ -255,19 +255,19 @@ nrindex_key_compare(NRIndexKey key1, NRIndexKey key2)
     if (key1->indexOid != key2->indexOid) {
         return (key1->indexOid < key2->indexOid) ? -1 : 1;
     }
-    
+
     /* Compare serialized key data */
-    int cmp = memcmp(key1->key_data, key2->key_data, 
+    int cmp = memcmp(key1->key_data, key2->key_data,
                      Min(key1->key_size, key2->key_size));
     if (cmp != 0) {
         return cmp;
     }
-    
+
     /* If one is longer, it's greater */
     if (key1->key_size != key2->key_size) {
         return (key1->key_size < key2->key_size) ? -1 : 1;
     }
-    
+
     return 0;
 }
 
@@ -288,12 +288,12 @@ NRIndexValue
 nrindex_value_create(ItemPointer heap_tid)
 {
     NRIndexValue ivalue;
-    
+
     ivalue = (NRIndexValue)palloc0(sizeof(NRIndexValueData));
     ivalue->heap_tid = *heap_tid;
     ivalue->xact_id = GetCurrentTransactionId();
     ivalue->flags = 0;
-    
+
     return ivalue;
 }
 
@@ -301,11 +301,11 @@ char *
 nrindex_value_serialize(NRIndexValue ivalue, Size *out_len)
 {
     char *buf;
-    
+
     *out_len = sizeof(NRIndexValueData);
     buf = palloc0(*out_len);
     memcpy(buf, ivalue, *out_len);
-    
+
     return buf;
 }
 
@@ -313,14 +313,14 @@ NRIndexValue
 nrindex_value_deserialize(const char *buf, Size len)
 {
     NRIndexValue ivalue;
-    
+
     if (len != sizeof(NRIndexValueData)) {
         elog(ERROR, "nrindex_value_deserialize: invalid buffer size");
     }
-    
+
     ivalue = (NRIndexValue)palloc0(sizeof(NRIndexValueData));
     memcpy(ivalue, buf, sizeof(NRIndexValueData));
-    
+
     return ivalue;
 }
 
@@ -328,10 +328,10 @@ NRIndexValue
 nrindex_value_copy(NRIndexValue src)
 {
     NRIndexValue dst;
-    
+
     dst = (NRIndexValue)palloc0(sizeof(NRIndexValueData));
     *dst = *src;
-    
+
     return dst;
 }
 

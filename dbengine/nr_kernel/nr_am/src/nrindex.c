@@ -624,7 +624,7 @@ Datum
 nrindex_handler(PG_FUNCTION_ARGS)
 {
     IndexAmRoutine *amroutine = makeNode(IndexAmRoutine);
-    
+
     /* Set AM capabilities */
     amroutine->amstrategies = 0;  /* No fixed strategies */
     amroutine->amsupport = 1;     /* One support function */
@@ -646,7 +646,7 @@ nrindex_handler(PG_FUNCTION_ARGS)
     amroutine->amsummarizing = false;
     amroutine->amparallelvacuumoptions = VACUUM_OPTION_NO_PARALLEL;
     amroutine->amkeytype = InvalidOid;
-    
+
     /* Set function pointers */
     amroutine->ambuild = nrindex_build;
     amroutine->ambuildempty = nrindex_buildempty;
@@ -670,6 +670,6 @@ nrindex_handler(PG_FUNCTION_ARGS)
     amroutine->amestimateparallelscan = NULL;
     amroutine->aminitparallelscan = NULL;
     amroutine->amparallelrescan = NULL;
-    
+
     PG_RETURN_POINTER(amroutine);
 }
