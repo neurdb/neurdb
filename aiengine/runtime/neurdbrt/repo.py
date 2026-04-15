@@ -1,10 +1,9 @@
 from typing import List, TypedDict
 
-from torch import nn
-
 import neurdb
 from neurdb.storeman import ModelStorage, Pickled, PickledList
 from neurdbrt.log import logger
+from torch import nn
 
 
 class DBParams(TypedDict):
