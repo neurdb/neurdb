@@ -4,10 +4,13 @@ ENGINEPATH = $(CURDIR)/../..
 MODULE_big = nram
 OBJS = \
 	${EXTPATH}/src/nram.o \
+	${EXTPATH}/src/nrindex.o \
+	${EXTPATH}/src/nrindex_access/nrindex_kv.o \
 	${EXTPATH}/src/nram_access/kv.o \
 	${EXTPATH}/src/nram_xact/xact.o \
 	${EXTPATH}/src/nram_xact/action.o \
 	${EXTPATH}/src/nram_storage/rocksengine.o \
+	${EXTPATH}/src/nram_storage/indexengine.o \
 	${EXTPATH}/src/nram_storage/rocks_service.o \
 	${EXTPATH}/src/nram_storage/thread.o \
 	${EXTPATH}/src/nram_storage/rocks_handler.o \
@@ -23,9 +26,12 @@ EXTENSION = nram
 DATA = sql/nram--1.0.sql
 PGFILEDESC = "nram - CCaaLF custom table access method"
 
-# Link to RocksDB C API
+# Link to RocksDB C API for table storage
 PG_CPPFLAGS += -I/usr/local/include -I./src/
-SHLIB_LINK += -L/usr/local/lib -lrocksdb -Wl,-rpath,/usr/local/lib
+# C++ flags for indexengine (map-based, no RocksDB needed)
+PG_CXXFLAGS += -std=c++17 -march=native -I./src/
+# Link RocksDB for table storage and C++ standard library for indexengine
+SHLIB_LINK += -L/usr/local/lib -lrocksdb -lstdc++ -Wl,-rpath,/usr/local/lib
 
 REGRESS = clean init unit_tests table_scan index_scan xact_basic
 
@@ -43,20 +49,24 @@ ROCKSDB_LIB_PATH = /usr/local/lib
 ROCKSDB_INC_PATH = /usr/local/include
 
 
-PG_CONFIG ?= pg_config
+PG_CONFIG = ${NEURDBPATH}/psql/bin/pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
+# Custom rule for C++ files
+%.o: %.cpp
+	$(CXX) $(PG_CXXFLAGS) $(CPPFLAGS) -fPIC -c $< -o $@
+
 .PHONY: debug test
 
-debug:
-	$(MAKE) PG_CPPFLAGS="-I/usr/local/include -I./src/ -DDEBUG" \
+debug:#
+	$(MAKE) PG_CPPFLAGS="$(PG_CPPFLAGS) -DDEBUG" \
 	        SHLIB_LINK="$(SHLIB_LINK)" \
 	        CFLAGS="-g -O0 -Wall"
 
 test:
 	rm -rf ../logfile
-	rm -rf "$(NEURDBPATH)/build/psql/data/pg_rocksdb/"
+	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
 	make clean
 	make debug -j
 	sudo make install
@@ -68,7 +78,7 @@ test:
 
 unit-test:
 	rm -rf ../logfile
-	rm -rf "$(NEURDBPATH)/build/psql/data/pg_rocksdb/"
+	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
 	make clean
 	make debug -j
 	sudo make install
@@ -81,7 +91,7 @@ unit-test:
 
 setup:
 	rm -rf ../logfile
-	rm -rf "$(NEURDBPATH)/build/psql/data/pg_rocksdb/"
+	rm -rf "${NEURDBPATH}/psql/data/pg_rocksdb/"
 	make clean
 	make debug -j
 	sudo make install

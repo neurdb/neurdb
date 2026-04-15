@@ -349,9 +349,24 @@ void PrintKVMsg(const KVMsg* msg) {
         case kv_range:
             op_str = "RANGE";
             break;
+        case kv_index_put:
+            op_str = "INDEX_PUT";
+            break;
+        case kv_index_get:
+            op_str = "INDEX_GET";
+            break;
+        case kv_index_delete:
+            op_str = "INDEX_DELETE";
+            break;
+        case kv_index_range_scan:
+            op_str = "INDEX_RANGE_SCAN";
+            break;
+        case kv_index_bulk_load:
+            op_str = "INDEX_BULK_LOAD";
+            break;
         default:
             op_str = "UNKNOWN_OP";
-            elog(ERROR, "PrintKVMsg: unknown op %d", msg->header.op);
+            elog(WARNING, "PrintKVMsg: unknown op %d", msg->header.op);
             break;
     }
 
@@ -409,8 +424,9 @@ bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, long timeout_ms) {
     uint64 header_size = sizeof(KVMsgHeader);
     uint64 entity_size = msg->header.entitySize;
     uint64 total_size = header_size + entity_size;
-    char temp[MSG_SIZE] = {0};
+    char *temp;
     uint64 offset = 0;
+    bool result;
 
     if (total_size > MSG_SIZE) {
         elog(ERROR, "KVChannelPushMsg: total message too large (%lu bytes)",
@@ -418,7 +434,9 @@ bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, long timeout_ms) {
         return false;
     }
 
-    Assert(total_size <= MSG_SIZE);
+    /* Use dynamic allocation for large messages */
+    temp = (char *) palloc0(total_size);
+
     memcpy(temp + offset, &msg->header, header_size);
     offset += header_size;
     if (entity_size > 0 && msg->entity != NULL) {
@@ -426,7 +444,9 @@ bool KVChannelPushMsg(KVChannel* channel, KVMsg* msg, long timeout_ms) {
         offset += entity_size;
     }
 
-    return KVChannelPush(channel, temp, total_size, timeout_ms);
+    result = KVChannelPush(channel, temp, total_size, timeout_ms);
+    pfree(temp);
+    return result;
 }
 
 KVMsg* KVChannelPopMsg(KVChannel* channel, long timeout_ms) {
