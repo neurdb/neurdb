@@ -1,6 +1,9 @@
-from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Optional
+
+from pydantic import Field, field_validator, model_validator
+
+from .batch import RuntimeDataModel
 
 
 class ColumnRole(str, Enum):
@@ -16,55 +19,47 @@ class TaskType(str, Enum):
     CLASSIFICATION = "classification"
     REGRESSION = "regression"
     RECOMMENDATION = "recommendation"
-    LINK_PREDICTION = "link_prediction" # NOT USED CURRENTLY
+    LINK_PREDICTION = "link_prediction"  # NOT USED CURRENTLY
     UNKNOWN = "unknown"
 
 
-@dataclass(frozen=True)
-class ColumnSchema:
+class ColumnSchema(RuntimeDataModel):
     name: str
     dtype: str
     nullable: bool = True
     role: ColumnRole = ColumnRole.FEATURE
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
-        if not self.name:
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, name: str) -> str:
+        if not name:
             raise ValueError("column name must not be empty")
+        return name
+
+    @model_validator(mode="after")
+    def _validate_dtype(self) -> "ColumnSchema":
         if not self.dtype:
             raise ValueError(f"column {self.name} dtype must not be empty")
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ColumnSchema":
-        return cls(
-            name=data["name"],
-            dtype=data["dtype"],
-            nullable=data.get("nullable", True),
-            role=ColumnRole(data.get("role", ColumnRole.FEATURE.value)),
-            metadata=dict(data.get("metadata", {})),
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "dtype": self.dtype,
-            "nullable": self.nullable,
-            "role": self.role.value,
-            "metadata": dict(self.metadata),
-        }
+        return self
 
 
-@dataclass(frozen=True)
-class TableSchema:
+class TableSchema(RuntimeDataModel):
     name: str
     columns: List[ColumnSchema]
     primary_key: Optional[List[str]] = None
     timestamp_column: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
-        if not self.name:
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, name: str) -> str:
+        if not name:
             raise ValueError("table name must not be empty")
+        return name
+
+    @model_validator(mode="after")
+    def _validate_table(self) -> "TableSchema":
         if not self.columns:
             raise ValueError(f"table {self.name} must contain at least one column")
 
@@ -90,6 +85,7 @@ class TableSchema:
                 f"table {self.name} timestamp column is missing: "
                 f"{self.timestamp_column}"
             )
+        return self
 
     @property
     def column_names(self) -> List[str]:
@@ -101,37 +97,18 @@ class TableSchema:
                 return column
         raise KeyError(f"column {name} does not exist in table {self.name}")
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TableSchema":
-        return cls(
-            name=data["name"],
-            columns=[ColumnSchema.from_dict(column) for column in data["columns"]],
-            primary_key=data.get("primary_key"),
-            timestamp_column=data.get("timestamp_column"),
-            metadata=dict(data.get("metadata", {})),
-        )
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "columns": [column.to_dict() for column in self.columns],
-            "primary_key": list(self.primary_key) if self.primary_key else None,
-            "timestamp_column": self.timestamp_column,
-            "metadata": dict(self.metadata),
-        }
-
-
-@dataclass(frozen=True)
-class RelationshipSchema:
+class RelationshipSchema(RuntimeDataModel):
     name: str
     source_table: str
     source_columns: List[str]
     target_table: str
     target_columns: List[str]
     cardinality: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
+    @model_validator(mode="after")
+    def _validate_relationship(self) -> "RelationshipSchema":
         if not self.name:
             raise ValueError("relationship name must not be empty")
         if not self.source_table or not self.target_table:
@@ -142,73 +119,39 @@ class RelationshipSchema:
             raise ValueError(
                 f"relationship {self.name} source and target columns must match"
             )
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "RelationshipSchema":
-        return cls(
-            name=data["name"],
-            source_table=data["source_table"],
-            source_columns=list(data["source_columns"]),
-            target_table=data["target_table"],
-            target_columns=list(data["target_columns"]),
-            cardinality=data.get("cardinality"),
-            metadata=dict(data.get("metadata", {})),
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "source_table": self.source_table,
-            "source_columns": list(self.source_columns),
-            "target_table": self.target_table,
-            "target_columns": list(self.target_columns),
-            "cardinality": self.cardinality,
-            "metadata": dict(self.metadata),
-        }
+        return self
 
 
-@dataclass(frozen=True)
-class TargetSpec:
+class TargetSpec(RuntimeDataModel):
     table: str
     column: str
     task_type: TaskType = TaskType.UNKNOWN
     timestamp_column: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
-        if not self.table:
-            raise ValueError("target table must not be empty")
-        if not self.column:
-            raise ValueError("target column must not be empty")
-
+    @field_validator("table")
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TargetSpec":
-        return cls(
-            table=data["table"],
-            column=data["column"],
-            task_type=TaskType(data.get("task_type", TaskType.UNKNOWN.value)),
-            timestamp_column=data.get("timestamp_column"),
-            metadata=dict(data.get("metadata", {})),
-        )
+    def _validate_table(cls, table: str) -> str:
+        if not table:
+            raise ValueError("target table must not be empty")
+        return table
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "table": self.table,
-            "column": self.column,
-            "task_type": self.task_type.value,
-            "timestamp_column": self.timestamp_column,
-            "metadata": dict(self.metadata),
-        }
+    @field_validator("column")
+    @classmethod
+    def _validate_column(cls, column: str) -> str:
+        if not column:
+            raise ValueError("target column must not be empty")
+        return column
 
 
-@dataclass(frozen=True)
-class DatabaseSchema:
+class DatabaseSchema(RuntimeDataModel):
     tables: List[TableSchema]
-    relationships: List[RelationshipSchema] = field(default_factory=list)
+    relationships: List[RelationshipSchema] = Field(default_factory=list)
     target: Optional[TargetSpec] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
+    @model_validator(mode="after")
+    def _validate_database(self) -> "DatabaseSchema":
         if not self.tables:
             raise ValueError("database schema must contain at least one table")
 
@@ -248,6 +191,7 @@ class DatabaseSchema:
             target_table.get_column(self.target.column)
             if self.target.timestamp_column:
                 target_table.get_column(self.target.timestamp_column)
+        return self
 
     def get_table(self, name: str) -> TableSchema:
         for table in self.tables:
@@ -271,29 +215,6 @@ class DatabaseSchema:
             else None
         )
         return cls(tables=[table], target=target, metadata=metadata or {})
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DatabaseSchema":
-        target_data = data.get("target")
-        return cls(
-            tables=[TableSchema.from_dict(table) for table in data["tables"]],
-            relationships=[
-                RelationshipSchema.from_dict(relationship)
-                for relationship in data.get("relationships", [])
-            ],
-            target=TargetSpec.from_dict(target_data) if target_data else None,
-            metadata=dict(data.get("metadata", {})),
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "tables": [table.to_dict() for table in self.tables],
-            "relationships": [
-                relationship.to_dict() for relationship in self.relationships
-            ],
-            "target": self.target.to_dict() if self.target else None,
-            "metadata": dict(self.metadata),
-        }
 
 
 def _validate_columns_exist(

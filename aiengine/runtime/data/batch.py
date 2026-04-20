@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Mapping, Optional, Sequence
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class BatchRole(str, Enum):
@@ -11,20 +12,35 @@ class BatchRole(str, Enum):
     UNKNOWN = "unknown"
 
 
-@dataclass(frozen=True)
-class TableBatch:
+class RuntimeDataModel(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return self.model_dump(mode="json")
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]):
+        return cls.model_validate(data)
+
+
+class TableBatch(RuntimeDataModel):
     table: str
     columns: List[str]
     rows: Sequence[Sequence[Any]]
     row_ids: Optional[Sequence[Any]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
-        if not self.table:
+    @field_validator("table")
+    @classmethod
+    def _validate_table(cls, table: str) -> str:
+        if not table:
             raise ValueError("table batch table name must not be empty")
+        return table
+
+    @model_validator(mode="after")
+    def _validate_shape(self) -> "TableBatch":
         if not self.columns:
             raise ValueError(f"table batch {self.table} must contain columns")
-
         column_count = len(self.columns)
         for index, row in enumerate(self.rows):
             if len(row) != column_count:
@@ -37,6 +53,7 @@ class TableBatch:
             raise ValueError(
                 f"table batch {self.table} row_ids length must match rows length"
             )
+        return self
 
     @property
     def row_count(self) -> int:
@@ -45,76 +62,49 @@ class TableBatch:
     def to_rows(self) -> List[Dict[str, Any]]:
         return [dict(zip(self.columns, row)) for row in self.rows]
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TableBatch":
-        return cls(
-            table=data["table"],
-            columns=list(data["columns"]),
-            rows=list(data.get("rows", [])),
-            row_ids=data.get("row_ids"),
-            metadata=dict(data.get("metadata", {})),
-        )
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "table": self.table,
-            "columns": list(self.columns),
-            "rows": [list(row) for row in self.rows],
-            "row_ids": list(self.row_ids) if self.row_ids is not None else None,
-            "metadata": dict(self.metadata),
-        }
-
-
-@dataclass(frozen=True)
-class TargetBatch:
+class TargetBatch(RuntimeDataModel):
     table: str
     column: str
     values: Sequence[Any]
     row_ids: Optional[Sequence[Any]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
-        if not self.table:
+    @field_validator("table")
+    @classmethod
+    def _validate_table(cls, table: str) -> str:
+        if not table:
             raise ValueError("target batch table name must not be empty")
-        if not self.column:
+        return table
+
+    @field_validator("column")
+    @classmethod
+    def _validate_column(cls, column: str) -> str:
+        if not column:
             raise ValueError("target batch column must not be empty")
+        return column
+
+    @model_validator(mode="after")
+    def _validate_shape(self) -> "TargetBatch":
         if self.row_ids is not None and len(self.row_ids) != len(self.values):
             raise ValueError("target batch row_ids length must match values length")
+        return self
 
     @property
     def row_count(self) -> int:
         return len(self.values)
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TargetBatch":
-        return cls(
-            table=data["table"],
-            column=data["column"],
-            values=list(data.get("values", [])),
-            row_ids=data.get("row_ids"),
-            metadata=dict(data.get("metadata", {})),
-        )
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "table": self.table,
-            "column": self.column,
-            "values": list(self.values),
-            "row_ids": list(self.row_ids) if self.row_ids is not None else None,
-            "metadata": dict(self.metadata),
-        }
-
-
-@dataclass(frozen=True)
-class DataBatch:
+class DataBatch(RuntimeDataModel):
     tables: Mapping[str, TableBatch]
     target: Optional[TargetBatch] = None
     role: BatchRole = BatchRole.UNKNOWN
     batch_id: Optional[int] = None
     session_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self):
+    @model_validator(mode="after")
+    def _validate_batch(self) -> "DataBatch":
         if not self.tables:
             raise ValueError("data batch must contain at least one table batch")
 
@@ -129,6 +119,7 @@ class DataBatch:
             raise ValueError(
                 f"target table {self.target.table} is not present in data batch"
             )
+        return self
 
     @property
     def primary_table(self) -> TableBatch:
@@ -170,32 +161,3 @@ class DataBatch:
             session_id=session_id,
             metadata=metadata or {},
         )
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DataBatch":
-        tables = {
-            name: TableBatch.from_dict(table_data)
-            for name, table_data in data["tables"].items()
-        }
-        target_data = data.get("target")
-        return cls(
-            tables=tables,
-            target=TargetBatch.from_dict(target_data) if target_data else None,
-            role=BatchRole(data.get("role", BatchRole.UNKNOWN.value)),
-            batch_id=data.get("batch_id"),
-            session_id=data.get("session_id"),
-            metadata=dict(data.get("metadata", {})),
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "tables": {
-                name: table_batch.to_dict()
-                for name, table_batch in self.tables.items()
-            },
-            "target": self.target.to_dict() if self.target else None,
-            "role": self.role.value,
-            "batch_id": self.batch_id,
-            "session_id": self.session_id,
-            "metadata": dict(self.metadata),
-        }
