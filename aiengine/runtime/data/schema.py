@@ -16,7 +16,7 @@ class TaskType(str, Enum):
     CLASSIFICATION = "classification"
     REGRESSION = "regression"
     RECOMMENDATION = "recommendation"
-    LINK_PREDICTION = "link_prediction" # NOT USED CURRENTLY
+    LINK_PREDICTION = "link_prediction"  # NOT USED CURRENTLY
     UNKNOWN = "unknown"
 
 
@@ -79,7 +79,9 @@ class TableSchema:
 
         column_name_set = set(column_names)
         if self.primary_key:
-            missing_keys = [name for name in self.primary_key if name not in column_name_set]
+            missing_keys = [
+                name for name in self.primary_key if name not in column_name_set
+            ]
             if missing_keys:
                 raise ValueError(
                     f"table {self.name} primary key columns are missing: {missing_keys}"
@@ -217,7 +219,9 @@ class DatabaseSchema:
             {name for name in table_names if table_names.count(name) > 1}
         )
         if duplicate_names:
-            raise ValueError(f"database schema contains duplicate tables: {duplicate_names}")
+            raise ValueError(
+                f"database schema contains duplicate tables: {duplicate_names}"
+            )
 
         table_name_set = set(table_names)
         for relationship in self.relationships:

@@ -190,8 +190,7 @@ class DataBatch:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "tables": {
-                name: table_batch.to_dict()
-                for name, table_batch in self.tables.items()
+                name: table_batch.to_dict() for name, table_batch in self.tables.items()
             },
             "target": self.target.to_dict() if self.target else None,
             "role": self.role.value,
