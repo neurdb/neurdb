@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
+from .base import RuntimeDataModel, NonEmptyStr
 
 class BatchRole(str, Enum):
     TRAIN = "train"
@@ -12,15 +13,34 @@ class BatchRole(str, Enum):
     UNKNOWN = "unknown"
 
 
-class RuntimeDataModel(BaseModel):
-    model_config = ConfigDict(frozen=True)
+class TaskType(str, Enum):
+    CLASSIFICATION = "classification"
+    REGRESSION = "regression"
+    RECOMMENDATION = "recommendation"
+    LINK_PREDICTION = "link_prediction"  # NOT USED CURRENTLY
+    UNKNOWN = "unknown"
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump(mode="json")
 
+class TargetSpec(RuntimeDataModel):
+    table: str
+    column: str
+    task_type: TaskType = TaskType.UNKNOWN
+    timestamp_column: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("table")
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
-        return cls.model_validate(data)
+    def _validate_table(cls, table: str) -> str:
+        if not table:
+            raise ValueError("target table must not be empty")
+        return table
+
+    @field_validator("column")
+    @classmethod
+    def _validate_column(cls, column: str) -> str:
+        if not column:
+            raise ValueError("target column must not be empty")
+        return column
 
 
 class TableBatch(RuntimeDataModel):
