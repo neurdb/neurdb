@@ -5,8 +5,6 @@ from .schema import (
     DatabaseSchema,
     RelationshipSchema,
     TableSchema,
-    TargetSpec,
-    TaskType,
 )
 
 __all__ = [
@@ -19,6 +17,4 @@ __all__ = [
     "DatabaseSchema",
     "RelationshipSchema",
     "TableSchema",
-    "TargetSpec",
-    "TaskType",
 ]

@@ -90,8 +90,8 @@ class DatabaseSchema(RuntimeDataModel):
                     f"{r.source_table}, {r.target_table}"
                 )
 
-            source_table = self.get_table(r.source_table)
-            target_table = self.get_table(r.target_table)
+            source_table = self.tables[r.source_table]
+            target_table = self.tables[r.target_table]
             
             src_missing_columns = set(r.source_columns).issubset(source_table.columns)
             tgt_missing_columns = set(r.target_columns).issubset(target_table.columns)
@@ -103,5 +103,3 @@ class DatabaseSchema(RuntimeDataModel):
                     f"tgt {r.target_table}: {r.target_columns if not tgt_missing_columns else ''}"
                 )
         return self
-
-
