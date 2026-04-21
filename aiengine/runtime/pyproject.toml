@@ -64,6 +64,7 @@ dependencies = [
     "websocket-client==1.8.0",
     "werkzeug==3.0.6",
     "wsproto==1.2.0",
+    "pytest>=8.4.2",
 ]
 
 [project.optional-dependencies]
@@ -105,6 +106,11 @@ torch = [
 
 [tool.uv.extra-build-dependencies]
 nvidia-pyindex = ["pip"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+norecursedirs = ["tests/manual"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
