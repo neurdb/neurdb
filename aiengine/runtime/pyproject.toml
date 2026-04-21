@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "NeurDB AI runtime server"
 requires-python = ">=3.9,<3.12"
 dependencies = [
-    "pip>=26.0.1",
     "pydantic>=2.11.10",
 ]
 
