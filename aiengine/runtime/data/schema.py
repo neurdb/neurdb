@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, model_validator
 
 from .base import NonEmptyStr, RuntimeDataModel
 
@@ -15,10 +15,7 @@ class ColumnRole(str, Enum):
     METADATA = "metadata"
 
 
-
 class ColumnSchema(RuntimeDataModel):
-    dtype: NonEmptyStr
-    nullable: bool = True
     role: ColumnRole = ColumnRole.FEATURE
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
@@ -65,7 +62,7 @@ class RelationshipSchema(RuntimeDataModel):
     target_columns: List[NonEmptyStr] = Field(min_length=1)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def _validate_column_match(self) -> "RelationshipSchema":
         if len(self.source_columns) != len(self.target_columns):
             raise ValueError(
@@ -79,10 +76,17 @@ class DatabaseSchema(RuntimeDataModel):
     relationships: List[RelationshipSchema] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+    def iter_columns(
+        self, role: Optional["ColumnRole"] = None
+    ) -> Iterator[Tuple[str, str, ColumnSchema]]:
+        """Yield (table_name, column_name, column_schema) across all tables."""
+        for table_name, table in self.tables.items():
+            for col_name, col in table.columns.items():
+                if role is None or col.role is role:
+                    yield table_name, col_name, col
+
     @model_validator(mode="after")
     def _validate_database(self) -> "DatabaseSchema":
-        
-        # mainly check the relationship is valid according to tables
         for r in self.relationships:
             if r.source_table not in self.tables or r.target_table not in self.tables:
                 raise ValueError(
@@ -92,14 +96,14 @@ class DatabaseSchema(RuntimeDataModel):
 
             source_table = self.tables[r.source_table]
             target_table = self.tables[r.target_table]
-            
-            src_missing_columns = set(r.source_columns).issubset(source_table.columns)
-            tgt_missing_columns = set(r.target_columns).issubset(target_table.columns)
 
-            if not src_missing_columns or not tgt_missing_columns:
+            src_columns_present = set(r.source_columns).issubset(source_table.columns)
+            tgt_columns_present = set(r.target_columns).issubset(target_table.columns)
+
+            if not src_columns_present or not tgt_columns_present:
                 raise ValueError(
                     f"relationship {r.name} source or target columns are missing: "
-                    f"src {r.source_table}: {r.source_columns if not src_missing_columns else ''}, "
-                    f"tgt {r.target_table}: {r.target_columns if not tgt_missing_columns else ''}"
+                    f"src {r.source_table}: {r.source_columns if not src_columns_present else ''}, "
+                    f"tgt {r.target_table}: {r.target_columns if not tgt_columns_present else ''}"
                 )
         return self

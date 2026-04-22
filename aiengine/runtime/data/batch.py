@@ -1,183 +1,97 @@
-from enum import Enum
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+import json
+import struct
+from typing import Any, Dict, Optional
 
-from pydantic import Field, field_validator, model_validator
+import pyarrow as pa
+from pydantic import Field, model_validator
 
-from .base import RuntimeDataModel, NonEmptyStr
-
-class BatchRole(str, Enum):
-    TRAIN = "train"
-    EVALUATE = "evaluate"
-    TEST = "test"
-    INFERENCE = "inference"
-    UNKNOWN = "unknown"
+from .base import ArrowRuntimeModel, NonEmptyStr
 
 
-class TaskType(str, Enum):
-    CLASSIFICATION = "classification"
-    REGRESSION = "regression"
-    RECOMMENDATION = "recommendation"
-    LINK_PREDICTION = "link_prediction"  # NOT USED CURRENTLY
-    UNKNOWN = "unknown"
+_MAGIC = b"NEURDBDB"
+_HEADER_LEN_FMT = "<I"
+_HEADER_LEN_SIZE = struct.calcsize(_HEADER_LEN_FMT)
 
 
-class TargetSpec(RuntimeDataModel):
-    table: str
-    column: str
-    task_type: TaskType = TaskType.UNKNOWN
-    timestamp_column: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator("table")
-    @classmethod
-    def _validate_table(cls, table: str) -> str:
-        if not table:
-            raise ValueError("target table must not be empty")
-        return table
-
-    @field_validator("column")
-    @classmethod
-    def _validate_column(cls, column: str) -> str:
-        if not column:
-            raise ValueError("target column must not be empty")
-        return column
+def _record_batch_to_ipc(rb: pa.RecordBatch) -> bytes:
+    sink = pa.BufferOutputStream()
+    with pa.ipc.new_stream(sink, rb.schema) as writer:
+        writer.write_batch(rb)
+    return sink.getvalue().to_pybytes()
 
 
-class TableBatch(RuntimeDataModel):
-    table: str
-    columns: List[str]
-    rows: Sequence[Sequence[Any]]
-    row_ids: Optional[Sequence[Any]] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator("table")
-    @classmethod
-    def _validate_table(cls, table: str) -> str:
-        if not table:
-            raise ValueError("table batch table name must not be empty")
-        return table
-
-    @model_validator(mode="after")
-    def _validate_shape(self) -> "TableBatch":
-        if not self.columns:
-            raise ValueError(f"table batch {self.table} must contain columns")
-        column_count = len(self.columns)
-        for index, row in enumerate(self.rows):
-            if len(row) != column_count:
-                raise ValueError(
-                    f"row {index} in table batch {self.table} has {len(row)} "
-                    f"values, expected {column_count}"
-                )
-
-        if self.row_ids is not None and len(self.row_ids) != len(self.rows):
-            raise ValueError(
-                f"table batch {self.table} row_ids length must match rows length"
-            )
-        return self
-
-    @property
-    def row_count(self) -> int:
-        return len(self.rows)
-
-    def to_rows(self) -> List[Dict[str, Any]]:
-        return [dict(zip(self.columns, row)) for row in self.rows]
+def _record_batch_from_ipc(payload: bytes) -> pa.RecordBatch:
+    with pa.ipc.open_stream(pa.BufferReader(payload)) as reader:
+        return next(iter(reader))
 
 
-class TargetBatch(RuntimeDataModel):
-    table: str
-    column: str
-    values: Sequence[Any]
-    row_ids: Optional[Sequence[Any]] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator("table")
-    @classmethod
-    def _validate_table(cls, table: str) -> str:
-        if not table:
-            raise ValueError("target batch table name must not be empty")
-        return table
-
-    @field_validator("column")
-    @classmethod
-    def _validate_column(cls, column: str) -> str:
-        if not column:
-            raise ValueError("target batch column must not be empty")
-        return column
-
-    @model_validator(mode="after")
-    def _validate_shape(self) -> "TargetBatch":
-        if self.row_ids is not None and len(self.row_ids) != len(self.values):
-            raise ValueError("target batch row_ids length must match values length")
-        return self
-
-    @property
-    def row_count(self) -> int:
-        return len(self.values)
-
-
-class DataBatch(RuntimeDataModel):
-    tables: Mapping[str, TableBatch]
-    target: Optional[TargetBatch] = None
-    role: BatchRole = BatchRole.UNKNOWN
-    batch_id: Optional[int] = None
-    session_id: Optional[str] = None
+class DataBatch(ArrowRuntimeModel):
+    tables: Dict[str, pa.RecordBatch]
+    anchor_table: NonEmptyStr
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _validate_batch(self) -> "DataBatch":
         if not self.tables:
-            raise ValueError("data batch must contain at least one table batch")
+            raise ValueError("data batch must contain at least one table")
 
-        for table_name, table_batch in self.tables.items():
-            if table_name != table_batch.table:
-                raise ValueError(
-                    f"table batch key {table_name} does not match table name "
-                    f"{table_batch.table}"
-                )
-
-        if self.target and self.target.table not in self.tables:
+        if self.anchor_table not in self.tables:
             raise ValueError(
-                f"target table {self.target.table} is not present in data batch"
+                f"anchor table {self.anchor_table} is not present in data batch"
             )
         return self
 
-    @property
-    def primary_table(self) -> TableBatch:
-        return next(iter(self.tables.values()))
+    def get_column(self, table: str, column: str) -> Optional[pa.Array]:
+        rb = self.tables.get(table)
+        if rb is None or column not in rb.schema.names:
+            return None
+        return rb.column(column)
 
-    @property
-    def row_count(self) -> int:
-        return self.primary_table.row_count
+    def to_bytes(self) -> bytes:
+        table_payloads: Dict[str, bytes] = {
+            name: _record_batch_to_ipc(rb) for name, rb in self.tables.items()
+        }
+
+        header = {
+            "anchor_table": self.anchor_table,
+            "metadata": self.metadata,
+            "tables": [
+                {"name": name, "length": len(payload)}
+                for name, payload in table_payloads.items()
+            ],
+        }
+        header_bytes = json.dumps(header).encode("utf-8")
+
+        buffer = bytearray()
+        buffer += _MAGIC
+        buffer += struct.pack(_HEADER_LEN_FMT, len(header_bytes))
+        buffer += header_bytes
+        for entry in header["tables"]:
+            buffer += table_payloads[entry["name"]]
+        return bytes(buffer)
 
     @classmethod
-    def from_single_table(
-        cls,
-        table: str,
-        columns: List[str],
-        rows: Sequence[Sequence[Any]],
-        target_column: Optional[str] = None,
-        target_values: Optional[Sequence[Any]] = None,
-        role: BatchRole = BatchRole.UNKNOWN,
-        batch_id: Optional[int] = None,
-        session_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> "DataBatch":
-        table_batch = TableBatch(table=table, columns=columns, rows=rows)
-        target = None
-        if target_column is not None:
-            if target_values is None:
-                raise ValueError("target_values must be provided with target_column")
-            target = TargetBatch(
-                table=table,
-                column=target_column,
-                values=target_values,
-            )
+    def from_bytes(cls, data: bytes) -> "DataBatch":
+        if not data.startswith(_MAGIC):
+            raise ValueError("invalid DataBatch payload: magic header missing")
+
+        offset = len(_MAGIC)
+        (header_len,) = struct.unpack(
+            _HEADER_LEN_FMT, data[offset : offset + _HEADER_LEN_SIZE]
+        )
+        offset += _HEADER_LEN_SIZE
+        header = json.loads(data[offset : offset + header_len])
+        offset += header_len
+
+        tables: Dict[str, pa.RecordBatch] = {}
+        for entry in header["tables"]:
+            length = entry["length"]
+            payload = data[offset : offset + length]
+            offset += length
+            tables[entry["name"]] = _record_batch_from_ipc(payload)
 
         return cls(
-            tables={table: table_batch},
-            target=target,
-            role=role,
-            batch_id=batch_id,
-            session_id=session_id,
-            metadata=metadata or {},
+            tables=tables,
+            anchor_table=header["anchor_table"],
+            metadata=header.get("metadata") or {},
         )

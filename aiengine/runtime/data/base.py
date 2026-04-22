@@ -1,8 +1,10 @@
-from typing import Any, Dict, Annotated
+from typing import Annotated, Any, Dict
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 NonEmptyStr = Annotated[str, Field(min_length=1)]
+
 
 class RuntimeDataModel(BaseModel):
     model_config = ConfigDict(frozen=True)
@@ -13,3 +15,7 @@ class RuntimeDataModel(BaseModel):
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
         return cls.model_validate(data)
+
+
+class ArrowRuntimeModel(BaseModel):
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)

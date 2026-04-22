@@ -1,29 +1,28 @@
 import pytest
 
-from data.schema import ColumnSchema, DatabaseSchema, RelationshipSchema, TableSchema
+from data.schema import (
+    ColumnRole,
+    ColumnSchema,
+    DatabaseSchema,
+    RelationshipSchema,
+    TableSchema,
+)
 
 
 @pytest.fixture
-def int_column() -> ColumnSchema:
-    return ColumnSchema(dtype="int")
+def users_table() -> TableSchema:
+    return TableSchema(
+        columns={"id": ColumnSchema(role=ColumnRole.PRIMARY_KEY)},
+        primary_key=["id"],
+    )
 
 
 @pytest.fixture
-def timestamp_column() -> ColumnSchema:
-    return ColumnSchema(dtype="timestamp")
-
-
-@pytest.fixture
-def users_table(int_column: ColumnSchema) -> TableSchema:
-    return TableSchema(columns={"id": int_column}, primary_key=["id"])
-
-
-@pytest.fixture
-def orders_table(int_column: ColumnSchema) -> TableSchema:
+def orders_table() -> TableSchema:
     return TableSchema(
         columns={
-            "id": int_column,
-            "user_id": ColumnSchema(dtype="int"),
+            "id": ColumnSchema(role=ColumnRole.PRIMARY_KEY),
+            "user_id": ColumnSchema(role=ColumnRole.FOREIGN_KEY),
         }
     )
 

@@ -1,4 +1,4 @@
-from .batch import BatchRole, DataBatch, TableBatch, TargetBatch
+from .batch import DataBatch
 from .schema import (
     ColumnRole,
     ColumnSchema,
@@ -8,10 +8,7 @@ from .schema import (
 )
 
 __all__ = [
-    "BatchRole",
     "DataBatch",
-    "TableBatch",
-    "TargetBatch",
     "ColumnRole",
     "ColumnSchema",
     "DatabaseSchema",

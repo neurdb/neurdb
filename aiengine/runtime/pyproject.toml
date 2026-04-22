@@ -65,6 +65,7 @@ dependencies = [
     "werkzeug==3.0.6",
     "wsproto==1.2.0",
     "pytest>=8.4.2",
+    "pyarrow>=21.0.0",
 ]
 
 [project.optional-dependencies]
