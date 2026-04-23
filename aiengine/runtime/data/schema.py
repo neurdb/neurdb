@@ -1,21 +1,37 @@
-from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from pydantic import Field, model_validator
 
-from .base import NonEmptyStr, RuntimeDataModel
-
-
-class ColumnRole(str, Enum):
-    FEATURE = "feature"
-    TARGET = "target"
-    PRIMARY_KEY = "primary_key"
-    FOREIGN_KEY = "foreign_key"
-    TIMESTAMP = "timestamp"
-    METADATA = "metadata"
+from .base import ColumnRole, ColumnStype, MetadataKey, NonEmptyStr, RuntimeDataModel
 
 
 class ColumnSchema(RuntimeDataModel):
+    """Per-column schema entry.
+
+    ``metadata`` is a free-form dict used as a tagged-union payload — the DB
+    engine populates it because only the engine has the global dataset view
+    (a ``DataBatch`` is a subset and cannot derive global statistics).
+
+    Convention consumed by the runtime converter:
+
+    - ``stype`` (str, required when the column reaches the model — i.e. role
+      in {FEATURE, TARGET, TIMESTAMP}; omit for PRIMARY_KEY / FOREIGN_KEY /
+      METADATA). Discriminator for the encoding path. One of:
+
+        * ``"numerical"``   — scalar float; linear projection / MLP input.
+        * ``"categorical"`` — discrete vocab; embedding lookup.
+        * ``"timestamp"``   — datetime; cast to int64 epoch.
+
+    - ``stats`` (dict, shape selected by ``stype``):
+
+        numerical   -> {"mean": float, "std": float}
+        categorical -> {"cardinality": list[Any]}    # ordered; index == global code
+        timestamp   -> {"strategy": "epoch_s" | "epoch_ms" | "epoch_ns"}
+
+    Extra keys (quantiles, class counts, year_range, ...) are permitted and
+    ignored by the converter — reserved for future use.
+    """
+
     role: ColumnRole = ColumnRole.FEATURE
     metadata: Dict[str, Any] = Field(default_factory=dict)
 

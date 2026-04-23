@@ -1,4 +1,5 @@
 from typing import Annotated, Any, Dict
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,3 +20,31 @@ class RuntimeDataModel(BaseModel):
 
 class ArrowRuntimeModel(BaseModel):
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+
+class ColumnRole(str, Enum):
+    FEATURE = "feature"
+    TARGET = "target"
+    PRIMARY_KEY = "primary_key"
+    FOREIGN_KEY = "foreign_key"
+    TIMESTAMP = "timestamp"
+    METADATA = "metadata"
+
+
+class ColumnStype(str, Enum):
+    """Semantic type tag stored in column metadata."""
+
+    NUMERICAL = "numerical"
+    CATEGORICAL = "categorical"
+    TIMESTAMP = "timestamp"
+
+
+class MetadataKey(str, Enum):
+    """Well-known keys inside ColumnSchema.metadata."""
+
+    STYPE = "stype"
+    STATS = "stats"
+    CARDINALITY = "cardinality"
+    MEAN = "mean"
+    STD = "std"
+    STRATEGY = "strategy"
