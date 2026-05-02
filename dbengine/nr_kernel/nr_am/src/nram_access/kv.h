@@ -107,6 +107,8 @@ typedef struct KVEngine {
 
 extern KVEngine *GetCurrentEngine(void);
 
+extern KVEngine *GetIndexEngine(void);
+
 /*
  * The scan state is for maintaining state for a scan, either for a
  * SELECT or UPDATE or DELETE.
