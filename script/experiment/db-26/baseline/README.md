@@ -22,7 +22,7 @@
 
 - 用 **SQL** 查 `router` 得到 `model_id`（与 C 端相同的 hash 规则）。
 - 用 **NeurDB storeman** 的 `load_model(model_id).unpack().to_model()` 从 DB 读模型（与 algserver 一致）。
-- 用 **SQL** `SELECT feature1,...,feature10 FROM <table>` 读数据。
+- 用 **SQL** 按 batch 读特征列（默认表中除 target 外的全部列）。
 - 在 Python 里按批拼成 armnet 需要的 `{id, value}`，调用 `model(batch)` 做推理。
 
 用来和「完整 PREDICT 路径」比延迟和正确性。
@@ -30,17 +30,17 @@
 ## 怎么跑
 
 1. 先保证库里已有对应模型（对目标表跑过一次带 `TRAIN ON *` 的 PREDICT）。
-2. 在仓库根目录下，把 `api/python` 和 `aiengine/runtime` 放进 `PYTHONPATH`，再执行：
+2. 在仓库根目录下执行：
 
 ```bash
-# 默认表 frappe_extend，目标 click_rate，特征 feature1..feature10
-python script/baseline_inference.py
+# 默认表 frappe_test，目标 click_rate，特征为除 click_rate 外的全部列
+python script/experiment/db-26/baseline/baseline_inference.py
 
 # 指定表和目标
-python script/baseline_inference.py --table frappe_extend --target click_rate
+python script/experiment/db-26/baseline/baseline_inference.py --table frappe_extend --target click_rate
 
-# 限制行数、batch 大小、写出预测结果
-python script/baseline_inference.py --table frappe_test --target click_rate --batch-size 60 --limit 6000 --out preds.txt
+# 限制 batch 数、限制行数、写出预测结果
+python script/experiment/db-26/baseline/baseline_inference.py --table frappe_test --target click_rate --num-batches 10 --limit 6000 --out preds.txt
 ```
 
 DB 连接默认 `localhost:5432`、库/用户 `neurdb`，可用 `--db-host`、`--db-port`、`--db-name`、`--db-user` 覆盖。

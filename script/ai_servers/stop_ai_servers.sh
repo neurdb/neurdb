@@ -2,7 +2,7 @@
 # Stop AI engine servers started by start_ai_servers.sh (python server.py).
 # Finds and kills processes whose command line matches "python.*server.py"
 # (same as start_ai_servers.sh), so no port range or N needed.
-# Usage: ./script/stop_ai_servers.sh
+# Usage: ./script/ai_servers/stop_ai_servers.sh
 
 # Match processes running python server.py (same as start_ai_servers.sh) (e.g. "python server.py" from aiengine/runtime)
 if command -v pgrep &>/dev/null; then

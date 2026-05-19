@@ -4,9 +4,9 @@ Baseline inference: read data and model via SQL / DB, run inference in Python.
 No WebSocket, no NeurDB pipeline — just a standalone script to compare with
   PREDICT CLASS OF ... FROM (...) TRAIN ON *;
 
-Usage (from repo root, with neurdb + neurdbrt on PYTHONPATH):
-  python script/baseline_inference.py
-  python script/baseline_inference.py --num-batches 10
+Usage (from repo root):
+  python script/experiment/db-26/baseline/baseline_inference.py
+  python script/experiment/db-26/baseline/baseline_inference.py --num-batches 10
 
 Batch size is fixed at 512. Each batch = one DB round-trip (SELECT LIMIT/OFFSET).
 Tune how many batches with --num-batches (default: all).
@@ -14,16 +14,53 @@ Tune how many batches with --num-batches (default: all).
 
 import argparse
 import hashlib
+import importlib.util
 import os
 import sys
 import time
+import types
 from datetime import datetime
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-BASELINE_RT = os.path.join(REPO_ROOT, "script", "baseline_rt")
-sys.path.insert(0, os.path.join(REPO_ROOT, "aiengine", "runtime"))
+REPO_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
+)
 sys.path.insert(0, os.path.join(REPO_ROOT, "api", "python"))
-sys.path.insert(0, BASELINE_RT)
+
+
+def _ensure_package(name: str, path: str):
+    module = sys.modules.get(name)
+    if module is None:
+        module = types.ModuleType(name)
+        module.__path__ = [path]
+        sys.modules[name] = module
+    return module
+
+
+def _load_module(name: str, path: str):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _install_armnet_pickle_modules():
+    """Load only the ARMNet model modules needed by ModelStorage.unpack()."""
+    neurdbrt_dir = os.path.join(REPO_ROOT, "aiengine", "runtime", "neurdbrt")
+    model_dir = os.path.join(neurdbrt_dir, "model")
+    armnet_dir = os.path.join(model_dir, "armnet")
+
+    _ensure_package("neurdbrt", neurdbrt_dir)
+    _ensure_package("neurdbrt.model", model_dir)
+    armnet_pkg = _ensure_package("neurdbrt.model.armnet", armnet_dir)
+
+    _load_module("neurdbrt.model.armnet.entmax", os.path.join(armnet_dir, "entmax.py"))
+    _load_module("neurdbrt.model.armnet.layer", os.path.join(armnet_dir, "layer.py"))
+    armnet_model = _load_module(
+        "neurdbrt.model.armnet.model", os.path.join(armnet_dir, "model.py")
+    )
+    armnet_pkg.ARMNetModel = armnet_model.ARMNetModel
+
 
 import neurdb
 import torch
@@ -76,7 +113,7 @@ def rows_to_batch(feature_rows, device, nfield: int):
     return {"id": feat_id, "value": feat_value}
 
 
-BATCH_SIZE = 8
+BATCH_SIZE = 512
 
 
 def main():
@@ -157,6 +194,7 @@ def main():
     _log("info", "loading model from database", model_id=model_id)
     load_start = time.perf_counter()
     try:
+        _install_armnet_pickle_modules()
         storage = conn.load_model(model_id).unpack()
         model = storage.to_model()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

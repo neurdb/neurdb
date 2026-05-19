@@ -1,7 +1,7 @@
 #!/bin/bash
 # Start N AI engine servers (python server.py) in background.
-# Usage: ./script/start_ai_servers.sh <N>
-#   e.g. ./script/start_ai_servers.sh 3  → ports 8090,8091,8092; CUDA 0,1,2; logs in test/
+# Usage: ./script/ai_servers/start_ai_servers.sh <N>
+#   e.g. ./script/ai_servers/start_ai_servers.sh 3  → ports 8090,8091,8092; CUDA 0,1,2; logs in test/
 # Ports start at 8090; CUDA_VISIBLE_DEVICES cycles from 0.
 
 N="${1:-1}"
@@ -11,7 +11,7 @@ if ! [[ "$N" =~ ^[0-9]+$ ]] || [[ "$N" -lt 1 ]]; then
   exit 1
 fi
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 RUNTIME_DIR="${REPO_ROOT}/aiengine/runtime"
 LOG_DIR="${REPO_ROOT}/test"
 mkdir -p "$LOG_DIR"
