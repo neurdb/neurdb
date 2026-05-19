@@ -92,9 +92,9 @@ NeurDB consists of three main components:
 ![NeurDB arch](assets/neurdb-v1-arch.jpg)
 
 1.	**AI Layer (NeurIDA)**: This layer manages AI models and analytics tasks inside the database and supports the lifecycle of in-database machine learning models.
-    - *Model Selection (VLDB 2024)* – Automatically ranks and selects suitable models for database tasks.
+    - *Model Selection (VLDB 2024, ICML 2026)* – Automatically ranks and selects suitable models for database tasks.
     - *Model Slicing (VLDB 2025)* – Decomposes large models into smaller slices to enable efficient execution and deployment.
-    - *Model Construction* – Supports the composition and integration of multiple models for AI analytics and transactional workloads.
+    - *Model Construction (VLDB 2026)*  – Supports the composition and integration of multiple models for AI analytics and transactional workloads.
 
 
 2. **Database Engine Layer**: Built on top of an enhanced PostgreSQL engine, this layer integrates learned optimization, learned concurrency control, and runtime adaptive execution.
@@ -116,7 +116,7 @@ NeurDB also includes benchmarking frameworks for evaluating AI-powered database 
    - *NL2SQLBench (VLDB 2026)* – A modular benchmark for evaluating LLM-enabled NL2SQL systems.
 
 1. **Tools and Utilities**
-NeurDB provides additional system tools to support model interpretation and system analysis.
+   NeurDB provides additional system tools to support model interpretation and system analysis.
 
    - *CoShap (SIGMOD 2026)* – A scalable method for Shapley value approximation to support model interpretation and feature contribution analysis.
 
@@ -137,33 +137,28 @@ NeurDB is backed by rigorous academic research. Our work has been published in t
 
 1. **NeurDB: An AI-powered Autonomous Data System** [[PDF]](http://scis.scichina.com/en/2024/200901.pdf)
    *SCIENCE CHINA Information Sciences, 2024*
-
 2. **NeurDB: On the Design and Implementation of an AI-powered Autonomous Database** [[PDF]](https://vldb.org/cidrdb/papers/2025/p29-zhao.pdf)
    *CIDR 2025*
-
 3. **Database Native Model Selection: Harnessing Deep Neural Networks in Database Systems** [[PDF]](https://www.vldb.org/pvldb/vol17/p1020-xing.pdf)
    *VLDB 2024*
-
 4. **Powering In-Database Dynamic Model Slicing for Structured Data Analytics** [[PDF]](https://www.vldb.org/pvldb/vol17/p4813-zeng.pdf)
    *VLDB, 2025*
-
 5.  **NeurStore: Efficient In-database Deep Learning Model Management System**
    *SIGMOD 2026*
-
 6. **Modeling Concurrency Control as a Learnable Function**
    *SIGMOD 2026*
-
 7. **On Self-Designing Learned Indexes**
    *SIGMOD 2026*
-
 8. **NL2SQLBench: A Modular Benchmarking Framework for LLM-Enabled NL2SQL Solutions**
    *VLDB 2026*
-
 9.  **NeurBench: A Benchmark Suite for Learned Database Components with Drift Modeling**
    *SIGMOD 2026*
-
 10. **CoShap: A Scalable Coalition Growth Approach to Shapley Value Approximation**
-   *SIGMOD 2026*
+      *SIGMOD 2026*
+11. **pTNAS: Progressive Neural Architecture Search for Tabular Data**
+    ICML 2026
+12. **NeurIDA: Dynamic Modeling for Effective In-Database Analytics**
+    VLDB 2026
 
 
 ### Citation
