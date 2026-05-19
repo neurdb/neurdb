@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/app/setup.py", line 44, in train
+    await builder.train(
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/model/armnet/builder.py", line 137, in train
+    y = self._model(batch)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/model/armnet/model.py", line 120, in forward
+    arm_weight = self.attn_layer(x_arm)  # bsz*nhead*nhid*nfield
+  File "/home/neurdb/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/model/armnet/model.py", line 46, in forward
+    torch.einsum("bfx,kxy,koy->bkof", keys, self.bilinear_w, self.query)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/torch/functional.py", line 378, in einsum
+    return _VF.einsum(equation, operands)  # type: ignore[attr-defined]
+RuntimeError: CUDA error: CUBLAS_STATUS_NOT_INITIALIZED when calling `cublasCreate(handle)`
+
+[2m2026-02-22 13:45:23[0m [[31m[1merror    [0m] [1mtrain failed with error: Traceback (most recent call last):
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/app/setup.py", line 44, in train
+    await builder.train(
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/model/armnet/builder.py", line 137, in train
+    y = self._model(batch)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/model/armnet/model.py", line 120, in forward
+    arm_weight = self.attn_layer(x_arm)  # bsz*nhead*nhid*nfield
+  File "/home/neurdb/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/code/neurdb-dev/aiengine/runtime/neurdbrt/model/armnet/model.py", line 46, in forward
+    torch.einsum("bfx,kxy,koy->bkof", keys, self.bilinear_w, self.query)
+  File "/home/neurdb/.local/lib/python3.10/site-packages/torch/functional.py", line 378, in einsum
+    return _VF.einsum(equation, operands)  # type: ignore[attr-defined]
+RuntimeError: CUDA error: CUBLAS_STATUS_NOT_INITIALIZED when calling `cublasCreate(handle)`
+[0m [[0m[1m[34mneurdb_algserver[0m][0m
+INFO:     Shutting down

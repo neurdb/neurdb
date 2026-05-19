@@ -1,0 +1,17 @@
+Training: lws buflist sanity limit (WebSocket send buffer overflow)
+
+During streaming training, logs repeatedly show:
+  lws_buflist_append_segment: buflist reached sanity limit
+
+Cause: C-side sends training batches over WebSocket (nws_send_batch_data) faster than lws can send or Python can consume. No back pressure → buflist grows until libwebsockets hits its sanity limit.
+
+Impact: Log spam; training can appear stuck.
+
+Proposed fix:
+1. Back pressure: only send next batch after previous is consumed or send queue has room (e.g. Python "ready for next batch" or bounded C send queue).
+2. Throttle: after each nws_send_batch_data(), run lws_service so queued data drains before sending next batch.
+3. (Optional) Increase lws buflist sanity limit as a mitigation.
+
+Relevant: dbengine/nr_kernel/nr_pipeline/src/utils/network/websocket.c, interface.c, interface2.c.
+
+
