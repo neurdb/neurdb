@@ -25,8 +25,8 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "aiengine", "runtime"))
 sys.path.insert(0, os.path.join(REPO_ROOT, "api", "python"))
 sys.path.insert(0, BASELINE_RT)
 
-import torch
 import neurdb
+import torch
 
 
 def _log(level: str, msg: str, **kwargs):
@@ -44,7 +44,9 @@ def get_table_columns(conn, table_name: str):
     return [d[0] for d in conn.database.cursor.description]
 
 
-def get_model_id_from_router(conn, table_name: str, feature_names: list, target_name: str):
+def get_model_id_from_router(
+    conn, table_name: str, feature_names: list, target_name: str
+):
     features_hash = md5_list(feature_names)
     target_hash = md5_list([target_name])
     rows = conn.database.select(
@@ -79,37 +81,78 @@ BATCH_SIZE = 8
 
 def main():
     script_start = time.perf_counter()
-    parser = argparse.ArgumentParser(description="Baseline inference: SQL + load model + infer")
-    parser.add_argument("--table", default="frappe_test", help="Table name (must match router)")
+    parser = argparse.ArgumentParser(
+        description="Baseline inference: SQL + load model + infer"
+    )
+    parser.add_argument(
+        "--table", default="frappe_test", help="Table name (must match router)"
+    )
     parser.add_argument("--target", default="click_rate", help="Target column name")
-    parser.add_argument("--features", default=None, help="Comma-separated feature column names (default: all except target)")
+    parser.add_argument(
+        "--features",
+        default=None,
+        help="Comma-separated feature column names (default: all except target)",
+    )
     parser.add_argument("--db-name", default="neurdb")
     parser.add_argument("--db-user", default="neurdb")
     parser.add_argument("--db-host", default="localhost")
     parser.add_argument("--db-port", default="5432")
-    parser.add_argument("--num-batches", type=int, default=None, help="Max number of batches to run (each batch=512 rows). Default: all.")
-    parser.add_argument("--limit", type=int, default=None, help="Max rows to read from table (default: all)")
-    parser.add_argument("--out", default=None, help="Optional path to write predictions (one per line)")
+    parser.add_argument(
+        "--num-batches",
+        type=int,
+        default=None,
+        help="Max number of batches to run (each batch=512 rows). Default: all.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Max rows to read from table (default: all)",
+    )
+    parser.add_argument(
+        "--out", default=None, help="Optional path to write predictions (one per line)"
+    )
     args = parser.parse_args()
 
-    conn = neurdb.NeurDB(db_name=args.db_name, db_user=args.db_user, db_host=args.db_host, db_port=args.db_port)
+    conn = neurdb.NeurDB(
+        db_name=args.db_name,
+        db_user=args.db_user,
+        db_host=args.db_host,
+        db_port=args.db_port,
+    )
 
     if args.features:
         feature_names = [s.strip() for s in args.features.split(",")]
     else:
         all_cols = get_table_columns(conn, args.table)
         if args.target not in all_cols:
-            _log("error", "target column not in table", table=args.table, target=args.target)
+            _log(
+                "error",
+                "target column not in table",
+                table=args.table,
+                target=args.target,
+            )
             sys.exit(1)
         feature_names = [c for c in all_cols if c != args.target]
     nfield = len(feature_names)
-    _log("info", "using features", nfield=nfield, features_head=str(feature_names[:5]) + ("..." if nfield > 5 else ""))
+    _log(
+        "info",
+        "using features",
+        nfield=nfield,
+        features_head=str(feature_names[:5]) + ("..." if nfield > 5 else ""),
+    )
 
     model_id = get_model_id_from_router(conn, args.table, feature_names, args.target)
     if model_id is None:
         _log("error", "no model found in router", table=args.table, target=args.target)
         sys.exit(1)
-    _log("info", "found model in router", model_id=model_id, table=args.table, target=args.target)
+    _log(
+        "info",
+        "found model in router",
+        model_id=model_id,
+        table=args.table,
+        target=args.target,
+    )
 
     _log("info", "loading model from database", model_id=model_id)
     load_start = time.perf_counter()
@@ -122,14 +165,26 @@ def main():
     except Exception as e:
         _log("error", "model load failed", model_id=model_id, error=str(e))
         raise
-    _log("info", "model loaded successfully", model_id=model_id, device=str(device), load_ms=round((time.perf_counter() - load_start) * 1000))
+    _log(
+        "info",
+        "model loaded successfully",
+        model_id=model_id,
+        device=str(device),
+        load_ms=round((time.perf_counter() - load_start) * 1000),
+    )
 
     # Per-batch query: each batch = one SELECT LIMIT/OFFSET (one DB round-trip per batch).
     cols = ", ".join(feature_names)
     limit_clause = f" LIMIT {args.limit}" if args.limit else ""
     subquery = f"SELECT {cols} FROM {args.table}{limit_clause}"
     run_batches = args.num_batches
-    _log("info", "begin inference (one query per batch, LIMIT/OFFSET)", batch_size=BATCH_SIZE, max_batches=run_batches or "all", task="inference")
+    _log(
+        "info",
+        "begin inference (one query per batch, LIMIT/OFFSET)",
+        batch_size=BATCH_SIZE,
+        max_batches=run_batches or "all",
+        task="inference",
+    )
     infer_start = time.perf_counter()
     all_preds = []
     batch_index = 0
@@ -152,11 +207,21 @@ def main():
             y = model(batch)
             preds = y.cpu().numpy().tolist()
         all_preds.extend(preds)
-        _log("info", f"done batch for {batch_index}, Batch size: {actual_batch_size}", task="inference")
+        _log(
+            "info",
+            f"done batch for {batch_index}, Batch size: {actual_batch_size}",
+            task="inference",
+        )
         batch_index += 1
 
     infer_time = time.perf_counter() - infer_start
-    _log("info", "inference done", total_predictions=len(all_preds), batches_run=batch_index, infer_ms=round(infer_time * 1000))
+    _log(
+        "info",
+        "inference done",
+        total_predictions=len(all_preds),
+        batches_run=batch_index,
+        infer_ms=round(infer_time * 1000),
+    )
 
     if args.out:
         with open(args.out, "w") as f:
@@ -165,7 +230,11 @@ def main():
         _log("info", "wrote predictions to file", path=args.out)
 
     conn.close()
-    _log("info", "script total time", total_ms=round((time.perf_counter() - script_start) * 1000))
+    _log(
+        "info",
+        "script total time",
+        total_ms=round((time.perf_counter() - script_start) * 1000),
+    )
     _log("info", "done")
 
 

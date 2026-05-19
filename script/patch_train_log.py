@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
+
 def patch_stream_libsvm():
     p = ROOT / "aiengine/runtime/neurdbrt/dataloader/stream_libsvm_dataset.py"
     text = p.read_text()
@@ -69,6 +70,7 @@ def patch_stream_libsvm():
     print("stream_libsvm_dataset.py: OK")
     return True
 
+
 def patch_armnet_builder():
     p = ROOT / "aiengine/runtime/neurdbrt/model/armnet/builder.py"
     text = p.read_text()
@@ -98,6 +100,7 @@ def patch_armnet_builder():
     p.write_text(text.replace(old, new, 1))
     print("armnet builder.py: OK")
     return True
+
 
 if __name__ == "__main__":
     patch_stream_libsvm()

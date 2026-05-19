@@ -36,18 +36,32 @@ class SparseAttLayer(nn.Module):
 class ARMNetModel(nn.Module):
     def __init__(
         self,
-        nfield, nfeat, nemb, nhead, alpha, nhid,
-        mlp_nlayer, mlp_nhid, dropout, ensemble,
-        deep_nlayer, deep_nhid, noutput=1,
+        nfield,
+        nfeat,
+        nemb,
+        nhead,
+        alpha,
+        nhid,
+        mlp_nlayer,
+        mlp_nhid,
+        dropout,
+        ensemble,
+        deep_nlayer,
+        deep_nhid,
+        noutput=1,
     ):
         super().__init__()
         self.embedding = Embedding(nfeat, nemb)
         self.attn_layer = SparseAttLayer(nhead, nfield, nemb, nemb, nhid, alpha)
         self.arm_bn = nn.BatchNorm1d(nhead * nhid)
-        self.mlp = MLP(nhead * nhid * nemb, mlp_nlayer, mlp_nhid, dropout, noutput=noutput)
+        self.mlp = MLP(
+            nhead * nhid * nemb, mlp_nlayer, mlp_nhid, dropout, noutput=noutput
+        )
         if ensemble:
             self.deep_embedding = Embedding(nfeat, nemb)
-            self.deep_mlp = MLP(nfield * nemb, deep_nlayer, deep_nhid, dropout, noutput=noutput)
+            self.deep_mlp = MLP(
+                nfield * nemb, deep_nlayer, deep_nhid, dropout, noutput=noutput
+            )
             self.ensemble_layer = nn.Linear(2 * noutput, 1 * noutput)
             nn.init.constant_(self.ensemble_layer.weight, 0.5)
             nn.init.constant_(self.ensemble_layer.bias, 0.0)

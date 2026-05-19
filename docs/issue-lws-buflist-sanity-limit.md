@@ -25,26 +25,26 @@ This comes from **libwebsockets (lws)**. The send-side buffer list (buflist) hit
 
 ## Proposed direction
 
-1. **Back pressure (recommended)**  
-   - Do not send the next training batch until the previous one has been consumed or the send path has room.  
+1. **Back pressure (recommended)**
+   - Do not send the next training batch until the previous one has been consumed or the send path has room.
    - Options: (a) protocol change so Python signals "ready for next batch", or (b) bounded send queue on the C side that blocks when full until lws drains.
 
-2. **Throttling**  
+2. **Throttling**
    - After each `nws_send_batch_data()`, run `lws_service` (and/or `lws_callback_on_writable`) so that queued data is drained before sending the next batch. This reduces buflist buildup without a protocol change.
 
-3. **Increase lws sanity limit (mitigation only)**  
+3. **Increase lws sanity limit (mitigation only)**
    - If lws is built from source, increase the buflist sanity limit. This only postpones the issue and may increase memory use; back pressure or throttling is still preferred.
 
 ## Relevant code
 
-- WebSocket send: `dbengine/nr_kernel/nr_pipeline/src/utils/network/websocket.c`  
+- WebSocket send: `dbengine/nr_kernel/nr_pipeline/src/utils/network/websocket.c`
   - `nws_send_batch_data()`, `send_json()`, `lws_write()`
-- Call sites that send training batches:  
-  - `dbengine/nr_kernel/nr_pipeline/src/interface2.c` (e.g. `nws_send_batch_data(..., S_TRAIN, ...)`)  
+- Call sites that send training batches:
+  - `dbengine/nr_kernel/nr_pipeline/src/interface2.c` (e.g. `nws_send_batch_data(..., S_TRAIN, ...)`)
   - `dbengine/nr_kernel/nr_pipeline/src/interface.c` (same)
 
 ## Labels (suggested)
 
-- component: dbengine / nr_pipeline / websocket  
-- type: bug  
+- component: dbengine / nr_pipeline / websocket
+- type: bug
 - priority: medium (log spam + possible training flow impact)
