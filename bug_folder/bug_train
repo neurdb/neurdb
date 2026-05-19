@@ -13,5 +13,3 @@ Proposed fix:
 3. (Optional) Increase lws buflist sanity limit as a mitigation.
 
 Relevant: dbengine/nr_kernel/nr_pipeline/src/utils/network/websocket.c, interface.c, interface2.c.
-
-
