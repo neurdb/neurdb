@@ -4,8 +4,10 @@ Exercises ``neurdbrt.model.tabpfn`` against an avito AdCTR task table (``w_task_
 produced by the workload SQL. Data is read from a CSV dump (preferred) or a live
 DB connection.
 
-Prepare the fixture once (from the repo root):
+The committed fixture is test/avito/w_task_1.csv. To regenerate / use other
+horizons, dump fresh tables (from the repo root) and point the test at them:
     bash data/workloads/dump_tasks.sh            # writes data/workloads/dump/w_task_*.csv
+    NEURDB_TASK_CSV=data/workloads/dump/w_task_3.csv python aiengine/runtime/tests/test_tabular_pipeline.py
 
 Run (use an env that has tabpfn, e.g. the adacontext tabpfn conda env):
     python aiengine/runtime/tests/test_tabular_pipeline.py
@@ -125,7 +127,7 @@ def _fixture_csv() -> str:
     env = os.environ.get("NEURDB_TASK_CSV")
     if env:
         return env
-    return str(REPO_ROOT / "data" / "workloads" / "dump" / "w_task_1.csv")
+    return str(REPO_ROOT / "test" / "avito" / "w_task_1.csv")
 
 
 def _load():
@@ -143,8 +145,9 @@ def _load():
             }
         else:
             _skip(
-                f"no fixture at {csv} and NEURDB_HOST not set; "
-                f"run `bash data/workloads/dump_tasks.sh` first"
+                f"no fixture at {csv} and NEURDB_HOST not set; expected committed "
+                f"fixture test/avito/w_task_1.csv, or run `bash data/workloads/dump_tasks.sh` "
+                f"and set NEURDB_TASK_CSV"
             )
     table = os.environ.get("NEURDB_TASK_TABLE", "w_task_1")
     return load_task_table(

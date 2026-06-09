@@ -9,3 +9,5 @@ workloads/*
 !workloads/*.sql
 !workloads/*.sh
 !workloads/*.md
+# CSV dumps from dump_tasks.sh are scratch -- never track them.
+workloads/dump/
