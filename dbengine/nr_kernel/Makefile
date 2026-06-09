@@ -1,5 +1,5 @@
 # List of subdirectories to process
-SUBDIRS := nr_ext nr_pipeline nr_am nr_store nr_molqo
+SUBDIRS := nr_ext nr_pipeline
 
 # Build directory (for out-of-source build when source dir is read-only)
 NEURDBPATH ?= /code/neurdb-dev

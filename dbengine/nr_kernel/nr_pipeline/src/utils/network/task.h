@@ -32,6 +32,11 @@ typedef struct {
   int nField;
 
   int nclass;
+
+  /* optional: comma-separated Postgres type names aligned with `features`
+   * (from the tupdesc); consumed by type-aware engine models (e.g. tabpfn).
+   * NULL when unused. */
+  char *colTypes;
 } TrainTaskSpec;
 
 typedef struct {
@@ -48,6 +53,9 @@ typedef struct {
   int modelId;
 
   int nclass;
+
+  /* see TrainTaskSpec.colTypes */
+  char *colTypes;
 } InferenceTaskSpec;
 
 typedef struct {

@@ -194,13 +194,19 @@ class TabularPreprocessor:
         self,
         col_to_stype: Optional[Dict[str, str]] = None,
         *,
+        stype_hints: Optional[Dict[str, str]] = None,
         id_cols: Sequence[str] = (),
         num_impute: str = "median",
         cat_impute: str = "most_frequent",
         expand_timestamp: bool = True,
         low_card_ratio: float = 0.01,
     ):
+        # ``col_to_stype`` (if given) fixes every column's stype outright.
+        # ``stype_hints`` is the softer form: per-column overrides (e.g. the
+        # timestamp/text columns derived from the DB ``tupdesc``) that win for
+        # the listed columns while the rest are still inferred from the data.
         self.col_to_stype = col_to_stype
+        self.stype_hints = dict(stype_hints or {})
         self.id_cols = list(id_cols)
         self.num_impute = num_impute
         self.cat_impute = cat_impute
@@ -224,7 +230,10 @@ class TabularPreprocessor:
         feat_df = train_df.drop(columns=[target_col])
 
         stypes = self.col_to_stype or infer_column_stypes(
-            feat_df, id_cols=self.id_cols, low_card_ratio=self.low_card_ratio
+            feat_df,
+            hints=self.stype_hints,
+            id_cols=self.id_cols,
+            low_card_ratio=self.low_card_ratio,
         )
         self.col_to_stype = stypes
 

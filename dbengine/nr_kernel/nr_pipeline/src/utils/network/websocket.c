@@ -9,8 +9,6 @@
 static int	callback(struct lws *wsi, enum lws_callback_reasons callback_reason,
 					 void *user, void *input, size_t len);
 
-static void handle_request_data(NrWebsocket * ws, const cJSON * json);
-
 static void handle_result(NrWebsocket * ws, const cJSON * json);
 
 static void handle_ack_setup(NrWebsocket * ws, const cJSON * json);
@@ -20,11 +18,22 @@ static void handle_ack_disconnect(NrWebsocket * ws);
 static void handle_ack_task(NrWebsocket * ws);
 
 /*  message */
-static void send_json(const NrWebsocket * ws, const cJSON * json);
+/*
+ * Thread-safe outbound send. libwebsockets is single-threaded: lws_write must
+ * only run on the service thread (the one calling lws_service). Producers on
+ * the main backend thread therefore serialise the JSON, push it onto the
+ * thread-safe queue, and wake the service thread (lws_cancel_service is the one
+ * lws call documented as safe from another thread). The service thread drains
+ * the queue from LWS_CALLBACK_CLIENT_WRITEABLE. Calling lws_write directly from
+ * the main thread (the old behaviour) corrupted the connection once more than a
+ * single batch was sent, which silently dropped the socket and hung the caller
+ * in nws_wait_completion forever.
+ */
+static void queue_outbound(NrWebsocket * ws, const cJSON * json);
 
-static void send_setup_signal(const NrWebsocket * ws, size_t cache_size);
+static void send_setup_signal(NrWebsocket * ws, size_t cache_size);
 
-static void send_disconnect_signal(const NrWebsocket * ws);
+static void send_disconnect_signal(NrWebsocket * ws);
 
 /*  websocket thread */
 static void websocket_thread(void *arg);
@@ -106,20 +115,28 @@ nws_connect(NrWebsocket * ws)
 		free(ws);
 		return -1;
 	}
-	while (!ws->connnected)
+	while (!ws->connnected && !ws->interrupted)
 	{
 		/* wait for the connection to be established */
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
 	}
+	if (ws->interrupted)
+	{
+		elog(ERROR, "AI engine connection failed before setup");
+	}
 	send_setup_signal(ws, ws->queue.max_size);
-	while (!ws->setuped)
+	while (!ws->setuped && !ws->interrupted)
 	{
 		/* wait for the setup to be acknowledged */
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
+	}
+	if (!ws->setuped && ws->interrupted)
+	{
+		elog(ERROR, "AI engine connection closed before setup was acknowledged");
 	}
 	return 0;
 }
@@ -136,11 +153,20 @@ nws_disconnect(NrWebsocket * ws)
 void
 nws_wait_completion(NrWebsocket * ws)
 {
-	while (!ws->completed)
+	while (!ws->completed && !ws->interrupted)
 	{
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
+	}
+	if (!ws->completed && ws->interrupted)
+	{
+		/*
+		 * The connection dropped before the server reported completion. Fail
+		 * the query instead of spinning forever (the old loop only checked
+		 * ``completed`` and would hang if the socket closed early).
+		 */
+		elog(ERROR, "AI engine connection closed before task completion");
 	}
 }
 
@@ -159,12 +185,22 @@ nws_free_websocket(NrWebsocket * ws)
 static void
 websocket_thread(void *arg)
 {
-	const		NrWebsocket *ws = (NrWebsocket *) arg;
+	NrWebsocket *ws = (NrWebsocket *) arg;
 
 	while (!ws->interrupted)
 	{
 		lws_service(ws->context, 50);
 		/* 50 ms */
+
+		/*
+		 * Drain the outbound queue from this (service) thread only. Producers
+		 * enqueue + lws_cancel_service; here we ask lws for a writable slot so
+		 * the actual lws_write happens on the service thread.
+		 */
+		if (ws->instance && batch_queue_has_data(&ws->queue))
+		{
+			lws_callback_on_writable(ws->instance);
+		}
 	}
 	pthread_exit(NULL);
 }
@@ -182,21 +218,11 @@ nws_send_batch_data(NrWebsocket * ws, const int batch_id,
 	cJSON_AddNumberToObject(json, "batchId", batch_id);
 	cJSON_AddStringToObject(json, "stage", ML_STAGE[ml_stage]);
 	cJSON_AddStringToObject(json, "byte", batch_data);
-	char	   *data = cJSON_PrintUnformatted(json);
 
-	/* OLD: send data in queue */
-#if 0
-	/* enqueue the data */
-	enqueue(&ws->queue, data);
-#endif
+	/* hand off to the service thread (see queue_outbound) */
+	queue_outbound(ws, json);
 
-	/* NEW: send data directly */
-	send_json(ws, json);
-
-	/* clean up */
 	cJSON_Delete(json);
-	free(data);
-	lws_callback_on_writable(ws->instance);
 }
 
 void
@@ -211,53 +237,59 @@ nws_send_task(NrWebsocket * ws, MLTask ml_task, const char *table_name, void *ta
 	cJSON_AddStringToObject(json, "table", table_name);
 	task_append_to_json(json, task_spec, ml_task);
 
-	send_json(ws, json);
-	while (!ws->task_acknowledged)
+	queue_outbound(ws, json);
+	cJSON_Delete(json);
+	while (!ws->task_acknowledged && !ws->interrupted)
 	{
 		/* wait for the task to be acknowledged */
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
 	}
+	if (!ws->task_acknowledged && ws->interrupted)
+	{
+		elog(ERROR, "AI engine connection closed before task was acknowledged");
+	}
 }
 
 static void
-send_json(const NrWebsocket * ws, const cJSON * json)
+queue_outbound(NrWebsocket * ws, const cJSON * json)
 {
 	char	   *data = cJSON_PrintUnformatted(json);
-	const size_t data_len = strlen(data);
-	unsigned char *buf = malloc(LWS_PRE + data_len);
 
-	if (buf)
+	if (data)
 	{
-		memcpy(buf + LWS_PRE, data, data_len);
-		lws_write(ws->instance, buf + LWS_PRE, data_len, LWS_WRITE_TEXT);
-		free(buf);
+		enqueue(&ws->queue, data);	/* enqueue strdups internally */
+		free(data);
 	}
-	free(data);
+	/* wake the service thread so it drains the queue promptly */
+	if (ws->context)
+	{
+		lws_cancel_service(ws->context);
+	}
 }
 
 static void
-send_setup_signal(const NrWebsocket * ws, const size_t cache_size)
+send_setup_signal(NrWebsocket * ws, const size_t cache_size)
 {
 	cJSON	   *json = cJSON_CreateObject();
 
 	cJSON_AddStringToObject(json, "version", "1");
 	cJSON_AddStringToObject(json, "event", "setup");
 	cJSON_AddNumberToObject(json, "cacheSize", (double) cache_size);
-	send_json(ws, json);
+	queue_outbound(ws, json);
 	cJSON_Delete(json);
 }
 
 static void
-send_disconnect_signal(const NrWebsocket * ws)
+send_disconnect_signal(NrWebsocket * ws)
 {
 	cJSON	   *json = cJSON_CreateObject();
 
 	cJSON_AddStringToObject(json, "version", "1");
 	cJSON_AddStringToObject(json, "event", "disconnect");
 	cJSON_AddStringToObject(json, "sessionId", ws->sid);
-	send_json(ws, json);
+	queue_outbound(ws, json);
 	cJSON_Delete(json);
 }
 
@@ -394,7 +426,32 @@ callback(struct lws *wsi, enum lws_callback_reasons callback_reason,
 			break;
 
 		case LWS_CALLBACK_CLIENT_WRITEABLE:
+		{
+			/* write one queued message per writable slot (lws flow control) */
+			char	   *msg = try_dequeue(&websocket->queue);
+
+			if (msg != NULL)
+			{
+				const size_t msg_len = strlen(msg);
+				unsigned char *buf = malloc(LWS_PRE + msg_len);
+
+				if (buf)
+				{
+					memcpy(buf + LWS_PRE, msg, msg_len);
+					lws_write(websocket->instance, buf + LWS_PRE, msg_len,
+							  LWS_WRITE_TEXT);
+					free(buf);
+				}
+				free(msg);
+
+				/* more queued? ask for another writable slot */
+				if (batch_queue_has_data(&websocket->queue))
+				{
+					lws_callback_on_writable(websocket->instance);
+				}
+			}
 			break;
+		}
 
 		case LWS_CALLBACK_CLIENT_CLOSED:
 			/* connection closed */
@@ -405,27 +462,6 @@ callback(struct lws *wsi, enum lws_callback_reasons callback_reason,
 			break;
 	}
 	return 0;
-}
-
-static void
-handle_request_data(NrWebsocket * ws, const cJSON * json)
-{
-	const int	start_batch_id =
-		cJSON_GetObjectItem(json, "startBatchId")->valueint;
-	int			n_batch = cJSON_GetObjectItem(json, "nBatch")->valueint;
-
-	while (n_batch > 0)
-	{
-		const char *batch_data = dequeue(&ws->queue);
-
-		if (batch_data == NULL)
-		{
-			return;
-		}
-		/* send to python server */
-		send_json(ws, cJSON_Parse(batch_data));
-		n_batch--;
-	}
 }
 
 static void

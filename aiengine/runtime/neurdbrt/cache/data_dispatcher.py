@@ -14,10 +14,21 @@ class LibSvmDataDispatcher:
     LibSvmDataDispatcher monitors the cache and requests data to fill the cache.
     """
 
-    def __init__(self, data_cache: DataCache = None, in_libsvm_format: bool = True):
+    def __init__(
+        self,
+        data_cache: DataCache = None,
+        in_libsvm_format: bool = True,
+        field_sep: str = None,
+    ):
         """
         Initialize the LibSvmDataDispatcher with an optional data cache.
         :param data_cache: The data cache it is currently handling.
+        :param in_libsvm_format: parse rows as dense libsvm (id/value/y tensors).
+        :param field_sep: when not libsvm, the per-row field separator. ``None``
+            keeps the legacy whitespace split (auto_pipeline). A literal ``"\\t"``
+            selects the *typed* format (label-first, real values, NULL = empty
+            field) used by TabPFN -- it preserves empty fields, which a
+            whitespace split would drop.
         """
         self.data_cache = data_cache
         self.client_id = None
@@ -30,6 +41,7 @@ class LibSvmDataDispatcher:
         self.total_preprocessing_time = 0.0
 
         self._in_libsvm_format = in_libsvm_format
+        self._field_sep = field_sep
 
     def bound_client_to_cache(self, data_cache: DataCache, client_id: str):
         """
@@ -145,7 +157,14 @@ class LibSvmDataDispatcher:
             values = []
             y = []
             for b in batches:
-                tokens = b.split()
+                if self._field_sep is not None:
+                    # typed format: split on the explicit separator so empty
+                    # fields (NULLs) are preserved as "" rather than dropped.
+                    if b == "":
+                        continue
+                    tokens = b.split(self._field_sep)
+                else:
+                    tokens = b.split()
                 if len(tokens) == 0:
                     continue
 

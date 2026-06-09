@@ -38,3 +38,7 @@ dbengine/nr_kernel/nr_store/external/hnswlib/
 # the committed unit-test fixture test/avito/w_task_1.csv tracked).
 test/avito/rel-avito-db/
 test/avito/workloads/dump/
+
+# db-26 experiment scratch run logs + ad-hoc server logs
+script/experiment/db-26/*.log
+test/server_8090.log
