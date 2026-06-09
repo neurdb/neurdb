@@ -1,7 +1,6 @@
 from neurdbrt.model import register_model
 
 from .builder import TabPFNModelBuilder
-from .runner import run_tabular_task
 from .model import BINARY, REGRESSION, TabPFNPredictor
 from .preprocess import (
     CATEGORICAL,
@@ -13,6 +12,7 @@ from .preprocess import (
     TabularPreprocessor,
     infer_column_stypes,
 )
+from .runner import run_tabular_task
 
 
 def neurdb_on_start():

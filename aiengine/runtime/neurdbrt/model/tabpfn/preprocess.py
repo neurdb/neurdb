@@ -38,18 +38,63 @@ DROP = "drop"
 
 # Column-name keyword rules (mirrors NeurIDA utils/preprocess.py).
 NUMERICAL_KEYWORDS = {
-    "count", "num", "amount", "total", "length", "height", "value", "rate",
-    "number", "score", "size", "price", "percent", "ratio", "volume", "avg",
-    "max", "min", "age", "ctr", "impr", "impressions", "click", "clicks",
+    "count",
+    "num",
+    "amount",
+    "total",
+    "length",
+    "height",
+    "value",
+    "rate",
+    "number",
+    "score",
+    "size",
+    "price",
+    "percent",
+    "ratio",
+    "volume",
+    "avg",
+    "max",
+    "min",
+    "age",
+    "ctr",
+    "impr",
+    "impressions",
+    "click",
+    "clicks",
 }
 CATEGORICAL_KEYWORDS = {
-    "type", "category", "class", "label", "status", "code", "id", "guid",
-    "region", "zone", "flag", "is", "has", "mode", "city", "context", "level",
+    "type",
+    "category",
+    "class",
+    "label",
+    "status",
+    "code",
+    "id",
+    "guid",
+    "region",
+    "zone",
+    "flag",
+    "is",
+    "has",
+    "mode",
+    "city",
+    "context",
+    "level",
     "parent",
 }
 TEXT_KEYWORDS = {
-    "description", "comments", "content", "name", "review", "message", "note",
-    "query", "summary", "title", "text",
+    "description",
+    "comments",
+    "content",
+    "name",
+    "review",
+    "message",
+    "note",
+    "query",
+    "summary",
+    "title",
+    "text",
 }
 
 _TS_PARTS = ("year", "month", "day", "dayofweek", "hour")
@@ -183,8 +228,12 @@ class TabularPreprocessor:
         )
         self.col_to_stype = stypes
 
-        self._numerical_cols = [c for c in feat_df.columns if stypes.get(c) == NUMERICAL]
-        self._categorical_cols = [c for c in feat_df.columns if stypes.get(c) == CATEGORICAL]
+        self._numerical_cols = [
+            c for c in feat_df.columns if stypes.get(c) == NUMERICAL
+        ]
+        self._categorical_cols = [
+            c for c in feat_df.columns if stypes.get(c) == CATEGORICAL
+        ]
         self._timestamp_cols = (
             [c for c in feat_df.columns if stypes.get(c) == TIMESTAMP]
             if self.expand_timestamp

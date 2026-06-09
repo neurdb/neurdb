@@ -27,8 +27,8 @@ import numpy as np
 import pandas as pd
 
 # Make the runtime package importable when run as a plain script.
-RUNTIME_DIR = Path(__file__).resolve().parents[1]      # aiengine/runtime
-REPO_ROOT = Path(__file__).resolve().parents[3]        # neurdb-dev
+RUNTIME_DIR = Path(__file__).resolve().parents[1]  # aiengine/runtime
+REPO_ROOT = Path(__file__).resolve().parents[3]  # neurdb-dev
 TABPFN_DIR = RUNTIME_DIR / "neurdbrt" / "model" / "tabpfn"
 if str(RUNTIME_DIR) not in sys.path:
     sys.path.insert(0, str(RUNTIME_DIR))
@@ -38,8 +38,8 @@ if str(RUNTIME_DIR) not in sys.path:
 if str(TABPFN_DIR) not in sys.path:
     sys.path.insert(0, str(TABPFN_DIR))
 
-from preprocess import TabularPreprocessor  # noqa: E402
 from model import REGRESSION  # noqa: E402
+from preprocess import TabularPreprocessor  # noqa: E402
 from runner import run_tabular_task  # noqa: E402
 
 try:
@@ -53,21 +53,41 @@ except ImportError:  # pytest not present in the tabpfn env
 # Semantic types for the avito AdCTR w_task_<h> tables, passed as hints so id-like
 # integer columns are typed correctly without relying on inference.
 AVITO_TASK_STYPES = {
-    "adid": "drop", "ts": "timestamp", "split": "drop",
-    "price": "numerical", "iscontext": "categorical",
-    "categoryid": "categorical", "locationid": "categorical",
-    "title_len": "numerical", "cat_level": "categorical",
-    "cat_parent": "categorical", "loc_region": "categorical", "loc_city": "categorical",
-    "ss_impr_all": "numerical", "ss_click_all": "numerical", "ss_ctr_all": "numerical",
-    "ss_avgpos_all": "numerical", "ss_avghistctr_all": "numerical",
-    "ss_impr_7d": "numerical", "ss_click_7d": "numerical",
-    "vs_visit_all": "numerical", "vs_visit_7d": "numerical", "pr_all": "numerical",
+    "adid": "drop",
+    "ts": "timestamp",
+    "split": "drop",
+    "price": "numerical",
+    "iscontext": "categorical",
+    "categoryid": "categorical",
+    "locationid": "categorical",
+    "title_len": "numerical",
+    "cat_level": "categorical",
+    "cat_parent": "categorical",
+    "loc_region": "categorical",
+    "loc_city": "categorical",
+    "ss_impr_all": "numerical",
+    "ss_click_all": "numerical",
+    "ss_ctr_all": "numerical",
+    "ss_avgpos_all": "numerical",
+    "ss_avghistctr_all": "numerical",
+    "ss_impr_7d": "numerical",
+    "ss_click_7d": "numerical",
+    "vs_visit_all": "numerical",
+    "vs_visit_7d": "numerical",
+    "pr_all": "numerical",
     "label_ctr": "numerical",
 }
 
 
-def load_task_table(table, *, csv_path=None, dsn=None, split_col="split",
-                    train_splits=("train", "val"), test_splits=("test",)):
+def load_task_table(
+    table,
+    *,
+    csv_path=None,
+    dsn=None,
+    split_col="split",
+    train_splits=("train", "val"),
+    test_splits=("test",),
+):
     """Load a task table (CSV preferred, else live DB) and split by ``split_col``."""
     df = None
     if csv_path and os.path.exists(csv_path):
@@ -81,7 +101,9 @@ def load_task_table(table, *, csv_path=None, dsn=None, split_col="split",
         finally:
             conn.close()
     if df is None:
-        raise FileNotFoundError(f"cannot load {table!r}: no csv at {csv_path!r} and no dsn")
+        raise FileNotFoundError(
+            f"cannot load {table!r}: no csv at {csv_path!r} and no dsn"
+        )
     if split_col not in df.columns:
         raise KeyError(f"split column {split_col!r} not in {table!r}")
     train_df = df[df[split_col].isin(train_splits)].reset_index(drop=True)
@@ -125,7 +147,9 @@ def _load():
                 f"run `bash data/workloads/dump_tasks.sh` first"
             )
     table = os.environ.get("NEURDB_TASK_TABLE", "w_task_1")
-    return load_task_table(table, csv_path=csv if os.path.exists(csv) else None, dsn=dsn)
+    return load_task_table(
+        table, csv_path=csv if os.path.exists(csv) else None, dsn=dsn
+    )
 
 
 def test_type_aware_preprocessing():

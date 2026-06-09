@@ -51,7 +51,9 @@ class TabPFNPredictor:
         self.task_type = task_type
         self.device = device or _default_device()
         self.model_path = model_path
-        self.categorical_indices = list(categorical_indices) if categorical_indices else []
+        self.categorical_indices = (
+            list(categorical_indices) if categorical_indices else []
+        )
         self.max_train_samples = max_train_samples
         self.batch_size = batch_size
         self.random_state = random_state

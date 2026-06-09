@@ -16,11 +16,11 @@ import numpy as np
 import pandas as pd
 
 try:  # normal package import
-    from .preprocess import TabularPreprocessor
     from .model import BINARY, REGRESSION, TabPFNPredictor
+    from .preprocess import TabularPreprocessor
 except ImportError:  # loaded standalone (dir on sys.path), e.g. unit test
-    from preprocess import TabularPreprocessor  # type: ignore
     from model import BINARY, REGRESSION, TabPFNPredictor  # type: ignore
+    from preprocess import TabularPreprocessor  # type: ignore
 
 
 def _regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
