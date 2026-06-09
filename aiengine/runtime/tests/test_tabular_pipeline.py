@@ -6,8 +6,8 @@ DB connection.
 
 The committed fixture is test/avito/w_task_1.csv. To regenerate / use other
 horizons, dump fresh tables (from the repo root) and point the test at them:
-    bash data/workloads/dump_tasks.sh            # writes data/workloads/dump/w_task_*.csv
-    NEURDB_TASK_CSV=data/workloads/dump/w_task_3.csv python aiengine/runtime/tests/test_tabular_pipeline.py
+    bash test/avito/workloads/dump_tasks.sh      # writes test/avito/workloads/dump/w_task_*.csv
+    NEURDB_TASK_CSV=test/avito/workloads/dump/w_task_3.csv python aiengine/runtime/tests/test_tabular_pipeline.py
 
 Run (use an env that has tabpfn, e.g. the adacontext tabpfn conda env):
     python aiengine/runtime/tests/test_tabular_pipeline.py
@@ -15,7 +15,7 @@ Run (use an env that has tabpfn, e.g. the adacontext tabpfn conda env):
     pytest aiengine/runtime/tests/test_tabular_pipeline.py -s
 
 Overrides via env vars:
-    NEURDB_TASK_CSV   path to a w_task_<h>.csv (default: data/workloads/dump/w_task_1.csv)
+    NEURDB_TASK_CSV   path to a w_task_<h>.csv (default: test/avito/w_task_1.csv)
     NEURDB_TABPFN_DEVICE   cpu | cuda | cuda:N   (default: auto)
 """
 
@@ -146,8 +146,8 @@ def _load():
         else:
             _skip(
                 f"no fixture at {csv} and NEURDB_HOST not set; expected committed "
-                f"fixture test/avito/w_task_1.csv, or run `bash data/workloads/dump_tasks.sh` "
-                f"and set NEURDB_TASK_CSV"
+                f"fixture test/avito/w_task_1.csv, or run "
+                f"`bash test/avito/workloads/dump_tasks.sh` and set NEURDB_TASK_CSV"
             )
     table = os.environ.get("NEURDB_TASK_TABLE", "w_task_1")
     return load_task_table(

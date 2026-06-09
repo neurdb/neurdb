@@ -8,7 +8,7 @@ set -euo pipefail
 
 CONTAINER=neurdb_dev
 PSQL="/code/neurdb-dev/build/psql/bin/psql -h 0.0.0.0 -U neurdb -d avito -v ON_ERROR_STOP=1"
-DIR=/code/neurdb-dev/data/workloads
+DIR=/code/neurdb-dev/test/avito/workloads
 HORIZONS="${HORIZONS:-1 3 7}"
 
 run() { docker exec "$CONTAINER" bash -lc "$PSQL $*"; }

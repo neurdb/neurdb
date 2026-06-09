@@ -1,22 +1,26 @@
-# Datasets
+# rel-avito dataset + workload
 
-Raw, **multi-table** datasets used by the end-to-end horizon-sweep workload
-(see `../.local/prompts/exp.md`). The data is imported into NeurDB and features /
-labels are built database-natively via point-in-time (PIT) joins.
+Raw, **multi-table** rel-avito dataset and the SQL workload used by the
+end-to-end horizon-sweep experiment (see `../../.local/prompts/exp.md`). The data
+is imported into NeurDB and features / labels are built database-natively via
+point-in-time (PIT) joins (see `workloads/`).
 
-> Everything in this directory is git-ignored except this `README.md` and
-> `.gitignore`. Do **not** commit datasets. Re-download them with the steps below.
+> The raw dataset (`rel-avito-db/`) and CSV dumps (`workloads/dump/`) are
+> git-ignored. Do **not** commit datasets -- re-download them with the steps
+> below. Tracked here: the workload SQL/scripts and the committed unit-test
+> fixture `w_task_1.csv`.
 
 ## Layout
 
 ```
-data/
+test/avito/
 ├── README.md                  # this file
-├── .gitignore
-├── avito/                      # rel-avito RAW source (form A, ignored)
-│   ├── rel-avito-raw-100k.zip
-│   └── avito_100k_integ_test/  # 8 partitioned .snappy.parquet table dirs
-└── rel-avito-db/               # rel-avito PREBUILT cleaned DB (form B, used for loading)
+├── w_task_1.csv               # committed unit-test fixture (1d horizon task table)
+├── workloads/                 # SQL + scripts that build w_task_<h> (tracked)
+│   ├── tool_cutoffs.sql  01_label_adctr.sql  02_features_adctr_pit.sql  03_task_table.sql
+│   ├── tool_feat_cache_init.sql  run_avito.sh  bench.sh  dump_tasks.sh  README.md
+│   └── dump/                   # scratch CSV dumps from dump_tasks.sh (ignored)
+└── rel-avito-db/               # rel-avito PREBUILT cleaned DB (form B, ignored)
     ├── db.zip
     └── db/                     # 8 cleaned single-file parquet tables
         ├── AdsInfo.parquet  Category.parquet  Location.parquet  UserInfo.parquet
@@ -31,7 +35,7 @@ full-size version. It ships the same subsample in two forms:
 
 | Form | File | Size | sha256 | State |
 |------|------|-----:|--------|-------|
-| **A. raw source** | `data/rel-avito-raw-100k.zip` | 495 MB | `ad4fc178…d7929` | uncleaned; needs `make_db()` processing |
+| **A. raw source** | `rel-avito-db/rel-avito-raw-100k.zip` | 495 MB | `ad4fc178…d7929` | uncleaned; needs `make_db()` processing |
 | **B. prebuilt DB** | `download/rel-avito/db.zip` | 347 MB | `274e6922…d77058` | cleaned `Database` (what `get_dataset(download=True)` pulls) |
 
 **We load form B** (prebuilt) into NeurDB for parity with the RelBench `AdCTRTask`
@@ -49,10 +53,10 @@ definition. In form B: `Params`/`SearchParams` are dropped, date columns are rea
 
 ### How to download
 
-Option A — direct download (what is used here):
+Option A — direct download (raw form A):
 
 ```bash
-cd data/avito
+mkdir -p test/avito/rel-avito-db && cd test/avito/rel-avito-db
 curl -O https://relbench.stanford.edu/data/rel-avito-raw-100k.zip
 # verify integrity (must match the sha256 above)
 sha256sum rel-avito-raw-100k.zip
@@ -62,7 +66,7 @@ unzip -q rel-avito-raw-100k.zip      # -> avito_100k_integ_test/
 Option B — prebuilt cleaned DB (what we use for loading into NeurDB):
 
 ```bash
-cd data/rel-avito-db
+cd test/avito/rel-avito-db
 curl -O https://relbench.stanford.edu/download/rel-avito/db.zip
 sha256sum db.zip      # 274e692295027a753063b9201815a9d2dea94d4cda968be81be936f546d77058
 unzip -q db.zip       # -> db/<Table>.parquet  (8 cleaned single-file tables)

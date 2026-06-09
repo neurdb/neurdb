@@ -13,7 +13,7 @@
 set -euo pipefail
 
 CONTAINER=neurdb_dev
-DIR=/code/neurdb-dev/data/workloads
+DIR=/code/neurdb-dev/test/avito/workloads
 PSQL="/code/neurdb-dev/build/psql/bin/psql -h 0.0.0.0 -U neurdb -d avito -v ON_ERROR_STOP=1 -q"
 HORIZONS="${HORIZONS:-1 3 7}"
 
