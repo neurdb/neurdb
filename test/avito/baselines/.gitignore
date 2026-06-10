@@ -1,0 +1,4 @@
+data/
+logs/*.parquet
+logs/**/w_pred_*.parquet
+__pycache__/
