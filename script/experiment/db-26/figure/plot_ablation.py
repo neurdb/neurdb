@@ -30,11 +30,11 @@ LOGS = os.path.normpath(os.path.join(HERE, "../../../../test/avito/workloads/log
 FIGSIZE = (4.8, 3.6)
 plt.rcParams.update(
     {
-        "font.size": 13,
-        "axes.labelsize": 14,
-        "xtick.labelsize": 12,
-        "ytick.labelsize": 12,
-        "legend.fontsize": 10.5,
+        "font.size": 15,
+        "axes.labelsize": 17,
+        "xtick.labelsize": 14,
+        "ytick.labelsize": 14,
+        "legend.fontsize": 12.5,
         "axes.spines.top": False,
         "axes.spines.right": False,
     }
@@ -96,7 +96,7 @@ for name, color, get in segs:
                 f"{v:.0f}",
                 ha="center",
                 va="center",
-                fontsize=10.5,
+                fontsize=12,
                 color="white" if color != "#b8b8b8" else "#444444",
             )
     bottoms = [b + v for b, v in zip(bottoms, vals)]
@@ -107,13 +107,19 @@ for i, (s, _) in enumerate(order):
         bottoms[i] + 14,
         f"{rows[s]['total_s']:.0f}s",
         ha="center",
-        fontsize=11.5,
+        fontsize=13.5,
         fontweight="bold",
     )
 naive = rows["cache_off__sched_off"]["total_s"]
 
 ax.set_xticks(list(xs))
-ax.set_xticklabels([lbl for _, lbl in order], fontsize=10.5)
+ax.set_xticklabels(
+    [lbl for _, lbl in order],
+    fontsize=12.5,
+    rotation=12,
+    ha="right",
+    rotation_mode="anchor",
+)
 ax.set_ylabel("End-to-end time (s)")
 ax.set_ylim(0, naive * 1.22)
 ax.legend(
@@ -142,7 +148,7 @@ def predict_times(log, sched):
 t_root = predict_times("cache_off__sched_off.log", "off")
 t_dyn = predict_times("cache_off__sched_on.log", "on")
 horizons = sorted(t_root)
-task_rows = {1: 8368, 3: 19106, 7: 33531}
+task_rows = {1: "8K", 3: "19K", 7: "34K"}
 
 fig, ax = plt.subplots(figsize=FIGSIZE)
 w = 0.36
@@ -162,24 +168,22 @@ ax.bar(
     color="#DD8452",
 )
 for x, h in zip(xb, horizons):
-    ax.text(x - w / 2, t_root[h] + 0.9, f"{t_root[h]:.1f}", ha="center", fontsize=10.5)
-    ax.text(x + w / 2, t_dyn[h] + 0.9, f"{t_dyn[h]:.1f}", ha="center", fontsize=10.5)
+    ax.text(x - w / 2, t_root[h] + 0.9, f"{t_root[h]:.1f}", ha="center", fontsize=12)
+    ax.text(x + w / 2, t_dyn[h] + 0.9, f"{t_dyn[h]:.1f}", ha="center", fontsize=12)
     ax.text(
         x,
         max(t_root[h], t_dyn[h]) + 6.0,
         f"{t_root[h] / t_dyn[h]:.1f}x",
         ha="center",
-        fontsize=11.5,
+        fontsize=13.5,
         color="#C44E52",
         fontweight="bold",
     )
 
 ax.set_xticks(list(xb))
-ax.set_xticklabels(
-    [f"h = {h}d\n({task_rows[h]:,} rows)" for h in horizons], fontsize=11
-)
+ax.set_xticklabels([f"{h}d ({task_rows[h]})" for h in horizons], fontsize=14)
 ax.set_ylabel("AI predict time (s)")
-ax.set_ylim(0, max(t_root.values()) * 1.32)
+ax.set_ylim(0, max(t_root.values()) * 1.5)
 ax.legend(
     loc="upper left",
     frameon=False,
