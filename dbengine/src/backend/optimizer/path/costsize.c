@@ -1464,17 +1464,10 @@ cost_subqueryscan(SubqueryScanPath *path, PlannerInfo *root,
 	path->path.total_cost = path->subpath->total_cost;
 
 	/*
-	 * NEURDB: a PREDICT subquery's plan gets wrapped with a NeurDBPredict
-	 * node at plan-creation time (create_subqueryscan_plan); charge the AI
-	 * inference cost here so the outer query is planned around the
-	 * operator's true cost.  Quals/tlist below are evaluated on the
-	 * operator's output, so they correctly stack on top of this.
+	 * NEURDB: no special treatment for PREDICT subqueries here.  Their final
+	 * paths are NeurDBPredictPaths (added by grouping_planner), so the
+	 * subpath costs above already include the AI operator's cost.
 	 */
-	if (baserel->subroot &&
-		baserel->subroot->parse->commandType == CMD_PREDICT)
-		cost_neurdbpredict(&path->path.startup_cost, &path->path.total_cost,
-						   path->path.startup_cost, path->path.total_cost,
-						   path->subpath->rows);
 
 	/*
 	 * However, if there are no relevant restriction clauses and the

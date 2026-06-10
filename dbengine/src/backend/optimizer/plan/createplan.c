@@ -118,6 +118,8 @@ static LockRows *create_lockrows_plan(PlannerInfo *root, LockRowsPath *best_path
 static ModifyTable *create_modifytable_plan(PlannerInfo *root, ModifyTablePath *best_path);
 static Limit *create_limit_plan(PlannerInfo *root, LimitPath *best_path,
 								int flags);
+static NeurDBPredict *create_neurdbpredict_plan(PlannerInfo *root,
+												NeurDBPredictPath *best_path);
 static SeqScan *create_seqscan_plan(PlannerInfo *root, Path *best_path,
 									List *tlist, List *scan_clauses);
 static SampleScan *create_samplescan_plan(PlannerInfo *root, Path *best_path,
@@ -534,6 +536,11 @@ create_plan_recurse(PlannerInfo *root, Path *best_path, int flags)
 			plan = (Plan *) create_limit_plan(root,
 											  (LimitPath *) best_path,
 											  flags);
+			break;
+		case T_NeurDBPredict:
+			/* NEURDB: the PREDICT AI operator */
+			plan = (Plan *) create_neurdbpredict_plan(root,
+													  (NeurDBPredictPath *) best_path);
 			break;
 		case T_GatherMerge:
 			plan = (Plan *) create_gather_merge_plan(root,
@@ -2882,6 +2889,37 @@ create_limit_plan(PlannerInfo *root, LimitPath *best_path, int flags)
 	return plan;
 }
 
+/*
+ * create_neurdbpredict_plan
+ *
+ *	  NEURDB: create a NeurDBPredict plan node for the PREDICT AI operator
+ *	  path and (recursively) plans for its subpath.
+ *
+ * The child must emit exactly the advertised output columns (all input
+ * columns plus the trailing nr_pred placeholder), because the executor
+ * derives the feature payload sent to the AI engine from the child's
+ * targetlist; hence CP_EXACT_TLIST.
+ */
+static NeurDBPredict *
+create_neurdbpredict_plan(PlannerInfo *root, NeurDBPredictPath *best_path)
+{
+	NeurDBPredict *plan;
+	Plan	   *subplan;
+	Query	   *parse = root->parse;
+
+	subplan = create_plan_recurse(root, best_path->subpath, CP_EXACT_TLIST);
+
+	plan = make_neurdbpredict(subplan);
+	plan->stmt = (NeurDBPredictStmt *) parse->predictStmt;
+	plan->trainOn = parse->trainOn;
+	plan->predictTargetList = parse->predictTargetList;
+	plan->nested = true;
+
+	copy_generic_path_info(&plan->plan, (Path *) best_path);
+
+	return plan;
+}
+
 
 /*****************************************************************************
  *
@@ -3701,23 +3739,11 @@ create_subqueryscan_plan(PlannerInfo *root, SubqueryScanPath *best_path,
 	subplan = create_plan(rel->subroot, best_path->subpath);
 
 	/*
-	 * NEURDB: if the subquery is a PREDICT statement, wrap its plan with a
-	 * NeurDBPredict node so predictions are computed before rows are handed
-	 * to the outer query.  The node passes all input columns through and
-	 * fills the trailing nr_pred placeholder column with the prediction.
+	 * NEURDB: if the subquery is a PREDICT statement, its plan tree already
+	 * has the NeurDBPredict node on top: grouping_planner put a
+	 * NeurDBPredictPath atop the subquery's final paths, and create_plan
+	 * just translated it (create_neurdbpredict_plan).  Nothing to add here.
 	 */
-	if (rel->subroot->parse->commandType == CMD_PREDICT)
-	{
-		Query	   *subparse = rel->subroot->parse;
-		NeurDBPredict *predict = make_neurdbpredict(subplan);
-
-		predict->stmt = (NeurDBPredictStmt *) subparse->predictStmt;
-		predict->trainOn = subparse->trainOn;
-		predict->predictTargetList = subparse->predictTargetList;
-		predict->nested = true;
-
-		subplan = (Plan *) predict;
-	}
 
 	/* Sort clauses into best execution order */
 	scan_clauses = order_qual_clauses(root, scan_clauses);
