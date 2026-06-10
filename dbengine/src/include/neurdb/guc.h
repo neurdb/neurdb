@@ -12,4 +12,9 @@ extern PGDLLIMPORT int NrTaskEpoch;
 extern PGDLLIMPORT int NrTaskMaxFeatures;
 extern PGDLLIMPORT int NrTaskNumBatches;
 
+/* PREDICT operator cost-model parameters (see cost_neurdbpredict) */
+extern PGDLLIMPORT double NrPredictStartupCost;
+extern PGDLLIMPORT double NrPredictTupleCost;
+extern PGDLLIMPORT double NrPredictBatchCost;
+
 #endif

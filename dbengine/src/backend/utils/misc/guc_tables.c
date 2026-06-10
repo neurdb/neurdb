@@ -3577,6 +3577,40 @@ struct config_int ConfigureNamesInt[] =
 struct config_real ConfigureNamesReal[] =
 {
 	{
+		{"nr_predict_startup_cost", PGC_USERSET, QUERY_TUNING_COST,
+			gettext_noop("Sets the planner's estimate of the one-time cost of "
+						 "starting a PREDICT operator (AI engine session and "
+						 "model/context setup)."),
+			NULL,
+			GUC_EXPLAIN
+		},
+		&NrPredictStartupCost,
+		10000.0, 0, DBL_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"nr_predict_tuple_cost", PGC_USERSET, QUERY_TUNING_COST,
+			gettext_noop("Sets the planner's estimate of the cost of running "
+						 "AI inference on one input row in a PREDICT operator."),
+			NULL,
+			GUC_EXPLAIN
+		},
+		&NrPredictTupleCost,
+		1.0, 0, DBL_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"nr_predict_batch_cost", PGC_USERSET, QUERY_TUNING_COST,
+			gettext_noop("Sets the planner's estimate of the per-batch round "
+						 "trip cost between a PREDICT operator and the AI engine."),
+			NULL,
+			GUC_EXPLAIN
+		},
+		&NrPredictBatchCost,
+		1000.0, 0, DBL_MAX,
+		NULL, NULL, NULL
+	},
+	{
 		{"seq_page_cost", PGC_USERSET, QUERY_TUNING_COST,
 			gettext_noop("Sets the planner's estimate of the cost of a "
 						 "sequentially fetched disk page."),

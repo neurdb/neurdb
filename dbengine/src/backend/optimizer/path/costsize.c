@@ -82,6 +82,7 @@
 #include "executor/nodeHash.h"
 #include "executor/nodeMemoize.h"
 #include "miscadmin.h"
+#include "neurdb/guc.h"
 #include "nodes/makefuncs.h"
 #include "nodes/nodeFuncs.h"
 #include "optimizer/clauses.h"
@@ -1463,6 +1464,19 @@ cost_subqueryscan(SubqueryScanPath *path, PlannerInfo *root,
 	path->path.total_cost = path->subpath->total_cost;
 
 	/*
+	 * NEURDB: a PREDICT subquery's plan gets wrapped with a NeurDBPredict
+	 * node at plan-creation time (create_subqueryscan_plan); charge the AI
+	 * inference cost here so the outer query is planned around the
+	 * operator's true cost.  Quals/tlist below are evaluated on the
+	 * operator's output, so they correctly stack on top of this.
+	 */
+	if (baserel->subroot &&
+		baserel->subroot->parse->commandType == CMD_PREDICT)
+		cost_neurdbpredict(&path->path.startup_cost, &path->path.total_cost,
+						   path->path.startup_cost, path->path.total_cost,
+						   path->subpath->rows);
+
+	/*
 	 * However, if there are no relevant restriction clauses and the
 	 * pathtarget is trivial, then we expect that setrefs.c will optimize away
 	 * the SubqueryScan plan node altogether, so we should just make its cost
@@ -1490,6 +1504,40 @@ cost_subqueryscan(SubqueryScanPath *path, PlannerInfo *root,
 
 	path->path.startup_cost += startup_cost;
 	path->path.total_cost += startup_cost + run_cost;
+}
+
+/*
+ * cost_neurdbpredict
+ *	  Cost of the PREDICT (NeurDBPredict) AI operator over 'tuples' input rows.
+ *
+ * Deliberately simple linear model, tunable via three GUCs and meant to be
+ * refined/replaced later (e.g. model-specific terms, cache-aware context
+ * reuse, engine load):
+ *
+ *	startup = input_startup + nr_predict_startup_cost
+ *	total   = input_total   + nr_predict_startup_cost
+ *	        + nr_predict_tuple_cost * tuples              (per-row inference)
+ *	        + nr_predict_batch_cost * ceil(tuples/batch)  (engine round trips)
+ *
+ * The batch size is the runtime batching GUC (nr_task_batch_size), so the
+ * estimate follows how the operator will actually talk to the AI engine.
+ * Row count and width are unchanged by the operator (it passes input columns
+ * through and fills the nr_pred column).
+ */
+void
+cost_neurdbpredict(Cost *startup_cost, Cost *total_cost,
+				   Cost input_startup_cost, Cost input_total_cost,
+				   double tuples)
+{
+	double		nbatches;
+
+	tuples = clamp_row_est(tuples);
+	nbatches = ceil(tuples / Max(NrTaskBatchSize, 1));
+
+	*startup_cost = input_startup_cost + NrPredictStartupCost;
+	*total_cost = input_total_cost + NrPredictStartupCost +
+		NrPredictTupleCost * tuples +
+		NrPredictBatchCost * nbatches;
 }
 
 /*

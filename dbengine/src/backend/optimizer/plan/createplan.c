@@ -7275,9 +7275,10 @@ make_neurdbpredict(Plan *lefttree)
 	plan->lefttree = lefttree;
 	plan->righttree = NULL;
 
-	/* prediction dominates cost; just inherit the child's estimates */
-	plan->startup_cost = lefttree->startup_cost;
-	plan->total_cost = lefttree->total_cost;
+	/* AI operator cost model; rows/width pass through unchanged */
+	cost_neurdbpredict(&plan->startup_cost, &plan->total_cost,
+					   lefttree->startup_cost, lefttree->total_cost,
+					   lefttree->plan_rows);
 	plan->plan_rows = lefttree->plan_rows;
 	plan->plan_width = lefttree->plan_width;
 	plan->parallel_aware = false;
