@@ -27,14 +27,14 @@ import matplotlib.pyplot as plt
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOGS = os.path.normpath(os.path.join(HERE, "../../../../test/avito/workloads/logs"))
 
-FIGSIZE = (4.8, 3.6)
+FIGSIZE = (6.4, 4.8)
 plt.rcParams.update(
     {
-        "font.size": 15,
-        "axes.labelsize": 17,
-        "xtick.labelsize": 14,
-        "ytick.labelsize": 14,
-        "legend.fontsize": 12.5,
+        "font.size": 20,
+        "axes.labelsize": 20,
+        "xtick.labelsize": 20,
+        "ytick.labelsize": 20,
+        "legend.fontsize": 20,
         "axes.spines.top": False,
         "axes.spines.right": False,
     }
@@ -89,14 +89,14 @@ for name, color, get in segs:
         linewidth=0.5,
     )
     for i, v in enumerate(vals):
-        if v > 30:
+        if v > 110:  # segment must be tall enough for a 20 pt label
             ax.text(
                 i,
                 bottoms[i] + v / 2,
                 f"{v:.0f}",
                 ha="center",
                 va="center",
-                fontsize=12,
+                fontsize=20,
                 color="white" if color != "#b8b8b8" else "#444444",
             )
     bottoms = [b + v for b, v in zip(bottoms, vals)]
@@ -107,7 +107,7 @@ for i, (s, _) in enumerate(order):
         bottoms[i] + 14,
         f"{rows[s]['total_s']:.0f}s",
         ha="center",
-        fontsize=13.5,
+        fontsize=20,
         fontweight="bold",
     )
 naive = rows["cache_off__sched_off"]["total_s"]
@@ -117,12 +117,13 @@ ax.set_xticklabels([lbl.replace("-", "-\n") for _, lbl in order], fontsize=13)
 ax.set_ylabel("End-to-end time (s)")
 ax.set_ylim(0, naive * 1.22)
 ax.legend(
-    loc="upper right",
-    bbox_to_anchor=(1.02, 1.06),
-    borderaxespad=0,
+    loc="lower center",
+    bbox_to_anchor=(0.5, 1.0),
+    ncol=2,
     frameon=False,
-    handlelength=1.4,
-    handletextpad=0.5,
+    handlelength=1.2,
+    handletextpad=0.4,
+    columnspacing=1.0,
     labelspacing=0.25,
 )
 fig.tight_layout()
@@ -164,27 +165,28 @@ ax.bar(
     color="#DD8452",
 )
 for x, h in zip(xb, horizons):
-    ax.text(x - w / 2, t_root[h] + 0.9, f"{t_root[h]:.1f}", ha="center", fontsize=12)
-    ax.text(x + w / 2, t_dyn[h] + 0.9, f"{t_dyn[h]:.1f}", ha="center", fontsize=12)
+    ax.text(x - w / 2, t_root[h] + 0.9, f"{t_root[h]:.1f}", ha="center", fontsize=20)
+    ax.text(x + w / 2, t_dyn[h] + 0.9, f"{t_dyn[h]:.1f}", ha="center", fontsize=20)
     ax.text(
         x,
         max(t_root[h], t_dyn[h]) + 6.0,
         f"{t_root[h] / t_dyn[h]:.1f}x",
         ha="center",
-        fontsize=13.5,
+        fontsize=20,
         color="#C44E52",
         fontweight="bold",
     )
 
 ax.set_xticks(list(xb))
-ax.set_xticklabels([f"{h}d\n({task_rows[h]} rows)" for h in horizons], fontsize=13)
+ax.set_xticklabels([f"{h}d\n({task_rows[h]} rows)" for h in horizons], fontsize=20)
 ax.set_ylabel("AI predict time (s)")
-ax.set_ylim(0, max(t_root.values()) * 1.5)
+ax.set_ylim(0, max(t_root.values()) * 1.3)
 ax.legend(
-    loc="upper left",
+    loc="lower left",
+    bbox_to_anchor=(-0.02, 1.0),
     frameon=False,
-    handlelength=1.4,
-    handletextpad=0.5,
+    handlelength=1.2,
+    handletextpad=0.4,
     labelspacing=0.25,
 )
 fig.tight_layout()
