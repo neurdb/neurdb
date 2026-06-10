@@ -151,14 +151,14 @@ ax.bar(
     [x - w / 2 for x in xb],
     [t_root[h] for h in horizons],
     w,
-    label="AI op at root (all rows)",
+    label="w/o operator scheduling",
     color="#937860",
 )
 ax.bar(
     [x + w / 2 for x in xb],
     [t_dyn[h] for h in horizons],
     w,
-    label="Dynamic scheduling (candidates)",
+    label="w/ operator scheduling",
     color="#DD8452",
 )
 for x, h in zip(xb, horizons):
@@ -178,7 +178,7 @@ ax.set_xticks(list(xb))
 ax.set_xticklabels(
     [f"h = {h}d\n({task_rows[h]:,} rows)" for h in horizons], fontsize=11
 )
-ax.set_ylabel("AI-operator time (s)")
+ax.set_ylabel("AI predict time (s)")
 ax.set_ylim(0, max(t_root.values()) * 1.32)
 ax.legend(
     loc="upper left",
