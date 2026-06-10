@@ -77,25 +77,32 @@ async def hello():
 
 @quart_app.websocket("/ws")
 async def handle_ws():
-    sender_task = asyncio.create_task(WebsocketSender.start_websocket_sender_task())
+    g.ws_sender = WebsocketSender()
+    sender_task = asyncio.create_task(g.ws_sender.run())
     logger.debug(f"Client event received.")
-    while True:
-        data = await websocket.receive()
-        if data:
-            data_json: dict = json.loads(data)
-            event = data_json.get("event")
-            if event == "setup":
-                await on_setup(data_json)
-            elif event == "disconnect":
-                await on_disconnect(data_json)
-            elif event == "task":
-                await on_task(data_json)
-            elif event == "batch_data":
-                await on_batch_data(data_json)
-            elif event == "ack_result":
-                await on_ack_result(data_json)
-            else:
-                pass
+    try:
+        while True:
+            data = await websocket.receive()
+            if data:
+                data_json: dict = json.loads(data)
+                event = data_json.get("event")
+                if event == "setup":
+                    await on_setup(data_json)
+                elif event == "disconnect":
+                    await on_disconnect(data_json)
+                elif event == "task":
+                    await on_task(data_json)
+                elif event == "batch_data":
+                    await on_batch_data(data_json)
+                elif event == "ack_result":
+                    await on_ack_result(data_json)
+                else:
+                    pass
+    finally:
+        # connection gone (clean disconnect or abort): stop ONLY this
+        # connection's sender; other concurrent clients keep running
+        g.ws_sender.stop(getattr(g, "ws_session_id", None))
+        sender_task.cancel()
 
 
 async def on_setup(data: dict):
@@ -105,6 +112,11 @@ async def on_setup(data: dict):
     quart_app.config["clients"][
         req.session_id
     ] = req.session_id  # TODO: refactor the structure of clients map
+
+    # bind this connection's sender to the freshly assigned session id so
+    # detached tasks (train/inference) can route results back to it
+    g.ws_session_id = req.session_id
+    g.ws_sender.register(req.session_id)
 
     await WebsocketSender.send(SetupResponse(req.session_id).to_json())
 
@@ -118,7 +130,7 @@ async def on_disconnect(data: dict):
     quart_app.config["dispatchers"].remove(req.session_id)
 
     await WebsocketSender.send(DisconnectResponse(req.session_id).to_json())
-    WebsocketSender.stop()
+    g.ws_sender.stop(req.session_id)
 
 
 async def on_task(data: dict):
