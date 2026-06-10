@@ -3,6 +3,7 @@
 #include <c.h>
 
 #include "../cjson/cJSON.h"
+#include "miscadmin.h"
 #include "utils/elog.h"
 
 /*  callback and handlers */
@@ -79,6 +80,40 @@ nws_trace_enabled(void)
 		}                                           \
 	} while (0)
 
+/*
+ * Query-cancel support for the busy-wait loops below.
+ *
+ * The waits (connect / setup ack / task ack / completion) used to spin on
+ * usleep() without ever calling CHECK_FOR_INTERRUPTS(), so a backend stuck
+ * waiting on the AI engine (e.g. a batch-count mismatch) ignored both Ctrl+C
+ * (pg_cancel_backend) and pg_terminate_backend forever: those only set
+ * pending flags that are acted upon at the next CHECK_FOR_INTERRUPTS().
+ *
+ * elog/CHECK_FOR_INTERRUPTS may only run on the backend main thread, but
+ * nws_wait_completion is also called from inference worker pthreads.  We
+ * therefore remember the thread that initialised the websocket (always the
+ * backend) and only check interrupts when waiting on that thread.
+ *
+ * Before throwing we set ws->interrupted so the service thread (which loops
+ * on !ws->interrupted) shuts down instead of being orphaned mid-query.
+ */
+static pthread_t nws_backend_thread;
+static bool nws_backend_thread_known = false;
+
+static inline void
+nws_check_backend_interrupts(NrWebsocket * ws)
+{
+	if (!nws_backend_thread_known ||
+		!pthread_equal(pthread_self(), nws_backend_thread))
+		return;
+
+	if ((QueryCancelPending || ProcDiePending) && INTERRUPTS_CAN_BE_PROCESSED())
+	{
+		ws->interrupted = 1;	/* stop the service thread before we longjmp */
+		CHECK_FOR_INTERRUPTS();
+	}
+}
+
 /*  define the protocol in the websocket */
 static const struct lws_protocols nws_protocol[] = {{
 		"nws_protocol",
@@ -95,6 +130,13 @@ nws_initialize(const char *url, const int port, const char *path,
 			   const size_t queue_max_size)
 {
 	NrWebsocket *websocket = (NrWebsocket *) malloc(sizeof(NrWebsocket));
+
+	/* nws_initialize always runs on the backend main thread */
+	if (!nws_backend_thread_known)
+	{
+		nws_backend_thread = pthread_self();
+		nws_backend_thread_known = true;
+	}
 
 	memset(websocket, 0, sizeof(NrWebsocket));
 
@@ -159,6 +201,7 @@ nws_connect(NrWebsocket * ws)
 	while (!ws->connnected && !ws->interrupted)
 	{
 		/* wait for the connection to be established */
+		nws_check_backend_interrupts(ws);
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
@@ -171,6 +214,7 @@ nws_connect(NrWebsocket * ws)
 	while (!ws->setuped && !ws->interrupted)
 	{
 		/* wait for the setup to be acknowledged */
+		nws_check_backend_interrupts(ws);
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
@@ -196,6 +240,7 @@ nws_wait_completion(NrWebsocket * ws)
 {
 	while (!ws->completed && !ws->interrupted)
 	{
+		nws_check_backend_interrupts(ws);
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
@@ -283,6 +328,7 @@ nws_send_task(NrWebsocket * ws, MLTask ml_task, const char *table_name, void *ta
 	while (!ws->task_acknowledged && !ws->interrupted)
 	{
 		/* wait for the task to be acknowledged */
+		nws_check_backend_interrupts(ws);
 		usleep(1000);
 /* TODO: consider using a condition variable instead of busy */
 		/* waiting */
