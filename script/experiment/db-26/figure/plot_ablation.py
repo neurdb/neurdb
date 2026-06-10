@@ -63,9 +63,9 @@ order = [
     ("cache_on__sched_on", "NeurEngine"),
 ]
 segs = [
-    ("Label build (SQL)", "#b8b8b8", lambda r: r["label_s"]),
-    ("PIT features (SQL)", "#4C72B0", lambda r: r["features_s"]),
-    ("AI predict (TabPFN)", "#DD8452", lambda r: r["predict_total_s"]),
+    ("Label build", "#b8b8b8", lambda r: r["label_s"]),
+    ("PIT features", "#4C72B0", lambda r: r["features_s"]),
+    ("AI predict", "#DD8452", lambda r: r["predict_total_s"]),
     (
         "Other",
         "#e3e3e3",
