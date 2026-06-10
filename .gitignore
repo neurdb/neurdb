@@ -41,4 +41,4 @@ test/avito/workloads/dump/
 
 # db-26 experiment scratch run logs + ad-hoc server logs
 script/experiment/db-26/*.log
-test/server_8090.log
+test/server_*.log
