@@ -181,7 +181,7 @@ for x, h in zip(xb, horizons):
     )
 
 ax.set_xticks(list(xb))
-ax.set_xticklabels([f"{h}d ({task_rows[h]})" for h in horizons], fontsize=14)
+ax.set_xticklabels([f"{h}d ({task_rows[h]} rows)" for h in horizons], fontsize=11.5)
 ax.set_ylabel("AI predict time (s)")
 ax.set_ylim(0, max(t_root.values()) * 1.5)
 ax.legend(
