@@ -8,6 +8,9 @@ with each task routed to its own TabPFN AI server (one GPU each,
 Figure 1 (throughput_scaling):     NLQ predict wall time vs #AI servers with
                                    the ideal 1/N line.
 Figure 2 (throughput_per_horizon): per-task predict latency vs #servers.
+Figure 3 (throughput_combined):    1+2 merged: per-task bars at every server
+                                   count, with the NLQ wall-time line running
+                                   over the tops of the slowest bars.
 
 Same size/fonts as plot_ablation.py so all figures match in the paper.
 
@@ -130,3 +133,68 @@ ax.legend(
 )
 fig.tight_layout()
 save(fig, "throughput_per_horizon")
+
+# ====== figure 3: per-task bars per server count + wall-time line on top ======
+# One group of bars per server count N (one bar per task); the NLQ finishes
+# when its slowest task does, so the wall-time curve of figure 1 is exactly
+# the line running over the tallest bar of every group.
+fig, ax = plt.subplots(figsize=FIGSIZE)
+gw = 0.8  # group width
+bw = gw / len(horizons)
+# soft pastel palette, one color + hatch per task, black bar edges
+hcolors = ["#AECDE1", "#F6D8AE", "#B5D6B2", "#EFB3AC", "#C9BEDB", "#E3CBA6"]
+hatches = ["", "//", "..", "xx", "\\\\", "++"]
+for j, h in enumerate(horizons):
+    off = (j - (len(horizons) - 1) / 2) * bw
+    ax.bar(
+        [x + off for x in range(len(ns))],
+        [conc_h[h][n] for n in ns],
+        bw,
+        label=f"{h}d",
+        color=hcolors[j % len(hcolors)],
+        hatch=hatches[j % len(hatches)],
+        edgecolor="black",
+        linewidth=0.7,
+    )
+# the line literally runs over the top of each group's slowest bar
+wall_x, wall = [], []
+for x, n in enumerate(ns):
+    jmax = max(range(len(horizons)), key=lambda j: conc_h[horizons[j]][n])
+    wall_x.append(x + (jmax - (len(horizons) - 1) / 2) * bw)
+    wall.append(conc_h[horizons[jmax]][n])
+ax.plot(
+    wall_x,
+    wall,
+    "o-",
+    lw=2.5,
+    ms=8,
+    color="#1F77B4",
+    zorder=5,
+    clip_on=False,
+)
+for x, v in zip(wall_x, wall):
+    ax.text(
+        x + 0.02,
+        v + wall[0] * 0.045,
+        f"{v:.1f}",
+        ha="left",
+        fontsize=17,
+        color="#1F77B4",
+    )
+ax.set_xticks(list(range(len(ns))))
+ax.set_xticklabels([str(n) for n in ns])
+ax.set_xlabel("Number of AI servers (GPUs)")
+ax.set_ylabel("AI predict time (s)")
+ax.set_ylim(0, wall[0] * 1.42)
+ax.legend(
+    frameon=False,
+    ncol=6,
+    fontsize=16.5,
+    loc="upper right",
+    handlelength=1.0,
+    handletextpad=0.35,
+    labelspacing=0.25,
+    columnspacing=0.8,
+)
+fig.tight_layout()
+save(fig, "throughput_combined")
