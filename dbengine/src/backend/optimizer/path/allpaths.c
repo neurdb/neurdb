@@ -25,6 +25,7 @@
 #include "catalog/pg_proc.h"
 #include "foreign/fdwapi.h"
 #include "miscadmin.h"
+#include "neurdb/guc.h"
 #include "nodes/makefuncs.h"
 #include "nodes/nodeFuncs.h"
 #include "nodes/supportnodes.h"
@@ -2569,13 +2570,24 @@ set_subquery_pathlist(PlannerInfo *root, RelOptInfo *rel,
 	 * XXX Are there any cases where we want to make a policy decision not to
 	 * push down a pushable qual, because it'd result in a worse plan?
 	 *
-	 * NEURDB: never push outer quals down into a PREDICT subquery.  Filters
-	 * above PREDICT typically reference the nr_pred column, which is only a
-	 * NULL placeholder inside the subquery (the prediction is computed by
-	 * the NeurDBPredict node wrapped around the subquery plan); and pushing
-	 * other quals down would change which rows get predicted.
+	 * NEURDB: dynamic scheduling of the PREDICT AI operator.  When
+	 * nr_predict_pushdown is on, outer quals referencing only input columns
+	 * may be pushed below the operator (into the PREDICT subquery's WHERE),
+	 * so only qualifying rows are fetched, trained on and inferred --
+	 * usually a massive saving, since the plan cost is dominated by per-row
+	 * inference (see cost_neurdbpredict).  The trailing nr_pred output
+	 * column is explicitly marked unsafe: inside the subquery it is only a
+	 * NULL placeholder Const, so a qual on the prediction must stay above
+	 * the operator (substituting the placeholder would discard every row).
+	 * With the GUC off, the operator always stays at the root of its
+	 * subquery and every qual is evaluated above it.
 	 */
-	if (subquery->commandType == CMD_SELECT &&
+	if (subquery->commandType == CMD_PREDICT)
+		safetyInfo.unsafeFlags[list_length(subquery->targetList)] |=
+			UNSAFE_HAS_VOLATILE_FUNC;
+
+	if ((subquery->commandType == CMD_SELECT ||
+		 (subquery->commandType == CMD_PREDICT && NrPredictPushdown)) &&
 		rel->baserestrictinfo != NIL &&
 		subquery_is_pushdown_safe(subquery, subquery, &safetyInfo))
 	{

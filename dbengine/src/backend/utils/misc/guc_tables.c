@@ -811,6 +811,18 @@ StaticAssertDecl(lengthof(config_type_names) == (PGC_ENUM + 1),
 struct config_bool ConfigureNamesBool[] =
 {
 	{
+		{"nr_predict_pushdown", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Enables pushing input-column quals below the PREDICT "
+						 "AI operator (cost-based dynamic operator scheduling)."),
+			gettext_noop("When off, the operator always stays at the root of its "
+						 "subquery and all quals are evaluated above it."),
+			GUC_EXPLAIN
+		},
+		&NrPredictPushdown,
+		true,
+		NULL, NULL, NULL
+	},
+	{
 		{"enable_seqscan", PGC_USERSET, QUERY_TUNING_METHOD,
 			gettext_noop("Enables the planner's use of sequential-scan plans."),
 			NULL,

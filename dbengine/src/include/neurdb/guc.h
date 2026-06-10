@@ -17,4 +17,7 @@ extern PGDLLIMPORT double NrPredictStartupCost;
 extern PGDLLIMPORT double NrPredictTupleCost;
 extern PGDLLIMPORT double NrPredictBatchCost;
 
+/* allow pushing input-column quals below the PREDICT operator */
+extern PGDLLIMPORT bool NrPredictPushdown;
+
 #endif

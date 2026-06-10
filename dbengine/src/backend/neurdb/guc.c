@@ -21,3 +21,10 @@ int NrTaskNumBatches;
 double NrPredictStartupCost;	/* engine session + model/context setup */
 double NrPredictTupleCost;		/* per input row inferred */
 double NrPredictBatchCost;		/* per batch round trip to the AI engine */
+
+/*
+ * Allow the planner to push input-column quals below the PREDICT operator
+ * (cost-based dynamic scheduling).  Off = the operator always stays at the
+ * root of its subquery and all quals are evaluated above it.
+ */
+bool NrPredictPushdown;
