@@ -1,0 +1,299 @@
+== task set: horizons=[1 3 7] cand=[categoryid IN (60, 26, 27)] cache=on modes=[off] k=10 ==
+>> tool: cutoffs
+DROP TABLE
+SELECT 12
+ALTER TABLE
+w_cutoffs:
+ split | n_cutoffs |         min         |         max
+-------+-----------+---------------------+---------------------
+ test  |         1 | 2015-05-13 00:00:00 | 2015-05-13 00:00:00
+ train |         9 | 2015-05-02 00:00:00 | 2015-05-10 00:00:00
+ val   |         2 | 2015-05-11 00:00:00 | 2015-05-12 00:00:00
+(3 rows)
+
+TIMING,tool_cutoffs,0.2
+>> 01 label h=1
+DROP TABLE
+SELECT 8368
+ALTER TABLE
+w_ad_label_1:
+ n_rows | n_ads | n_cutoffs
+--------+-------+-----------
+   8368 |  3927 |        12
+(1 row)
+
+TIMING,01_label_h1,66.9
+>> 01 label h=3
+DROP TABLE
+SELECT 19106
+ALTER TABLE
+w_ad_label_3:
+ n_rows | n_ads | n_cutoffs
+--------+-------+-----------
+  19106 |  4322 |        12
+(1 row)
+
+TIMING,01_label_h3,80.4
+>> 01 label h=7
+DROP TABLE
+SELECT 33531
+ALTER TABLE
+w_ad_label_7:
+ n_rows | n_ads | n_cutoffs
+--------+-------+-----------
+  33531 |  4939 |        12
+(1 row)
+
+TIMING,01_label_h7,148.8
+>> tool: feature cache init (ONCE = reuse across tasks)
+DROP TABLE
+CREATE TABLE
+TIMING,cache_init,0.3
+>> 02 features h=1
+INSERT 0 8368
+   (INSERT count above = rows actually computed for h=1; cache size now:)
+ cache_rows
+------------
+       8368
+(1 row)
+
+TIMING,02_features_h1,94.7
+>> 03 task table h=1
+DROP TABLE
+SELECT 8368
+ALTER TABLE
+w_task_1 (split / rows / mean label):
+ split | n_rows | mean_ctr
+-------+--------+----------
+ test  |    780 |  0.06913
+ train |   5935 |  0.08886
+ val   |   1653 |  0.07969
+(3 rows)
+
+TIMING,03_task_h1,0.3
+>> 02 features h=3
+INSERT 0 10738
+   (INSERT count above = rows actually computed for h=3; cache size now:)
+ cache_rows
+------------
+      19106
+(1 row)
+
+TIMING,02_features_h3,45.1
+>> 03 task table h=3
+DROP TABLE
+SELECT 19106
+ALTER TABLE
+w_task_3 (split / rows / mean label):
+ split | n_rows | mean_ctr
+-------+--------+----------
+ test  |   1613 |  0.05016
+ train |  13888 |  0.05408
+ val   |   3605 |  0.04570
+(3 rows)
+
+TIMING,03_task_h3,0.3
+>> 02 features h=7
+INSERT 0 14425
+   (INSERT count above = rows actually computed for h=7; cache size now:)
+ cache_rows
+------------
+      33531
+(1 row)
+
+TIMING,02_features_h7,42.1
+>> 03 task table h=7
+DROP TABLE
+SELECT 33531
+ALTER TABLE
+w_task_7 (split / rows / mean label):
+ split | n_rows | mean_ctr
+-------+--------+----------
+ test  |   2620 |  0.03758
+ train |  25198 |  0.03548
+ val   |   5713 |  0.03505
+(3 rows)
+
+TIMING,03_task_h7,0.5
+>> 08 predict candidates h=1 sched=off
+SET
+=== 08 h=1  sched=off  candidates: categoryid IN (60, 26, 27)
+    rows total=8368  candidate=1155  fed_to_operator=8368  batches=3
+SET
+SET
+SET
+                                QUERY PLAN
+---------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..21770.74 rows=1155 width=48)
+   Filter: (p.categoryid = ANY ('{60,26,27}'::bigint[]))
+   ->  NeurDB Predict  (cost=10000.00..21655.68 rows=8368 width=185)
+         ->  Seq Scan on w_task_1  (cost=0.00..287.68 rows=8368 width=185)
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 1155
+Time: 12780.548 ms (00:12.781)
+Timing is off.
+ALTER TABLE
+--- w_pred_1 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   1155 |  0.064665 | 0.095832
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=1) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 4418364 | 2015-05-09 00:00:00 |         27 |   950 | 0.313886
+ 4590265 | 2015-05-10 00:00:00 |         60 |  1439 | 0.312274
+ 2773609 | 2015-05-05 00:00:00 |         60 |  2399 | 0.306917
+ 1414705 | 2015-05-12 00:00:00 |         60 |   359 | 0.299926
+   46023 | 2015-05-07 00:00:00 |         27 |  6490 | 0.299731
+(5 rows)
+
+RESET
+TIMING,08_predict_h1_off,13.0
+>> 08 predict candidates h=3 sched=off
+SET
+=== 08 h=3  sched=off  candidates: categoryid IN (60, 26, 27)
+    rows total=19106  candidate=2676  fed_to_operator=19106  batches=5
+SET
+SET
+SET
+                                 QUERY PLAN
+----------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..35021.77 rows=2676 width=48)
+   Filter: (p.categoryid = ANY ('{60,26,27}'::bigint[]))
+   ->  NeurDB Predict  (cost=10000.00..34759.06 rows=19106 width=185)
+         ->  Seq Scan on w_task_3  (cost=0.00..653.06 rows=19106 width=185)
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 2676
+Time: 24313.821 ms (00:24.314)
+Timing is off.
+ALTER TABLE
+--- w_pred_3 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   2676 |  0.034098 | 0.046363
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=3) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 4418364 | 2015-05-08 00:00:00 |         27 |   950 | 0.236452
+ 4418364 | 2015-05-09 00:00:00 |         27 |   950 | 0.235890
+ 4418364 | 2015-05-07 00:00:00 |         27 |   950 | 0.235506
+ 3076925 | 2015-05-13 00:00:00 |         60 |  1099 | 0.227445
+ 3076925 | 2015-05-12 00:00:00 |         60 |  1099 | 0.222731
+(5 rows)
+
+RESET
+TIMING,08_predict_h3_off,24.5
+>> 08 predict candidates h=7 sched=off
+SET
+=== 08 h=7  sched=off  candidates: categoryid IN (60, 26, 27)
+    rows total=33531  candidate=4595  fed_to_operator=33531  batches=9
+SET
+SET
+SET
+                                 QUERY PLAN
+-----------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..54159.36 rows=503 width=48)
+   Filter: (p.categoryid = ANY ('{60,26,27}'::bigint[]))
+   ->  NeurDB Predict  (cost=10000.00..53698.31 rows=33531 width=212)
+         ->  Seq Scan on w_task_7  (cost=0.00..1167.31 rows=33531 width=212)
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 4595
+Time: 39396.037 ms (00:39.396)
+Timing is off.
+ALTER TABLE
+--- w_pred_7 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   4595 |  0.022548 | 0.022783
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=7) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 4109035 | 2015-05-07 00:00:00 |         27 |  3000 | 0.190592
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.180108
+  974474 | 2015-05-11 00:00:00 |         60 |  3899 | 0.179102
+  974474 | 2015-05-10 00:00:00 |         60 |  3899 | 0.177583
+  974474 | 2015-05-09 00:00:00 |         60 |  3899 | 0.176582
+(5 rows)
+
+RESET
+TIMING,08_predict_h7_off,39.7
+>> 09 action list
+DROP TABLE
+SELECT 1155
+ALTER TABLE
+=== 09 action list (k=10) ===
+     action      | n_ads | avg_ctr_1d | avg_ctr_7d
+-----------------+-------+------------+------------
+ promote_now     |   120 |   0.216075 |   0.057307
+ promote_later   |    20 |   0.141012 |   0.041670
+ keep            |   813 |   0.053716 |   0.014191
+ reduce_exposure |   202 |   0.011224 |   0.005001
+(4 rows)
+
+--- sample: promote_now ---
+  adid   |         ts          | categoryid |  ctr_1d  |  ctr_3d  |  ctr_7d
+---------+---------------------+------------+----------+----------+----------
+ 4418364 | 2015-05-09 00:00:00 |         27 | 0.313886 | 0.235890 | 0.126152
+ 4590265 | 2015-05-10 00:00:00 |         60 | 0.312274 | 0.182016 | 0.104483
+ 2773609 | 2015-05-05 00:00:00 |         60 | 0.306917 | 0.202165 | 0.111268
+ 1414705 | 2015-05-12 00:00:00 |         60 | 0.299926 | 0.190000 | 0.114590
+   46023 | 2015-05-07 00:00:00 |         27 | 0.299731 | 0.187505 | 0.118438
+(5 rows)
+
+--- sample: promote_later (weak 1d, strong 7d) ---
+  adid   |         ts          | categoryid |  ctr_1d  |  ctr_3d  |  ctr_7d
+---------+---------------------+------------+----------+----------+----------
+ 2771160 | 2015-05-07 00:00:00 |         27 | 0.162447 | 0.131820 | 0.075094
+ 4933713 | 2015-05-05 00:00:00 |         60 | 0.163901 | 0.083116 | 0.057815
+ 4862166 | 2015-05-12 00:00:00 |         26 | 0.117436 | 0.067103 | 0.054555
+  198105 | 2015-05-05 00:00:00 |         27 | 0.173670 | 0.122001 | 0.051912
+ 5089464 | 2015-05-05 00:00:00 |         60 | 0.155964 | 0.087145 | 0.051799
+(5 rows)
+
+--- sample: reduce_exposure ---
+  adid   |         ts          | categoryid |  ctr_1d  |  ctr_3d  |  ctr_7d
+---------+---------------------+------------+----------+----------+----------
+ 4099633 | 2015-05-06 00:00:00 |         60 | 0.002603 | 0.001852 | 0.001700
+ 4099633 | 2015-05-04 00:00:00 |         60 | 0.002606 | 0.001862 | 0.001632
+ 4099633 | 2015-05-11 00:00:00 |         60 | 0.002649 | 0.001876 | 0.001801
+ 4099633 | 2015-05-13 00:00:00 |         60 | 0.002667 | 0.001851 | 0.001821
+ 4099633 | 2015-05-07 00:00:00 |         60 | 0.002709 | 0.001891 | 0.001741
+(5 rows)
+
+TIMING,09_action_list,0.2
+
+== timing summary (wall clock) ==
+tool_cutoffs                      0.2s
+01_label_h1                      66.9s
+01_label_h3                      80.4s
+01_label_h7                     148.8s
+cache_init                        0.3s
+02_features_h1                   94.7s
+03_task_h1                        0.3s
+02_features_h3                   45.1s
+03_task_h3                        0.3s
+02_features_h7                   42.1s
+03_task_h7                        0.5s
+08_predict_h1_off                13.0s
+08_predict_h3_off                24.5s
+08_predict_h7_off                39.7s
+09_action_list                    0.2s
+== done ==
