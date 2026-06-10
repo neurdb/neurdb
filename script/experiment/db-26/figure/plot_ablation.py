@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOGS = os.path.normpath(os.path.join(HERE, "../../../../test/avito/workloads/logs"))
 
-FIGSIZE = (6.4, 4.8)
+FIGSIZE = (7.2, 4.8)
 plt.rcParams.update(
     {
         "font.size": 20,
@@ -113,7 +113,7 @@ for i, (s, _) in enumerate(order):
 naive = rows["cache_off__sched_off"]["total_s"]
 
 ax.set_xticks(list(xs))
-ax.set_xticklabels([lbl.replace("-", "-\n") for _, lbl in order], fontsize=13)
+ax.set_xticklabels([lbl.replace("-", "-\n") for _, lbl in order], fontsize=20)
 ax.set_ylabel("End-to-end time (s)")
 ax.set_ylim(0, naive * 1.22)
 ax.legend(
