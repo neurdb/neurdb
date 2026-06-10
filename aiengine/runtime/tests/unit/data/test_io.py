@@ -1,7 +1,6 @@
 import io
 
 import pyarrow as pa
-
 from data.batch import DataBatch
 from data.io import StreamDataSource, encode_frame, encode_stream
 

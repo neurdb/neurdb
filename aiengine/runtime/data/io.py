@@ -27,7 +27,6 @@ from typing import BinaryIO, Iterable, Iterator, Protocol
 from .batch import DataBatch
 from .schema import DatabaseSchema
 
-
 # Frame = 4-byte little-endian payload length + DataBatch IPC bytes.
 # A zero-length frame (or EOF) terminates the stream.
 _LEN_FMT = "<I"

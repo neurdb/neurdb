@@ -54,8 +54,7 @@ class TableSchema(RuntimeDataModel):
 
         if self.timestamp_column and self.timestamp_column not in column_name_set:
             raise ValueError(
-                "table schema timestamp column is missing: "
-                f"{self.timestamp_column}"
+                "table schema timestamp column is missing: " f"{self.timestamp_column}"
             )
         return self
 

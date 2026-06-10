@@ -32,13 +32,11 @@ from typing import (
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
-
-from data.batch import DataBatch
 from data.base import ColumnStype, MetadataKey
+from data.batch import DataBatch
 from data.schema import ColumnSchema, DatabaseSchema
 
 from .base import ColumnEncoder, ColumnPipeline, Identity, Operator
-
 
 TimestampStrategy = Literal["epoch_s", "epoch_ms", "epoch_ns"]
 
@@ -74,7 +72,7 @@ class CategoricalEncoder:
         object.__setattr__(self, "_value_set", pa.array(self.cardinality))
 
     def encode(self, arr: pa.Array) -> np.ndarray:
-        codes = pc.index_in(arr, value_set=self._value_set) # type: ignore
+        codes = pc.index_in(arr, value_set=self._value_set)  # type: ignore
         return codes.to_numpy(zero_copy_only=False).astype(np.int64, copy=False)
 
 
@@ -102,8 +100,10 @@ class TimestampEncoder:
         if not pa.types.is_timestamp(arr.type):
             raise TypeError(f"TimestampEncoder expected timestamp, got {arr.type}")
         unit = self.strategy.removeprefix("epoch_")
-        return pc.cast(arr, pa.timestamp(unit)).cast(pa.int64()).to_numpy(
-            zero_copy_only=False
+        return (
+            pc.cast(arr, pa.timestamp(unit))
+            .cast(pa.int64())
+            .to_numpy(zero_copy_only=False)
         )
 
 
@@ -180,9 +180,7 @@ class NullFillBuilder:
     def register(cls, name: str) -> Callable[[Type[Operator]], Type[Operator]]:
         def decorator(op_cls: Type[Operator]) -> Type[Operator]:
             if name in cls._registry:
-                raise ValueError(
-                    f"null-fill strategy already registered: {name!r}"
-                )
+                raise ValueError(f"null-fill strategy already registered: {name!r}")
             cls._registry[name] = op_cls
             return op_cls
 
@@ -215,7 +213,7 @@ class NullFillForward:
     """Carry the last observed value forward across nulls."""
 
     def apply(self, arr: pa.Array) -> pa.Array:
-        return pc.fill_null_forward(arr) # type: ignore
+        return pc.fill_null_forward(arr)  # type: ignore
 
 
 @NullFillBuilder.register("backward")
@@ -224,7 +222,7 @@ class NullFillBackward:
     """Carry the next observed value backward across nulls."""
 
     def apply(self, arr: pa.Array) -> pa.Array:
-        return pc.fill_null_backward(arr) # type: ignore
+        return pc.fill_null_backward(arr)  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -296,9 +294,7 @@ class FeatureConverter:
                 pipeline = self._get_pipeline(table_name, col_name, col)
                 if pipeline is None:
                     continue
-                features[(table_name, col_name)] = pipeline.apply(
-                    rb.column(col_name)
-                )
+                features[(table_name, col_name)] = pipeline.apply(rb.column(col_name))
         return EncodedFeatures(features=features)
 
     def _get_pipeline(

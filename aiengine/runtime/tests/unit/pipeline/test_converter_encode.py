@@ -1,13 +1,11 @@
 import numpy as np
 import pyarrow as pa
 import pytest
-
 from pipeline.converter import (
     CategoricalEncoder,
     NumericEncoder,
     TimestampEncoder,
 )
-
 
 # ---------------------------------------------------------------------------
 # CategoricalEncoder
@@ -117,7 +115,9 @@ def test_numeric_encoder_handles_empty_input() -> None:
 def test_timestamp_encoder_default_returns_epoch_seconds() -> None:
     encoder = TimestampEncoder()
 
-    out = encoder.encode(pa.array([1_700_000_000, 1_700_000_001], type=pa.timestamp("s")))
+    out = encoder.encode(
+        pa.array([1_700_000_000, 1_700_000_001], type=pa.timestamp("s"))
+    )
 
     assert out.dtype == np.int64
     assert out.tolist() == [1_700_000_000, 1_700_000_001]

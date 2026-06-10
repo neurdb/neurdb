@@ -1,8 +1,7 @@
-from typing import Annotated, Any, Dict
 from enum import Enum
+from typing import Annotated, Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 NonEmptyStr = Annotated[str, Field(min_length=1)]
 

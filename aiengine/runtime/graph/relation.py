@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pyarrow as pa
-
 from data.batch import DataBatch
 from data.schema import DatabaseSchema, RelationshipSchema
 
@@ -66,9 +65,7 @@ class RelationConverter:
         src_keys = RelationConverter._composite_key(src_rb, rel.source_columns)
         tgt_keys = RelationConverter._composite_key(tgt_rb, rel.target_columns)
 
-        tgt_index: Dict[Tuple[Any, ...], int] = {
-            k: i for i, k in enumerate(tgt_keys)
-        }
+        tgt_index: Dict[Tuple[Any, ...], int] = {k: i for i, k in enumerate(tgt_keys)}
 
         src_idx: List[int] = []
         tgt_idx: List[int] = []
@@ -84,8 +81,6 @@ class RelationConverter:
         )
 
     @staticmethod
-    def _composite_key(
-        rb: pa.RecordBatch, columns: List[str]
-    ) -> List[Tuple[Any, ...]]:
+    def _composite_key(rb: pa.RecordBatch, columns: List[str]) -> List[Tuple[Any, ...]]:
         cols = [rb.column(c).to_pylist() for c in columns]
         return list(zip(*cols))

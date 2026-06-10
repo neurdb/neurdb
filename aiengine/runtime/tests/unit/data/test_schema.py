@@ -1,6 +1,4 @@
 import pytest
-from pydantic import ValidationError
-
 from data.schema import (
     ColumnRole,
     ColumnSchema,
@@ -8,6 +6,7 @@ from data.schema import (
     RelationshipSchema,
     TableSchema,
 )
+from pydantic import ValidationError
 
 
 def test_column_schema_defaults() -> None:
@@ -57,7 +56,9 @@ def test_table_schema_rejects_empty_column_name() -> None:
 
 
 def test_table_schema_rejects_missing_primary_key_columns() -> None:
-    with pytest.raises(ValidationError, match="table schema primary key columns are missing"):
+    with pytest.raises(
+        ValidationError, match="table schema primary key columns are missing"
+    ):
         TableSchema(
             columns={"id": ColumnSchema()},
             primary_key=["missing_id"],
@@ -65,7 +66,9 @@ def test_table_schema_rejects_missing_primary_key_columns() -> None:
 
 
 def test_table_schema_rejects_missing_timestamp_column() -> None:
-    with pytest.raises(ValidationError, match="table schema timestamp column is missing"):
+    with pytest.raises(
+        ValidationError, match="table schema timestamp column is missing"
+    ):
         TableSchema(
             columns={"id": ColumnSchema()},
             timestamp_column="created_at",

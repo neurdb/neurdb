@@ -7,7 +7,6 @@ from pydantic import Field, model_validator
 
 from .base import ArrowRuntimeModel
 
-
 _MAGIC = b"NEURDBDB"
 _HEADER_LEN_FMT = "<I"
 _HEADER_LEN_SIZE = struct.calcsize(_HEADER_LEN_FMT)
@@ -33,7 +32,7 @@ class DataBatch(ArrowRuntimeModel):
     def _validate_batch(self) -> "DataBatch":
         if not self.tables:
             raise ValueError("data batch must contain at least one table")
-            
+
         return self
 
     def get_column(self, table: str, column: str) -> Optional[pa.Array]:

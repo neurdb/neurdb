@@ -1,8 +1,7 @@
 import pyarrow as pa
 import pytest
-from pydantic import ValidationError
-
 from data.batch import DataBatch
+from pydantic import ValidationError
 
 
 def make_users_batch() -> pa.RecordBatch:

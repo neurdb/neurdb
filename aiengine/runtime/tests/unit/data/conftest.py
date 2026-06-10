@@ -1,5 +1,4 @@
 import pytest
-
 from data.schema import (
     ColumnRole,
     ColumnSchema,
