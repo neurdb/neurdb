@@ -24,12 +24,45 @@
 
 #include <math.h>
 
+#include <utils/guc.h>
+#include <limits.h>
+
 #include "labeling/encode.h"
 #include "utils/hash/md5.h"
 #include "utils/network/task.h"
 
 
 PG_MODULE_MAGIC;
+
+void _PG_init(void);
+
+/*
+ * nr_pipeline.engine_pin: route this session's PREDICT to a single AI engine
+ * (index into nr_aiengine catalog order, modulo the engine count) instead of
+ * broadcasting the in-context train phase to every engine and sharding
+ * inference across all of them.  -1 (default) keeps broadcast+shard.
+ *
+ * Rationale: for an in-context model the per-task context fit is DUPLICATED
+ * on every engine under broadcast, so running many concurrent PREDICT tasks
+ * against the full pool makes each server fit every task's context and
+ * task-level parallelism does not scale.  Pinning gives each concurrent task
+ * its own engine: fits spread across the pool instead of being replicated.
+ */
+static int nr_engine_pin = -1;
+
+void
+_PG_init(void)
+{
+	DefineCustomIntVariable("nr_pipeline.engine_pin",
+							"Pin this session's PREDICT to one AI engine "
+							"(index into nr_aiengine; -1 = use all engines).",
+							NULL,
+							&nr_engine_pin,
+							-1, -1, INT_MAX,
+							PGC_USERSET,
+							0,
+							NULL, NULL, NULL);
+}
 
 PG_FUNCTION_INFO_V1(nr_pipeline_init);
 
@@ -501,7 +534,7 @@ free_ai_engines(EngineEndpoint *endpoints, int count) {
 }
 
 static void
-send_inference_task(NrWebsocket *ws, const PipelineSession *session) {
+send_inference_task(NrWebsocket *ws, const PipelineSession *session, int model_id) {
     int n_class = (session->type == PREDICT_CLASS && session->class_id_map)
                       ? hash_get_num_entries(session->class_id_map)
                       : -1;
@@ -516,7 +549,7 @@ send_inference_task(NrWebsocket *ws, const PipelineSession *session) {
         session->nfeat,
         session->n_features,
         n_class,
-        session->model_id,
+        model_id,
         char_array2str(session->feature_names, session->n_features),
         session->target
     );
@@ -594,10 +627,34 @@ infer_collector_main(void *arg) {
     return NULL;
 }
 
+/*
+ * Spin up one worker (thread + websocket) per AI engine and send each the
+ * inference task.  When worker_model_ids is non-NULL it carries one model id
+ * per engine (broadcast-trained in-context models such as tabpfn, whose model
+ * ids are AI-server-process-local); otherwise session->model_id is shared by
+ * every worker (models persisted in the DB-backed model repo).
+ *
+ * Endpoints captured in the session at train time take priority over a fresh
+ * catalog load so the worker order always matches worker_model_ids.
+ */
 static DistributedInfer *
-distributed_infer_create(const PipelineSession *session) {
+distributed_infer_create(const PipelineSession *session, const int *worker_model_ids) {
     int engine_count = 0;
-    EngineEndpoint *engines = load_ai_engines(&engine_count);
+    EngineEndpoint *engines = NULL;
+
+    if (session->eng_count > 0) {
+        engine_count = session->eng_count;
+        engines = (EngineEndpoint *) malloc(sizeof(*engines) * engine_count);
+        if (!engines) {
+            elog(ERROR, "failed to allocate ai engine endpoints");
+        }
+        for (int i = 0; i < engine_count; i++) {
+            engines[i].host = strdup(session->eng_hosts[i]);
+            engines[i].port = session->eng_ports[i];
+        }
+    } else {
+        engines = load_ai_engines(&engine_count);
+    }
     if (engine_count <= 0) {
         free_ai_engines(engines, engine_count);
         return NULL;
@@ -630,7 +687,8 @@ distributed_infer_create(const PipelineSession *session) {
         dist->workers[i].dist = dist;
         dist->workers[i].ws = nws_initialize(engines[i].host, engines[i].port, "/ws", 10);
         nws_connect(dist->workers[i].ws);
-        send_inference_task(dist->workers[i].ws, session);
+        send_inference_task(dist->workers[i].ws, session,
+                            worker_model_ids ? worker_model_ids[i] : session->model_id);
     }
 
     for (int i = 0; i < engine_count; i++) {
@@ -1103,7 +1161,14 @@ run_train_batch(PipelineSession *session, bool flush) {
         );
     }
 
-    nws_send_batch_data(session->ws, 0, S_TRAIN, libsvm.data);
+    if (session->train_wss) {
+        /* broadcast the same context batch to every engine */
+        for (int i = 0; i < session->eng_count; i++) {
+            nws_send_batch_data(session->train_wss[i], 0, S_TRAIN, libsvm.data);
+        }
+    } else {
+        nws_send_batch_data(session->ws, 0, S_TRAIN, libsvm.data);
+    }
 
     for (int i=0;i<session->batch_count;i++) {
         heap_freetuple(session->batch_vals[i]);
@@ -1172,10 +1237,10 @@ pipeline_init(
         }
         PIPELINE_SESSION.state = PS_INFER;
         PIPELINE_SESSION.ws = NULL;
-        PIPELINE_SESSION.dist_infer = distributed_infer_create(&PIPELINE_SESSION);
+        PIPELINE_SESSION.dist_infer = distributed_infer_create(&PIPELINE_SESSION, NULL);
         if (!PIPELINE_SESSION.dist_infer) {
             PIPELINE_SESSION.ws = connect_to_ai_engine();
-            send_inference_task(PIPELINE_SESSION.ws, &PIPELINE_SESSION);
+            send_inference_task(PIPELINE_SESSION.ws, &PIPELINE_SESSION, PIPELINE_SESSION.model_id);
         }
 
         return true;
@@ -1208,7 +1273,51 @@ pipeline_init(
             PIPELINE_SESSION.id_class_map = last_id_class_map;
         }
 
-        PIPELINE_SESSION.ws = connect_to_ai_engine();
+        /*
+         * tabpfn is in-context with a process-local session store, so the
+         * context (train) phase is BROADCAST to every registered engine:
+         * each fits the same context, and inference can then shard batches
+         * across all of them (see pipeline_state_change).  Other models
+         * train on a single engine and persist to the shared model repo.
+         */
+        if (_is_tabpfn(PIPELINE_SESSION.model_name)) {
+            int engine_count = 0;
+            EngineEndpoint *engines = load_ai_engines(&engine_count);
+            int eng_base = 0;
+            int eng_used;
+            if (engine_count <= 0) {
+                free_ai_engines(engines, engine_count);
+                elog(ERROR, "nr_aiengine catalog is empty");
+            }
+            if (nr_engine_pin >= 0) {
+                /* session pinned to one engine (task-level parallelism) */
+                eng_base = nr_engine_pin % engine_count;
+                eng_used = 1;
+            } else {
+                eng_used = engine_count;
+            }
+            PIPELINE_SESSION.eng_count = eng_used;
+            PIPELINE_SESSION.eng_hosts = (char **) malloc(sizeof(char *) * eng_used);
+            PIPELINE_SESSION.eng_ports = (int *) malloc(sizeof(int) * eng_used);
+            PIPELINE_SESSION.train_wss =
+                (NrWebsocket **) malloc(sizeof(NrWebsocket *) * eng_used);
+            if (!PIPELINE_SESSION.eng_hosts || !PIPELINE_SESSION.eng_ports ||
+                !PIPELINE_SESSION.train_wss) {
+                elog(ERROR, "failed to allocate broadcast-train state");
+            }
+            for (int i = 0; i < eng_used; i++) {
+                EngineEndpoint *e = &engines[eng_base + i];
+                PIPELINE_SESSION.eng_hosts[i] = strdup(e->host);
+                PIPELINE_SESSION.eng_ports[i] = e->port;
+                PIPELINE_SESSION.train_wss[i] =
+                    nws_initialize(e->host, e->port, "/ws", 10);
+                nws_connect(PIPELINE_SESSION.train_wss[i]);
+            }
+            free_ai_engines(engines, engine_count);
+            PIPELINE_SESSION.ws = PIPELINE_SESSION.train_wss[0];
+        } else {
+            PIPELINE_SESSION.ws = connect_to_ai_engine();
+        }
         int n_class = (PIPELINE_SESSION.type == PREDICT_CLASS && PIPELINE_SESSION.class_id_map)
                         ? hash_get_num_entries(PIPELINE_SESSION.class_id_map)
                         : -1;
@@ -1240,7 +1349,14 @@ pipeline_init(
             tt->colTypes = strdup(ct);
             pfree(ct);
         }
-        nws_send_task(PIPELINE_SESSION.ws, T_TRAIN, PIPELINE_SESSION.table_name, tt);
+        if (PIPELINE_SESSION.train_wss) {
+            for (int i = 0; i < PIPELINE_SESSION.eng_count; i++) {
+                nws_send_task(PIPELINE_SESSION.train_wss[i], T_TRAIN,
+                              PIPELINE_SESSION.table_name, tt);
+            }
+        } else {
+            nws_send_task(PIPELINE_SESSION.ws, T_TRAIN, PIPELINE_SESSION.table_name, tt);
+        }
         free_train_task_spec(tt);
         // set to training state
         PIPELINE_SESSION.state = PS_TRAIN;
@@ -1291,25 +1407,49 @@ pipeline_state_change(bool to_inference) {
     if (to_inference) {
         // TRAIN -> INFER
         run_train_batch(&PIPELINE_SESSION, /*flush=*/true);
-        nws_wait_completion(PIPELINE_SESSION.ws);
-        PIPELINE_SESSION.model_id = PIPELINE_SESSION.ws->model_id;
 
-        /* reset websocket with a new connection */
-        _clean_up_conn(PIPELINE_SESSION.ws);
-        PIPELINE_SESSION.ws = NULL;
+        if (PIPELINE_SESSION.train_wss) {
+            /*
+             * Broadcast-trained in-context model (tabpfn): wait for EVERY
+             * engine to finish fitting the context and remember each engine's
+             * process-local model id, then shard inference across all of them.
+             */
+            PIPELINE_SESSION.worker_model_ids =
+                (int *) malloc(sizeof(int) * PIPELINE_SESSION.eng_count);
+            if (!PIPELINE_SESSION.worker_model_ids) {
+                elog(ERROR, "failed to allocate worker model ids");
+            }
+            for (int i = 0; i < PIPELINE_SESSION.eng_count; i++) {
+                nws_wait_completion(PIPELINE_SESSION.train_wss[i]);
+                PIPELINE_SESSION.worker_model_ids[i] =
+                    PIPELINE_SESSION.train_wss[i]->model_id;
+            }
+            PIPELINE_SESSION.model_id = PIPELINE_SESSION.worker_model_ids[0];
 
-        /*
-         * tabpfn is in-context and single-engine for now (Phase 1): the fitted
-         * context lives on one AI server keyed by model_id, so route inference
-         * to a single engine rather than sharding across distributed workers
-         * (which would not share the cached context).
-         */
-        PIPELINE_SESSION.dist_infer = _is_tabpfn(PIPELINE_SESSION.model_name)
-                                          ? NULL
-                                          : distributed_infer_create(&PIPELINE_SESSION);
+            /* reset websockets; inference uses fresh per-worker connections */
+            for (int i = 0; i < PIPELINE_SESSION.eng_count; i++) {
+                _clean_up_conn(PIPELINE_SESSION.train_wss[i]);
+            }
+            free(PIPELINE_SESSION.train_wss);
+            PIPELINE_SESSION.train_wss = NULL;
+            PIPELINE_SESSION.ws = NULL;
+
+            PIPELINE_SESSION.dist_infer =
+                distributed_infer_create(&PIPELINE_SESSION,
+                                         PIPELINE_SESSION.worker_model_ids);
+        } else {
+            nws_wait_completion(PIPELINE_SESSION.ws);
+            PIPELINE_SESSION.model_id = PIPELINE_SESSION.ws->model_id;
+
+            /* reset websocket with a new connection */
+            _clean_up_conn(PIPELINE_SESSION.ws);
+            PIPELINE_SESSION.ws = NULL;
+
+            PIPELINE_SESSION.dist_infer = distributed_infer_create(&PIPELINE_SESSION, NULL);
+        }
         if (!PIPELINE_SESSION.dist_infer) {
             PIPELINE_SESSION.ws = connect_to_ai_engine();
-            send_inference_task(PIPELINE_SESSION.ws, &PIPELINE_SESSION);
+            send_inference_task(PIPELINE_SESSION.ws, &PIPELINE_SESSION, PIPELINE_SESSION.model_id);
         }
 
         PIPELINE_SESSION.state = PS_INFER;
@@ -1365,9 +1505,35 @@ pipeline_close() {
         distributed_infer_shutdown(PIPELINE_SESSION.dist_infer);
         PIPELINE_SESSION.dist_infer = NULL;
     }
+    if (PIPELINE_SESSION.train_wss) {
+        /* error path: query aborted while the broadcast train was in flight */
+        for (int i = 0; i < PIPELINE_SESSION.eng_count; i++) {
+            if (PIPELINE_SESSION.train_wss[i] == PIPELINE_SESSION.ws) {
+                PIPELINE_SESSION.ws = NULL;  /* avoid double free below */
+            }
+            _clean_up_conn(PIPELINE_SESSION.train_wss[i]);
+        }
+        free(PIPELINE_SESSION.train_wss);
+        PIPELINE_SESSION.train_wss = NULL;
+    }
     if (PIPELINE_SESSION.ws) {
         _clean_up_conn(PIPELINE_SESSION.ws);
         PIPELINE_SESSION.ws = NULL;
+    }
+    if (PIPELINE_SESSION.eng_hosts) {
+        for (int i = 0; i < PIPELINE_SESSION.eng_count; i++) {
+            free(PIPELINE_SESSION.eng_hosts[i]);
+        }
+        free(PIPELINE_SESSION.eng_hosts);
+        PIPELINE_SESSION.eng_hosts = NULL;
+    }
+    if (PIPELINE_SESSION.eng_ports) {
+        free(PIPELINE_SESSION.eng_ports);
+        PIPELINE_SESSION.eng_ports = NULL;
+    }
+    if (PIPELINE_SESSION.worker_model_ids) {
+        free(PIPELINE_SESSION.worker_model_ids);
+        PIPELINE_SESSION.worker_model_ids = NULL;
     }
 
     if (PIPELINE_SESSION.batch_vals) {
