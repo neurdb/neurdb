@@ -27,6 +27,8 @@
 #include "nodes/primnodes.h"
 #include "nodes/makefuncs.h"
 
+#include "nodePredict.h"
+
 /*
  * Materialization target GUC, defined in nr_kernel.c.  When non-empty, the
  * PREDICT operator augments every input row with a trailing nr_pred column and
@@ -43,6 +45,24 @@ extern char *NrPredictInto;
 static Relation nr_mat_rel = NULL;	/* open target relation, or NULL */
 static int	nr_mat_ninput = 0;		/* # of passthrough (input) columns */
 static bool nr_mat_enabled = false; /* materialization active for this node */
+
+/*
+ * Nested-subquery state.  When PREDICT runs as a subquery in FROM
+ * (SELECT ... FROM (PREDICT ...) p), the planner marks the plan node with
+ * nested=true and the child plan already emits (input columns + a trailing
+ * NULL float8 nr_pred placeholder).  The node then passes the input columns
+ * through and overwrites the placeholder with the prediction -- no table
+ * write, no legacy single-column projection.
+ */
+static bool nr_nested_mode = false;
+static int	nr_nested_ninput = 0;	/* # of passthrough (input) columns */
+
+/*
+ * True when the node was initialized under EXEC_FLAG_EXPLAIN_ONLY: no
+ * pipeline session is opened, so none must be closed at ExecEnd either
+ * (closing a never-opened session blocks waiting for the AI engine).
+ */
+static bool nr_explain_only = false;
 
 
 static char *trainingFuncName = "nr_train";
@@ -715,6 +735,30 @@ ExecNeurDBPredict(PlanState *pstate)
 					/* get the next result from the cache */
 					result_node *node = (result_node *) dclist_pop_head_node(&predictstate->result_cache);
 
+					if (nr_nested_mode)
+					{
+						/*
+						 * Nested mode: pass the input columns through and
+						 * overwrite the trailing nr_pred placeholder with
+						 * the prediction.
+						 */
+						TupleTableSlot *out = predictstate->ps.ps_ResultTupleSlot;
+
+						slot_getallattrs(slot);
+						ExecClearTuple(out);
+						for (int i = 0; i < nr_nested_ninput; i++)
+						{
+							out->tts_values[i] = slot->tts_values[i];
+							out->tts_isnull[i] = slot->tts_isnull[i];
+						}
+						out->tts_values[nr_nested_ninput] = Float8GetDatum(node->value);
+						out->tts_isnull[nr_nested_ninput] = false;
+						ExecStoreVirtualTuple(out);
+
+						predictstate->num_consumed += 1;
+						return out;
+					}
+
 					if (nr_mat_enabled)
 					{
 						/*
@@ -978,14 +1022,26 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	NeurDBPredictState *predictstate;
 	Plan	   *outerPlan;
 
-	/* reset per-backend materialization state for this node */
+	/* reset per-backend output-mode state for this node */
 	nr_mat_rel = NULL;
 	nr_mat_ninput = 0;
-	nr_mat_enabled = (NrPredictInto != NULL && NrPredictInto[0] != '\0');
+	nr_nested_mode = node->nested;
+	/* nested mode ignores the materialization GUC */
+	nr_mat_enabled = !nr_nested_mode &&
+		(NrPredictInto != NULL && NrPredictInto[0] != '\0');
 
 	predictstate = makeNode(NeurDBPredictState);
 	predictstate->ps.plan = (Plan *) node;
-	predictstate->ps.plan->targetlist = node->predictTargetList;
+	if (!nr_nested_mode)
+	{
+		/*
+		 * Legacy quirk: expose the predict target list as the plan's
+		 * targetlist.  In nested mode the plan targetlist must stay the
+		 * passthrough+nr_pred list set up by the planner, since the outer
+		 * query references those columns positionally.
+		 */
+		predictstate->ps.plan->targetlist = node->predictTargetList;
+	}
 	predictstate->ps.state = estate;
 	predictstate->ps.ExecProcNode = ExecNeurDBPredict;
 
@@ -1012,7 +1068,30 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
 #endif
 
-	if (nr_mat_enabled)
+	if (nr_nested_mode)
+	{
+		/*
+		 * Nested mode: the child plan already emits (input columns + a
+		 * trailing NULL float8 nr_pred placeholder), so the output schema is
+		 * exactly the child's.  We pass the input columns through and fill
+		 * the placeholder with the prediction at run time.
+		 */
+		TupleDesc	outDesc =
+			CreateTupleDescCopy(ExecGetResultType(outerPlanState(predictstate)));
+
+		outDesc = BlessTupleDesc(outDesc);
+		nr_nested_ninput = outDesc->natts - 1;
+		if (nr_nested_ninput < 1)
+			elog(ERROR, "nested PREDICT subquery has no input columns");
+
+		predictstate->ps.ps_ResultTupleSlot =
+			MakeSingleTupleTableSlot(outDesc, &TTSOpsVirtual);
+		predictstate->ps.ps_ResultTupleDesc = outDesc;
+		predictstate->ps.ps_ProjInfo = NULL;
+
+		elog(DEBUG1, "[NeurDBPredict] nested mode: ninput=%d", nr_nested_ninput);
+	}
+	else if (nr_mat_enabled)
 	{
 		/*
 		 * Materialization mode: the output schema is (all input columns +
@@ -1086,6 +1165,21 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 									ExecTypeFromTL(node->predictTargetList));
 	}
 
+	/*
+	 * For EXPLAIN (without ANALYZE) the node will never be executed: do not
+	 * open an AI-engine pipeline session (and skip closing it at ExecEnd).
+	 */
+	nr_explain_only = (eflags & EXEC_FLAG_EXPLAIN_ONLY) != 0;
+	if (nr_explain_only)
+	{
+		predictstate->slot_cache = NULL;
+		predictstate->slot_cache_size = 0;
+		predictstate->num_consumed = 0;
+		dclist_init(&predictstate->result_cache);
+		predictstate->curr_epoch = 0;
+		return predictstate;
+	}
+
 	StringInfoData targetColumn = construct_target_columns(node->predictTargetList);
 
 	Datum		args[INIT_PARAMS_ARRAY_SIZE];
@@ -1097,6 +1191,24 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 
 	ArrayType  *trainColumnArray = get_train_columns_array(table, targetColumn.data, trainOnColumns.data);
 
+	/*
+	 * Tuple descriptor describing the rows pushed to the AI engine.  In
+	 * nested mode the child plan carries an extra trailing nr_pred
+	 * placeholder column; trim it so the engine-facing layout is identical
+	 * to the raw input columns (the pipeline reads only the attributes
+	 * described by this descriptor, so the placeholder is simply ignored).
+	 */
+	TupleDesc	pipeDesc = ExecTypeFromTL(outerPlan->targetlist);
+
+	if (nr_nested_mode)
+	{
+		TupleDesc	trimmed = CreateTemplateTupleDesc(pipeDesc->natts - 1);
+
+		for (int attno = 1; attno < pipeDesc->natts; attno++)
+			TupleDescCopyEntry(trimmed, attno, pipeDesc, attno);
+		pipeDesc = trimmed;
+	}
+
 	args[0] = CStringGetTextDatum(model);
 	args[1] = CStringGetTextDatum(table);
 	args[2] = Int32GetDatum(NrTaskBatchSize);
@@ -1106,7 +1218,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	args[6] = PointerGetDatum(trainColumnArray);
 	args[7] = CStringGetTextDatum(targetColumn.data);
 	args[8] = Int32GetDatum(predictstate->stmt->kind);
-	args[9] = PointerGetDatum(ExecTypeFromTL(outerPlan->targetlist));
+	args[9] = PointerGetDatum(pipeDesc);
 
 	UdfResult	initRes = call_udf_function(initFuncName,
 											initArgTypes,
@@ -1156,10 +1268,14 @@ ExecEndNeurDBPredict(NeurDBPredictState * node)
 	}
 	nr_mat_enabled = false;
 	nr_mat_ninput = 0;
+	nr_nested_mode = false;
+	nr_nested_ninput = 0;
 
 	ExecFreeExprContext(&node->ps);
 	ExecEndNode(outerPlanState(node));
-	_call_pipeline_close();
+	if (!nr_explain_only)
+		_call_pipeline_close();
+	nr_explain_only = false;
 	elog(DEBUG1, "NeurDB prediction end");
 }
 
@@ -1174,4 +1290,30 @@ ExecReScanNeurDBPredict(NeurDBPredictState * node)
 	 */
 	if (outerPlan && outerPlan->chgParam == NULL)
 		ExecReScan(outerPlan);
+}
+
+/*
+ * Generic-signature wrappers installed into the core executor's
+ * NeurDBPredict dispatch hooks (executor/executor.h), so that core
+ * ExecInitNode / ExecEndNode / ExecReScan can run NeurDBPredict nodes that
+ * sit *inside* a plan tree (e.g. under a SubqueryScan for
+ * SELECT ... FROM (PREDICT ...) p).
+ */
+PlanState *
+NeurDBPredictInitNodeHook(Plan *node, EState *estate, int eflags)
+{
+	return (PlanState *) ExecInitNeurDBPredict((NeurDBPredict *) node,
+											   estate, eflags);
+}
+
+void
+NeurDBPredictEndNodeHook(PlanState *node)
+{
+	ExecEndNeurDBPredict((NeurDBPredictState *) node);
+}
+
+void
+NeurDBPredictReScanHook(PlanState *node)
+{
+	ExecReScanNeurDBPredict((NeurDBPredictState *) node);
 }

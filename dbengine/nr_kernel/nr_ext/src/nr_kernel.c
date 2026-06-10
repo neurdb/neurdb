@@ -9,10 +9,13 @@
 #include "miscadmin.h"
 #include "postmaster/bgworker.h"
 #include "storage/ipc.h"
+#include "executor/executor.h"
 #include "tcop/utility.h"
 #include "utils/guc.h"
 #include "utils/snapmgr.h"
 #include "utils/builtins.h"
+
+#include "nodePredict.h"
 
 /* required metadata marker for PostgreSQL extensions */
 PG_MODULE_MAGIC;
@@ -198,6 +201,15 @@ _PG_init(void)
 	ExecutorFinish_hook = NeurDB_ExecutorFinish;
 	ExecutorEnd_hook = NeurDB_ExecutorEnd;
 
+	/*
+	 * Let the core executor dispatch NeurDBPredict nodes that appear nested
+	 * inside plan trees (SELECT ... FROM (PREDICT ...) p) back into this
+	 * extension's node implementation.
+	 */
+	NeurDBPredictInitNode_hook = NeurDBPredictInitNodeHook;
+	NeurDBPredictEndNode_hook = NeurDBPredictEndNodeHook;
+	NeurDBPredictReScan_hook = NeurDBPredictReScanHook;
+
 	register_aiengine_background_worker();
 }
 
@@ -212,4 +224,7 @@ _PG_fini(void)
 	ExecutorRun_hook = original_executorrun_hook;
 	ExecutorEnd_hook = original_executorend_hook;
 	ExecutorFinish_hook = original_executorfinish_hook;
+	NeurDBPredictInitNode_hook = NULL;
+	NeurDBPredictEndNode_hook = NULL;
+	NeurDBPredictReScan_hook = NULL;
 }
