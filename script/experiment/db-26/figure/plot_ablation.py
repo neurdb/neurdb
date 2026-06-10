@@ -124,6 +124,8 @@ ax.set_ylabel("End-to-end time (s)")
 ax.set_ylim(0, naive * 1.22)
 ax.legend(
     loc="upper right",
+    bbox_to_anchor=(1.02, 1.06),
+    borderaxespad=0,
     frameon=False,
     handlelength=1.4,
     handletextpad=0.5,
