@@ -113,13 +113,7 @@ for i, (s, _) in enumerate(order):
 naive = rows["cache_off__sched_off"]["total_s"]
 
 ax.set_xticks(list(xs))
-ax.set_xticklabels(
-    [lbl for _, lbl in order],
-    fontsize=12.5,
-    rotation=12,
-    ha="right",
-    rotation_mode="anchor",
-)
+ax.set_xticklabels([lbl.replace("-", "-\n") for _, lbl in order], fontsize=13)
 ax.set_ylabel("End-to-end time (s)")
 ax.set_ylim(0, naive * 1.22)
 ax.legend(
@@ -183,7 +177,7 @@ for x, h in zip(xb, horizons):
     )
 
 ax.set_xticks(list(xb))
-ax.set_xticklabels([f"{h}d ({task_rows[h]} rows)" for h in horizons], fontsize=11.5)
+ax.set_xticklabels([f"{h}d\n({task_rows[h]} rows)" for h in horizons], fontsize=13)
 ax.set_ylabel("AI predict time (s)")
 ax.set_ylim(0, max(t_root.values()) * 1.5)
 ax.legend(
