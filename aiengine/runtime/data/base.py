@@ -48,3 +48,4 @@ class MetadataKey(str, Enum):
     MEAN = "mean"
     STD = "std"
     STRATEGY = "strategy"
+    IMPUTE = "impute"

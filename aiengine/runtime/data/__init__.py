@@ -1,4 +1,11 @@
 from .batch import DataBatch
+from .io import (
+    DataSource,
+    SchemaSource,
+    StreamDataSource,
+    encode_frame,
+    encode_stream,
+)
 from .schema import (
     ColumnRole,
     ColumnSchema,
@@ -9,6 +16,11 @@ from .schema import (
 
 __all__ = [
     "DataBatch",
+    "DataSource",
+    "SchemaSource",
+    "StreamDataSource",
+    "encode_frame",
+    "encode_stream",
     "ColumnRole",
     "ColumnSchema",
     "DatabaseSchema",

@@ -28,9 +28,8 @@ def make_orders_batch() -> pa.RecordBatch:
 def test_data_batch_accepts_single_table() -> None:
     users = make_users_batch()
 
-    batch = DataBatch(tables={"users": users}, anchor_table="users")
+    batch = DataBatch(tables={"users": users})
 
-    assert batch.anchor_table == "users"
     assert batch.tables["users"].num_rows == 3
     assert batch.metadata == {}
 
@@ -38,7 +37,6 @@ def test_data_batch_accepts_single_table() -> None:
 def test_data_batch_accepts_multiple_tables() -> None:
     batch = DataBatch(
         tables={"users": make_users_batch(), "orders": make_orders_batch()},
-        anchor_table="users",
     )
 
     assert set(batch.tables) == {"users", "orders"}
@@ -47,35 +45,23 @@ def test_data_batch_accepts_multiple_tables() -> None:
 
 def test_data_batch_rejects_empty_tables() -> None:
     with pytest.raises(ValidationError, match="must contain at least one table"):
-        DataBatch(tables={}, anchor_table="users")
-
-
-def test_data_batch_rejects_missing_anchor_table() -> None:
-    with pytest.raises(ValidationError, match="anchor table orders"):
-        DataBatch(tables={"users": make_users_batch()}, anchor_table="orders")
-
-
-def test_data_batch_rejects_empty_anchor_table() -> None:
-    with pytest.raises(ValidationError):
-        DataBatch(tables={"users": make_users_batch()}, anchor_table="")
+        DataBatch(tables={})
 
 
 def test_data_batch_roundtrip_preserves_scalar_fields() -> None:
     original = DataBatch(
         tables={"users": make_users_batch()},
-        anchor_table="users",
         metadata={"role": "train"},
     )
 
     restored = DataBatch.from_bytes(original.to_bytes())
 
-    assert restored.anchor_table == "users"
     assert restored.metadata == {"role": "train"}
 
 
 def test_data_batch_roundtrip_preserves_arrow_payload() -> None:
     users = make_users_batch()
-    original = DataBatch(tables={"users": users}, anchor_table="users")
+    original = DataBatch(tables={"users": users})
 
     restored = DataBatch.from_bytes(original.to_bytes())
 
@@ -89,7 +75,6 @@ def test_data_batch_roundtrip_preserves_arrow_payload() -> None:
 def test_data_batch_roundtrip_preserves_multiple_tables() -> None:
     original = DataBatch(
         tables={"users": make_users_batch(), "orders": make_orders_batch()},
-        anchor_table="users",
     )
 
     restored = DataBatch.from_bytes(original.to_bytes())
@@ -109,7 +94,7 @@ def test_data_batch_roundtrip_preserves_dictionary_column() -> None:
         ],
         names=["id", "tier"],
     )
-    original = DataBatch(tables={"users": users}, anchor_table="users")
+    original = DataBatch(tables={"users": users})
 
     restored = DataBatch.from_bytes(original.to_bytes())
 

@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 import pyarrow as pa
 from pydantic import Field, model_validator
 
-from .base import ArrowRuntimeModel, NonEmptyStr
+from .base import ArrowRuntimeModel
 
 
 _MAGIC = b"NEURDBDB"
@@ -27,18 +27,13 @@ def _record_batch_from_ipc(payload: bytes) -> pa.RecordBatch:
 
 class DataBatch(ArrowRuntimeModel):
     tables: Dict[str, pa.RecordBatch]
-    anchor_table: NonEmptyStr
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _validate_batch(self) -> "DataBatch":
         if not self.tables:
             raise ValueError("data batch must contain at least one table")
-
-        if self.anchor_table not in self.tables:
-            raise ValueError(
-                f"anchor table {self.anchor_table} is not present in data batch"
-            )
+            
         return self
 
     def get_column(self, table: str, column: str) -> Optional[pa.Array]:
@@ -53,7 +48,6 @@ class DataBatch(ArrowRuntimeModel):
         }
 
         header = {
-            "anchor_table": self.anchor_table,
             "metadata": self.metadata,
             "tables": [
                 {"name": name, "length": len(payload)}
@@ -92,6 +86,5 @@ class DataBatch(ArrowRuntimeModel):
 
         return cls(
             tables=tables,
-            anchor_table=header["anchor_table"],
             metadata=header.get("metadata") or {},
         )
