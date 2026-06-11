@@ -7,7 +7,7 @@
 #
 # Task DAG executed by this script (all inside the neurdb_dev container):
 #
-#   tool_cutoffs
+#   tool_cutoffs -> tool_rollups (shared daily rollups)
 #   per horizon h in HORIZONS:
 #     01 label  ->  02 features (PIT, vs cache)  ->  03 task table
 #     08 PREDICT candidates (sched per MODES; "on" = qual pushed below the
@@ -22,10 +22,12 @@
 #   MODES      AI-operator scheduling mode(s) for 08, default "off on"
 #              ("off on" = A/B both; the LAST one listed leaves its output in
 #               w_pred_<h>, which 09 then consumes)
-#   CACHE      on  (default) = reset the PIT feature cache ONCE -> tasks reuse
-#                  each other's features, computing only their delta;
-#              off = reset the cache BEFORE EVERY task -> each task recomputes
-#                  all of its feature rows from scratch (no cross-task reuse)
+#   CACHE      on  (default) = build the shared data-prep artifacts (daily
+#                  rollups + PIT feature cache) ONCE -> tasks reuse them,
+#                  computing only their feature delta;
+#              off = rebuild rollups + reset the cache BEFORE EVERY task ->
+#                  each task prepares all of its data from the base tables
+#                  (no cross-task reuse)
 #   SKIP_PREP  =1 to skip cutoffs/labels/cache/features/task tables when the
 #              w_task_<h> tables already exist
 #
@@ -65,23 +67,29 @@ timed() {  # timed <step-id> <psql-args...>
 
 echo "== task set: horizons=[$HORIZONS] cand=[$CAND] cache=$CACHE modes=[$MODES] k=$K =="
 
-# ---- prep: cutoffs, labels, PIT feature cache, task tables ------------------
+# ---- prep: cutoffs, rollups, labels, PIT feature cache, task tables ---------
+# The REUSE axis (CACHE knob) governs the shared data-preparation artifacts:
+# the daily rollups (tool_rollups) AND the PIT feature cache. CACHE=on builds
+# them ONCE and every task reuses them; CACHE=off rebuilds both from the base
+# tables before EVERY task (what an external per-task pipeline has to do).
 if [ "$SKIP_PREP" != "1" ]; then
   echo ">> tool: cutoffs"
   timed "tool_cutoffs" "-f $DIR/tool_cutoffs.sql"
-  for h in $HORIZONS; do
-    echo ">> 01 label h=$h"
-    timed "01_label_h$h" "-v h=$h -f $DIR/01_label_adctr.sql"
-  done
   if [ "$CACHE" = "on" ]; then
+    echo ">> tool: daily rollups (ONCE = reuse across tasks)"
+    timed "tool_rollups" "-f $DIR/tool_rollups.sql"
     echo ">> tool: feature cache init (ONCE = reuse across tasks)"
     timed "cache_init" "-f $DIR/tool_feat_cache_init.sql"
   fi
   for h in $HORIZONS; do
     if [ "$CACHE" != "on" ]; then
+      echo ">> tool: daily rollups (per task = NO reuse) h=$h"
+      timed "tool_rollups_h$h" "-f $DIR/tool_rollups.sql"
       echo ">> tool: feature cache init (per task = NO reuse) h=$h"
       timed "cache_init_h$h" "-f $DIR/tool_feat_cache_init.sql"
     fi
+    echo ">> 01 label h=$h"
+    timed "01_label_h$h" "-v h=$h -f $DIR/01_label_adctr.sql"
     echo ">> 02 features h=$h"
     timed "02_features_h$h" "-v h=$h -f $DIR/02_features_adctr_pit.sql"
     echo ">> 03 task table h=$h"

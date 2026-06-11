@@ -36,7 +36,10 @@ for setting, name in [
             "system": name,
             "export_s": 0.0,
             "label_s": r["label_s"],
-            "features_s": r["features_s"],
+            # rollups = shared per-day stream aggregation feeding label+features;
+            # folded into features to match the baselines' accounting (their
+            # feature step aggregates the raw streams in pandas).
+            "features_s": round(r["rollups_s"] + r["features_s"], 1),
             "predict_s": r["predict_total_s"],
             "other_s": round(other, 1),
             "total_s": r["total_s"],

@@ -62,16 +62,23 @@ order = [
     ("cache_on__sched_off", "NE-NoSched"),
     ("cache_on__sched_on", "NeurEngine"),
 ]
+# Segments are stacked in execution order, bottom -> top. "Data prep" is the
+# shared per-day stream aggregation (tool_rollups) that runs FIRST and that
+# both labels and PIT features are computed from -- it is the artifact the
+# reuse axis governs (built once vs rebuilt per task).
 segs = [
-    ("Label build", "#b8b8b8", lambda r: r["label_s"]),
+    ("Data prep", "#64B5CD", lambda r: r["rollups_s"]),
+    ("Label build", "#8FBC8F", lambda r: r["label_s"]),
     ("PIT features", "#4C72B0", lambda r: r["features_s"]),
-    ("AI predict", "#DD8452", lambda r: r["predict_total_s"]),
     (
         "Other",
         "#e3e3e3",
         lambda r: r["cutoffs_s"] + r["cache_init_s"] + r["task_s"] + r["action_list_s"],
     ),
+    ("AI predict", "#DD8452", lambda r: r["predict_total_s"]),
 ]
+
+naive = rows["cache_off__sched_off"]["total_s"]
 
 fig, ax = plt.subplots(figsize=FIGSIZE)
 xs = range(len(order))
@@ -89,7 +96,7 @@ for name, color, get in segs:
         linewidth=0.5,
     )
     for i, v in enumerate(vals):
-        if v > 110:  # segment must be tall enough for a 20 pt label
+        if v > naive * 0.10:  # segment must be tall enough for a 20 pt label
             ax.text(
                 i,
                 bottoms[i] + v / 2,
@@ -97,20 +104,19 @@ for name, color, get in segs:
                 ha="center",
                 va="center",
                 fontsize=20,
-                color="white" if color != "#b8b8b8" else "#444444",
+                color="white" if color not in ("#b8b8b8", "#e3e3e3") else "#444444",
             )
     bottoms = [b + v for b, v in zip(bottoms, vals)]
 
 for i, (s, _) in enumerate(order):
     ax.text(
         i,
-        bottoms[i] + 14,
+        bottoms[i] + naive * 0.018,
         f"{rows[s]['total_s']:.0f}s",
         ha="center",
         fontsize=20,
         fontweight="bold",
     )
-naive = rows["cache_off__sched_off"]["total_s"]
 
 ax.set_xticks(list(xs))
 ax.set_xticklabels([lbl.replace("-", "-\n") for _, lbl in order], fontsize=20)
@@ -119,7 +125,7 @@ ax.set_ylim(0, naive * 1.22)
 ax.legend(
     loc="lower center",
     bbox_to_anchor=(0.5, 1.0),
-    ncol=2,
+    ncol=3,
     frameon=False,
     handlelength=1.2,
     handletextpad=0.4,
