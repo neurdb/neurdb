@@ -1,0 +1,48 @@
+TIMING,load_tables,0.8
+TIMING,tool_cutoffs,0.0
+TIMING,tool_rollups,0.1
+TIMING,01_label_h1,0.1
+TIMING,02_features_h1,0.7
+TIMING,03_task_h1,0.0
+TIMING,08_predict_h1,8.7
+  h=1: task_rows=1200 candidates=139 rmse=0.1742
+TIMING,01_label_h3,0.1
+TIMING,02_features_h3,0.7
+TIMING,03_task_h3,0.0
+TIMING,08_predict_h3,6.0
+  h=3: task_rows=3283 candidates=380 rmse=0.0703
+TIMING,01_label_h7,0.1
+TIMING,02_features_h7,0.7
+TIMING,03_task_h7,0.0
+TIMING,08_predict_h7,9.8
+  h=7: task_rows=6541 candidates=736 rmse=0.0213
+TIMING,09_action_list,0.0
+         action  n_ads  avg_ctr_1d  avg_ctr_7d
+           keep      3    0.080351    0.017319
+  promote_later     11    0.049396    0.030690
+    promote_now    114    0.295347    0.087227
+reduce_exposure     11    0.044445    0.009654
+TIMING,total,27.8
+	Command being timed: "python run_palimpzest.py --data data_mini --out logs/scaling/pz_mini --device cuda:0"
+	User time (seconds): 52.38
+	System time (seconds): 4.55
+	Percent of CPU this job got: 138%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:41.18
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4140316
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 6728
+	Minor (reclaiming a frame) page faults: 1655806
+	Voluntary context switches: 22188
+	Involuntary context switches: 451
+	Swaps: 0
+	File system inputs: 2650840
+	File system outputs: 208
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

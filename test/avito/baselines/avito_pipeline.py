@@ -1,11 +1,17 @@
 """Shared pipeline core for the LOTUS / Palimpzest baselines (export-execute-import).
 
-Faithfully mirrors the database-native workload in test/avito/workloads/:
+Faithfully mirrors the database-native workload in test/avito/workloads/,
+INCLUDING its daily-rollup optimization (same algorithm, pandas instead of
+SQL), so the baselines are never handicapped algorithmically:
 
   tool_cutoffs.sql            -> build_cutoffs()
-  01_label_adctr.sql          -> build_label(h)
-  02_features_adctr_pit.sql   -> build_features()      (cache-off semantics:
-                                 each task computes all of its own rows)
+  tool_rollups.sql            -> build_rollups()       (clicked-ads pruning +
+                                 (adid, day) pre-aggregation, built once and
+                                 shared across the horizon tasks)
+  01_label_adctr.sql          -> build_label(h)        (from the ss rollup)
+  02_features_adctr_pit.sql   -> build_features()      (from the rollups;
+                                 cache-off semantics: each task computes all
+                                 of its own rows)
   03_task_table.sql           -> build_task()
   08_predict_candidates.sql   -> candidate filter + TabPFN fit/predict
   09_action_list.sql          -> build_action_list()
@@ -122,22 +128,87 @@ def build_cutoffs(searchstream: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# tool_rollups.sql -- clicked-ads pruning + (adid, day) daily pre-aggregation
+# ---------------------------------------------------------------------------
+# Same two exactness tricks as the SQL version:
+#   * day bucket = day(evt - 1us), so bucket B holds events in (B, B+1d] and
+#     every half-open midnight window maps exactly onto a bucket range:
+#       evt <= t          <=>  day <  t
+#       evt in (t-7d, t]  <=>  day in [t-7d, t-1d]
+#       evt in (t,  t+h]  <=>  day in [t,    t+h-1d]
+#   * only ads with >= 1 click ever can appear in a label or feature key, so
+#     the rollups are restricted to those ads up front.
+# All sums/counts decompose the original aggregates exactly
+# (AVG(x) = SUM(sum_x) / SUM(n_x), NULLs excluded per day like SQL AVG).
+def build_rollups(tables: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
+    ss = tables["searchstream"]
+    clicked = ss.loc[ss["isclick"] > 0, "adid"].dropna().unique()
+
+    def day_of(s: pd.Series) -> pd.Series:
+        return (s - pd.Timedelta(microseconds=1)).dt.normalize()
+
+    s = ss[ss["adid"].isin(clicked)]
+    ss_daily = (
+        s.assign(day=day_of(s["searchdate"]))
+        .groupby(["adid", "day"], sort=False)
+        .agg(
+            impr=("searchid", "count"),
+            clicks=("isclick", "sum"),
+            n_click=("isclick", "count"),
+            sum_pos=("position", "sum"),
+            n_pos=("position", "count"),
+            sum_histctr=("histctr", "sum"),
+            n_histctr=("histctr", "count"),
+        )
+        .reset_index()
+        .sort_values("day", kind="mergesort")
+        .reset_index(drop=True)
+    )
+
+    v = tables["visitstream"]
+    v = v[v["adid"].isin(clicked)]
+    vs_daily = (
+        v.assign(day=day_of(v["viewdate"]))
+        .groupby(["adid", "day"], sort=False)
+        .size()
+        .reset_index(name="visits")
+        .sort_values("day", kind="mergesort")
+        .reset_index(drop=True)
+    )
+
+    p = tables["phonerequestsstream"]
+    p = p[p["adid"].isin(clicked)]
+    pr_daily = (
+        p.assign(day=day_of(p["phonerequestdate"]))
+        .groupby(["adid", "day"], sort=False)
+        .size()
+        .reset_index(name="reqs")
+        .sort_values("day", kind="mergesort")
+        .reset_index(drop=True)
+    )
+    return {"ss_daily": ss_daily, "vs_daily": vs_daily, "pr_daily": pr_daily}
+
+
+# ---------------------------------------------------------------------------
 # 01_label_adctr.sql -- label(adid, t) = SUM(isclick)/COUNT(searchid) over (t, t+h]
 # ---------------------------------------------------------------------------
 def build_label(
-    searchstream: pd.DataFrame, cutoffs: pd.DataFrame, horizon_days: int
+    rollups: Dict[str, pd.DataFrame], cutoffs: pd.DataFrame, horizon_days: int
 ) -> pd.DataFrame:
-    ss = searchstream.sort_values("searchdate", kind="mergesort").reset_index(drop=True)
-    dates = ss["searchdate"].to_numpy()
+    ssd = rollups["ss_daily"]
+    days = ssd["day"].to_numpy()
     out = []
     for ts in cutoffs["ts"]:
-        lo = np.searchsorted(dates, np.datetime64(ts), side="right")
+        # events in (t, t+h]  <=>  day in [t, t+h-1d]
+        lo = np.searchsorted(days, np.datetime64(ts), side="left")
         hi = np.searchsorted(
-            dates, np.datetime64(ts + pd.Timedelta(days=horizon_days)), side="right"
+            days,
+            np.datetime64(ts + pd.Timedelta(days=horizon_days - 1)),
+            side="right",
         )
-        win = ss.iloc[lo:hi]
+        win = ssd.iloc[lo:hi]
         g = win.groupby("adid").agg(
-            clicks=("isclick", "sum"), impressions=("searchid", "count")
+            clicks=("clicks", "sum"), impressions=("impr", "sum")
         )
         g = g[g["clicks"] > 0]
         g["ctr"] = g["clicks"] / g["impressions"]
@@ -151,27 +222,25 @@ def build_label(
 # 02_features_adctr_pit.sql (cache-off: compute every key of this task)
 # ---------------------------------------------------------------------------
 def _window_aggs(
-    df: pd.DataFrame,
-    date_col: str,
+    daily: pd.DataFrame,
     cutoffs: Sequence[pd.Timestamp],
     keys_by_ts: Dict[pd.Timestamp, np.ndarray],
     agg_fn,
 ) -> pd.DataFrame:
-    """For each cutoff ts: aggregate rows with date <= ts (and the 7d sub-window)
-    for the adids that need features at that ts. agg_fn(hist, win7) -> DataFrame
-    indexed by adid."""
-    d = df.sort_values(date_col, kind="mergesort").reset_index(drop=True)
-    dates = d[date_col].to_numpy()
+    """For each cutoff ts: aggregate rollup rows with day < ts (= events <= ts)
+    and the 7d sub-window for the adids that need features at that ts.
+    agg_fn(hist, win7) -> DataFrame indexed by adid."""
+    days = daily["day"].to_numpy()
     out = []
     for ts in cutoffs:
         adids = keys_by_ts[ts]
-        hi = np.searchsorted(dates, np.datetime64(ts), side="right")
+        hi = np.searchsorted(days, np.datetime64(ts), side="left")
         lo7 = np.searchsorted(
-            dates, np.datetime64(ts - pd.Timedelta(days=7)), side="right"
+            days, np.datetime64(ts - pd.Timedelta(days=7)), side="left"
         )
-        hist = d.iloc[:hi]
+        hist = daily.iloc[:hi]
         hist = hist[hist["adid"].isin(adids)]
-        win7 = d.iloc[lo7:hi]
+        win7 = daily.iloc[lo7:hi]
         win7 = win7[win7["adid"].isin(adids)]
         g = agg_fn(hist, win7).reindex(adids)
         g.index.name = "adid"
@@ -182,7 +251,10 @@ def _window_aggs(
 
 
 def build_features(
-    tables: Dict[str, pd.DataFrame], cutoffs: pd.DataFrame, label: pd.DataFrame
+    tables: Dict[str, pd.DataFrame],
+    cutoffs: pd.DataFrame,
+    label: pd.DataFrame,
+    rollups: Dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
     keys = label[["adid", "ts"]].drop_duplicates()
     cuts = sorted(keys["ts"].unique())
@@ -191,21 +263,29 @@ def build_features(
     }
     cuts = [pd.Timestamp(ts) for ts in cuts]
 
-    # searchstream history aggregates
+    # searchstream history aggregates (decomposed over the daily rollup)
     def ss_agg(hist: pd.DataFrame, win7: pd.DataFrame) -> pd.DataFrame:
         g = hist.groupby("adid").agg(
-            ss_impr_all=("searchid", "count"),
-            ss_click_all=("isclick", "sum"),
-            ss_ctr_all=("isclick", "mean"),
-            ss_avgpos_all=("position", "mean"),
-            ss_avghistctr_all=("histctr", "mean"),
+            impr=("impr", "sum"),
+            clicks=("clicks", "sum"),
+            n_click=("n_click", "sum"),
+            sum_pos=("sum_pos", "sum"),
+            n_pos=("n_pos", "sum"),
+            sum_histctr=("sum_histctr", "sum"),
+            n_histctr=("n_histctr", "sum"),
         )
+        out = pd.DataFrame(index=g.index)
+        out["ss_impr_all"] = g["impr"]
+        out["ss_click_all"] = g["clicks"]
+        out["ss_ctr_all"] = g["clicks"] / g["n_click"].replace(0, np.nan)
+        out["ss_avgpos_all"] = g["sum_pos"] / g["n_pos"].replace(0, np.nan)
+        out["ss_avghistctr_all"] = g["sum_histctr"] / g["n_histctr"].replace(0, np.nan)
         g7 = win7.groupby("adid").agg(
-            ss_impr_7d=("searchid", "count"), ss_click_7d=("isclick", "sum")
+            ss_impr_7d=("impr", "sum"), ss_click_7d=("clicks", "sum")
         )
-        return g.join(g7, how="outer")
+        return out.join(g7, how="outer")
 
-    ss = _window_aggs(tables["searchstream"], "searchdate", cuts, keys_by_ts, ss_agg)
+    ss = _window_aggs(rollups["ss_daily"], cuts, keys_by_ts, ss_agg)
     for c, fill in (
         ("ss_impr_all", 0),
         ("ss_click_all", 0.0),
@@ -216,20 +296,18 @@ def build_features(
 
     # visitstream
     def vs_agg(hist: pd.DataFrame, win7: pd.DataFrame) -> pd.DataFrame:
-        g = hist.groupby("adid").agg(vs_visit_all=("adid", "count"))
-        g7 = win7.groupby("adid").agg(vs_visit_7d=("adid", "count"))
+        g = hist.groupby("adid").agg(vs_visit_all=("visits", "sum"))
+        g7 = win7.groupby("adid").agg(vs_visit_7d=("visits", "sum"))
         return g.join(g7, how="outer")
 
-    vs = _window_aggs(tables["visitstream"], "viewdate", cuts, keys_by_ts, vs_agg)
+    vs = _window_aggs(rollups["vs_daily"], cuts, keys_by_ts, vs_agg)
     vs[["vs_visit_all", "vs_visit_7d"]] = vs[["vs_visit_all", "vs_visit_7d"]].fillna(0)
 
     # phone requests
     def pr_agg(hist: pd.DataFrame, win7: pd.DataFrame) -> pd.DataFrame:
-        return hist.groupby("adid").agg(pr_all=("adid", "count"))
+        return hist.groupby("adid").agg(pr_all=("reqs", "sum"))
 
-    pr = _window_aggs(
-        tables["phonerequestsstream"], "phonerequestdate", cuts, keys_by_ts, pr_agg
-    )
+    pr = _window_aggs(rollups["pr_daily"], cuts, keys_by_ts, pr_agg)
     pr["pr_all"] = pr["pr_all"].fillna(0)
 
     # static ad attributes + dimension joins

@@ -16,8 +16,10 @@ TabPFN cannot be expressed as a batch operator. The idiomatic implementation:
     the candidate set once, batch-predicts, memoizes, and serves PZ's
     per-record calls from the memo (the most favorable integration possible).
 
-Each horizon task is an independent pipeline run; nothing is shared across
-tasks (PZ has no cross-run materialization/reuse).
+The daily rollups (same algorithmic optimization as the engine's
+tool_rollups.sql) are built once in pandas and shared across the horizon
+tasks; each per-horizon prediction query is an independent PZ pipeline run
+(PZ itself has no cross-run materialization/reuse).
 
 Run (in the bl_pz conda env):
     python run_palimpzest.py [--device cuda:0] [--horizons 1 3 7] [--k 10]
@@ -109,14 +111,13 @@ def main():
 
     tables = t.timed("load_tables", core.load_tables, args.data)
     cutoffs = t.timed("tool_cutoffs", core.build_cutoffs, tables["searchstream"])
+    rollups = t.timed("tool_rollups", core.build_rollups, tables)
 
     preds = {}
     for h in args.horizons:
-        label = t.timed(
-            "01_label_h%d" % h, core.build_label, tables["searchstream"], cutoffs, h
-        )
+        label = t.timed("01_label_h%d" % h, core.build_label, rollups, cutoffs, h)
         feat = t.timed(
-            "02_features_h%d" % h, core.build_features, tables, cutoffs, label
+            "02_features_h%d" % h, core.build_features, tables, cutoffs, label, rollups
         )
         task = t.timed("03_task_h%d" % h, core.build_task, label, feat)
 

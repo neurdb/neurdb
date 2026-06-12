@@ -141,20 +141,21 @@ save(fig, "throughput_per_horizon")
 fig, ax = plt.subplots(figsize=FIGSIZE)
 gw = 0.8  # group width
 bw = gw / len(horizons)
-# soft pastel palette, one color + hatch per task, black bar edges
-hcolors = ["#AECDE1", "#F6D8AE", "#B5D6B2", "#EFB3AC", "#C9BEDB", "#E3CBA6"]
+# seaborn-deep palette (same family as scaling_e2e), one color + hatch per
+# task; white edges + a small gap between bars
+hcolors = ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B3", "#CCB974"]
 hatches = ["", "//", "..", "xx", "\\\\", "++"]
 for j, h in enumerate(horizons):
     off = (j - (len(horizons) - 1) / 2) * bw
     ax.bar(
         [x + off for x in range(len(ns))],
         [conc_h[h][n] for n in ns],
-        bw,
+        bw * 0.85,
         label=f"{h}d",
         color=hcolors[j % len(hcolors)],
         hatch=hatches[j % len(hatches)],
-        edgecolor="black",
-        linewidth=0.7,
+        edgecolor="white",
+        linewidth=0.5,
     )
 # the line literally runs over the top of each group's slowest bar
 wall_x, wall = [], []
@@ -183,7 +184,7 @@ for x, v in zip(wall_x, wall):
     )
 ax.set_xticks(list(range(len(ns))))
 ax.set_xticklabels([str(n) for n in ns])
-ax.set_xlabel("Number of AI servers (GPUs)")
+ax.set_xlabel("Number of AI engines")
 ax.set_ylabel("AI predict time (s)")
 ax.set_ylim(0, wall[0] * 1.42)
 ax.legend(

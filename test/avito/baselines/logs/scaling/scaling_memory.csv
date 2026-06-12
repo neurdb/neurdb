@@ -1,0 +1,13 @@
+scale,system,gb
+mini,lotus,3.9
+mini,neurengine,3.3
+mini,palimpzest,3.9
+small,lotus,5.0
+small,neurengine,3.5
+small,palimpzest,5.1
+medium,lotus,5.9
+medium,neurengine,3.6
+medium,palimpzest,6.1
+large,lotus,7.6
+large,neurengine,4.0
+large,palimpzest,7.8

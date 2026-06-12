@@ -8,10 +8,10 @@ own dataframe substrate) with TabPFN invoked as opaque user code -- exactly the
 export-execute-import pattern: no optimizer sees the relational work and the
 model call together, and nothing is shared across the horizon tasks.
 
-Each horizon task is an independent pipeline run (what an agent would
-generate), mirroring run_tasks.sh with CACHE=off:
-  cutoffs -> label(h) -> PIT features(h) -> task(h) -> candidates -> TabPFN
-and finally the cross-horizon action list.
+The daily rollups (same algorithmic optimization as the engine's
+tool_rollups.sql) are built once and shared across the horizon tasks; each
+horizon task then runs label -> PIT features -> task -> candidates -> TabPFN
+on top of them, and finally the cross-horizon action list.
 
 Run (in the bl_lotus conda env):
     python run_lotus.py [--device cuda:0] [--horizons 1 3 7] [--k 10]
@@ -46,14 +46,13 @@ def main():
 
     tables = t.timed("load_tables", core.load_tables, args.data)
     cutoffs = t.timed("tool_cutoffs", core.build_cutoffs, tables["searchstream"])
+    rollups = t.timed("tool_rollups", core.build_rollups, tables)
 
     preds = {}
     for h in args.horizons:
-        label = t.timed(
-            "01_label_h%d" % h, core.build_label, tables["searchstream"], cutoffs, h
-        )
+        label = t.timed("01_label_h%d" % h, core.build_label, rollups, cutoffs, h)
         feat = t.timed(
-            "02_features_h%d" % h, core.build_features, tables, cutoffs, label
+            "02_features_h%d" % h, core.build_features, tables, cutoffs, label, rollups
         )
         task = t.timed("03_task_h%d" % h, core.build_task, label, feat)
 

@@ -15,6 +15,7 @@
 #   09 action list (join w_pred_1/3/7 -> promote_now/later/keep/reduce)
 #
 # Knobs (env):
+#   DB         database to run against (default avito; see build_scaled_dbs.sh)
 #   HORIZONS   default "1 3 7"
 #   CAND       candidate predicate over input cols, default
 #              "categoryid IN (60, 26, 27)"   (no single quotes allowed)
@@ -41,7 +42,8 @@
 set -euo pipefail
 
 CONTAINER=neurdb_dev
-PSQL="/code/neurdb-dev/build/psql/bin/psql -h 0.0.0.0 -U neurdb -d avito -v ON_ERROR_STOP=1"
+DB="${DB:-avito}"
+PSQL="/code/neurdb-dev/build/psql/bin/psql -h 0.0.0.0 -U neurdb -d $DB -v ON_ERROR_STOP=1"
 DIR=/code/neurdb-dev/test/avito/workloads
 
 HORIZONS="${HORIZONS:-1 3 7}"
