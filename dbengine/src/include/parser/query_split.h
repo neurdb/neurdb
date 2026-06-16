@@ -96,6 +96,7 @@ extern int query_splitting_algorithm;
 extern int order_decision;
 extern bool neurqo_enabled;		/* the `neurqo` on/off GUC */
 extern char *neurqo_server_url;
+extern char *neurqo_trajectory_log_path;
 extern int neurqo_server_timeout_ms;
 extern int neurqo_max_rounds;
 extern int neurqo_search_topk;

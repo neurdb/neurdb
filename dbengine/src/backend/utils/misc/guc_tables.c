@@ -810,6 +810,7 @@ StaticAssertDecl(lengthof(config_type_names) == (PGC_ENUM + 1),
 
 extern bool neurqo_enabled;		/* NeurQO RCenter query-split master switch */
 extern char *neurqo_server_url;
+extern char *neurqo_trajectory_log_path;
 extern int neurqo_server_timeout_ms;
 extern int neurqo_max_rounds;
 extern int neurqo_search_topk;
@@ -3917,6 +3918,16 @@ struct config_string ConfigureNamesString[] =
 		},
 		&neurqo_server_url,
 		"http://127.0.0.1:8088/action",
+		NULL, NULL, NULL
+	},
+
+	{
+		{"neurqo.trajectory_log", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the JSONL file path for NeurQO online trajectory events."),
+			gettext_noop("An empty string disables DB-side trajectory logging.")
+		},
+		&neurqo_trajectory_log_path,
+		"",
 		NULL, NULL, NULL
 	},
 

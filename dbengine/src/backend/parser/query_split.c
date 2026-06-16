@@ -26,8 +26,10 @@
 #include "parser/parse_func.h"
 #include "utils/builtins.h"
 #include "utils/guc.h"
+#include "utils/lsyscache.h"
 #include "utils/rel.h"
 #include "utils/ruleutils.h"
+#include "storage/fd.h"
 #include "storage/buf_internals.h"
 #include "parser/parse_relation.h"		/* addRTEPermissionInfo (PG16) */
 
@@ -103,18 +105,32 @@ static PlannedStmt* neurqo_plan_direct(Query* q, int cursorOptions,
 static char* neurqo_build_planner_hint(Query* q);
 static char* neurqo_build_search_hint(Query* q);
 static char* neurqo_build_aja_hint(Query* q, const char* search_hint_body);
-static bool neurqo_policy_round(int round, int length, int remaining,
-								bool* stop_now, double* policy_ms);
+static const char* neurqo_order_decision_name(int mode);
+static bool neurqo_search_enabled(void);
+static bool neurqo_aja_enabled(void);
+static bool neurqo_lip_enabled(void);
+static bool neurqo_policy_round(Query* q, const char* query_string,
+								int round, int length, int remaining,
+								bool* stop_now, double* policy_ms,
+								char** state_json_out);
 static double neurqo_now_ms(void);
 static bool neurqo_apply_lip(Query* q, double* lip_ms, int* lip_filters);
 static char* neurqo_make_hint_query(const char* first_hint,
 									const char* second_hint);
+static char* neurqo_build_round_state(Query* q, const char* query_string,
+									  int round, int length, int remaining);
+static void neurqo_log_trajectory_event(const char* phase, int round,
+										const char* state_json, bool stop_now,
+										double policy_ms, double planning_ms,
+										double execution_ms, double total_ms,
+										const char* result);
 
 bool* is_relationship;
 int query_splitting_algorithm = None;
 int order_decision = only_cost;
 bool neurqo_enabled = false;		/* backing var for the `neurqo` GUC */
 char* neurqo_server_url = NULL;
+char* neurqo_trajectory_log_path = NULL;
 int neurqo_server_timeout_ms = 2000;
 int neurqo_max_rounds = 64;
 int neurqo_search_topk = 5;
@@ -192,6 +208,167 @@ neurqo_now_ms(void)
 
 	gettimeofday(&tv, NULL);
 	return (double) tv.tv_sec * 1000.0 + (double) tv.tv_usec / 1000.0;
+}
+
+static void
+neurqo_append_json_string(StringInfo dst, const char* value)
+{
+	const unsigned char* p;
+
+	if (value == NULL)
+	{
+		appendStringInfoString(dst, "null");
+		return;
+	}
+	appendStringInfoChar(dst, '"');
+	for (p = (const unsigned char*)value; *p; p++)
+	{
+		switch (*p)
+		{
+			case '"':
+				appendStringInfoString(dst, "\\\"");
+				break;
+			case '\\':
+				appendStringInfoString(dst, "\\\\");
+				break;
+			case '\b':
+				appendStringInfoString(dst, "\\b");
+				break;
+			case '\f':
+				appendStringInfoString(dst, "\\f");
+				break;
+			case '\n':
+				appendStringInfoString(dst, "\\n");
+				break;
+			case '\r':
+				appendStringInfoString(dst, "\\r");
+				break;
+			case '\t':
+				appendStringInfoString(dst, "\\t");
+				break;
+			default:
+				if (*p < 0x20)
+					appendStringInfo(dst, "\\u%04x", *p);
+				else
+					appendStringInfoChar(dst, *p);
+				break;
+		}
+	}
+	appendStringInfoChar(dst, '"');
+}
+
+static char*
+neurqo_build_round_state(Query* q, const char* query_string,
+						 int round, int length, int remaining)
+{
+	StringInfoData state;
+	ListCell* lc;
+	bool first = true;
+
+	initStringInfo(&state);
+	appendStringInfo(&state,
+					 "{\"pid\":%d,\"run_id\":" UINT64_FORMAT
+					 ",\"request_type\":\"round\",\"round\":%d,"
+					 "\"base_rels\":%d,\"remaining_splits\":%d,"
+					 "\"algorithm\":%d,\"order_decision\":\"%s\","
+					 "\"lip_action\":\"%s\",\"sql\":",
+					 MyProcPid, neurqo_current_run_id, round, length, remaining,
+					 query_splitting_algorithm,
+					 neurqo_order_decision_name(order_decision),
+					 neurqo_lip_enabled() ? neurqo_current_lip_action : "none");
+	neurqo_append_json_string(&state, query_string);
+	appendStringInfoString(&state, ",\"relations\":[");
+	foreach(lc, q->rtable)
+	{
+		RangeTblEntry* rte = (RangeTblEntry*)lfirst(lc);
+		const char* alias;
+		char* relname = NULL;
+
+		if (rte->rtekind != RTE_RELATION)
+			continue;
+		alias = rte->eref ? rte->eref->aliasname : NULL;
+		relname = get_rel_name(rte->relid);
+		if (!first)
+			appendStringInfoChar(&state, ',');
+		first = false;
+		appendStringInfoString(&state, "{\"alias\":");
+		neurqo_append_json_string(&state, alias);
+		appendStringInfoString(&state, ",\"relname\":");
+		neurqo_append_json_string(&state, relname ? relname : alias);
+		appendStringInfo(&state, ",\"relid\":%u}", rte->relid);
+		if (relname)
+			pfree(relname);
+	}
+	appendStringInfoString(&state, "]}");
+	return state.data;
+}
+
+static void
+neurqo_log_trajectory_event(const char* phase, int round,
+							const char* state_json, bool stop_now,
+							double policy_ms, double planning_ms,
+							double execution_ms, double total_ms,
+							const char* result)
+{
+	FILE* fp;
+	StringInfoData line;
+
+	if (neurqo_trajectory_log_path == NULL ||
+		neurqo_trajectory_log_path[0] == '\0')
+		return;
+
+	fp = AllocateFile(neurqo_trajectory_log_path, "a");
+	if (fp == NULL)
+	{
+		elog(WARNING, "[neurqo] run=" UINT64_FORMAT
+			 " could not append trajectory log %s: %m",
+			 neurqo_current_run_id, neurqo_trajectory_log_path);
+		return;
+	}
+
+	initStringInfo(&line);
+	appendStringInfo(&line,
+					 "{\"ts_ms\":%.3f,\"pid\":%d,\"run_id\":"
+					 UINT64_FORMAT ",\"phase\":",
+					 neurqo_now_ms(), MyProcPid, neurqo_current_run_id);
+	neurqo_append_json_string(&line, phase);
+	appendStringInfo(&line, ",\"round\":%d,\"stop\":%s,\"state\":",
+					 round, stop_now ? "true" : "false");
+	if (state_json != NULL && state_json[0] != '\0')
+		appendStringInfoString(&line, state_json);
+	else
+		appendStringInfoString(&line, "null");
+	appendStringInfoString(&line, ",\"action\":{");
+	appendStringInfoString(&line, "\"order_decision\":");
+	neurqo_append_json_string(&line, neurqo_order_decision_name(order_decision));
+	appendStringInfoString(&line, ",\"search_strategy\":");
+	neurqo_append_json_string(&line,
+							  neurqo_search_enabled() ?
+							  neurqo_current_search_strategy : "default");
+	appendStringInfo(&line, ",\"search_k\":%d",
+					 neurqo_current_search_k > 0 ?
+					 neurqo_current_search_k : neurqo_search_topk);
+	appendStringInfoString(&line, ",\"execution_action\":");
+	neurqo_append_json_string(&line,
+							  neurqo_aja_enabled() ?
+							  neurqo_current_execution_action : "none");
+	appendStringInfoString(&line, ",\"lip_action\":");
+	neurqo_append_json_string(&line,
+							  neurqo_lip_enabled() ?
+							  neurqo_current_lip_action : "none");
+	appendStringInfoString(&line, "},\"timing_ms\":{");
+	appendStringInfo(&line,
+					 "\"policy\":%.3f,\"planning\":%.3f,"
+					 "\"execution\":%.3f,\"total\":%.3f}",
+					 policy_ms, planning_ms, execution_ms, total_ms);
+	appendStringInfoString(&line, ",\"result\":");
+	neurqo_append_json_string(&line, result);
+	appendStringInfoChar(&line, '}');
+
+	fputs(line.data, fp);
+	fputc('\n', fp);
+	FreeFile(fp);
+	pfree(line.data);
 }
 
 static const char*
@@ -527,32 +704,29 @@ neurqo_parse_policy_action(const char* body, NeurqoPolicyAction* act)
 }
 
 static bool
-neurqo_policy_round(int round, int length, int remaining,
-					bool* stop_now, double* policy_ms)
+neurqo_policy_round(Query* q, const char* query_string,
+					int round, int length, int remaining,
+					bool* stop_now, double* policy_ms,
+					char** state_json_out)
 {
-	StringInfoData state;
 	StringInfoData resp;
 	NeurqoPolicyAction act;
 	char errbuf[256];
 	double t0;
 	double t1;
 	bool ok;
+	char* state_json;
 
 	*stop_now = false;
 	*policy_ms = 0.0;
-	initStringInfo(&state);
-	appendStringInfo(&state,
-					 "{\"pid\":%d,\"round\":%d,\"base_rels\":%d,"
-					 "\"remaining_splits\":%d,\"algorithm\":%d,"
-					 "\"order_decision\":\"%s\",\"lip_action\":\"%s\"}",
-					 MyProcPid, round, length, remaining,
-					 query_splitting_algorithm,
-					 neurqo_order_decision_name(order_decision),
-					 neurqo_lip_enabled() ? neurqo_current_lip_action : "none");
+	if (state_json_out != NULL)
+		*state_json_out = NULL;
+	state_json = neurqo_build_round_state(q, query_string, round, length,
+										  remaining);
 
 	initStringInfo(&resp);
 	t0 = neurqo_now_ms();
-	ok = neurqo_http_post(neurqo_server_url, state.data, &resp,
+	ok = neurqo_http_post(neurqo_server_url, state_json, &resp,
 						  errbuf, sizeof(errbuf));
 	t1 = neurqo_now_ms();
 	*policy_ms = t1 - t0;
@@ -561,8 +735,11 @@ neurqo_policy_round(int round, int length, int remaining,
 	{
 		elog(WARNING, "[neurqo] run=" UINT64_FORMAT " round %d: AI server call failed (%s); fallback to local RCenter policy",
 			 neurqo_current_run_id, round, errbuf);
-		pfree(state.data);
 		pfree(resp.data);
+		if (state_json_out != NULL)
+			*state_json_out = state_json;
+		else
+			pfree(state_json);
 		return false;
 	}
 
@@ -592,7 +769,7 @@ neurqo_policy_round(int round, int length, int remaining,
 	*stop_now = act.stop;
 
 	elog(LOG, "[neurqo] run=" UINT64_FORMAT " round %d: state=%s action=%s stop=%d order_decision=%s search_strategy=%s search_k=%d execution_action=%s lip_action=%s note=\"%s\" policy_ms=%.2f",
-		 neurqo_current_run_id, round, state.data, act.action, act.stop ? 1 : 0,
+		 neurqo_current_run_id, round, state_json, act.action, act.stop ? 1 : 0,
 		 neurqo_order_decision_name(order_decision),
 		 neurqo_search_enabled() ? neurqo_current_search_strategy : "default",
 		 neurqo_current_search_k > 0 ? neurqo_current_search_k : neurqo_search_topk,
@@ -600,8 +777,11 @@ neurqo_policy_round(int round, int length, int remaining,
 		 neurqo_lip_enabled() ? neurqo_current_lip_action : "none",
 		 act.note, *policy_ms);
 
-	pfree(state.data);
 	pfree(resp.data);
+	if (state_json_out != NULL)
+		*state_json_out = state_json;
+	else
+		pfree(state_json);
 	return true;
 }
 
@@ -1676,45 +1856,6 @@ neurqo_build_search_hint(Query* q)
 	return neurqo_build_topk_leading_hint(q);
 }
 
-static void
-neurqo_append_json_string(StringInfo out, const char* value)
-{
-	const unsigned char* p;
-
-	appendStringInfoChar(out, '"');
-	if (value != NULL)
-	{
-		for (p = (const unsigned char*)value; *p != '\0'; p++)
-		{
-			switch (*p)
-			{
-				case '"':
-					appendStringInfoString(out, "\\\"");
-					break;
-				case '\\':
-					appendStringInfoString(out, "\\\\");
-					break;
-				case '\n':
-					appendStringInfoString(out, "\\n");
-					break;
-				case '\r':
-					appendStringInfoString(out, "\\r");
-					break;
-				case '\t':
-					appendStringInfoString(out, "\\t");
-					break;
-				default:
-					if (*p < 32)
-						appendStringInfo(out, "\\u%04x", *p);
-					else
-						appendStringInfoChar(out, *p);
-					break;
-			}
-		}
-	}
-	appendStringInfoChar(out, '"');
-}
-
 static const char*
 neurqo_plan_node_name(Plan* plan)
 {
@@ -2196,12 +2337,15 @@ static void Recon(char* query_string, CommandTag commandTag, Node* pstmt, Query*
 		double round_start = neurqo_now_ms();
 		double t0;
 		int remaining = hasNext(graph, length);
+		char* state_json = NULL;
 
 		if (remaining <= 0)
 			break;
 		if (policy_available)
-			policy_available = neurqo_policy_round(round, length, remaining,
-												   &stop_now, &policy_ms);
+			policy_available = neurqo_policy_round(global_query, query_string,
+												   round, length, remaining,
+												   &stop_now, &policy_ms,
+												   &state_json);
 		if (round >= neurqo_max_rounds)
 		{
 			stop_now = true;
@@ -2218,9 +2362,15 @@ static void Recon(char* query_string, CommandTag commandTag, Node* pstmt, Query*
 					   NULL, completionTag, global_query, transfer_array, FKlist,
 					   oldcontext);
 			exec_ms = neurqo_now_ms() - t0;
+			neurqo_log_trajectory_event("final", round, state_json, stop_now,
+										policy_ms, optimize_ms, exec_ms,
+										neurqo_now_ms() - round_start,
+										"remote");
 			elog(LOG, "[neurqo] run=" UINT64_FORMAT " round %d: final residual executed policy_ms=%.2f planning_ms=%.2f execution_ms=%.2f total_ms=%.2f",
 				 neurqo_current_run_id, round, policy_ms, optimize_ms, exec_ms,
 				 neurqo_now_ms() - round_start);
+			if (state_json != NULL)
+				pfree(state_json);
 			break;
 		}
 
@@ -2228,7 +2378,11 @@ static void Recon(char* query_string, CommandTag commandTag, Node* pstmt, Query*
 		plannedstmt = QSOptimizer(global_query, graph, transfer_array, length);
 		optimize_ms = neurqo_now_ms() - t0;
 		if (plannedstmt == NULL)
+		{
+			if (state_json != NULL)
+				pfree(state_json);
 			break;
+		}
 		queryId++;
 		char* relname = NULL;
 		//Should we output the result or save it as a temporary table
@@ -2241,10 +2395,18 @@ static void Recon(char* query_string, CommandTag commandTag, Node* pstmt, Query*
 		t0 = neurqo_now_ms();
 		FKlist = QSExecutor(query_string, commandTag, pstmt, plannedstmt, mydest, relname, completionTag, global_query, transfer_array, FKlist, oldcontext);
 		exec_ms = neurqo_now_ms() - t0;
+		neurqo_log_trajectory_event(mydest == DestIntoRel ? "split" : "final",
+									round, state_json,
+									mydest == DestRemote, policy_ms,
+									optimize_ms, exec_ms,
+									neurqo_now_ms() - round_start,
+									mydest == DestIntoRel ? relname : "remote");
 		elog(LOG, "[neurqo] run=" UINT64_FORMAT " round %d: apply split result=%s policy_ms=%.2f split_planning_ms=%.2f execution_rewrite_ms=%.2f total_ms=%.2f",
 			 neurqo_current_run_id, round,
 			 mydest == DestIntoRel ? relname : "remote",
 			 policy_ms, optimize_ms, exec_ms, neurqo_now_ms() - round_start);
+		if (state_json != NULL)
+			pfree(state_json);
 		//finish_xact_command();
 		if (mydest == DestRemote)
 		{
