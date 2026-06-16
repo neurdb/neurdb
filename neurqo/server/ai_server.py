@@ -204,13 +204,15 @@ class Handler(BaseHTTPRequestHandler):
 
         action = decide_action(state)
         body = render_action(action)
-        log(f"request={state.get('request_type', 'round')} -> action={action['action']} "
+        log(
+            f"request={state.get('request_type', 'round')} -> action={action['action']} "
             f"stop={action['stop']} order_decision={action.get('order_decision')} "
             f"search_strategy={action.get('search_strategy')} "
             f"search_k={action.get('search_k')} "
             f"execution_action={action.get('execution_action')} "
             f"lip_action={action.get('lip_action')} "
-            f"aja_hint={action.get('aja_hint')}")
+            f"aja_hint={action.get('aja_hint')}"
+        )
         self._respond(body)
 
     def do_GET(self):
@@ -228,8 +230,10 @@ def main() -> int:
     args = ap.parse_args()
 
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
-    log(f"NeurQO AI action server (stub) listening on "
-        f"http://{args.host}:{args.port}/action")
+    log(
+        f"NeurQO AI action server (stub) listening on "
+        f"http://{args.host}:{args.port}/action"
+    )
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

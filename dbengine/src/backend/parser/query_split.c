@@ -2107,7 +2107,7 @@ static void rRj(Query* querytree)
 	switch (querytree->jointree->quals->type)
 	{
 		case T_BoolExpr:
-		{	
+		{
 			BoolExpr* expr = (BoolExpr*)querytree->jointree->quals;
 			if (expr == NULL)
 				return;
@@ -2419,7 +2419,7 @@ static PlannedStmt* QSOptimizer(Query* global_query, bool* graph, Index* transfe
 		}
 	}
 	else if (query_splitting_algorithm == Minsubquery)
-	{	
+	{
 		for (int j = 0; j < length; j++)
 			transfer_array[j] = 0;
 		transfer_array[X] = 1;
@@ -2578,7 +2578,7 @@ static List* Prepare4Next(Query* global_query, Index* transfer_array, DR_intorel
 			prev = lc;
 		}
 	}
-	
+
 	Oid relid = RangeVarGetRelid(receiver->into->rel, NoLock, true);
 	Relation relation = table_open(relid, NoLock);
 	List* varlist = pull_var_clause((Node*)global_query->jointree, 0);
