@@ -10,6 +10,17 @@
 ### compiled output
 psql
 /psql/
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+__pycache__/
+*.py[cod]
+logfile
+*.log
 
 ### VS Code
 .vscode/
