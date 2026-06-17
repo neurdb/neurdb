@@ -77,6 +77,7 @@
 #include "utils/snapmgr.h"
 #include "utils/timeout.h"
 #include "utils/timestamp.h"
+#include "parser/query_split.h"		/* NeurQO RCenter query-split pipeline */
 
 /* ----------------
  *		global variables
@@ -184,8 +185,8 @@ static int	errdetail_params(ParamListInfo params);
 static int	errdetail_abort(void);
 static int	errdetail_recovery_conflict(void);
 static void bind_param_error_callback(void *arg);
-static void start_xact_command(void);
-static void finish_xact_command(void);
+void start_xact_command(void);
+void finish_xact_command(void);
 static bool IsTransactionExitStmt(Node *parsetree);
 static bool IsTransactionExitStmtList(List *pstmts);
 static bool IsTransactionStmtList(List *pstmts);
@@ -1228,6 +1229,32 @@ exec_simple_query(const char *query_string)
 		querytree_list = pg_analyze_and_rewrite_fixedparams(parsetree, query_string,
 															NULL, 0, NULL);
 
+		/*
+		 * NeurQO: when the `neurqo` GUC is on, divert a top-level SELECT into
+		 * the RCenter query-split / re-optimization pipeline.  This happens
+		 * BEFORE planning (doQSparse runs its own per-subquery planning,
+		 * materialization and execution, and emits its own EndCommand), so the
+		 * normal plan/portal path and the trailing EndCommand are skipped.
+		 */
+		bool		neurqo_handled = false;
+		if (neurqo_enabled && querytree_list != NIL &&
+			linitial_node(Query, querytree_list)->commandType == CMD_SELECT)
+		{
+			query_splitting_algorithm = RelationshipCenter;
+			if (snapshot_set)
+			{
+				PopActiveSnapshot();
+				snapshot_set = false;
+			}
+			CHECK_FOR_INTERRUPTS();
+			doQSparse(query_string, commandTag, parsetree->stmt,
+					  linitial_node(Query, querytree_list), &qc);
+			MemoryContextSwitchTo(oldcontext);
+			neurqo_handled = true;
+		}
+
+		if (!neurqo_handled)
+		{
 		plantree_list = pg_plan_queries(querytree_list, query_string,
 										CURSOR_OPT_PARALLEL_OK, NULL);
 
@@ -1320,6 +1347,7 @@ exec_simple_query(const char *query_string)
 		receiver->rDestroy(receiver);
 
 		PortalDrop(portal, false);
+		}						/* end if (!neurqo_handled) */
 
 		if (lnext(parsetree_list, parsetree_item) == NULL)
 		{
@@ -1373,7 +1401,8 @@ exec_simple_query(const char *query_string)
 		 * command the client sent, regardless of rewriting. (But a command
 		 * aborted by error will not send an EndCommand report at all.)
 		 */
-		EndCommand(&qc, dest, false);
+		if (!neurqo_handled)	/* doQSparse() already emitted EndCommand */
+			EndCommand(&qc, dest, false);
 
 		/* Now we may drop the per-parsetree context, if one was created. */
 		if (per_parsetree_context)
@@ -2781,7 +2810,7 @@ exec_describe_portal_message(const char *portal_name)
 /*
  * Convenience routines for starting/committing a single command.
  */
-static void
+void
 start_xact_command(void)
 {
 	if (!xact_started)
@@ -2809,7 +2838,7 @@ start_xact_command(void)
 							 client_connection_check_interval);
 }
 
-static void
+void
 finish_xact_command(void)
 {
 	/* cancel active statement timeout after each command */
