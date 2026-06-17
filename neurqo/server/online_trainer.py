@@ -6,13 +6,15 @@ This process consumes DB-side trajectory JSONL produced by:
 
     SET neurqo.trajectory_log = '/tmp/neurqo_runtime.jsonl';
 
-Each DB event is converted into a transition:
+DB events are converted into online RL transitions:
 
     state, action, reward, done, next_state=None, timing_ms
 
-The default reward is negative round total time. This is intentionally simple:
-it gives us an online data path immediately while keeping model-specific
-training outside the DB critical path.
+The bridge keeps the previous round for each run in memory and fills
+next_state when the next split/final event arrives. The default reward is
+negative round total time. This is intentionally simple: it gives us an online
+data path immediately while keeping model-specific training outside the DB
+critical path.
 
 Optionally pass --trainer-module module_or_path:callable. The callable receives
 a list[dict] batch and may update a model checkpoint however it wants.
@@ -79,6 +81,21 @@ def event_to_transition(event: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def emit_transition(
+    transition: dict[str, Any],
+    *,
+    out_path: Path,
+    trainer: Callable[[list[dict[str, Any]]], Any] | None,
+    batch: list[dict[str, Any]],
+    batch_size: int,
+) -> None:
+    append_jsonl(out_path, transition)
+    batch.append(transition)
+    if trainer is not None and len(batch) >= batch_size:
+        trainer(list(batch))
+        batch.clear()
+
+
 def read_new_lines(path: Path, offset: int) -> tuple[list[str], int]:
     if not path.exists():
         return [], offset
@@ -96,6 +113,7 @@ def process_lines(
     batch: list[dict[str, Any]],
     batch_size: int,
     seen: set[tuple[Any, Any, str]],
+    pending: dict[Any, dict[str, Any]],
 ) -> int:
     wrote = 0
     for line in lines:
@@ -110,12 +128,31 @@ def process_lines(
         transition = event_to_transition(event)
         if transition is None:
             continue
-        append_jsonl(out_path, transition)
-        batch.append(transition)
-        wrote += 1
-        if trainer is not None and len(batch) >= batch_size:
-            trainer(list(batch))
-            batch.clear()
+        run_id = transition.get("run_id")
+        previous = pending.pop(run_id, None)
+        if previous is not None:
+            previous["next_state"] = transition.get("state")
+            previous["done"] = False
+            emit_transition(
+                previous,
+                out_path=out_path,
+                trainer=trainer,
+                batch=batch,
+                batch_size=batch_size,
+            )
+            wrote += 1
+
+        if transition.get("done"):
+            emit_transition(
+                transition,
+                out_path=out_path,
+                trainer=trainer,
+                batch=batch,
+                batch_size=batch_size,
+            )
+            wrote += 1
+        else:
+            pending[run_id] = transition
     return wrote
 
 
@@ -134,6 +171,7 @@ def main() -> int:
     trainer = load_callable(args.trainer_module)
     offset = 0
     seen: set[tuple[Any, Any, str]] = set()
+    pending: dict[Any, dict[str, Any]] = {}
     batch: list[dict[str, Any]] = []
 
     while True:
@@ -145,6 +183,7 @@ def main() -> int:
             batch=batch,
             batch_size=max(args.batch_size, 1),
             seen=seen,
+            pending=pending,
         )
         if args.once:
             if trainer is not None and batch:
