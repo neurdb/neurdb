@@ -38,6 +38,7 @@ import importlib.util
 import json
 import os
 import sys
+import threading
 import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -575,14 +576,18 @@ def _decide_round(state: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]
 
 
 ADAPTER: PolicyAdapter | None = None
+ADAPTER_CONFIG: dict[str, Any] = {}
+POLICY_LOCK = threading.RLock()
+REQUIRE_MODEL = False
 TRAJECTORY_LOG: str | None = None
 
 
 def model_predict(state: dict[str, Any]) -> dict[str, Any]:
     """Call the configured learned policy, returning normalized action fields."""
-    if ADAPTER is None:
-        return {}
-    return ADAPTER.predict(state)
+    with POLICY_LOCK:
+        if ADAPTER is None:
+            return {}
+        return ADAPTER.predict(state)
 
 
 def decide_action(state: dict[str, Any]) -> dict[str, Any]:
@@ -597,7 +602,9 @@ def decide_action(state: dict[str, Any]) -> dict[str, Any]:
         action = _decide_aja(state, pred)
     else:
         action = _decide_round(state, pred)
-    action.setdefault("model_source", ADAPTER.source if ADAPTER else "stub")
+    with POLICY_LOCK:
+        source = ADAPTER.source if ADAPTER else "stub"
+    action.setdefault("model_source", source)
     return action
 
 
@@ -637,15 +644,80 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_POST(self):
-        t0 = time.perf_counter()
+    def _read_json_body(self) -> dict[str, Any]:
         length = int(self.headers.get("Content-Length", 0))
         raw = self.rfile.read(length) if length else b""
+        if not raw:
+            return {}
+        payload = json.loads(raw.decode("utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("request body must be a JSON object")
+        return payload
+
+    def _handle_reload(self, request: dict[str, Any]) -> None:
+        global ADAPTER, ADAPTER_CONFIG
+
+        started = time.perf_counter()
+        new_config = dict(ADAPTER_CONFIG)
+        for key in (
+            "model_module",
+            "model_path",
+            "model_method",
+            "model_hidden",
+            "workload",
+            "device",
+            "neurqo_src",
+        ):
+            if key in request and request[key] is not None:
+                new_config[key] = request[key]
+
         try:
-            state = json.loads(raw.decode("utf-8")) if raw else {}
+            adapter = PolicyAdapter(**new_config)
         except Exception as exc:  # noqa: BLE001
-            log(f"bad request body: {exc!r} raw={raw!r}")
+            log(f"policy reload failed: {exc!r}")
+            traceback.print_exc()
+            self._respond(f"reloaded=0\nnote={exc!r}\n".encode("utf-8"), 500)
+            return
+
+        if REQUIRE_MODEL and adapter.source == "stub":
+            note = "required model was not loaded during reload"
+            log(note)
+            self._respond(f"reloaded=0\nnote={note}\n".encode("utf-8"), 500)
+            return
+
+        with POLICY_LOCK:
+            ADAPTER = adapter
+            ADAPTER_CONFIG = new_config
+
+        elapsed_ms = (time.perf_counter() - started) * 1000.0
+        payload = {
+            "ts": _now_iso(),
+            "phase": "policy_reload",
+            "latency_ms": elapsed_ms,
+            "request": request,
+            "model_source": adapter.source,
+        }
+        _append_jsonl(TRAJECTORY_LOG, payload)
+        log(f"policy reloaded source={adapter.source} latency_ms={elapsed_ms:.2f}")
+        self._respond(
+            (
+                "reloaded=1\n"
+                f"model_source={adapter.source}\n"
+                f"latency_ms={elapsed_ms:.2f}\n"
+            ).encode("utf-8")
+        )
+
+    def do_POST(self):
+        t0 = time.perf_counter()
+        try:
+            state = self._read_json_body()
+        except Exception as exc:  # noqa: BLE001
+            log(f"bad request body: {exc!r}")
             self._respond(b"action=none\nstop=1\nnote=bad request\n", 400)
+            return
+
+        if self.path.startswith("/reload"):
+            self._handle_reload(state)
             return
 
         action = decide_action(state)
@@ -673,14 +745,20 @@ class Handler(BaseHTTPRequestHandler):
         self._respond(body)
 
     def do_GET(self):
-        self._respond(b"action=none\nstop=1\nnote=health ok\n")
+        with POLICY_LOCK:
+            source = ADAPTER.source if ADAPTER else "stub"
+        self._respond(
+            f"action=none\nstop=1\nnote=health ok\nmodel_source={source}\n".encode(
+                "utf-8"
+            )
+        )
 
     def log_message(self, *args):  # silence default per-request stderr noise
         pass
 
 
 def main() -> int:
-    global ADAPTER, TRAJECTORY_LOG
+    global ADAPTER, ADAPTER_CONFIG, REQUIRE_MODEL, TRAJECTORY_LOG
 
     ap = argparse.ArgumentParser(description="NeurQO AI action server")
     ap.add_argument("--host", default="127.0.0.1")
@@ -708,17 +786,19 @@ def main() -> int:
     )
     args = ap.parse_args()
 
+    REQUIRE_MODEL = bool(args.require_model)
     TRAJECTORY_LOG = args.trajectory_log
+    ADAPTER_CONFIG = {
+        "model_module": args.model_module,
+        "model_path": args.model_path,
+        "model_method": args.model_method,
+        "model_hidden": args.model_hidden,
+        "workload": args.workload,
+        "device": args.device,
+        "neurqo_src": args.neurqo_src,
+    }
     try:
-        ADAPTER = PolicyAdapter(
-            model_module=args.model_module,
-            model_path=args.model_path,
-            model_method=args.model_method,
-            model_hidden=args.model_hidden,
-            workload=args.workload,
-            device=args.device,
-            neurqo_src=args.neurqo_src,
-        )
+        ADAPTER = PolicyAdapter(**ADAPTER_CONFIG)
     except Exception as exc:  # noqa: BLE001
         if args.require_model:
             log(f"policy adapter initialization failed: {exc!r}")
