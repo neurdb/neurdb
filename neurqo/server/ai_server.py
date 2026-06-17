@@ -63,6 +63,33 @@ SEARCH_LABEL_TO_DB = {
     "left_deep": ("left_deep", 1),
 }
 
+PLAN_NODE_NAME_TO_EXPLAIN = {
+    "Agg": "Aggregate",
+    "Append": "Append",
+    "BitmapHeapScan": "Bitmap Heap Scan",
+    "BitmapIndexScan": "Bitmap Index Scan",
+    "CteScan": "CTE Scan",
+    "FunctionScan": "Function Scan",
+    "Gather": "Gather",
+    "GatherMerge": "Gather Merge",
+    "Group": "Group",
+    "Hash": "Hash",
+    "HashJoin": "Hash Join",
+    "IndexOnlyScan": "Index Only Scan",
+    "IndexScan": "Index Scan",
+    "Limit": "Limit",
+    "Material": "Materialize",
+    "MergeAppend": "Merge Append",
+    "MergeJoin": "Merge Join",
+    "NestLoop": "Nested Loop",
+    "Result": "Result",
+    "SeqScan": "Seq Scan",
+    "Sort": "Sort",
+    "SubqueryScan": "Subquery Scan",
+    "TidScan": "Tid Scan",
+    "ValuesScan": "Values Scan",
+}
+
 
 def _truthy(value: Any) -> bool:
     if isinstance(value, bool):
@@ -90,6 +117,60 @@ def _append_jsonl(path: str | None, payload: dict[str, Any]) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("a", encoding="utf-8") as f:
         f.write(json.dumps(payload, sort_keys=True, default=str) + "\n")
+
+
+def _explain_node_name(name: Any) -> str:
+    text = str(name or "Other")
+    return PLAN_NODE_NAME_TO_EXPLAIN.get(text, text)
+
+
+def _normalize_plan_json(plan: Any) -> Any:
+    """Convert DB-side lightweight plan JSON into transfer_state's EXPLAIN schema."""
+    if plan is None:
+        return None
+    if not isinstance(plan, dict):
+        return plan
+    if "Plan" in plan:
+        return {
+            **plan,
+            "Plan": _normalize_plan_json(plan.get("Plan")),
+        }
+    if "Node Type" in plan:
+        out = dict(plan)
+        if "Plans" in out and isinstance(out["Plans"], list):
+            out["Plans"] = [_normalize_plan_json(child) for child in out["Plans"]]
+        return out
+    if "node" not in plan:
+        return plan
+
+    out = {
+        "Node Type": _explain_node_name(plan.get("node")),
+        "Plan Rows": float(plan.get("rows") or 0.0),
+        "Startup Cost": float(plan.get("startup_cost") or 0.0),
+        "Total Cost": float(plan.get("total_cost") or 0.0),
+        "Plan Width": int(plan.get("width") or 0),
+    }
+    if plan.get("alias"):
+        out["Alias"] = str(plan["alias"])
+    children = plan.get("children") or []
+    if isinstance(children, list) and children:
+        out["Plans"] = [_normalize_plan_json(child) for child in children]
+    return out
+
+
+def _state_for_model(state: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy whose plan_json is in the schema used by the HRL code."""
+    raw_plan = state.get("plan_json")
+    if raw_plan is None:
+        raw_plan = state.get("plan")
+    if raw_plan is None:
+        return state
+
+    normalized = _normalize_plan_json(raw_plan)
+    out = dict(state)
+    out.setdefault("db_plan_json", raw_plan)
+    out["plan_json"] = normalized
+    return out
 
 
 class PolicyAdapter:
@@ -179,6 +260,7 @@ class PolicyAdapter:
             from model.hrl.workload_config import get_workload_spec  # type: ignore
         except Exception as exc:  # noqa: BLE001
             log(f"failed to import HRL model code ({exc!r}); using stub policy")
+            traceback.print_exc()
             return
 
         if self.model_method in ("hac", "smdp", "standardmdp", "standardmdp_rl"):
@@ -217,6 +299,8 @@ class PolicyAdapter:
         log(f"loaded HRL checkpoint {path} method={self.model_method} device={device}")
 
     def predict(self, state: dict[str, Any]) -> dict[str, Any]:
+        state = _state_for_model(state)
+
         if self._callable is not None:
             raw = self._callable(state)
             if raw is None:
@@ -236,6 +320,7 @@ class PolicyAdapter:
     def _query_graph_state(self, state: dict[str, Any], level: str):
         transfer = self._transfer
         sql = state.get("sql") or state.get("original_sql") or ""
+        plan_json = state.get("plan_json") or state.get("plan")
         if not sql or self._catalog is None:
             ctx_dim = transfer.HIGH_CTX_DIM if level == "high" else 0
             return transfer.empty_structured_state(level=level, ctx_dim=ctx_dim)
@@ -243,7 +328,7 @@ class PolicyAdapter:
         try:
             graph = transfer.parse_query_graph(sql)
             qgraph, _stats = transfer.build_transfer_graph_state(
-                sql, graph, self._catalog, plan_json=state.get("plan_json")
+                sql, graph, self._catalog, plan_json=plan_json
             )
         except Exception:
             ctx_dim = transfer.HIGH_CTX_DIM if level == "high" else 0
@@ -615,6 +700,12 @@ def main() -> int:
     ap.add_argument("--device", default=os.environ.get("NEURQO_DEVICE", "cpu"))
     ap.add_argument("--neurqo-src", default=os.environ.get("NEURQO_SRC"))
     ap.add_argument("--trajectory-log", default=os.environ.get("NEURQO_TRAJECTORY_LOG"))
+    ap.add_argument(
+        "--require-model",
+        action="store_true",
+        default=_truthy(os.environ.get("NEURQO_REQUIRE_MODEL")),
+        help="fail startup if --model-module/--model-path cannot be loaded",
+    )
     args = ap.parse_args()
 
     TRAJECTORY_LOG = args.trajectory_log
@@ -629,9 +720,22 @@ def main() -> int:
             neurqo_src=args.neurqo_src,
         )
     except Exception as exc:  # noqa: BLE001
+        if args.require_model:
+            log(f"policy adapter initialization failed: {exc!r}")
+            traceback.print_exc()
+            return 2
         log(f"policy adapter initialization failed: {exc!r}; using stub policy")
         traceback.print_exc()
         ADAPTER = PolicyAdapter()
+
+    if args.require_model:
+        requested_model = bool(args.model_module or args.model_path)
+        if not requested_model or ADAPTER.source == "stub":
+            log(
+                "required model was not loaded; pass --model-module or a valid "
+                "--model-path with --neurqo-src"
+            )
+            return 2
 
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     log(
