@@ -37,13 +37,12 @@ import importlib
 import importlib.util
 import json
 import os
-from pathlib import Path
 import sys
 import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any, Callable
-
 
 ACTION_LABEL_TO_LIP_AJA = {
     "none": ("none", "none"),
@@ -169,14 +168,14 @@ class PolicyAdapter:
 
         try:
             import torch  # type: ignore
+            from model.hrl import hrl_shared  # type: ignore
+            from model.hrl import transfer_state  # type: ignore
             from model.hrl.hrl_train import (  # type: ignore
                 HACNetwork,
                 MAXQNetwork,
                 OptionCriticNetwork,
             )
             from model.hrl.query_graph_encoder import CatalogInfo  # type: ignore
-            from model.hrl import hrl_shared  # type: ignore
-            from model.hrl import transfer_state  # type: ignore
             from model.hrl.workload_config import get_workload_spec  # type: ignore
         except Exception as exc:  # noqa: BLE001
             log(f"failed to import HRL model code ({exc!r}); using stub policy")
@@ -193,8 +192,9 @@ class PolicyAdapter:
             return
 
         device = torch.device(
-            self.device_name if self.device_name != "auto" else
-            ("cuda" if torch.cuda.is_available() else "cpu")
+            self.device_name
+            if self.device_name != "auto"
+            else ("cuda" if torch.cuda.is_available() else "cpu")
         )
         state_dict = torch.load(path, map_location=device)
         model.load_state_dict(state_dict)
@@ -272,7 +272,9 @@ class PolicyAdapter:
                 plan_tree = transfer.empty_plan_tree()
         else:
             plan_tree = transfer.empty_plan_tree()
-        empty = transfer.empty_structured_state(level="low", ctx_dim=transfer.LOW_CTX_DIM)
+        empty = transfer.empty_structured_state(
+            level="low", ctx_dim=transfer.LOW_CTX_DIM
+        )
         return transfer.StructuredState(
             level="low",
             query_graph=empty.query_graph,
@@ -600,8 +602,15 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=8088)
     ap.add_argument("--model-module", default=os.environ.get("NEURQO_MODEL_MODULE"))
     ap.add_argument("--model-path", default=os.environ.get("NEURQO_MODEL_PATH"))
-    ap.add_argument("--model-method", default=os.environ.get("NEURQO_MODEL_METHOD", "standardmdp_rl"))
-    ap.add_argument("--model-hidden", type=int, default=int(os.environ.get("NEURQO_MODEL_HIDDEN", "128")))
+    ap.add_argument(
+        "--model-method",
+        default=os.environ.get("NEURQO_MODEL_METHOD", "standardmdp_rl"),
+    )
+    ap.add_argument(
+        "--model-hidden",
+        type=int,
+        default=int(os.environ.get("NEURQO_MODEL_HIDDEN", "128")),
+    )
     ap.add_argument("--workload", default=os.environ.get("NEURQO_WORKLOAD", "job"))
     ap.add_argument("--device", default=os.environ.get("NEURQO_DEVICE", "cpu"))
     ap.add_argument("--neurqo-src", default=os.environ.get("NEURQO_SRC"))

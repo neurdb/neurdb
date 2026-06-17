@@ -25,9 +25,9 @@ import argparse
 import importlib
 import importlib.util
 import json
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 from typing import Any, Callable
 
 
@@ -158,7 +158,9 @@ def process_lines(
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="NeurQO online training bridge")
-    ap.add_argument("--db-log", required=True, help="DB-side neurqo.trajectory_log JSONL")
+    ap.add_argument(
+        "--db-log", required=True, help="DB-side neurqo.trajectory_log JSONL"
+    )
     ap.add_argument("--out", required=True, help="transition JSONL output path")
     ap.add_argument("--trainer-module", default=None)
     ap.add_argument("--batch-size", type=int, default=32)
