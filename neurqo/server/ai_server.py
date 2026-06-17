@@ -264,7 +264,7 @@ class PolicyAdapter:
 
     def _plan_state(self, state: dict[str, Any]):
         transfer = self._transfer
-        plan_json = state.get("plan_json")
+        plan_json = state.get("plan_json") or state.get("plan")
         if plan_json is not None and self._catalog is not None:
             try:
                 plan_tree = transfer.plan_to_tree(plan_json, catalog=self._catalog)

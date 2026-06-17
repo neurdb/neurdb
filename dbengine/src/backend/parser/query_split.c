@@ -13,6 +13,7 @@
 
 #include <errno.h>
 #include <float.h>
+#include <math.h>
 #include <netdb.h>
 #include <sys/time.h>
 
@@ -119,6 +120,13 @@ static char* neurqo_make_hint_query(const char* first_hint,
 									const char* second_hint);
 static char* neurqo_build_round_state(Query* q, const char* query_string,
 									  int round, int length, int remaining);
+static void neurqo_append_plan_state_fields(Query* q, StringInfo out,
+											const char* search_hint_body);
+static void neurqo_plan_summary(Plan* plan, int depth, int* nnodes,
+								int* njoins, int* nscans, int* max_depth);
+static void neurqo_append_aliases_json(Query* q, StringInfo out);
+static void neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out,
+									int* nnodes);
 static void neurqo_log_trajectory_event(const char* phase, int round,
 										const char* state_json, bool stop_now,
 										double policy_ms, double planning_ms,
@@ -299,7 +307,9 @@ neurqo_build_round_state(Query* q, const char* query_string,
 		if (relname)
 			pfree(relname);
 	}
-	appendStringInfoString(&state, "]}");
+	appendStringInfoString(&state, "],");
+	neurqo_append_plan_state_fields(q, &state, NULL);
+	appendStringInfoString(&state, "}");
 	return state.data;
 }
 
@@ -2054,6 +2064,51 @@ neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 		appendStringInfoChar(out, ']');
 	}
 	appendStringInfoChar(out, '}');
+}
+
+static void
+neurqo_append_plan_state_fields(Query* q, StringInfo out,
+								const char* search_hint_body)
+{
+	PlannedStmt* baseline;
+	char* search_hint_query = NULL;
+	int nnodes = 0;
+	int njoins = 0;
+	int nscans = 0;
+	int max_depth = 0;
+	int plan_json_nodes = 0;
+	double t0 = neurqo_now_ms();
+
+	if (search_hint_body != NULL && search_hint_body[0] != '\0')
+		search_hint_query = neurqo_make_hint_query(search_hint_body, NULL);
+
+	baseline = neurqo_plan_direct(copyObjectImpl(q), CURSOR_OPT_PARALLEL_OK,
+								  false, search_hint_query, false);
+	if (search_hint_query != NULL)
+		pfree(search_hint_query);
+
+	if (baseline == NULL || baseline->planTree == NULL)
+	{
+		appendStringInfoString(out, "\"plan_available\":false");
+		return;
+	}
+
+	neurqo_plan_summary(baseline->planTree, 1, &nnodes, &njoins, &nscans,
+						&max_depth);
+	appendStringInfo(out,
+					 "\"plan_available\":true,"
+					 "\"plan_total_cost\":%.2f,\"plan_rows\":%.0f,"
+					 "\"plan_width\":%d,\"plan_state_ms\":%.3f,"
+					 "\"plan_summary\":{\"nodes\":%d,\"joins\":%d,"
+					 "\"scans\":%d,\"max_depth\":%d},\"aliases\":",
+					 baseline->planTree->total_cost,
+					 baseline->planTree->plan_rows,
+					 baseline->planTree->plan_width,
+					 neurqo_now_ms() - t0,
+					 nnodes, njoins, nscans, max_depth);
+	neurqo_append_aliases_json(q, out);
+	appendStringInfoString(out, ",\"plan_json\":");
+	neurqo_append_plan_json(baseline->planTree, q, out, &plan_json_nodes);
 }
 
 static char*
