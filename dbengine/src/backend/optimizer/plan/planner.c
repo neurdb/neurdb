@@ -36,6 +36,7 @@
 #include "lib/bipartite_match.h"
 #include "lib/knapsack.h"
 #include "miscadmin.h"
+#include "neurdb/guc.h"
 #include "nodes/makefuncs.h"
 #include "nodes/nodeFuncs.h"
 #ifdef OPTIMIZER_DEBUG
@@ -242,6 +243,7 @@ static void apply_scanjoin_target_to_paths(PlannerInfo *root,
 										   List *scanjoin_targets_contain_srfs,
 										   bool scanjoin_target_parallel_safe,
 										   bool tlist_same_exprs);
+void neurdb_pull_up_predict_subqueries(PlannerInfo *root);
 static void create_partitionwise_grouping_paths(PlannerInfo *root,
 												RelOptInfo *input_rel,
 												RelOptInfo *grouped_rel,
@@ -571,6 +573,658 @@ standard_planner(Query *parse, const char *query_string, int cursorOptions,
 }
 
 
+typedef struct NeurDBPredictPullupRefs
+{
+	int			pred_rtindex;
+	int			pred_nattrs;
+	bool		has_external;
+	bool		has_nr_pred;
+	bool		unsupported;
+} NeurDBPredictPullupRefs;
+
+typedef struct NeurDBPredictPullupReplace
+{
+	Query	   *predquery;
+	int			pred_rtindex;
+	int			pred_nattrs;
+	int		   *rtindex_map;
+	int			rtindex_map_len;
+} NeurDBPredictPullupReplace;
+
+typedef struct NeurDBPredictPullupOutputVar
+{
+	Index		outer_rtindex;
+	AttrNumber	outer_attno;
+	AttrNumber	pred_attno;
+	Var		   *sample_var;
+} NeurDBPredictPullupOutputVar;
+
+typedef struct NeurDBPredictPullupOutputCtx
+{
+	int			pred_rtindex;
+	int			pred_nattrs;
+	bool		unsupported;
+	List	   *vars;
+} NeurDBPredictPullupOutputCtx;
+
+typedef struct NeurDBPredictPullupOuterReplace
+{
+	int			pred_rtindex;
+	int			old_nr_pred_attno;
+	int			new_nr_pred_attno;
+	List	   *output_vars;
+} NeurDBPredictPullupOuterReplace;
+
+static bool
+neurdb_predict_collect_inner_join(Query *parse, Node *jtnode,
+								  List **fromrefs, List **quals,
+								  int *pred_rtindex, int *pred_count)
+{
+	if (jtnode == NULL)
+		return true;
+
+	if (IsA(jtnode, RangeTblRef))
+	{
+		RangeTblRef *rtr = (RangeTblRef *) jtnode;
+		RangeTblEntry *rte = rt_fetch(rtr->rtindex, parse->rtable);
+
+		if (rte->rtekind == RTE_SUBQUERY &&
+			rte->subquery != NULL &&
+			rte->subquery->commandType == CMD_PREDICT)
+		{
+			*pred_rtindex = rtr->rtindex;
+			*pred_count += 1;
+		}
+
+		*fromrefs = lappend(*fromrefs, rtr);
+		return true;
+	}
+
+	if (IsA(jtnode, FromExpr))
+	{
+		FromExpr   *f = (FromExpr *) jtnode;
+		ListCell   *lc;
+
+		foreach(lc, f->fromlist)
+		{
+			if (!neurdb_predict_collect_inner_join(parse, lfirst(lc),
+												  fromrefs, quals,
+												  pred_rtindex, pred_count))
+				return false;
+		}
+
+		if (f->quals != NULL)
+			*quals = lappend(*quals, f->quals);
+
+		return true;
+	}
+
+	if (IsA(jtnode, JoinExpr))
+	{
+		JoinExpr   *j = (JoinExpr *) jtnode;
+
+		if (j->jointype != JOIN_INNER)
+			return false;
+
+		if (!neurdb_predict_collect_inner_join(parse, j->larg,
+											  fromrefs, quals,
+											  pred_rtindex, pred_count))
+			return false;
+		if (!neurdb_predict_collect_inner_join(parse, j->rarg,
+											  fromrefs, quals,
+											  pred_rtindex, pred_count))
+			return false;
+
+		if (j->quals != NULL)
+			*quals = lappend(*quals, j->quals);
+
+		return true;
+	}
+
+	return false;
+}
+
+static bool
+neurdb_predict_pullup_refs_walker(Node *node, NeurDBPredictPullupRefs *ctx)
+{
+	if (node == NULL)
+		return false;
+
+	if (IsA(node, Var))
+	{
+		Var		   *var = (Var *) node;
+
+		if (var->varlevelsup == 0)
+		{
+			if (var->varno == ctx->pred_rtindex)
+			{
+				if (var->varattno == ctx->pred_nattrs)
+					ctx->has_nr_pred = true;
+				else if (var->varattno <= 0 || var->varattno > ctx->pred_nattrs)
+					ctx->unsupported = true;
+			}
+			else
+			{
+				if (var->varattno <= 0)
+					ctx->unsupported = true;
+				ctx->has_external = true;
+			}
+		}
+
+		return false;
+	}
+
+	return expression_tree_walker(node, neurdb_predict_pullup_refs_walker, ctx);
+}
+
+static void
+neurdb_predict_pullup_check_refs(Node *node, int pred_rtindex, int pred_nattrs,
+								 NeurDBPredictPullupRefs *refs)
+{
+	memset(refs, 0, sizeof(NeurDBPredictPullupRefs));
+	refs->pred_rtindex = pred_rtindex;
+	refs->pred_nattrs = pred_nattrs;
+	(void) neurdb_predict_pullup_refs_walker(node, refs);
+}
+
+static NeurDBPredictPullupOutputVar *
+neurdb_predict_find_output_var(List *vars, Index outer_rtindex,
+							   AttrNumber outer_attno)
+{
+	ListCell   *lc;
+
+	foreach(lc, vars)
+	{
+		NeurDBPredictPullupOutputVar *outvar =
+			(NeurDBPredictPullupOutputVar *) lfirst(lc);
+
+		if (outvar->outer_rtindex == outer_rtindex &&
+			outvar->outer_attno == outer_attno)
+			return outvar;
+	}
+
+	return NULL;
+}
+
+static bool
+neurdb_predict_pullup_output_walker(Node *node,
+									NeurDBPredictPullupOutputCtx *ctx)
+{
+	if (node == NULL)
+		return false;
+
+	if (IsA(node, Var))
+	{
+		Var		   *var = (Var *) node;
+
+		if (var->varlevelsup == 0)
+		{
+			if (var->varno == ctx->pred_rtindex)
+			{
+				if (var->varattno <= 0 || var->varattno > ctx->pred_nattrs)
+					ctx->unsupported = true;
+			}
+			else
+			{
+				NeurDBPredictPullupOutputVar *outvar;
+
+				if (var->varattno <= 0)
+				{
+					ctx->unsupported = true;
+					return false;
+				}
+
+				outvar = neurdb_predict_find_output_var(ctx->vars,
+														var->varno,
+														var->varattno);
+				if (outvar == NULL)
+				{
+					outvar = palloc0(sizeof(NeurDBPredictPullupOutputVar));
+					outvar->outer_rtindex = var->varno;
+					outvar->outer_attno = var->varattno;
+					outvar->sample_var = copyObject(var);
+					ctx->vars = lappend(ctx->vars, outvar);
+				}
+			}
+		}
+
+		return false;
+	}
+
+	return expression_tree_walker(node,
+								  neurdb_predict_pullup_output_walker,
+								  ctx);
+}
+
+static void
+neurdb_predict_pullup_collect_outputs(Node *node,
+									  NeurDBPredictPullupOutputCtx *ctx)
+{
+	if (node != NULL)
+		(void) neurdb_predict_pullup_output_walker(node, ctx);
+}
+
+static Node *
+neurdb_predict_pullup_replace_mutator(Node *node,
+									  NeurDBPredictPullupReplace *ctx)
+{
+	if (node == NULL)
+		return NULL;
+
+	if (IsA(node, Var))
+	{
+		Var		   *var = (Var *) node;
+
+		if (var->varlevelsup == 0)
+		{
+			if (var->varno == ctx->pred_rtindex)
+			{
+				TargetEntry *tle;
+
+				if (var->varattno <= 0 || var->varattno >= ctx->pred_nattrs)
+					elog(ERROR, "unsupported PREDICT output reference in pull-up rewrite");
+
+				tle = get_tle_by_resno(ctx->predquery->targetList,
+									   var->varattno);
+				if (tle == NULL)
+					elog(ERROR, "could not find PREDICT input column %d",
+						 var->varattno);
+
+				return (Node *) copyObject(tle->expr);
+			}
+			else if (var->varno > 0 && var->varno < ctx->rtindex_map_len &&
+					 ctx->rtindex_map[var->varno] > 0)
+			{
+				Var		   *newvar = copyObject(var);
+
+				newvar->varno = ctx->rtindex_map[var->varno];
+				newvar->varnosyn = newvar->varno;
+				return (Node *) newvar;
+			}
+		}
+
+		return (Node *) copyObject(var);
+	}
+
+	return expression_tree_mutator(node,
+								   neurdb_predict_pullup_replace_mutator,
+								   ctx);
+}
+
+static Node *
+neurdb_predict_pullup_outer_replace_mutator(Node *node,
+											NeurDBPredictPullupOuterReplace *ctx)
+{
+	if (node == NULL)
+		return NULL;
+
+	if (IsA(node, Var))
+	{
+		Var		   *var = (Var *) node;
+
+		if (var->varlevelsup == 0)
+		{
+			if (var->varno == ctx->pred_rtindex)
+			{
+				Var		   *newvar = copyObject(var);
+
+				if (newvar->varattno == ctx->old_nr_pred_attno)
+					newvar->varattno = ctx->new_nr_pred_attno;
+
+				return (Node *) newvar;
+			}
+			else
+			{
+				NeurDBPredictPullupOutputVar *outvar;
+
+				outvar = neurdb_predict_find_output_var(ctx->output_vars,
+														var->varno,
+														var->varattno);
+				if (outvar != NULL)
+				{
+					Var		   *newvar = copyObject(var);
+
+					newvar->varno = ctx->pred_rtindex;
+					newvar->varattno = outvar->pred_attno;
+					newvar->varnosyn = ctx->pred_rtindex;
+					newvar->varattnosyn = outvar->pred_attno;
+					return (Node *) newvar;
+				}
+			}
+		}
+
+		return (Node *) copyObject(var);
+	}
+
+	return expression_tree_mutator(node,
+								   neurdb_predict_pullup_outer_replace_mutator,
+								   ctx);
+}
+
+static bool
+neurdb_predict_train_on_star(Query *predquery)
+{
+	NeurDBPredictStmt *stmt;
+	ListCell   *lc;
+
+	if (predquery->predictStmt == NULL ||
+		!IsA(predquery->predictStmt, NeurDBPredictStmt))
+		return false;
+
+	stmt = (NeurDBPredictStmt *) predquery->predictStmt;
+	if (stmt->trainOnSpec == NULL)
+		return false;
+
+	foreach(lc, stmt->trainOnSpec->trainOn)
+	{
+		ResTarget  *rt = (ResTarget *) lfirst(lc);
+		ColumnRef  *cr;
+
+		if (!IsA(rt, ResTarget) || rt->val == NULL || !IsA(rt->val, ColumnRef))
+			continue;
+
+		cr = (ColumnRef *) rt->val;
+		if (list_length(cr->fields) == 1 && IsA(linitial(cr->fields), A_Star))
+			return true;
+	}
+
+	return false;
+}
+
+static int
+neurdb_predict_add_pulled_outputs(Query *parse, RangeTblEntry *pred_rte,
+								  Query *predquery, int pred_nattrs,
+								  int *rtindex_map, int rtindex_map_len,
+								  List *output_vars)
+{
+	TargetEntry *nrpred_tle;
+	AttrNumber	resno = pred_nattrs;
+	bool		update_colnames = false;
+	bool		train_on_star;
+	ListCell   *lc;
+
+	if (output_vars == NIL)
+		return pred_nattrs;
+
+	nrpred_tle = get_tle_by_resno(predquery->targetList, pred_nattrs);
+	if (nrpred_tle == NULL || nrpred_tle->resname == NULL ||
+		strcmp(nrpred_tle->resname, "nr_pred") != 0)
+		return 0;
+
+	predquery->targetList = list_delete_ptr(predquery->targetList, nrpred_tle);
+
+	if (pred_rte->eref != NULL &&
+		list_length(pred_rte->eref->colnames) == pred_nattrs)
+	{
+		pred_rte->eref->colnames =
+			list_delete_last(pred_rte->eref->colnames);
+		update_colnames = true;
+	}
+
+	train_on_star = neurdb_predict_train_on_star(predquery);
+
+	foreach(lc, output_vars)
+	{
+		NeurDBPredictPullupOutputVar *outvar =
+			(NeurDBPredictPullupOutputVar *) lfirst(lc);
+		RangeTblEntry *oldrte;
+		Var		   *newvar;
+		TargetEntry *te;
+		char	   *attname;
+		int			new_rtindex;
+
+		if (outvar->outer_rtindex <= 0 ||
+			outvar->outer_rtindex >= rtindex_map_len)
+			return 0;
+
+		new_rtindex = rtindex_map[outvar->outer_rtindex];
+		if (new_rtindex <= 0)
+			return 0;
+
+		oldrte = rt_fetch(outvar->outer_rtindex, parse->rtable);
+		attname = get_rte_attribute_name(oldrte, outvar->outer_attno);
+
+		newvar = makeVar(new_rtindex,
+						 outvar->outer_attno,
+						 outvar->sample_var->vartype,
+						 outvar->sample_var->vartypmod,
+						 outvar->sample_var->varcollid,
+						 0);
+		newvar->varnosyn = new_rtindex;
+		newvar->varattnosyn = outvar->outer_attno;
+
+		outvar->pred_attno = resno++;
+		te = makeTargetEntry((Expr *) newvar,
+							 outvar->pred_attno,
+							 pstrdup(attname),
+							 false);
+		predquery->targetList = lappend(predquery->targetList, te);
+
+		if (train_on_star)
+		{
+			TargetEntry *train_te;
+
+			train_te = makeTargetEntry((Expr *) copyObject(newvar),
+									   list_length(predquery->trainOn) + 1,
+									   pstrdup(attname),
+									   false);
+			predquery->trainOn = lappend(predquery->trainOn, train_te);
+		}
+
+		if (update_colnames)
+			pred_rte->eref->colnames =
+				lappend(pred_rte->eref->colnames, makeString(pstrdup(attname)));
+	}
+
+	nrpred_tle->resno = resno;
+	predquery->targetList = lappend(predquery->targetList, nrpred_tle);
+	if (update_colnames)
+		pred_rte->eref->colnames =
+			lappend(pred_rte->eref->colnames, makeString(pstrdup("nr_pred")));
+
+	return resno;
+}
+
+/*
+ * NEURDB: Conservative PREDICT pull-up/postponement rewrite.
+ *
+ * For queries of the form:
+ *
+ *   SELECT p.cols, d.cols, p.nr_pred
+ *   FROM (PREDICT ... FROM X ...) p
+ *        INNER JOIN D ...
+ *   WHERE quals_on_input_and_D [AND quals_on_nr_pred]
+ *
+ * when nr_predict_pullup is enabled, move the inner-join relations and
+ * input-column quals into the PREDICT query's input jointree.  If moved
+ * relations are still referenced above PREDICT, append those columns to the
+ * PREDICT output before the trailing nr_pred column and rewrite the outer
+ * references to p.<new column>.  nr_pred-dependent quals stay above PREDICT.
+ */
+void
+neurdb_pull_up_predict_subqueries(PlannerInfo *root)
+{
+	Query	   *parse = root->parse;
+	FromExpr   *jointree;
+	List	   *fromrefs = NIL;
+	List	   *qual_nodes = NIL;
+	List	   *move_quals = NIL;
+	List	   *keep_quals = NIL;
+	int			pred_rtindex = 0;
+	int			pred_count = 0;
+	int			pred_nattrs;
+	int			new_pred_nattrs;
+	int			nrtable;
+	int		   *rtindex_map;
+	RangeTblEntry *pred_rte;
+	Query	   *predquery;
+	FromExpr   *pred_jointree;
+	ListCell   *lc;
+	NeurDBPredictPullupRefs refs;
+	NeurDBPredictPullupReplace replace_ctx;
+	NeurDBPredictPullupOutputCtx output_ctx;
+	NeurDBPredictPullupOuterReplace outer_replace_ctx;
+	RangeTblRef *only_pred_ref;
+
+	if (!NrPredictPullup || parse->commandType != CMD_SELECT ||
+		parse->jointree == NULL)
+		return;
+
+	jointree = parse->jointree;
+	if (!neurdb_predict_collect_inner_join(parse, (Node *) jointree,
+										  &fromrefs, &qual_nodes,
+										  &pred_rtindex, &pred_count))
+		return;
+
+	if (pred_count != 1 || list_length(fromrefs) <= 1)
+		return;
+
+	pred_rte = rt_fetch(pred_rtindex, parse->rtable);
+	predquery = pred_rte->subquery;
+	pred_nattrs = list_length(predquery->targetList);
+	if (pred_nattrs < 2)
+		return;
+
+	foreach(lc, qual_nodes)
+	{
+		List	   *clauses = make_ands_implicit((Expr *) lfirst(lc));
+		ListCell   *qc;
+
+		foreach(qc, clauses)
+		{
+			Node	   *clause = (Node *) lfirst(qc);
+
+			neurdb_predict_pullup_check_refs(clause,
+											 pred_rtindex, pred_nattrs, &refs);
+			if (refs.unsupported)
+				return;
+
+			if (refs.has_nr_pred)
+				keep_quals = lappend(keep_quals, clause);
+			else
+				move_quals = lappend(move_quals, clause);
+		}
+	}
+
+	memset(&output_ctx, 0, sizeof(output_ctx));
+	output_ctx.pred_rtindex = pred_rtindex;
+	output_ctx.pred_nattrs = pred_nattrs;
+	neurdb_predict_pullup_collect_outputs((Node *) parse->targetList,
+										  &output_ctx);
+	neurdb_predict_pullup_collect_outputs(parse->havingQual,
+										  &output_ctx);
+	foreach(lc, keep_quals)
+		neurdb_predict_pullup_collect_outputs((Node *) lfirst(lc),
+											  &output_ctx);
+	if (output_ctx.unsupported)
+		return;
+
+	nrtable = list_length(parse->rtable);
+	rtindex_map = palloc0(sizeof(int) * (nrtable + 1));
+
+	pred_jointree = predquery->jointree;
+	if (pred_jointree == NULL)
+		return;
+
+	foreach(lc, fromrefs)
+	{
+		RangeTblRef *rtr = (RangeTblRef *) lfirst(lc);
+		RangeTblEntry *oldrte;
+		RangeTblEntry *newrte;
+		RangeTblRef *newrtr;
+
+		if (rtr->rtindex == pred_rtindex)
+			continue;
+
+		oldrte = rt_fetch(rtr->rtindex, parse->rtable);
+
+		/* Keep the first implementation simple and safe. */
+		if (oldrte->rtekind != RTE_RELATION)
+			return;
+
+		newrte = copyObject(oldrte);
+		if (newrte->perminfoindex > 0)
+		{
+			RTEPermissionInfo *oldperm;
+			RTEPermissionInfo *newperm;
+
+			oldperm = getRTEPermissionInfo(parse->rteperminfos, oldrte);
+			newperm = copyObject(oldperm);
+			newrte->perminfoindex = list_length(predquery->rteperminfos) + 1;
+			predquery->rteperminfos = lappend(predquery->rteperminfos, newperm);
+		}
+
+		predquery->rtable = lappend(predquery->rtable, newrte);
+		rtindex_map[rtr->rtindex] = list_length(predquery->rtable);
+
+		newrtr = makeNode(RangeTblRef);
+		newrtr->rtindex = rtindex_map[rtr->rtindex];
+		pred_jointree->fromlist = lappend(pred_jointree->fromlist, newrtr);
+	}
+
+	foreach(lc, output_ctx.vars)
+	{
+		NeurDBPredictPullupOutputVar *outvar =
+			(NeurDBPredictPullupOutputVar *) lfirst(lc);
+
+		if (outvar->outer_rtindex <= 0 ||
+			outvar->outer_rtindex >= nrtable + 1 ||
+			rtindex_map[outvar->outer_rtindex] <= 0)
+			return;
+	}
+
+	new_pred_nattrs =
+		neurdb_predict_add_pulled_outputs(parse, pred_rte, predquery,
+										  pred_nattrs, rtindex_map,
+										  nrtable + 1, output_ctx.vars);
+	if (new_pred_nattrs == 0)
+		return;
+
+	replace_ctx.predquery = predquery;
+	replace_ctx.pred_rtindex = pred_rtindex;
+	replace_ctx.pred_nattrs = pred_nattrs;
+	replace_ctx.rtindex_map = rtindex_map;
+	replace_ctx.rtindex_map_len = nrtable + 1;
+
+	if (move_quals != NIL)
+	{
+		List	   *new_pred_quals;
+		ListCell   *qc;
+
+		new_pred_quals = make_ands_implicit((Expr *) pred_jointree->quals);
+
+		foreach(qc, move_quals)
+		{
+			Node	   *moved;
+
+			moved = neurdb_predict_pullup_replace_mutator(copyObject(lfirst(qc)),
+														  &replace_ctx);
+			new_pred_quals = lappend(new_pred_quals, moved);
+		}
+
+		pred_jointree->quals = (Node *) make_ands_explicit(new_pred_quals);
+	}
+
+	outer_replace_ctx.pred_rtindex = pred_rtindex;
+	outer_replace_ctx.old_nr_pred_attno = pred_nattrs;
+	outer_replace_ctx.new_nr_pred_attno = new_pred_nattrs;
+	outer_replace_ctx.output_vars = output_ctx.vars;
+
+	parse->targetList =
+		(List *) neurdb_predict_pullup_outer_replace_mutator((Node *) parse->targetList,
+															 &outer_replace_ctx);
+	parse->havingQual =
+		neurdb_predict_pullup_outer_replace_mutator(parse->havingQual,
+													&outer_replace_ctx);
+
+	only_pred_ref = makeNode(RangeTblRef);
+	only_pred_ref->rtindex = pred_rtindex;
+	jointree->fromlist = list_make1(only_pred_ref);
+	jointree->quals =
+		neurdb_predict_pullup_outer_replace_mutator((Node *) make_ands_explicit(keep_quals),
+													&outer_replace_ctx);
+}
+
 /*--------------------
  * subquery_planner
  *	  Invokes the planner on a subquery.  We recurse to here for each
@@ -701,6 +1355,7 @@ subquery_planner(PlannerGlobal *glob, Query *parse,
 	 * query.
 	 */
 	pull_up_subqueries(root);
+	neurdb_pull_up_predict_subqueries(root);
 
 	/*
 	 * If this is a simple UNION ALL query, flatten it into an appendrel. We

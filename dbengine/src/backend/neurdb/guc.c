@@ -28,3 +28,9 @@ double NrPredictBatchCost;		/* per batch round trip to the AI engine */
  * root of its subquery and all quals are evaluated above it.
  */
 bool NrPredictPushdown;
+
+/*
+ * Allow a PREDICT subquery that is inner-joined with ordinary relations to be
+ * postponed until after those joins by moving the joins into the PREDICT input.
+ */
+bool NrPredictPullup;
