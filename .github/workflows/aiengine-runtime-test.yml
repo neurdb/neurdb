@@ -1,0 +1,39 @@
+name: AI Engine runtime unit tests
+
+on:
+  push:
+    paths:
+      - 'aiengine/runtime/**'
+      - '.github/workflows/aiengine-runtime-test.yml'
+  pull_request:
+    paths:
+      - 'aiengine/runtime/**'
+      - '.github/workflows/aiengine-runtime-test.yml'
+  # Allow manual runs from the GitHub UI
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    name: Run aiengine/runtime pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.10
+
+      - name: Sync dependencies (CPU)
+        working-directory: aiengine/runtime
+        run: uv sync --extra cpu
+
+      - name: Run unit tests
+        working-directory: aiengine/runtime
+        run: uv run pytest
