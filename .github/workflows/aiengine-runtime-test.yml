@@ -12,6 +12,15 @@ on:
   # Allow manual runs from the GitHub UI
   workflow_dispatch:
 
+# Least-privilege: the test job only needs to read the repo.
+permissions:
+  contents: read
+
+env:
+  # Force uv to resolve/run against 3.10 (torch 1.13.1+cpu has no 3.11 wheels),
+  # rather than whatever interpreter the runner happens to provide.
+  UV_PYTHON: "3.10"
+
 jobs:
   pytest:
     name: Run aiengine/runtime pytest
@@ -27,13 +36,15 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python
+      - name: Set up Python 3.10
         run: uv python install 3.10
 
-      - name: Sync dependencies (CPU)
+      - name: Sync dependencies (CPU, locked)
         working-directory: aiengine/runtime
-        run: uv sync --extra cpu
+        # --locked fails the job if uv.lock is out of date with pyproject.toml,
+        # so CI never silently resolves a different dependency set.
+        run: uv sync --locked --extra cpu
 
       - name: Run unit tests
         working-directory: aiengine/runtime
-        run: uv run pytest
+        run: uv run --no-sync pytest
