@@ -8,8 +8,10 @@ it in a module-level dict (the AI server runs as a single uvicorn worker), keyed
 by the synthetic ``model_id`` the engine returns from the train phase and then
 passes back in the inference task.
 
-This is the single-engine (Phase 1) mechanism; broadcasting the context to
-multiple engines for distributed inference is future work (Phase 2).
+For distributed inference the DB engine broadcasts the context (train) phase
+to every registered engine; each process fits the same context and stores it
+here under its own process-local model id, which the engine passes back in
+that worker's inference task.
 """
 
 from __future__ import annotations

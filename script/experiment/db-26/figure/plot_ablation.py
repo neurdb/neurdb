@@ -154,14 +154,14 @@ ax.bar(
     [x - w / 2 for x in xb],
     [t_root[h] for h in horizons],
     w,
-    label="w/o AI operator scheduling",
+    label="w/o plan reordering",
     color="#937860",
 )
 ax.bar(
     [x + w / 2 for x in xb],
     [t_dyn[h] for h in horizons],
     w,
-    label="w/ AI operator scheduling",
+    label="w/ plan reordering",
     color="#DD8452",
 )
 for x, h in zip(xb, horizons):

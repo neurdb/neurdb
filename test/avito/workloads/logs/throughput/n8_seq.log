@@ -1,0 +1,241 @@
+SET
+SET
+=== 08 h=1  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=8368  candidate=1155  fed_to_operator=1155  batches=1
+SET
+SET
+SET
+                                QUERY PLAN
+---------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..12485.61 rows=1155 width=48)
+   ->  NeurDB Predict  (cost=10000.00..12474.06 rows=1155 width=185)
+         ->  Seq Scan on w_task_1  (cost=0.00..319.06 rows=1155 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 1155
+Time: 1860.180 ms (00:01.860)
+Timing is off.
+ALTER TABLE
+--- w_pred_1 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   1155 |  0.062886 | 0.092219
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=1) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 2929748 | 2015-05-02 00:00:00 |         60 |   585 | 0.361519
+  513567 | 2015-05-13 00:00:00 |         60 |   674 | 0.342221
+   46023 | 2015-05-07 00:00:00 |         27 |  6490 | 0.316269
+ 4590265 | 2015-05-10 00:00:00 |         60 |  1439 | 0.314892
+ 2275702 | 2015-05-09 00:00:00 |         60 |   833 | 0.301629
+(5 rows)
+
+RESET
+TIMING,seq_h1_n8,2.1
+SET
+SET
+=== 08 h=2  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=14213  candidate=1998  fed_to_operator=1998  batches=1
+SET
+SET
+SET
+                                QUERY PLAN
+---------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..13557.41 rows=1998 width=48)
+   ->  NeurDB Predict  (cost=10000.00..13537.43 rows=1998 width=185)
+         ->  Seq Scan on w_task_2  (cost=0.00..539.43 rows=1998 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 1998
+Time: 2116.012 ms (00:02.116)
+Timing is off.
+ALTER TABLE
+--- w_pred_2 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   1998 |  0.040856 | 0.054183
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=2) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 1526477 | 2015-05-07 00:00:00 |         26 |  9990 | 0.287881
+ 1526477 | 2015-05-06 00:00:00 |         26 |  9990 | 0.283351
+ 4590265 | 2015-05-10 00:00:00 |         60 |  1439 | 0.274376
+  513567 | 2015-05-13 00:00:00 |         60 |   674 | 0.273189
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.257548
+(5 rows)
+
+RESET
+TIMING,seq_h2_n8,2.3
+SET
+SET
+=== 08 h=3  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=19106  candidate=2676  fed_to_operator=2676  batches=1
+SET
+SET
+SET
+                                QUERY PLAN
+---------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..14426.47 rows=2676 width=48)
+   ->  NeurDB Predict  (cost=10000.00..14399.71 rows=2676 width=185)
+         ->  Seq Scan on w_task_3  (cost=0.00..723.71 rows=2676 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 2676
+Time: 2628.568 ms (00:02.629)
+Timing is off.
+ALTER TABLE
+--- w_pred_3 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   2676 |  0.032463 | 0.032062
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=3) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 2012210 | 2015-05-03 00:00:00 |         27 | 56990 | 0.283810
+ 2012210 | 2015-05-02 00:00:00 |         27 | 56990 | 0.283674
+  974474 | 2015-05-10 00:00:00 |         60 |  3899 | 0.270536
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.269630
+  974474 | 2015-05-11 00:00:00 |         60 |  3899 | 0.267465
+(5 rows)
+
+RESET
+TIMING,seq_h3_n8,2.9
+SET
+SET
+=== 08 h=4  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=23331  candidate=3252  fed_to_operator=3252  batches=1
+SET
+SET
+SET
+                                QUERY PLAN
+---------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..15181.32 rows=3252 width=48)
+   ->  NeurDB Predict  (cost=10000.00..15148.80 rows=3252 width=185)
+         ->  Seq Scan on w_task_4  (cost=0.00..896.80 rows=3252 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 3252
+Time: 2999.816 ms (00:03.000)
+Timing is off.
+ALTER TABLE
+--- w_pred_4 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   3252 |  0.027486 | 0.024256
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=4) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.277143
+  974474 | 2015-05-09 00:00:00 |         60 |  3899 | 0.276913
+  974474 | 2015-05-10 00:00:00 |         60 |  3899 | 0.272986
+  974474 | 2015-05-11 00:00:00 |         60 |  3899 | 0.271512
+ 4418364 | 2015-05-08 00:00:00 |         27 |   950 | 0.262911
+(5 rows)
+
+RESET
+TIMING,seq_h4_n8,3.2
+SET
+SET
+=== 08 h=5  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=27076  candidate=3748  fed_to_operator=3748  batches=1
+SET
+SET
+SET
+                                 QUERY PLAN
+----------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..15808.77 rows=3748 width=48)
+   ->  NeurDB Predict  (cost=10000.00..15771.30 rows=3748 width=185)
+         ->  Seq Scan on w_task_5  (cost=0.00..1023.30 rows=3748 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 3748
+Time: 3097.795 ms (00:03.098)
+Timing is off.
+ALTER TABLE
+--- w_pred_5 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   3748 |  0.024351 | 0.019602
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=5) ---
+  adid  |         ts          | categoryid | price | pred_ctr
+--------+---------------------+------------+-------+----------
+ 974474 | 2015-05-09 00:00:00 |         60 |  3899 | 0.284083
+ 974474 | 2015-05-08 00:00:00 |         60 |  3899 | 0.283886
+ 974474 | 2015-05-10 00:00:00 |         60 |  3899 | 0.282183
+ 974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.276960
+ 974474 | 2015-05-11 00:00:00 |         60 |  3899 | 0.272957
+(5 rows)
+
+RESET
+TIMING,seq_h5_n8,3.3
+SET
+SET
+=== 08 h=7  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=33531  candidate=4595  fed_to_operator=4595  batches=2
+SET
+SET
+SET
+                                 QUERY PLAN
+----------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..17924.91 rows=4586 width=48)
+   ->  NeurDB Predict  (cost=10000.00..17879.05 rows=4586 width=185)
+         ->  Seq Scan on w_task_7  (cost=0.00..1293.05 rows=4586 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 4595
+Time: 4737.164 ms (00:04.737)
+Timing is off.
+ALTER TABLE
+--- w_pred_7 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   4595 |  0.020502 | 0.009657
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=7) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 4418364 | 2015-05-09 00:00:00 |         27 |   950 | 0.249792
+ 4418364 | 2015-05-08 00:00:00 |         27 |   950 | 0.246544
+ 4418364 | 2015-05-07 00:00:00 |         27 |   950 | 0.239695
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.215753
+ 1230184 | 2015-05-06 00:00:00 |         27 | 15500 | 0.213406
+(5 rows)
+
+RESET
+TIMING,seq_h7_n8,5.0
+TIMING,seq_total_n8,18.9

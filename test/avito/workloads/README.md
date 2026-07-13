@@ -66,10 +66,11 @@ materialization), `06` (nested PREDICT forms), `07` (pushdown A/B on one query).
 ## Run
 
 ```bash
-bash run_tasks.sh     # FULL task set: prep + 08 per horizon (off+on) + 09
-bash run_matrix.sh    # 2x2 ablation: cache reuse x AI-op scheduling -> logs/ + results.csv
-bash run_avito.sh     # prep only (reuse mode): builds w_task_1/3/7
-bash bench.sh         # times reuse vs no-reuse feature compute + rows computed
+bash run_tasks.sh      # FULL task set: prep + 08 per horizon (off+on) + 09
+bash run_matrix.sh     # 2x2 ablation: cache reuse x AI-op scheduling -> logs/ + results.csv
+bash run_throughput.sh # distributed-inference sweep: 6 tasks x N AI servers -> logs/throughput*
+bash run_avito.sh      # prep only (reuse mode): builds w_task_1/3/7
+bash bench.sh          # times reuse vs no-reuse feature compute + rows computed
 ```
 
 `run_tasks.sh` knobs (env): `HORIZONS="1 3 7"`, `CAND="categoryid IN (60, 26, 27)"`,
@@ -82,6 +83,18 @@ plus a final summary; reference run (cache on): baseline vs dynamic predict =
 `run_matrix.sh` runs the 4 settings (cache on/off x sched on/off), keeps each
 full log in `logs/<setting>.log`, and aggregates the TIMING lines into
 `logs/results.csv` (row = setting, columns = per-phase seconds).
+
+`run_throughput.sh` is the distributed-inference experiment, run under the full
+NeurEngine setting (cache reuse ON + scheduling ON). The NLQ is widened to six
+horizon tasks (`HORIZONS="1 2 3 4 5 7"`; 14d would overflow the 25-day data
+window). It manages a pool of TabPFN AI servers inside the container (port
+`8090+i` pinned to GPU `i`), registers the first `N` of them in
+`pg_catalog.nr_aiengine`, and for each `N` in `SERVERS="1 2 4 8"` runs the six
+`08` PREDICTs both **sequentially** (per-task latency; each statement broadcasts
+its in-context train phase to all N engines and row-shards every inference
+batch across them) and **concurrently** (NLQ wall time; task-level parallelism
+on top). Results land in `logs/throughput/*.log` +
+`logs/throughput_results.csv`.
 
 File naming: `tool_*` = experiment setup (not part of a task); `NN_*` = the
 per-task SQL. **One prediction task = 4 SQL files** (01 label -> 02 features ->
