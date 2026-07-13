@@ -70,4 +70,4 @@ tool_feat_cache_init.sql           (ONCE -> reuse ; per-task -> no-reuse)
   fixed to 2015-05-02..05-13 (>=7d history, >=7d future) so 1/3/7d are all valid;
   relbench's own test_timestamp (05-14) is NOT reused (05-14+7d overflows data).
 - Source tables (`adsinfo`, `searchstream`, ...) live in db `avito`, loaded by
-  `../../.local/exp/load_avito.py`. See `../README.md`.
+  `../../../.local/exp/load_avito.py`. See `../README.md` (dataset doc).
