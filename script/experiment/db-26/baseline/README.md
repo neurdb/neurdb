@@ -44,3 +44,48 @@ python script/experiment/db-26/baseline/baseline_inference.py --table frappe_tes
 ```
 
 DB 连接默认 `localhost:5432`、库/用户 `neurdb`，可用 `--db-host`、`--db-port`、`--db-name`、`--db-user` 覆盖。
+
+## 分布式 inference 实验流程
+
+1. **环境**
+   - 推荐在容器里跑：`docker exec -it neurdb_dev bash`，进入 `/code/neurdb-dev`。
+   - 宿主机如需跑 Python baseline，先切到有依赖的环境：`conda activate neurbench`。
+
+2. **准备数据和模型**
+   - `frappe_test` 默认由 `test/frappe.csv` 导入，`test/test.sh` 会建表、`COPY` 数据，并执行一次 `PREDICT ... TRAIN ON *`。
+   - 表结构是 `click_rate + feature1..feature10`。后续系统 inference 和 baseline 都默认读 `frappe_test`。
+
+3. **启动多 worker AI engine**
+   ```bash
+   ./script/ai_servers/start_ai_servers.sh 3
+   ```
+   - 这个脚本会启动 `8090,8091,8092` 三个 Python server，日志写到 `test/server_*.log`。
+   - 按脚本输出，在 psql 里重新注册 engine：
+     ```sql
+     DELETE FROM pg_catalog.nr_aiengine;
+     select insert_ai_engine('127.0.0.1', 8090);
+     select insert_ai_engine('127.0.0.1', 8091);
+     select insert_ai_engine('127.0.0.1', 8092);
+     ```
+   - 并行度就是注册的 engine 数量。
+
+4. **跑系统路径**
+   - 通过 `PREDICT CLASS/VALUE OF click_rate FROM frappe_test TRAIN ON *;` 触发系统 inference。
+   - C 端按注册的 engine 数把数据切分，多个 Python worker 分别加载同一个 model_id 并推理。
+
+5. **跑 baseline**
+   ```bash
+   python script/experiment/db-26/baseline/baseline_inference.py
+   python script/experiment/db-26/baseline/baseline_inference.py --num-batches 10
+   ```
+   - baseline 不走 WebSocket，只是 Python 直连 DB：查 router、加载模型、按 batch 读表并调用 `model(batch)`。
+   - 脚本日志会输出 `load_ms`、`infer_ms`、`total_ms`。
+
+6. **收集日志**
+   - 系统路径看 `test/server_8090.log`、`test/server_8091.log`、`test/server_8092.log`。
+   - 重点关注：`loading model from database`、`done batch for ...`、batch 数、每个 server 的总耗时。
+   - baseline 直接看终端输出即可。
+
+7. **后续分析**
+   - 当前还没有正式画图脚本；先手工记录不同 worker 数、不同 feature 数、不同 batch 数下的 `total_ms/infer_ms`。
+   - 后续可以补一个小脚本解析 `server_*.log` 和 baseline 输出，汇总成 CSV，再画折线图或柱状图。

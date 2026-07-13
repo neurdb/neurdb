@@ -12,6 +12,7 @@
 
 ### VS Code
 .vscode/
+.local/
 
 # Third-party libraries
 socket.io-client-cpp/
