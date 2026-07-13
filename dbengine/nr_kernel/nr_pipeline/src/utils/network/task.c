@@ -27,6 +27,7 @@ void init_train_task_spec(TrainTaskSpec *task, const char *architecture,
   task->features = strdup(features);
   task->target = strdup(target);
   task->nclass = nclass;
+  task->colTypes = NULL;
 }
 
 void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
@@ -44,6 +45,7 @@ void init_inference_task_spec(InferenceTaskSpec *task, const char *architecture,
   task->nclass = nclass;
   task->features = strdup(features);
   task->target = strdup(target);
+  task->colTypes = NULL;
 }
 
 void init_finetune_task_spec(FinetuneTaskSpec *task, const char *model_name,
@@ -76,6 +78,7 @@ void free_train_task_spec(TrainTaskSpec *task) {
   free(task->metrics);
   free(task->features);
   free(task->target);
+  if (task->colTypes) free(task->colTypes);
   free(task);
 }
 
@@ -84,6 +87,7 @@ void free_inference_task_spec(InferenceTaskSpec *task) {
   free(task->metrics);
   free(task->features);
   free(task->target);
+  if (task->colTypes) free(task->colTypes);
   free(task);
 }
 
@@ -106,6 +110,9 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
       cJSON_AddNumberToObject(json, "nFeat", spec->nFeat);
       cJSON_AddNumberToObject(json, "nField", spec->nField);
       cJSON_AddNumberToObject(json, "nclass", spec->nclass);
+      if (spec->colTypes) {
+        cJSON_AddStringToObject(json, "colTypes", spec->colTypes);
+      }
 
       cJSON *spec_json = cJSON_CreateObject();
       cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);
@@ -130,6 +137,9 @@ void task_append_to_json(cJSON *json, void *task_spec, MLTask ml_task) {
       cJSON_AddNumberToObject(json, "nField", spec->nField);
       cJSON_AddNumberToObject(json, "nclass", spec->nclass);
       cJSON_AddNumberToObject(json, "modelId", spec->modelId);
+      if (spec->colTypes) {
+        cJSON_AddStringToObject(json, "colTypes", spec->colTypes);
+      }
 
       cJSON *spec_json = cJSON_CreateObject();
       cJSON_AddNumberToObject(spec_json, "batchSize", spec->batch_size);

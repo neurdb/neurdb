@@ -151,9 +151,29 @@ async def on_ack_result(data: dict):
     logger.debug(f"Ack result received")
 
 
+def _tabpfn_cfg_from_task(data: dict) -> dict:
+    """Build the tabpfn builder config (task type + per-column stype hints) from
+    the task spec. ``colTypes`` is a comma-separated list of Postgres type names
+    aligned with ``features`` (derived from the tupdesc on the DB side)."""
+    from neurdbrt.model.tabpfn import infer_task_type, pg_types_to_hints
+
+    feature_names = data["features"].split(",")
+    col_types = (data.get("colTypes") or "").split(",")
+    return {
+        "task_type": infer_task_type(data.get("nclass", -1)),
+        "stype_hints": pg_types_to_hints(feature_names, col_types),
+    }
+
+
 async def on_train(data: dict):
     req = TaskRequest(data, is_inference=False)
-    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
+    architecture = data["architecture"]
+    is_token_format = architecture in ("auto_pipeline", "tabpfn")
+    await init_database(
+        req,
+        in_libsvm_format=not is_token_format,
+        field_sep="\t" if architecture == "tabpfn" else None,
+    )
 
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
@@ -171,10 +191,13 @@ async def on_train(data: dict):
     asyncio.create_task(
         train_task(
             setup=Setup(
-                model_name=data["architecture"],
+                model_name=architecture,
                 libsvm_data=g.data_loader,
                 args=current_app.config["config_args"],
                 db=current_app.config["db_connector"],
+                tabpfn_cfg=(
+                    _tabpfn_cfg_from_task(data) if architecture == "tabpfn" else None
+                ),
             ),
             table_name=data["table"],
             epoch=data["spec"]["epoch"],
@@ -228,7 +251,11 @@ async def train_task(
 
     print(f"train done. model_id: {model_id}")
 
-    if NEURDB_CONNECTOR:
+    # tabpfn is in-context: the fitted context lives in the in-process
+    # session_store keyed by model_id, not in the router. Skip router
+    # registration so each PREDICT re-fits the context (and so a stale router
+    # row can't point inference at a context that no longer exists in memory).
+    if NEURDB_CONNECTOR and setup._model_name != "tabpfn":
         NEURDB_CONNECTOR.register_model(
             model_id, table_name, feature_names, target_name
         )
@@ -238,8 +265,13 @@ async def train_task(
 
 async def on_inference(data: dict):
     req = TaskRequest(data, is_inference=True)
+    architecture = data["architecture"]
 
-    await init_database(req, in_libsvm_format=(data["architecture"] != "auto_pipeline"))
+    await init_database(
+        req,
+        in_libsvm_format=architecture not in ("auto_pipeline", "tabpfn"),
+        field_sep="\t" if architecture == "tabpfn" else None,
+    )
     await websocket.send(AckTaskResponse(req.session_id).to_json())
 
     exe_flag, exe_info = before_execute(
@@ -382,7 +414,9 @@ async def finetune_task(
     return model_id
 
 
-async def init_database(req: TaskRequest, in_libsvm_format: bool = True):
+async def init_database(
+    req: TaskRequest, in_libsvm_format: bool = True, field_sep: str = None
+):
     # Get the arguments from the request
     session_id = req.session_id
     n_feat = req.n_feat
@@ -404,8 +438,12 @@ async def init_database(req: TaskRequest, in_libsvm_format: bool = True):
     # Create the data dispatcher if it doesn't exist
     dispatchers = quart_app.config["dispatchers"]
     if not dispatchers.contains(session_id, session_id):
-        d = LibSvmDataDispatcher(in_libsvm_format=in_libsvm_format)
-        logger.debug(f"Created data dispatcher", in_libsvm_format=in_libsvm_format)
+        d = LibSvmDataDispatcher(in_libsvm_format=in_libsvm_format, field_sep=field_sep)
+        logger.debug(
+            f"Created data dispatcher",
+            in_libsvm_format=in_libsvm_format,
+            field_sep=field_sep,
+        )
         dispatchers.add(session_id, session_id, d)
 
         d.bound_client_to_cache(c, session_id)

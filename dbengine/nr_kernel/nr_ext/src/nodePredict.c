@@ -8,19 +8,41 @@
 
 #include "access/relation.h"
 #include "access/heapam.h"
+#include "access/table.h"
+#include "access/tableam.h"
 #include "funcapi.h"
 #include "nodes/nodeFuncs.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
 #include "parser/parse_target.h"
+#include "catalog/namespace.h"
 #include "catalog/pg_type.h"
 #include "fmgr.h"
 #include "lib/ilist.h"
 #include "utils/builtins.h"
 #include "utils/array.h"
+#include "utils/regproc.h"
+#include "utils/rel.h"
 #include "neurdb/predict.h"
 #include "nodes/primnodes.h"
 #include "nodes/makefuncs.h"
+
+/*
+ * Materialization target GUC, defined in nr_kernel.c.  When non-empty, the
+ * PREDICT operator augments every input row with a trailing nr_pred column and
+ * writes the row into this table, so downstream relational operators
+ * (top-k / aggregation) can consume PREDICT output as a normal relation.
+ */
+extern char *NrPredictInto;
+
+/*
+ * Per-backend materialization state.  PREDICT runs one node at a time within a
+ * backend, so file-static state is sufficient and avoids touching the core
+ * NeurDBPredictState struct (which lives in a backend header).
+ */
+static Relation nr_mat_rel = NULL;	/* open target relation, or NULL */
+static int	nr_mat_ninput = 0;		/* # of passthrough (input) columns */
+static bool nr_mat_enabled = false; /* materialization active for this node */
 
 
 static char *trainingFuncName = "nr_train";
@@ -478,7 +500,17 @@ ExecNeurDBPredict(PlanState *pstate)
 
 	outerPlan = outerPlanState(predictstate);
 
-	predictstate->is_final = false;
+	/*
+	 * NB: do NOT reset predictstate->is_final here.  is_final is persistent
+	 * state on the node: it is set when the outer plan is exhausted (the
+	 * current batch is the last one) and must survive across the many
+	 * ExecNeurDBPredict() invocations that drain a batch's results one row at
+	 * a time.  Clearing it on every call made the INFERENCE_RETURN state lose
+	 * track of the final batch, loop back to INFERENCE_COLLECT after the last
+	 * row, re-scan the input, and push a duplicate batch that the AI engine
+	 * (told exactly nr_task_num_batches up front) never answers -- hanging the
+	 * backend forever in nws_wait_completion().
+	 */
 
 	for (;;)
 	{
@@ -581,6 +613,14 @@ ExecNeurDBPredict(PlanState *pstate)
 
 						OidFunctionCall1(funcOid, BoolGetDatum(true));
 
+						/*
+						 * Entering the inference phase with a fresh batch:
+						 * is_final is still true from the last training batch,
+						 * so clear it here (it is no longer reset per-call) to
+						 * avoid prematurely ending inference after one batch.
+						 */
+						predictstate->is_final = false;
+
 						/* go to inference */
 						predictstate->nrpstate = NEURDBPREDICT_INFERENCE_COLLECT;
 					}
@@ -669,15 +709,43 @@ ExecNeurDBPredict(PlanState *pstate)
 						}
 					}
 
-					/* get the next slot from the cache */
+					/* get the next input slot from the cache */
 					slot = predictstate->slot_cache[predictstate->num_consumed];
-
-					/* project the slot */
-					predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
-					slot = ExecProject(predictstate->ps.ps_ProjInfo);
 
 					/* get the next result from the cache */
 					result_node *node = (result_node *) dclist_pop_head_node(&predictstate->result_cache);
+
+					if (nr_mat_enabled)
+					{
+						/*
+						 * Materialization mode: emit the input row verbatim plus
+						 * a trailing nr_pred column, and persist it into the
+						 * target table.  The result slot already carries the
+						 * target relation's descriptor (input cols + nr_pred).
+						 */
+						TupleTableSlot *out = predictstate->ps.ps_ResultTupleSlot;
+
+						slot_getallattrs(slot);
+						ExecClearTuple(out);
+						for (int i = 0; i < nr_mat_ninput; i++)
+						{
+							out->tts_values[i] = slot->tts_values[i];
+							out->tts_isnull[i] = slot->tts_isnull[i];
+						}
+						out->tts_values[nr_mat_ninput] = Float8GetDatum(node->value);
+						out->tts_isnull[nr_mat_ninput] = false;
+						ExecStoreVirtualTuple(out);
+
+						/* write the augmented row into the target table */
+						simple_table_tuple_insert(nr_mat_rel, out);
+
+						predictstate->num_consumed += 1;
+						return out;
+					}
+
+					/* legacy mode: project then overwrite with prediction */
+					predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
+					slot = ExecProject(predictstate->ps.ps_ProjInfo);
 
 					/* build the returning slot */
 					build_result_slot(node->value, predictstate->is_float, predictstate->id_class_map, slot);
@@ -843,11 +911,77 @@ _temp_extract_table_name(List *fromClause)
 }
 
 
+/*
+ * Open the materialization target table named by neurdb.predict_into and set
+ * up the augmented result slot (input columns + a trailing float8 nr_pred
+ * column).
+ *
+ * The target table must already exist and have exactly (ninput + 1) columns,
+ * laid out as the input columns (same order/types as the PREDICT FROM source)
+ * followed by a final float8 prediction column.  A convenient way to create it:
+ *
+ *     CREATE TABLE w_pred_h (LIKE w_task_h INCLUDING DEFAULTS, nr_pred float8);
+ *
+ * Installs the augmented (blessed) tuple descriptor as the node's result slot
+ * and records the open relation / input width in file-static state.
+ */
+static void
+nr_open_materialize_target(NeurDBPredictState * predictstate, TupleDesc inputDesc)
+{
+	List	   *names;
+	RangeVar   *rv;
+	Oid			relid;
+	TupleDesc	relDesc;
+	TupleDesc	outDesc;
+
+	nr_mat_ninput = inputDesc->natts;
+
+	names = stringToQualifiedNameList(NrPredictInto, NULL);
+	rv = makeRangeVarFromNameList(names);
+	relid = RangeVarGetRelid(rv, RowExclusiveLock, false);
+	nr_mat_rel = table_open(relid, RowExclusiveLock);
+
+	relDesc = RelationGetDescr(nr_mat_rel);
+	if (relDesc->natts != nr_mat_ninput + 1)
+	{
+		char	   *relname = pstrdup(RelationGetRelationName(nr_mat_rel));
+		int			expected = nr_mat_ninput + 1;
+		int			got = relDesc->natts;
+
+		table_close(nr_mat_rel, RowExclusiveLock);
+		nr_mat_rel = NULL;
+		ereport(ERROR,
+				(errcode(ERRCODE_DATATYPE_MISMATCH),
+				 errmsg("neurdb.predict_into table \"%s\" must have %d columns "
+						"(input columns + 1 prediction column), but has %d",
+						relname, expected, got)));
+	}
+
+	/* Result slot carries the target relation's descriptor (input + nr_pred). */
+	outDesc = CreateTupleDescCopy(relDesc);
+	outDesc = BlessTupleDesc(outDesc);
+
+	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
+	predictstate->ps.ps_ResultTupleSlot =
+		MakeSingleTupleTableSlot(outDesc, &TTSOpsVirtual);
+	predictstate->ps.ps_ResultTupleDesc = outDesc;
+	predictstate->ps.ps_ProjInfo = NULL;
+
+	elog(DEBUG1,
+		 "[NeurDBPredict] materialize ON: into=\"%s\" ninput=%d",
+		 NrPredictInto, nr_mat_ninput);
+}
+
 NeurDBPredictState *
 ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 {
 	NeurDBPredictState *predictstate;
 	Plan	   *outerPlan;
+
+	/* reset per-backend materialization state for this node */
+	nr_mat_rel = NULL;
+	nr_mat_ninput = 0;
+	nr_mat_enabled = (NrPredictInto != NULL && NrPredictInto[0] != '\0');
 
 	predictstate = makeNode(NeurDBPredictState);
 	predictstate->ps.plan = (Plan *) node;
@@ -878,66 +1012,79 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
 #endif
 
-	/*
-	 * Initialize result tuple slot with FIXED descriptor Need to determine
-	 * upfront if we're doing classification or regression
-	 */
-	TupleDesc	resultDesc;
-	int			natts = list_length(node->predictTargetList);
-
-	/* Determine if we need the debug column (for classification) */
-	/* You may need to determine this from node->stmt->kind or other metadata */
-	bool		needsDebugColumn = (node->stmt->kind == PREDICT_CLASS);
-
-	if (needsDebugColumn)
+	if (nr_mat_enabled)
 	{
-		/* Classification: add debug column */
-		resultDesc = CreateTemplateTupleDesc(natts + 1);
-
-		int			i = 1;
-		ListCell   *lc;
-
-		foreach(lc, node->predictTargetList)
-		{
-			TargetEntry *tle = (TargetEntry *) lfirst(lc);
-
-			TupleDescInitEntry(resultDesc,
-							   (AttrNumber) i,
-							   tle->resname,
-							   exprType((Node *) tle->expr),
-							   exprTypmod((Node *) tle->expr),
-							   0);
-			i++;
-		}
-
-		/* Add debug column */
-		TupleDescInitEntry(resultDesc,
-						   (AttrNumber) (natts + 1),
-						   "_dbg_value",
-						   FLOAT8OID,
-						   -1,
-						   0);
+		/*
+		 * Materialization mode: the output schema is (all input columns +
+		 * trailing nr_pred). We pass the input row through verbatim and append
+		 * the prediction, so downstream SQL (top-k / aggregation) can consume
+		 * PREDICT output as a relation.
+		 */
+		nr_open_materialize_target(predictstate,
+								   ExecGetResultType(outerPlanState(predictstate)));
 	}
 	else
 	{
-		/* Regression: no debug column */
-		resultDesc = ExecTypeFromTL(node->predictTargetList);
+		/*
+		 * Legacy mode: emit only the prediction (single column), optionally
+		 * with a debug column for classification.
+		 */
+		TupleDesc	resultDesc;
+		int			natts = list_length(node->predictTargetList);
+
+		/* Determine if we need the debug column (for classification) */
+		bool		needsDebugColumn = (node->stmt->kind == PREDICT_CLASS);
+
+		if (needsDebugColumn)
+		{
+			/* Classification: add debug column */
+			resultDesc = CreateTemplateTupleDesc(natts + 1);
+
+			int			i = 1;
+			ListCell   *lc;
+
+			foreach(lc, node->predictTargetList)
+			{
+				TargetEntry *tle = (TargetEntry *) lfirst(lc);
+
+				TupleDescInitEntry(resultDesc,
+								   (AttrNumber) i,
+								   tle->resname,
+								   exprType((Node *) tle->expr),
+								   exprTypmod((Node *) tle->expr),
+								   0);
+				i++;
+			}
+
+			/* Add debug column */
+			TupleDescInitEntry(resultDesc,
+							   (AttrNumber) (natts + 1),
+							   "_dbg_value",
+							   FLOAT8OID,
+							   -1,
+							   0);
+		}
+		else
+		{
+			/* Regression: no debug column */
+			resultDesc = ExecTypeFromTL(node->predictTargetList);
+		}
+
+		resultDesc = BlessTupleDesc(resultDesc);
+		ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
+		predictstate->ps.ps_ResultTupleSlot = MakeSingleTupleTableSlot(resultDesc, &TTSOpsVirtual);
+		predictstate->ps.ps_ResultTupleDesc = resultDesc;
+
+		/*
+		 * initialize projection info
+		 */
+		predictstate->ps.ps_ProjInfo =
+			ExecBuildProjectionInfo(node->predictTargetList,
+									predictstate->ps.ps_ExprContext,
+									predictstate->ps.ps_ResultTupleSlot,
+									(PlanState *) predictstate,
+									ExecTypeFromTL(node->predictTargetList));
 	}
-
-	resultDesc = BlessTupleDesc(resultDesc);
-	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
-	predictstate->ps.ps_ResultTupleSlot = MakeSingleTupleTableSlot(resultDesc, &TTSOpsVirtual);
-	predictstate->ps.ps_ResultTupleDesc = resultDesc;
-
-	/*
-	 * initialize projection info
-	 */
-	predictstate->ps.ps_ProjInfo =
-		ExecBuildProjectionInfo(node->predictTargetList,
-								predictstate->ps.ps_ExprContext,
-								predictstate->ps.ps_ResultTupleSlot,
-								(PlanState *) predictstate,
-								ExecTypeFromTL(node->predictTargetList));
 
 	StringInfoData targetColumn = construct_target_columns(node->predictTargetList);
 
@@ -1001,6 +1148,15 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 void
 ExecEndNeurDBPredict(NeurDBPredictState * node)
 {
+	/* close the materialization target table, if one was opened */
+	if (nr_mat_rel != NULL)
+	{
+		table_close(nr_mat_rel, RowExclusiveLock);
+		nr_mat_rel = NULL;
+	}
+	nr_mat_enabled = false;
+	nr_mat_ninput = 0;
+
 	ExecFreeExprContext(&node->ps);
 	ExecEndNode(outerPlanState(node));
 	_call_pipeline_close();

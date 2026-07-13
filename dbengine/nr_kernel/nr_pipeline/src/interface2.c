@@ -42,6 +42,10 @@ PG_FUNCTION_INFO_V1(nr_pipeline_close);
 
 static void pipeline_close();
 
+/* forward declarations (used by send_inference_task before their definitions) */
+static bool _is_tabpfn(const char *model_name);
+static char *_build_col_types(TupleDesc tupdesc, int n_features);
+
 
 static PipelineSession PIPELINE_SESSION;
 
@@ -516,6 +520,11 @@ send_inference_task(NrWebsocket *ws, const PipelineSession *session) {
         char_array2str(session->feature_names, session->n_features),
         session->target
     );
+    if (_is_tabpfn(session->model_name)) {
+        char *ct = _build_col_types(session->tupdesc, session->n_features);
+        it->colTypes = strdup(ct);
+        pfree(ct);
+    }
     nws_send_task(ws, T_INFERENCE, session->table_name, it);
     free_inference_task_spec(it);
 }
@@ -715,6 +724,92 @@ static void build_libsvm_data(
     pfree(row_data.data);
 }
 
+static bool
+_is_tabpfn(const char *model_name) {
+    return model_name && strcmp(model_name, "tabpfn") == 0;
+}
+
+/* Replace framing chars inside a field so the tab/newline layout survives. */
+static void
+_sanitize_field(char *s) {
+    for (char *p = s; *p; p++) {
+        if (*p == '\t' || *p == '\n' || *p == '\r') {
+            *p = ' ';
+        }
+    }
+}
+
+/*
+ * Typed payload for in-context, type-aware models (e.g. tabpfn).
+ *
+ * One row per tuple, fields TAB-separated, label first then the features in
+ * column order. Each value is the type's canonical text (via SPI_getvalue /
+ * the type output function) so numbers, timestamps and text all survive
+ * losslessly; a SQL NULL becomes an empty field. This is the dual of
+ * build_libsvm_data, which forces everything to dense integers/floats and
+ * tokenizes text -- lossy and wrong for tabpfn's type-aware preprocessing.
+ */
+static void
+build_typed_data(
+    SPITupleTable *tuptable,
+    TupleDesc tupdesc,
+    int n_features,
+    StringInfo out,
+    bool has_label,
+    int label_col
+) {
+    StringInfoData row;
+    initStringInfo(&row);
+    for (int i = 0; i < SPI_processed; i++) {
+        resetStringInfo(&row);
+        // label occupies the first field (empty placeholder during inference)
+        if (has_label) {
+            char *lv = SPI_getvalue(tuptable->vals[i], tupdesc, label_col);
+            if (lv) {
+                _sanitize_field(lv);
+                appendStringInfoString(&row, lv);
+                pfree(lv);
+            }
+        }
+        // features
+        for (int col = 0; col < n_features; col++) {
+            appendStringInfoChar(&row, '\t');
+            char *v = SPI_getvalue(tuptable->vals[i], tupdesc, col + 1);
+            if (v) {
+                _sanitize_field(v);
+                appendStringInfoString(&row, v);
+                pfree(v);
+            }
+        }
+        appendStringInfoChar(&row, '\n');
+        appendStringInfoString(out, row.data);
+    }
+    pfree(row.data);
+}
+
+/*
+ * Comma-separated Postgres type names for the first n_features columns (the
+ * feature columns, same positional convention as build_*_data). Sent in the
+ * task spec so the engine can derive type-aware stype hints (e.g. timestamp)
+ * that it cannot recover from the stringified values alone. Returns palloc'd
+ * memory.
+ */
+static char *
+_build_col_types(TupleDesc tupdesc, int n_features) {
+    StringInfoData s;
+    initStringInfo(&s);
+    for (int col = 0; col < n_features; col++) {
+        if (col > 0) {
+            appendStringInfoChar(&s, ',');
+        }
+        Oid t = SPI_gettypeid(tupdesc, col + 1);
+        char *name = format_type_be(t);
+        appendStringInfoString(&s, name);
+        pfree(name);
+    }
+    return s.data;
+}
+
 // ------------------------ Helper Functions ------------------------
 
 static NrWebsocket *
@@ -812,17 +907,28 @@ run_infer_batch(PipelineSession *session, bool flush) {
 
     StringInfoData libsvm;
     initStringInfo(&libsvm);
-    build_libsvm_data(
-        &fake_table,
-        session->tupdesc,
-        session->n_features,
-        session->feature_names,
-        session->table_name,
-        &libsvm,
-        false,
-        0,
-        session->model_name
-    );
+    if (_is_tabpfn(session->model_name)) {
+        build_typed_data(
+            &fake_table,
+            session->tupdesc,
+            session->n_features,
+            &libsvm,
+            false,
+            0
+        );
+    } else {
+        build_libsvm_data(
+            &fake_table,
+            session->tupdesc,
+            session->n_features,
+            session->feature_names,
+            session->table_name,
+            &libsvm,
+            false,
+            0,
+            session->model_name
+        );
+    }
     char *payload = NULL;
     if (session->dist_infer) {
         int total_lines = 0;
@@ -974,17 +1080,28 @@ run_train_batch(PipelineSession *session, bool flush) {
 
     StringInfoData libsvm;
     initStringInfo(&libsvm);
-    build_libsvm_data(
-        &fake_table,
-        session->tupdesc,
-        session->n_features,
-        session->feature_names,
-        session->table_name,
-        &libsvm,
-        true,
-        session->label_col_id,
-        session->model_name
-    );
+    if (_is_tabpfn(session->model_name)) {
+        build_typed_data(
+            &fake_table,
+            session->tupdesc,
+            session->n_features,
+            &libsvm,
+            true,
+            session->label_col_id
+        );
+    } else {
+        build_libsvm_data(
+            &fake_table,
+            session->tupdesc,
+            session->n_features,
+            session->feature_names,
+            session->table_name,
+            &libsvm,
+            true,
+            session->label_col_id,
+            session->model_name
+        );
+    }
 
     nws_send_batch_data(session->ws, 0, S_TRAIN, libsvm.data);
 
@@ -1118,6 +1235,11 @@ pipeline_init(
             PIPELINE_SESSION.n_features,
             n_class
         );
+        if (_is_tabpfn(PIPELINE_SESSION.model_name)) {
+            char *ct = _build_col_types(PIPELINE_SESSION.tupdesc, PIPELINE_SESSION.n_features);
+            tt->colTypes = strdup(ct);
+            pfree(ct);
+        }
         nws_send_task(PIPELINE_SESSION.ws, T_TRAIN, PIPELINE_SESSION.table_name, tt);
         free_train_task_spec(tt);
         // set to training state
@@ -1176,7 +1298,15 @@ pipeline_state_change(bool to_inference) {
         _clean_up_conn(PIPELINE_SESSION.ws);
         PIPELINE_SESSION.ws = NULL;
 
-        PIPELINE_SESSION.dist_infer = distributed_infer_create(&PIPELINE_SESSION);
+        /*
+         * tabpfn is in-context and single-engine for now (Phase 1): the fitted
+         * context lives on one AI server keyed by model_id, so route inference
+         * to a single engine rather than sharding across distributed workers
+         * (which would not share the cached context).
+         */
+        PIPELINE_SESSION.dist_infer = _is_tabpfn(PIPELINE_SESSION.model_name)
+                                          ? NULL
+                                          : distributed_infer_create(&PIPELINE_SESSION);
         if (!PIPELINE_SESSION.dist_infer) {
             PIPELINE_SESSION.ws = connect_to_ai_engine();
             send_inference_task(PIPELINE_SESSION.ws, &PIPELINE_SESSION);
