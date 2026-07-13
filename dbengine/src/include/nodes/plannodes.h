@@ -1601,6 +1601,14 @@ typedef struct NeurDBPredict
 	NeurDBPredictStmt *stmt;
 	List		*trainOn;
     List 		*predictTargetList;
+
+	/*
+	 * True when this node was injected for a PREDICT nested as a subquery in
+	 * FROM.  In that mode the node passes all input columns through and
+	 * fills the trailing nr_pred column, instead of emitting the legacy
+	 * single-column prediction result.
+	 */
+	bool		nested;
 } NeurDBPredict;
 
 #endif							/* PLANNODES_H */

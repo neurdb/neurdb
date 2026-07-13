@@ -43,6 +43,15 @@ class StreamingDataSet:
         Wait until the next data is available.
         :return: current batch data
         """
+        next_batch = self.current_stage_batch_count
+        total = self.stage_counts.get(self.current_stage, 0) if self.stage_counts else 0
+        if total > 0:
+            logger.info(
+                "waiting for next batch from DB",
+                stage=str(self.current_stage),
+                next_batch=next_batch,
+                total_batches=total,
+            )
         logger.debug(f"[StreamingDataSet]: reading one data from queue...")
         begin_time = time.time()
         batch_data = await self.data_cache.get()
@@ -54,6 +63,14 @@ class StreamingDataSet:
 
         # increase the current stage count
         self.current_stage_batch_count += 1
+        if total > 0:
+            logger.info(
+                "got batch from DB",
+                stage=str(self.current_stage),
+                batch_index=self.current_stage_batch_count - 1,
+                total_batches=total,
+                wait_sec=round(end_time - begin_time, 2),
+            )
         if self.current_stage_batch_count >= self.stage_counts[self.current_stage]:
             _pre_stage_for_log = self.current_stage
             # switch to next stage

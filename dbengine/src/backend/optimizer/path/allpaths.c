@@ -25,6 +25,7 @@
 #include "catalog/pg_proc.h"
 #include "foreign/fdwapi.h"
 #include "miscadmin.h"
+#include "neurdb/guc.h"
 #include "nodes/makefuncs.h"
 #include "nodes/nodeFuncs.h"
 #include "nodes/supportnodes.h"
@@ -2513,6 +2514,15 @@ set_subquery_pathlist(PlannerInfo *root, RelOptInfo *rel,
 	subquery = copyObject(subquery);
 
 	/*
+	 * NEURDB: a PREDICT subquery is executed by a NeurDBPredict node wrapped
+	 * around its plan, which talks to the AI engine and must run in the
+	 * leader backend.  Marking the rel not parallel-safe keeps its
+	 * SubqueryScan paths out of Gather subtrees.
+	 */
+	if (subquery->commandType == CMD_PREDICT)
+		rel->consider_parallel = false;
+
+	/*
 	 * If it's a LATERAL subquery, it might contain some Vars of the current
 	 * query level, requiring it to be treated as parameterized, even though
 	 * we don't support pushing down join quals into subqueries.
@@ -2559,8 +2569,26 @@ set_subquery_pathlist(PlannerInfo *root, RelOptInfo *rel,
 	 *
 	 * XXX Are there any cases where we want to make a policy decision not to
 	 * push down a pushable qual, because it'd result in a worse plan?
+	 *
+	 * NEURDB: dynamic scheduling of the PREDICT AI operator.  When
+	 * nr_predict_pushdown is on, outer quals referencing only input columns
+	 * may be pushed below the operator (into the PREDICT subquery's WHERE),
+	 * so only qualifying rows are fetched, trained on and inferred --
+	 * usually a massive saving, since the plan cost is dominated by per-row
+	 * inference (see cost_neurdbpredict).  The trailing nr_pred output
+	 * column is explicitly marked unsafe: inside the subquery it is only a
+	 * NULL placeholder Const, so a qual on the prediction must stay above
+	 * the operator (substituting the placeholder would discard every row).
+	 * With the GUC off, the operator always stays at the root of its
+	 * subquery and every qual is evaluated above it.
 	 */
-	if (rel->baserestrictinfo != NIL &&
+	if (subquery->commandType == CMD_PREDICT)
+		safetyInfo.unsafeFlags[list_length(subquery->targetList)] |=
+			UNSAFE_HAS_VOLATILE_FUNC;
+
+	if ((subquery->commandType == CMD_SELECT ||
+		 (subquery->commandType == CMD_PREDICT && NrPredictPushdown)) &&
+		rel->baserestrictinfo != NIL &&
 		subquery_is_pushdown_safe(subquery, subquery, &safetyInfo))
 	{
 		/* OK to consider pushing down individual quals */
@@ -2622,8 +2650,13 @@ set_subquery_pathlist(PlannerInfo *root, RelOptInfo *rel,
 	 * not, we can simplify.  Pass the attributes that were pushed down into
 	 * WindowAgg run conditions to ensure we don't accidentally think those
 	 * are unused.
+	 *
+	 * NEURDB: keep all output columns of a PREDICT subquery.  Replacing
+	 * "unused" columns with NULL constants would corrupt the feature vector
+	 * sent to the AI engine, which consumes the full input row.
 	 */
-	remove_unused_subquery_outputs(subquery, rel, run_cond_attrs);
+	if (subquery->commandType == CMD_SELECT)
+		remove_unused_subquery_outputs(subquery, rel, run_cond_attrs);
 
 	/*
 	 * We can safely pass the outer tuple_fraction down to the subquery if the

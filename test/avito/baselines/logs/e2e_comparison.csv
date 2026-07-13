@@ -1,0 +1,5 @@
+system,export_s,label_s,features_s,predict_s,other_s,total_s
+neurengine,0.0,2.1,18.8,8.8,1.6,31.3
+neurengine_naive,0.0,2.0,53.6,77.9,2.1,135.6
+lotus,62.0,13.4,36.8,13.6,3.7,129.5
+palimpzest,61.8,11.7,33.6,97.0,3.7,207.8

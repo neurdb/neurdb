@@ -1,0 +1,47 @@
+TIMING,load_tables,5.7
+TIMING,tool_cutoffs,0.2
+TIMING,01_label_h1,10.6
+TIMING,02_features_h1,33.3
+TIMING,03_task_h1,0.0
+TIMING,08_predict_h1,18.0
+  h=1: task_rows=8368 candidates=1155 rmse=0.0923
+TIMING,01_label_h3,12.7
+TIMING,02_features_h3,33.1
+TIMING,03_task_h3,0.0
+TIMING,08_predict_h3,28.0
+  h=3: task_rows=19106 candidates=2676 rmse=0.0320
+TIMING,01_label_h7,16.4
+TIMING,02_features_h7,37.5
+TIMING,03_task_h7,0.0
+TIMING,08_predict_h7,51.2
+  h=7: task_rows=33531 candidates=4595 rmse=0.0096
+TIMING,09_action_list,0.0
+         action  n_ads  avg_ctr_1d  avg_ctr_7d
+           keep    828    0.048889    0.013454
+  promote_later     47    0.107430    0.051135
+    promote_now    120    0.212042    0.057440
+reduce_exposure    160    0.010215    0.003953
+TIMING,total,246.9
+	Command being timed: "python /home/worker/r/neurdb/neurdb-dev/test/avito/baselines/run_palimpzest.py --data /home/worker/r/neurdb/neurdb-dev/test/avito/baselines/data_large --out /home/worker/r/neurdb/neurdb-dev/test/avito/baselines/logs/scaling/palimpzest_large_mem --device cuda:0"
+	User time (seconds): 265.41
+	System time (seconds): 28.49
+	Percent of CPU this job got: 112%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 4:20.53
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10793836
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 6871
+	Minor (reclaiming a frame) page faults: 8766738
+	Voluntary context switches: 25909
+	Involuntary context switches: 1318
+	Swaps: 0
+	File system inputs: 4875944
+	File system outputs: 648
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

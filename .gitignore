@@ -13,6 +13,7 @@ psql
 
 ### VS Code
 .vscode/
+.local/
 
 # Third-party libraries
 socket.io-client-cpp/
@@ -33,3 +34,12 @@ dbengine/nr_kernel/nr_am/optimizer/__pycache__
 build/
 dbengine/nr_kernel/nr_store/external/*
 dbengine/nr_kernel/nr_store/external/hnswlib/
+
+# avito experiment: raw dataset + scratch CSV dumps (keep workloads/ scripts and
+# the committed unit-test fixture test/avito/w_task_1.csv tracked).
+test/avito/rel-avito-db/
+test/avito/workloads/dump/
+
+# db-26 experiment scratch run logs + ad-hoc server logs
+script/experiment/db-26/*.log
+test/server_*.log

@@ -1,0 +1,7 @@
+TIMING,export_adsinfo,21.5  (5960558 rows)
+TIMING,export_searchstream,27.3  (9254702 rows)
+TIMING,export_visitstream,12.3  (6454562 rows)
+TIMING,export_phonerequestsstream,0.6  (302974 rows)
+TIMING,export_category,0.0  (68 rows)
+TIMING,export_location,0.0  (3512 rows)
+TIMING,export_total,61.8

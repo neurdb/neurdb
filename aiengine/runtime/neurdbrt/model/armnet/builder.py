@@ -112,15 +112,21 @@ class ARMNetModelBuilder(BuilderBase):
             )
             train_timestamp = time.time()
 
+            logger.info(
+                "train loop started",
+                epoch=e,
+                total_epochs=epoch,
+                train_batch_num=train_batch_num,
+            )
             batch_idx = -1
             async for batch in train_loader:
                 batch_idx += 1
-                # logger.info(
-                #     "get batch",
-                #     id=batch_idx,
-                #     id_shape=batch["id"].shape,
-                #     value_shape=batch["value"].shape,
-                # )
+                logger.info(
+                    "get batch",
+                    id=batch_idx,
+                    id_shape=batch["id"].shape,
+                    value_shape=batch["value"].shape,
+                )
 
                 target = batch["y"]
                 if torch.cuda.is_available():
@@ -318,7 +324,9 @@ class ARMNetModelBuilder(BuilderBase):
 
                 y = self._model(batch)
                 predictions.append(y.cpu().numpy().tolist())
-                logger.info(f"done batch for {batch_idx}, total {inf_batch_num} ")
+                logger.info(
+                    f"done batch for {batch_idx}, total {inf_batch_num}. Batch size: {len(batch['id'])}"
+                )
 
                 asyncio.create_task(
                     WebsocketSender.send(

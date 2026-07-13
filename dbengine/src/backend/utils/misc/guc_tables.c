@@ -811,6 +811,30 @@ StaticAssertDecl(lengthof(config_type_names) == (PGC_ENUM + 1),
 struct config_bool ConfigureNamesBool[] =
 {
 	{
+		{"nr_predict_pushdown", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Enables pushing input-column quals below the PREDICT "
+						 "AI operator (cost-based dynamic operator scheduling)."),
+			gettext_noop("When off, the operator always stays at the root of its "
+						 "subquery and all quals are evaluated above it."),
+			GUC_EXPLAIN
+		},
+		&NrPredictPushdown,
+		true,
+		NULL, NULL, NULL
+	},
+	{
+		{"nr_predict_pullup", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Enables pulling PREDICT above safe outer inner-join "
+						 "filters by merging those joins into the PREDICT input."),
+			gettext_noop("When off, a PREDICT subquery remains a normal relation "
+						 "in the outer join tree."),
+			GUC_EXPLAIN
+		},
+		&NrPredictPullup,
+		false,
+		NULL, NULL, NULL
+	},
+	{
 		{"enable_seqscan", PGC_USERSET, QUERY_TUNING_METHOD,
 			gettext_noop("Enables the planner's use of sequential-scan plans."),
 			NULL,
@@ -3576,6 +3600,40 @@ struct config_int ConfigureNamesInt[] =
 
 struct config_real ConfigureNamesReal[] =
 {
+	{
+		{"nr_predict_startup_cost", PGC_USERSET, QUERY_TUNING_COST,
+			gettext_noop("Sets the planner's estimate of the one-time cost of "
+						 "starting a PREDICT operator (AI engine session and "
+						 "model/context setup)."),
+			NULL,
+			GUC_EXPLAIN
+		},
+		&NrPredictStartupCost,
+		10000.0, 0, DBL_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"nr_predict_tuple_cost", PGC_USERSET, QUERY_TUNING_COST,
+			gettext_noop("Sets the planner's estimate of the cost of running "
+						 "AI inference on one input row in a PREDICT operator."),
+			NULL,
+			GUC_EXPLAIN
+		},
+		&NrPredictTupleCost,
+		1.0, 0, DBL_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"nr_predict_batch_cost", PGC_USERSET, QUERY_TUNING_COST,
+			gettext_noop("Sets the planner's estimate of the per-batch round "
+						 "trip cost between a PREDICT operator and the AI engine."),
+			NULL,
+			GUC_EXPLAIN
+		},
+		&NrPredictBatchCost,
+		1000.0, 0, DBL_MAX,
+		NULL, NULL, NULL
+	},
 	{
 		{"seq_page_cost", PGC_USERSET, QUERY_TUNING_COST,
 			gettext_noop("Sets the planner's estimate of the cost of a "

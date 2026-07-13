@@ -3808,6 +3808,43 @@ create_limit_path(PlannerInfo *root, RelOptInfo *rel,
 }
 
 /*
+ * create_neurdbpredict_path
+ *	  Creates a path representing the PREDICT (NeurDBPredict) AI operator
+ *	  applied to the rows of 'subpath'.
+ *
+ * NEURDB: the operator passes all input columns through (filling the
+ * trailing nr_pred placeholder), preserves input ordering, and must run in
+ * the leader backend (it talks to the AI engine).  Costing comes from
+ * cost_neurdbpredict(), so these paths compete in add_path() on equal
+ * footing with everything else.
+ */
+NeurDBPredictPath *
+create_neurdbpredict_path(PlannerInfo *root, RelOptInfo *rel, Path *subpath)
+{
+	NeurDBPredictPath *pathnode = makeNode(NeurDBPredictPath);
+
+	pathnode->path.pathtype = T_NeurDBPredict;
+	pathnode->path.parent = rel;
+	/* PREDICT doesn't project; use source path's pathtarget */
+	pathnode->path.pathtarget = subpath->pathtarget;
+	pathnode->path.param_info = NULL;
+	pathnode->path.parallel_aware = false;
+	pathnode->path.parallel_safe = false;
+	pathnode->path.parallel_workers = 0;
+	pathnode->path.rows = subpath->rows;
+	pathnode->path.pathkeys = subpath->pathkeys;
+	pathnode->subpath = subpath;
+
+	cost_neurdbpredict(&pathnode->path.startup_cost,
+					   &pathnode->path.total_cost,
+					   subpath->startup_cost,
+					   subpath->total_cost,
+					   subpath->rows);
+
+	return pathnode;
+}
+
+/*
  * adjust_limit_rows_costs
  *	  Adjust the size and cost estimates for a LimitPath node according to the
  *	  offset/limit.
