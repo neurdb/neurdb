@@ -1185,6 +1185,7 @@ run_infer_batch(PipelineSession *session, bool flush) {
 		return NULL;
 	}
 
+	MemoryContext outer_cxt = CurrentMemoryContext;
 	SPI_connect();
 
 	SPITupleTable fake_table = {0};
@@ -1198,12 +1199,18 @@ run_infer_batch(PipelineSession *session, bool flush) {
 	build_batch_payload(session, &fake_table, &payload, false);
 
 	char *result_payload = run_infer_payload(session, payload.data);
+	char *result_copy = NULL;
+	if (result_payload) {
+		MemoryContext oldcxt = MemoryContextSwitchTo(outer_cxt);
+		result_copy = pstrdup(result_payload);
+		MemoryContextSwitchTo(oldcxt);
+		pfree(result_payload);
+	}
 
-	SPI_finish();
-
-	free_batch_values(session);
 	pfree(payload.data);
-	return result_payload;
+	SPI_finish();
+	free_batch_values(session);
+	return result_copy;
 }
 
 static int
