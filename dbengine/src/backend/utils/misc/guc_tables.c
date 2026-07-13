@@ -823,6 +823,18 @@ struct config_bool ConfigureNamesBool[] =
 		NULL, NULL, NULL
 	},
 	{
+		{"nr_predict_pullup", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Enables pulling PREDICT above safe outer inner-join "
+						 "filters by merging those joins into the PREDICT input."),
+			gettext_noop("When off, a PREDICT subquery remains a normal relation "
+						 "in the outer join tree."),
+			GUC_EXPLAIN
+		},
+		&NrPredictPullup,
+		false,
+		NULL, NULL, NULL
+	},
+	{
 		{"enable_seqscan", PGC_USERSET, QUERY_TUNING_METHOD,
 			gettext_noop("Enables the planner's use of sequential-scan plans."),
 			NULL,

@@ -241,6 +241,8 @@ static PlannerInfo *subquery_planner(PlannerGlobal *glob, Query *parse,
 									 PlannerInfo *parent_root,
 									 bool hasRecursion, double tuple_fraction);
 
+extern void neurdb_pull_up_predict_subqueries(PlannerInfo *root);
+
 static RowMarkType select_rowmark_type(RangeTblEntry *rte,
 									   LockClauseStrength strength);
 
@@ -709,6 +711,7 @@ subquery_planner(PlannerGlobal *glob, Query *parse,
 	 * query.
 	 */
 	pull_up_subqueries(root);
+	neurdb_pull_up_predict_subqueries(root);
 
 	/*
 	 * If this is a simple UNION ALL query, flatten it into an appendrel. We
