@@ -10,6 +10,13 @@
 -- given (adid, t) has the same features no matter which task asked for it -> safe
 -- to cache and reuse across horizons.
 --
+-- History aggregates are computed from the shared daily rollups
+-- (tool_rollups.sql), whose buckets B hold events in (B, B+1d]:
+--   evt <= t          <=>  day <  t
+--   evt in (t-7d, t]  <=>  day >= t - 7d  (together with day < t)
+-- Decompositions are exact, incl. NULL handling:
+--   COUNT(x)  -> SUM(n_x),  SUM(x) -> SUM(sum_x),  AVG(x) -> SUM(sum_x)/SUM(n_x)
+--
 -- Mode is decided by the caller (see tool_feat_cache_init.sql):
 --   * cache ON : the "INSERT 0 N" line shows only the DELTA each task computed.
 --   * cache OFF: cache was reset first, so N = all of this task's rows.
@@ -21,6 +28,9 @@
 \else
   \set h 1
 \endif
+
+SET work_mem = '512MB';
+SET max_parallel_workers_per_gather = 8;
 
 INSERT INTO w_feat_cache (
     adid, ts, split,
@@ -37,33 +47,33 @@ WITH k AS (   -- this task's keys MINUS whatever is already cached (the delta)
 ),
 ss AS (
     SELECT k.adid, k.ts,
-           COUNT(s.searchid)                                                      AS ss_impr_all,
-           COALESCE(SUM(s.isclick), 0)                                            AS ss_click_all,
-           AVG(s.isclick)                                                         AS ss_ctr_all,
-           AVG(s.position)                                                        AS ss_avgpos_all,
-           AVG(s.histctr)                                                         AS ss_avghistctr_all,
-           COUNT(s.searchid) FILTER (WHERE s.searchdate > k.ts - INTERVAL '7 day') AS ss_impr_7d,
-           COALESCE(SUM(s.isclick) FILTER (WHERE s.searchdate > k.ts - INTERVAL '7 day'), 0) AS ss_click_7d
+           COALESCE(SUM(d.impr), 0)::bigint                                   AS ss_impr_all,
+           COALESCE(SUM(d.clicks), 0)::float8                                 AS ss_click_all,
+           (SUM(d.clicks) / NULLIF(SUM(d.n_click), 0)::float8)                AS ss_ctr_all,
+           (SUM(d.sum_pos)::float8 / NULLIF(SUM(d.n_pos), 0)::float8)         AS ss_avgpos_all,
+           (SUM(d.sum_histctr) / NULLIF(SUM(d.n_histctr), 0)::float8)         AS ss_avghistctr_all,
+           COALESCE(SUM(d.impr)   FILTER (WHERE d.day >= k.ts - INTERVAL '7 day'), 0)::bigint AS ss_impr_7d,
+           COALESCE(SUM(d.clicks) FILTER (WHERE d.day >= k.ts - INTERVAL '7 day'), 0)::float8 AS ss_click_7d
     FROM k
-    LEFT JOIN searchstream s
-           ON s.adid = k.adid AND s.searchdate <= k.ts
+    LEFT JOIN w_ss_daily d
+           ON d.adid = k.adid AND d.day < k.ts
     GROUP BY k.adid, k.ts
 ),
 vs AS (
     SELECT k.adid, k.ts,
-           COUNT(v.adid)                                                         AS vs_visit_all,
-           COUNT(v.adid) FILTER (WHERE v.viewdate > k.ts - INTERVAL '7 day')      AS vs_visit_7d
+           COALESCE(SUM(d.visits), 0)::bigint                                 AS vs_visit_all,
+           COALESCE(SUM(d.visits) FILTER (WHERE d.day >= k.ts - INTERVAL '7 day'), 0)::bigint AS vs_visit_7d
     FROM k
-    LEFT JOIN visitstream v
-           ON v.adid = k.adid AND v.viewdate <= k.ts
+    LEFT JOIN w_vs_daily d
+           ON d.adid = k.adid AND d.day < k.ts
     GROUP BY k.adid, k.ts
 ),
 pr AS (
     SELECT k.adid, k.ts,
-           COUNT(p.adid) AS pr_all
+           COALESCE(SUM(d.reqs), 0)::bigint AS pr_all
     FROM k
-    LEFT JOIN phonerequestsstream p
-           ON p.adid = k.adid AND p.phonerequestdate <= k.ts
+    LEFT JOIN w_pr_daily d
+           ON d.adid = k.adid AND d.day < k.ts
     GROUP BY k.adid, k.ts
 )
 SELECT k.adid, k.ts, c.split,
