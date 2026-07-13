@@ -1457,6 +1457,19 @@ not_end_of_copy:
 	 */
 	REFILL_LINEBUF;
 
+	/*
+	 * If we reached EOF, also flush any remaining bytes from the input buffer
+	 * into line_buf.  This ensures the last line is not dropped when the file
+	 * does not end with a newline (common with CSV exports).
+	 */
+	if (result && INPUT_BUF_BYTES(cstate) > 0)
+	{
+		appendBinaryStringInfo(&cstate->line_buf,
+							  cstate->input_buf + cstate->input_buf_index,
+							  INPUT_BUF_BYTES(cstate));
+		cstate->input_buf_index = cstate->input_buf_len;
+	}
+
 	return result;
 }
 
