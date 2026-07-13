@@ -1761,12 +1761,19 @@ grouping_planner(PlannerInfo *root, double tuple_fraction)
 		}
 
 		/*
+		 * NEURDB: for a PREDICT query, add the NeurDBPredict path on top, in
+		 * the same spot where DML gets its ModifyTable.  The AI operator is
+		 * thereby a first-class path: it carries its own cost (see
+		 * cost_neurdbpredict) and competes in add_path() below, and
+		 * create_plan translates it like any other node.  (Nested PREDICT
+		 * subqueries are planned by this core subquery_planner; top-level
+		 * PREDICT goes through the nr_planner fork instead.)
+		 */
+		if (parse->commandType == CMD_PREDICT)
+			path = (Path *) create_neurdbpredict_path(root, final_rel, path);
+
+		/*
 		 * If this is an INSERT/UPDATE/DELETE/MERGE, add the ModifyTable node.
-		 *
-		 * NEURDB: CMD_PREDICT is planned like a SELECT here.  (A nested
-		 * PREDICT subquery is planned by this core subquery_planner; the
-		 * NeurDBPredict node is wrapped around its plan later, in
-		 * create_subqueryscan_plan.)
 		 */
 		if (parse->commandType != CMD_SELECT &&
 			parse->commandType != CMD_PREDICT)

@@ -2359,6 +2359,21 @@ typedef struct LimitPath
 	LimitOption limitOption;	/* FETCH FIRST with ties or exact number */
 } LimitPath;
 
+/*
+ * NEURDB: NeurDBPredictPath represents the PREDICT AI operator applied to
+ * the rows of its subpath.  It passes all input columns through, fills the
+ * trailing nr_pred placeholder column with the model's prediction, and is
+ * costed by cost_neurdbpredict(), so it competes in add_path() like any
+ * other operator.  The PREDICT statement details (model, target column,
+ * train-on list) live in the query's parse tree and are attached to the
+ * NeurDBPredict plan node at create_plan time.
+ */
+typedef struct NeurDBPredictPath
+{
+	Path		path;
+	Path	   *subpath;		/* path supplying the input rows */
+} NeurDBPredictPath;
+
 
 /*
  * Restriction clause info.
