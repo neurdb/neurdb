@@ -809,7 +809,7 @@ static void build_libsvm_data(
                     break;
                 case TEXTOID:
                 case VARCHAROID:
-                case CHAROID:
+				case CHAROID: {
                     char *text = DatumGetCString(value);
                     if (strcmp(model_name, "auto_pipeline") != 0) {
                         int token = encode_text(text, table_name, feature_names[col]);
@@ -818,6 +818,7 @@ static void build_libsvm_data(
                         appendStringInfo(&row_data, " \"%s\"", text);
                     }
                     break;
+				}
                 default:
                     elog(ERROR, "Unsupported data type");
             }
@@ -994,235 +995,259 @@ add_slot_to_batch(PipelineSession *session, TupleTableSlot *slot) {
     session->batch_vals[session->batch_count++] = tuple;
 }
 
-static char *
-run_infer_batch(PipelineSession *session, bool flush) {
-    if (session->batch_capacity > session->batch_count && !flush) {
-        // not enough data to run inference
-        return NULL;
-    }
+static void
+free_batch_values(PipelineSession *session) {
+	for (int i = 0; i < session->batch_count; i++) {
+		heap_freetuple(session->batch_vals[i]);
+	}
+	session->batch_count = 0;
+}
 
-    SPI_connect();
+static void
+build_batch_payload(PipelineSession *session,
+					SPITupleTable *fake_table,
+					StringInfo payload,
+					bool has_label) {
+	int label_col = has_label ? session->label_col_id : 0;
 
-    SPITupleTable fake_table = {0};
-    fake_table.tupdesc = session->tupdesc;
-    fake_table.vals = session->batch_vals;
-    extern uint64 SPI_processed;
-    SPI_processed = (uint64) session->batch_count;
-
-    StringInfoData libsvm;
-    initStringInfo(&libsvm);
-    if (_is_tabpfn(session->model_name)) {
-        build_typed_data(
-            &fake_table,
-            session->tupdesc,
-            session->n_features,
-            &libsvm,
-            false,
-            0
-        );
-    } else {
-        build_libsvm_data(
-            &fake_table,
-            session->tupdesc,
-            session->n_features,
-            session->feature_names,
-            session->table_name,
-            &libsvm,
-            false,
-            0,
+	if (_is_tabpfn(session->model_name)) {
+		build_typed_data(
+			fake_table,
+			session->tupdesc,
+			session->n_features,
+			payload,
+			has_label,
+			label_col
+		);
+	} else {
+		build_libsvm_data(
+			fake_table,
+			session->tupdesc,
+			session->n_features,
+			session->feature_names,
+			session->table_name,
+			payload,
+			has_label,
+			label_col,
 			session->model_name,
 			session->primary_key_ids
-        );
-    }
-    char *payload = NULL;
-    if (session->dist_infer) {
-        int total_lines = 0;
-        bool in_line = false;
-        for (const char *p = libsvm.data; *p; p++) {
-            if (*p == '\n') {
-                if (in_line) {
-                    total_lines++;
-                }
-                in_line = false;
-            } else {
-                in_line = true;
-            }
-        }
-        if (in_line) {
-            total_lines++;
-        }
+		);
+	}
+}
 
-        int worker_count = session->dist_infer->worker_count;
-        if (total_lines > 0 && worker_count > 0) {
-            int chunk_size = (total_lines + worker_count - 1) / worker_count;
-            StringInfoData *chunks = (StringInfoData *) palloc(sizeof(*chunks) * worker_count);
-            for (int i = 0; i < worker_count; i++) {
-                initStringInfo(&chunks[i]);
-            }
+static int
+count_payload_lines(const char *payload) {
+	int total_lines = 0;
+	bool in_line = false;
 
-            const char *start = libsvm.data;
-            int line_idx = 0;
-            for (const char *p = libsvm.data; ; p++) {
-                if (*p == '\n' || *p == '\0') {
-                    size_t len = p - start;
-                    if (len > 0) {
-                        int chunk_idx = line_idx / chunk_size;
-                        if (chunk_idx >= worker_count) {
-                            chunk_idx = worker_count - 1;
-                        }
-                        appendBinaryStringInfo(&chunks[chunk_idx], start, len);
-                        appendStringInfoChar(&chunks[chunk_idx], '\n');
-                        line_idx++;
-                    }
-                    if (*p == '\0') {
-                        break;
-                    }
-                    start = p + 1;
-                }
-            }
+	for (const char *p = payload; *p; p++) {
+		if (*p == '\n') {
+			if (in_line) {
+				total_lines++;
+			}
+			in_line = false;
+		} else {
+			in_line = true;
+		}
+	}
+	if (in_line) {
+		total_lines++;
+	}
 
-            int expected = 0;
-            for (int i = 0; i < worker_count; i++) {
-                if (chunks[i].len > 0) {
-                    expected++;
-                }
-            }
+	return total_lines;
+}
 
-            if (expected > 0) {
-                set_result_state_active(&session->dist_infer->result_state, expected, worker_count);
-                for (int i = 0; i < worker_count; i++) {
-                    if (chunks[i].len == 0) {
-                        continue;
-                    }
-                    InferJob job = {
-                        .job_id = i,
-                        .payload = strdup(chunks[i].data)
-                    };
-                    enqueue_infer_job(&session->dist_infer->job_queue, job);
-                }
+static char *
+run_distributed_infer_payload(PipelineSession *session, const char *payload) {
+	int total_lines = count_payload_lines(payload);
+	int worker_count = session->dist_infer->worker_count;
+	char *result_payload = NULL;
 
-                wait_result_state_done(&session->dist_infer->result_state);
+	if (total_lines <= 0 || worker_count <= 0) {
+		return NULL;
+	}
 
-                StringInfoData combined;
-                initStringInfo(&combined);
-                pthread_mutex_lock(&session->dist_infer->result_state.mutex);
-                for (int i = 0; i < session->dist_infer->result_state.capacity; i++) {
-                    char *piece = session->dist_infer->result_state.results[i];
-                    if (!piece || piece[0] == '\0') {
-                        continue;
-                    }
-                    if (combined.len > 0 && combined.data[combined.len - 1] != ' ') {
-                        appendStringInfoChar(&combined, ' ');
-                    }
-                    appendStringInfoString(&combined, piece);
-                }
-                for (int i = 0; i < session->dist_infer->result_state.capacity; i++) {
-                    free(session->dist_infer->result_state.results[i]);
-                    session->dist_infer->result_state.results[i] = NULL;
-                }
-                free(session->dist_infer->result_state.results);
-                session->dist_infer->result_state.results = NULL;
-                session->dist_infer->result_state.capacity = 0;
-                session->dist_infer->result_state.expected = 0;
-                session->dist_infer->result_state.collected = 0;
-                pthread_mutex_unlock(&session->dist_infer->result_state.mutex);
+	int chunk_size = (total_lines + worker_count - 1) / worker_count;
+	StringInfoData *chunks = (StringInfoData *) palloc(sizeof(*chunks) * worker_count);
+	for (int i = 0; i < worker_count; i++) {
+		initStringInfo(&chunks[i]);
+	}
 
-                payload = pstrdup(combined.data);
-                pfree(combined.data);
-            }
+	const char *start = payload;
+	int line_idx = 0;
+	for (const char *p = payload; ; p++) {
+		if (*p == '\n' || *p == '\0') {
+			size_t len = p - start;
+			if (len > 0) {
+				int chunk_idx = line_idx / chunk_size;
+				if (chunk_idx >= worker_count) {
+					chunk_idx = worker_count - 1;
+				}
+				appendBinaryStringInfo(&chunks[chunk_idx], start, len);
+				appendStringInfoChar(&chunks[chunk_idx], '\n');
+				line_idx++;
+			}
+			if (*p == '\0') {
+				break;
+			}
+			start = p + 1;
+		}
+	}
 
-            for (int i = 0; i < worker_count; i++) {
-                pfree(chunks[i].data);
-            }
-            pfree(chunks);
-        }
-    } else {
-        NrWebsocket *ws = session->ws;
-        nws_send_batch_data(ws, 0, S_INFERENCE, libsvm.data);
-        nws_wait_completion(ws);
-        /* reset completion flag */
-        ws->completed = 0;
-        payload = pstrdup(ws->result);
-        free(ws->result);
-    }
+	int expected = 0;
+	for (int i = 0; i < worker_count; i++) {
+		if (chunks[i].len > 0) {
+			expected++;
+		}
+	}
 
-    SPI_finish();
+	if (expected > 0) {
+		set_result_state_active(&session->dist_infer->result_state,
+								expected,
+								worker_count);
+		for (int i = 0; i < worker_count; i++) {
+			if (chunks[i].len == 0) {
+				continue;
+			}
+			InferJob job = {
+				.job_id = i,
+				.payload = strdup(chunks[i].data)
+			};
+			enqueue_infer_job(&session->dist_infer->job_queue, job);
+		}
 
-    // clean up
-    for (int i = 0; i < session->batch_count; i++) {
-        heap_freetuple(session->batch_vals[i]);
-    }
-    session->batch_count = 0;
-    return payload;
+		wait_result_state_done(&session->dist_infer->result_state);
+
+		StringInfoData combined;
+		initStringInfo(&combined);
+		pthread_mutex_lock(&session->dist_infer->result_state.mutex);
+		for (int i = 0; i < session->dist_infer->result_state.capacity; i++) {
+			char *piece = session->dist_infer->result_state.results[i];
+			if (!piece || piece[0] == '\0') {
+				continue;
+			}
+			if (combined.len > 0 && combined.data[combined.len - 1] != ' ') {
+				appendStringInfoChar(&combined, ' ');
+			}
+			appendStringInfoString(&combined, piece);
+		}
+		for (int i = 0; i < session->dist_infer->result_state.capacity; i++) {
+			free(session->dist_infer->result_state.results[i]);
+			session->dist_infer->result_state.results[i] = NULL;
+		}
+		free(session->dist_infer->result_state.results);
+		session->dist_infer->result_state.results = NULL;
+		session->dist_infer->result_state.capacity = 0;
+		session->dist_infer->result_state.expected = 0;
+		session->dist_infer->result_state.collected = 0;
+		pthread_mutex_unlock(&session->dist_infer->result_state.mutex);
+
+		result_payload = pstrdup(combined.data);
+		pfree(combined.data);
+	}
+
+	for (int i = 0; i < worker_count; i++) {
+		pfree(chunks[i].data);
+	}
+	pfree(chunks);
+
+	return result_payload;
+}
+
+static char *
+run_single_infer_payload(PipelineSession *session, const char *payload) {
+	NrWebsocket *ws = session->ws;
+
+	nws_send_batch_data(ws, 0, S_INFERENCE, payload);
+	nws_wait_completion(ws);
+	/* reset completion flag */
+	ws->completed = 0;
+
+	char *result_payload = pstrdup(ws->result);
+	free(ws->result);
+
+	return result_payload;
+}
+
+static char *
+run_infer_payload(PipelineSession *session, const char *payload) {
+	if (session->dist_infer) {
+		return run_distributed_infer_payload(session, payload);
+	}
+
+	return run_single_infer_payload(session, payload);
+}
+
+static char *
+run_infer_batch(PipelineSession *session, bool flush) {
+	if (session->batch_capacity > session->batch_count && !flush) {
+		// not enough data to run inference
+		return NULL;
+	}
+
+	SPI_connect();
+
+	SPITupleTable fake_table = {0};
+	fake_table.tupdesc = session->tupdesc;
+	fake_table.vals = session->batch_vals;
+	extern uint64 SPI_processed;
+	SPI_processed = (uint64) session->batch_count;
+
+	StringInfoData payload;
+	initStringInfo(&payload);
+	build_batch_payload(session, &fake_table, &payload, false);
+
+	char *result_payload = run_infer_payload(session, payload.data);
+
+	SPI_finish();
+
+	free_batch_values(session);
+	pfree(payload.data);
+	return result_payload;
 }
 
 static int
 _label_col_id(TupleDesc tupdesc, const char *label_col) {
-    // or directly inspect attributes:
-    for (int i = 0; i < tupdesc->natts; i++)
-    {
-        Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
-        if (strncmp(attr->attname.data, label_col, strlen(label_col)) == 0) {
-            return i + 1;
-        }
-    }
+	// or directly inspect attributes:
+	for (int i = 0; i < tupdesc->natts; i++)
+	{
+		Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
+		if (strncmp(attr->attname.data, label_col, strlen(label_col)) == 0) {
+			return i + 1;
+		}
+	}
 
-    return -1;
+	return -1;
 }
 
 static void
 run_train_batch(PipelineSession *session, bool flush) {
-    if (session->batch_capacity > session->batch_count && !flush) {
-        // not enough data to run training
-        return;
-    }
+	if (session->batch_capacity > session->batch_count && !flush) {
+		// not enough data to run training
+		return;
+	}
 
-    SPITupleTable fake_table = {0};
-    fake_table.tupdesc = session->tupdesc;
-    fake_table.vals = session->batch_vals;
-    extern uint64 SPI_processed;
-    SPI_processed = (uint64)session->batch_count;
+	SPITupleTable fake_table = {0};
+	fake_table.tupdesc = session->tupdesc;
+	fake_table.vals = session->batch_vals;
+	extern uint64 SPI_processed;
+	SPI_processed = (uint64)session->batch_count;
 
-    StringInfoData libsvm;
-    initStringInfo(&libsvm);
-    if (_is_tabpfn(session->model_name)) {
-        build_typed_data(
-            &fake_table,
-            session->tupdesc,
-            session->n_features,
-            &libsvm,
-            true,
-            session->label_col_id
-        );
-    } else {
-        build_libsvm_data(
-            &fake_table,
-            session->tupdesc,
-            session->n_features,
-            session->feature_names,
-            session->table_name,
-            &libsvm,
-            true,
-            session->label_col_id,
-			session->model_name,
-			session->primary_key_ids
-        );
-    }
+	StringInfoData payload;
+	initStringInfo(&payload);
+	build_batch_payload(session, &fake_table, &payload, true);
 
-    if (session->train_wss) {
-        /* broadcast the same context batch to every engine */
-        for (int i = 0; i < session->eng_count; i++) {
-            nws_send_batch_data(session->train_wss[i], 0, S_TRAIN, libsvm.data);
-        }
-    } else {
-        nws_send_batch_data(session->ws, 0, S_TRAIN, libsvm.data);
-    }
+	if (session->train_wss) {
+		/* broadcast the same context batch to every engine */
+		for (int i = 0; i < session->eng_count; i++) {
+			nws_send_batch_data(session->train_wss[i], 0, S_TRAIN, payload.data);
+		}
+	} else {
+		nws_send_batch_data(session->ws, 0, S_TRAIN, payload.data);
+	}
 
-    for (int i=0;i<session->batch_count;i++) {
-        heap_freetuple(session->batch_vals[i]);
-    }
-    session->batch_count = 0;
-    resetStringInfo(&libsvm);
+	free_batch_values(session);
+	pfree(payload.data);
 }
 
 /* return true if model is found, false otherwise */

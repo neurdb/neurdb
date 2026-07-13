@@ -311,6 +311,64 @@ append_primary_values_to_tuple_slot(TupleTableSlot *proj_slot,
 	return proj_slot;
 }
 
+static TupleTableSlot *
+build_passthrough_prediction_slot(TupleTableSlot *input_slot,
+								  TupleTableSlot *out_slot,
+								  int ninput,
+								  double value)
+{
+	slot_getallattrs(input_slot);
+	ExecClearTuple(out_slot);
+	for (int i = 0; i < ninput; i++)
+	{
+		out_slot->tts_values[i] = input_slot->tts_values[i];
+		out_slot->tts_isnull[i] = input_slot->tts_isnull[i];
+	}
+	out_slot->tts_values[ninput] = Float8GetDatum(value);
+	out_slot->tts_isnull[ninput] = false;
+	ExecStoreVirtualTuple(out_slot);
+
+	return out_slot;
+}
+
+static TupleTableSlot *
+build_legacy_prediction_slot(NeurDBPredictState * predictstate,
+							 TupleTableSlot *input_slot,
+							 double value)
+{
+	TupleTableSlot *slot_copy = NULL;
+	TupleTableSlot *out_slot;
+
+	if (predictstate->stmt->withPrimaryKey)
+	{
+		/* copy the primary key to a new slot before projection */
+		slot_copy = MakeTupleTableSlot(input_slot->tts_tupleDescriptor,
+									   &TTSOpsVirtual);
+		ExecCopySlot(slot_copy, input_slot);
+	}
+
+	predictstate->ps.ps_ExprContext->ecxt_outertuple = input_slot;
+	out_slot = ExecProject(predictstate->ps.ps_ProjInfo);
+
+	build_result_slot(value,
+					  predictstate->is_float,
+					  predictstate->id_class_map,
+					  out_slot);
+
+	if (predictstate->stmt->withPrimaryKey)
+	{
+		out_slot = append_primary_values_to_tuple_slot(out_slot,
+													   predictstate->primkeyindexes,
+													   predictstate->nkeys,
+													   slot_copy,
+													   predictstate->is_float ? 1 : 2);
+
+		ReleaseTupleDesc(slot_copy->tts_tupleDescriptor);
+	}
+
+	return out_slot;
+}
+
 static void
 reset_slot_cache(NeurDBPredictState * predictstate)
 {
@@ -558,23 +616,11 @@ ExecNeurDBPredict(PlanState *pstate)
 
 					if (nr_nested_mode)
 					{
-						/*
-						 * Nested mode: pass the input columns through and
-						 * overwrite the trailing nr_pred placeholder with
-						 * the prediction.
-						 */
-						TupleTableSlot *out = predictstate->ps.ps_ResultTupleSlot;
-
-						slot_getallattrs(slot);
-						ExecClearTuple(out);
-						for (int i = 0; i < nr_nested_ninput; i++)
-						{
-							out->tts_values[i] = slot->tts_values[i];
-							out->tts_isnull[i] = slot->tts_isnull[i];
-						}
-						out->tts_values[nr_nested_ninput] = Float8GetDatum(value);
-						out->tts_isnull[nr_nested_ninput] = false;
-						ExecStoreVirtualTuple(out);
+						TupleTableSlot *out =
+							build_passthrough_prediction_slot(slot,
+															  predictstate->ps.ps_ResultTupleSlot,
+															  nr_nested_ninput,
+															  value);
 
 						predictstate->num_consumed += 1;
 						return out;
@@ -582,24 +628,11 @@ ExecNeurDBPredict(PlanState *pstate)
 
 					if (nr_mat_enabled)
 					{
-						/*
-						 * Materialization mode: emit the input row verbatim plus
-						 * a trailing nr_pred column, and persist it into the
-						 * target table.  The result slot already carries the
-						 * target relation's descriptor (input cols + nr_pred).
-						 */
-						TupleTableSlot *out = predictstate->ps.ps_ResultTupleSlot;
-
-						slot_getallattrs(slot);
-						ExecClearTuple(out);
-						for (int i = 0; i < nr_mat_ninput; i++)
-						{
-							out->tts_values[i] = slot->tts_values[i];
-							out->tts_isnull[i] = slot->tts_isnull[i];
-						}
-						out->tts_values[nr_mat_ninput] = Float8GetDatum(value);
-						out->tts_isnull[nr_mat_ninput] = false;
-						ExecStoreVirtualTuple(out);
+						TupleTableSlot *out =
+							build_passthrough_prediction_slot(slot,
+															  predictstate->ps.ps_ResultTupleSlot,
+															  nr_mat_ninput,
+															  value);
 
 						/* write the augmented row into the target table */
 						simple_table_tuple_insert(nr_mat_rel, out);
@@ -608,32 +641,7 @@ ExecNeurDBPredict(PlanState *pstate)
 						return out;
 					}
 
-					/* legacy mode: project then overwrite with prediction */
-					TupleTableSlot *slot_copy = NULL;
-
-					if (predictstate->stmt->withPrimaryKey)
-					{
-						/* copy the primary key to a new slot before projection */
-						slot_copy = MakeTupleTableSlot(slot->tts_tupleDescriptor, &TTSOpsVirtual);
-						ExecCopySlot(slot_copy, slot);
-					}
-
-					predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
-					slot = ExecProject(predictstate->ps.ps_ProjInfo);
-
-					/* build the returning slot */
-					build_result_slot(value, predictstate->is_float, predictstate->id_class_map, slot);
-
-					if (predictstate->stmt->withPrimaryKey)
-					{
-						slot = append_primary_values_to_tuple_slot(slot,
-																   predictstate->primkeyindexes,
-																   predictstate->nkeys,
-																   slot_copy,
-																   predictstate->is_float ? 1 : 2);
-
-						ReleaseTupleDesc(slot_copy->tts_tupleDescriptor);
-					}
+					slot = build_legacy_prediction_slot(predictstate, slot, value);
 
 					predictstate->num_consumed += 1;
 					return slot;
