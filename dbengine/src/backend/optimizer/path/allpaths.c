@@ -2513,6 +2513,15 @@ set_subquery_pathlist(PlannerInfo *root, RelOptInfo *rel,
 	subquery = copyObject(subquery);
 
 	/*
+	 * NEURDB: a PREDICT subquery is executed by a NeurDBPredict node wrapped
+	 * around its plan, which talks to the AI engine and must run in the
+	 * leader backend.  Marking the rel not parallel-safe keeps its
+	 * SubqueryScan paths out of Gather subtrees.
+	 */
+	if (subquery->commandType == CMD_PREDICT)
+		rel->consider_parallel = false;
+
+	/*
 	 * If it's a LATERAL subquery, it might contain some Vars of the current
 	 * query level, requiring it to be treated as parameterized, even though
 	 * we don't support pushing down join quals into subqueries.
@@ -2559,8 +2568,15 @@ set_subquery_pathlist(PlannerInfo *root, RelOptInfo *rel,
 	 *
 	 * XXX Are there any cases where we want to make a policy decision not to
 	 * push down a pushable qual, because it'd result in a worse plan?
+	 *
+	 * NEURDB: never push outer quals down into a PREDICT subquery.  Filters
+	 * above PREDICT typically reference the nr_pred column, which is only a
+	 * NULL placeholder inside the subquery (the prediction is computed by
+	 * the NeurDBPredict node wrapped around the subquery plan); and pushing
+	 * other quals down would change which rows get predicted.
 	 */
-	if (rel->baserestrictinfo != NIL &&
+	if (subquery->commandType == CMD_SELECT &&
+		rel->baserestrictinfo != NIL &&
 		subquery_is_pushdown_safe(subquery, subquery, &safetyInfo))
 	{
 		/* OK to consider pushing down individual quals */
@@ -2622,8 +2638,13 @@ set_subquery_pathlist(PlannerInfo *root, RelOptInfo *rel,
 	 * not, we can simplify.  Pass the attributes that were pushed down into
 	 * WindowAgg run conditions to ensure we don't accidentally think those
 	 * are unused.
+	 *
+	 * NEURDB: keep all output columns of a PREDICT subquery.  Replacing
+	 * "unused" columns with NULL constants would corrupt the feature vector
+	 * sent to the AI engine, which consumes the full input row.
 	 */
-	remove_unused_subquery_outputs(subquery, rel, run_cond_attrs);
+	if (subquery->commandType == CMD_SELECT)
+		remove_unused_subquery_outputs(subquery, rel, run_cond_attrs);
 
 	/*
 	 * We can safely pass the outer tuple_fraction down to the subquery if the

@@ -299,6 +299,13 @@ ExecReScan(PlanState *node)
 			ExecReScanLimit((LimitState *) node);
 			break;
 
+		case T_NeurDBPredictState:
+			/* NEURDB: node implementation lives in the nr_ext extension */
+			if (NeurDBPredictReScan_hook == NULL)
+				elog(ERROR, "cannot rescan NeurDBPredict node: nr_ext extension is not loaded");
+			(*NeurDBPredictReScan_hook) (node);
+			break;
+
 		default:
 			elog(ERROR, "unrecognized node type: %d", (int) nodeTag(node));
 			break;

@@ -89,7 +89,8 @@ preprocess_targetlist(PlannerInfo *root)
 		target_relation = table_open(target_rte->relid, NoLock);
 	}
 	else
-		Assert(command_type == CMD_SELECT);
+		Assert(command_type == CMD_SELECT ||
+			   command_type == CMD_PREDICT);	/* NEURDB */
 
 	/*
 	 * In an INSERT, the executor expects the targetlist to match the exact

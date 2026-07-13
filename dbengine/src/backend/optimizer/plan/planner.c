@@ -1762,8 +1762,14 @@ grouping_planner(PlannerInfo *root, double tuple_fraction)
 
 		/*
 		 * If this is an INSERT/UPDATE/DELETE/MERGE, add the ModifyTable node.
+		 *
+		 * NEURDB: CMD_PREDICT is planned like a SELECT here.  (A nested
+		 * PREDICT subquery is planned by this core subquery_planner; the
+		 * NeurDBPredict node is wrapped around its plan later, in
+		 * create_subqueryscan_plan.)
 		 */
-		if (parse->commandType != CMD_SELECT)
+		if (parse->commandType != CMD_SELECT &&
+			parse->commandType != CMD_PREDICT)
 		{
 			Index		rootRelation;
 			List	   *resultRelations = NIL;
@@ -1953,9 +1959,12 @@ grouping_planner(PlannerInfo *root, double tuple_fraction)
 	/*
 	 * Generate partial paths for final_rel, too, if outer query levels might
 	 * be able to make use of them.
+	 *
+	 * NEURDB: skip this for CMD_PREDICT subqueries; the NeurDBPredict node
+	 * wrapped around the subquery plan is not parallel-safe.
 	 */
 	if (final_rel->consider_parallel && root->query_level > 1 &&
-		!limit_needed(parse))
+		!limit_needed(parse) && parse->commandType == CMD_SELECT)
 	{
 		Assert(!parse->rowMarks && parse->commandType == CMD_SELECT);
 		foreach(lc, current_rel->partial_pathlist)

@@ -1490,8 +1490,18 @@ is_simple_subquery(PlannerInfo *root, Query *subquery, RangeTblEntry *rte,
 	/*
 	 * Let's just make sure it's a valid subselect ...
 	 */
-	if (!IsA(subquery, Query) ||
-		subquery->commandType != CMD_SELECT)
+	if (!IsA(subquery, Query))
+		elog(ERROR, "subquery is bogus");
+
+	/*
+	 * NEURDB: a PREDICT subquery must stay a separate subquery level so that
+	 * create_subqueryscan_plan can wrap its plan with a NeurDBPredict node;
+	 * never pull it up.
+	 */
+	if (subquery->commandType == CMD_PREDICT)
+		return false;
+
+	if (subquery->commandType != CMD_SELECT)
 		elog(ERROR, "subquery is bogus");
 
 	/*
@@ -1897,8 +1907,14 @@ is_simple_union_all(Query *subquery)
 	SetOperationStmt *topop;
 
 	/* Let's just make sure it's a valid subselect ... */
-	if (!IsA(subquery, Query) ||
-		subquery->commandType != CMD_SELECT)
+	if (!IsA(subquery, Query))
+		elog(ERROR, "subquery is bogus");
+
+	/* NEURDB: PREDICT subqueries are never set operations */
+	if (subquery->commandType == CMD_PREDICT)
+		return false;
+
+	if (subquery->commandType != CMD_SELECT)
 		elog(ERROR, "subquery is bogus");
 
 	/* Is it a set-operation query at all? */

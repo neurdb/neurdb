@@ -3700,6 +3700,25 @@ create_subqueryscan_plan(PlannerInfo *root, SubqueryScanPath *best_path,
 	 */
 	subplan = create_plan(rel->subroot, best_path->subpath);
 
+	/*
+	 * NEURDB: if the subquery is a PREDICT statement, wrap its plan with a
+	 * NeurDBPredict node so predictions are computed before rows are handed
+	 * to the outer query.  The node passes all input columns through and
+	 * fills the trailing nr_pred placeholder column with the prediction.
+	 */
+	if (rel->subroot->parse->commandType == CMD_PREDICT)
+	{
+		Query	   *subparse = rel->subroot->parse;
+		NeurDBPredict *predict = make_neurdbpredict(subplan);
+
+		predict->stmt = (NeurDBPredictStmt *) subparse->predictStmt;
+		predict->trainOn = subparse->trainOn;
+		predict->predictTargetList = subparse->predictTargetList;
+		predict->nested = true;
+
+		subplan = (Plan *) predict;
+	}
+
 	/* Sort clauses into best execution order */
 	scan_clauses = order_qual_clauses(root, scan_clauses);
 
@@ -7243,7 +7262,7 @@ is_projection_capable_plan(Plan *plan)
 
 /*
  * make_neurdbpredict
- *	  Build a Limit plan node
+ *	  Build a NeurDBPredict plan node atop the given subplan.
  */
 NeurDBPredict *
 make_neurdbpredict(Plan *lefttree)
@@ -7255,6 +7274,14 @@ make_neurdbpredict(Plan *lefttree)
 	plan->qual = NIL;
 	plan->lefttree = lefttree;
 	plan->righttree = NULL;
+
+	/* prediction dominates cost; just inherit the child's estimates */
+	plan->startup_cost = lefttree->startup_cost;
+	plan->total_cost = lefttree->total_cost;
+	plan->plan_rows = lefttree->plan_rows;
+	plan->plan_width = lefttree->plan_width;
+	plan->parallel_aware = false;
+	plan->parallel_safe = false;
 
 	return node;
 }

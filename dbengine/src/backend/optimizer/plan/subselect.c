@@ -2759,6 +2759,7 @@ finalize_plan(PlannerInfo *root, Plan *plan,
 		case T_Unique:
 		case T_SetOp:
 		case T_Group:
+		case T_NeurDBPredict:
 			/* no node-type-specific fields need fixing */
 			break;
 
