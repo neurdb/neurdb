@@ -8,6 +8,7 @@
 .idea/
 
 ### compiled output
+psql
 /psql/
 
 ### VS Code

@@ -9,12 +9,15 @@
  */
 #include "interface2.h"
 
+#include <access/relation.h>
 #include <access/heapam.h>
 #include <access/htup.h>
 #include <access/table.h>
 #include <access/genam.h>
+#include <catalog/namespace.h>
 #include <catalog/indexing.h>
 #include <catalog/nr_aiengine.h>
+#include <nodes/makefuncs.h>
 #include <utils/builtins.h>
 #include <utils/array.h>
 #include <utils/hsearch.h>
@@ -705,6 +708,41 @@ distributed_infer_create(const PipelineSession *session, const int *worker_model
     return dist;
 }
 
+static List *
+get_primary_key_ids(const char *table_name) {
+	RangeVar   *rv = makeRangeVar(NULL, table_name, -1);
+	Oid			relid = RangeVarGetRelid(rv, NoLock, false);
+	Relation	rel = relation_open(relid, AccessShareLock);
+	Oid			ident_index;
+	List	   *keys = NIL;
+
+	ident_index = RelationGetReplicaIndex(rel);
+
+	if (OidIsValid(ident_index))
+	{
+		Relation	idxrel;
+		Form_pg_index idx;
+
+		idxrel = index_open(ident_index, AccessShareLock);
+		idx = idxrel->rd_index;
+
+		for (int i = 0; i < idx->indnatts; i++)
+		{
+			if (idx->indkey.values[i] == 0)
+				ereport(ERROR,
+						(errmsg("replica identity index contains expressions")));
+
+			keys = lappend_int(keys, idx->indkey.values[i] - 1);
+		}
+
+		index_close(idxrel, AccessShareLock);
+	}
+
+	relation_close(rel, AccessShareLock);
+
+	return keys;
+}
+
 static void build_libsvm_data(
     SPITupleTable *tuptable,
     TupleDesc tupdesc,
@@ -714,7 +752,8 @@ static void build_libsvm_data(
     StringInfo libsvm_data,
     bool has_label,
     int label_col,
-    const char *model_name
+	const char *model_name,
+	List *primary_key_ids
 ) {
     StringInfoData row_data;
     initStringInfo(&row_data);
@@ -744,6 +783,13 @@ static void build_libsvm_data(
                 col + 1,
                 &is_null
             );
+
+			/* col because of the first column is the label */
+			if (list_member_int(primary_key_ids, col)) {
+				// skip primary key
+				continue;
+			}
+
             int type = SPI_gettypeid(tupdesc, col + 1);
             switch (type) {
                 case INT2OID:
@@ -984,7 +1030,8 @@ run_infer_batch(PipelineSession *session, bool flush) {
             &libsvm,
             false,
             0,
-            session->model_name
+			session->model_name,
+			session->primary_key_ids
         );
     }
     char *payload = NULL;
@@ -1157,7 +1204,8 @@ run_train_batch(PipelineSession *session, bool flush) {
             &libsvm,
             true,
             session->label_col_id,
-            session->model_name
+			session->model_name,
+			session->primary_key_ids
         );
     }
 
@@ -1214,6 +1262,7 @@ pipeline_init(
     if (PIPELINE_SESSION.label_col_id < 0) {
         elog(ERROR, "label column %s not found", target);
     }
+	PIPELINE_SESSION.primary_key_ids = get_primary_key_ids(table_name);
 
     // look up for existing model
     int model_id = _lookup_model(PIPELINE_SESSION.table_name, PIPELINE_SESSION.feature_names,

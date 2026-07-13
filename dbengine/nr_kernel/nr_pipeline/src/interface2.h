@@ -69,6 +69,8 @@ typedef struct {
     int *eng_ports;
     NrWebsocket **train_wss;  /* one ws per engine while PS_TRAIN, else NULL */
     int *worker_model_ids;    /* per-engine model id after the train phase */
+
+	List *primary_key_ids;
 } PipelineSession;
 
 

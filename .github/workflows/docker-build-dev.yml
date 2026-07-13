@@ -13,7 +13,7 @@ on:
 
 env:
   DOCKER_IMAGE_NAME: neurdb-dev
-  RELEASE_VERSION: 0.2.0
+  RELEASE_VERSION: dev-${{ github.sha }}
 
 jobs:
   build_and_run_dev_docker_cpu:
@@ -27,6 +27,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Set dev version number
       run: export RELEASE_VERSION="${RELEASE_VERSION}-dev"

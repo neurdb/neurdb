@@ -665,7 +665,7 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 %type <list> 	neurdb_train_on_columns neurdb_train_on_list neurdb_from_list
 %type <target>	neurdb_train_on_el
 %type <str>		opt_neurdb_model_name
-/* %type <boolean> opt_allow_train */
+%type <boolean> opt_with_primary_key
 
 /*
  * Non-keyword token types.  These are hard-wired into the "flex" lexer.
@@ -16966,27 +16966,25 @@ NeurDBPredictStmt:
 		;
 
 neurdb_target: target_list
+			opt_with_primary_key
 			neurdb_from
-			/*opt_allow_train*/
 			opt_neurdb_train_on
 			opt_neurdb_values
 				{
-					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $2;
+					NeurDBPredictStmt *n = (NeurDBPredictStmt *) $3;
 					n->targetList = $1;
-					/*n->allowTrain = $3;*/
-					n->trainOnSpec = (NeurDBTrainOnSpec *) $3;
-					n->values = (SelectStmt *) $4;
+					n->withPrimaryKey = $2;
+					n->trainOnSpec = (NeurDBTrainOnSpec *) $4;
+					n->values = (SelectStmt *) $5;
 					$$ = (Node *) n;
 				}
 		;
 
-
-/*
-opt_allow_train:
-			TRAIN IF_P NOT EXISTS					{ $$ = true; }
-			|  										{ $$ = false; }
+opt_with_primary_key:
+			WITH PRIMARY KEY					    { $$ = true; }
+			| 										{ $$ = false; }
 		;
-*/
+
 
 neurdb_from:
 		FROM relation_expr

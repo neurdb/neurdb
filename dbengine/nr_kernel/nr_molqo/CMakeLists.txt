@@ -7,15 +7,16 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_FLAGS "-Werror=implicit-function-declaration")
 
-# Set PostgreSQL paths
-set(PostgreSQL_ROOT /code/neurdb-dev/build/psql)
-set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
-set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")
-set(PostgreSQL_LIBDIR "${PostgreSQL_ROOT}/lib")
-set(PostgreSQL_SHAREDIR "${PostgreSQL_ROOT}/share")
+# Discover PostgreSQL paths via pg_config
+if(NOT DEFINED PG_CONFIG)
+    find_program(PG_CONFIG pg_config REQUIRED)
+endif()
+execute_process(COMMAND ${PG_CONFIG} --includedir-server OUTPUT_VARIABLE PostgreSQL_INCLUDE_DIRS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --pkglibdir       OUTPUT_VARIABLE PostgreSQL_LIBDIR        OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --sharedir        OUTPUT_VARIABLE PostgreSQL_SHAREDIR      OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --libdir          OUTPUT_VARIABLE PostgreSQL_LIBRARY_DIRS  OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${PG_CONFIG} --libs            OUTPUT_VARIABLE PostgreSQL_LIBRARIES     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-# Check PostgreSQL
-find_package(PostgreSQL REQUIRED)
 include_directories(${PostgreSQL_INCLUDE_DIRS})
 
 # Base dir
@@ -28,7 +29,6 @@ set(SOURCES
     # src/http_client.c  # Uncomment when implementing real HTTP client
 )
 add_library(nr_molqo SHARED ${SOURCES})
-target_link_libraries(nr_molqo ${PostgreSQL_LIBRARIES})
 
 # Optional: Add HTTP client dependencies when ready
 # find_package(CURL REQUIRED)

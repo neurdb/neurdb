@@ -8,6 +8,7 @@ set -x
 
 # Set default mode to GPU
 MODE="gpu"
+RELEASE=false
 
 # Default port mappings (empty means use mode defaults)
 DB_PORT=""
@@ -18,14 +19,16 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --cpu) MODE="cpu" ;;
         --gpu) MODE="gpu" ;;
+        --release) RELEASE=true ;;
         --db-port) DB_PORT="$2"; shift ;;
         --debug-port) DEBUG_PORT="$2"; shift ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --cpu           Build and run in CPU mode"
-            echo "  --gpu           Build and run in GPU mode (default)"
+            echo "  --cpu           Build and run in CPU mode (dev)"
+            echo "  --gpu           Build and run in GPU mode (dev, default)"
+            echo "  --release       Build both CPU and GPU release images (Dockerfile.release)"
             echo "  --db-port PORT  Specify the host port for database (default: 5432 for GPU, 15432 for CPU)"
             echo "  --debug-port PORT  Specify the host port for debug server (default: 1234 for GPU, 11234 for CPU)"
             echo "  -h, --help      Show this help message"
@@ -36,54 +39,95 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-# Set default ports based on mode if not specified
-if [ "$MODE" == "cpu" ]; then
-    DB_PORT=${DB_PORT:-15432}
-    DEBUG_PORT=${DEBUG_PORT:-11234}
-else
-    DB_PORT=${DB_PORT:-5432}
-    DEBUG_PORT=${DEBUG_PORT:-1234}
+# Returns an available host port: uses the given default if free, otherwise
+# picks a random ephemeral port in 49152-65535.
+find_available_port() {
+    local preferred=$1
+    if ! ss -tlnH "sport = :${preferred}" 2>/dev/null | grep -q .; then
+        echo "$preferred"
+        return
+    fi
+    local port
+    while true; do
+        port=$(( RANDOM % 16383 + 49152 ))
+        if ! ss -tlnH "sport = :${port}" 2>/dev/null | grep -q .; then
+            echo "$port"
+            return
+        fi
+    done
+}
+
+# Set default ports based on mode if not specified (only needed for dev builds)
+if [ "$RELEASE" != true ]; then
+    if [ "$MODE" == "cpu" ]; then
+        DB_PORT=$(find_available_port "${DB_PORT:-15432}")
+        DEBUG_PORT=$(find_available_port "${DEBUG_PORT:-11234}")
+    else
+        DB_PORT=$(find_available_port "${DB_PORT:-5432}")
+        DEBUG_PORT=$(find_available_port "${DEBUG_PORT:-1234}")
+    fi
 fi
 
-# Remove the Docker container if it exists, suppressing errors if it doesn't
-docker rm -f neurdb_dev || true
-
-# Build the Docker image based on the selected mode
-if [ "$MODE" == "cpu" ]; then
-    docker build -t neurdbimg . -f Dockerfile.cpu --progress=plain --no-cache
+if [ "$RELEASE" = true ]; then
+    # Release build: build both CPU and GPU (cuda11) variants
+    for VARIANT in cpu cuda11; do
+        IMAGE_NAME="neurdb:latest-${VARIANT}"
+        echo "==> Building release image: ${IMAGE_NAME}"
+        docker build \
+            -f Dockerfile.release \
+            --target release \
+            --build-arg VARIANT=${VARIANT} \
+            --build-arg HOST_UID=$(id -u) \
+            --build-arg HOST_GID=$(id -g) \
+            --progress=plain \
+            -t ${IMAGE_NAME} .
+    done
+    echo "Release images built successfully:"
+    echo "  neurdb:latest-cpu"
+    echo "  neurdb:latest-cuda11"
 else
-    docker build -t neurdbimg . -f Dockerfile.cuda11 --progress=plain --no-cache
-fi
+    # Container name based on mode
+    CONTAINER_NAME="neurdb_dev"
+    if [ "$MODE" == "cpu" ]; then
+        CONTAINER_NAME="${CONTAINER_NAME}_cpu"
+    fi
 
-# This to solve the permission problems
-# chmod -R a+rwX .; \
+    # Dev build: existing behaviour, unchanged
+    docker rm -f ${CONTAINER_NAME} || true
 
-# Run the Docker container
-# You may replace or delete the port mapping
+    # Select Dockerfile based on mode
+    DOCKERFILE="Dockerfile.cuda11"
+    if [ "$MODE" == "cpu" ]; then
+        DOCKERFILE="Dockerfile.cpu"
+    fi
 
-# Clean build directory based on CLEAN_BUILD env var
-# CLEAN_BUILD=1        : clean everything (compile + data)
-# CLEAN_BUILD=compile  : clean compile only, keep data
+    docker build -t neurdbimg . -f ${DOCKERFILE} \
+        --build-arg HOST_UID=$(id -u) \
+        --build-arg HOST_GID=$(id -g) \
+        --progress=plain --no-cache
 
-if [ "$MODE" == "cpu" ]; then
-    docker run -d -e CLEAN_BUILD=1 --name neurdb_dev_opt \
-      -v "$(pwd)":/code/neurdb-dev \
-      -p ${DB_PORT}:5432 \
-      -p ${DEBUG_PORT}:1234 \
-      --cap-add=SYS_PTRACE \
-      neurdbimg-opt
-else
-    docker run -d -e CLEAN_BUILD=1 --name neurdb_dev \
-        -v $(pwd):/code/neurdb-dev \
-        -p ${DB_PORT}:5432 \
-        -p ${DEBUG_PORT}:1234 \
+    # Dev run: existing behaviour, unchanged
+    # Clean build directory based on CLEAN_BUILD env var
+    # CLEAN_BUILD=1        : clean everything (compile + data)
+    # CLEAN_BUILD=compile  : clean compile only, keep data
+
+    # Set GPU_FLAG for docker run if in GPU mode
+    GPU_FLAG=""
+    if [ "$MODE" != "cpu" ]; then
+        GPU_FLAG="--gpus all"
+    fi
+
+    # Run the Docker container with appropriate port mappings and GPU access
+    docker run -d -e CLEAN_BUILD=1 --name "${CONTAINER_NAME}" \
+        -v "$(pwd)":/code/neurdb-dev \
+        -p "${DB_PORT}:5432" \
+        -p "${DEBUG_PORT}:1234" \
         --cap-add=SYS_PTRACE \
-        --gpus all \
+        ${GPU_FLAG} \
         neurdbimg
+
+    # Follow the Docker container logs
+    docker logs -f ${CONTAINER_NAME}
 fi
-
-# Follow the Docker container logs
-docker logs -f neurdb_dev
-
 
 # psql -h localhost -U neurdb -d neurdb
