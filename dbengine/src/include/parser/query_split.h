@@ -101,6 +101,16 @@ extern int neurqo_server_timeout_ms;
 extern int neurqo_max_rounds;
 extern int neurqo_search_topk;
 extern int neurqo_search_max_rels;
+extern bool neurqo_search_exact_cardinality;
+extern int neurqo_aja_conservative_rows;
+extern int neurqo_aja_aggressive_rows;
+extern int neurqo_aja_max_nestloop_cost_ratio_pct;
+extern int neurqo_aja_aggressive_max_nestloop_cost_ratio_pct;
+extern int neurqo_lip_max_build_relation_rows;
+extern int neurqo_lip_selective_plan_rows;
+extern int neurqo_lip_max_build_selectivity_pct;
+extern int neurqo_lip_min_probe_ratio;
+extern int neurqo_lip_max_filters;
 
 /* DR_intorel is static in PG16's createas.c; expose it here for Prepare4Next.
  * Layout copied verbatim from src/backend/commands/createas.c (PG16). */

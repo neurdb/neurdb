@@ -815,6 +815,16 @@ extern int neurqo_server_timeout_ms;
 extern int neurqo_max_rounds;
 extern int neurqo_search_topk;
 extern int neurqo_search_max_rels;
+extern bool neurqo_search_exact_cardinality;
+extern int neurqo_aja_conservative_rows;
+extern int neurqo_aja_aggressive_rows;
+extern int neurqo_aja_max_nestloop_cost_ratio_pct;
+extern int neurqo_aja_aggressive_max_nestloop_cost_ratio_pct;
+extern int neurqo_lip_max_build_relation_rows;
+extern int neurqo_lip_selective_plan_rows;
+extern int neurqo_lip_max_build_selectivity_pct;
+extern int neurqo_lip_min_probe_ratio;
+extern int neurqo_lip_max_filters;
 
 struct config_bool ConfigureNamesBool[] =
 {
@@ -824,6 +834,15 @@ struct config_bool ConfigureNamesBool[] =
 			NULL
 		},
 		&neurqo_enabled,
+		false,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.search_exact_cardinality", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Uses a PostgreSQL planning call for every connected DP subset instead of pairwise cardinality composition."),
+			NULL
+		},
+		&neurqo_search_exact_cardinality,
 		false,
 		NULL, NULL, NULL
 	},
@@ -2067,6 +2086,87 @@ struct config_int ConfigureNamesInt[] =
 		},
 		&neurqo_search_max_rels,
 		12, 2, 16,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_conservative_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the build-row switch threshold for conservative NeurQO adaptive joins."),
+			NULL
+		},
+		&neurqo_aja_conservative_rows,
+		362443, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_aggressive_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the build-row switch threshold for aggressive NeurQO adaptive joins."),
+			NULL
+		},
+		&neurqo_aja_aggressive_rows,
+		3624434, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Rejects conservative NeurQO adaptive nest-loop candidates whose estimated subtree cost exceeds this percentage of the hash-join subtree cost; zero disables the guard."),
+			NULL
+		},
+		&neurqo_aja_max_nestloop_cost_ratio_pct,
+		150, 0, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_aggressive_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Rejects aggressive NeurQO adaptive nest-loop candidates whose estimated subtree cost exceeds this percentage of the hash-join subtree cost; zero disables the guard."),
+			NULL
+		},
+		&neurqo_aja_aggressive_max_nestloop_cost_ratio_pct,
+		125, 0, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_max_build_relation_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the largest base relation from which NeurQO may build a LIP Bloom filter."),
+			NULL
+		},
+		&neurqo_lip_max_build_relation_rows,
+		500000, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_selective_plan_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum estimated filtered build rows for selective NeurQO LIP."),
+			NULL
+		},
+		&neurqo_lip_selective_plan_rows,
+		10000, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_max_build_selectivity_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum estimated build-side selectivity percentage for selective NeurQO LIP."),
+			NULL
+		},
+		&neurqo_lip_max_build_selectivity_pct,
+		10, 1, 100,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_min_probe_ratio", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the minimum estimated probe/build row ratio for a NeurQO LIP filter."),
+			NULL
+		},
+		&neurqo_lip_min_probe_ratio,
+		2, 1, 1000,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_max_filters", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum number of Bloom filters built per NeurQO round."),
+			NULL
+		},
+		&neurqo_lip_max_filters,
+		4, 1, 10,
 		NULL, NULL, NULL
 	},
 
