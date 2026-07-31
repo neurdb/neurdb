@@ -2,20 +2,35 @@
 """
 NeurQO AI action server.
 
-The DB-side NeurQO path calls this service at two decision points:
-  1. round policy: choose split/search/LIP/AJA knobs for the current round
-  2. AJA policy: map a baseline plan state to pg_hint_plan join-method hints
+The DB-side NeurQO path calls this service sequentially:
+  1. high policy: choose split or stop from the current residual query
+  2. select policy: after split, choose one QSA candidate subquery
+  3. search policy: choose search for the selected execution query
+  4. low policy: choose LIP/AJA from the plan produced by search
 
 The wire protocol remains intentionally simple. The request body is JSON, and
 the response is line-oriented key=value fields that the C code can parse:
 
+    action=stop
+    stop=1
+
+or, for a search request:
+
     action=search
-    stop=0
     search_strategy=topk
     search_k=5
-    execution_action=aja
+
+or, for a subquery-selection request:
+
+    action=select
+    candidate_id=2
+    selection_strategy=phi4
+
+or, for a low request:
+
+    action=low
+    execution_action=aggressive
     lip_action=full
-    order_decision=only_cost
     note=model: ...
 
 Inference is layered:
@@ -33,9 +48,11 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import hashlib
 import importlib
 import importlib.util
 import json
+import math
 import os
 import sys
 import threading
@@ -49,20 +66,25 @@ ACTION_LABEL_TO_LIP_AJA = {
     "none": ("none", "none"),
     "lip_full": ("full", "none"),
     "lip_sel": ("selective", "none"),
-    "aja": ("none", "aja"),
-    "lip_full+aja": ("full", "aja"),
-    "lip_sel+aja": ("selective", "aja"),
+    "aja": ("none", "aggressive"),
+    "lip_full+aja": ("full", "aggressive"),
+    "lip_sel+aja": ("selective", "aggressive"),
+    "aja_conservative": ("none", "conservative"),
+    "lip_full+aja_conservative": ("full", "conservative"),
+    "lip_sel+aja_conservative": ("selective", "conservative"),
 }
 
 SEARCH_LABEL_TO_DB = {
     "default": ("default", 1),
     "none": ("default", 1),
-    "split": ("topk", 5),
+    "split": ("topk", 1),
     "top5": ("topk", 5),
     "top10": ("topk", 10),
     "topk": ("topk", 5),
     "left_deep": ("left_deep", 1),
 }
+
+SCHEDULE_ALPHA_VALUES = (0.0, 0.25, 0.5, 0.75, 1.0)
 
 PLAN_NODE_NAME_TO_EXPLAIN = {
     "Agg": "Aggregate",
@@ -174,6 +196,52 @@ def _state_for_model(state: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _runtime_relation_plan(state: dict[str, Any]) -> dict[str, Any] | None:
+    """Expose live catalog estimates, including analyzed temporary tables."""
+    relations = state.get("relations") or []
+    children = []
+    for relation in relations:
+        if not isinstance(relation, dict):
+            continue
+        rows = max(float(relation.get("estimated_rows") or 0.0), 0.0)
+        children.append(
+            {
+                "Node Type": "Seq Scan",
+                "Relation Name": relation.get("relname"),
+                "Alias": relation.get("alias"),
+                "Plan Rows": rows,
+                "Plan Width": 0,
+                "Startup Cost": 0.0,
+                "Total Cost": float(relation.get("pages") or 0.0),
+            }
+        )
+    if not children:
+        return None
+    return {
+        "Plan": {
+            "Node Type": "Append",
+            "Plan Rows": sum(child["Plan Rows"] for child in children),
+            "Plan Width": 0,
+            "Startup Cost": 0.0,
+            "Total Cost": sum(child["Total Cost"] for child in children),
+            "Plans": children,
+        }
+    }
+
+
+def _plan_contains_join(plan: Any, join_name: str | None = None) -> bool:
+    if not isinstance(plan, dict):
+        return False
+    node_name = str(plan.get("Node Type") or plan.get("node") or "").lower()
+    is_join = "join" in node_name or "nestloop" in node_name
+    if is_join and (
+        join_name is None or join_name.lower() in node_name.replace(" ", "")
+    ):
+        return True
+    children = plan.get("Plans") or plan.get("children") or []
+    return any(_plan_contains_join(child, join_name) for child in children)
+
+
 class PolicyAdapter:
     """Optional learned-controller adapter with deterministic fallback."""
 
@@ -187,6 +255,13 @@ class PolicyAdapter:
         workload: str = "job",
         device: str = "cpu",
         neurqo_src: str | None = None,
+        inference_mode: str = "deterministic",
+        temperature: float = 1.0,
+        exploration_epsilon: float = 0.0,
+        stochastic_heads: str | list[str] | tuple[str, ...] | None = None,
+        sampling_seed: int = 42,
+        policy_version: str | None = None,
+        torch_threads: int = 1,
     ) -> None:
         self.model_module = model_module
         self.model_path = model_path
@@ -195,6 +270,39 @@ class PolicyAdapter:
         self.workload = workload
         self.device_name = device
         self.neurqo_src = neurqo_src
+        self.inference_mode = inference_mode.strip().lower()
+        self.temperature = float(temperature)
+        self.exploration_epsilon = float(exploration_epsilon)
+        self.sampling_seed = int(sampling_seed)
+        valid_heads = {"high", "select", "search", "low"}
+        if stochastic_heads is None:
+            parsed_heads = valid_heads
+        elif isinstance(stochastic_heads, str):
+            parsed_heads = {
+                item.strip().lower()
+                for item in stochastic_heads.split(",")
+                if item.strip()
+            }
+        else:
+            parsed_heads = {
+                str(item).strip().lower()
+                for item in stochastic_heads
+                if str(item).strip()
+            }
+        unknown_heads = parsed_heads - valid_heads
+        if unknown_heads:
+            raise ValueError(f"unknown stochastic heads: {sorted(unknown_heads)}")
+        self.stochastic_heads = frozenset(parsed_heads)
+        self.policy_version = policy_version
+        self.torch_threads = int(torch_threads)
+        if self.inference_mode not in {"deterministic", "stochastic"}:
+            raise ValueError("inference_mode must be 'deterministic' or 'stochastic'")
+        if self.temperature <= 0.0:
+            raise ValueError("temperature must be greater than zero")
+        if not 0.0 <= self.exploration_epsilon < 1.0:
+            raise ValueError("exploration_epsilon must be in [0, 1)")
+        if self.torch_threads < 1:
+            raise ValueError("torch_threads must be at least 1")
         self.source = "stub"
         self._callable: Callable[[dict[str, Any]], Any] | None = None
         self._torch = None
@@ -203,6 +311,10 @@ class PolicyAdapter:
         self._hrl = None
         self._transfer = None
         self._catalog = None
+        self._schedule_trained = False
+        self.checkpoint_metadata: dict[str, Any] = {}
+        self._query_graph_cache: dict[str, Any] = {}
+        self._plan_tree_cache: dict[str, Any] = {}
 
         if model_module:
             self._load_callable(model_module)
@@ -230,6 +342,8 @@ class PolicyAdapter:
             raise TypeError(f"{spec} is not callable")
         self._callable = fn
         self.source = f"module:{spec}"
+        if self.policy_version is None:
+            self.policy_version = self.source
         log(f"loaded model callable {spec}")
 
     def _load_hrl_checkpoint(self, model_path: str) -> None:
@@ -263,6 +377,11 @@ class PolicyAdapter:
             log(f"failed to import HRL model code ({exc!r}); using stub policy")
             traceback.print_exc()
             return
+        torch.set_num_threads(self.torch_threads)
+        try:
+            torch.set_num_interop_threads(1)
+        except RuntimeError:
+            pass
 
         if self.model_method in ("hac", "smdp", "standardmdp", "standardmdp_rl"):
             model = HACNetwork(hidden=self.model_hidden)
@@ -279,8 +398,95 @@ class PolicyAdapter:
             if self.device_name != "auto"
             else ("cuda" if torch.cuda.is_available() else "cpu")
         )
-        state_dict = torch.load(path, map_location=device)
-        model.load_state_dict(state_dict)
+        try:
+            # NeurQO checkpoints are generated by the local trainer and carry
+            # policy metadata in addition to tensors.
+            checkpoint = torch.load(
+                path,
+                map_location=device,
+                weights_only=False,
+            )
+        except TypeError:
+            checkpoint = torch.load(path, map_location=device)
+        if (
+            isinstance(checkpoint, dict)
+            and "model_state" in checkpoint
+            and isinstance(checkpoint["model_state"], dict)
+        ):
+            state_dict = checkpoint["model_state"]
+            metadata = checkpoint.get("metadata") or {}
+        elif (
+            isinstance(checkpoint, dict)
+            and "model_state_dict" in checkpoint
+            and isinstance(checkpoint["model_state_dict"], dict)
+        ):
+            state_dict = checkpoint["model_state_dict"]
+            metadata = checkpoint.get("metadata") or {}
+        else:
+            state_dict = checkpoint
+            metadata = {}
+        if not isinstance(state_dict, dict):
+            raise TypeError(f"unsupported checkpoint payload in {path}")
+
+        target_state = model.state_dict()
+        expanded_heads = []
+        for key, source_tensor in list(state_dict.items()):
+            target_tensor = target_state.get(key)
+            if (
+                target_tensor is not None
+                and hasattr(source_tensor, "shape")
+                and len(source_tensor.shape) == len(target_tensor.shape)
+                and source_tensor.shape[0] == 6
+                and target_tensor.shape[0] == 9
+                and source_tensor.shape[1:] == target_tensor.shape[1:]
+            ):
+                expanded = target_tensor.clone()
+                expanded[:6].copy_(source_tensor)
+                state_dict[key] = expanded
+                expanded_heads.append(key)
+                continue
+            if (
+                key == "encoder.low_trunk.0.weight"
+                and target_tensor is not None
+                and hasattr(source_tensor, "shape")
+                and len(source_tensor.shape) == 2
+                and source_tensor.shape[0] == target_tensor.shape[0]
+                and source_tensor.shape[1] < target_tensor.shape[1]
+            ):
+                expanded = target_tensor.clone()
+                expanded[:, : source_tensor.shape[1]].copy_(source_tensor)
+                expanded[:, source_tensor.shape[1] :].zero_()
+                state_dict[key] = expanded
+                expanded_heads.append(key)
+        if expanded_heads:
+            log(
+                "expanded legacy binary-AJA checkpoint heads: "
+                + ",".join(expanded_heads)
+            )
+        incompatible = model.load_state_dict(state_dict, strict=False)
+        unexpected = list(incompatible.unexpected_keys)
+        missing_non_schedule = [
+            key
+            for key in incompatible.missing_keys
+            if not key.startswith("schedule_")
+            and key != "q_schedule.weight"
+            and key != "q_schedule.bias"
+        ]
+        if unexpected or missing_non_schedule:
+            raise RuntimeError(
+                "checkpoint architecture mismatch: "
+                f"missing={missing_non_schedule} unexpected={unexpected}"
+            )
+
+        trained_heads = set(metadata.get("trained_heads") or [])
+        self._schedule_trained = "schedule" in trained_heads
+        self.checkpoint_metadata = dict(metadata)
+        if self.policy_version is None:
+            self.policy_version = str(
+                metadata.get("policy_version")
+                or metadata.get("checkpoint_id")
+                or path.stem
+            )
         model.to(device)
         model.eval()
 
@@ -297,6 +503,10 @@ class PolicyAdapter:
         self._transfer = transfer_state
         self._catalog = catalog
         self.source = f"checkpoint:{path}"
+        self._warmup_hrl()
+        torch.manual_seed(self.sampling_seed)
+        if device.type == "cuda":
+            torch.cuda.manual_seed_all(self.sampling_seed)
         log(f"loaded HRL checkpoint {path} method={self.model_method} device={device}")
 
     def predict(self, state: dict[str, Any]) -> dict[str, Any]:
@@ -311,6 +521,7 @@ class PolicyAdapter:
             raw = dict(raw)
             raw.setdefault("note", f"model callable {self.source}")
             raw.setdefault("model_source", self.source)
+            raw.setdefault("policy_version", self.policy_version or self.source)
             return raw
 
         if self._model is not None:
@@ -318,61 +529,240 @@ class PolicyAdapter:
 
         return {}
 
+    def _plan_tree(self, plan_json: Any):
+        transfer = self._transfer
+        if plan_json is None or self._catalog is None:
+            return transfer.empty_plan_tree()
+        cache_key = hashlib.sha256(
+            json.dumps(
+                plan_json,
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            ).encode("utf-8")
+        ).hexdigest()
+        plan_tree = self._plan_tree_cache.get(cache_key)
+        if plan_tree is None:
+            try:
+                plan_tree = transfer.plan_to_tree(
+                    plan_json,
+                    catalog=self._catalog,
+                )
+            except Exception:
+                plan_tree = transfer.empty_plan_tree()
+            if len(self._plan_tree_cache) >= 512:
+                self._plan_tree_cache.pop(next(iter(self._plan_tree_cache)))
+            self._plan_tree_cache[cache_key] = plan_tree
+        return plan_tree
+
     def _query_graph_state(self, state: dict[str, Any], level: str):
         transfer = self._transfer
         sql = state.get("sql") or state.get("original_sql") or ""
-        plan_json = state.get("plan_json") or state.get("plan")
+        plan_json = None
+        if level != "high":
+            plan_json = (
+                state.get("plan_json")
+                or state.get("plan")
+                or _runtime_relation_plan(state)
+            )
         if not sql or self._catalog is None:
             ctx_dim = transfer.HIGH_CTX_DIM if level == "high" else 0
             return transfer.empty_structured_state(level=level, ctx_dim=ctx_dim)
 
-        try:
-            graph = transfer.parse_query_graph(sql)
-            qgraph, _stats = transfer.build_transfer_graph_state(
-                sql, graph, self._catalog, plan_json=plan_json
-            )
-        except Exception:
-            ctx_dim = transfer.HIGH_CTX_DIM if level == "high" else 0
-            return transfer.empty_structured_state(level=level, ctx_dim=ctx_dim)
+        cache_key = hashlib.sha256(
+            json.dumps(
+                {"sql": sql, "plan": plan_json},
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            ).encode("utf-8")
+        ).hexdigest()
+        qgraph = self._query_graph_cache.get(cache_key)
+        if qgraph is None:
+            try:
+                graph = transfer.parse_query_graph(sql)
+                qgraph, _stats = transfer.build_transfer_graph_state(
+                    sql, graph, self._catalog, plan_json=plan_json
+                )
+            except Exception:
+                ctx_dim = transfer.HIGH_CTX_DIM if level == "high" else 0
+                return transfer.empty_structured_state(level=level, ctx_dim=ctx_dim)
+            if len(self._query_graph_cache) >= 512:
+                self._query_graph_cache.pop(next(iter(self._query_graph_cache)))
+            self._query_graph_cache[cache_key] = qgraph
 
-        ctx = []
+        ctx = transfer.np.zeros(
+            transfer.HIGH_CTX_DIM if level == "high" else 0,
+            dtype=transfer.np.float32,
+        )
         if level == "high":
-            base_rels = float(state.get("base_rels") or 0.0)
-            round_no = float(state.get("round") or 0.0)
-            ctx = [min(base_rels / 16.0, 1.0), min(round_no / 16.0, 1.0)]
+            ctx = transfer.build_high_context(
+                cumulative_ms=float(state.get("cumulative_cost_ms") or 0.0),
+                round_index=float(state.get("round") or 0.0),
+                max_rounds=float(state.get("max_split_rounds") or 1.0),
+            )
         return transfer.StructuredState(
             level=level,
             query_graph=qgraph,
             current_plan=transfer.empty_plan_tree(),
-            ctx=transfer.np.asarray(ctx, dtype=transfer.np.float32),
+            ctx=ctx,
             cache_key=("online", level, hash(sql), tuple(ctx)),
         )
 
     def _plan_state(self, state: dict[str, Any]):
         transfer = self._transfer
         plan_json = state.get("plan_json") or state.get("plan")
-        if plan_json is not None and self._catalog is not None:
-            try:
-                plan_tree = transfer.plan_to_tree(plan_json, catalog=self._catalog)
-            except Exception:
-                plan_tree = transfer.empty_plan_tree()
-        else:
-            plan_tree = transfer.empty_plan_tree()
-        empty = transfer.empty_structured_state(
-            level="low", ctx_dim=transfer.LOW_CTX_DIM
+        ctx = transfer.build_low_context(
+            cumulative_ms=float(state.get("cumulative_cost_ms") or 0.0),
+            round_index=float(state.get("round") or 0.0),
+            max_rounds=float(state.get("max_split_rounds") or 1.0),
+            is_split_execution=bool(state.get("is_split_execution", False)),
+            search_strategy=str(state.get("search_strategy") or "default"),
+            search_k=int(state.get("search_k") or 0),
         )
+        state_key = hashlib.sha256(
+            json.dumps(
+                {
+                    "plan": plan_json,
+                    "context": ctx.tolist(),
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            ).encode("utf-8")
+        ).hexdigest()
+        plan_tree = self._plan_tree(plan_json)
         return transfer.StructuredState(
             level="low",
-            query_graph=empty.query_graph,
+            query_graph=transfer.empty_query_graph_state(),
             current_plan=plan_tree,
-            ctx=transfer.np.zeros(transfer.LOW_CTX_DIM, dtype=transfer.np.float32),
-            cache_key=("online", "low", state.get("round"), state.get("plan_rows")),
+            ctx=ctx,
+            cache_key=("online", "low", state_key, tuple(ctx)),
         )
 
-    def _masked_argmax(self, logits, mask) -> int:
+    def _warmup_hrl(self) -> None:
+        if self._model is None:
+            return
+        transfer = self._transfer
+        model = self._model
+        with self._torch.no_grad():
+            high = transfer.empty_structured_state(
+                level="high",
+                ctx_dim=transfer.HIGH_CTX_DIM,
+            )
+            high_encoded = self._encode(high)
+            search = transfer.empty_structured_state(level="search", ctx_dim=0)
+            search_encoded = self._encode(search)
+            low = transfer.empty_structured_state(
+                level="low",
+                ctx_dim=transfer.LOW_CTX_DIM,
+            )
+            low_encoded = self._encode(low)
+            if self.model_method in (
+                "hac",
+                "smdp",
+                "standardmdp",
+                "standardmdp_rl",
+            ):
+                model.high_actor(high_encoded)
+                model.high_critic(high_encoded)
+                schedule_encoded = model.schedule_features(high_encoded)
+                model.schedule_actor(schedule_encoded)
+                model.schedule_critic(schedule_encoded)
+                model.search_actor(search_encoded)
+                model.search_critic(search_encoded)
+                model.low_actor(low_encoded)
+                model.low_critic(low_encoded)
+            elif self.model_method == "option":
+                model.option_policy(high_encoded)
+                model.q_options(high_encoded)
+                schedule_encoded = model.schedule_features(high_encoded)
+                model.schedule_actor(schedule_encoded)
+                model.schedule_critic(schedule_encoded)
+                model.search_actor(search_encoded)
+                model.search_critic(search_encoded)
+                for policy in model.intra_policies:
+                    policy(low_encoded)
+            else:
+                model.q_high(high_encoded)
+                model.q_schedule(model.schedule_features(high_encoded))
+                model.q_search(search_encoded)
+                model.q_low(low_encoded)
+
+    def _masked_action(
+        self,
+        logits,
+        mask,
+        phase: str,
+        state: dict[str, Any] | None = None,
+    ) -> tuple[int, dict[str, Any]]:
         torch = self._torch
+        logits = logits.reshape(-1)
         mask_t = torch.tensor(mask, dtype=torch.float32, device=self._device)
-        return int((logits + (mask_t - 1.0) * 1e9).argmax().item())
+        masked_logits = logits / self.temperature + (mask_t - 1.0) * 1e9
+        base_probs = torch.softmax(masked_logits, dim=-1)
+        valid_probs = mask_t / mask_t.sum().clamp_min(1.0)
+        mixed_probs = (
+            1.0 - self.exploration_epsilon
+        ) * base_probs + self.exploration_epsilon * valid_probs
+        dist = torch.distributions.Categorical(probs=mixed_probs)
+        stochastic = (
+            self.inference_mode == "stochastic" and phase in self.stochastic_heads
+        )
+        if stochastic:
+            stable_state = {
+                key: value
+                for key, value in (state or {}).items()
+                if key
+                not in {
+                    "pid",
+                    "run_id",
+                    "relid",
+                    "cumulative_cost_ms",
+                    "plan_state_ms",
+                }
+            }
+            seed_material = json.dumps(
+                {
+                    "seed": self.sampling_seed,
+                    "policy": self.policy_version or self.source,
+                    "phase": phase,
+                    "state": stable_state,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            ).encode("utf-8")
+            sample_seed = int.from_bytes(
+                hashlib.sha256(seed_material).digest()[:8],
+                "big",
+            )
+            generator = torch.Generator(device=self._device)
+            generator.manual_seed(sample_seed)
+            action_t = torch.multinomial(
+                dist.probs,
+                1,
+                generator=generator,
+            ).reshape(())
+        else:
+            action_t = masked_logits.argmax()
+        action = int(action_t.item())
+        metadata = {
+            "action_index": action,
+            "action_mask": [bool(value) for value in mask],
+            "action_probability": float(dist.probs[action_t].item()),
+            "log_probability": float(dist.log_prob(action_t).item()),
+            "policy_entropy": float(dist.entropy().item()),
+            "policy_version": self.policy_version or self.source,
+            "inference_mode": "stochastic" if stochastic else "deterministic",
+            "temperature": self.temperature,
+            "exploration_epsilon": self.exploration_epsilon,
+            "stochastic_heads": sorted(self.stochastic_heads),
+            "sampling_seed": self.sampling_seed,
+        }
+        if phase == "high" and len(mask) >= 2:
+            metadata["high_split_probability"] = float(dist.probs[1].item())
+        return action, metadata
 
     def _encode(self, structured_state):
         with self._torch.no_grad():
@@ -381,62 +771,180 @@ class PolicyAdapter:
     def _predict_hrl(self, state: dict[str, Any]) -> dict[str, Any]:
         hrl = self._hrl
         model = self._model
+        request_type = str(state.get("request_type") or "high").lower()
         base_rels = int(state.get("base_rels") or 0)
         remaining = int(state.get("remaining_splits") or 0)
 
-        high_state = self._query_graph_state(state, "high")
-        search_state = self._query_graph_state(state, "search")
-        low_state = self._plan_state(state)
+        if request_type == "high":
+            structured_state = self._query_graph_state(state, "high")
+            mask = [1.0, 1.0 if base_rels > 2 and remaining > 0 else 0.0]
+            with self._torch.no_grad():
+                encoded = self._encode(structured_state)
+                if self.model_method in (
+                    "hac",
+                    "smdp",
+                    "standardmdp",
+                    "standardmdp_rl",
+                ):
+                    logits = model.high_actor(encoded)
+                    predicted_value = float(model.high_critic(encoded).squeeze().item())
+                elif self.model_method == "option":
+                    logits = model.option_policy(encoded)
+                    option_values = model.q_options(encoded)
+                    predicted_value = None
+                else:
+                    logits = model.q_high(encoded)
+                    predicted_value = None
+                high_idx, policy_meta = self._masked_action(logits, mask, "high", state)
+                if predicted_value is None:
+                    values = option_values if self.model_method == "option" else logits
+                    predicted_value = float(values.reshape(-1)[high_idx].item())
+            high_action = "split" if high_idx == 1 else "stop"
+            return {
+                "action": high_action,
+                "stop": high_idx == 0,
+                "order_decision": "only_cost",
+                "high_action": high_action,
+                "predicted_value": predicted_value,
+                "model_source": self.source,
+                "note": f"model high inference: high={high_idx}",
+                **policy_meta,
+            }
 
-        high_mask = [1.0, 1.0 if base_rels > 2 and remaining > 0 else 0.0]
-        search_mask = [1.0, 1.0, 1.0, 1.0]
-        low_mask = [1.0] * len(hrl.ACTION_LABELS)
+        if request_type == "select":
+            if not self._schedule_trained:
+                # Legacy checkpoints keep the established phi4/alpha=0.5
+                # scheduler instead of activating a randomly initialized head.
+                return {}
+            structured_state = self._query_graph_state(state, "high")
+            mask = [1.0] * len(SCHEDULE_ALPHA_VALUES)
+            with self._torch.no_grad():
+                encoded = self._encode(structured_state)
+                if self.model_method in (
+                    "hac",
+                    "smdp",
+                    "standardmdp",
+                    "standardmdp_rl",
+                    "option",
+                ):
+                    schedule_encoded = model.schedule_features(encoded)
+                    logits = model.schedule_actor(schedule_encoded)
+                    predicted_value = float(
+                        model.schedule_critic(schedule_encoded).squeeze().item()
+                    )
+                else:
+                    logits = model.q_schedule(model.schedule_features(encoded))
+                    predicted_value = None
+                schedule_idx, policy_meta = self._masked_action(
+                    logits, mask, "select", state
+                )
+                if predicted_value is None:
+                    predicted_value = float(logits.reshape(-1)[schedule_idx].item())
+            alpha = SCHEDULE_ALPHA_VALUES[schedule_idx]
+            return {
+                "action": "select",
+                "stop": False,
+                "schedule_idx": schedule_idx,
+                "schedule_alpha": alpha,
+                "selection_strategy": f"alpha_{alpha:.2f}",
+                "predicted_value": predicted_value,
+                "model_source": self.source,
+                "note": f"model schedule inference: alpha={alpha:.2f}",
+                **policy_meta,
+            }
 
-        with self._torch.no_grad():
-            high_h = self._encode(high_state)
-            search_h = self._encode(search_state)
-            low_h = self._encode(low_state)
+        if request_type == "search":
+            structured_state = self._query_graph_state(state, "search")
+            max_rels = int(state.get("search_max_rels") or 12)
+            search_feasible = 2 <= base_rels <= max_rels
+            mask = [1.0] + [1.0 if search_feasible else 0.0] * (
+                len(hrl.SEARCH_LABELS) - 1
+            )
+            with self._torch.no_grad():
+                encoded = self._encode(structured_state)
+                if self.model_method in (
+                    "hac",
+                    "smdp",
+                    "standardmdp",
+                    "standardmdp_rl",
+                    "option",
+                ):
+                    logits = model.search_actor(encoded)
+                    predicted_value = float(
+                        model.search_critic(encoded).squeeze().item()
+                    )
+                else:
+                    logits = model.q_search(encoded)
+                    predicted_value = None
+                search_idx, policy_meta = self._masked_action(
+                    logits, mask, "search", state
+                )
+                if predicted_value is None:
+                    predicted_value = float(logits.reshape(-1)[search_idx].item())
+            search_label = hrl.SEARCH_LABELS[search_idx]
+            search_strategy, search_k = _map_search_label(search_label)
+            return {
+                "action": "search",
+                "stop": False,
+                "search_strategy": search_strategy,
+                "search_k": search_k,
+                "search_label": search_label,
+                "predicted_value": predicted_value,
+                "model_source": self.source,
+                "note": f"model search inference: search={search_label}",
+                **policy_meta,
+            }
 
-            if self.model_method in ("hac", "smdp", "standardmdp", "standardmdp_rl"):
-                high_logits = model.high_actor(high_h)
-                search_logits = model.search_actor(search_h)
-                low_logits = model.low_actor(low_h)
-            elif self.model_method == "option":
-                high_logits = model.option_policy(high_h)
-                search_logits = model.search_actor(search_h)
-                option_idx = self._masked_argmax(high_logits, high_mask)
-                low_logits = model.intra_policies[option_idx](low_h)
-            else:
-                high_logits = model.q_high(high_h)
-                search_logits = model.q_search(search_h)
-                low_logits = model.q_low(low_h)
+        if request_type == "low":
+            structured_state = self._plan_state(state)
+            plan_json = state.get("plan_json") or state.get("plan") or {}
+            has_join = _plan_contains_join(plan_json)
+            has_hash_join = _plan_contains_join(plan_json, "hashjoin")
+            mask = []
+            for label in hrl.ACTION_LABELS:
+                needs_lip = label.startswith("lip_")
+                needs_aja = "aja" in label
+                valid = (not needs_lip or has_join) and (not needs_aja or has_hash_join)
+                mask.append(1.0 if valid else 0.0)
+            with self._torch.no_grad():
+                encoded = self._encode(structured_state)
+                if self.model_method in (
+                    "hac",
+                    "smdp",
+                    "standardmdp",
+                    "standardmdp_rl",
+                ):
+                    logits = model.low_actor(encoded)
+                    predicted_value = float(model.low_critic(encoded).squeeze().item())
+                elif self.model_method == "option":
+                    high_action = str(state.get("high_action") or "stop").lower()
+                    option_idx = 1 if high_action == "split" else 0
+                    option_idx = min(option_idx, len(model.intra_policies) - 1)
+                    logits = model.intra_policies[option_idx](encoded)
+                    predicted_value = float(
+                        model.q_options(encoded).reshape(-1)[option_idx].item()
+                    )
+                else:
+                    logits = model.q_low(encoded)
+                    predicted_value = None
+                low_idx, policy_meta = self._masked_action(logits, mask, "low", state)
+                if predicted_value is None:
+                    predicted_value = float(logits.reshape(-1)[low_idx].item())
+            low_label = hrl.ACTION_LABELS[low_idx]
+            lip_action, execution_action = _map_low_label(low_label)
+            return {
+                "action": "low",
+                "stop": False,
+                "execution_action": execution_action,
+                "lip_action": lip_action,
+                "low_label": low_label,
+                "predicted_value": predicted_value,
+                "model_source": self.source,
+                "note": f"model low inference: low={low_label}",
+                **policy_meta,
+            }
 
-            high_idx = self._masked_argmax(high_logits, high_mask)
-            search_idx = self._masked_argmax(search_logits, search_mask)
-            low_idx = self._masked_argmax(low_logits, low_mask)
-
-        search_label = hrl.SEARCH_LABELS[search_idx]
-        low_label = hrl.ACTION_LABELS[low_idx]
-        search_strategy, search_k = _map_search_label(search_label)
-        lip_action, execution_action = _map_low_label(low_label)
-
-        return {
-            "action": "split" if high_idx == 1 else "search",
-            "stop": high_idx == 0,
-            "search_strategy": search_strategy,
-            "search_k": search_k,
-            "execution_action": execution_action,
-            "lip_action": lip_action,
-            "order_decision": "only_cost",
-            "high_action": "split" if high_idx == 1 else "stop",
-            "search_label": search_label,
-            "low_label": low_label,
-            "model_source": self.source,
-            "note": (
-                f"model inference: high={high_idx} search={search_label} "
-                f"low={low_label}"
-            ),
-        }
+        raise ValueError(f"unknown request_type={request_type!r}")
 
 
 def _map_search_label(label: str | None) -> tuple[str, int]:
@@ -469,109 +977,187 @@ def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any]:
         lip, aja = _map_low_label(str(pred["low_label"]))
         pred.setdefault("lip_action", lip)
         pred.setdefault("execution_action", aja)
+    if "aja_level" in pred and "execution_action" not in pred:
+        pred["execution_action"] = pred["aja_level"]
+    if "execution_action" in pred:
+        execution_action = str(pred["execution_action"]).strip().lower()
+        # Existing checkpoints use a binary AJA label generated with v10pct.
+        if execution_action == "aja":
+            execution_action = "aggressive"
+        pred["execution_action"] = execution_action
     if "high_action" in pred and "stop" not in pred:
         pred["stop"] = str(pred["high_action"]).lower() in {"stop", "none"}
     return pred
 
 
-def _aliases_hint(method: str, aliases: list[str]) -> str:
-    aliases = [str(a) for a in aliases if str(a)]
-    if len(aliases) < 2:
-        return "none"
-    return f"{method}({' '.join(aliases)})"
-
-
-def _state_aliases(state: dict[str, Any]) -> list[str]:
-    aliases = state.get("aliases") or []
-    if aliases:
-        return [str(a) for a in aliases]
-    rels = state.get("relations") or []
-    out = []
-    for rel in rels:
-        if isinstance(rel, dict):
-            out.append(str(rel.get("alias") or rel.get("relname") or ""))
-    return [a for a in out if a]
-
-
-def _decide_aja(state: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]:
-    aliases = _state_aliases(state)
-    summary = state.get("plan_summary") or {}
-    rows = float(state.get("plan_rows") or 0)
-    joins = int(summary.get("joins") or 0)
-
-    if pred.get("aja_hint") or pred.get("join_method"):
-        method = pred.get("join_method", "")
-        return {
-            "action": "aja",
-            "stop": False,
-            "aja_hint": pred.get("aja_hint", _aliases_hint(method, aliases)),
-            "join_method": method,
-            "note": pred.get("note", "model AJA hint"),
-        }
-
-    method = "NestLoop" if joins <= 1 and 0 < rows < 10_000 else "HashJoin"
-    return {
-        "action": "aja",
-        "stop": False,
-        "aja_hint": _aliases_hint(method, aliases),
-        "join_method": method,
-        "note": (
-            f"stub AJA: {method} from baseline plan "
-            f"(joins={joins}, rows={rows:.0f})"
-        ),
-    }
-
-
-def _decide_round(state: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]:
+def _decide_high(state: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]:
     base_rels = int(state.get("base_rels", 0))
+    remaining = int(state.get("remaining_splits", 0))
 
     if pred:
         pred = _normalize_prediction(pred)
-        search_strategy, default_k = _map_search_label(pred.get("search_strategy"))
-        action = {
-            "action": pred.get("action", "search"),
-            "stop": _truthy(pred.get("stop", False)),
-            "search_strategy": search_strategy,
-            "search_k": int(pred.get("search_k") or default_k or 5),
-            "execution_action": pred.get("execution_action", "aja"),
-            "lip_action": pred.get("lip_action", "full"),
+        high_action = str(pred.get("high_action") or pred.get("action") or "")
+        high_action = high_action.strip().lower()
+        stop = _truthy(pred.get("stop", high_action == "stop"))
+        if high_action not in {"split", "stop"}:
+            high_action = "stop" if stop else "split"
+        return {
+            "action": high_action,
+            "stop": high_action == "stop",
             "order_decision": pred.get("order_decision", "only_cost"),
-            "note": pred.get("note", "model round action"),
+            "high_action": high_action,
+            "note": pred.get("note", "model high action"),
+            "model_source": pred.get("model_source"),
         }
-        if pred.get("model_source"):
-            action["model_source"] = pred["model_source"]
-        if pred.get("high_action"):
-            action["high_action"] = pred["high_action"]
-        if pred.get("search_label"):
-            action["search_label"] = pred["search_label"]
-        if pred.get("low_label"):
-            action["low_label"] = pred["low_label"]
-        return action
 
-    if base_rels > 2:
+    can_split = base_rels > 2 and remaining > 0
+    return {
+        "action": "split" if can_split else "stop",
+        "stop": not can_split,
+        "order_decision": "only_cost",
+        "high_action": "split" if can_split else "stop",
+        "note": f"stub high: {'split' if can_split else 'stop'}",
+    }
+
+
+def _decide_search(state: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]:
+    if pred:
+        pred = _normalize_prediction(pred)
+        strategy, default_k = _map_search_label(
+            pred.get("search_label") or pred.get("search_strategy")
+        )
         return {
             "action": "search",
             "stop": False,
-            "search_strategy": "topk",
-            "search_k": 5,
-            "execution_action": "aja",
-            "lip_action": "full",
-            "order_decision": "only_cost",
-            "note": (
-                "stub: in-DB top-k Leading search + "
-                f"AJA plan-feature replan + LIP Bloom probes (base_rels={base_rels})"
-            ),
+            "search_strategy": strategy,
+            "search_k": int(pred.get("search_k") or default_k),
+            "search_label": pred.get("search_label"),
+            "note": pred.get("note", "model search action"),
+            "model_source": pred.get("model_source"),
         }
-
     return {
-        "action": "none",
-        "stop": True,
+        "action": "search",
+        "stop": False,
         "search_strategy": "default",
         "search_k": 1,
+        "search_label": "default",
+        "note": "stub search: default",
+    }
+
+
+def _decide_select(state: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]:
+    candidates = state.get("candidates") or []
+    if not isinstance(candidates, list) or not candidates:
+        raise ValueError("select request requires a non-empty candidates list")
+
+    valid_ids = {
+        int(candidate.get("candidate_id", idx))
+        for idx, candidate in enumerate(candidates)
+        if isinstance(candidate, dict)
+    }
+    requested = pred.get("candidate_id") if pred else None
+    if requested is not None:
+        candidate_id = int(requested)
+        if candidate_id not in valid_ids:
+            raise ValueError(
+                f"model selected unknown candidate_id={candidate_id}; "
+                f"valid={sorted(valid_ids)}"
+            )
+        return {
+            "action": "select",
+            "stop": False,
+            "candidate_id": candidate_id,
+            "selection_strategy": pred.get("selection_strategy", "model"),
+            "note": pred.get("note", "model subquery selection"),
+            "model_source": pred.get("model_source"),
+        }
+
+    requested_alpha = pred.get("schedule_alpha") if pred else None
+    if requested_alpha is not None:
+        alpha = float(requested_alpha)
+        if not 0.0 <= alpha <= 1.0:
+            raise ValueError(f"schedule_alpha must be in [0,1], got {alpha}")
+
+        def alpha_key(item: tuple[int, Any]) -> tuple[float, int]:
+            idx, candidate = item
+            if not isinstance(candidate, dict):
+                return float("inf"), idx
+            cost = max(float(candidate.get("plan_total_cost") or 0.0), 1e-12)
+            rows = max(float(candidate.get("plan_rows") or 0.0), 1e-12)
+            candidate_id = int(candidate.get("candidate_id", idx))
+            # Compare in log space to avoid overflow from C^alpha*S^(1-alpha).
+            score = alpha * math.log(cost) + (1.0 - alpha) * math.log(rows)
+            return score, candidate_id
+
+        selected_idx, selected = min(enumerate(candidates), key=alpha_key)
+        candidate_id = int(
+            selected.get("candidate_id", selected_idx)
+            if isinstance(selected, dict)
+            else selected_idx
+        )
+        return {
+            "action": "select",
+            "stop": False,
+            "candidate_id": candidate_id,
+            "schedule_idx": pred.get("schedule_idx"),
+            "schedule_alpha": alpha,
+            "selection_strategy": pred.get("selection_strategy", f"alpha_{alpha:.2f}"),
+            "note": pred.get("note", f"model scheduler alpha={alpha:.2f}"),
+            "model_source": pred.get("model_source"),
+        }
+
+    def phi4_key(item: tuple[int, Any]) -> tuple[float, int]:
+        idx, candidate = item
+        if not isinstance(candidate, dict):
+            return float("inf"), idx
+        cost = float(candidate.get("plan_total_cost") or float("inf"))
+        rows = max(float(candidate.get("plan_rows") or 1.0), 1.0)
+        candidate_id = int(candidate.get("candidate_id", idx))
+        return cost * rows, candidate_id
+
+    selected_idx, selected = min(enumerate(candidates), key=phi4_key)
+    candidate_id = int(
+        selected.get("candidate_id", selected_idx)
+        if isinstance(selected, dict)
+        else selected_idx
+    )
+    return {
+        "action": "select",
+        "stop": False,
+        "candidate_id": candidate_id,
+        "selection_strategy": "phi4",
+        "note": "stub SSA: phi4=min(cost*rows)",
+    }
+
+
+def _decide_low(state: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]:
+    if pred:
+        pred = _normalize_prediction(pred)
+        lip_action = str(pred.get("lip_action") or "none")
+        execution_action = str(pred.get("execution_action") or "none")
+        action = {
+            "action": "low",
+            "stop": False,
+            "execution_action": execution_action,
+            "lip_action": lip_action,
+            "low_label": pred.get("low_label"),
+            "note": pred.get("note", "model low action"),
+            "model_source": pred.get("model_source"),
+        }
+        static_join = execution_action in {"hashjoin", "nestloop", "mergejoin"}
+        if static_join and pred.get("aja_hint"):
+            action["aja_hint"] = pred["aja_hint"]
+        if static_join and pred.get("join_method"):
+            action["join_method"] = pred["join_method"]
+        return action
+
+    return {
+        "action": "low",
+        "stop": False,
         "execution_action": "none",
         "lip_action": "none",
-        "order_decision": "only_cost",
-        "note": f"stub: no-op (base_rels={base_rels})",
+        "low_label": "none",
+        "note": "stub low: none",
     }
 
 
@@ -598,13 +1184,44 @@ def decide_action(state: dict[str, Any]) -> dict[str, Any]:
         traceback.print_exc()
         pred = {}
 
-    if state.get("request_type") == "aja" or state.get("action") == "aja":
-        action = _decide_aja(state, pred)
+    request_type = str(state.get("request_type") or "high").lower()
+    if request_type == "high":
+        action = _decide_high(state, pred)
+    elif request_type == "select":
+        action = _decide_select(state, pred)
+    elif request_type == "search":
+        action = _decide_search(state, pred)
+    elif request_type == "low":
+        action = _decide_low(state, pred)
     else:
-        action = _decide_round(state, pred)
+        raise ValueError(f"unknown request_type={request_type!r}")
     with POLICY_LOCK:
         source = ADAPTER.source if ADAPTER else "stub"
-    action.setdefault("model_source", source)
+    if not action.get("model_source"):
+        action["model_source"] = source
+    for key in (
+        "action_index",
+        "action_mask",
+        "action_probability",
+        "log_probability",
+        "policy_entropy",
+        "predicted_value",
+        "policy_version",
+        "inference_mode",
+        "temperature",
+        "exploration_epsilon",
+        "stochastic_heads",
+        "sampling_seed",
+        "high_split_probability",
+        "schedule_idx",
+        "schedule_alpha",
+    ):
+        if key in pred and key not in action:
+            action[key] = pred[key]
+    if pred:
+        action.setdefault("policy_version", source)
+        action.setdefault("action_probability", 1.0)
+        action.setdefault("log_probability", 0.0)
     return action
 
 
@@ -616,6 +1233,10 @@ def render_action(action: dict[str, Any]) -> bytes:
     ]
     if action.get("order_decision"):
         lines.append(f"order_decision={action['order_decision']}")
+    if action.get("candidate_id") is not None:
+        lines.append(f"candidate_id={int(action['candidate_id'])}")
+    if action.get("selection_strategy"):
+        lines.append(f"selection_strategy={action['selection_strategy']}")
     if action.get("search_strategy"):
         lines.append(f"search_strategy={action['search_strategy']}")
     if action.get("search_k"):
@@ -667,6 +1288,13 @@ class Handler(BaseHTTPRequestHandler):
             "workload",
             "device",
             "neurqo_src",
+            "inference_mode",
+            "temperature",
+            "exploration_epsilon",
+            "stochastic_heads",
+            "sampling_seed",
+            "policy_version",
+            "torch_threads",
         ):
             if key in request and request[key] is not None:
                 new_config[key] = request[key]
@@ -709,6 +1337,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         t0 = time.perf_counter()
+        if self.path.startswith("/shutdown"):
+            self._respond(b"shutdown=1\n")
+            threading.Thread(
+                target=self.server.shutdown,
+                name="neurqo-server-shutdown",
+                daemon=True,
+            ).start()
+            return
         try:
             state = self._read_json_body()
         except Exception as exc:  # noqa: BLE001
@@ -720,11 +1356,30 @@ class Handler(BaseHTTPRequestHandler):
             self._handle_reload(state)
             return
 
-        action = decide_action(state)
+        try:
+            action = decide_action(state)
+        except ValueError as exc:
+            log(f"invalid policy request: {exc}")
+            self._respond(
+                ("action=none\nstop=1\nerror=invalid_request\n" f"note={exc}\n").encode(
+                    "utf-8"
+                ),
+                400,
+            )
+            return
+        except Exception as exc:  # noqa: BLE001
+            log(f"policy request failed: {exc!r}")
+            traceback.print_exc()
+            self._respond(
+                b"action=none\nstop=1\nerror=server_error\n"
+                b"note=policy request failed\n",
+                500,
+            )
+            return
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         body = render_action(action)
         log(
-            f"request={state.get('request_type', 'round')} "
+            f"request={state.get('request_type', 'high')} "
             f"run={state.get('run_id')} round={state.get('round')} "
             f"source={action.get('model_source')} action={action['action']} "
             f"stop={action['stop']} search={action.get('search_strategy')} "
@@ -777,6 +1432,43 @@ def main() -> int:
     ap.add_argument("--workload", default=os.environ.get("NEURQO_WORKLOAD", "job"))
     ap.add_argument("--device", default=os.environ.get("NEURQO_DEVICE", "cpu"))
     ap.add_argument("--neurqo-src", default=os.environ.get("NEURQO_SRC"))
+    ap.add_argument(
+        "--inference-mode",
+        choices=("deterministic", "stochastic"),
+        default=os.environ.get("NEURQO_INFERENCE_MODE", "deterministic"),
+    )
+    ap.add_argument(
+        "--temperature",
+        type=float,
+        default=float(os.environ.get("NEURQO_TEMPERATURE", "1.0")),
+    )
+    ap.add_argument(
+        "--exploration-epsilon",
+        type=float,
+        default=float(os.environ.get("NEURQO_EXPLORATION_EPSILON", "0.0")),
+    )
+    ap.add_argument(
+        "--stochastic-heads",
+        default=os.environ.get("NEURQO_STOCHASTIC_HEADS"),
+        help=(
+            "comma-separated policy phases sampled stochastically; "
+            "other phases use deterministic argmax"
+        ),
+    )
+    ap.add_argument(
+        "--sampling-seed",
+        type=int,
+        default=int(os.environ.get("NEURQO_SAMPLING_SEED", "42")),
+    )
+    ap.add_argument(
+        "--policy-version",
+        default=os.environ.get("NEURQO_POLICY_VERSION"),
+    )
+    ap.add_argument(
+        "--torch-threads",
+        type=int,
+        default=int(os.environ.get("NEURQO_TORCH_THREADS", "1")),
+    )
     ap.add_argument("--trajectory-log", default=os.environ.get("NEURQO_TRAJECTORY_LOG"))
     ap.add_argument(
         "--require-model",
@@ -796,6 +1488,13 @@ def main() -> int:
         "workload": args.workload,
         "device": args.device,
         "neurqo_src": args.neurqo_src,
+        "inference_mode": args.inference_mode,
+        "temperature": args.temperature,
+        "exploration_epsilon": args.exploration_epsilon,
+        "stochastic_heads": args.stochastic_heads,
+        "sampling_seed": args.sampling_seed,
+        "policy_version": args.policy_version,
+        "torch_threads": args.torch_threads,
     }
     try:
         ADAPTER = PolicyAdapter(**ADAPTER_CONFIG)

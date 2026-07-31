@@ -8,13 +8,19 @@ This process consumes DB-side trajectory JSONL produced by:
 
 DB events are converted into online RL transitions:
 
-    state, action, reward, done, next_state=None, timing_ms
+    state, decision_states, action, reward, done, next_state=None, timing_ms
 
 The bridge keeps the previous round for each run in memory and fills
 next_state when the next split/final event arrives. The default reward is
 negative round total time. This is intentionally simple: it gives us an online
 data path immediately while keeping model-specific training outside the DB
 critical path.
+
+decision_states contains the exact state sent to each policy phase. Split
+rounds contain high, candidate-selection, search, and low states. Final rounds
+contain high, search, and low states. The current checkpoint has no candidate
+selection head, so the selection state is retained for a future model while
+online updates train the existing high/search/low heads.
 
 Optionally pass --trainer-module module_or_path:callable. The callable receives
 a list[dict] batch and may update a model checkpoint however it wants.
@@ -34,9 +40,12 @@ LOW_LABEL_BY_ACTION = {
     ("none", "none"): "none",
     ("full", "none"): "lip_full",
     ("selective", "none"): "lip_sel",
-    ("none", "aja"): "aja",
-    ("full", "aja"): "lip_full+aja",
-    ("selective", "aja"): "lip_sel+aja",
+    ("none", "aggressive"): "aja",
+    ("full", "aggressive"): "lip_full+aja",
+    ("selective", "aggressive"): "lip_sel+aja",
+    ("none", "conservative"): "aja_conservative",
+    ("full", "conservative"): "lip_full+aja_conservative",
+    ("selective", "conservative"): "lip_sel+aja_conservative",
 }
 
 
@@ -85,8 +94,8 @@ def _norm_aja(value: Any) -> str:
     key = str(value or "none").strip().lower()
     if key in {"off", "false", "0"}:
         return "none"
-    if key in {"on", "true", "1", "v10pct"}:
-        return "aja"
+    if key in {"on", "true", "1", "v10pct", "aja", "aggressive"}:
+        return "aggressive"
     return key
 
 
@@ -203,45 +212,55 @@ class OnlineCheckpointTrainer:
         self.total_updates = 0
         self.last_saved_path: str | None = None
 
-    def _target_indices(
-        self, transition: dict[str, Any]
-    ) -> tuple[int, int, int] | None:
+    def _target_indices(self, transition: dict[str, Any]) -> dict[str, int]:
         action = transition.get("action") or {}
+        decision_states = transition.get("decision_states") or {}
+        targets: dict[str, int] = {}
         try:
             high_idx = 1 if _high_label(transition) == "split" else 0
-            search_idx = self.hrl.SEARCH_LABELS.index(_search_label(action))
-            low_idx = self.hrl.ACTION_LABELS.index(_low_label(action))
+            if isinstance(decision_states.get("high"), dict):
+                targets["high"] = high_idx
+            if isinstance(decision_states.get("search"), dict):
+                targets["search"] = self.hrl.SEARCH_LABELS.index(_search_label(action))
+            if isinstance(decision_states.get("low"), dict):
+                targets["low"] = self.hrl.ACTION_LABELS.index(_low_label(action))
         except ValueError:
-            return None
-        return high_idx, search_idx, low_idx
+            return {}
+        return targets
 
-    def _logits_for_targets(
-        self, state: dict[str, Any], high_idx: int
-    ) -> tuple[Any, Any, Any]:
+    def _logits_for_target(
+        self, phase: str, state: dict[str, Any], high_idx: int
+    ) -> Any:
         model = self.model
-        high_state = self.adapter._query_graph_state(state, "high")
-        search_state = self.adapter._query_graph_state(state, "search")
-        low_state = self.adapter._plan_state(state)
-
-        high_h = model.encode_state_obj(high_state, self.device)
-        search_h = model.encode_state_obj(search_state, self.device)
-        low_h = model.encode_state_obj(low_state, self.device)
+        if phase == "high":
+            structured_state = self.adapter._query_graph_state(state, "high")
+        elif phase == "search":
+            structured_state = self.adapter._query_graph_state(state, "search")
+        elif phase == "low":
+            structured_state = self.adapter._plan_state(state)
+        else:
+            raise RuntimeError(f"unsupported policy phase: {phase}")
+        encoded = model.encode_state_obj(structured_state, self.device)
 
         if self.model_method in ("hac", "smdp", "standardmdp", "standardmdp_rl"):
-            return (
-                model.high_actor(high_h),
-                model.search_actor(search_h),
-                model.low_actor(low_h),
-            )
+            if phase == "high":
+                return model.high_actor(encoded)
+            if phase == "search":
+                return model.search_actor(encoded)
+            return model.low_actor(encoded)
         if self.model_method == "option":
+            if phase == "high":
+                return model.option_policy(encoded)
+            if phase == "search":
+                return model.search_actor(encoded)
             option_idx = max(0, min(int(high_idx), len(model.intra_policies) - 1))
-            return (
-                model.option_policy(high_h),
-                model.search_actor(search_h),
-                model.intra_policies[option_idx](low_h),
-            )
+            return model.intra_policies[option_idx](encoded)
         if self.model_method == "maxq":
-            return model.q_high(high_h), model.q_search(search_h), model.q_low(low_h)
+            if phase == "high":
+                return model.q_high(encoded)
+            if phase == "search":
+                return model.q_search(encoded)
+            return model.q_low(encoded)
         raise RuntimeError(f"unsupported model method: {self.model_method}")
 
     def _ce(self, logits: Any, target: int) -> Any:
@@ -254,13 +273,15 @@ class OnlineCheckpointTrainer:
     def __call__(self, transitions: list[dict[str, Any]]) -> dict[str, Any]:
         samples = []
         for transition in transitions:
-            state = transition.get("state")
-            if not isinstance(state, dict):
+            decision_states = transition.get("decision_states")
+            if not isinstance(decision_states, dict):
                 continue
             targets = self._target_indices(transition)
-            if targets is None:
+            if not targets:
                 continue
-            samples.append((transition, state, targets, _timing_total_ms(transition)))
+            samples.append(
+                (transition, decision_states, targets, _timing_total_ms(transition))
+            )
 
         if not samples:
             result = {"samples": 0, "updates": 0, "loss": 0.0}
@@ -273,17 +294,21 @@ class OnlineCheckpointTrainer:
 
         self.model.train()
         losses: list[float] = []
+        phase_samples = {"high": 0, "search": 0, "low": 0}
         for _epoch in range(self.epochs):
-            for (_, state, targets, _timing_ms), weight in zip(samples, weights):
-                high_idx, search_idx, low_idx = targets
-                high_logits, search_logits, low_logits = self._logits_for_targets(
-                    state, high_idx
-                )
-                loss = (
-                    self._ce(high_logits, high_idx)
-                    + self._ce(search_logits, search_idx)
-                    + self._ce(low_logits, low_idx)
-                ) * float(weight)
+            for (_, states, targets, _timing_ms), weight in zip(samples, weights):
+                high_idx = targets.get("high", 0)
+                phase_losses = []
+                for phase, target in targets.items():
+                    state = states.get(phase)
+                    if not isinstance(state, dict):
+                        continue
+                    logits = self._logits_for_target(phase, state, high_idx)
+                    phase_losses.append(self._ce(logits, target))
+                    phase_samples[phase] += 1
+                if not phase_losses:
+                    continue
+                loss = sum(phase_losses) * float(weight)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
@@ -300,6 +325,7 @@ class OnlineCheckpointTrainer:
             "mean_timing_ms": mean_ms,
             "min_weight": min(weights),
             "max_weight": max(weights),
+            "phase_samples": phase_samples,
             "method": "reward_weighted_behavioral_update",
         }
         self.history.append(result)
@@ -341,11 +367,21 @@ def event_to_transition(event: dict[str, Any]) -> dict[str, Any] | None:
         return None
     timing = event.get("timing_ms") or {}
     total_ms = float(timing.get("total") or 0.0)
+    state = event.get("state")
+    decision_states = event.get("decision_states")
+    if not isinstance(decision_states, dict):
+        # Backward compatibility for logs produced by the old combined request.
+        decision_states = {
+            "high": state,
+            "search": state if phase == "final" else None,
+            "low": state if phase == "final" else None,
+        }
     return {
         "pid": event.get("pid"),
         "run_id": event.get("run_id"),
         "round": event.get("round"),
-        "state": event.get("state"),
+        "state": state,
+        "decision_states": decision_states,
         "action": event.get("action"),
         "reward": -total_ms,
         "done": bool(event.get("stop")) or phase == "final",
