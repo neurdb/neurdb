@@ -259,6 +259,7 @@ class PolicyAdapter:
         sampling_seed: int = 42,
         policy_version: str | None = None,
         torch_threads: int = 1,
+        action_ablation: str = "none",
     ) -> None:
         self.model_module = model_module
         self.model_path = model_path
@@ -292,6 +293,14 @@ class PolicyAdapter:
         self.stochastic_heads = frozenset(parsed_heads)
         self.policy_version = policy_version
         self.torch_threads = int(torch_threads)
+        self.action_ablation = str(action_ablation).strip().lower()
+        if self.action_ablation not in {
+            "none",
+            "no_topk",
+            "no_filter",
+            "no_ajoin",
+        }:
+            raise ValueError(f"unknown action ablation {self.action_ablation!r}")
         if self.inference_mode not in {"deterministic", "stochastic"}:
             raise ValueError("inference_mode must be 'deterministic' or 'stochastic'")
         if self.temperature <= 0.0:
@@ -753,6 +762,9 @@ class PolicyAdapter:
                 and remaining > 0
             )
             mask = [1.0, 1.0 if split_allowed else 0.0]
+            mask = hrl.apply_action_ablation_mask(
+                mask, "high", self.action_ablation
+            ).tolist()
             with self._torch.no_grad():
                 encoded = self._encode(structured_state)
                 if self.model_method in (
@@ -793,6 +805,9 @@ class PolicyAdapter:
                 return {}
             structured_state = self._query_graph_state(state, "high")
             mask = [1.0] * len(hrl.SCHEDULE_ALPHA_VALUES)
+            mask = hrl.apply_action_ablation_mask(
+                mask, "select", self.action_ablation
+            ).tolist()
             with self._torch.no_grad():
                 encoded = self._encode(structured_state)
                 if self.model_method in (
@@ -835,6 +850,9 @@ class PolicyAdapter:
             mask = [1.0] + [1.0 if search_feasible else 0.0] * (
                 len(hrl.SEARCH_LABELS) - 1
             )
+            mask = hrl.apply_action_ablation_mask(
+                mask, "search", self.action_ablation
+            ).tolist()
             with self._torch.no_grad():
                 encoded = self._encode(structured_state)
                 if self.model_method in (
@@ -881,6 +899,9 @@ class PolicyAdapter:
                 needs_aja = "aja" in label
                 valid = (not needs_lip or has_join) and (not needs_aja or has_hash_join)
                 mask.append(1.0 if valid else 0.0)
+            mask = hrl.apply_action_ablation_mask(
+                mask, "low", self.action_ablation
+            ).tolist()
             with self._torch.no_grad():
                 encoded = self._encode(structured_state)
                 if self.model_method in (
@@ -1270,6 +1291,7 @@ class Handler(BaseHTTPRequestHandler):
             "sampling_seed",
             "policy_version",
             "torch_threads",
+            "action_ablation",
         ):
             if key in request and request[key] is not None:
                 new_config[key] = request[key]
@@ -1444,6 +1466,11 @@ def main() -> int:
         type=int,
         default=int(os.environ.get("NEURQO_TORCH_THREADS", "1")),
     )
+    ap.add_argument(
+        "--action-ablation",
+        choices=("none", "no_topk", "no_filter", "no_ajoin"),
+        default=os.environ.get("NEURQO_ACTION_ABLATION", "none"),
+    )
     ap.add_argument("--trajectory-log", default=os.environ.get("NEURQO_TRAJECTORY_LOG"))
     ap.add_argument(
         "--require-model",
@@ -1470,6 +1497,7 @@ def main() -> int:
         "sampling_seed": args.sampling_seed,
         "policy_version": args.policy_version,
         "torch_threads": args.torch_threads,
+        "action_ablation": args.action_ablation,
     }
     try:
         ADAPTER = PolicyAdapter(**ADAPTER_CONFIG)
