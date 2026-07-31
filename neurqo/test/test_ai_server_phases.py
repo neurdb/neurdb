@@ -46,7 +46,7 @@ class FakeAlphaAdapter:
     def predict(self, state):
         if state.get("request_type") == "select":
             return {
-                "schedule_idx": 4,
+                "schedule_idx": 2,
                 "schedule_alpha": 1.0,
                 "selection_strategy": "alpha_1.00",
             }
@@ -170,7 +170,7 @@ class PhaseDecisionTest(unittest.TestCase):
         )
 
         self.assertEqual(action["candidate_id"], 1)
-        self.assertEqual(action["schedule_idx"], 4)
+        self.assertEqual(action["schedule_idx"], 2)
         self.assertEqual(action["schedule_alpha"], 1.0)
         self.assertEqual(action["selection_strategy"], "alpha_1.00")
 
@@ -253,6 +253,37 @@ class PhaseDecisionTest(unittest.TestCase):
         self.assertNotIn("search_abstained", metadata)
         self.assertEqual(metadata["inference_mode"], "stochastic")
 
+    def test_tpch_model_inference_masks_query_split(self):
+        adapter = ai_server.PolicyAdapter(workload="tpch")
+        adapter._torch = torch
+        adapter._hrl = SimpleNamespace()
+        adapter._query_graph_state = lambda _state, _level: object()
+        adapter._encode = lambda _state: torch.zeros(2)
+        adapter._model = SimpleNamespace(
+            high_actor=lambda _encoded: torch.tensor([0.0, 10.0]),
+            high_critic=lambda _encoded: torch.tensor([0.0]),
+        )
+        observed = {}
+
+        def masked_action(_logits, mask, _phase, _state):
+            observed["mask"] = mask
+            return 0, {
+                "action_index": 0,
+                "action_mask": mask,
+            }
+
+        adapter._masked_action = masked_action
+        action = adapter._predict_hrl(
+            {
+                "request_type": "high",
+                "base_rels": 8,
+                "remaining_splits": 7,
+            }
+        )
+
+        self.assertEqual(observed["mask"], [1.0, 0.0])
+        self.assertEqual(action["high_action"], "stop")
+
     def test_runtime_relation_plan_contains_temp_table_statistics(self):
         plan = ai_server._runtime_relation_plan(
             {
@@ -272,6 +303,15 @@ class PhaseDecisionTest(unittest.TestCase):
         self.assertEqual(node["Relation Name"], "temp1")
         self.assertEqual(node["Plan Rows"], 41840)
         self.assertEqual(node["Total Cost"], 321)
+
+    def test_normalized_nested_loop_is_recognized_as_a_join(self):
+        plan = {
+            "Node Type": "Aggregate",
+            "Plans": [{"Node Type": "Nested Loop"}],
+        }
+
+        self.assertTrue(ai_server._plan_contains_join(plan))
+        self.assertFalse(ai_server._plan_contains_join(plan, "hashjoin"))
 
     def test_policy_adapter_delegates_high_context_to_shared_builder(self):
         received = {}

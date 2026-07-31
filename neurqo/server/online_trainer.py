@@ -18,9 +18,8 @@ critical path.
 
 decision_states contains the exact state sent to each policy phase. Split
 rounds contain high, candidate-selection, search, and low states. Final rounds
-contain high, search, and low states. The current checkpoint has no candidate
-selection head, so the selection state is retained for a future model while
-online updates train the existing high/search/low heads.
+contain high, search, and low states. Online updates train each head from the
+state that produced its own action.
 
 Optionally pass --trainer-module module_or_path:callable. The callable receives
 a list[dict] batch and may update a model checkpoint however it wants.
@@ -38,13 +37,8 @@ from typing import Any, Callable
 
 LOW_LABEL_BY_ACTION = {
     ("none", "none"): "none",
-    ("full", "none"): "lip_full",
     ("selective", "none"): "lip_sel",
-    ("none", "aggressive"): "aja",
-    ("full", "aggressive"): "lip_full+aja",
-    ("selective", "aggressive"): "lip_sel+aja",
     ("none", "conservative"): "aja_conservative",
-    ("full", "conservative"): "lip_full+aja_conservative",
     ("selective", "conservative"): "lip_sel+aja_conservative",
 }
 
@@ -107,8 +101,6 @@ def _search_label(action: dict[str, Any]) -> str:
     strategy = str(action.get("search_strategy") or "default").strip().lower()
     if strategy == "default":
         return "default"
-    if strategy in {"top10"}:
-        return "top10"
     if strategy in {"top5"}:
         return "top5"
     if strategy in {"topk", "split"}:
@@ -116,11 +108,9 @@ def _search_label(action: dict[str, Any]) -> str:
             k = int(action.get("search_k") or 0)
         except Exception:
             k = 0
-        if k >= 10:
-            return "top10"
         if k >= 5:
             return "top5"
-        return "split"
+        return ""
     return "default"
 
 
@@ -132,7 +122,7 @@ def _low_label(action: dict[str, Any]) -> str:
         _norm_lip(action.get("lip_action")),
         _norm_aja(action.get("execution_action")),
     )
-    return LOW_LABEL_BY_ACTION.get(key, "none")
+    return LOW_LABEL_BY_ACTION.get(key, "")
 
 
 def _high_label(transition: dict[str, Any]) -> str:
@@ -220,6 +210,18 @@ class OnlineCheckpointTrainer:
             high_idx = 1 if _high_label(transition) == "split" else 0
             if isinstance(decision_states.get("high"), dict):
                 targets["high"] = high_idx
+            if isinstance(decision_states.get("select"), dict):
+                if action.get("schedule_idx") is not None:
+                    schedule_idx = int(action["schedule_idx"])
+                else:
+                    alpha = float(action.get("schedule_alpha") or 0.5)
+                    schedule_idx = min(
+                        range(len(self.hrl.SCHEDULE_ALPHA_VALUES)),
+                        key=lambda index: abs(
+                            self.hrl.SCHEDULE_ALPHA_VALUES[index] - alpha
+                        ),
+                    )
+                targets["select"] = schedule_idx
             if isinstance(decision_states.get("search"), dict):
                 targets["search"] = self.hrl.SEARCH_LABELS.index(_search_label(action))
             if isinstance(decision_states.get("low"), dict):
@@ -234,6 +236,8 @@ class OnlineCheckpointTrainer:
         model = self.model
         if phase == "high":
             structured_state = self.adapter._query_graph_state(state, "high")
+        elif phase == "select":
+            structured_state = self.adapter._query_graph_state(state, "high")
         elif phase == "search":
             structured_state = self.adapter._query_graph_state(state, "search")
         elif phase == "low":
@@ -245,12 +249,18 @@ class OnlineCheckpointTrainer:
         if self.model_method in ("hac", "smdp", "standardmdp", "standardmdp_rl"):
             if phase == "high":
                 return model.high_actor(encoded)
+            if phase == "select":
+                encoded = model.schedule_features(encoded)
+                return model.schedule_actor(encoded)
             if phase == "search":
                 return model.search_actor(encoded)
             return model.low_actor(encoded)
         if self.model_method == "option":
             if phase == "high":
                 return model.option_policy(encoded)
+            if phase == "select":
+                encoded = model.schedule_features(encoded)
+                return model.schedule_actor(encoded)
             if phase == "search":
                 return model.search_actor(encoded)
             option_idx = max(0, min(int(high_idx), len(model.intra_policies) - 1))
@@ -258,6 +268,9 @@ class OnlineCheckpointTrainer:
         if self.model_method == "maxq":
             if phase == "high":
                 return model.q_high(encoded)
+            if phase == "select":
+                encoded = model.schedule_features(encoded)
+                return model.q_schedule(encoded)
             if phase == "search":
                 return model.q_search(encoded)
             return model.q_low(encoded)
@@ -294,7 +307,7 @@ class OnlineCheckpointTrainer:
 
         self.model.train()
         losses: list[float] = []
-        phase_samples = {"high": 0, "search": 0, "low": 0}
+        phase_samples = {"high": 0, "select": 0, "search": 0, "low": 0}
         for _epoch in range(self.epochs):
             for (_, states, targets, _timing_ms), weight in zip(samples, weights):
                 high_idx = targets.get("high", 0)

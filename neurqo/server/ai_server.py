@@ -84,8 +84,6 @@ SEARCH_LABEL_TO_DB = {
     "left_deep": ("left_deep", 1),
 }
 
-SCHEDULE_ALPHA_VALUES = (0.0, 0.25, 0.5, 0.75, 1.0)
-
 PLAN_NODE_NAME_TO_EXPLAIN = {
     "Agg": "Aggregate",
     "Append": "Append",
@@ -233,10 +231,9 @@ def _plan_contains_join(plan: Any, join_name: str | None = None) -> bool:
     if not isinstance(plan, dict):
         return False
     node_name = str(plan.get("Node Type") or plan.get("node") or "").lower()
-    is_join = "join" in node_name or "nestloop" in node_name
-    if is_join and (
-        join_name is None or join_name.lower() in node_name.replace(" ", "")
-    ):
+    compact_name = node_name.replace(" ", "")
+    is_join = "join" in node_name or compact_name in {"nestloop", "nestedloop"}
+    if is_join and (join_name is None or join_name.lower() in compact_name):
         return True
     children = plan.get("Plans") or plan.get("children") or []
     return any(_plan_contains_join(child, join_name) for child in children)
@@ -428,40 +425,13 @@ class PolicyAdapter:
         if not isinstance(state_dict, dict):
             raise TypeError(f"unsupported checkpoint payload in {path}")
 
-        target_state = model.state_dict()
-        expanded_heads = []
-        for key, source_tensor in list(state_dict.items()):
-            target_tensor = target_state.get(key)
-            if (
-                target_tensor is not None
-                and hasattr(source_tensor, "shape")
-                and len(source_tensor.shape) == len(target_tensor.shape)
-                and source_tensor.shape[0] == 6
-                and target_tensor.shape[0] == 9
-                and source_tensor.shape[1:] == target_tensor.shape[1:]
-            ):
-                expanded = target_tensor.clone()
-                expanded[:6].copy_(source_tensor)
-                state_dict[key] = expanded
-                expanded_heads.append(key)
-                continue
-            if (
-                key == "encoder.low_trunk.0.weight"
-                and target_tensor is not None
-                and hasattr(source_tensor, "shape")
-                and len(source_tensor.shape) == 2
-                and source_tensor.shape[0] == target_tensor.shape[0]
-                and source_tensor.shape[1] < target_tensor.shape[1]
-            ):
-                expanded = target_tensor.clone()
-                expanded[:, : source_tensor.shape[1]].copy_(source_tensor)
-                expanded[:, source_tensor.shape[1] :].zero_()
-                state_dict[key] = expanded
-                expanded_heads.append(key)
-        if expanded_heads:
+        state_dict, migrated_tensors = (
+            hrl_shared.migrate_action_space_checkpoint_tensors(model, state_dict)
+        )
+        if migrated_tensors:
             log(
-                "expanded legacy binary-AJA checkpoint heads: "
-                + ",".join(expanded_heads)
+                "migrated legacy action-space checkpoint tensors: "
+                + ",".join(migrated_tensors)
             )
         incompatible = model.load_state_dict(state_dict, strict=False)
         unexpected = list(incompatible.unexpected_keys)
@@ -777,7 +747,12 @@ class PolicyAdapter:
 
         if request_type == "high":
             structured_state = self._query_graph_state(state, "high")
-            mask = [1.0, 1.0 if base_rels > 2 and remaining > 0 else 0.0]
+            split_allowed = (
+                self.workload.strip().lower() != "tpch"
+                and base_rels > 2
+                and remaining > 0
+            )
+            mask = [1.0, 1.0 if split_allowed else 0.0]
             with self._torch.no_grad():
                 encoded = self._encode(structured_state)
                 if self.model_method in (
@@ -817,7 +792,7 @@ class PolicyAdapter:
                 # scheduler instead of activating a randomly initialized head.
                 return {}
             structured_state = self._query_graph_state(state, "high")
-            mask = [1.0] * len(SCHEDULE_ALPHA_VALUES)
+            mask = [1.0] * len(hrl.SCHEDULE_ALPHA_VALUES)
             with self._torch.no_grad():
                 encoded = self._encode(structured_state)
                 if self.model_method in (
@@ -840,7 +815,7 @@ class PolicyAdapter:
                 )
                 if predicted_value is None:
                     predicted_value = float(logits.reshape(-1)[schedule_idx].item())
-            alpha = SCHEDULE_ALPHA_VALUES[schedule_idx]
+            alpha = hrl.SCHEDULE_ALPHA_VALUES[schedule_idx]
             return {
                 "action": "select",
                 "stop": False,

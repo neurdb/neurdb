@@ -10,16 +10,12 @@ import online_trainer  # noqa: E402
 
 
 class _FakeHRL:
-    SEARCH_LABELS = ["default", "split", "top5", "top10"]
+    SCHEDULE_ALPHA_VALUES = (0.0, 0.5, 1.0)
+    SEARCH_LABELS = ["default", "top5"]
     ACTION_LABELS = [
         "none",
-        "lip_full",
         "lip_sel",
-        "aja",
-        "lip_full+aja",
-        "lip_sel+aja",
         "aja_conservative",
-        "lip_full+aja_conservative",
         "lip_sel+aja_conservative",
     ]
 
@@ -51,9 +47,11 @@ class OnlineTrainerPhaseTest(unittest.TestCase):
             "action": {
                 "high_action": "split",
                 "candidate_id": 2,
+                "schedule_idx": 1,
+                "schedule_alpha": 0.5,
                 "search_strategy": "topk",
-                "search_k": 1,
-                "execution_action": "aja",
+                "search_k": 5,
+                "execution_action": "conservative",
                 "lip_action": "none",
             },
             "timing_ms": {"total": 10.0},
@@ -64,7 +62,7 @@ class OnlineTrainerPhaseTest(unittest.TestCase):
         self.assertIsNotNone(transition)
         self.assertEqual(
             self.trainer._target_indices(transition),
-            {"high": 1, "search": 1, "low": 3},
+            {"high": 1, "select": 1, "search": 1, "low": 2},
         )
 
     def test_final_updates_each_head_from_its_own_state(self):
@@ -84,8 +82,8 @@ class OnlineTrainerPhaseTest(unittest.TestCase):
                 "high_action": "stop",
                 "search_strategy": "topk",
                 "search_k": 5,
-                "execution_action": "aja",
-                "lip_action": "full",
+                "execution_action": "conservative",
+                "lip_action": "selective",
             },
             "timing_ms": {"total": 20.0},
         }
@@ -95,7 +93,7 @@ class OnlineTrainerPhaseTest(unittest.TestCase):
         self.assertIsNotNone(transition)
         self.assertEqual(
             self.trainer._target_indices(transition),
-            {"high": 0, "search": 2, "low": 4},
+            {"high": 0, "search": 1, "low": 3},
         )
 
     def test_old_combined_log_remains_readable(self):
@@ -132,7 +130,7 @@ class OnlineTrainerPhaseTest(unittest.TestCase):
 
         self.assertEqual(
             self.trainer._target_indices(transition),
-            {"low": 8},
+            {"low": 3},
         )
 
 
