@@ -255,6 +255,9 @@ class PolicyAdapter:
         inference_mode: str = "deterministic",
         temperature: float = 1.0,
         exploration_epsilon: float = 0.0,
+        coverage_counts_path: str | None = None,
+        coverage_mix: float = 0.0,
+        coverage_power: float = 0.5,
         stochastic_heads: str | list[str] | tuple[str, ...] | None = None,
         sampling_seed: int = 42,
         policy_version: str | None = None,
@@ -271,6 +274,10 @@ class PolicyAdapter:
         self.inference_mode = inference_mode.strip().lower()
         self.temperature = float(temperature)
         self.exploration_epsilon = float(exploration_epsilon)
+        self.coverage_counts_path = coverage_counts_path
+        self.coverage_mix = float(coverage_mix)
+        self.coverage_power = float(coverage_power)
+        self.coverage_counts: dict[str, dict[str, list[int]]] = {}
         self.sampling_seed = int(sampling_seed)
         valid_heads = {"high", "select", "search", "low"}
         if stochastic_heads is None:
@@ -307,6 +314,21 @@ class PolicyAdapter:
             raise ValueError("temperature must be greater than zero")
         if not 0.0 <= self.exploration_epsilon < 1.0:
             raise ValueError("exploration_epsilon must be in [0, 1)")
+        if not 0.0 <= self.coverage_mix < 1.0:
+            raise ValueError("coverage_mix must be in [0, 1)")
+        if self.coverage_power < 0.0:
+            raise ValueError("coverage_power must be nonnegative")
+        if self.coverage_mix > 0.0:
+            if not self.coverage_counts_path:
+                raise ValueError("coverage_counts_path is required when coverage_mix > 0")
+            coverage_path = Path(self.coverage_counts_path)
+            payload = json.loads(coverage_path.read_text(encoding="utf-8"))
+            if int(payload.get("schema_version") or 0) != 1:
+                raise ValueError(f"unsupported coverage snapshot: {coverage_path}")
+            counts = payload.get("counts") or {}
+            if not isinstance(counts, dict):
+                raise ValueError("coverage snapshot counts must be an object")
+            self.coverage_counts = counts
         if self.torch_threads < 1:
             raise ValueError("torch_threads must be at least 1")
         self.source = "stub"
@@ -321,6 +343,15 @@ class PolicyAdapter:
         self.checkpoint_metadata: dict[str, Any] = {}
         self._query_graph_cache: dict[str, Any] = {}
         self._plan_tree_cache: dict[str, Any] = {}
+        # Structured encodings are pure functions of a fixed checkpoint and
+        # the canonical model state.  Reuse exact matches across hierarchy
+        # heads and repeated executions while still recomputing the actor
+        # distribution (and therefore preserving stochastic sampling).
+        self._encoded_state_cache: dict[Any, Any] = {}
+        # Context (round/cumulative runtime) may change while the underlying
+        # query graph or plan tree stays identical.  Cache those expensive
+        # encoder outputs separately and always run the context-aware trunk.
+        self._shared_embedding_cache: dict[Any, Any] = {}
 
         if model_module:
             self._load_callable(model_module)
@@ -681,13 +712,30 @@ class PolicyAdapter:
         masked_logits = logits / self.temperature + (mask_t - 1.0) * 1e9
         base_probs = torch.softmax(masked_logits, dim=-1)
         valid_probs = mask_t / mask_t.sum().clamp_min(1.0)
-        mixed_probs = (
+        policy_probs = (
             1.0 - self.exploration_epsilon
         ) * base_probs + self.exploration_epsilon * valid_probs
-        dist = torch.distributions.Categorical(probs=mixed_probs)
         stochastic = (
             self.inference_mode == "stochastic" and phase in self.stochastic_heads
         )
+        coverage_state_hash = ""
+        coverage_probs = valid_probs
+        effective_coverage_mix = self.coverage_mix if stochastic else 0.0
+        if effective_coverage_mix > 0.0:
+            coverage_state_hash = self._hrl.coverage_state_hash(state or {})
+            raw_counts = (
+                self.coverage_counts.get(phase, {}).get(coverage_state_hash, [])
+            )
+            counts = torch.zeros_like(mask_t)
+            for index, count in enumerate(raw_counts[: len(mask)]):
+                counts[index] = max(float(count), 0.0)
+            weights = torch.pow(counts + 1.0, -self.coverage_power) * mask_t
+            coverage_probs = weights / weights.sum().clamp_min(1.0)
+        mixed_probs = (
+            (1.0 - effective_coverage_mix) * policy_probs
+            + effective_coverage_mix * coverage_probs
+        )
+        dist = torch.distributions.Categorical(probs=mixed_probs)
         if stochastic:
             stable_state = {
                 key: value
@@ -736,6 +784,12 @@ class PolicyAdapter:
             "inference_mode": "stochastic" if stochastic else "deterministic",
             "temperature": self.temperature,
             "exploration_epsilon": self.exploration_epsilon,
+            "coverage_mix": effective_coverage_mix,
+            "coverage_power": self.coverage_power,
+            "coverage_probabilities": [
+                float(value) for value in coverage_probs.detach().cpu().tolist()
+            ],
+            "coverage_state_hash": coverage_state_hash,
             "stochastic_heads": sorted(self.stochastic_heads),
             "sampling_seed": self.sampling_seed,
         }
@@ -744,8 +798,72 @@ class PolicyAdapter:
         return action, metadata
 
     def _encode(self, structured_state):
+        cache_key = getattr(structured_state, "cache_key", None)
+        if cache_key is not None:
+            try:
+                cached = self._encoded_state_cache.get(cache_key)
+            except TypeError:
+                cache_key = None
+            else:
+                if cached is not None:
+                    return cached
         with self._torch.no_grad():
-            return self._model.encode_state_obj(structured_state, self._device)
+            encoder = getattr(self._model, "encoder", None)
+            level = getattr(structured_state, "level", None)
+            can_reuse_shared = (
+                encoder is not None
+                and callable(getattr(structured_state, "tensor", None))
+            )
+            if can_reuse_shared and level == "low":
+                shared_key = ("plan", id(structured_state.current_plan))
+                plan_embedding = self._shared_embedding_cache.get(shared_key)
+                if plan_embedding is None:
+                    plan_embedding = encoder.plan_encoder.encode_tree(
+                        structured_state.current_plan,
+                        self._device,
+                    )
+                    self._cache_shared_embedding(shared_key, plan_embedding)
+                ctx = structured_state.tensor(
+                    "ctx", structured_state.ctx, self._device
+                )
+                encoded = encoder.low_trunk(
+                    self._torch.cat([plan_embedding, ctx], dim=0)
+                )
+            elif can_reuse_shared and level in {"high", "search"}:
+                shared_key = ("graph", id(structured_state.query_graph))
+                graph_embedding = self._shared_embedding_cache.get(shared_key)
+                if graph_embedding is None:
+                    graph_embedding = encoder.graph_encoder(
+                        structured_state.query_graph,
+                        self._device,
+                    )
+                    self._cache_shared_embedding(shared_key, graph_embedding)
+                if level == "high":
+                    ctx = structured_state.tensor(
+                        "ctx", structured_state.ctx, self._device
+                    )
+                    encoded = encoder.high_trunk(
+                        self._torch.cat([graph_embedding, ctx], dim=0)
+                    )
+                else:
+                    encoded = encoder.search_trunk(graph_embedding)
+            else:
+                encoded = self._model.encode_state_obj(
+                    structured_state,
+                    self._device,
+                )
+        if cache_key is not None:
+            if len(self._encoded_state_cache) >= 2048:
+                self._encoded_state_cache.pop(next(iter(self._encoded_state_cache)))
+            self._encoded_state_cache[cache_key] = encoded
+        return encoded
+
+    def _cache_shared_embedding(self, key, embedding) -> None:
+        if len(self._shared_embedding_cache) >= 2048:
+            self._shared_embedding_cache.pop(
+                next(iter(self._shared_embedding_cache))
+            )
+        self._shared_embedding_cache[key] = embedding
 
     def _predict_hrl(self, state: dict[str, Any]) -> dict[str, Any]:
         hrl = self._hrl
@@ -1206,6 +1324,10 @@ def decide_action(state: dict[str, Any]) -> dict[str, Any]:
         "inference_mode",
         "temperature",
         "exploration_epsilon",
+        "coverage_mix",
+        "coverage_power",
+        "coverage_probabilities",
+        "coverage_state_hash",
         "stochastic_heads",
         "sampling_seed",
         "high_split_probability",
@@ -1287,6 +1409,9 @@ class Handler(BaseHTTPRequestHandler):
             "inference_mode",
             "temperature",
             "exploration_epsilon",
+            "coverage_counts_path",
+            "coverage_mix",
+            "coverage_power",
             "stochastic_heads",
             "sampling_seed",
             "policy_version",
@@ -1445,6 +1570,20 @@ def main() -> int:
         default=float(os.environ.get("NEURQO_EXPLORATION_EPSILON", "0.0")),
     )
     ap.add_argument(
+        "--coverage-counts-path",
+        default=os.environ.get("NEURQO_COVERAGE_COUNTS_PATH"),
+    )
+    ap.add_argument(
+        "--coverage-mix",
+        type=float,
+        default=float(os.environ.get("NEURQO_COVERAGE_MIX", "0.0")),
+    )
+    ap.add_argument(
+        "--coverage-power",
+        type=float,
+        default=float(os.environ.get("NEURQO_COVERAGE_POWER", "0.5")),
+    )
+    ap.add_argument(
         "--stochastic-heads",
         default=os.environ.get("NEURQO_STOCHASTIC_HEADS"),
         help=(
@@ -1493,6 +1632,9 @@ def main() -> int:
         "inference_mode": args.inference_mode,
         "temperature": args.temperature,
         "exploration_epsilon": args.exploration_epsilon,
+        "coverage_counts_path": args.coverage_counts_path,
+        "coverage_mix": args.coverage_mix,
+        "coverage_power": args.coverage_power,
         "stochastic_heads": args.stochastic_heads,
         "sampling_seed": args.sampling_seed,
         "policy_version": args.policy_version,

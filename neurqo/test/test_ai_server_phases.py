@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -236,6 +238,28 @@ class PhaseDecisionTest(unittest.TestCase):
         self.assertEqual(metadata["action_index"], 1)
         self.assertEqual(metadata["inference_mode"], "deterministic")
 
+    def test_exact_structured_state_encodings_are_reused(self):
+        adapter = ai_server.PolicyAdapter()
+        adapter._torch = torch
+        adapter._device = torch.device("cpu")
+        calls = []
+        adapter._model = SimpleNamespace(
+            encode_state_obj=lambda state, _device: (
+                calls.append(state.cache_key) or torch.tensor([float(len(calls))])
+            )
+        )
+        first_state = SimpleNamespace(cache_key=("online", "high", "q1", (0.0,)))
+        same_state = SimpleNamespace(cache_key=("online", "high", "q1", (0.0,)))
+        later_state = SimpleNamespace(cache_key=("online", "high", "q1", (1.0,)))
+
+        first = adapter._encode(first_state)
+        repeated = adapter._encode(same_state)
+        later = adapter._encode(later_state)
+
+        self.assertIs(first, repeated)
+        self.assertEqual(later.item(), 2.0)
+        self.assertEqual(len(calls), 2)
+
     def test_stochastic_search_samples_without_confidence_guard(self):
         adapter = ai_server.PolicyAdapter(
             inference_mode="stochastic",
@@ -253,10 +277,45 @@ class PhaseDecisionTest(unittest.TestCase):
         self.assertNotIn("search_abstained", metadata)
         self.assertEqual(metadata["inference_mode"], "stochastic")
 
+    def test_coverage_sampling_prefers_underexplored_valid_action(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "coverage.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "counts": {"search": {"state": [100, 0]}},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            adapter = ai_server.PolicyAdapter(
+                inference_mode="stochastic",
+                stochastic_heads="search",
+                coverage_counts_path=str(path),
+                coverage_mix=0.3,
+                coverage_power=0.5,
+            )
+        adapter._torch = torch
+        adapter._device = torch.device("cpu")
+        adapter._hrl = SimpleNamespace(coverage_state_hash=lambda _state: "state")
+        _action, metadata = adapter._masked_action(
+            torch.tensor([0.0, 0.0]), [True, True], "search", {"sql": "select 1"}
+        )
+        self.assertGreater(
+            metadata["coverage_probabilities"][1],
+            metadata["coverage_probabilities"][0],
+        )
+        self.assertEqual(metadata["coverage_mix"], 0.3)
+
     def test_tpch_model_inference_masks_query_split(self):
         adapter = ai_server.PolicyAdapter(workload="tpch")
         adapter._torch = torch
-        adapter._hrl = SimpleNamespace()
+        adapter._hrl = SimpleNamespace(
+            apply_action_ablation_mask=lambda mask, _phase, _ablation: np.asarray(
+                mask, dtype=np.float32
+            )
+        )
         adapter._query_graph_state = lambda _state, _level: object()
         adapter._encode = lambda _state: torch.zeros(2)
         adapter._model = SimpleNamespace(
