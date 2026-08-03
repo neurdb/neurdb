@@ -303,6 +303,7 @@ class PolicyAdapter:
         self.action_ablation = str(action_ablation).strip().lower()
         if self.action_ablation not in {
             "none",
+            "no_split",
             "no_topk",
             "no_filter",
             "no_ajoin",
@@ -1607,7 +1608,7 @@ def main() -> int:
     )
     ap.add_argument(
         "--action-ablation",
-        choices=("none", "no_topk", "no_filter", "no_ajoin"),
+        choices=("none", "no_split", "no_topk", "no_filter", "no_ajoin"),
         default=os.environ.get("NEURQO_ACTION_ABLATION", "none"),
     )
     ap.add_argument("--trajectory-log", default=os.environ.get("NEURQO_TRAJECTORY_LOG"))
