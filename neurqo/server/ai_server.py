@@ -341,6 +341,7 @@ class PolicyAdapter:
         self._transfer = None
         self._catalog = None
         self._schedule_trained = False
+        self.state_ablation = "none"
         self.checkpoint_metadata: dict[str, Any] = {}
         self._query_graph_cache: dict[str, Any] = {}
         self._plan_tree_cache: dict[str, Any] = {}
@@ -491,6 +492,17 @@ class PolicyAdapter:
 
         trained_heads = set(metadata.get("trained_heads") or [])
         self._schedule_trained = "schedule" in trained_heads
+        self.state_ablation = str(
+            metadata.get("state_ablation") or "none"
+        ).strip().lower()
+        if self.state_ablation not in {
+            "none",
+            "no_query_topology",
+            "no_plan_topology",
+        }:
+            raise ValueError(
+                f"unknown checkpoint state ablation {self.state_ablation!r}"
+            )
         self.checkpoint_metadata = dict(metadata)
         if self.policy_version is None:
             self.policy_version = str(
@@ -559,6 +571,8 @@ class PolicyAdapter:
                     plan_json,
                     catalog=self._catalog,
                 )
+                if getattr(self, "state_ablation", "none") == "no_plan_topology":
+                    plan_tree = transfer.flatten_plan_tree_topology(plan_tree)
             except Exception:
                 plan_tree = transfer.empty_plan_tree()
             if len(self._plan_tree_cache) >= 512:
@@ -595,6 +609,11 @@ class PolicyAdapter:
                 qgraph, _stats = transfer.build_transfer_graph_state(
                     sql, graph, self._catalog, plan_json=plan_json
                 )
+                if (
+                    getattr(self, "state_ablation", "none")
+                    == "no_query_topology"
+                ):
+                    qgraph = transfer.remove_query_graph_topology(qgraph)
             except Exception:
                 ctx_dim = transfer.HIGH_CTX_DIM if level == "high" else 0
                 return transfer.empty_structured_state(level=level, ctx_dim=ctx_dim)
@@ -617,7 +636,13 @@ class PolicyAdapter:
             query_graph=qgraph,
             current_plan=transfer.empty_plan_tree(),
             ctx=ctx,
-            cache_key=("online", level, hash(sql), tuple(ctx)),
+            cache_key=(
+                "online",
+                level,
+                getattr(self, "state_ablation", "none"),
+                hash(sql),
+                tuple(ctx),
+            ),
         )
 
     def _plan_state(self, state: dict[str, Any]):
@@ -648,7 +673,13 @@ class PolicyAdapter:
             query_graph=transfer.empty_query_graph_state(),
             current_plan=plan_tree,
             ctx=ctx,
-            cache_key=("online", "low", state_key, tuple(ctx)),
+            cache_key=(
+                "online",
+                "low",
+                getattr(self, "state_ablation", "none"),
+                state_key,
+                tuple(ctx),
+            ),
         )
 
     def _warmup_hrl(self) -> None:

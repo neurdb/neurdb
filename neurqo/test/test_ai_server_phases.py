@@ -486,6 +486,90 @@ class PhaseDecisionTest(unittest.TestCase):
         self.assertEqual(received["search_strategy"], "topk")
         self.assertEqual(received["search_k"], 5)
 
+    def test_checkpoint_query_topology_ablation_is_applied_at_inference(self):
+        raw_graph = object()
+        bag_graph = object()
+
+        class FakeTransfer:
+            HIGH_CTX_DIM = 2
+            np = np
+
+            @staticmethod
+            def parse_query_graph(_sql):
+                return object()
+
+            @staticmethod
+            def build_transfer_graph_state(_sql, _graph, _catalog, plan_json=None):
+                return raw_graph, None
+
+            @staticmethod
+            def remove_query_graph_topology(graph):
+                self.assertIs(graph, raw_graph)
+                return bag_graph
+
+            @staticmethod
+            def build_high_context(**_kwargs):
+                return np.zeros(2, dtype=np.float32)
+
+            @staticmethod
+            def empty_plan_tree():
+                return object()
+
+            @staticmethod
+            def StructuredState(**kwargs):
+                return SimpleNamespace(**kwargs)
+
+        adapter = object.__new__(ai_server.PolicyAdapter)
+        adapter._transfer = FakeTransfer
+        adapter._catalog = object()
+        adapter._query_graph_cache = {}
+        adapter.state_ablation = "no_query_topology"
+        state = adapter._query_graph_state({"sql": "SELECT * FROM title"}, "high")
+        self.assertIs(state.query_graph, bag_graph)
+
+    def test_checkpoint_plan_topology_ablation_is_applied_at_inference(self):
+        raw_tree = object()
+        flat_tree = object()
+
+        class FakeTransfer:
+            LOW_CTX_DIM = 7
+            np = np
+
+            @staticmethod
+            def build_low_context(**_kwargs):
+                return np.zeros(7, dtype=np.float32)
+
+            @staticmethod
+            def plan_to_tree(_plan, catalog=None):
+                return raw_tree
+
+            @staticmethod
+            def flatten_plan_tree_topology(tree):
+                self.assertIs(tree, raw_tree)
+                return flat_tree
+
+            @staticmethod
+            def empty_plan_tree():
+                return object()
+
+            @staticmethod
+            def empty_query_graph_state():
+                return object()
+
+            @staticmethod
+            def StructuredState(**kwargs):
+                return SimpleNamespace(**kwargs)
+
+        adapter = object.__new__(ai_server.PolicyAdapter)
+        adapter._transfer = FakeTransfer
+        adapter._catalog = object()
+        adapter._plan_tree_cache = {}
+        adapter.state_ablation = "no_plan_topology"
+        state = adapter._plan_state(
+            {"plan_json": {"Plan": {"Node Type": "Hash Join"}}}
+        )
+        self.assertIs(state.current_plan, flat_tree)
+
     def test_legacy_combined_and_standalone_aja_requests_are_rejected(self):
         for request_type in ("round", "aja"):
             with self.subTest(request_type=request_type):
