@@ -263,6 +263,7 @@ class PolicyAdapter:
         policy_version: str | None = None,
         torch_threads: int = 1,
         action_ablation: str = "none",
+        fixed_schedule_alpha: float | None = None,
     ) -> None:
         self.model_module = model_module
         self.model_path = model_path
@@ -301,6 +302,11 @@ class PolicyAdapter:
         self.policy_version = policy_version
         self.torch_threads = int(torch_threads)
         self.action_ablation = str(action_ablation).strip().lower()
+        self.fixed_schedule_alpha = (
+            None
+            if fixed_schedule_alpha is None
+            else float(fixed_schedule_alpha)
+        )
         if self.action_ablation not in {
             "none",
             "no_split",
@@ -309,6 +315,11 @@ class PolicyAdapter:
             "no_ajoin",
         }:
             raise ValueError(f"unknown action ablation {self.action_ablation!r}")
+        if (
+            self.fixed_schedule_alpha is not None
+            and not 0.0 <= self.fixed_schedule_alpha <= 1.0
+        ):
+            raise ValueError("fixed_schedule_alpha must be in [0, 1]")
         if self.inference_mode not in {"deterministic", "stochastic"}:
             raise ValueError("inference_mode must be 'deterministic' or 'stochastic'")
         if self.temperature <= 0.0:
@@ -949,38 +960,51 @@ class PolicyAdapter:
             }
 
         if request_type == "select":
-            if not self._schedule_trained:
+            if not self._schedule_trained and self.fixed_schedule_alpha is None:
                 # Legacy checkpoints keep the established phi4/alpha=0.5
                 # scheduler instead of activating a randomly initialized head.
                 return {}
-            structured_state = self._query_graph_state(state, "high")
-            mask = [1.0] * len(hrl.SCHEDULE_ALPHA_VALUES)
-            mask = hrl.apply_action_ablation_mask(
-                mask, "select", self.action_ablation
-            ).tolist()
-            with self._torch.no_grad():
-                encoded = self._encode(structured_state)
-                if self.model_method in (
-                    "hac",
-                    "smdp",
-                    "standardmdp",
-                    "standardmdp_rl",
-                    "option",
-                ):
-                    schedule_encoded = model.schedule_features(encoded)
-                    logits = model.schedule_actor(schedule_encoded)
-                    predicted_value = float(
-                        model.schedule_critic(schedule_encoded).squeeze().item()
+            predicted_value = None
+            policy_meta: dict[str, Any] = {}
+            if self._schedule_trained:
+                structured_state = self._query_graph_state(state, "high")
+                mask = [1.0] * len(hrl.SCHEDULE_ALPHA_VALUES)
+                mask = hrl.apply_action_ablation_mask(
+                    mask, "select", self.action_ablation
+                ).tolist()
+                with self._torch.no_grad():
+                    encoded = self._encode(structured_state)
+                    if self.model_method in (
+                        "hac",
+                        "smdp",
+                        "standardmdp",
+                        "standardmdp_rl",
+                        "option",
+                    ):
+                        schedule_encoded = model.schedule_features(encoded)
+                        logits = model.schedule_actor(schedule_encoded)
+                        predicted_value = float(
+                            model.schedule_critic(schedule_encoded).squeeze().item()
+                        )
+                    else:
+                        logits = model.q_schedule(model.schedule_features(encoded))
+                    schedule_idx, policy_meta = self._masked_action(
+                        logits, mask, "select", state
                     )
-                else:
-                    logits = model.q_schedule(model.schedule_features(encoded))
-                    predicted_value = None
-                schedule_idx, policy_meta = self._masked_action(
-                    logits, mask, "select", state
+                    if predicted_value is None:
+                        predicted_value = float(
+                            logits.reshape(-1)[schedule_idx].item()
+                        )
+            if self.fixed_schedule_alpha is None:
+                alpha = hrl.SCHEDULE_ALPHA_VALUES[schedule_idx]
+            else:
+                alpha = self.fixed_schedule_alpha
+                schedule_idx = min(
+                    range(len(hrl.SCHEDULE_ALPHA_VALUES)),
+                    key=lambda index: abs(
+                        hrl.SCHEDULE_ALPHA_VALUES[index] - alpha
+                    ),
                 )
-                if predicted_value is None:
-                    predicted_value = float(logits.reshape(-1)[schedule_idx].item())
-            alpha = hrl.SCHEDULE_ALPHA_VALUES[schedule_idx]
             return {
                 "action": "select",
                 "stop": False,
@@ -1449,6 +1473,7 @@ class Handler(BaseHTTPRequestHandler):
             "policy_version",
             "torch_threads",
             "action_ablation",
+            "fixed_schedule_alpha",
         ):
             if key in request and request[key] is not None:
                 new_config[key] = request[key]
@@ -1642,6 +1667,15 @@ def main() -> int:
         choices=("none", "no_split", "no_topk", "no_filter", "no_ajoin"),
         default=os.environ.get("NEURQO_ACTION_ABLATION", "none"),
     )
+    ap.add_argument(
+        "--fixed-schedule-alpha",
+        type=float,
+        default=(
+            float(os.environ["NEURQO_FIXED_SCHEDULE_ALPHA"])
+            if os.environ.get("NEURQO_FIXED_SCHEDULE_ALPHA") is not None
+            else None
+        ),
+    )
     ap.add_argument("--trajectory-log", default=os.environ.get("NEURQO_TRAJECTORY_LOG"))
     ap.add_argument(
         "--require-model",
@@ -1672,6 +1706,7 @@ def main() -> int:
         "policy_version": args.policy_version,
         "torch_threads": args.torch_threads,
         "action_ablation": args.action_ablation,
+        "fixed_schedule_alpha": args.fixed_schedule_alpha,
     }
     try:
         ADAPTER = PolicyAdapter(**ADAPTER_CONFIG)
