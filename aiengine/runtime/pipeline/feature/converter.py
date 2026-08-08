@@ -13,8 +13,9 @@ ColumnSchema.metadata, never inferred from the incoming batch. The chain of
 builders is configured on PipelineBuilder; each builder is itself stype-aware
 and returns None for columns the step does not apply to.
 
-Concrete steps live in sibling modules: ``pipeline.encoder`` (terminal
-encoders + EncoderBuilder) and ``pipeline.nullfill`` (null-fill operators).
+Concrete steps live in sibling modules: ``pipeline.feature.encoder``
+(terminal encoders + EncoderBuilder) and ``pipeline.feature.nullfill``
+(null-fill operators).
 """
 
 from __future__ import annotations
@@ -26,25 +27,11 @@ from typing import Dict, Optional, Set, Tuple
 import numpy as np
 from data.base import ColumnRole
 from data.batch import DataBatch
-from data.schema import ColumnSchema, DatabaseSchema
+from data.schema import ColumnSchema, FeatureSchema
 
 from .base import ColumnPipeline, EncodeError, OperatorBuilder
 from .encoder import EncoderBuilder
 from .nullfill import NullFillBuilder
-
-# Backwards-compatible re-exports: these previously lived in this module.
-from .base import ColumnEncoder, Identity, Operator  # noqa: F401  isort: skip
-from .encoder import (  # noqa: F401  isort: skip
-    CategoricalEncoder,
-    NumericEncoder,
-    TimestampEncoder,
-    TimestampStrategy,
-)
-from .nullfill import (  # noqa: F401  isort: skip
-    NullFillBackward,
-    NullFillConstant,
-    NullFillForward,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +81,11 @@ class FeatureConverter:
 
     Iteration is driven by the batch: the RecordBatch reflects any projection
     pushed down by the engine, so only columns actually present are encoded.
-    The DatabaseSchema is a lookup reference — for each Arrow column we
-    resolve the matching ColumnSchema and build a pipeline on first use.
+    The ``FeatureSchema`` — a slim view derived at job setup by the
+    ViewBuilder — is the lookup reference: for each Arrow column we resolve
+    the matching ColumnSchema and build a pipeline on first use. Tables and
+    columns outside the view (e.g. squeezed junctions) are simply absent
+    from it and skip without any runtime filtering.
 
     Pipeline construction is delegated to ``pipeline_builder``; each builder
     in its chain is itself stype-aware and returns ``None`` to skip. Pipelines
@@ -107,7 +97,7 @@ class FeatureConverter:
     pipeline means broken schema metadata, not intent.
     """
 
-    schema: DatabaseSchema
+    schema: FeatureSchema
     pipeline_builder: PipelineBuilder = field(default_factory=PipelineBuilder)
     _cache: Dict[Tuple[str, str], ColumnPipeline] = field(
         default_factory=dict, init=False, repr=False
@@ -117,11 +107,11 @@ class FeatureConverter:
     def apply(self, batch: DataBatch) -> EncodedFeatures:
         features: Dict[Tuple[str, str], np.ndarray] = {}
         for table_name, rb in batch.tables.items():
-            table_schema = self.schema.tables.get(table_name)
-            if table_schema is None:
+            table_columns = self.schema.tables.get(table_name)
+            if table_columns is None:
                 continue
             for col_name in rb.schema.names:
-                col = table_schema.columns.get(col_name)
+                col = table_columns.get(col_name)
                 if col is None:
                     continue
                 pipeline = self._get_pipeline(table_name, col_name, col)

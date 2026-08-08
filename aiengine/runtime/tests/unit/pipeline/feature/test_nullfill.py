@@ -1,8 +1,8 @@
 import pyarrow as pa
 import pytest
 from data.schema import ColumnSchema
-from pipeline.base import Identity
-from pipeline.nullfill import (
+from pipeline.feature.base import Identity
+from pipeline.feature.nullfill import (
     NullFillBackward,
     NullFillBuilder,
     NullFillConstant,

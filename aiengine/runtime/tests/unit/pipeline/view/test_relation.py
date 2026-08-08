@@ -1,4 +1,5 @@
 import pyarrow as pa
+import pytest
 from data.batch import DataBatch
 from data.schema import (
     ColumnSchema,
@@ -6,7 +7,7 @@ from data.schema import (
     RelationshipSchema,
     TableSchema,
 )
-from graph.relation import RelationConverter
+from pipeline.view.relation import RelationConverter
 
 
 def _schema(relationships) -> DatabaseSchema:
@@ -129,10 +130,10 @@ def test_composite_key_join_matches_all_columns() -> None:
     assert tgt.tolist() == [0]
 
 
-def test_duplicate_target_keys_keep_last_occurrence() -> None:
-    # Pins current behavior: the target index map is built positionally, so
-    # a duplicated key resolves to its last row. Acceptable because the
-    # target side is the PK side, where keys are unique by construction.
+def test_duplicate_target_keys_produce_all_pairs() -> None:
+    # True inner-join semantics: a duplicated target key yields one edge per
+    # matching pair. On a real PK side keys are unique, so this degenerates
+    # to one-edge-per-FK.
     converter = RelationConverter(schema=_schema([_fk_orders_users()]))
 
     graph = converter.construct(
@@ -143,5 +144,38 @@ def test_duplicate_target_keys_keep_last_occurrence() -> None:
     )
 
     src, tgt = graph.edges["orders_to_users"]
+    assert src.tolist() == [0, 0]
+    assert tgt.tolist() == [0, 1]
+
+
+def test_null_fk_contributes_no_edge_but_row_stays_a_node() -> None:
+    # A null FK is an optional relationship: the row remains a node (counted
+    # in node_counts, features still encoded elsewhere) — it just has no
+    # edge. SQL semantics: null matches nothing.
+    converter = RelationConverter(schema=_schema([_fk_orders_users()]))
+
+    graph = converter.construct(
+        _batch(
+            orders={"order_id": [10, 11], "user_id": [1, None]},
+            users={"user_id": [1, 2], "region": ["sg", "us"]},
+        )
+    )
+
+    src, tgt = graph.edges["orders_to_users"]
     assert src.tolist() == [0]
-    assert tgt.tolist() == [1]
+    assert tgt.tolist() == [0]
+    assert graph.node_counts["orders"] == 2  # null-FK row is still a node
+
+
+def test_null_target_key_raises() -> None:
+    # PK non-nullness is a hard RDBMS constraint; a null on the target side
+    # means the engine sent an invalid batch. Fail loudly.
+    converter = RelationConverter(schema=_schema([_fk_orders_users()]))
+
+    with pytest.raises(ValueError, match="primary keys must be non-null"):
+        converter.construct(
+            _batch(
+                orders={"order_id": [10], "user_id": [1]},
+                users={"user_id": [1, None], "region": ["sg", "??"]},
+            )
+        )

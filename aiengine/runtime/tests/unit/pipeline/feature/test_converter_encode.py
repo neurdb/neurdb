@@ -1,7 +1,7 @@
 import numpy as np
 import pyarrow as pa
 import pytest
-from pipeline.converter import (
+from pipeline.feature.encoder import (
     CategoricalEncoder,
     NumericEncoder,
     TimestampEncoder,

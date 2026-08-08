@@ -4,9 +4,13 @@ import numpy as np
 import pyarrow as pa
 import pytest
 from data.batch import DataBatch
-from data.schema import ColumnSchema, DatabaseSchema, TableSchema
-from pipeline.base import EncodeError
-from pipeline.converter import FeatureConverter
+from data.schema import ColumnSchema, DatabaseSchema, FeatureSchema, TableSchema
+from pipeline.feature.base import EncodeError
+from pipeline.feature.converter import FeatureConverter
+
+
+def _converter(db_schema: DatabaseSchema) -> FeatureConverter:
+    return FeatureConverter(schema=FeatureSchema.from_database(db_schema))
 
 # ---------------------------------------------------------------------------
 # End-to-end: default builders over all three stypes
@@ -55,7 +59,7 @@ def _users_batch() -> DataBatch:
 
 
 def test_converter_encodes_all_three_stypes_with_default_builders() -> None:
-    converter = FeatureConverter(schema=_users_schema())
+    converter = _converter(_users_schema())
 
     out = converter.apply(_users_batch())
 
@@ -84,7 +88,7 @@ def test_converter_encodes_all_three_stypes_with_default_builders() -> None:
 
 
 def test_converter_reuses_cached_pipeline_across_batches() -> None:
-    converter = FeatureConverter(schema=_users_schema())
+    converter = _converter(_users_schema())
 
     converter.apply(_users_batch())
     first = dict(converter._cache)
@@ -102,9 +106,9 @@ def test_dropped_feature_column_warns_once(caplog: pytest.LogCaptureFixture) -> 
     # A FEATURE column whose metadata cannot build a pipeline is a schema
     # bug: warn (once), don't silently drop.
     schema = _users_schema(country=ColumnSchema(role="feature"))  # no stype
-    converter = FeatureConverter(schema=schema)
+    converter = _converter(schema)
 
-    with caplog.at_level(logging.WARNING, logger="pipeline.converter"):
+    with caplog.at_level(logging.WARNING, logger="pipeline.feature.converter"):
         converter.apply(_users_batch())
         converter.apply(_users_batch())
 
@@ -114,9 +118,9 @@ def test_dropped_feature_column_warns_once(caplog: pytest.LogCaptureFixture) -> 
 
 
 def test_dropped_key_column_is_silent(caplog: pytest.LogCaptureFixture) -> None:
-    converter = FeatureConverter(schema=_users_schema())
+    converter = _converter(_users_schema())
 
-    with caplog.at_level(logging.WARNING, logger="pipeline.converter"):
+    with caplog.at_level(logging.WARNING, logger="pipeline.feature.converter"):
         converter.apply(_users_batch())
 
     assert not [r for r in caplog.records if "users.id" in r.message]
@@ -134,7 +138,7 @@ def test_encode_failure_names_the_offending_column() -> None:
     rb = pa.RecordBatch.from_pydict(
         {"joined_at": pa.array([1, 2, 3], type=pa.int64())}
     )
-    converter = FeatureConverter(schema=schema)
+    converter = _converter(schema)
 
     with pytest.raises(EncodeError, match=r"users\.joined_at"):
         converter.apply(DataBatch(tables={"users": rb}))

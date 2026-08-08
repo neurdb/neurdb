@@ -1,24 +1,11 @@
-"""Composition contract for the model layer.
+"""Model-layer view of the input contract.
 
-``ModelInput`` is a single immutable struct the model layer consumes: pure
-composition of the two parallel converter outputs, zero logic. The model is the
-consumer, so the contract lives with the consumer.
+``ModelInput`` is produced by ``pipeline.input.InputPipeline`` — the
+pipeline is the composition layer that turns (DataBatch, DatabaseSchema)
+into model input, so the type lives with the producer. Re-exported here so
+model code keeps importing it from the layer it belongs to conceptually.
 """
 
-from __future__ import annotations
+from pipeline.input import ModelInput
 
-from dataclasses import dataclass
-
-from graph.relation import RelationGraph
-from pipeline.converter import EncodedFeatures
-
-
-@dataclass(frozen=True)
-class ModelInput:
-    """Composed model input: encoded features + relational graph.
-
-    Tabular models simply ignore ``graph.edges``.
-    """
-
-    features: EncodedFeatures
-    graph: RelationGraph
+__all__ = ["ModelInput"]

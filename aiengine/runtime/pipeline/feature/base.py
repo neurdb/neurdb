@@ -9,9 +9,9 @@ The stateless primitives shared across the ``pipeline`` package:
   encoder for a single column.
 * ``EncodeError`` — pipeline failure carrying (table, column) context.
 
-Concrete encoders live in ``pipeline.encoder``, null-fill operators in
-``pipeline.nullfill``, and the assembly layer (``PipelineBuilder``,
-``FeatureConverter``) in ``pipeline.converter``.
+Concrete encoders live in ``pipeline.feature.encoder``, null-fill operators
+in ``pipeline.feature.nullfill``, and the assembly layer
+(``PipelineBuilder``, ``FeatureConverter``) in ``pipeline.feature.converter``.
 """
 
 from __future__ import annotations
