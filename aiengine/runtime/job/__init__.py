@@ -6,7 +6,10 @@ from .base import (
     JobStatus,
     MetricRecord,
     MetricsSink,
+    Trainer,
 )
+from .dataset import CachedDataset, DatasetManager
+from .scheduler import LocalJobScheduler, TrainingJob
 
 __all__ = [
     "DataCache",
@@ -16,4 +19,9 @@ __all__ = [
     "JobStatus",
     "MetricRecord",
     "MetricsSink",
+    "Trainer",
+    "CachedDataset",
+    "DatasetManager",
+    "LocalJobScheduler",
+    "TrainingJob",
 ]

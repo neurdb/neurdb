@@ -28,7 +28,7 @@ model appears here only as an opaque ``bytes`` blob).
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterator, List, Optional, Protocol, Sequence
+from typing import Callable, Iterable, Iterator, List, Optional, Protocol, Sequence
 
 from data.base import NonEmptyStr, RuntimeDataModel
 from data.batch import DataBatch
@@ -104,6 +104,28 @@ class JobArtifacts(RuntimeDataModel):
     metrics: List[MetricRecord] = Field(default_factory=list)
 
 
+class Trainer(Protocol):
+    """Runs the TRAINING phase of a job. Provided by the (future) model
+    layer; the scheduler is complete without it.
+
+    ``batches`` is the job's cached data — re-iterable, so the trainer may
+    run as many epochs/passes as its model family needs (building the
+    ``InputPipeline`` from task + schema is the trainer's responsibility).
+    Progress goes to ``metrics``; ``should_stop`` must be polled at loop
+    boundaries and honored promptly (cooperative cancellation). Returns the
+    trained model as an opaque blob for ``JobArtifacts.model_blob``.
+    """
+
+    def run(
+        self,
+        task: TaskDefinition,
+        database_schema: DatabaseSchema,
+        batches: Iterable[DataBatch],
+        metrics: MetricsSink,
+        should_stop: Callable[[], bool],
+    ) -> bytes: ...
+
+
 class Job(Protocol):
     """Handle to one training job; all methods are safe to poll."""
 
@@ -115,6 +137,11 @@ class Job(Protocol):
 
     @property
     def status(self) -> JobStatus: ...
+
+    @property
+    def error(self) -> Optional[str]:
+        """Failure description once FAILED, else None."""
+        ...
 
     def metrics(self) -> Sequence[MetricRecord]:
         """Monitoring history so far, in emission order."""
