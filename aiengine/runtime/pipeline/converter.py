@@ -12,38 +12,45 @@ Operators are stateless: their parameters are frozen at build time from
 ColumnSchema.metadata, never inferred from the incoming batch. The chain of
 builders is configured on PipelineBuilder; each builder is itself stype-aware
 and returns None for columns the step does not apply to.
+
+Concrete steps live in sibling modules: ``pipeline.encoder`` (terminal
+encoders + EncoderBuilder) and ``pipeline.nullfill`` (null-fill operators).
 """
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Protocol,
-    Tuple,
-    Type,
-)
+from typing import Dict, Optional, Set, Tuple
 
 import numpy as np
-import pyarrow as pa
-import pyarrow.compute as pc
-from data.base import ColumnStype, MetadataKey
+from data.base import ColumnRole
 from data.batch import DataBatch
 from data.schema import ColumnSchema, DatabaseSchema
 
-from .base import ColumnEncoder, ColumnPipeline, Identity, Operator
+from .base import ColumnPipeline, EncodeError, OperatorBuilder
+from .encoder import EncoderBuilder
+from .nullfill import NullFillBuilder
 
-TimestampStrategy = Literal["epoch_s", "epoch_ms", "epoch_ns"]
+# Backwards-compatible re-exports: these previously lived in this module.
+from .base import ColumnEncoder, Identity, Operator  # noqa: F401  isort: skip
+from .encoder import (  # noqa: F401  isort: skip
+    CategoricalEncoder,
+    NumericEncoder,
+    TimestampEncoder,
+    TimestampStrategy,
+)
+from .nullfill import (  # noqa: F401  isort: skip
+    NullFillBackward,
+    NullFillConstant,
+    NullFillForward,
+)
 
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Output container
-# ---------------------------------------------------------------------------
+# Roles whose columns are meant to reach the model — dropping one of these
+# is a schema bug worth shouting about, not a routine projection skip.
+_MODEL_ROLES = (ColumnRole.FEATURE, ColumnRole.TARGET)
 
 
 @dataclass(frozen=True)
@@ -54,180 +61,6 @@ class EncodedFeatures:
     """
 
     features: Dict[Tuple[str, str], np.ndarray] = field(default_factory=dict)
-
-
-# ---------------------------------------------------------------------------
-# Terminal encoders (Arrow -> ndarray)
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class CategoricalEncoder:
-    """Map categorical values to frozen integer codes via list position."""
-
-    cardinality: List[str]
-    _value_set: pa.Array = field(init=False, repr=False, compare=False)
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "_value_set", pa.array(self.cardinality))
-
-    def encode(self, arr: pa.Array) -> np.ndarray:
-        codes = pc.index_in(arr, value_set=self._value_set)  # type: ignore
-        return codes.to_numpy(zero_copy_only=False).astype(np.int64, copy=False)
-
-
-@dataclass(frozen=True)
-class NumericEncoder:
-    """Standardize to float32. mean=0, std=1 means pass-through cast."""
-
-    mean: float = 0.0
-    std: float = 1.0
-
-    def encode(self, arr: pa.Array) -> np.ndarray:
-        x = arr.to_numpy(zero_copy_only=False).astype(np.float32, copy=False)
-        if self.std in (0.0, 1.0) and self.mean == 0.0:
-            return x
-        return (x - self.mean) / (self.std or 1.0)
-
-
-@dataclass(frozen=True)
-class TimestampEncoder:
-    """Cast timestamp -> int64 epoch. Unit strategy pluggable."""
-
-    strategy: Literal["epoch_s", "epoch_ms", "epoch_ns"] = "epoch_s"
-
-    def encode(self, arr: pa.Array) -> np.ndarray:
-        if not pa.types.is_timestamp(arr.type):
-            raise TypeError(f"TimestampEncoder expected timestamp, got {arr.type}")
-        unit = self.strategy.removeprefix("epoch_")
-        return (
-            pc.cast(arr, pa.timestamp(unit))
-            .cast(pa.int64())
-            .to_numpy(zero_copy_only=False)
-        )
-
-
-# ---------------------------------------------------------------------------
-# Encoder builder (ColumnSchema -> ColumnEncoder | None)
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class EncoderBuilder:
-    """Build a terminal encoder for a column.
-
-    Dispatch is a closed switch over ``ColumnStype`` (adding a new stype
-    requires a new enum value anyway). Subclass or pass a custom instance
-    to ``FeatureConverter`` if you need different behavior.
-    """
-
-    timestamp_strategy: TimestampStrategy = "epoch_s"
-
-    def __call__(self, col: ColumnSchema) -> Optional[ColumnEncoder]:
-        stype = col.metadata.get(MetadataKey.STYPE)
-        stats = col.metadata.get(MetadataKey.STATS) or {}
-        if stype == ColumnStype.NUMERICAL:
-            return NumericEncoder(
-                mean=float(stats.get(MetadataKey.MEAN, 0.0)),
-                std=float(stats.get(MetadataKey.STD, 1.0)),
-            )
-        if stype == ColumnStype.CATEGORICAL:
-            cardinality = stats.get(MetadataKey.CARDINALITY)
-            if not cardinality:
-                return None
-            return CategoricalEncoder(cardinality=list(cardinality))
-        if stype == ColumnStype.TIMESTAMP:
-            return TimestampEncoder(
-                strategy=stats.get(MetadataKey.STRATEGY, self.timestamp_strategy),
-            )
-        return None
-
-
-# ---------------------------------------------------------------------------
-# Operator builders (ColumnSchema -> Operator)
-# ---------------------------------------------------------------------------
-
-
-class OperatorBuilder(Protocol):
-    """Produce an Operator configured for one column.
-
-    Returns ``None`` when the step does not apply to the column;
-    ``PipelineBuilder`` drops those so pipeline assembly stays branch-free.
-    """
-
-    def __call__(self, col: ColumnSchema) -> Optional[Operator]: ...
-
-
-# ---- Null-fill -----------------------------------------------------------
-
-
-class NullFillBuilder:
-    """Build a null-fill operator from column metadata.
-
-    Strategies self-register via ``@NullFillBuilder.register("<name>")``.
-    Adding a new strategy is one file + one decorator; no builder edits.
-    """
-
-    _registry: Dict[str, Type[Operator]] = {"default": Identity}
-
-    _stype_nullfill: Dict[ColumnStype, str] = {
-        ColumnStype.NUMERICAL: "constant",
-        ColumnStype.CATEGORICAL: "forward",
-        ColumnStype.TIMESTAMP: "default",
-    }
-
-    @classmethod
-    def register(cls, name: str) -> Callable[[Type[Operator]], Type[Operator]]:
-        def decorator(op_cls: Type[Operator]) -> Type[Operator]:
-            if name in cls._registry:
-                raise ValueError(f"null-fill strategy already registered: {name!r}")
-            cls._registry[name] = op_cls
-            return op_cls
-
-        return decorator
-
-    def __call__(self, col: ColumnSchema) -> Optional[Operator]:
-        stype = col.metadata.get(MetadataKey.STYPE)
-        if stype is None:
-            return None
-        strategy = self._stype_nullfill.get(stype)
-        if strategy is None:
-            return None
-        return self._registry[strategy]()
-
-
-@NullFillBuilder.register("constant")
-@dataclass(frozen=True)
-class NullFillConstant:
-    """Replace nulls with a fixed scalar (mean/median resolved offline)."""
-
-    value: Any
-
-    def apply(self, arr: pa.Array) -> pa.Array:
-        return pc.fill_null(arr, pa.scalar(self.value, type=arr.type))
-
-
-@NullFillBuilder.register("forward")
-@dataclass(frozen=True)
-class NullFillForward:
-    """Carry the last observed value forward across nulls."""
-
-    def apply(self, arr: pa.Array) -> pa.Array:
-        return pc.fill_null_forward(arr)  # type: ignore
-
-
-@NullFillBuilder.register("backward")
-@dataclass(frozen=True)
-class NullFillBackward:
-    """Carry the next observed value backward across nulls."""
-
-    def apply(self, arr: pa.Array) -> pa.Array:
-        return pc.fill_null_backward(arr)  # type: ignore
-
-
-# ---------------------------------------------------------------------------
-# Pipeline builder (ColumnSchema -> ColumnPipeline | None)
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -255,11 +88,6 @@ class PipelineBuilder:
         return ColumnPipeline(operators=operators, encoder=encoder)
 
 
-# ---------------------------------------------------------------------------
-# Converter
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class FeatureConverter:
     """Apply schema-backed pipelines to an Arrow DataBatch.
@@ -273,6 +101,10 @@ class FeatureConverter:
     in its chain is itself stype-aware and returns ``None`` to skip. Pipelines
     are cached per (table, column) so cardinality-list / mean-std / operator
     construction is paid once per column across the converter's lifetime.
+
+    Columns that yield no pipeline are skipped — silently for key/metadata
+    roles, with a one-time warning for FEATURE/TARGET roles, where a missing
+    pipeline means broken schema metadata, not intent.
     """
 
     schema: DatabaseSchema
@@ -280,6 +112,7 @@ class FeatureConverter:
     _cache: Dict[Tuple[str, str], ColumnPipeline] = field(
         default_factory=dict, init=False, repr=False
     )
+    _warned: Set[Tuple[str, str]] = field(default_factory=set, init=False, repr=False)
 
     def apply(self, batch: DataBatch) -> EncodedFeatures:
         features: Dict[Tuple[str, str], np.ndarray] = {}
@@ -293,8 +126,16 @@ class FeatureConverter:
                     continue
                 pipeline = self._get_pipeline(table_name, col_name, col)
                 if pipeline is None:
+                    self._warn_dropped(table_name, col_name, col)
                     continue
-                features[(table_name, col_name)] = pipeline.apply(rb.column(col_name))
+                try:
+                    features[(table_name, col_name)] = pipeline.apply(
+                        rb.column(col_name)
+                    )
+                except Exception as exc:
+                    raise EncodeError(
+                        f"failed to encode column {table_name}.{col_name}: {exc}"
+                    ) from exc
         return EncodedFeatures(features=features)
 
     def _get_pipeline(
@@ -308,3 +149,16 @@ class FeatureConverter:
         if pipeline is not None:
             self._cache[key] = pipeline
         return pipeline
+
+    def _warn_dropped(self, table_name: str, col_name: str, col: ColumnSchema) -> None:
+        key = (table_name, col_name)
+        if col.role not in _MODEL_ROLES or key in self._warned:
+            return
+        self._warned.add(key)
+        logger.warning(
+            "dropping %s column %s.%s: no pipeline could be built from its "
+            "schema metadata (missing/unknown stype or required stats)",
+            col.role.value,
+            table_name,
+            col_name,
+        )

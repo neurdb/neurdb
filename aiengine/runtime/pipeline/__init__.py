@@ -1,22 +1,29 @@
-from .base import ColumnEncoder, ColumnPipeline, Identity, Operator
-from .converter import (
+from .base import (
+    ColumnEncoder,
+    ColumnPipeline,
+    EncodeError,
+    Identity,
+    Operator,
+    OperatorBuilder,
+)
+from .converter import EncodedFeatures, FeatureConverter, PipelineBuilder
+from .encoder import (
     CategoricalEncoder,
-    EncodedFeatures,
     EncoderBuilder,
-    FeatureConverter,
+    NumericEncoder,
+    TimestampEncoder,
+)
+from .nullfill import (
     NullFillBackward,
     NullFillBuilder,
     NullFillConstant,
     NullFillForward,
-    NumericEncoder,
-    OperatorBuilder,
-    PipelineBuilder,
-    TimestampEncoder,
 )
 
 __all__ = [
     "ColumnEncoder",
     "ColumnPipeline",
+    "EncodeError",
     "Identity",
     "Operator",
     "OperatorBuilder",
