@@ -108,9 +108,7 @@ class FeatureSchema(RuntimeDataModel):
         columns = self.tables.get(table)
         return None if columns is None else columns.get(column)
 
-    def extended(
-        self, table: str, columns: Dict[str, ColumnSchema]
-    ) -> "FeatureSchema":
+    def extended(self, table: str, columns: Dict[str, ColumnSchema]) -> "FeatureSchema":
         """A new view with extra (synthesized) columns on ``table``."""
         tables = {name: dict(cols) for name, cols in self.tables.items()}
         tables.setdefault(table, {}).update(columns)

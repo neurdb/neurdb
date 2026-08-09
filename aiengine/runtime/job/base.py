@@ -39,10 +39,10 @@ from task.base import TaskDefinition
 
 
 class JobStatus(str, Enum):
-    PENDING = "pending"        # accepted, not yet started
-    RECEIVING = "receiving"    # draining the engine's stream into the cache
-    TRAINING = "training"      # loop running over the cache
-    SUCCEEDED = "succeeded"    # artifacts available via Job.result()
+    PENDING = "pending"  # accepted, not yet started
+    RECEIVING = "receiving"  # draining the engine's stream into the cache
+    TRAINING = "training"  # loop running over the cache
+    SUCCEEDED = "succeeded"  # artifacts available via Job.result()
     FAILED = "failed"
     CANCELLED = "cancelled"
 

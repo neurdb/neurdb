@@ -12,9 +12,7 @@ def _db() -> DatabaseSchema:
                     ),
                 }
             ),
-            "clicks": TableSchema(
-                columns={"uid": ColumnSchema(role="foreign_key")}
-            ),
+            "clicks": TableSchema(columns={"uid": ColumnSchema(role="foreign_key")}),
         }
     )
 

@@ -39,7 +39,7 @@ class ModelKind(str, Enum):
     """What shape of model input the box consumes."""
 
     SINGLE_TABLE = "single_table"  # one table's (X, y); ignores graph
-    RELATIONAL = "relational"      # multi-table features + RelationGraph (GNNs)
+    RELATIONAL = "relational"  # multi-table features + RelationGraph (GNNs)
 
 
 class TrainProtocol(str, Enum):
@@ -86,9 +86,7 @@ class ModelSpec:
     @property
     def feature_order(self) -> Tuple[Tuple[str, str], ...]:
         """Canonical order: numerics first, then categoricals, each sorted."""
-        return self.numeric_features + tuple(
-            f.key for f in self.categorical_features
-        )
+        return self.numeric_features + tuple(f.key for f in self.categorical_features)
 
     @classmethod
     def derive(

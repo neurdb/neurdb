@@ -12,6 +12,7 @@ from pipeline.feature.converter import FeatureConverter
 def _converter(db_schema: DatabaseSchema) -> FeatureConverter:
     return FeatureConverter(schema=FeatureSchema.from_database(db_schema))
 
+
 # ---------------------------------------------------------------------------
 # End-to-end: default builders over all three stypes
 # ---------------------------------------------------------------------------
@@ -71,9 +72,7 @@ def test_converter_encodes_all_three_stypes_with_default_builders() -> None:
     }
 
     # Numerical: null imputed with 30.0, then standardized with mean/std.
-    np.testing.assert_allclose(
-        out.features[("users", "age")], [-1.0, 0.0, 1.0, 2.0]
-    )
+    np.testing.assert_allclose(out.features[("users", "age")], [-1.0, 0.0, 1.0, 2.0])
 
     # Categorical: null forward-filled to "us" (code 1), unknown "jp" -> 2.
     assert out.features[("users", "country")].tolist() == [0, 1, 1, 2]
@@ -135,9 +134,7 @@ def test_encode_failure_names_the_offending_column() -> None:
     # Schema says timestamp but the batch delivers int64 -> the encoder's
     # TypeError surfaces as EncodeError naming users.joined_at.
     schema = _users_schema()
-    rb = pa.RecordBatch.from_pydict(
-        {"joined_at": pa.array([1, 2, 3], type=pa.int64())}
-    )
+    rb = pa.RecordBatch.from_pydict({"joined_at": pa.array([1, 2, 3], type=pa.int64())})
     converter = _converter(schema)
 
     with pytest.raises(EncodeError, match=r"users\.joined_at"):

@@ -110,9 +110,7 @@ class RelationConverter:
         )
 
     @staticmethod
-    def _assert_target_keys_non_null(
-        batch: DataBatch, rel: RelationshipSchema
-    ) -> None:
+    def _assert_target_keys_non_null(batch: DataBatch, rel: RelationshipSchema) -> None:
         """A null in the target (PK) columns is a broken hard constraint."""
         tgt_nulls = _null_key_rows(batch.tables[rel.target_table], rel.target_columns)
         if tgt_nulls:

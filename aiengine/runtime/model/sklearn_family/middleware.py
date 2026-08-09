@@ -35,8 +35,8 @@ from ..base import ModelSpec
 class MatrixColumn:
     """Descriptor for one matrix column: provenance + declared type."""
 
-    key: Tuple[str, str]           # (table, column) it came from
-    stype: ColumnStype             # the DatabaseSchema's declaration
+    key: Tuple[str, str]  # (table, column) it came from
+    stype: ColumnStype  # the DatabaseSchema's declaration
     n_categories: Optional[int] = None  # incl. reserved unknown code
 
 
@@ -44,21 +44,21 @@ class MatrixColumn:
 class MatrixInput:
     """The sklearn family's model input: a self-describing matrix."""
 
-    X: np.ndarray                  # (n, d); column j described by columns[j]
-    y: np.ndarray                  # (n,) encoded target
+    X: np.ndarray  # (n, d); column j described by columns[j]
+    y: np.ndarray  # (n,) encoded target
     columns: Tuple[MatrixColumn, ...]
 
     @property
     def categorical_idx(self) -> Tuple[int, ...]:
         return tuple(
-            j for j, c in enumerate(self.columns)
-            if c.stype is ColumnStype.CATEGORICAL
+            j for j, c in enumerate(self.columns) if c.stype is ColumnStype.CATEGORICAL
         )
 
     @property
     def numeric_idx(self) -> Tuple[int, ...]:
         return tuple(
-            j for j, c in enumerate(self.columns)
+            j
+            for j, c in enumerate(self.columns)
             if c.stype is not ColumnStype.CATEGORICAL
         )
 
@@ -94,8 +94,7 @@ class SklearnMiddleware:
             features = encoded.features.features
             try:
                 cols = [
-                    features[key].astype(np.float32, copy=False)
-                    for key in self._keys
+                    features[key].astype(np.float32, copy=False) for key in self._keys
                 ]
                 y = features[self._spec.target]
             except KeyError as exc:

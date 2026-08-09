@@ -58,8 +58,7 @@ class LogisticRegressionModel(SklearnModel):
 
         params = {"max_iter": 1000, **self.params}
         categorical_idx = [
-            j for j, c in enumerate(columns)
-            if c.stype is ColumnStype.CATEGORICAL
+            j for j, c in enumerate(columns) if c.stype is ColumnStype.CATEGORICAL
         ]
         encode = ColumnTransformer(
             [("onehot", OneHotEncoder(handle_unknown="ignore"), categorical_idx)],

@@ -85,14 +85,10 @@ class FeatureTokenizer:
                         "spec was derived from"
                     ) from exc
                 if field.is_categorical:
-                    token_cols.append(
-                        field.offset + arr.astype(np.int64, copy=False)
-                    )
+                    token_cols.append(field.offset + arr.astype(np.int64, copy=False))
                     value_cols.append(np.ones(len(arr), dtype=np.float32))
                 else:
-                    token_cols.append(
-                        np.full(len(arr), field.offset, dtype=np.int64)
-                    )
+                    token_cols.append(np.full(len(arr), field.offset, dtype=np.int64))
                     value_cols.append(arr.astype(np.float32, copy=False))
             out[table] = (
                 np.column_stack(token_cols),

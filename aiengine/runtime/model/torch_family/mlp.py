@@ -86,13 +86,9 @@ class MLPModel(TorchModel):
             net=_MLP(
                 embedding_dim=embedding_dim,
                 out_dim=(
-                    spec.n_classes
-                    if spec.task_type is TaskType.MULTICLASS
-                    else 1
+                    spec.n_classes if spec.task_type is TaskType.MULTICLASS else 1
                 ),
-                hidden_dims=[
-                    int(h) for h in self.params.get("hidden_dims", [64, 32])
-                ],
+                hidden_dims=[int(h) for h in self.params.get("hidden_dims", [64, 32])],
                 pooling=str(self.params.get("pooling", "mean")),
                 norm=str(self.params.get("norm", "batch")),
                 dropout=float(self.params.get("dropout", 0.0)),

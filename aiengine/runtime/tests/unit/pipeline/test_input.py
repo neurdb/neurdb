@@ -7,8 +7,8 @@ from data.schema import (
     RelationshipSchema,
     TableSchema,
 )
-from pipeline.view.builder import SqueezedViewBuilder
 from pipeline.input import InputPipeline
+from pipeline.view.builder import SqueezedViewBuilder
 
 
 def _click_schema() -> DatabaseSchema:
