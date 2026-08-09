@@ -1,4 +1,4 @@
-"""The input pipeline: (DataBatch, DatabaseSchema) -> ModelInput.
+"""The input pipeline: (DataBatch, DatabaseSchema) -> EncodedBatch.
 
 Two stages composed by ``InputPipeline``:
 
@@ -17,7 +17,7 @@ from .feature import (
     FeatureConverter,
     PipelineBuilder,
 )
-from .input import InputPipeline, ModelInput
+from .input import EncodedBatch, InputPipeline
 from .view import (
     RelationConverter,
     RelationGraph,
@@ -28,7 +28,7 @@ from .view import (
 
 __all__ = [
     "InputPipeline",
-    "ModelInput",
+    "EncodedBatch",
     "EncodedFeatures",
     "EncodeError",
     "FeatureConverter",

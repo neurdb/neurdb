@@ -1,4 +1,4 @@
-"""(DataBatch, DatabaseSchema) -> ModelInput: the composed input pipeline.
+"""(DataBatch, DatabaseSchema) -> EncodedBatch: the composed input pipeline.
 
 ``InputPipeline`` is the one object the job layer holds. All configuration
 is resolved at construction (job setup): the ``ViewBuilder`` strategy
@@ -10,10 +10,15 @@ state is the ``DataBatch`` flowing through ``convert``:
 
     batch ──▶ view_builder.transform() ──▶ (batch', RelationGraph)
     batch' ──▶ feature_converter.apply() ──▶ EncodedFeatures
-           ──▶ ModelInput(features, graph)
+           ──▶ EncodedBatch(features, graph)
+
+The chain reads raw -> encoded -> model-ready: ``DataBatch`` (engine wire)
+-> ``EncodedBatch`` (numpy, model-agnostic — same output whatever model
+the job trains) -> the model family's middleware packages it into that
+family's consumable input (``model.middleware``).
 
 Alignment guarantee: features are encoded from the transformed batch under
-the same ``FeatureSchema`` the strategy derived, so ``ModelInput.features``
+the same ``FeatureSchema`` the strategy derived, so ``EncodedBatch.features``
 never describes a table the view compressed away, and synthesized columns
 are encoded like any engine-native column.
 """
@@ -33,10 +38,13 @@ from .view.relation import RelationGraph
 
 
 @dataclass(frozen=True)
-class ModelInput:
-    """Composed model input: encoded features + relational graph.
+class EncodedBatch:
+    """The encoded form of one DataBatch: features + relational graph.
 
-    Tabular models simply ignore ``graph.edges``.
+    Model-agnostic and framework-free (numpy): the same output whatever
+    model the job trains. The model family's middleware packages it into
+    that family's model-ready input; tabular consumers simply never read
+    ``graph.edges``.
     """
 
     features: EncodedFeatures
@@ -67,9 +75,9 @@ class InputPipeline:
             ),
         )
 
-    def convert(self, batch: DataBatch) -> ModelInput:
+    def convert(self, batch: DataBatch) -> EncodedBatch:
         batch, graph = self.view_builder.transform(batch)
-        return ModelInput(
+        return EncodedBatch(
             features=self.feature_converter.apply(batch),
             graph=graph,
         )
