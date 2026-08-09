@@ -1,7 +1,7 @@
 import numpy as np
 import pyarrow as pa
 import pytest
-from pipeline.converter import (
+from pipeline.feature.encoder import (
     CategoricalEncoder,
     NumericEncoder,
     TimestampEncoder,
@@ -46,15 +46,26 @@ def test_categorical_encoder_supports_integer_cardinality() -> None:
     assert out.tolist() == [1, 2, 0, 2]
 
 
-def test_categorical_encoder_unknown_value_does_not_raise() -> None:
-    # Unknown handling is the FeatureConverter's responsibility; the encoder
-    # itself just lets pc.index_in produce a null and casts to int64.
+def test_categorical_encoder_unknown_value_maps_to_reserved_code() -> None:
+    # Out-of-vocabulary values get the reserved code len(cardinality) — the
+    # last row of a (cardinality + 1)-sized embedding table.
     encoder = CategoricalEncoder(cardinality=["a", "b"])
 
     out = encoder.encode(pa.array(["a", "zzz"]))
 
     assert out.dtype == np.int64
-    assert out[0] == 0
+    assert encoder.unknown_code == 2
+    assert out.tolist() == [0, 2]
+
+
+def test_categorical_encoder_null_maps_to_reserved_code() -> None:
+    # Nulls that survive null-fill (e.g. leading nulls under forward-fill)
+    # land on the same reserved code as unknown values.
+    encoder = CategoricalEncoder(cardinality=["a", "b"])
+
+    out = encoder.encode(pa.array(["b", None]))
+
+    assert out.tolist() == [1, encoder.unknown_code]
 
 
 # ---------------------------------------------------------------------------
