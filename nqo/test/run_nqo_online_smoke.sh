@@ -6,23 +6,24 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5432}"
 PGUSER="${PGUSER:-neurdb}"
 PGDATABASE="${PGDATABASE:-imdb_ori}"
-QUERY_FILE="${QUERY_FILE:-/code/neurdb-dev/neurqo/test/job_2a.sql}"
-TRAINER="${TRAINER:-/code/neurdb-dev/neurqo/server/online_trainer.py}"
+QUERY_FILE="${QUERY_FILE:-/code/neurdb-dev/nqo/test/job_2a.sql}"
+NQO_RUNTIME_SRC="${NQO_RUNTIME_SRC:-/code/neurdb-dev/.nqo_runtime/nqo/src}"
 
-tmpdir="$(mktemp -d /tmp/neurqo-online-smoke.XXXXXX)"
+tmpdir="$(mktemp -d /tmp/nqo-online-smoke.XXXXXX)"
 db_log="${tmpdir}/db_trajectory.jsonl"
 transitions="${tmpdir}/transitions.jsonl"
 query_out="${tmpdir}/query.out"
 
 "${PSQL_BIN}" -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}" \
   -v ON_ERROR_STOP=1 -At >"${query_out}" <<SQL
-SET neurqo.trajectory_log = '${db_log}';
-SET neurqo.max_rounds = 1;
-SET neurqo = on;
+SET nqo.trajectory_log = '${db_log}';
+SET nqo.max_rounds = 1;
+SET nqo = on;
 \\i ${QUERY_FILE}
 SQL
 
-python3 "${TRAINER}" --db-log "${db_log}" --out "${transitions}" --once >/dev/null
+PYTHONPATH="${NQO_RUNTIME_SRC}" python3 -m runtime.online_trainer \
+  --db-log "${db_log}" --out "${transitions}" --once >/dev/null
 
 python3 - "${db_log}" "${transitions}" "${query_out}" <<'PY'
 import json

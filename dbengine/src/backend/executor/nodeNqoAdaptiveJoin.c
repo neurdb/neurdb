@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
  *
- * nodeNeurqoAdaptiveJoin.c
- *	  Runtime HashJoin-to-NestLoop selection for NeurQO.
+ * nodeNqoAdaptiveJoin.c
+ *	  Runtime HashJoin-to-NestLoop selection for NQO.
  *
  * The planner supplies a normal HashJoin subtree, an equivalent NestLoop
  * subtree.  The first HashJoin call builds its real hash table; we read the
@@ -13,7 +13,7 @@
  */
 #include "postgres.h"
 
-#include "executor/nodeNeurqoAdaptiveJoin.h"
+#include "executor/nodeNqoAdaptiveJoin.h"
 
 #include "commands/explain.h"
 #include "executor/executor.h"
@@ -24,23 +24,23 @@
 #include "nodes/nodeFuncs.h"
 #include "portability/instr_time.h"
 
-#define NEURQO_ADAPTIVE_JOIN_NAME "NeurqoAdaptiveJoin"
+#define NQO_ADAPTIVE_JOIN_NAME "NqoAdaptiveJoin"
 
-static NeurqoAdaptiveJoinStats neurqo_adaptive_stats;
+static NqoAdaptiveJoinStats nqo_adaptive_stats;
 
 void
-neurqo_reset_adaptive_join_stats(void)
+nqo_reset_adaptive_join_stats(void)
 {
-	memset(&neurqo_adaptive_stats, 0, sizeof(neurqo_adaptive_stats));
+	memset(&nqo_adaptive_stats, 0, sizeof(nqo_adaptive_stats));
 }
 
-NeurqoAdaptiveJoinStats
-neurqo_get_adaptive_join_stats(void)
+NqoAdaptiveJoinStats
+nqo_get_adaptive_join_stats(void)
 {
-	return neurqo_adaptive_stats;
+	return nqo_adaptive_stats;
 }
 
-typedef struct NeurqoAdaptiveJoinState
+typedef struct NqoAdaptiveJoinState
 {
 	CustomScanState css;
 	PlanState  *hash_state;
@@ -57,54 +57,54 @@ typedef struct NeurqoAdaptiveJoinState
 	bool		decided;
 	bool		use_nestloop;
 	bool		join_empty;
-} NeurqoAdaptiveJoinState;
+} NqoAdaptiveJoinState;
 
-static Node *neurqo_create_adaptive_join_state(CustomScan *cscan);
-static void neurqo_begin_adaptive_join(CustomScanState *node,
+static Node *nqo_create_adaptive_join_state(CustomScan *cscan);
+static void nqo_begin_adaptive_join(CustomScanState *node,
 									   EState *estate, int eflags);
-static TupleTableSlot *neurqo_exec_adaptive_join(CustomScanState *node);
-static void neurqo_end_adaptive_join(CustomScanState *node);
-static void neurqo_rescan_adaptive_join(CustomScanState *node);
-static void neurqo_explain_adaptive_join(CustomScanState *node,
+static TupleTableSlot *nqo_exec_adaptive_join(CustomScanState *node);
+static void nqo_end_adaptive_join(CustomScanState *node);
+static void nqo_rescan_adaptive_join(CustomScanState *node);
+static void nqo_explain_adaptive_join(CustomScanState *node,
 										 List *ancestors,
 										 ExplainState *es);
 
-static const CustomScanMethods neurqo_adaptive_join_plan_methods = {
-	.CustomName = NEURQO_ADAPTIVE_JOIN_NAME,
-	.CreateCustomScanState = neurqo_create_adaptive_join_state,
+static const CustomScanMethods nqo_adaptive_join_plan_methods = {
+	.CustomName = NQO_ADAPTIVE_JOIN_NAME,
+	.CreateCustomScanState = nqo_create_adaptive_join_state,
 };
 
-static const CustomExecMethods neurqo_adaptive_join_exec_methods = {
-	.CustomName = NEURQO_ADAPTIVE_JOIN_NAME,
-	.BeginCustomScan = neurqo_begin_adaptive_join,
-	.ExecCustomScan = neurqo_exec_adaptive_join,
-	.EndCustomScan = neurqo_end_adaptive_join,
-	.ReScanCustomScan = neurqo_rescan_adaptive_join,
-	.ExplainCustomScan = neurqo_explain_adaptive_join,
+static const CustomExecMethods nqo_adaptive_join_exec_methods = {
+	.CustomName = NQO_ADAPTIVE_JOIN_NAME,
+	.BeginCustomScan = nqo_begin_adaptive_join,
+	.ExecCustomScan = nqo_exec_adaptive_join,
+	.EndCustomScan = nqo_end_adaptive_join,
+	.ReScanCustomScan = nqo_rescan_adaptive_join,
+	.ExplainCustomScan = nqo_explain_adaptive_join,
 };
 
 static void
-neurqo_register_adaptive_join(void)
+nqo_register_adaptive_join(void)
 {
-	if (GetCustomScanMethods(NEURQO_ADAPTIVE_JOIN_NAME, true) == NULL)
-		RegisterCustomScanMethods(&neurqo_adaptive_join_plan_methods);
+	if (GetCustomScanMethods(NQO_ADAPTIVE_JOIN_NAME, true) == NULL)
+		RegisterCustomScanMethods(&nqo_adaptive_join_plan_methods);
 }
 
 static Node *
-neurqo_create_adaptive_join_state(CustomScan *cscan)
+nqo_create_adaptive_join_state(CustomScan *cscan)
 {
-	NeurqoAdaptiveJoinState *state;
+	NqoAdaptiveJoinState *state;
 
-	state = palloc0(sizeof(NeurqoAdaptiveJoinState));
+	state = palloc0(sizeof(NqoAdaptiveJoinState));
 	NodeSetTag(&state->css, T_CustomScanState);
-	state->css.methods = &neurqo_adaptive_join_exec_methods;
+	state->css.methods = &nqo_adaptive_join_exec_methods;
 	return (Node *) state;
 }
 
 static void
-neurqo_begin_adaptive_join(CustomScanState *node, EState *estate, int eflags)
+nqo_begin_adaptive_join(CustomScanState *node, EState *estate, int eflags)
 {
-	NeurqoAdaptiveJoinState *state = (NeurqoAdaptiveJoinState *) node;
+	NqoAdaptiveJoinState *state = (NqoAdaptiveJoinState *) node;
 	CustomScan *cscan = (CustomScan *) node->ss.ps.plan;
 	ListCell   *lc;
 
@@ -130,9 +130,9 @@ neurqo_begin_adaptive_join(CustomScanState *node, EState *estate, int eflags)
 }
 
 static TupleTableSlot *
-neurqo_exec_adaptive_join(CustomScanState *node)
+nqo_exec_adaptive_join(CustomScanState *node)
 {
-	NeurqoAdaptiveJoinState *state = (NeurqoAdaptiveJoinState *) node;
+	NqoAdaptiveJoinState *state = (NqoAdaptiveJoinState *) node;
 
 	if (!state->decided)
 	{
@@ -151,22 +151,22 @@ neurqo_exec_adaptive_join(CustomScanState *node)
 		INSTR_TIME_SUBTRACT(end, start);
 
 		if (!build_ok)
-			elog(ERROR, "NeurQO adaptive join could not build HashJoin table");
+			elog(ERROR, "NQO adaptive join could not build HashJoin table");
 		state->use_nestloop =
 			!state->join_empty &&
 			state->actual_build_rows <= (uint64) state->threshold_rows;
 		state->chosen_state = state->use_nestloop ?
 			state->nest_state : state->hash_state;
 		state->decided = true;
-		neurqo_adaptive_stats.joins_decided++;
-		neurqo_adaptive_stats.actual_build_rows += state->actual_build_rows;
-		neurqo_adaptive_stats.build_ms += INSTR_TIME_GET_MILLISEC(end);
+		nqo_adaptive_stats.joins_decided++;
+		nqo_adaptive_stats.actual_build_rows += state->actual_build_rows;
+		nqo_adaptive_stats.build_ms += INSTR_TIME_GET_MILLISEC(end);
 		if (state->use_nestloop)
-			neurqo_adaptive_stats.nestloop_selected++;
+			nqo_adaptive_stats.nestloop_selected++;
 		else
-			neurqo_adaptive_stats.hashjoin_selected++;
+			nqo_adaptive_stats.hashjoin_selected++;
 
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT
+		elog(LOG, "[nqo] run=" UINT64_FORMAT
 			 " round %d: adaptive_join=%d level=%s "
 			 "estimated_build_rows=%.0f actual_build_rows=" UINT64_FORMAT
 			 " threshold_rows=%d indexed_probe=%d selected=%s "
@@ -185,7 +185,7 @@ neurqo_exec_adaptive_join(CustomScanState *node)
 }
 
 static void
-neurqo_end_adaptive_join(CustomScanState *node)
+nqo_end_adaptive_join(CustomScanState *node)
 {
 	ListCell   *lc;
 
@@ -194,9 +194,9 @@ neurqo_end_adaptive_join(CustomScanState *node)
 }
 
 static void
-neurqo_rescan_adaptive_join(CustomScanState *node)
+nqo_rescan_adaptive_join(CustomScanState *node)
 {
-	NeurqoAdaptiveJoinState *state = (NeurqoAdaptiveJoinState *) node;
+	NqoAdaptiveJoinState *state = (NqoAdaptiveJoinState *) node;
 
 	if (state->decided)
 		ExecReScan(state->chosen_state);
@@ -205,10 +205,10 @@ neurqo_rescan_adaptive_join(CustomScanState *node)
 }
 
 static void
-neurqo_explain_adaptive_join(CustomScanState *node, List *ancestors,
+nqo_explain_adaptive_join(CustomScanState *node, List *ancestors,
 							 ExplainState *es)
 {
-	NeurqoAdaptiveJoinState *state = (NeurqoAdaptiveJoinState *) node;
+	NqoAdaptiveJoinState *state = (NqoAdaptiveJoinState *) node;
 
 	(void) ancestors;
 	ExplainPropertyText("AJA Level", state->level, es);
@@ -230,7 +230,7 @@ neurqo_explain_adaptive_join(CustomScanState *node, List *ancestors,
 }
 
 static Index
-neurqo_scan_relid(Plan *plan)
+nqo_scan_relid(Plan *plan)
 {
 	switch (nodeTag(plan))
 	{
@@ -257,7 +257,7 @@ neurqo_scan_relid(Plan *plan)
 }
 
 static Bitmapset *
-neurqo_collect_plan_relids(Plan *plan)
+nqo_collect_plan_relids(Plan *plan)
 {
 	Bitmapset  *relids = NULL;
 	Index		scanrelid;
@@ -265,31 +265,31 @@ neurqo_collect_plan_relids(Plan *plan)
 	if (plan == NULL)
 		return NULL;
 
-	scanrelid = neurqo_scan_relid(plan);
+	scanrelid = nqo_scan_relid(plan);
 	if (scanrelid > 0)
 		relids = bms_add_member(relids, scanrelid);
 	if (IsA(plan, CustomScan))
 		relids = bms_join(relids,
 						  bms_copy(((CustomScan *) plan)->custom_relids));
 
-	relids = bms_join(relids, neurqo_collect_plan_relids(outerPlan(plan)));
-	relids = bms_join(relids, neurqo_collect_plan_relids(innerPlan(plan)));
+	relids = bms_join(relids, nqo_collect_plan_relids(outerPlan(plan)));
+	relids = bms_join(relids, nqo_collect_plan_relids(innerPlan(plan)));
 	return relids;
 }
 
 static bool
-neurqo_plan_contains_index(Plan *plan)
+nqo_plan_contains_index(Plan *plan)
 {
 	if (plan == NULL)
 		return false;
 	if (IsA(plan, IndexScan) || IsA(plan, IndexOnlyScan))
 		return true;
-	return neurqo_plan_contains_index(outerPlan(plan)) ||
-		neurqo_plan_contains_index(innerPlan(plan));
+	return nqo_plan_contains_index(outerPlan(plan)) ||
+		nqo_plan_contains_index(innerPlan(plan));
 }
 
 static TargetEntry *
-neurqo_tle_by_resno(List *targetlist, AttrNumber resno)
+nqo_tle_by_resno(List *targetlist, AttrNumber resno)
 {
 	ListCell   *lc;
 
@@ -304,7 +304,7 @@ neurqo_tle_by_resno(List *targetlist, AttrNumber resno)
 }
 
 static bool
-neurqo_resolve_output_var(Plan *plan, AttrNumber resno, Index *varno,
+nqo_resolve_output_var(Plan *plan, AttrNumber resno, Index *varno,
 						  AttrNumber *varattno, int depth)
 {
 	TargetEntry *tle;
@@ -313,7 +313,7 @@ neurqo_resolve_output_var(Plan *plan, AttrNumber resno, Index *varno,
 	if (plan == NULL || resno <= 0 || depth > 32)
 		return false;
 
-	tle = neurqo_tle_by_resno(plan->targetlist, resno);
+	tle = nqo_tle_by_resno(plan->targetlist, resno);
 	if (tle == NULL || !IsA(tle->expr, Var))
 		return false;
 
@@ -321,18 +321,18 @@ neurqo_resolve_output_var(Plan *plan, AttrNumber resno, Index *varno,
 	if (var->varattno <= 0)
 		return false;
 	if (var->varno == OUTER_VAR)
-		return neurqo_resolve_output_var(outerPlan(plan), var->varattno,
+		return nqo_resolve_output_var(outerPlan(plan), var->varattno,
 										 varno, varattno, depth + 1);
 	if (var->varno == INNER_VAR)
-		return neurqo_resolve_output_var(innerPlan(plan), var->varattno,
+		return nqo_resolve_output_var(innerPlan(plan), var->varattno,
 										 varno, varattno, depth + 1);
 	if (var->varno == INDEX_VAR && IsA(plan, CustomScan))
 	{
 		CustomScan *cscan = (CustomScan *) plan;
 
-			if (cscan->methods == &neurqo_adaptive_join_plan_methods &&
+			if (cscan->methods == &nqo_adaptive_join_plan_methods &&
 				cscan->custom_plans != NIL)
-				return neurqo_resolve_output_var(
+				return nqo_resolve_output_var(
 					(Plan *) linitial(cscan->custom_plans),
 					var->varattno, varno, varattno, depth + 1);
 	}
@@ -345,7 +345,7 @@ neurqo_resolve_output_var(Plan *plan, AttrNumber resno, Index *varno,
 }
 
 static bool
-neurqo_find_output_resno(Plan *plan, Index varno, AttrNumber varattno,
+nqo_find_output_resno(Plan *plan, Index varno, AttrNumber varattno,
 						 AttrNumber *resno)
 {
 	ListCell   *lc;
@@ -356,7 +356,7 @@ neurqo_find_output_resno(Plan *plan, Index varno, AttrNumber varattno,
 		Index		output_varno;
 		AttrNumber output_attno;
 
-		if (neurqo_resolve_output_var(plan, tle->resno, &output_varno,
+		if (nqo_resolve_output_var(plan, tle->resno, &output_varno,
 									  &output_attno, 0) &&
 			output_varno == varno && output_attno == varattno)
 		{
@@ -369,7 +369,7 @@ neurqo_find_output_resno(Plan *plan, Index varno, AttrNumber varattno,
 }
 
 static bool
-neurqo_projection_compatible(Plan *desired_plan, Plan *source_plan)
+nqo_projection_compatible(Plan *desired_plan, Plan *source_plan)
 {
 	ListCell   *lc;
 
@@ -381,15 +381,15 @@ neurqo_projection_compatible(Plan *desired_plan, Plan *source_plan)
 		AttrNumber varattno;
 		AttrNumber source_resno;
 
-		if (!neurqo_resolve_output_var(desired_plan,
+		if (!nqo_resolve_output_var(desired_plan,
 									   desired_tle->resno,
 									   &varno, &varattno, 0) ||
-			!neurqo_find_output_resno(source_plan, varno, varattno,
+			!nqo_find_output_resno(source_plan, varno, varattno,
 									  &source_resno))
 			return false;
 
 		source_tle =
-			neurqo_tle_by_resno(source_plan->targetlist, source_resno);
+			nqo_tle_by_resno(source_plan->targetlist, source_resno);
 		Assert(source_tle != NULL);
 		if (exprType((Node *) desired_tle->expr) !=
 			exprType((Node *) source_tle->expr) ||
@@ -405,7 +405,7 @@ neurqo_projection_compatible(Plan *desired_plan, Plan *source_plan)
 }
 
 static Plan *
-neurqo_make_projection(Plan *desired_plan, Plan *source_plan)
+nqo_make_projection(Plan *desired_plan, Plan *source_plan)
 {
 	Result	   *result = makeNode(Result);
 	Plan	   *plan = &result->plan;
@@ -426,10 +426,10 @@ neurqo_make_projection(Plan *desired_plan, Plan *source_plan)
 		AttrNumber source_resno;
 		Var		   *var;
 
-		if (!neurqo_resolve_output_var(desired_plan,
+		if (!nqo_resolve_output_var(desired_plan,
 									   desired_tle->resno,
 									   &varno, &varattno, 0) ||
-			!neurqo_find_output_resno(source_plan, varno, varattno,
+			!nqo_find_output_resno(source_plan, varno, varattno,
 									  &source_resno))
 			return NULL;
 
@@ -465,7 +465,7 @@ neurqo_make_projection(Plan *desired_plan, Plan *source_plan)
 }
 
 static NestLoop *
-neurqo_find_nestloop_candidate(Plan *plan, Bitmapset *join_relids,
+nqo_find_nestloop_candidate(Plan *plan, Bitmapset *join_relids,
 							   Bitmapset *build_relids,
 							   JoinType jointype, Plan *output_plan,
 							   Plan *build_plan,
@@ -488,21 +488,21 @@ neurqo_find_nestloop_candidate(Plan *plan, Bitmapset *join_relids,
 			bool		index_compatible;
 
 		candidate = (NestLoop *) plan;
-		candidate_relids = neurqo_collect_plan_relids(plan);
-		outer_relids = neurqo_collect_plan_relids(outerPlan(plan));
-		inner_relids = neurqo_collect_plan_relids(innerPlan(plan));
+		candidate_relids = nqo_collect_plan_relids(plan);
+		outer_relids = nqo_collect_plan_relids(outerPlan(plan));
+		inner_relids = nqo_collect_plan_relids(innerPlan(plan));
 		same_join = candidate->join.jointype == jointype &&
 			bms_equal(candidate_relids, join_relids);
 		same_build = bms_equal(outer_relids, build_relids);
 			single_probe = !require_index ||
 				bms_num_members(inner_relids) == 1;
 			same_output =
-				neurqo_projection_compatible(output_plan, plan);
+				nqo_projection_compatible(output_plan, plan);
 			index_compatible = !require_index ||
 				(candidate->nestParams != NIL &&
-				 neurqo_plan_contains_index(innerPlan(plan)));
+				 nqo_plan_contains_index(innerPlan(plan)));
 				if (same_join)
-					elog(DEBUG1, "[neurqo] adaptive candidate match: "
+					elog(DEBUG1, "[nqo] adaptive candidate match: "
 						 "same_build=%d single_probe=%d same_output=%d "
 						 "index_compatible=%d require_index=%d "
 						 "join_relids=%s build_relids=%s "
@@ -527,20 +527,20 @@ neurqo_find_nestloop_candidate(Plan *plan, Bitmapset *join_relids,
 		bms_free(inner_relids);
 	}
 
-	candidate = neurqo_find_nestloop_candidate(outerPlan(plan), join_relids,
+	candidate = nqo_find_nestloop_candidate(outerPlan(plan), join_relids,
 											   build_relids, jointype,
 											   output_plan, build_plan,
 											   require_index);
 	if (candidate != NULL)
 		return candidate;
-	return neurqo_find_nestloop_candidate(innerPlan(plan), join_relids,
+	return nqo_find_nestloop_candidate(innerPlan(plan), join_relids,
 										  build_relids, jointype,
 										  output_plan, build_plan,
 										  require_index);
 }
 
 static List *
-neurqo_make_passthrough_tlist(List *source)
+nqo_make_passthrough_tlist(List *source)
 {
 	List	   *targetlist = NIL;
 	ListCell   *lc;
@@ -566,7 +566,7 @@ neurqo_make_passthrough_tlist(List *source)
 }
 
 static CustomScan *
-neurqo_make_adaptive_join(Plan *hash_plan, NestLoop *nestloop_plan,
+nqo_make_adaptive_join(Plan *hash_plan, NestLoop *nestloop_plan,
 						  Plan *build_plan, Bitmapset *join_relids,
 						  const char *level, int threshold_rows,
 						  bool indexed_probe, uint64 run_id, int round,
@@ -578,7 +578,7 @@ neurqo_make_adaptive_join(Plan *hash_plan, NestLoop *nestloop_plan,
 	Plan	   *nestloop_projection;
 	int			effective_threshold = indexed_probe ? threshold_rows : 1;
 
-	nestloop_projection = neurqo_make_projection(hash_plan, nestloop_copy);
+	nestloop_projection = nqo_make_projection(hash_plan, nestloop_copy);
 	Assert(nestloop_projection != NULL);
 	plan->startup_cost = hash_plan->startup_cost;
 	plan->total_cost = hash_plan->total_cost;
@@ -588,7 +588,7 @@ neurqo_make_adaptive_join(Plan *hash_plan, NestLoop *nestloop_plan,
 	plan->parallel_safe = false;
 	plan->async_capable = false;
 	plan->plan_node_id = hash_plan->plan_node_id;
-	plan->targetlist = neurqo_make_passthrough_tlist(hash_plan->targetlist);
+	plan->targetlist = nqo_make_passthrough_tlist(hash_plan->targetlist);
 	plan->qual = NIL;
 	plan->lefttree = NULL;
 	plan->righttree = NULL;
@@ -613,12 +613,12 @@ neurqo_make_adaptive_join(Plan *hash_plan, NestLoop *nestloop_plan,
 				makeInteger(indexed_probe ? 1 : 0));
 	cscan->custom_scan_tlist = copyObjectImpl(hash_plan->targetlist);
 	cscan->custom_relids = bms_copy(join_relids);
-	cscan->methods = &neurqo_adaptive_join_plan_methods;
+	cscan->methods = &nqo_adaptive_join_plan_methods;
 	return cscan;
 }
 
 static Plan *
-neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
+nqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 					  int threshold_rows,
 					  int max_nestloop_cost_ratio_pct,
 					  uint64 run_id, int round,
@@ -635,12 +635,12 @@ neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 	if (plan == NULL)
 		return NULL;
 
-	outerPlan(plan) = neurqo_wrap_plan_tree(outerPlan(plan), nestloop_root,
+	outerPlan(plan) = nqo_wrap_plan_tree(outerPlan(plan), nestloop_root,
 											level, threshold_rows,
 											max_nestloop_cost_ratio_pct,
 											run_id, round, next_join_id,
 											wrapped);
-	innerPlan(plan) = neurqo_wrap_plan_tree(innerPlan(plan), nestloop_root,
+	innerPlan(plan) = nqo_wrap_plan_tree(innerPlan(plan), nestloop_root,
 											level, threshold_rows,
 											max_nestloop_cost_ratio_pct,
 											run_id, round, next_join_id,
@@ -661,9 +661,9 @@ neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 	if (build_plan == NULL)
 		return plan;
 
-	join_relids = neurqo_collect_plan_relids(plan);
-	build_relids = neurqo_collect_plan_relids(build_plan);
-	candidate = neurqo_find_nestloop_candidate(nestloop_root, join_relids,
+	join_relids = nqo_collect_plan_relids(plan);
+	build_relids = nqo_collect_plan_relids(build_plan);
+	candidate = nqo_find_nestloop_candidate(nestloop_root, join_relids,
 											  build_relids,
 											  hashjoin->join.jointype,
 											  plan,
@@ -671,7 +671,7 @@ neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 	if (candidate == NULL)
 	{
 		indexed_probe = false;
-		candidate = neurqo_find_nestloop_candidate(nestloop_root, join_relids,
+		candidate = nqo_find_nestloop_candidate(nestloop_root, join_relids,
 												  build_relids,
 												  hashjoin->join.jointype,
 												  plan,
@@ -689,7 +689,7 @@ neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 		double		nestloop_cost = candidate->join.plan.total_cost;
 		double		cost_ratio_pct = 100.0 * nestloop_cost / hash_cost;
 
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT
+		elog(LOG, "[nqo] run=" UINT64_FORMAT
 			 " round %d: adaptive candidate join=%d indexed_probe=%d "
 			 "hash_cost=%.2f nestloop_cost=%.2f cost_ratio_pct=%.2f "
 			 "max_cost_ratio_pct=%d",
@@ -699,7 +699,7 @@ neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 		if (max_nestloop_cost_ratio_pct > 0 &&
 			cost_ratio_pct > (double) max_nestloop_cost_ratio_pct)
 		{
-			elog(LOG, "[neurqo] run=" UINT64_FORMAT
+			elog(LOG, "[nqo] run=" UINT64_FORMAT
 				 " round %d: adaptive candidate join=%d rejected by "
 				 "nest-loop cost guard",
 				 run_id, round, join_id);
@@ -708,7 +708,7 @@ neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 			return plan;
 		}
 
-		adaptive = neurqo_make_adaptive_join(plan, candidate, build_plan,
+		adaptive = nqo_make_adaptive_join(plan, candidate, build_plan,
 											join_relids, level,
 											threshold_rows, indexed_probe,
 											run_id, round, join_id);
@@ -724,7 +724,7 @@ neurqo_wrap_plan_tree(Plan *plan, Plan *nestloop_root, const char *level,
 }
 
 static int
-neurqo_count_hashjoins(Plan *plan)
+nqo_count_hashjoins(Plan *plan)
 {
 	int			count = 0;
 
@@ -742,24 +742,24 @@ neurqo_count_hashjoins(Plan *plan)
 			plan->extParam == NULL && plan->initPlan == NIL)
 			count++;
 	}
-	count += neurqo_count_hashjoins(outerPlan(plan));
-	count += neurqo_count_hashjoins(innerPlan(plan));
+	count += nqo_count_hashjoins(outerPlan(plan));
+	count += nqo_count_hashjoins(innerPlan(plan));
 	return count;
 }
 
 int
-neurqo_count_adaptive_hashjoins(PlannedStmt *plannedstmt)
+nqo_count_adaptive_hashjoins(PlannedStmt *plannedstmt)
 {
 	if (plannedstmt == NULL ||
 		plannedstmt->commandType != CMD_SELECT ||
 		plannedstmt->subplans != NIL ||
 		plannedstmt->parallelModeNeeded)
 		return 0;
-	return neurqo_count_hashjoins(plannedstmt->planTree);
+	return nqo_count_hashjoins(plannedstmt->planTree);
 }
 
 static bool
-neurqo_merge_param_types(PlannedStmt *baseline, PlannedStmt *alternative)
+nqo_merge_param_types(PlannedStmt *baseline, PlannedStmt *alternative)
 {
 	int			common;
 	int			i;
@@ -780,7 +780,7 @@ neurqo_merge_param_types(PlannedStmt *baseline, PlannedStmt *alternative)
 }
 
 int
-neurqo_wrap_adaptive_joins(PlannedStmt *baseline,
+nqo_wrap_adaptive_joins(PlannedStmt *baseline,
 						   PlannedStmt *nestloop_alternative,
 						   const char *level, int threshold_rows,
 						   int max_nestloop_cost_ratio_pct,
@@ -798,12 +798,12 @@ neurqo_wrap_adaptive_joins(PlannedStmt *baseline,
 		threshold_rows < 1)
 		return 0;
 
-	if (!neurqo_merge_param_types(baseline, nestloop_alternative))
+	if (!nqo_merge_param_types(baseline, nestloop_alternative))
 		return 0;
 
-	neurqo_register_adaptive_join();
+	nqo_register_adaptive_join();
 	baseline->planTree =
-		neurqo_wrap_plan_tree(baseline->planTree,
+		nqo_wrap_plan_tree(baseline->planTree,
 							  nestloop_alternative->planTree,
 							  level, threshold_rows,
 							  max_nestloop_cost_ratio_pct,

@@ -94,23 +94,23 @@
 /* set by the GUC/AI policy; read inside query_split.c */
 extern int query_splitting_algorithm;
 extern int order_decision;
-extern bool neurqo_enabled;		/* the `neurqo` on/off GUC */
-extern char *neurqo_server_url;
-extern char *neurqo_trajectory_log_path;
-extern int neurqo_server_timeout_ms;
-extern int neurqo_max_rounds;
-extern int neurqo_search_topk;
-extern int neurqo_search_max_rels;
-extern bool neurqo_search_exact_cardinality;
-extern int neurqo_aja_conservative_rows;
-extern int neurqo_aja_aggressive_rows;
-extern int neurqo_aja_max_nestloop_cost_ratio_pct;
-extern int neurqo_aja_aggressive_max_nestloop_cost_ratio_pct;
-extern int neurqo_lip_max_build_relation_rows;
-extern int neurqo_lip_selective_plan_rows;
-extern int neurqo_lip_max_build_selectivity_pct;
-extern int neurqo_lip_min_probe_ratio;
-extern int neurqo_lip_max_filters;
+extern bool nqo_enabled;		/* the `nqo` on/off GUC */
+extern char *nqo_server_url;
+extern char *nqo_trajectory_log_path;
+extern int nqo_server_timeout_ms;
+extern int nqo_max_rounds;
+extern int nqo_search_topk;
+extern int nqo_search_max_rels;
+extern bool nqo_search_exact_cardinality;
+extern int nqo_aja_conservative_rows;
+extern int nqo_aja_aggressive_rows;
+extern int nqo_aja_max_nestloop_cost_ratio_pct;
+extern int nqo_aja_aggressive_max_nestloop_cost_ratio_pct;
+extern int nqo_lip_max_build_relation_rows;
+extern int nqo_lip_selective_plan_rows;
+extern int nqo_lip_max_build_selectivity_pct;
+extern int nqo_lip_min_probe_ratio;
+extern int nqo_lip_max_filters;
 
 /* DR_intorel is static in PG16's createas.c; expose it here for Prepare4Next.
  * Layout copied verbatim from src/backend/commands/createas.c (PG16). */

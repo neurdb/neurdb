@@ -77,7 +77,7 @@
 #include "utils/snapmgr.h"
 #include "utils/timeout.h"
 #include "utils/timestamp.h"
-#include "parser/query_split.h"		/* NeurQO RCenter query-split pipeline */
+#include "parser/query_split.h"		/* NQO RCenter query-split pipeline */
 
 /* ----------------
  *		global variables
@@ -1230,14 +1230,14 @@ exec_simple_query(const char *query_string)
 															NULL, 0, NULL);
 
 		/*
-		 * NeurQO: when the `neurqo` GUC is on, divert a top-level SELECT into
+		 * NQO: when the `nqo` GUC is on, divert a top-level SELECT into
 		 * the RCenter query-split / re-optimization pipeline.  This happens
 		 * BEFORE planning (doQSparse runs its own per-subquery planning,
 		 * materialization and execution, and emits its own EndCommand), so the
 		 * normal plan/portal path and the trailing EndCommand are skipped.
 		 */
-		bool		neurqo_handled = false;
-		if (neurqo_enabled && querytree_list != NIL &&
+		bool		nqo_handled = false;
+		if (nqo_enabled && querytree_list != NIL &&
 			linitial_node(Query, querytree_list)->commandType == CMD_SELECT)
 		{
 			query_splitting_algorithm = RelationshipCenter;
@@ -1250,10 +1250,10 @@ exec_simple_query(const char *query_string)
 			doQSparse(query_string, commandTag, parsetree->stmt,
 					  linitial_node(Query, querytree_list), &qc);
 			MemoryContextSwitchTo(oldcontext);
-			neurqo_handled = true;
+			nqo_handled = true;
 		}
 
-		if (!neurqo_handled)
+		if (!nqo_handled)
 		{
 		plantree_list = pg_plan_queries(querytree_list, query_string,
 										CURSOR_OPT_PARALLEL_OK, NULL);
@@ -1347,7 +1347,7 @@ exec_simple_query(const char *query_string)
 		receiver->rDestroy(receiver);
 
 		PortalDrop(portal, false);
-		}						/* end if (!neurqo_handled) */
+		}						/* end if (!nqo_handled) */
 
 		if (lnext(parsetree_list, parsetree_item) == NULL)
 		{
@@ -1401,7 +1401,7 @@ exec_simple_query(const char *query_string)
 		 * command the client sent, regardless of rewriting. (But a command
 		 * aborted by error will not send an EndCommand report at all.)
 		 */
-		if (!neurqo_handled)	/* doQSparse() already emitted EndCommand */
+		if (!nqo_handled)	/* doQSparse() already emitted EndCommand */
 			EndCommand(&qc, dest, false);
 
 		/* Now we may drop the per-parsetree context, if one was created. */

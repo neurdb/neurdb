@@ -6,11 +6,11 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5432}"
 PGUSER="${PGUSER:-neurdb}"
 PGDATABASE="${PGDATABASE:-imdb_ori}"
-AI_SERVER="${AI_SERVER:-/code/neurdb-dev/neurqo/server/ai_server.py}"
-TEST_POLICY="${TEST_POLICY:-/code/neurdb-dev/neurqo/test/aja_test_policy.py:predict}"
+NQO_RUNTIME_SRC="${NQO_RUNTIME_SRC:-/code/neurdb-dev/.nqo_runtime/nqo/src}"
+TEST_POLICY="${TEST_POLICY:-/code/neurdb-dev/nqo/test/aja_test_policy.py:predict}"
 AI_PORT="${AI_PORT:-18089}"
 
-tmpdir="$(mktemp -d /tmp/neurqo-aja-smoke.XXXXXX)"
+tmpdir="$(mktemp -d /tmp/nqo-aja-smoke.XXXXXX)"
 server_log="${tmpdir}/ai_server.log"
 query_log="${tmpdir}/query.log"
 server_pid=""
@@ -24,7 +24,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-python3 "${AI_SERVER}" \
+PYTHONPATH="${NQO_RUNTIME_SRC}" python3 -m runtime.action_server \
     --host 127.0.0.1 \
     --port "${AI_PORT}" \
     --model-module "${TEST_POLICY}" \
@@ -46,52 +46,52 @@ curl -fsS "http://127.0.0.1:${AI_PORT}/" >/dev/null
     -d "${PGDATABASE}" \
     -v ON_ERROR_STOP=1 >"${query_log}" 2>&1 <<SQL
 SET client_min_messages = log;
-CREATE TEMP TABLE neurqo_aja_probe (k integer PRIMARY KEY, payload integer);
-CREATE TEMP TABLE neurqo_aja_probe_2 (k integer PRIMARY KEY, payload integer);
-CREATE TEMP TABLE neurqo_aja_build (k integer, payload integer);
-INSERT INTO neurqo_aja_probe
+CREATE TEMP TABLE nqo_aja_probe (k integer PRIMARY KEY, payload integer);
+CREATE TEMP TABLE nqo_aja_probe_2 (k integer PRIMARY KEY, payload integer);
+CREATE TEMP TABLE nqo_aja_build (k integer, payload integer);
+INSERT INTO nqo_aja_probe
 SELECT i, i FROM generate_series(1, 100000) AS g(i);
-INSERT INTO neurqo_aja_probe_2
+INSERT INTO nqo_aja_probe_2
 SELECT i, i FROM generate_series(1, 100000) AS g(i);
-INSERT INTO neurqo_aja_build
+INSERT INTO nqo_aja_build
 SELECT i, i FROM generate_series(1, 10000) AS g(i);
-ANALYZE neurqo_aja_probe;
-ANALYZE neurqo_aja_probe_2;
-ANALYZE neurqo_aja_build;
-DELETE FROM neurqo_aja_build WHERE k > 10;
+ANALYZE nqo_aja_probe;
+ANALYZE nqo_aja_probe_2;
+ANALYZE nqo_aja_build;
+DELETE FROM nqo_aja_build WHERE k > 10;
 
-SET neurqo.server_url = 'http://127.0.0.1:${AI_PORT}/action';
-SET neurqo.max_rounds = 0;
+SET nqo.server_url = 'http://127.0.0.1:${AI_PORT}/action';
+SET nqo.max_rounds = 0;
 SET enable_mergejoin = off;
-SET neurqo.aja_max_nestloop_cost_ratio_pct = 0;
-SET neurqo.aja_aggressive_max_nestloop_cost_ratio_pct = 0;
-SET neurqo.aja_conservative_rows = 5;
-SET neurqo = on;
+SET nqo.aja_max_nestloop_cost_ratio_pct = 0;
+SET nqo.aja_aggressive_max_nestloop_cost_ratio_pct = 0;
+SET nqo.aja_conservative_rows = 5;
+SET nqo = on;
 SELECT count(*)::text || ':' ||
        sum(build.payload + probe.payload)::text AS result
-FROM neurqo_aja_probe AS probe
-JOIN neurqo_aja_build AS build ON build.k = probe.k;
+FROM nqo_aja_probe AS probe
+JOIN nqo_aja_build AS build ON build.k = probe.k;
 
-SET neurqo.aja_conservative_rows = 100;
+SET nqo.aja_conservative_rows = 100;
 SELECT count(*)::text || ':' ||
        sum(build.payload + probe.payload)::text AS result
-FROM neurqo_aja_probe AS probe
-JOIN neurqo_aja_build AS build ON build.k = probe.k;
+FROM nqo_aja_probe AS probe
+JOIN nqo_aja_build AS build ON build.k = probe.k;
 
-SET neurqo.aja_conservative_rows = 5;
-SET neurqo.aja_aggressive_rows = 100;
+SET nqo.aja_conservative_rows = 5;
+SET nqo.aja_aggressive_rows = 100;
 SELECT count(*)::text || ':' ||
        sum(build_aggressive_case.payload + probe.payload)::text AS result
-FROM neurqo_aja_probe AS probe
-JOIN neurqo_aja_build AS build_aggressive_case
+FROM nqo_aja_probe AS probe
+JOIN nqo_aja_build AS build_aggressive_case
   ON build_aggressive_case.k = probe.k;
 
-SET neurqo.aja_conservative_rows = 100;
+SET nqo.aja_conservative_rows = 100;
 SELECT count(*)::text || ':' ||
        sum(build.payload + probe.payload + probe_2.payload)::text AS result
-FROM neurqo_aja_build AS build
-JOIN neurqo_aja_probe AS probe ON probe.k = build.k
-JOIN neurqo_aja_probe_2 AS probe_2 ON probe_2.k = build.k;
+FROM nqo_aja_build AS build
+JOIN nqo_aja_probe AS probe ON probe.k = build.k
+JOIN nqo_aja_probe_2 AS probe_2 ON probe_2.k = build.k;
 SQL
 
 if [[ "$(grep -c '^ *10:110 *$' "${query_log}")" -ne 3 ]]; then

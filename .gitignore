@@ -45,5 +45,7 @@ build/
 dbengine/nr_kernel/nr_store/external/*
 dbengine/nr_kernel/nr_store/external/hnswlib/
 
-# NeurQO online experiment scratch space.
+# NQO online experiment scratch space.
+.nqo_runtime/
+# Retain the legacy local runtime path outside new runs.
 .neurqo_runtime/

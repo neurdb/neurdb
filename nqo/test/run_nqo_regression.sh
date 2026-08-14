@@ -6,7 +6,7 @@ PGHOST="${PGHOST:-localhost}"
 PGPORT="${PGPORT:-5432}"
 PGUSER="${PGUSER:-neurdb}"
 PGDATABASE="${PGDATABASE:-imdb_ori}"
-QUERY_DIR="${QUERY_DIR:-/code/neurdb-dev/neurqo/test}"
+QUERY_DIR="${QUERY_DIR:-/code/neurdb-dev/nqo/test}"
 
 if [ "$#" -eq 0 ]; then
   QUERIES=(job_1a job_2a job_6a job_8c job_17a job_33a)
@@ -20,7 +20,7 @@ run_query() {
 
   "$PSQL_BIN" -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
     -v ON_ERROR_STOP=1 -At <<SQL | sed '/^SET$/d'
-SET neurqo = ${mode};
+SET nqo = ${mode};
 \\i ${sql_file}
 SQL
 }

@@ -18,7 +18,7 @@
 #include <sys/time.h>
 
 #include "access/stratnum.h"
-#include "executor/nodeNeurqoAdaptiveJoin.h"
+#include "executor/nodeNqoAdaptiveJoin.h"
 #include "fe_utils/simple_list.h"
 #include "nodes/nodeFuncs.h"
 #include "optimizer/cost.h"
@@ -42,11 +42,11 @@
 
 #define NEWBETTER 1
 #define OLDBETTER 2
-#define NEURQO_MAX_LIP_FILTERS 10
-#define NEURQO_MAX_LIP_PROBES 32
-#define NEURQO_SEARCH_ABS_MAX_RELS 16
-#define NEURQO_SEARCH_ABS_MAX_K 16
-#define NEURQO_AJA_PLAN_MAX_NODES 96
+#define NQO_MAX_LIP_FILTERS 10
+#define NQO_MAX_LIP_PROBES 32
+#define NQO_SEARCH_ABS_MAX_RELS 16
+#define NQO_SEARCH_ABS_MAX_K 16
+#define NQO_AJA_PLAN_MAX_NODES 96
 
 //Create a local query
 static Query* createQuery(const Query* querytree, CommandDest dest, List* rtable, Index* transfer_array, int length);
@@ -67,7 +67,7 @@ static int hasNext(bool* graph, int length);
 static bool is_RC(Expr* expr);
 //Transefer jointree to graph
 static bool* List2Graph(bool* is_relationship, List* joinlist, List* FKlist, int length);
-static int neurqo_remove_redundant_rr_equalities(
+static int nqo_remove_redundant_rr_equalities(
 	Query* query, bool* relationship_flags, int length);
 //Make a aggregation function as result
 static List* removeAggref(List* targetList);
@@ -99,52 +99,52 @@ static Query* QSSelectSubquery(Query* global_query, bool* graph,
 							   int max_split_rounds,
 							   double* policy_ms,
 							   char** selection_state_json_out);
-static bool neurqo_split_candidate_valid(
+static bool nqo_split_candidate_valid(
 	Query* query, int center_x, int center_y);
 static Plan* find_node_with_nleaf_recursive(Plan* plan, int nleaf, int* leaf_has, int* depth);
 static void walk_plantree(Plan* plan, Index* rel);
-static PlannedStmt* neurqo_plan(Query* q, int cursorOptions, bool apply_lip);
-static PlannedStmt* neurqo_plan_direct(Query* q, int cursorOptions,
+static PlannedStmt* nqo_plan(Query* q, int cursorOptions, bool apply_lip);
+static PlannedStmt* nqo_plan_direct(Query* q, int cursorOptions,
 									   bool apply_lip,
 									   const char* hint_query_string,
 									   bool log_hint);
-static PlannedStmt* neurqo_plan_nestloop_candidate(
+static PlannedStmt* nqo_plan_nestloop_candidate(
 	Query* q, const char* hint_query_string);
-static PlannedStmt* neurqo_plan_hashjoin_candidate(
+static PlannedStmt* nqo_plan_hashjoin_candidate(
 	Query* q, const char* hint_query_string);
-static char* neurqo_build_planner_hint(Query* q);
-static char* neurqo_build_search_hint(Query* q,
+static char* nqo_build_planner_hint(Query* q);
+static char* nqo_build_search_hint(Query* q,
 									  PlannedStmt** selected_plan_out);
-static char* neurqo_build_join_method_hint(Query* q, const char* method);
-static char* neurqo_build_plan_hint(PlannedStmt* plannedstmt, Query* q);
-static char* neurqo_build_leading_hint(PlannedStmt* plannedstmt, Query* q,
+static char* nqo_build_join_method_hint(Query* q, const char* method);
+static char* nqo_build_plan_hint(PlannedStmt* plannedstmt, Query* q);
+static char* nqo_build_leading_hint(PlannedStmt* plannedstmt, Query* q,
 									  bool swap_hash_inputs);
-static const char* neurqo_order_decision_name(int mode);
-static bool neurqo_search_enabled(void);
-static bool neurqo_aja_enabled(void);
-static const char* neurqo_adaptive_aja_level(void);
-static bool neurqo_lip_enabled(void);
-static void neurqo_reset_execution_actions(void);
-static bool neurqo_policy_high(Query* q, const char* query_string,
+static const char* nqo_order_decision_name(int mode);
+static bool nqo_search_enabled(void);
+static bool nqo_aja_enabled(void);
+static const char* nqo_adaptive_aja_level(void);
+static bool nqo_lip_enabled(void);
+static void nqo_reset_execution_actions(void);
+static bool nqo_policy_high(Query* q, const char* query_string,
 							   int round, int length, int remaining,
 							   double cumulative_cost_ms,
 							   int max_split_rounds,
 							   bool* stop_now, double* policy_ms,
 							   char** state_json_out);
-static bool neurqo_policy_select(Query* q, const char* query_string,
+static bool nqo_policy_select(Query* q, const char* query_string,
 								 int round, List* candidates,
 								 double cumulative_cost_ms,
 								 int max_split_rounds,
 								 int* candidate_id,
 								 double* policy_ms,
 								 char** state_json_out);
-static bool neurqo_policy_search(Query* q, const char* query_string,
+static bool nqo_policy_search(Query* q, const char* query_string,
 								 int round, int length, int remaining,
 								 double cumulative_cost_ms,
 								 int max_split_rounds,
 								 double* policy_ms,
 								 char** state_json_out);
-static bool neurqo_policy_low(Query* q,
+static bool nqo_policy_low(Query* q,
 							  int round, PlannedStmt* selected_plan,
 							  double cumulative_cost_ms,
 							  int max_split_rounds,
@@ -152,7 +152,7 @@ static bool neurqo_policy_low(Query* q,
 							  char** aja_hint_out,
 							  double* policy_ms,
 							  char** state_json_out);
-static PlannedStmt* neurqo_plan_execution(Query* q, const char* query_string,
+static PlannedStmt* nqo_plan_execution(Query* q, const char* query_string,
 										  int round, int length, int remaining,
 										  double cumulative_cost_ms,
 										  int max_split_rounds,
@@ -160,32 +160,32 @@ static PlannedStmt* neurqo_plan_execution(Query* q, const char* query_string,
 										  double* policy_ms,
 										  char** search_state_json_out,
 										  char** low_state_json_out);
-static double neurqo_now_ms(void);
-static bool neurqo_apply_lip(Query* q, PlannedStmt* reference_plan,
+static double nqo_now_ms(void);
+static bool nqo_apply_lip(Query* q, PlannedStmt* reference_plan,
 							 double* lip_ms, int* lip_filters);
-static char* neurqo_make_hint_query(const char* first_hint,
+static char* nqo_make_hint_query(const char* first_hint,
 									const char* second_hint);
-static char* neurqo_build_round_state(Query* q, const char* query_string,
+static char* nqo_build_round_state(Query* q, const char* query_string,
 									  const char* request_type,
 									  int round, int length, int remaining,
 									  double cumulative_cost_ms,
 									  int max_split_rounds);
-static void neurqo_append_relations_json(Query* q, StringInfo out);
-static char* neurqo_build_selection_state(Query* q, const char* query_string,
+static void nqo_append_relations_json(Query* q, StringInfo out);
+static char* nqo_build_selection_state(Query* q, const char* query_string,
 										  int round, List* candidates,
 										  double cumulative_cost_ms,
 										  int max_split_rounds);
-static char* neurqo_build_low_state(Query* q,
+static char* nqo_build_low_state(Query* q,
 									int round, PlannedStmt* selected_plan,
 									double cumulative_cost_ms,
 									int max_split_rounds,
 									bool is_split_execution);
-static void neurqo_plan_summary(Plan* plan, int depth, int* nnodes,
+static void nqo_plan_summary(Plan* plan, int depth, int* nnodes,
 								int* njoins, int* nscans, int* max_depth);
-static void neurqo_append_aliases_json(Query* q, StringInfo out);
-static void neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out,
+static void nqo_append_aliases_json(Query* q, StringInfo out);
+static void nqo_append_plan_json(Plan* plan, Query* q, StringInfo out,
 									int* nnodes);
-static void neurqo_log_trajectory_event(const char* phase, int round,
+static void nqo_log_trajectory_event(const char* phase, int round,
 										const char* state_json, bool stop_now,
 										const char* selection_state_json,
 										const char* search_state_json,
@@ -195,62 +195,62 @@ static void neurqo_log_trajectory_event(const char* phase, int round,
 										double policy_ms, double planning_ms,
 										double execution_ms, double total_ms,
 										const char* result);
-static void neurqo_reset_execution_metrics(void);
-static void neurqo_analyze_temp_relation(Oid relid, RangeVar* relation);
-static int64 neurqo_total_relation_size(Oid relid);
-static Index neurqo_source_varno(const Var* var, int length);
-static AttrNumber neurqo_source_attno(const Var* var);
+static void nqo_reset_execution_metrics(void);
+static void nqo_analyze_temp_relation(Oid relid, RangeVar* relation);
+static int64 nqo_total_relation_size(Oid relid);
+static Index nqo_source_varno(const Var* var, int length);
+static AttrNumber nqo_source_attno(const Var* var);
 
 bool* is_relationship;
 int query_splitting_algorithm = None;
 int order_decision = only_cost;
-bool neurqo_enabled = false;		/* backing var for the `neurqo` GUC */
-char* neurqo_server_url = NULL;
-char* neurqo_trajectory_log_path = NULL;
-int neurqo_server_timeout_ms = 2000;
-int neurqo_max_rounds = 64;
-int neurqo_search_topk = 5;
-int neurqo_search_max_rels = 12;
-bool neurqo_search_exact_cardinality = false;
-int neurqo_aja_conservative_rows = 362443;
-int neurqo_aja_aggressive_rows = 3624434;
-int neurqo_aja_max_nestloop_cost_ratio_pct = 150;
-int neurqo_aja_aggressive_max_nestloop_cost_ratio_pct = 125;
-int neurqo_lip_max_build_relation_rows = 500000;
-int neurqo_lip_selective_plan_rows = 10000;
-int neurqo_lip_max_build_selectivity_pct = 10;
-int neurqo_lip_min_probe_ratio = 2;
-int neurqo_lip_max_filters = 4;
-static char neurqo_current_search_strategy[64] = "";
-static char neurqo_current_execution_action[64] = "";
-static char neurqo_current_lip_action[64] = "";
-static char neurqo_current_high_action[16] = "";
-static char neurqo_current_selection_strategy[64] = "";
-static int neurqo_current_search_k = 0;
-static int neurqo_current_candidate_id = -1;
+bool nqo_enabled = false;		/* backing var for the `nqo` GUC */
+char* nqo_server_url = NULL;
+char* nqo_trajectory_log_path = NULL;
+int nqo_server_timeout_ms = 2000;
+int nqo_max_rounds = 64;
+int nqo_search_topk = 5;
+int nqo_search_max_rels = 12;
+bool nqo_search_exact_cardinality = false;
+int nqo_aja_conservative_rows = 362443;
+int nqo_aja_aggressive_rows = 3624434;
+int nqo_aja_max_nestloop_cost_ratio_pct = 150;
+int nqo_aja_aggressive_max_nestloop_cost_ratio_pct = 125;
+int nqo_lip_max_build_relation_rows = 500000;
+int nqo_lip_selective_plan_rows = 10000;
+int nqo_lip_max_build_selectivity_pct = 10;
+int nqo_lip_min_probe_ratio = 2;
+int nqo_lip_max_filters = 4;
+static char nqo_current_search_strategy[64] = "";
+static char nqo_current_execution_action[64] = "";
+static char nqo_current_lip_action[64] = "";
+static char nqo_current_high_action[16] = "";
+static char nqo_current_selection_strategy[64] = "";
+static int nqo_current_search_k = 0;
+static int nqo_current_candidate_id = -1;
 //the number of subquery
 static int queryId = 0;
-static uint64 neurqo_run_seq = 0;
-static uint64 neurqo_current_run_id = 0;
-static double neurqo_last_executor_ms = 0.0;
-static double neurqo_last_analyze_ms = 0.0;
-static double neurqo_last_residual_rewrite_ms = 0.0;
-static double neurqo_last_search_ms = 0.0;
-static double neurqo_last_search_candidate_cost = 0.0;
-static int neurqo_last_search_candidates = 0;
-static int neurqo_last_search_planner_calls = 0;
-static bool neurqo_last_search_applied = false;
-static double neurqo_last_lip_build_ms = 0.0;
-static int neurqo_last_lip_filters = 0;
-static int neurqo_last_adaptive_joins = 0;
-static int neurqo_last_adaptive_threshold = 0;
-static uint64 neurqo_last_materialized_rows = 0;
-static int64 neurqo_last_materialized_bytes = 0;
+static uint64 nqo_run_seq = 0;
+static uint64 nqo_current_run_id = 0;
+static double nqo_last_executor_ms = 0.0;
+static double nqo_last_analyze_ms = 0.0;
+static double nqo_last_residual_rewrite_ms = 0.0;
+static double nqo_last_search_ms = 0.0;
+static double nqo_last_search_candidate_cost = 0.0;
+static int nqo_last_search_candidates = 0;
+static int nqo_last_search_planner_calls = 0;
+static bool nqo_last_search_applied = false;
+static double nqo_last_lip_build_ms = 0.0;
+static int nqo_last_lip_filters = 0;
+static int nqo_last_adaptive_joins = 0;
+static int nqo_last_adaptive_threshold = 0;
+static uint64 nqo_last_materialized_rows = 0;
+static int64 nqo_last_materialized_bytes = 0;
 //where to send the result, to the client end or temporary table
 CommandDest mydest;
 Index* transfer_array = NULL;
 
-typedef struct NeurqoPolicyAction
+typedef struct NqoPolicyAction
 {
 	char action[64];
 	bool stop;
@@ -273,61 +273,61 @@ typedef struct NeurqoPolicyAction
 	bool has_join_method;
 	char join_method[64];
 	char note[256];
-} NeurqoPolicyAction;
+} NqoPolicyAction;
 
-typedef struct NeurqoSplitCandidate
+typedef struct NqoSplitCandidate
 {
 	int			candidate_id;
 	int			x;
 	int			y;
 	Query	   *query;
 	PlannedStmt *estimate_plan;
-} NeurqoSplitCandidate;
+} NqoSplitCandidate;
 
-typedef struct NeurqoLipFilter
+typedef struct NqoLipFilter
 {
 	int			filter_id;
 	bool		is_build;
 	Var		   *build_var;
 	Var		   *probe_var;
-} NeurqoLipFilter;
+} NqoLipFilter;
 
-typedef struct NeurqoLipRelStats
+typedef struct NqoLipRelStats
 {
 	bool		has_plan;
 	double		plan_rows;
 	double		plan_cost;
 	double		relation_rows;
-} NeurqoLipRelStats;
+} NqoLipRelStats;
 
-typedef struct NeurqoVarnoRemapContext
+typedef struct NqoVarnoRemapContext
 {
 	Index		from_varno;
 	Index		to_varno;
-} NeurqoVarnoRemapContext;
+} NqoVarnoRemapContext;
 
-typedef struct NeurqoSearchRel
+typedef struct NqoSearchRel
 {
 	Index		rtindex;
 	char	   *alias;
-} NeurqoSearchRel;
+} NqoSearchRel;
 
-typedef struct NeurqoSearchEntry
+typedef struct NqoSearchEntry
 {
 	double		cout;
 	char	   *leading;
-} NeurqoSearchEntry;
+} NqoSearchEntry;
 
-typedef struct NeurqoSearchCell
+typedef struct NqoSearchCell
 {
 	int			nentries;
-	NeurqoSearchEntry entries[NEURQO_SEARCH_ABS_MAX_K];
+	NqoSearchEntry entries[NQO_SEARCH_ABS_MAX_K];
 	bool		card_valid;
 	double		card_rows;
-} NeurqoSearchCell;
+} NqoSearchCell;
 
 static double
-neurqo_now_ms(void)
+nqo_now_ms(void)
 {
 	struct timeval tv;
 
@@ -336,7 +336,7 @@ neurqo_now_ms(void)
 }
 
 static void
-neurqo_append_json_string(StringInfo dst, const char* value)
+nqo_append_json_string(StringInfo dst, const char* value)
 {
 	const unsigned char* p;
 
@@ -383,7 +383,7 @@ neurqo_append_json_string(StringInfo dst, const char* value)
 }
 
 static char*
-neurqo_build_round_state(Query* q, const char* query_string,
+nqo_build_round_state(Query* q, const char* query_string,
 						 const char* request_type,
 						 int round, int length, int remaining,
 						 double cumulative_cost_ms,
@@ -414,15 +414,15 @@ neurqo_build_round_state(Query* q, const char* query_string,
 					 "\"search_max_rels\":%d,"
 					 "\"algorithm\":%d,\"order_decision\":\"%s\","
 					 "\"sql\":",
-					 MyProcPid, neurqo_current_run_id, request_type, round,
+					 MyProcPid, nqo_current_run_id, request_type, round,
 					 base_rels, remaining, cumulative_cost_ms, max_split_rounds,
-					 neurqo_search_max_rels,
+					 nqo_search_max_rels,
 					 query_splitting_algorithm,
-					 neurqo_order_decision_name(order_decision));
-	neurqo_append_json_string(&state,
+					 nqo_order_decision_name(order_decision));
+	nqo_append_json_string(&state,
 							  current_sql != NULL ? current_sql : query_string);
 	appendStringInfoString(&state, ",\"relations\":");
-	neurqo_append_relations_json(q, &state);
+	nqo_append_relations_json(q, &state);
 	appendStringInfoString(&state, "}");
 	if (current_sql != NULL)
 		pfree(current_sql);
@@ -430,7 +430,7 @@ neurqo_build_round_state(Query* q, const char* query_string,
 }
 
 static void
-neurqo_append_relations_json(Query* q, StringInfo out)
+nqo_append_relations_json(Query* q, StringInfo out)
 {
 	ListCell* lc;
 	bool first = true;
@@ -461,15 +461,15 @@ neurqo_append_relations_json(Query* q, StringInfo out)
 			is_temporary =
 				classform->relpersistence == RELPERSISTENCE_TEMP;
 			if (is_temporary)
-				relation_bytes = neurqo_total_relation_size(rte->relid);
+				relation_bytes = nqo_total_relation_size(rte->relid);
 		}
 		if (!first)
 			appendStringInfoChar(out, ',');
 		first = false;
 		appendStringInfoString(out, "{\"alias\":");
-		neurqo_append_json_string(out, alias);
+		nqo_append_json_string(out, alias);
 		appendStringInfoString(out, ",\"relname\":");
-		neurqo_append_json_string(out, relname ? relname : alias);
+		nqo_append_json_string(out, relname ? relname : alias);
 		appendStringInfo(out,
 						 ",\"relid\":%u,\"estimated_rows\":%.0f,"
 						 "\"pages\":%d,\"is_temporary\":%s,"
@@ -486,7 +486,7 @@ neurqo_append_relations_json(Query* q, StringInfo out)
 }
 
 static char*
-neurqo_build_selection_state(Query* q, const char* query_string,
+nqo_build_selection_state(Query* q, const char* query_string,
 							 int round, List* candidates,
 							 double cumulative_cost_ms,
 							 int max_split_rounds)
@@ -502,20 +502,20 @@ neurqo_build_selection_state(Query* q, const char* query_string,
 					 ",\"request_type\":\"select\",\"round\":%d,"
 					 "\"candidate_count\":%d,\"cumulative_cost_ms\":%.3f,"
 					 "\"max_split_rounds\":%d,\"sql\":",
-					 MyProcPid, neurqo_current_run_id, round,
+					 MyProcPid, nqo_current_run_id, round,
 					 list_length(candidates), cumulative_cost_ms,
 					 max_split_rounds);
-	neurqo_append_json_string(&state,
+	nqo_append_json_string(&state,
 							  current_sql != NULL ? current_sql : query_string);
 	appendStringInfoString(&state, ",\"original_sql\":");
-	neurqo_append_json_string(&state, query_string);
+	nqo_append_json_string(&state, query_string);
 	appendStringInfoString(&state, ",\"relations\":");
-	neurqo_append_relations_json(q, &state);
+	nqo_append_relations_json(q, &state);
 	appendStringInfoString(&state, ",\"candidates\":[");
 	foreach(lc, candidates)
 	{
-		NeurqoSplitCandidate* candidate =
-			(NeurqoSplitCandidate*)lfirst(lc);
+		NqoSplitCandidate* candidate =
+			(NqoSplitCandidate*)lfirst(lc);
 		Plan* plan = candidate->estimate_plan != NULL ?
 			candidate->estimate_plan->planTree : NULL;
 		char* candidate_sql = pg_get_querydef(candidate->query, false);
@@ -533,9 +533,9 @@ neurqo_build_selection_state(Query* q, const char* query_string,
 						 "\"phi4_score\":%.6g,\"sql\":",
 						 candidate->candidate_id, candidate->x,
 						 cost, rows, phi4_score);
-		neurqo_append_json_string(&state, candidate_sql);
+		nqo_append_json_string(&state, candidate_sql);
 		appendStringInfoString(&state, ",\"aliases\":");
-		neurqo_append_aliases_json(candidate->query, &state);
+		nqo_append_aliases_json(candidate->query, &state);
 		appendStringInfoChar(&state, '}');
 		if (candidate_sql != NULL)
 			pfree(candidate_sql);
@@ -547,7 +547,7 @@ neurqo_build_selection_state(Query* q, const char* query_string,
 }
 
 static void
-neurqo_log_trajectory_event(const char* phase, int round,
+nqo_log_trajectory_event(const char* phase, int round,
 							const char* state_json, bool stop_now,
 							const char* selection_state_json,
 							const char* search_state_json,
@@ -560,18 +560,18 @@ neurqo_log_trajectory_event(const char* phase, int round,
 {
 	FILE* fp;
 	StringInfoData line;
-	NeurqoAdaptiveJoinStats aja_stats = neurqo_get_adaptive_join_stats();
+	NqoAdaptiveJoinStats aja_stats = nqo_get_adaptive_join_stats();
 
-	if (neurqo_trajectory_log_path == NULL ||
-		neurqo_trajectory_log_path[0] == '\0')
+	if (nqo_trajectory_log_path == NULL ||
+		nqo_trajectory_log_path[0] == '\0')
 		return;
 
-	fp = AllocateFile(neurqo_trajectory_log_path, "a");
+	fp = AllocateFile(nqo_trajectory_log_path, "a");
 	if (fp == NULL)
 	{
-		elog(WARNING, "[neurqo] run=" UINT64_FORMAT
+		elog(WARNING, "[nqo] run=" UINT64_FORMAT
 			 " could not append trajectory log %s: %m",
-			 neurqo_current_run_id, neurqo_trajectory_log_path);
+			 nqo_current_run_id, nqo_trajectory_log_path);
 		return;
 	}
 
@@ -579,8 +579,8 @@ neurqo_log_trajectory_event(const char* phase, int round,
 	appendStringInfo(&line,
 					 "{\"ts_ms\":%.3f,\"pid\":%d,\"run_id\":"
 					 UINT64_FORMAT ",\"phase\":",
-					 neurqo_now_ms(), MyProcPid, neurqo_current_run_id);
-	neurqo_append_json_string(&line, phase);
+					 nqo_now_ms(), MyProcPid, nqo_current_run_id);
+	nqo_append_json_string(&line, phase);
 	appendStringInfo(&line, ",\"round\":%d,\"stop\":%s,\"state\":",
 					 round, stop_now ? "true" : "false");
 	if (state_json != NULL && state_json[0] != '\0')
@@ -589,7 +589,7 @@ neurqo_log_trajectory_event(const char* phase, int round,
 		appendStringInfoString(&line, "null");
 	appendStringInfoString(&line, ",\"decision_states\":{\"high\":");
 	if (state_json != NULL && state_json[0] != '\0' &&
-		neurqo_current_high_action[0] != '\0')
+		nqo_current_high_action[0] != '\0')
 		appendStringInfoString(&line, state_json);
 	else
 		appendStringInfoString(&line, "null");
@@ -615,73 +615,73 @@ neurqo_log_trajectory_event(const char* phase, int round,
 	{
 		int nnodes = 0;
 
-		neurqo_append_plan_json(execution_plan->planTree, execution_query,
+		nqo_append_plan_json(execution_plan->planTree, execution_query,
 								&line, &nnodes);
 	}
 	else
 		appendStringInfoString(&line, "null");
 	appendStringInfoString(&line, ",\"action\":{");
 	appendStringInfoString(&line, "\"high_action\":");
-	neurqo_append_json_string(&line,
-							  neurqo_current_high_action[0] != '\0' ?
-							  neurqo_current_high_action : NULL);
+	nqo_append_json_string(&line,
+							  nqo_current_high_action[0] != '\0' ?
+							  nqo_current_high_action : NULL);
 	appendStringInfoString(&line, ",\"order_decision\":");
-	neurqo_append_json_string(&line, neurqo_order_decision_name(order_decision));
+	nqo_append_json_string(&line, nqo_order_decision_name(order_decision));
 	appendStringInfoString(&line, ",\"candidate_id\":");
 	if (selection_state_json == NULL)
 		appendStringInfoString(&line, "null");
 	else
-		appendStringInfo(&line, "%d", neurqo_current_candidate_id);
+		appendStringInfo(&line, "%d", nqo_current_candidate_id);
 	appendStringInfoString(&line, ",\"selection_strategy\":");
 	if (selection_state_json == NULL)
-		neurqo_append_json_string(&line, NULL);
+		nqo_append_json_string(&line, NULL);
 	else
-		neurqo_append_json_string(
+		nqo_append_json_string(
 			&line,
-			neurqo_current_selection_strategy[0] != '\0' ?
-			neurqo_current_selection_strategy : "phi4");
+			nqo_current_selection_strategy[0] != '\0' ?
+			nqo_current_selection_strategy : "phi4");
 	appendStringInfoString(&line, ",\"search_strategy\":");
 	if (search_state_json == NULL)
-		neurqo_append_json_string(&line, NULL);
+		nqo_append_json_string(&line, NULL);
 	else
-		neurqo_append_json_string(&line,
-								  neurqo_search_enabled() ?
-								  neurqo_current_search_strategy : "default");
+		nqo_append_json_string(&line,
+								  nqo_search_enabled() ?
+								  nqo_current_search_strategy : "default");
 	if (search_state_json == NULL)
 		appendStringInfoString(&line, ",\"search_k\":null");
 	else
 		appendStringInfo(&line, ",\"search_k\":%d",
-						 neurqo_current_search_k > 0 ?
-						 neurqo_current_search_k : 0);
+						 nqo_current_search_k > 0 ?
+						 nqo_current_search_k : 0);
 	appendStringInfoString(&line, ",\"execution_action\":");
 	if (low_state_json == NULL)
-		neurqo_append_json_string(&line, NULL);
+		nqo_append_json_string(&line, NULL);
 	else
-		neurqo_append_json_string(&line,
-								  neurqo_aja_enabled() ?
-								  neurqo_current_execution_action : "none");
+		nqo_append_json_string(&line,
+								  nqo_aja_enabled() ?
+								  nqo_current_execution_action : "none");
 	appendStringInfoString(&line, ",\"lip_action\":");
 	if (low_state_json == NULL)
-		neurqo_append_json_string(&line, NULL);
+		nqo_append_json_string(&line, NULL);
 	else
-		neurqo_append_json_string(&line,
-								  neurqo_lip_enabled() ?
-								  neurqo_current_lip_action : "none");
+		nqo_append_json_string(&line,
+								  nqo_lip_enabled() ?
+								  nqo_current_lip_action : "none");
 	appendStringInfo(&line, ",\"lip_filters\":%d",
-					 neurqo_last_lip_filters);
+					 nqo_last_lip_filters);
 	appendStringInfo(&line, ",\"aja_threshold_rows\":%d",
-					 neurqo_last_adaptive_threshold);
+					 nqo_last_adaptive_threshold);
 	appendStringInfo(&line,
 					 ",\"search_applied\":%s,\"search_candidates\":%d,"
 					 "\"search_planner_calls\":%d,"
 					 "\"search_cardinality_mode\":\"%s\","
 					 "\"search_candidate_cost\":%.3f",
-					 neurqo_last_search_applied ? "true" : "false",
-					 neurqo_last_search_candidates,
-					 neurqo_last_search_planner_calls,
-					 neurqo_search_exact_cardinality ?
+					 nqo_last_search_applied ? "true" : "false",
+					 nqo_last_search_candidates,
+					 nqo_last_search_planner_calls,
+					 nqo_search_exact_cardinality ?
 					 "exact" : "pairwise",
-					 neurqo_last_search_candidate_cost);
+					 nqo_last_search_candidate_cost);
 	appendStringInfoString(&line, "},\"timing_ms\":{");
 	appendStringInfo(&line,
 					 "\"policy\":%.3f,\"search\":%.3f,\"planning\":%.3f,"
@@ -689,16 +689,16 @@ neurqo_log_trajectory_event(const char* phase, int round,
 					 "\"execution\":%.3f,\"executor\":%.3f,"
 					 "\"analyze\":%.3f,\"residual_rewrite\":%.3f,"
 					 "\"total\":%.3f}",
-					 policy_ms, neurqo_last_search_ms, planning_ms,
-					 neurqo_last_lip_build_ms,
+					 policy_ms, nqo_last_search_ms, planning_ms,
+					 nqo_last_lip_build_ms,
 					 aja_stats.build_ms, execution_ms,
-					 neurqo_last_executor_ms, neurqo_last_analyze_ms,
-					 neurqo_last_residual_rewrite_ms, total_ms);
+					 nqo_last_executor_ms, nqo_last_analyze_ms,
+					 nqo_last_residual_rewrite_ms, total_ms);
 	appendStringInfo(&line,
 					 ",\"aja\":{\"planned\":%d,\"decided\":%d,"
 					 "\"nestloop\":%d,\"hashjoin\":%d,"
 					 "\"actual_build_rows\":" UINT64_FORMAT "}",
-					 neurqo_last_adaptive_joins,
+					 nqo_last_adaptive_joins,
 					 aja_stats.joins_decided,
 					 aja_stats.nestloop_selected,
 					 aja_stats.hashjoin_selected,
@@ -706,10 +706,10 @@ neurqo_log_trajectory_event(const char* phase, int round,
 	appendStringInfo(&line,
 					 ",\"materialized\":{\"rows\":" UINT64_FORMAT
 					 ",\"bytes\":" INT64_FORMAT "}",
-					 neurqo_last_materialized_rows,
-					 neurqo_last_materialized_bytes);
+					 nqo_last_materialized_rows,
+					 nqo_last_materialized_bytes);
 	appendStringInfoString(&line, ",\"result\":");
-	neurqo_append_json_string(&line, result);
+	nqo_append_json_string(&line, result);
 	appendStringInfoChar(&line, '}');
 
 	fputs(line.data, fp);
@@ -719,18 +719,18 @@ neurqo_log_trajectory_event(const char* phase, int round,
 }
 
 static void
-neurqo_reset_execution_metrics(void)
+nqo_reset_execution_metrics(void)
 {
-	neurqo_last_executor_ms = 0.0;
-	neurqo_last_analyze_ms = 0.0;
-	neurqo_last_residual_rewrite_ms = 0.0;
-	neurqo_last_materialized_rows = 0;
-	neurqo_last_materialized_bytes = 0;
-	neurqo_reset_adaptive_join_stats();
+	nqo_last_executor_ms = 0.0;
+	nqo_last_analyze_ms = 0.0;
+	nqo_last_residual_rewrite_ms = 0.0;
+	nqo_last_materialized_rows = 0;
+	nqo_last_materialized_bytes = 0;
+	nqo_reset_adaptive_join_stats();
 }
 
 static void
-neurqo_analyze_temp_relation(Oid relid, RangeVar* relation)
+nqo_analyze_temp_relation(Oid relid, RangeVar* relation)
 {
 	VacuumParams params;
 
@@ -748,7 +748,7 @@ neurqo_analyze_temp_relation(Oid relid, RangeVar* relation)
 }
 
 static int64
-neurqo_total_relation_size(Oid relid)
+nqo_total_relation_size(Oid relid)
 {
 	Oid argtypes[1] = {REGCLASSOID};
 	Oid funcid;
@@ -760,7 +760,7 @@ neurqo_total_relation_size(Oid relid)
 }
 
 static const char*
-neurqo_order_decision_name(int mode)
+nqo_order_decision_name(int mode)
 {
 	switch (mode)
 	{
@@ -782,45 +782,45 @@ neurqo_order_decision_name(int mode)
 }
 
 static bool
-neurqo_search_enabled(void)
+nqo_search_enabled(void)
 {
-	return neurqo_current_search_strategy[0] != '\0' &&
-		strcmp(neurqo_current_search_strategy, "default") != 0 &&
-		strcmp(neurqo_current_search_strategy, "none") != 0;
+	return nqo_current_search_strategy[0] != '\0' &&
+		strcmp(nqo_current_search_strategy, "default") != 0 &&
+		strcmp(nqo_current_search_strategy, "none") != 0;
 }
 
 static bool
-neurqo_aja_enabled(void)
+nqo_aja_enabled(void)
 {
-	return neurqo_current_execution_action[0] != '\0' &&
-		(neurqo_adaptive_aja_level() != NULL ||
-		 strcmp(neurqo_current_execution_action, "hashjoin") == 0 ||
-		 strcmp(neurqo_current_execution_action, "nestloop") == 0 ||
-		 strcmp(neurqo_current_execution_action, "mergejoin") == 0);
+	return nqo_current_execution_action[0] != '\0' &&
+		(nqo_adaptive_aja_level() != NULL ||
+		 strcmp(nqo_current_execution_action, "hashjoin") == 0 ||
+		 strcmp(nqo_current_execution_action, "nestloop") == 0 ||
+		 strcmp(nqo_current_execution_action, "mergejoin") == 0);
 }
 
 static const char*
-neurqo_adaptive_aja_level(void)
+nqo_adaptive_aja_level(void)
 {
-	if (strcmp(neurqo_current_execution_action, "conservative") == 0)
+	if (strcmp(nqo_current_execution_action, "conservative") == 0)
 		return "conservative";
-	if (strcmp(neurqo_current_execution_action, "aggressive") == 0 ||
-		strcmp(neurqo_current_execution_action, "aja") == 0)
+	if (strcmp(nqo_current_execution_action, "aggressive") == 0 ||
+		strcmp(nqo_current_execution_action, "aja") == 0)
 		return "aggressive";
 	return NULL;
 }
 
 static bool
-neurqo_lip_enabled(void)
+nqo_lip_enabled(void)
 {
-	return neurqo_current_lip_action[0] != '\0' &&
-		strcmp(neurqo_current_lip_action, "default") != 0 &&
-		strcmp(neurqo_current_lip_action, "none") != 0 &&
-		strcmp(neurqo_current_lip_action, "off") != 0;
+	return nqo_current_lip_action[0] != '\0' &&
+		strcmp(nqo_current_lip_action, "default") != 0 &&
+		strcmp(nqo_current_lip_action, "none") != 0 &&
+		strcmp(nqo_current_lip_action, "off") != 0;
 }
 
 static bool
-neurqo_parse_order_decision(const char* value, int* mode)
+nqo_parse_order_decision(const char* value, int* mode)
 {
 	if (strcmp(value, "only_cost") == 0 || strcmp(value, "0") == 0)
 		*mode = only_cost;
@@ -840,7 +840,7 @@ neurqo_parse_order_decision(const char* value, int* mode)
 }
 
 static bool
-neurqo_parse_http_url(const char* url, char* host, size_t hostlen,
+nqo_parse_http_url(const char* url, char* host, size_t hostlen,
 					  char* port, size_t portlen, char* path, size_t pathlen)
 {
 	const char* p = url;
@@ -890,7 +890,7 @@ neurqo_parse_http_url(const char* url, char* host, size_t hostlen,
 }
 
 static bool
-neurqo_http_post(const char* url, const char* body, StringInfo resp,
+nqo_http_post(const char* url, const char* body, StringInfo resp,
 				 char* errbuf, size_t errlen)
 {
 	char host[256];
@@ -909,10 +909,10 @@ neurqo_http_post(const char* url, const char* body, StringInfo resp,
 
 	if (url == NULL || url[0] == '\0')
 	{
-		snprintf(errbuf, errlen, "neurqo.server_url is empty");
+		snprintf(errbuf, errlen, "nqo.server_url is empty");
 		return false;
 	}
-	if (!neurqo_parse_http_url(url, host, sizeof(host), port, sizeof(port),
+	if (!nqo_parse_http_url(url, host, sizeof(host), port, sizeof(port),
 							   path, sizeof(path)))
 	{
 		snprintf(errbuf, errlen, "bad server url: %s", url);
@@ -937,8 +937,8 @@ neurqo_http_post(const char* url, const char* body, StringInfo resp,
 		fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 		if (fd < 0)
 			continue;
-		tv.tv_sec = neurqo_server_timeout_ms / 1000;
-		tv.tv_usec = (neurqo_server_timeout_ms % 1000) * 1000;
+		tv.tv_sec = nqo_server_timeout_ms / 1000;
+		tv.tv_usec = (nqo_server_timeout_ms % 1000) * 1000;
 		setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 		setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 		if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0)
@@ -1018,7 +1018,7 @@ neurqo_http_post(const char* url, const char* body, StringInfo resp,
 }
 
 static void
-neurqo_parse_policy_action(const char* body, NeurqoPolicyAction* act)
+nqo_parse_policy_action(const char* body, NqoPolicyAction* act)
 {
 	const char* p = body;
 
@@ -1056,13 +1056,13 @@ neurqo_parse_policy_action(const char* body, NeurqoPolicyAction* act)
 			{
 				int mode;
 
-				if (neurqo_parse_order_decision(val, &mode))
+				if (nqo_parse_order_decision(val, &mode))
 				{
 					act->has_order_decision = true;
 					act->order_decision = mode;
 				}
 				else
-					elog(WARNING, "[neurqo] AI server returned unknown order_decision=%s", val);
+					elog(WARNING, "[nqo] AI server returned unknown order_decision=%s", val);
 			}
 			else if (strcmp(key, "candidate_id") == 0)
 			{
@@ -1115,20 +1115,20 @@ neurqo_parse_policy_action(const char* body, NeurqoPolicyAction* act)
 }
 
 static void
-neurqo_reset_execution_actions(void)
+nqo_reset_execution_actions(void)
 {
-	neurqo_current_search_strategy[0] = '\0';
-	neurqo_current_execution_action[0] = '\0';
-	neurqo_current_lip_action[0] = '\0';
-	neurqo_current_selection_strategy[0] = '\0';
-	neurqo_current_search_k = 0;
-	neurqo_current_candidate_id = -1;
+	nqo_current_search_strategy[0] = '\0';
+	nqo_current_execution_action[0] = '\0';
+	nqo_current_lip_action[0] = '\0';
+	nqo_current_selection_strategy[0] = '\0';
+	nqo_current_search_k = 0;
+	nqo_current_candidate_id = -1;
 }
 
 static bool
-neurqo_request_policy_action(const char* request_type, int round,
+nqo_request_policy_action(const char* request_type, int round,
 							 const char* state_json,
-							 NeurqoPolicyAction* act,
+							 NqoPolicyAction* act,
 							 double* policy_ms)
 {
 	StringInfoData resp;
@@ -1138,49 +1138,49 @@ neurqo_request_policy_action(const char* request_type, int round,
 
 	*policy_ms = 0.0;
 	initStringInfo(&resp);
-	t0 = neurqo_now_ms();
-	ok = neurqo_http_post(neurqo_server_url, state_json, &resp,
+	t0 = nqo_now_ms();
+	ok = nqo_http_post(nqo_server_url, state_json, &resp,
 						  errbuf, sizeof(errbuf));
-	*policy_ms = neurqo_now_ms() - t0;
+	*policy_ms = nqo_now_ms() - t0;
 
 	if (!ok)
 	{
-		elog(WARNING, "[neurqo] run=" UINT64_FORMAT
+		elog(WARNING, "[nqo] run=" UINT64_FORMAT
 			 " round %d: %s policy call failed (%s)",
-			 neurqo_current_run_id, round, request_type, errbuf);
+			 nqo_current_run_id, round, request_type, errbuf);
 		pfree(resp.data);
 		return false;
 	}
 
-	neurqo_parse_policy_action(resp.data, act);
-	elog(DEBUG1, "[neurqo] run=" UINT64_FORMAT
+	nqo_parse_policy_action(resp.data, act);
+	elog(DEBUG1, "[nqo] run=" UINT64_FORMAT
 		 " round %d: %s policy response=%s policy_ms=%.2f",
-		 neurqo_current_run_id, round, request_type, resp.data, *policy_ms);
+		 nqo_current_run_id, round, request_type, resp.data, *policy_ms);
 	pfree(resp.data);
 	return true;
 }
 
 static bool
-neurqo_policy_high(Query* q, const char* query_string,
+nqo_policy_high(Query* q, const char* query_string,
 				   int round, int length, int remaining,
 				   double cumulative_cost_ms, int max_split_rounds,
 				   bool* stop_now, double* policy_ms,
 				   char** state_json_out)
 {
-	NeurqoPolicyAction act;
+	NqoPolicyAction act;
 	char* state_json;
 	bool ok;
 
-	neurqo_reset_execution_actions();
-	neurqo_current_high_action[0] = '\0';
+	nqo_reset_execution_actions();
+	nqo_current_high_action[0] = '\0';
 	*stop_now = false;
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = neurqo_build_round_state(q, query_string, "high",
+	state_json = nqo_build_round_state(q, query_string, "high",
 										 round, length, remaining,
 										 cumulative_cost_ms,
 										 max_split_rounds);
-	ok = neurqo_request_policy_action("high", round, state_json, &act,
+	ok = nqo_request_policy_action("high", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1195,22 +1195,22 @@ neurqo_policy_high(Query* q, const char* query_string,
 		order_decision = act.order_decision;
 	if (remaining > 0 && strcmp(act.action, "split") == 0 && !act.stop)
 	{
-		snprintf(neurqo_current_high_action,
-				 sizeof(neurqo_current_high_action), "split");
+		snprintf(nqo_current_high_action,
+				 sizeof(nqo_current_high_action), "split");
 		*stop_now = false;
 	}
 	else
 	{
-		snprintf(neurqo_current_high_action,
-				 sizeof(neurqo_current_high_action), "stop");
+		snprintf(nqo_current_high_action,
+				 sizeof(nqo_current_high_action), "stop");
 		*stop_now = true;
 	}
 
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT
+	elog(LOG, "[nqo] run=" UINT64_FORMAT
 		" round %d: high action=%s stop=%d order_decision=%s note=\"%s\" policy_ms=%.2f",
-		neurqo_current_run_id, round, neurqo_current_high_action,
+		nqo_current_run_id, round, nqo_current_high_action,
 		*stop_now ? 1 : 0,
-		neurqo_order_decision_name(order_decision), act.note, *policy_ms);
+		nqo_order_decision_name(order_decision), act.note, *policy_ms);
 
 	if (state_json_out != NULL)
 		*state_json_out = state_json;
@@ -1220,26 +1220,26 @@ neurqo_policy_high(Query* q, const char* query_string,
 }
 
 static bool
-neurqo_policy_select(Query* q, const char* query_string,
+nqo_policy_select(Query* q, const char* query_string,
 					 int round, List* candidates,
 					 double cumulative_cost_ms, int max_split_rounds,
 					 int* candidate_id, double* policy_ms,
 					 char** state_json_out)
 {
-	NeurqoPolicyAction act;
+	NqoPolicyAction act;
 	char* state_json;
 	bool ok;
 	int ncandidates = list_length(candidates);
 
 	*candidate_id = -1;
-	neurqo_current_candidate_id = -1;
-	neurqo_current_selection_strategy[0] = '\0';
+	nqo_current_candidate_id = -1;
+	nqo_current_selection_strategy[0] = '\0';
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = neurqo_build_selection_state(
+	state_json = nqo_build_selection_state(
 		q, query_string, round, candidates, cumulative_cost_ms,
 		max_split_rounds);
-	ok = neurqo_request_policy_action("select", round, state_json, &act,
+	ok = nqo_request_policy_action("select", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1253,9 +1253,9 @@ neurqo_policy_select(Query* q, const char* query_string,
 	if (!act.has_candidate_id ||
 		act.candidate_id < 0 || act.candidate_id >= ncandidates)
 	{
-		elog(WARNING, "[neurqo] run=" UINT64_FORMAT
+		elog(WARNING, "[nqo] run=" UINT64_FORMAT
 			 " round %d: select returned invalid candidate_id=%d for %d candidates",
-			 neurqo_current_run_id, round,
+			 nqo_current_run_id, round,
 			 act.has_candidate_id ? act.candidate_id : -1, ncandidates);
 		if (state_json_out != NULL)
 			*state_json_out = state_json;
@@ -1265,15 +1265,15 @@ neurqo_policy_select(Query* q, const char* query_string,
 	}
 
 	*candidate_id = act.candidate_id;
-	neurqo_current_candidate_id = act.candidate_id;
-	snprintf(neurqo_current_selection_strategy,
-			 sizeof(neurqo_current_selection_strategy), "%s",
+	nqo_current_candidate_id = act.candidate_id;
+	snprintf(nqo_current_selection_strategy,
+			 sizeof(nqo_current_selection_strategy), "%s",
 			 act.has_selection_strategy ?
 			 act.selection_strategy : "model");
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT
+	elog(LOG, "[nqo] run=" UINT64_FORMAT
 		 " round %d: select candidate_id=%d/%d strategy=%s note=\"%s\" policy_ms=%.2f",
-		 neurqo_current_run_id, round, *candidate_id, ncandidates,
-		 neurqo_current_selection_strategy, act.note, *policy_ms);
+		 nqo_current_run_id, round, *candidate_id, ncandidates,
+		 nqo_current_selection_strategy, act.note, *policy_ms);
 
 	if (state_json_out != NULL)
 		*state_json_out = state_json;
@@ -1283,24 +1283,24 @@ neurqo_policy_select(Query* q, const char* query_string,
 }
 
 static bool
-neurqo_policy_search(Query* q, const char* query_string,
+nqo_policy_search(Query* q, const char* query_string,
 					 int round, int length, int remaining,
 					 double cumulative_cost_ms, int max_split_rounds,
 					 double* policy_ms, char** state_json_out)
 {
-	NeurqoPolicyAction act;
+	NqoPolicyAction act;
 	char* state_json;
 	bool ok;
 
-	neurqo_current_search_strategy[0] = '\0';
-	neurqo_current_search_k = 0;
+	nqo_current_search_strategy[0] = '\0';
+	nqo_current_search_k = 0;
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = neurqo_build_round_state(q, query_string, "search",
+	state_json = nqo_build_round_state(q, query_string, "search",
 										 round, length, remaining,
 										 cumulative_cost_ms,
 										 max_split_rounds);
-	ok = neurqo_request_policy_action("search", round, state_json, &act,
+	ok = nqo_request_policy_action("search", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1309,18 +1309,18 @@ neurqo_policy_search(Query* q, const char* query_string,
 	}
 
 	if (act.has_search_strategy)
-		snprintf(neurqo_current_search_strategy,
-				 sizeof(neurqo_current_search_strategy),
+		snprintf(nqo_current_search_strategy,
+				 sizeof(nqo_current_search_strategy),
 				 "%s", act.search_strategy);
 	if (act.has_search_k && act.search_k > 0)
-		neurqo_current_search_k = act.search_k;
+		nqo_current_search_k = act.search_k;
 
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT
+	elog(LOG, "[nqo] run=" UINT64_FORMAT
 		 " round %d: search strategy=%s k=%d note=\"%s\" policy_ms=%.2f",
-		 neurqo_current_run_id, round,
-		 neurqo_search_enabled() ? neurqo_current_search_strategy : "default",
-		 neurqo_current_search_k > 0 ?
-		 neurqo_current_search_k : neurqo_search_topk,
+		 nqo_current_run_id, round,
+		 nqo_search_enabled() ? nqo_current_search_strategy : "default",
+		 nqo_current_search_k > 0 ?
+		 nqo_current_search_k : nqo_search_topk,
 		act.note, *policy_ms);
 	if (state_json_out != NULL)
 		*state_json_out = state_json;
@@ -1330,7 +1330,7 @@ neurqo_policy_search(Query* q, const char* query_string,
 }
 
 static bool
-neurqo_policy_low(Query* q,
+nqo_policy_low(Query* q,
 				  int round, PlannedStmt* selected_plan,
 				  double cumulative_cost_ms,
 				  int max_split_rounds,
@@ -1338,19 +1338,19 @@ neurqo_policy_low(Query* q,
 				  char** aja_hint_out, double* policy_ms,
 				  char** state_json_out)
 {
-	NeurqoPolicyAction act;
+	NqoPolicyAction act;
 	char* state_json;
 	bool ok;
 
-	neurqo_current_execution_action[0] = '\0';
-	neurqo_current_lip_action[0] = '\0';
+	nqo_current_execution_action[0] = '\0';
+	nqo_current_lip_action[0] = '\0';
 	*aja_hint_out = NULL;
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = neurqo_build_low_state(
+	state_json = nqo_build_low_state(
 		q, round, selected_plan,
 		cumulative_cost_ms, max_split_rounds, is_split_execution);
-	ok = neurqo_request_policy_action("low", round, state_json, &act,
+	ok = nqo_request_policy_action("low", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1359,14 +1359,14 @@ neurqo_policy_low(Query* q,
 	}
 
 	if (act.has_execution_action)
-		snprintf(neurqo_current_execution_action,
-				 sizeof(neurqo_current_execution_action),
+		snprintf(nqo_current_execution_action,
+				 sizeof(nqo_current_execution_action),
 				 "%s", act.execution_action);
 	if (act.has_lip_action)
-		snprintf(neurqo_current_lip_action,
-				 sizeof(neurqo_current_lip_action),
+		snprintf(nqo_current_lip_action,
+				 sizeof(nqo_current_lip_action),
 				 "%s", act.lip_action);
-	if (neurqo_adaptive_aja_level() == NULL &&
+	if (nqo_adaptive_aja_level() == NULL &&
 		act.has_aja_hint &&
 		pg_strcasecmp(act.aja_hint, "none") != 0 &&
 		pg_strcasecmp(act.aja_hint, "default") != 0)
@@ -1374,19 +1374,19 @@ neurqo_policy_low(Query* q,
 		if (strchr(act.aja_hint, '(') != NULL)
 			*aja_hint_out = pstrdup(act.aja_hint);
 		else
-			*aja_hint_out = neurqo_build_join_method_hint(q, act.aja_hint);
+			*aja_hint_out = nqo_build_join_method_hint(q, act.aja_hint);
 	}
-	else if (neurqo_adaptive_aja_level() == NULL &&
+	else if (nqo_adaptive_aja_level() == NULL &&
 			 act.has_join_method &&
 			 pg_strcasecmp(act.join_method, "none") != 0 &&
 			 pg_strcasecmp(act.join_method, "default") != 0)
-		*aja_hint_out = neurqo_build_join_method_hint(q, act.join_method);
+		*aja_hint_out = nqo_build_join_method_hint(q, act.join_method);
 
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT
+	elog(LOG, "[nqo] run=" UINT64_FORMAT
 		 " round %d: low execution_action=%s lip_action=%s aja_hint=%s note=\"%s\" policy_ms=%.2f",
-		 neurqo_current_run_id, round,
-		 neurqo_aja_enabled() ? neurqo_current_execution_action : "none",
-		 neurqo_lip_enabled() ? neurqo_current_lip_action : "none",
+		 nqo_current_run_id, round,
+		 nqo_aja_enabled() ? nqo_current_execution_action : "none",
+		 nqo_lip_enabled() ? nqo_current_lip_action : "none",
 		*aja_hint_out != NULL ? *aja_hint_out : "none",
 		act.note, *policy_ms);
 	if (state_json_out != NULL)
@@ -1397,7 +1397,7 @@ neurqo_policy_low(Query* q,
 }
 
 static void
-neurqo_flatten_and_clauses(Node* node, List** clauses)
+nqo_flatten_and_clauses(Node* node, List** clauses)
 {
 	if (node == NULL)
 		return;
@@ -1406,14 +1406,14 @@ neurqo_flatten_and_clauses(Node* node, List** clauses)
 		ListCell* lc;
 
 		foreach(lc, ((BoolExpr*)node)->args)
-			neurqo_flatten_and_clauses((Node*)lfirst(lc), clauses);
+			nqo_flatten_and_clauses((Node*)lfirst(lc), clauses);
 		return;
 	}
 	*clauses = lappend(*clauses, node);
 }
 
 static bool
-neurqo_clause_single_varno(Node* clause, Index* varno)
+nqo_clause_single_varno(Node* clause, Index* varno)
 {
 	List* vars;
 	ListCell* lc;
@@ -1446,7 +1446,7 @@ neurqo_clause_single_varno(Node* clause, Index* varno)
 }
 
 static RangeTblEntry*
-neurqo_rte_for_var(Query* q, Var* var)
+nqo_rte_for_var(Query* q, Var* var)
 {
 	RangeTblEntry* rte;
 
@@ -1461,7 +1461,7 @@ neurqo_rte_for_var(Query* q, Var* var)
 }
 
 static bool
-neurqo_is_int4_equi_join(Expr* expr, Var** left, Var** right)
+nqo_is_int4_equi_join(Expr* expr, Var** left, Var** right)
 {
 	OpExpr* op;
 	Node* lnode;
@@ -1493,9 +1493,9 @@ neurqo_is_int4_equi_join(Expr* expr, Var** left, Var** right)
 }
 
 static bool
-neurqo_var_att_is_id(Query* q, Var* var)
+nqo_var_att_is_id(Query* q, Var* var)
 {
-	RangeTblEntry* rte = neurqo_rte_for_var(q, var);
+	RangeTblEntry* rte = nqo_rte_for_var(q, var);
 	char* attname;
 	bool is_id;
 
@@ -1510,7 +1510,7 @@ neurqo_var_att_is_id(Query* q, Var* var)
 }
 
 static bool
-neurqo_lip_filter_exists(NeurqoLipFilter* filters, int nfilters,
+nqo_lip_filter_exists(NqoLipFilter* filters, int nfilters,
 						 Var* build_var, Var* probe_var)
 {
 	int i;
@@ -1527,7 +1527,7 @@ neurqo_lip_filter_exists(NeurqoLipFilter* filters, int nfilters,
 }
 
 static Index
-neurqo_lip_scan_relid(Plan* plan)
+nqo_lip_scan_relid(Plan* plan)
 {
 	if (plan == NULL)
 		return 0;
@@ -1545,28 +1545,28 @@ neurqo_lip_scan_relid(Plan* plan)
 }
 
 static void
-neurqo_lip_plan_rel_stats(Plan* plan, Index varno,
-						  NeurqoLipRelStats* stats)
+nqo_lip_plan_rel_stats(Plan* plan, Index varno,
+						  NqoLipRelStats* stats)
 {
 	Index scanrelid;
 
 	if (plan == NULL)
 		return;
-	scanrelid = neurqo_lip_scan_relid(plan);
+	scanrelid = nqo_lip_scan_relid(plan);
 	if (scanrelid == varno)
 	{
 		stats->has_plan = true;
 		stats->plan_rows += Max(plan->plan_rows, 0.0);
 		stats->plan_cost += Max(plan->total_cost, 0.0);
 	}
-	neurqo_lip_plan_rel_stats(plan->lefttree, varno, stats);
-	neurqo_lip_plan_rel_stats(plan->righttree, varno, stats);
+	nqo_lip_plan_rel_stats(plan->lefttree, varno, stats);
+	nqo_lip_plan_rel_stats(plan->righttree, varno, stats);
 }
 
 static double
-neurqo_lip_relation_rows(Query* q, Var* var)
+nqo_lip_relation_rows(Query* q, Var* var)
 {
-	RangeTblEntry* rte = neurqo_rte_for_var(q, var);
+	RangeTblEntry* rte = nqo_rte_for_var(q, var);
 	HeapTuple tuple;
 	Form_pg_class classform;
 	double rows = -1.0;
@@ -1582,15 +1582,15 @@ neurqo_lip_relation_rows(Query* q, Var* var)
 	return rows;
 }
 
-static NeurqoLipRelStats
-neurqo_lip_rel_stats(Query* q, PlannedStmt* reference_plan, Var* var)
+static NqoLipRelStats
+nqo_lip_rel_stats(Query* q, PlannedStmt* reference_plan, Var* var)
 {
-	NeurqoLipRelStats stats;
+	NqoLipRelStats stats;
 
 	memset(&stats, 0, sizeof(stats));
-	stats.relation_rows = neurqo_lip_relation_rows(q, var);
+	stats.relation_rows = nqo_lip_relation_rows(q, var);
 	if (reference_plan != NULL)
-		neurqo_lip_plan_rel_stats(reference_plan->planTree,
+		nqo_lip_plan_rel_stats(reference_plan->planTree,
 								  var->varno, &stats);
 	if (stats.relation_rows < 0.0 && stats.has_plan)
 		stats.relation_rows = stats.plan_rows;
@@ -1598,31 +1598,31 @@ neurqo_lip_rel_stats(Query* q, PlannedStmt* reference_plan, Var* var)
 }
 
 static bool
-neurqo_lip_build_eligible(NeurqoLipRelStats* build,
-						  NeurqoLipRelStats* probe,
+nqo_lip_build_eligible(NqoLipRelStats* build,
+						  NqoLipRelStats* probe,
 						  bool selective)
 {
 	if (build->relation_rows < 0.0 ||
 		build->relation_rows >
-			(double)neurqo_lip_max_build_relation_rows)
+			(double)nqo_lip_max_build_relation_rows)
 		return false;
 	if (selective &&
 			(!build->has_plan ||
-			 build->plan_rows > (double)neurqo_lip_selective_plan_rows ||
+			 build->plan_rows > (double)nqo_lip_selective_plan_rows ||
 			 build->relation_rows <= 0.0 ||
 			 build->plan_rows * 100.0 >
 				build->relation_rows *
-				(double)neurqo_lip_max_build_selectivity_pct))
+				(double)nqo_lip_max_build_selectivity_pct))
 		return false;
 	if (build->has_plan && probe->has_plan &&
 		probe->plan_rows <
-			build->plan_rows * (double)neurqo_lip_min_probe_ratio)
+			build->plan_rows * (double)nqo_lip_min_probe_ratio)
 		return false;
 	return true;
 }
 
 static int
-neurqo_lip_existing_build_filter(NeurqoLipFilter* filters, int nprobes,
+nqo_lip_existing_build_filter(NqoLipFilter* filters, int nprobes,
 								 Var* build_var)
 {
 	int i;
@@ -1637,9 +1637,9 @@ neurqo_lip_existing_build_filter(NeurqoLipFilter* filters, int nprobes,
 }
 
 static int
-neurqo_collect_lip_filters(Query* q, List* clauses,
+nqo_collect_lip_filters(Query* q, List* clauses,
 						   PlannedStmt* reference_plan,
-						   NeurqoLipFilter* filters,
+						   NqoLipFilter* filters,
 						   int* filter_count)
 {
 	bool* has_local_restrict;
@@ -1647,14 +1647,14 @@ neurqo_collect_lip_filters(Query* q, List* clauses,
 	int nprobes = 0;
 	int nfilters = 0;
 	int nrtables = list_length(q->rtable);
-	bool selective = strcmp(neurqo_current_lip_action, "selective") == 0;
+	bool selective = strcmp(nqo_current_lip_action, "selective") == 0;
 
 	has_local_restrict = (bool*)palloc0((nrtables + 1) * sizeof(bool));
 	foreach(lc, clauses)
 	{
 		Index varno;
 
-		if (neurqo_clause_single_varno((Node*)lfirst(lc), &varno) &&
+		if (nqo_clause_single_varno((Node*)lfirst(lc), &varno) &&
 			varno > 0 && varno <= nrtables)
 			has_local_restrict[varno] = true;
 	}
@@ -1669,26 +1669,26 @@ neurqo_collect_lip_filters(Query* q, List* clauses,
 		bool right_local;
 		bool left_eligible;
 		bool right_eligible;
-		NeurqoLipRelStats left_stats;
-		NeurqoLipRelStats right_stats;
+		NqoLipRelStats left_stats;
+		NqoLipRelStats right_stats;
 		int filter_id;
 
-		if (!neurqo_is_int4_equi_join((Expr*)lfirst(lc), &left, &right))
+		if (!nqo_is_int4_equi_join((Expr*)lfirst(lc), &left, &right))
 			continue;
-		if (neurqo_rte_for_var(q, left) == NULL ||
-			neurqo_rte_for_var(q, right) == NULL)
+		if (nqo_rte_for_var(q, left) == NULL ||
+			nqo_rte_for_var(q, right) == NULL)
 			continue;
 
 		left_local = left->varno <= nrtables && has_local_restrict[left->varno];
 		right_local = right->varno <= nrtables && has_local_restrict[right->varno];
 		if (!left_local && !right_local)
 			continue;
-		left_stats = neurqo_lip_rel_stats(q, reference_plan, left);
-		right_stats = neurqo_lip_rel_stats(q, reference_plan, right);
+		left_stats = nqo_lip_rel_stats(q, reference_plan, left);
+		right_stats = nqo_lip_rel_stats(q, reference_plan, right);
 		left_eligible = left_local &&
-			neurqo_lip_build_eligible(&left_stats, &right_stats, selective);
+			nqo_lip_build_eligible(&left_stats, &right_stats, selective);
 		right_eligible = right_local &&
-			neurqo_lip_build_eligible(&right_stats, &left_stats, selective);
+			nqo_lip_build_eligible(&right_stats, &left_stats, selective);
 		if (!left_eligible && !right_eligible)
 			continue;
 
@@ -1708,8 +1708,8 @@ neurqo_collect_lip_filters(Query* q, List* clauses,
 				  right_stats.relation_rows < left_stats.relation_rows) ||
 				 (right_stats.plan_rows == left_stats.plan_rows &&
 				  right_stats.relation_rows == left_stats.relation_rows &&
-				  !neurqo_var_att_is_id(q, left) &&
-				  neurqo_var_att_is_id(q, right)))
+				  !nqo_var_att_is_id(q, left) &&
+				  nqo_var_att_is_id(q, right)))
 		{
 			build_var = right;
 			probe_var = left;
@@ -1720,14 +1720,14 @@ neurqo_collect_lip_filters(Query* q, List* clauses,
 			probe_var = right;
 		}
 
-		if (neurqo_lip_filter_exists(filters, nprobes, build_var, probe_var))
+		if (nqo_lip_filter_exists(filters, nprobes, build_var, probe_var))
 			continue;
-		filter_id = neurqo_lip_existing_build_filter(
+		filter_id = nqo_lip_existing_build_filter(
 			filters, nprobes, build_var);
 		if (filter_id < 0)
 		{
-			if (nfilters >= Min(neurqo_lip_max_filters,
-							   NEURQO_MAX_LIP_FILTERS))
+			if (nfilters >= Min(nqo_lip_max_filters,
+							   NQO_MAX_LIP_FILTERS))
 				continue;
 			filter_id = nfilters++;
 			filters[nprobes].is_build = true;
@@ -1738,7 +1738,7 @@ neurqo_collect_lip_filters(Query* q, List* clauses,
 		filters[nprobes].build_var = (Var*)copyObjectImpl(build_var);
 		filters[nprobes].probe_var = (Var*)copyObjectImpl(probe_var);
 		nprobes++;
-		if (nprobes >= NEURQO_MAX_LIP_PROBES)
+		if (nprobes >= NQO_MAX_LIP_PROBES)
 			break;
 	}
 
@@ -1748,9 +1748,9 @@ neurqo_collect_lip_filters(Query* q, List* clauses,
 }
 
 static Node*
-neurqo_remap_single_varno_mutator(Node* node, void* context)
+nqo_remap_single_varno_mutator(Node* node, void* context)
 {
-	NeurqoVarnoRemapContext* ctx = (NeurqoVarnoRemapContext*)context;
+	NqoVarnoRemapContext* ctx = (NqoVarnoRemapContext*)context;
 
 	if (node == NULL)
 		return NULL;
@@ -1766,14 +1766,14 @@ neurqo_remap_single_varno_mutator(Node* node, void* context)
 		}
 		return (Node*)newvar;
 	}
-	return expression_tree_mutator(node, neurqo_remap_single_varno_mutator,
+	return expression_tree_mutator(node, nqo_remap_single_varno_mutator,
 								   context);
 }
 
 static char*
-neurqo_lip_deparse_where(Query* q, List* clauses, Var* build_var)
+nqo_lip_deparse_where(Query* q, List* clauses, Var* build_var)
 {
-	RangeTblEntry* rte = neurqo_rte_for_var(q, build_var);
+	RangeTblEntry* rte = nqo_rte_for_var(q, build_var);
 	StringInfoData where;
 	ListCell* lc;
 
@@ -1784,17 +1784,17 @@ neurqo_lip_deparse_where(Query* q, List* clauses, Var* build_var)
 	{
 		Node* clause = (Node*)lfirst(lc);
 		Index varno;
-		NeurqoVarnoRemapContext ctx;
+		NqoVarnoRemapContext ctx;
 		Node* local_clause;
 		List* dpcontext;
 		char* clause_sql;
 
-		if (!neurqo_clause_single_varno(clause, &varno) ||
+		if (!nqo_clause_single_varno(clause, &varno) ||
 			varno != build_var->varno)
 			continue;
 		ctx.from_varno = build_var->varno;
 		ctx.to_varno = 1;
-		local_clause = neurqo_remap_single_varno_mutator(clause, &ctx);
+		local_clause = nqo_remap_single_varno_mutator(clause, &ctx);
 		dpcontext = deparse_context_for(rte->eref->aliasname, rte->relid);
 		clause_sql = deparse_expression(local_clause, dpcontext, false, false);
 		if (where.len > 0)
@@ -1810,21 +1810,21 @@ neurqo_lip_deparse_where(Query* q, List* clauses, Var* build_var)
 }
 
 static bool
-neurqo_lip_execute_sql(const char* sql)
+nqo_lip_execute_sql(const char* sql)
 {
 	int rc = SPI_execute(sql, false, 0);
 
 	if (rc < 0)
 	{
-		elog(WARNING, "[neurqo] run=" UINT64_FORMAT " LIP SQL failed rc=%d sql=%s",
-			 neurqo_current_run_id, rc, sql);
+		elog(WARNING, "[nqo] run=" UINT64_FORMAT " LIP SQL failed rc=%d sql=%s",
+			 nqo_current_run_id, rc, sql);
 		return false;
 	}
 	return true;
 }
 
 static bool
-neurqo_lip_run_setup(Query* q, List* clauses, NeurqoLipFilter* filters,
+nqo_lip_run_setup(Query* q, List* clauses, NqoLipFilter* filters,
 					 int nprobes, int nfilters)
 {
 	int i;
@@ -1842,27 +1842,27 @@ neurqo_lip_run_setup(Query* q, List* clauses, NeurqoLipFilter* filters,
 	spi_rc = SPI_connect();
 	if (spi_rc != SPI_OK_CONNECT)
 	{
-		elog(WARNING, "[neurqo] run=" UINT64_FORMAT " LIP setup skipped: SPI_connect rc=%d",
-			 neurqo_current_run_id, spi_rc);
+		elog(WARNING, "[nqo] run=" UINT64_FORMAT " LIP setup skipped: SPI_connect rc=%d",
+			 nqo_current_run_id, spi_rc);
 		if (pushed_snapshot)
 			PopActiveSnapshot();
 		client_min_messages = save_client_min_messages;
 		return false;
 	}
 
-	if (!neurqo_lip_execute_sql("CREATE EXTENSION IF NOT EXISTS pg_lip_bloom"))
+	if (!nqo_lip_execute_sql("CREATE EXTENSION IF NOT EXISTS pg_lip_bloom"))
 		goto fail;
 	CommandCounterIncrement();
 	if (pushed_snapshot)
 		UpdateActiveSnapshotCommandId();
-	if (!neurqo_lip_execute_sql("SELECT pg_lip_bloom_set_dynamic(2)"))
+	if (!nqo_lip_execute_sql("SELECT pg_lip_bloom_set_dynamic(2)"))
 		goto fail;
-	if (!neurqo_lip_execute_sql(psprintf("SELECT pg_lip_bloom_init(%d)", nfilters)))
+	if (!nqo_lip_execute_sql(psprintf("SELECT pg_lip_bloom_init(%d)", nfilters)))
 		goto fail;
 
 	for (i = 0; i < nprobes; i++)
 	{
-		RangeTblEntry* rte = neurqo_rte_for_var(q, filters[i].build_var);
+		RangeTblEntry* rte = nqo_rte_for_var(q, filters[i].build_var);
 		char* schema;
 		char* relname;
 		char* attname;
@@ -1884,7 +1884,7 @@ neurqo_lip_run_setup(Query* q, List* clauses, NeurqoLipFilter* filters,
 		relation_sql = quote_qualified_identifier(schema, relname);
 		alias_sql = quote_identifier(rte->eref->aliasname);
 		att_sql = quote_identifier(attname);
-		where_sql = neurqo_lip_deparse_where(q, clauses, filters[i].build_var);
+		where_sql = nqo_lip_deparse_where(q, clauses, filters[i].build_var);
 
 		initStringInfo(&sql);
 		appendStringInfo(&sql,
@@ -1893,9 +1893,9 @@ neurqo_lip_run_setup(Query* q, List* clauses, NeurqoLipFilter* filters,
 						 relation_sql, alias_sql);
 		if (where_sql != NULL)
 			appendStringInfo(&sql, " WHERE %s", where_sql);
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT " LIP build filter=%d sql=%s",
-			 neurqo_current_run_id, filters[i].filter_id, sql.data);
-		if (!neurqo_lip_execute_sql(sql.data))
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " LIP build filter=%d sql=%s",
+			 nqo_current_run_id, filters[i].filter_id, sql.data);
+		if (!nqo_lip_execute_sql(sql.data))
 			goto fail;
 		pfree(sql.data);
 	}
@@ -1916,7 +1916,7 @@ fail:
 }
 
 static Oid
-neurqo_lip_probe_funcid(void)
+nqo_lip_probe_funcid(void)
 {
 	Oid argtypes[2] = {INT4OID, INT4OID};
 
@@ -1925,7 +1925,7 @@ neurqo_lip_probe_funcid(void)
 }
 
 static void
-neurqo_lip_add_probe_qual(Query* q, Oid probe_funcid, NeurqoLipFilter* filter)
+nqo_lip_add_probe_qual(Query* q, Oid probe_funcid, NqoLipFilter* filter)
 {
 	Const* filter_id;
 	FuncExpr* probe;
@@ -1949,55 +1949,55 @@ neurqo_lip_add_probe_qual(Query* q, Oid probe_funcid, NeurqoLipFilter* filter)
 }
 
 static bool
-neurqo_apply_lip(Query* q, PlannedStmt* reference_plan,
+nqo_apply_lip(Query* q, PlannedStmt* reference_plan,
 				 double* lip_ms, int* lip_filters)
 {
 	List* clauses = NIL;
-	NeurqoLipFilter filters[NEURQO_MAX_LIP_PROBES];
+	NqoLipFilter filters[NQO_MAX_LIP_PROBES];
 	Oid probe_funcid;
 	int nprobes;
 	int nfilters;
 	int i;
-	double t0 = neurqo_now_ms();
+	double t0 = nqo_now_ms();
 
 	*lip_ms = 0.0;
 	*lip_filters = 0;
-	if (!neurqo_lip_enabled() || q == NULL || q->jointree == NULL)
+	if (!nqo_lip_enabled() || q == NULL || q->jointree == NULL)
 		return true;
 
-	neurqo_flatten_and_clauses(q->jointree->quals, &clauses);
-	nprobes = neurqo_collect_lip_filters(q, clauses, reference_plan,
+	nqo_flatten_and_clauses(q->jointree->quals, &clauses);
+	nprobes = nqo_collect_lip_filters(q, clauses, reference_plan,
 										filters, &nfilters);
 	if (nfilters <= 0)
 	{
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT " LIP skipped: no eligible int4 equi-join filters mode=%s",
-			 neurqo_current_run_id, neurqo_current_lip_action);
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " LIP skipped: no eligible int4 equi-join filters mode=%s",
+			 nqo_current_run_id, nqo_current_lip_action);
 		return true;
 	}
 
-	if (!neurqo_lip_run_setup(q, clauses, filters, nprobes, nfilters))
+	if (!nqo_lip_run_setup(q, clauses, filters, nprobes, nfilters))
 	{
-		elog(WARNING, "[neurqo] run=" UINT64_FORMAT " LIP setup failed; continuing without probe quals",
-			 neurqo_current_run_id);
+		elog(WARNING, "[nqo] run=" UINT64_FORMAT " LIP setup failed; continuing without probe quals",
+			 nqo_current_run_id);
 		return false;
 	}
 
-	probe_funcid = neurqo_lip_probe_funcid();
+	probe_funcid = nqo_lip_probe_funcid();
 	if (!OidIsValid(probe_funcid))
 	{
-		elog(WARNING, "[neurqo] run=" UINT64_FORMAT " LIP probe function not found after setup; continuing without probe quals",
-			 neurqo_current_run_id);
+		elog(WARNING, "[nqo] run=" UINT64_FORMAT " LIP probe function not found after setup; continuing without probe quals",
+			 nqo_current_run_id);
 		return false;
 	}
 
 	for (i = 0; i < nprobes; i++)
-		neurqo_lip_add_probe_qual(q, probe_funcid, &filters[i]);
+		nqo_lip_add_probe_qual(q, probe_funcid, &filters[i]);
 
-	*lip_ms = neurqo_now_ms() - t0;
+	*lip_ms = nqo_now_ms() - t0;
 	*lip_filters = nfilters;
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT
+	elog(LOG, "[nqo] run=" UINT64_FORMAT
 		 " apply LIP: mode=%s filters=%d probes=%d lip_ms=%.2f",
-		 neurqo_current_run_id, neurqo_current_lip_action,
+		 nqo_current_run_id, nqo_current_lip_action,
 		 nfilters, nprobes, *lip_ms);
 	return true;
 }
@@ -2007,12 +2007,12 @@ neurqo_apply_lip(Query* q, PlannedStmt* reference_plan,
  * query->rteperminfos list, indexed by rte->perminfoindex.  The original
  * (PG12) querysplit builds/remaps Query trees by hand and never maintains
  * that list, so the executor dereferences a stale/empty perminfo and crashes
- * (SIGSEGV).  neurqo_rebuild_perminfos() regenerates rteperminfos to match the
- * current (subset/remapped) rtable; neurqo_plan() does it right before every
+ * (SIGSEGV).  nqo_rebuild_perminfos() regenerates rteperminfos to match the
+ * current (subset/remapped) rtable; nqo_plan() does it right before every
  * planner() call so every plan/exec sees consistent permission info.
  */
 static void
-neurqo_rebuild_perminfos(Query* q)
+nqo_rebuild_perminfos(Query* q)
 {
 	List* old = q->rteperminfos;
 	ListCell* lc;
@@ -2042,55 +2042,55 @@ neurqo_rebuild_perminfos(Query* q)
 }
 
 static PlannedStmt*
-neurqo_plan_direct(Query* q, int cursorOptions, bool apply_lip,
+nqo_plan_direct(Query* q, int cursorOptions, bool apply_lip,
 				   const char* hint_query_string, bool log_hint)
 {
 	PlannedStmt* r;
 	double lip_ms = 0.0;
 	int lip_filters = 0;
 
-	elog(DEBUG1, "[neurqo] run=" UINT64_FORMAT " plan: rtable=%d perminfos=%d",
-		 neurqo_current_run_id, list_length(q->rtable), list_length(q->rteperminfos));
+	elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " plan: rtable=%d perminfos=%d",
+		 nqo_current_run_id, list_length(q->rtable), list_length(q->rteperminfos));
 	if (apply_lip)
-		neurqo_apply_lip(q, NULL, &lip_ms, &lip_filters);
-	neurqo_rebuild_perminfos(q);
-	elog(DEBUG1, "[neurqo] run=" UINT64_FORMAT " plan: perminfos rebuilt=%d, calling planner",
-		 neurqo_current_run_id, list_length(q->rteperminfos));
+		nqo_apply_lip(q, NULL, &lip_ms, &lip_filters);
+	nqo_rebuild_perminfos(q);
+	elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " plan: perminfos rebuilt=%d, calling planner",
+		 nqo_current_run_id, list_length(q->rteperminfos));
 	if (hint_query_string != NULL && log_hint)
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT " apply planner hint: search_strategy=%s execution_action=%s lip_action=%s hint=%s",
-			 neurqo_current_run_id,
-			 neurqo_search_enabled() ? neurqo_current_search_strategy : "default",
-			 neurqo_aja_enabled() ? neurqo_current_execution_action : "none",
-			 neurqo_lip_enabled() ? neurqo_current_lip_action : "none",
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " apply planner hint: search_strategy=%s execution_action=%s lip_action=%s hint=%s",
+			 nqo_current_run_id,
+			 nqo_search_enabled() ? nqo_current_search_strategy : "default",
+			 nqo_aja_enabled() ? nqo_current_execution_action : "none",
+			 nqo_lip_enabled() ? nqo_current_lip_action : "none",
 			 hint_query_string);
 	r = planner(q, hint_query_string, cursorOptions, NULL);
-	elog(DEBUG1, "[neurqo] run=" UINT64_FORMAT " plan: planner returned ok lip_filters=%d lip_ms=%.2f",
-		 neurqo_current_run_id, lip_filters, lip_ms);
+	elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " plan: planner returned ok lip_filters=%d lip_ms=%.2f",
+		 nqo_current_run_id, lip_filters, lip_ms);
 	return r;
 }
 
 static PlannedStmt*
-neurqo_plan(Query* q, int cursorOptions, bool apply_lip)
+nqo_plan(Query* q, int cursorOptions, bool apply_lip)
 {
 	PlannedStmt* r;
 	char* hint_query_string = NULL;
 
-	hint_query_string = neurqo_build_planner_hint(q);
+	hint_query_string = nqo_build_planner_hint(q);
 	if (apply_lip)
 	{
 		double lip_ms = 0.0;
 		int lip_filters = 0;
 
-		neurqo_apply_lip(q, NULL, &lip_ms, &lip_filters);
+		nqo_apply_lip(q, NULL, &lip_ms, &lip_filters);
 	}
-	r = neurqo_plan_direct(q, cursorOptions, false, hint_query_string, true);
+	r = nqo_plan_direct(q, cursorOptions, false, hint_query_string, true);
 	if (hint_query_string != NULL)
 		pfree(hint_query_string);
 	return r;
 }
 
 static PlannedStmt*
-neurqo_plan_nestloop_candidate(Query* q, const char* hint_query_string)
+nqo_plan_nestloop_candidate(Query* q, const char* hint_query_string)
 {
 	PlannedStmt* plan = NULL;
 	bool saved_nestloop = enable_nestloop;
@@ -2102,7 +2102,7 @@ neurqo_plan_nestloop_candidate(Query* q, const char* hint_query_string)
 		enable_nestloop = true;
 		enable_mergejoin = false;
 		enable_hashjoin = false;
-		plan = neurqo_plan_direct(q, 0, false, hint_query_string, false);
+		plan = nqo_plan_direct(q, 0, false, hint_query_string, false);
 	}
 	PG_FINALLY();
 	{
@@ -2116,7 +2116,7 @@ neurqo_plan_nestloop_candidate(Query* q, const char* hint_query_string)
 }
 
 static PlannedStmt*
-neurqo_plan_hashjoin_candidate(Query* q, const char* hint_query_string)
+nqo_plan_hashjoin_candidate(Query* q, const char* hint_query_string)
 {
 	PlannedStmt* plan = NULL;
 	bool saved_nestloop = enable_nestloop;
@@ -2128,7 +2128,7 @@ neurqo_plan_hashjoin_candidate(Query* q, const char* hint_query_string)
 		enable_nestloop = false;
 		enable_mergejoin = false;
 		enable_hashjoin = true;
-		plan = neurqo_plan_direct(q, 0, false, hint_query_string, false);
+		plan = nqo_plan_direct(q, 0, false, hint_query_string, false);
 	}
 	PG_FINALLY();
 	{
@@ -2142,7 +2142,7 @@ neurqo_plan_hashjoin_candidate(Query* q, const char* hint_query_string)
 }
 
 static char*
-neurqo_make_hint_query(const char* first_hint, const char* second_hint)
+nqo_make_hint_query(const char* first_hint, const char* second_hint)
 {
 	StringInfoData hint;
 
@@ -2161,7 +2161,7 @@ neurqo_make_hint_query(const char* first_hint, const char* second_hint)
 }
 
 static char*
-neurqo_build_left_deep_leading_hint(Query* q)
+nqo_build_left_deep_leading_hint(Query* q)
 {
 	ListCell* lc;
 	StringInfoData leading;
@@ -2213,7 +2213,7 @@ neurqo_build_left_deep_leading_hint(Query* q)
 }
 
 static char*
-neurqo_build_join_method_hint(Query* q, const char* method)
+nqo_build_join_method_hint(Query* q, const char* method)
 {
 	ListCell* lc;
 	StringInfoData aliases;
@@ -2269,20 +2269,20 @@ neurqo_build_join_method_hint(Query* q, const char* method)
 }
 
 static int
-neurqo_effective_search_k(void)
+nqo_effective_search_k(void)
 {
-	int k = neurqo_current_search_k > 0 ?
-		neurqo_current_search_k : neurqo_search_topk;
+	int k = nqo_current_search_k > 0 ?
+		nqo_current_search_k : nqo_search_topk;
 
 	if (k <= 0)
 		k = 1;
-	if (k > NEURQO_SEARCH_ABS_MAX_K)
-		k = NEURQO_SEARCH_ABS_MAX_K;
+	if (k > NQO_SEARCH_ABS_MAX_K)
+		k = NQO_SEARCH_ABS_MAX_K;
 	return k;
 }
 
 static int
-neurqo_popcount64(uint64 mask)
+nqo_popcount64(uint64 mask)
 {
 	int n = 0;
 
@@ -2295,7 +2295,7 @@ neurqo_popcount64(uint64 mask)
 }
 
 static Var*
-neurqo_node_var(Node* node)
+nqo_node_var(Node* node)
 {
 	if (node == NULL)
 		return NULL;
@@ -2312,7 +2312,7 @@ neurqo_node_var(Node* node)
 }
 
 static int
-neurqo_collect_search_rels(Query* q, NeurqoSearchRel* rels, int maxrels,
+nqo_collect_search_rels(Query* q, NqoSearchRel* rels, int maxrels,
 						   bool* all_rte_relation)
 {
 	ListCell* lc;
@@ -2341,7 +2341,7 @@ neurqo_collect_search_rels(Query* q, NeurqoSearchRel* rels, int maxrels,
 }
 
 static void
-neurqo_collect_join_edges(Query* q, NeurqoSearchRel* rels, int nrels,
+nqo_collect_join_edges(Query* q, NqoSearchRel* rels, int nrels,
 						  bool* edges)
 {
 	int* rtindex_to_pos;
@@ -2360,7 +2360,7 @@ neurqo_collect_join_edges(Query* q, NeurqoSearchRel* rels, int nrels,
 	for (i = 0; i < nrels; i++)
 		rtindex_to_pos[rels[i].rtindex] = i;
 
-	neurqo_flatten_and_clauses(q->jointree->quals, &clauses);
+	nqo_flatten_and_clauses(q->jointree->quals, &clauses);
 	foreach(lc, clauses)
 	{
 		Expr* expr = (Expr*)lfirst(lc);
@@ -2375,8 +2375,8 @@ neurqo_collect_join_edges(Query* q, NeurqoSearchRel* rels, int nrels,
 		op = (OpExpr*)expr;
 		if (list_length(op->args) != 2)
 			continue;
-		left = neurqo_node_var((Node*)linitial(op->args));
-		right = neurqo_node_var((Node*)lsecond(op->args));
+		left = nqo_node_var((Node*)linitial(op->args));
+		right = nqo_node_var((Node*)lsecond(op->args));
 		if (left == NULL || right == NULL ||
 			left->varlevelsup != 0 || right->varlevelsup != 0 ||
 			left->varno == right->varno ||
@@ -2394,7 +2394,7 @@ neurqo_collect_join_edges(Query* q, NeurqoSearchRel* rels, int nrels,
 }
 
 static bool
-neurqo_masks_connected(uint64 lmask, uint64 rmask, bool* edges, int nrels)
+nqo_masks_connected(uint64 lmask, uint64 rmask, bool* edges, int nrels)
 {
 	int i;
 	int j;
@@ -2415,7 +2415,7 @@ neurqo_masks_connected(uint64 lmask, uint64 rmask, bool* edges, int nrels)
 }
 
 static Query*
-neurqo_make_subset_query(Query* q, NeurqoSearchRel* rels, int nrels,
+nqo_make_subset_query(Query* q, NqoSearchRel* rels, int nrels,
 						 uint64 mask)
 {
 	int nrtables = list_length(q->rtable);
@@ -2483,8 +2483,8 @@ neurqo_make_subset_query(Query* q, NeurqoSearchRel* rels, int nrels,
 }
 
 static double
-neurqo_plan_subset_cardinality(Query* q, NeurqoSearchRel* rels, int nrels,
-							   NeurqoSearchCell* cells, uint64 mask)
+nqo_plan_subset_cardinality(Query* q, NqoSearchRel* rels, int nrels,
+							   NqoSearchCell* cells, uint64 mask)
 {
 	Query* local_query;
 	PlannedStmt* planned;
@@ -2493,13 +2493,13 @@ neurqo_plan_subset_cardinality(Query* q, NeurqoSearchRel* rels, int nrels,
 	if (cells[mask].card_valid)
 		return cells[mask].card_rows;
 
-	local_query = neurqo_make_subset_query(q, rels, nrels, mask);
+	local_query = nqo_make_subset_query(q, rels, nrels, mask);
 	if (local_query == NULL)
 		rows = 1.0;
 	else
 	{
-		neurqo_last_search_planner_calls++;
-		planned = neurqo_plan_direct(local_query, CURSOR_OPT_PARALLEL_OK,
+		nqo_last_search_planner_calls++;
+		planned = nqo_plan_direct(local_query, CURSOR_OPT_PARALLEL_OK,
 									 false, NULL, false);
 		rows = planned && planned->planTree ? planned->planTree->plan_rows : 1.0;
 	}
@@ -2511,8 +2511,8 @@ neurqo_plan_subset_cardinality(Query* q, NeurqoSearchRel* rels, int nrels,
 }
 
 static double
-neurqo_pairwise_subset_cardinality(Query* q, NeurqoSearchRel* rels,
-								   int nrels, NeurqoSearchCell* cells,
+nqo_pairwise_subset_cardinality(Query* q, NqoSearchRel* rels,
+								   int nrels, NqoSearchCell* cells,
 								   bool* edges, uint64 mask)
 {
 	double log_rows = 0.0;
@@ -2522,8 +2522,8 @@ neurqo_pairwise_subset_cardinality(Query* q, NeurqoSearchRel* rels,
 
 	if (cells[mask].card_valid)
 		return cells[mask].card_rows;
-	if (neurqo_popcount64(mask) <= 2)
-		return neurqo_plan_subset_cardinality(q, rels, nrels, cells, mask);
+	if (nqo_popcount64(mask) <= 2)
+		return nqo_plan_subset_cardinality(q, rels, nrels, cells, mask);
 
 	for (i = 0; i < nrels; i++)
 	{
@@ -2532,7 +2532,7 @@ neurqo_pairwise_subset_cardinality(Query* q, NeurqoSearchRel* rels,
 
 		if ((mask & singleton) == 0)
 			continue;
-		base_rows = neurqo_plan_subset_cardinality(
+		base_rows = nqo_plan_subset_cardinality(
 			q, rels, nrels, cells, singleton);
 		log_rows += log(Max(base_rows, 1.0));
 	}
@@ -2563,7 +2563,7 @@ neurqo_pairwise_subset_cardinality(Query* q, NeurqoSearchRel* rels,
 				continue;
 			right_rows = cells[jmask].card_rows;
 			pair_mask = imask | jmask;
-			pair_rows = neurqo_plan_subset_cardinality(
+			pair_rows = nqo_plan_subset_cardinality(
 				q, rels, nrels, cells, pair_mask);
 			selectivity = pair_rows /
 				Max(left_rows * right_rows, 1.0);
@@ -2582,18 +2582,18 @@ neurqo_pairwise_subset_cardinality(Query* q, NeurqoSearchRel* rels,
 }
 
 static double
-neurqo_subset_cardinality(Query* q, NeurqoSearchRel* rels, int nrels,
-						  NeurqoSearchCell* cells, bool* edges, uint64 mask)
+nqo_subset_cardinality(Query* q, NqoSearchRel* rels, int nrels,
+						  NqoSearchCell* cells, bool* edges, uint64 mask)
 {
-	if (neurqo_search_exact_cardinality)
-		return neurqo_plan_subset_cardinality(
+	if (nqo_search_exact_cardinality)
+		return nqo_plan_subset_cardinality(
 			q, rels, nrels, cells, mask);
-	return neurqo_pairwise_subset_cardinality(
+	return nqo_pairwise_subset_cardinality(
 		q, rels, nrels, cells, edges, mask);
 }
 
 static void
-neurqo_search_cell_add(NeurqoSearchCell* cell, double cout,
+nqo_search_cell_add(NqoSearchCell* cell, double cout,
 					   const char* leading, int k)
 {
 	int pos;
@@ -2634,7 +2634,7 @@ neurqo_search_cell_add(NeurqoSearchCell* cell, double cout,
 		}
 		if (best != pos)
 		{
-			NeurqoSearchEntry tmp = cell->entries[pos];
+			NqoSearchEntry tmp = cell->entries[pos];
 
 			cell->entries[pos] = cell->entries[best];
 			cell->entries[best] = tmp;
@@ -2643,32 +2643,32 @@ neurqo_search_cell_add(NeurqoSearchCell* cell, double cout,
 }
 
 static char*
-neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
+nqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 {
-	NeurqoSearchRel rels[NEURQO_SEARCH_ABS_MAX_RELS];
-	bool edges[NEURQO_SEARCH_ABS_MAX_RELS * NEURQO_SEARCH_ABS_MAX_RELS];
+	NqoSearchRel rels[NQO_SEARCH_ABS_MAX_RELS];
+	bool edges[NQO_SEARCH_ABS_MAX_RELS * NQO_SEARCH_ABS_MAX_RELS];
 	bool all_rte_relation;
 	int nrels;
-	int max_rels = neurqo_search_max_rels;
-	int k = neurqo_effective_search_k();
+	int max_rels = nqo_search_max_rels;
+	int k = nqo_effective_search_k();
 	uint64 nmasks;
 	uint64 full_mask;
-	NeurqoSearchCell* cells;
+	NqoSearchCell* cells;
 	int level;
 	int i;
 	char* best_leading = NULL;
 	double best_cost = DBL_MAX;
-	double t0 = neurqo_now_ms();
+	double t0 = nqo_now_ms();
 	PlannedStmt* best_plan = NULL;
 
 	if (selected_plan_out != NULL)
 		*selected_plan_out = NULL;
 
-	neurqo_last_search_ms = 0.0;
-	neurqo_last_search_candidate_cost = 0.0;
-	neurqo_last_search_candidates = 0;
-	neurqo_last_search_planner_calls = 0;
-	neurqo_last_search_applied = false;
+	nqo_last_search_ms = 0.0;
+	nqo_last_search_candidate_cost = 0.0;
+	nqo_last_search_candidates = 0;
+	nqo_last_search_planner_calls = 0;
+	nqo_last_search_applied = false;
 
 	/*
 	 * A SubLink can contain correlated Vars whose outer relation disappears
@@ -2679,39 +2679,39 @@ neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 	 */
 	if (q->hasSubLinks)
 	{
-		neurqo_last_search_ms = neurqo_now_ms() - t0;
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT
+		nqo_last_search_ms = nqo_now_ms() - t0;
+		elog(LOG, "[nqo] run=" UINT64_FORMAT
 			 " Search top-k skipped: query contains SubLink; fallback default",
-			 neurqo_current_run_id);
+			 nqo_current_run_id);
 		return NULL;
 	}
 
-	if (max_rels <= 0 || max_rels > NEURQO_SEARCH_ABS_MAX_RELS)
-		max_rels = NEURQO_SEARCH_ABS_MAX_RELS;
-	nrels = neurqo_collect_search_rels(q, rels, NEURQO_SEARCH_ABS_MAX_RELS,
+	if (max_rels <= 0 || max_rels > NQO_SEARCH_ABS_MAX_RELS)
+		max_rels = NQO_SEARCH_ABS_MAX_RELS;
+	nrels = nqo_collect_search_rels(q, rels, NQO_SEARCH_ABS_MAX_RELS,
 									   &all_rte_relation);
 	if (nrels < 2)
 		return NULL;
 	if (!all_rte_relation || nrels > max_rels)
 	{
-		neurqo_last_search_ms = neurqo_now_ms() - t0;
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT " Search top-k skipped: nrels=%d all_relation=%d max_rels=%d; fallback default",
-			 neurqo_current_run_id, nrels, all_rte_relation ? 1 : 0, max_rels);
+		nqo_last_search_ms = nqo_now_ms() - t0;
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " Search top-k skipped: nrels=%d all_relation=%d max_rels=%d; fallback default",
+			 nqo_current_run_id, nrels, all_rte_relation ? 1 : 0, max_rels);
 		return NULL;
 	}
 
-	neurqo_collect_join_edges(q, rels, nrels, edges);
+	nqo_collect_join_edges(q, rels, nrels, edges);
 	full_mask = (((uint64)1) << nrels) - 1;
 	nmasks = full_mask + 1;
-	cells = (NeurqoSearchCell*)palloc0(sizeof(NeurqoSearchCell) * nmasks);
+	cells = (NqoSearchCell*)palloc0(sizeof(NqoSearchCell) * nmasks);
 
 	for (i = 0; i < nrels; i++)
 	{
 		uint64 mask = ((uint64)1) << i;
 
-		neurqo_search_cell_add(&cells[mask], 0.0, rels[i].alias, k);
-		if (!neurqo_search_exact_cardinality)
-			(void) neurqo_plan_subset_cardinality(
+		nqo_search_cell_add(&cells[mask], 0.0, rels[i].alias, k);
+		if (!nqo_search_exact_cardinality)
+			(void) nqo_plan_subset_cardinality(
 				q, rels, nrels, cells, mask);
 	}
 
@@ -2723,7 +2723,7 @@ neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 		{
 			uint64 lmask;
 
-			if (neurqo_popcount64(mask) != level)
+			if (nqo_popcount64(mask) != level)
 				continue;
 			for (lmask = (mask - 1) & mask; lmask != 0;
 				 lmask = (lmask - 1) & mask)
@@ -2737,9 +2737,9 @@ neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 					continue;
 				if (cells[lmask].nentries == 0 || cells[rmask].nentries == 0)
 					continue;
-				if (!neurqo_masks_connected(lmask, rmask, edges, nrels))
+				if (!nqo_masks_connected(lmask, rmask, edges, nrels))
 					continue;
-				join_rows = neurqo_subset_cardinality(
+				join_rows = nqo_subset_cardinality(
 					q, rels, nrels, cells, edges, mask);
 				for (li = 0; li < cells[lmask].nentries; li++)
 				{
@@ -2752,12 +2752,12 @@ neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 						leading = psprintf("(%s %s)",
 										   cells[lmask].entries[li].leading,
 										   cells[rmask].entries[ri].leading);
-						neurqo_search_cell_add(&cells[mask], cout, leading, k);
+						nqo_search_cell_add(&cells[mask], cout, leading, k);
 						pfree(leading);
 						leading = psprintf("(%s %s)",
 										   cells[rmask].entries[ri].leading,
 										   cells[lmask].entries[li].leading);
-						neurqo_search_cell_add(&cells[mask], cout, leading, k);
+						nqo_search_cell_add(&cells[mask], cout, leading, k);
 						pfree(leading);
 					}
 				}
@@ -2767,28 +2767,28 @@ neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 
 	if (cells[full_mask].nentries == 0)
 	{
-		neurqo_last_search_ms = neurqo_now_ms() - t0;
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT " Search top-k found no connected DP order; fallback default",
-			 neurqo_current_run_id);
+		nqo_last_search_ms = nqo_now_ms() - t0;
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " Search top-k found no connected DP order; fallback default",
+			 nqo_current_run_id);
 		return NULL;
 	}
-	neurqo_last_search_candidates = cells[full_mask].nentries;
+	nqo_last_search_candidates = cells[full_mask].nentries;
 
 	for (i = 0; i < cells[full_mask].nentries; i++)
 	{
 		char* search_hint = psprintf("Leading(%s)", cells[full_mask].entries[i].leading);
-		char* hint_query = neurqo_make_hint_query(search_hint, NULL);
+		char* hint_query = nqo_make_hint_query(search_hint, NULL);
 		PlannedStmt* planned;
 		double cost;
 
-		neurqo_last_search_planner_calls++;
-		planned = neurqo_plan_direct(copyObjectImpl(q),
+		nqo_last_search_planner_calls++;
+		planned = nqo_plan_direct(copyObjectImpl(q),
 									CURSOR_OPT_PARALLEL_OK,
 									false, hint_query, false);
 		cost = planned && planned->planTree ?
 			planned->planTree->total_cost : DBL_MAX;
-		elog(DEBUG1, "[neurqo] run=" UINT64_FORMAT " Search candidate %d/%d cout=%.2f physical_cost=%.2f hint=%s",
-			 neurqo_current_run_id, i + 1, cells[full_mask].nentries,
+		elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " Search candidate %d/%d cout=%.2f physical_cost=%.2f hint=%s",
+			 nqo_current_run_id, i + 1, cells[full_mask].nentries,
 			 cells[full_mask].entries[i].cout, cost, search_hint);
 		if (cost < best_cost)
 		{
@@ -2803,17 +2803,17 @@ neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 			pfree(hint_query);
 	}
 
-	neurqo_last_search_ms = neurqo_now_ms() - t0;
+	nqo_last_search_ms = nqo_now_ms() - t0;
 	if (best_cost < DBL_MAX)
-		neurqo_last_search_candidate_cost = best_cost;
+		nqo_last_search_candidate_cost = best_cost;
 	if (best_leading == NULL)
 		return NULL;
 
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT " Search top-k applied: strategy=%s k=%d nrels=%d candidates=%d best_physical_cost=%.2f search_ms=%.2f leading=%s",
-		 neurqo_current_run_id, neurqo_current_search_strategy, k, nrels,
-		 cells[full_mask].nentries, best_cost, neurqo_last_search_ms,
+	elog(LOG, "[nqo] run=" UINT64_FORMAT " Search top-k applied: strategy=%s k=%d nrels=%d candidates=%d best_physical_cost=%.2f search_ms=%.2f leading=%s",
+		 nqo_current_run_id, nqo_current_search_strategy, k, nrels,
+		 cells[full_mask].nentries, best_cost, nqo_last_search_ms,
 		 best_leading);
-	neurqo_last_search_applied = true;
+	nqo_last_search_applied = true;
 	if (selected_plan_out != NULL)
 		*selected_plan_out = best_plan;
 	{
@@ -2825,19 +2825,19 @@ neurqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 }
 
 static char*
-neurqo_build_search_hint(Query* q, PlannedStmt** selected_plan_out)
+nqo_build_search_hint(Query* q, PlannedStmt** selected_plan_out)
 {
 	if (selected_plan_out != NULL)
 		*selected_plan_out = NULL;
-	if (!neurqo_search_enabled())
+	if (!nqo_search_enabled())
 		return NULL;
-	if (strcmp(neurqo_current_search_strategy, "left_deep") == 0)
-		return neurqo_build_left_deep_leading_hint(q);
-	return neurqo_build_topk_leading_hint(q, selected_plan_out);
+	if (strcmp(nqo_current_search_strategy, "left_deep") == 0)
+		return nqo_build_left_deep_leading_hint(q);
+	return nqo_build_topk_leading_hint(q, selected_plan_out);
 }
 
 static const char*
-neurqo_plan_node_name(Plan* plan)
+nqo_plan_node_name(Plan* plan)
 {
 	if (plan == NULL)
 		return "Null";
@@ -2897,14 +2897,14 @@ neurqo_plan_node_name(Plan* plan)
 }
 
 static bool
-neurqo_plan_is_join(Plan* plan)
+nqo_plan_is_join(Plan* plan)
 {
 	return plan != NULL &&
 		(IsA(plan, NestLoop) || IsA(plan, MergeJoin) || IsA(plan, HashJoin));
 }
 
 static bool
-neurqo_plan_is_scan(Plan* plan)
+nqo_plan_is_scan(Plan* plan)
 {
 	if (plan == NULL)
 		return false;
@@ -2927,7 +2927,7 @@ neurqo_plan_is_scan(Plan* plan)
 }
 
 static Index
-neurqo_plan_scanrelid(Plan* plan)
+nqo_plan_scanrelid(Plan* plan)
 {
 	if (plan == NULL)
 		return 0;
@@ -2946,7 +2946,7 @@ neurqo_plan_scanrelid(Plan* plan)
 }
 
 static bool
-neurqo_plan_hint_part(Plan* plan, Query* q, StringInfo methods,
+nqo_plan_hint_part(Plan* plan, Query* q, StringInfo methods,
 						  char** tree_out, char** aliases_out,
 						  bool include_methods, bool swap_hash_inputs)
 {
@@ -2957,7 +2957,7 @@ neurqo_plan_hint_part(Plan* plan, Query* q, StringInfo methods,
 	if (plan == NULL)
 		return false;
 
-	scanrelid = neurqo_plan_scanrelid(plan);
+	scanrelid = nqo_plan_scanrelid(plan);
 	if (scanrelid > 0 && scanrelid <= list_length(q->rtable))
 	{
 		RangeTblEntry* rte =
@@ -2992,7 +2992,7 @@ neurqo_plan_hint_part(Plan* plan, Query* q, StringInfo methods,
 		return true;
 	}
 
-	if (neurqo_plan_is_join(plan))
+	if (nqo_plan_is_join(plan))
 	{
 		Plan* left_plan = plan->lefttree;
 		Plan* right_plan = plan->righttree;
@@ -3007,10 +3007,10 @@ neurqo_plan_hint_part(Plan* plan, Query* q, StringInfo methods,
 			left_plan = plan->righttree;
 			right_plan = plan->lefttree;
 		}
-		if (!neurqo_plan_hint_part(left_plan, q, methods,
+		if (!nqo_plan_hint_part(left_plan, q, methods,
 								  &left_tree, &left_aliases,
 								  include_methods, swap_hash_inputs) ||
-			!neurqo_plan_hint_part(right_plan, q, methods,
+			!nqo_plan_hint_part(right_plan, q, methods,
 								   &right_tree, &right_aliases,
 								   include_methods, swap_hash_inputs))
 			return false;
@@ -3033,18 +3033,18 @@ neurqo_plan_hint_part(Plan* plan, Query* q, StringInfo methods,
 	}
 
 	if (plan->lefttree != NULL && plan->righttree == NULL)
-		return neurqo_plan_hint_part(plan->lefttree, q, methods,
+		return nqo_plan_hint_part(plan->lefttree, q, methods,
 									tree_out, aliases_out,
 									include_methods, swap_hash_inputs);
 	if (plan->righttree != NULL && plan->lefttree == NULL)
-		return neurqo_plan_hint_part(plan->righttree, q, methods,
+		return nqo_plan_hint_part(plan->righttree, q, methods,
 									tree_out, aliases_out,
 									include_methods, swap_hash_inputs);
 	return false;
 }
 
 static char*
-neurqo_build_plan_hint(PlannedStmt* plannedstmt, Query* q)
+nqo_build_plan_hint(PlannedStmt* plannedstmt, Query* q)
 {
 	StringInfoData methods;
 	char* tree;
@@ -3054,7 +3054,7 @@ neurqo_build_plan_hint(PlannedStmt* plannedstmt, Query* q)
 	if (plannedstmt == NULL || plannedstmt->planTree == NULL)
 		return NULL;
 	initStringInfo(&methods);
-	if (!neurqo_plan_hint_part(plannedstmt->planTree, q, &methods,
+	if (!nqo_plan_hint_part(plannedstmt->planTree, q, &methods,
 							   &tree, &aliases, true, false))
 	{
 		pfree(methods.data);
@@ -3070,7 +3070,7 @@ neurqo_build_plan_hint(PlannedStmt* plannedstmt, Query* q)
 }
 
 static char*
-neurqo_build_leading_hint(PlannedStmt* plannedstmt, Query* q,
+nqo_build_leading_hint(PlannedStmt* plannedstmt, Query* q,
 						  bool swap_hash_inputs)
 {
 	StringInfoData ignored_methods;
@@ -3081,7 +3081,7 @@ neurqo_build_leading_hint(PlannedStmt* plannedstmt, Query* q,
 	if (plannedstmt == NULL || plannedstmt->planTree == NULL)
 		return NULL;
 	initStringInfo(&ignored_methods);
-	if (!neurqo_plan_hint_part(plannedstmt->planTree, q, &ignored_methods,
+	if (!nqo_plan_hint_part(plannedstmt->planTree, q, &ignored_methods,
 							   &tree, &aliases, false, swap_hash_inputs))
 	{
 		pfree(ignored_methods.data);
@@ -3095,26 +3095,26 @@ neurqo_build_leading_hint(PlannedStmt* plannedstmt, Query* q,
 }
 
 static void
-neurqo_plan_summary(Plan* plan, int depth, int* nnodes, int* njoins,
+nqo_plan_summary(Plan* plan, int depth, int* nnodes, int* njoins,
 					int* nscans, int* max_depth)
 {
 	if (plan == NULL)
 		return;
 	(*nnodes)++;
-	if (neurqo_plan_is_join(plan))
+	if (nqo_plan_is_join(plan))
 		(*njoins)++;
-	if (neurqo_plan_is_scan(plan))
+	if (nqo_plan_is_scan(plan))
 		(*nscans)++;
 	if (depth > *max_depth)
 		*max_depth = depth;
-	neurqo_plan_summary(plan->lefttree, depth + 1, nnodes, njoins, nscans,
+	nqo_plan_summary(plan->lefttree, depth + 1, nnodes, njoins, nscans,
 						max_depth);
-	neurqo_plan_summary(plan->righttree, depth + 1, nnodes, njoins, nscans,
+	nqo_plan_summary(plan->righttree, depth + 1, nnodes, njoins, nscans,
 						max_depth);
 }
 
 static void
-neurqo_append_aliases_json(Query* q, StringInfo out)
+nqo_append_aliases_json(Query* q, StringInfo out)
 {
 	ListCell* lc;
 	bool first = true;
@@ -3128,7 +3128,7 @@ neurqo_append_aliases_json(Query* q, StringInfo out)
 			continue;
 		if (!first)
 			appendStringInfoChar(out, ',');
-		neurqo_append_json_string(out, rte->eref && rte->eref->aliasname ?
+		nqo_append_json_string(out, rte->eref && rte->eref->aliasname ?
 								  rte->eref->aliasname : get_rel_name(rte->relid));
 		first = false;
 	}
@@ -3136,7 +3136,7 @@ neurqo_append_aliases_json(Query* q, StringInfo out)
 }
 
 static void
-neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
+nqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 {
 	Index scanrelid;
 
@@ -3145,7 +3145,7 @@ neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 		appendStringInfoString(out, "null");
 		return;
 	}
-	if (*nnodes >= NEURQO_AJA_PLAN_MAX_NODES)
+	if (*nnodes >= NQO_AJA_PLAN_MAX_NODES)
 	{
 		appendStringInfoString(out, "{\"truncated\":true}");
 		return;
@@ -3153,12 +3153,12 @@ neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 	(*nnodes)++;
 	appendStringInfoString(out, "{");
 	appendStringInfoString(out, "\"node\":");
-	neurqo_append_json_string(out, neurqo_plan_node_name(plan));
+	nqo_append_json_string(out, nqo_plan_node_name(plan));
 	appendStringInfo(out, ",\"rows\":%.0f,\"startup_cost\":%.2f,"
 					 "\"total_cost\":%.2f,\"width\":%d",
 					 plan->plan_rows, plan->startup_cost,
 					 plan->total_cost, plan->plan_width);
-	scanrelid = neurqo_plan_scanrelid(plan);
+	scanrelid = nqo_plan_scanrelid(plan);
 	if (scanrelid > 0 && scanrelid <= list_length(q->rtable))
 	{
 		RangeTblEntry* rte = (RangeTblEntry*)list_nth(q->rtable, scanrelid - 1);
@@ -3166,7 +3166,7 @@ neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 		if (rte->rtekind == RTE_RELATION)
 		{
 			appendStringInfoString(out, ",\"alias\":");
-			neurqo_append_json_string(out, rte->eref && rte->eref->aliasname ?
+			nqo_append_json_string(out, rte->eref && rte->eref->aliasname ?
 									  rte->eref->aliasname :
 									  get_rel_name(rte->relid));
 		}
@@ -3174,11 +3174,11 @@ neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 	if (plan->lefttree != NULL || plan->righttree != NULL)
 	{
 		appendStringInfoString(out, ",\"children\":[");
-		neurqo_append_plan_json(plan->lefttree, q, out, nnodes);
+		nqo_append_plan_json(plan->lefttree, q, out, nnodes);
 		if (plan->righttree != NULL)
 		{
 			appendStringInfoChar(out, ',');
-			neurqo_append_plan_json(plan->righttree, q, out, nnodes);
+			nqo_append_plan_json(plan->righttree, q, out, nnodes);
 		}
 		appendStringInfoChar(out, ']');
 	}
@@ -3186,7 +3186,7 @@ neurqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 }
 
 static char*
-neurqo_build_low_state(Query* q,
+nqo_build_low_state(Query* q,
 					   int round, PlannedStmt* selected_plan,
 					   double cumulative_cost_ms,
 					   int max_split_rounds,
@@ -3207,22 +3207,22 @@ neurqo_build_low_state(Query* q,
 					 "\"base_rels\":%d,\"cumulative_cost_ms\":%.3f,"
 					 "\"max_split_rounds\":%d,"
 					 "\"is_split_execution\":%s,\"search_strategy\":",
-					 MyProcPid, neurqo_current_run_id, round,
+					 MyProcPid, nqo_current_run_id, round,
 					 list_length(q->rtable), cumulative_cost_ms,
 					 max_split_rounds,
 					 is_split_execution ? "true" : "false");
-	neurqo_append_json_string(&state,
-							  neurqo_search_enabled() ?
-							  neurqo_current_search_strategy : "default");
+	nqo_append_json_string(&state,
+							  nqo_search_enabled() ?
+							  nqo_current_search_strategy : "default");
 	appendStringInfo(&state, ",\"search_k\":%d",
-					 neurqo_current_search_k > 0 ?
-					 neurqo_current_search_k : neurqo_search_topk);
+					 nqo_current_search_k > 0 ?
+					 nqo_current_search_k : nqo_search_topk);
 
 	if (plan == NULL)
 		appendStringInfoString(&state, ",\"plan_available\":false");
 	else
 	{
-		neurqo_plan_summary(plan, 1, &nnodes, &njoins, &nscans, &max_depth);
+		nqo_plan_summary(plan, 1, &nnodes, &njoins, &nscans, &max_depth);
 		appendStringInfo(&state,
 						 ",\"plan_available\":true,"
 						 "\"plan_total_cost\":%.2f,\"plan_rows\":%.0f,"
@@ -3231,31 +3231,31 @@ neurqo_build_low_state(Query* q,
 						 "\"scans\":%d,\"max_depth\":%d},\"plan_json\":",
 						 plan->total_cost, plan->plan_rows, plan->plan_width,
 						 nnodes, njoins, nscans, max_depth);
-		neurqo_append_plan_json(plan, q, &state, &plan_json_nodes);
+		nqo_append_plan_json(plan, q, &state, &plan_json_nodes);
 	}
 	appendStringInfoChar(&state, '}');
 	return state.data;
 }
 
 static char*
-neurqo_build_planner_hint(Query* q)
+nqo_build_planner_hint(Query* q)
 {
 	char* search_hint = NULL;
 	char* aja_hint = NULL;
 	char* hint_query = NULL;
 
-	if (neurqo_search_enabled())
-		search_hint = neurqo_build_search_hint(q, NULL);
-	if (neurqo_aja_enabled())
+	if (nqo_search_enabled())
+		search_hint = nqo_build_search_hint(q, NULL);
+	if (nqo_aja_enabled())
 	{
-		if (strcmp(neurqo_current_execution_action, "hashjoin") == 0 ||
-			strcmp(neurqo_current_execution_action, "nestloop") == 0 ||
-			strcmp(neurqo_current_execution_action, "mergejoin") == 0)
-			aja_hint = neurqo_build_join_method_hint(
-				q, neurqo_current_execution_action);
+		if (strcmp(nqo_current_execution_action, "hashjoin") == 0 ||
+			strcmp(nqo_current_execution_action, "nestloop") == 0 ||
+			strcmp(nqo_current_execution_action, "mergejoin") == 0)
+			aja_hint = nqo_build_join_method_hint(
+				q, nqo_current_execution_action);
 	}
 
-	hint_query = neurqo_make_hint_query(aja_hint, search_hint);
+	hint_query = nqo_make_hint_query(aja_hint, search_hint);
 	if (search_hint != NULL)
 		pfree(search_hint);
 	if (aja_hint != NULL)
@@ -3264,7 +3264,7 @@ neurqo_build_planner_hint(Query* q)
 }
 
 static PlannedStmt*
-neurqo_plan_execution(Query* q, const char* query_string,
+nqo_plan_execution(Query* q, const char* query_string,
 					  int round, int length, int remaining,
 					  double cumulative_cost_ms, int max_split_rounds,
 					  bool is_split_execution,
@@ -3301,58 +3301,58 @@ neurqo_plan_execution(Query* q, const char* query_string,
 	bool forced_hash_baseline = false;
 
 	*policy_ms = 0.0;
-	neurqo_last_search_ms = 0.0;
-	neurqo_last_search_candidate_cost = 0.0;
-	neurqo_last_search_candidates = 0;
-	neurqo_last_search_applied = false;
-	neurqo_last_lip_build_ms = 0.0;
-	neurqo_last_lip_filters = 0;
-	neurqo_last_adaptive_joins = 0;
-	neurqo_last_adaptive_threshold = 0;
+	nqo_last_search_ms = 0.0;
+	nqo_last_search_candidate_cost = 0.0;
+	nqo_last_search_candidates = 0;
+	nqo_last_search_applied = false;
+	nqo_last_lip_build_ms = 0.0;
+	nqo_last_lip_filters = 0;
+	nqo_last_adaptive_joins = 0;
+	nqo_last_adaptive_threshold = 0;
 	if (search_state_json_out != NULL)
 		*search_state_json_out = NULL;
 	if (low_state_json_out != NULL)
 		*low_state_json_out = NULL;
-	if (!neurqo_policy_search(q, query_string, round, length, remaining,
+	if (!nqo_policy_search(q, query_string, round, length, remaining,
 							  cumulative_cost_ms, max_split_rounds,
 							  &search_policy_ms,
 							  search_state_json_out))
 	{
-		neurqo_current_search_strategy[0] = '\0';
-		neurqo_current_search_k = 0;
+		nqo_current_search_strategy[0] = '\0';
+		nqo_current_search_k = 0;
 	}
 	*policy_ms += search_policy_ms;
 
-	if (neurqo_search_enabled())
-		search_hint_body = neurqo_build_search_hint(
+	if (nqo_search_enabled())
+		search_hint_body = nqo_build_search_hint(
 			q, &search_candidate_plan);
-	search_hint_query = neurqo_make_hint_query(NULL, search_hint_body);
+	search_hint_query = nqo_make_hint_query(NULL, search_hint_body);
 	search_planner_query =
 		search_hint_query != NULL ? search_hint_query : query_string;
 	if (search_candidate_plan != NULL)
 	{
 		selected_plan = search_candidate_plan;
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT
+		elog(LOG, "[nqo] run=" UINT64_FORMAT
 			 " round %d: reuse best top-k candidate plan",
-			 neurqo_current_run_id, round);
+			 nqo_current_run_id, round);
 	}
 	else
-		selected_plan = neurqo_plan_direct(copyObjectImpl(q),
+		selected_plan = nqo_plan_direct(copyObjectImpl(q),
 										  CURSOR_OPT_PARALLEL_OK, false,
 										  search_planner_query, false);
 
-	if (!neurqo_policy_low(q, round, selected_plan,
+	if (!nqo_policy_low(q, round, selected_plan,
 						   cumulative_cost_ms,
 						   max_split_rounds, is_split_execution,
 						   &aja_hint_body,
 						   &low_policy_ms, low_state_json_out))
 	{
-		neurqo_current_execution_action[0] = '\0';
-		neurqo_current_lip_action[0] = '\0';
+		nqo_current_execution_action[0] = '\0';
+		nqo_current_lip_action[0] = '\0';
 	}
 	*policy_ms += low_policy_ms;
 
-	adaptive_level = neurqo_adaptive_aja_level();
+	adaptive_level = nqo_adaptive_aja_level();
 	adaptive_safe = adaptive_level != NULL &&
 		!contain_volatile_functions((Node *) q);
 	if (adaptive_level != NULL && aja_hint_body != NULL)
@@ -3362,22 +3362,22 @@ neurqo_plan_execution(Query* q, const char* query_string,
 	}
 	if (aja_hint_body == NULL &&
 		adaptive_level == NULL &&
-		(strcmp(neurqo_current_execution_action, "hashjoin") == 0 ||
-		 strcmp(neurqo_current_execution_action, "nestloop") == 0 ||
-		 strcmp(neurqo_current_execution_action, "mergejoin") == 0))
-		aja_hint_body = neurqo_build_join_method_hint(
-			q, neurqo_current_execution_action);
+		(strcmp(nqo_current_execution_action, "hashjoin") == 0 ||
+		 strcmp(nqo_current_execution_action, "nestloop") == 0 ||
+		 strcmp(nqo_current_execution_action, "mergejoin") == 0))
+		aja_hint_body = nqo_build_join_method_hint(
+			q, nqo_current_execution_action);
 
-	neurqo_apply_lip(q, selected_plan, &lip_ms, &lip_filters);
-	neurqo_last_lip_build_ms = lip_ms;
-	neurqo_last_lip_filters = lip_filters;
+	nqo_apply_lip(q, selected_plan, &lip_ms, &lip_filters);
+	nqo_last_lip_build_ms = lip_ms;
+	nqo_last_lip_filters = lip_filters;
 	execution_hint_body = search_hint_body;
 	execution_planner_query = search_planner_query;
 	if (lip_filters > 0)
 	{
-		lip_plan_hint_body = neurqo_build_plan_hint(selected_plan, q);
+		lip_plan_hint_body = nqo_build_plan_hint(selected_plan, q);
 		lip_plan_hint_query =
-			neurqo_make_hint_query(NULL, lip_plan_hint_body);
+			nqo_make_hint_query(NULL, lip_plan_hint_body);
 		if (lip_plan_hint_query != NULL)
 		{
 			execution_hint_body = lip_plan_hint_body;
@@ -3393,36 +3393,36 @@ neurqo_plan_execution(Query* q, const char* query_string,
 
 		adaptive_threshold =
 			strcmp(adaptive_level, "conservative") == 0 ?
-			neurqo_aja_conservative_rows : neurqo_aja_aggressive_rows;
+			nqo_aja_conservative_rows : nqo_aja_aggressive_rows;
 		max_nestloop_cost_ratio_pct =
 			strcmp(adaptive_level, "conservative") == 0 ?
-			neurqo_aja_max_nestloop_cost_ratio_pct :
-			neurqo_aja_aggressive_max_nestloop_cost_ratio_pct;
-		neurqo_last_adaptive_threshold = adaptive_threshold;
+			nqo_aja_max_nestloop_cost_ratio_pct :
+			nqo_aja_aggressive_max_nestloop_cost_ratio_pct;
+		nqo_last_adaptive_threshold = adaptive_threshold;
 		/*
 		 * Workload SQL can carry physical-method hints from offline
 		 * generation. Preserve the selected logical order, but let PostgreSQL
 		 * choose the baseline physical methods before building AJA branches.
 		 */
 		adaptive_baseline_leading_body =
-			neurqo_build_leading_hint(selected_plan, q, false);
+			nqo_build_leading_hint(selected_plan, q, false);
 		adaptive_baseline_hint_query =
-			neurqo_make_hint_query(NULL, adaptive_baseline_leading_body);
+			nqo_make_hint_query(NULL, adaptive_baseline_leading_body);
 		if (lip_filters == 0)
 			adaptive_fallback_plan = selected_plan;
 		else
-			adaptive_fallback_plan = neurqo_plan_direct(
+			adaptive_fallback_plan = nqo_plan_direct(
 				copyObjectImpl(q), CURSOR_OPT_PARALLEL_OK, false,
 				execution_planner_query != NULL ?
 					execution_planner_query : query_string, true);
 		if (adaptive_baseline_hint_query != NULL)
-			final_plan = neurqo_plan_direct(
+			final_plan = nqo_plan_direct(
 				copyObjectImpl(q), CURSOR_OPT_PARALLEL_OK, false,
 				adaptive_baseline_hint_query, true);
 		else
 			final_plan = adaptive_fallback_plan;
 		eligible_hashjoins =
-			neurqo_count_adaptive_hashjoins(final_plan);
+			nqo_count_adaptive_hashjoins(final_plan);
 		/*
 		 * Offline workload SQL often pins every join to NestLoop. If the
 		 * same logical order has no natural HashJoin, form a hash-oriented
@@ -3431,10 +3431,10 @@ neurqo_plan_execution(Query* q, const char* query_string,
 		if (eligible_hashjoins == 0)
 		{
 			PlannedStmt* hashjoin_plan =
-				neurqo_plan_hashjoin_candidate(
+				nqo_plan_hashjoin_candidate(
 					copyObjectImpl(q), adaptive_baseline_hint_query);
 			int forced_eligible =
-				neurqo_count_adaptive_hashjoins(hashjoin_plan);
+				nqo_count_adaptive_hashjoins(hashjoin_plan);
 
 			if (forced_eligible > 0)
 			{
@@ -3446,31 +3446,31 @@ neurqo_plan_execution(Query* q, const char* query_string,
 		if (eligible_hashjoins > 0)
 		{
 			adaptive_nest_leading_body =
-				neurqo_build_leading_hint(final_plan, nestloop_query, true);
+				nqo_build_leading_hint(final_plan, nestloop_query, true);
 			adaptive_nest_hint_query =
-				neurqo_make_hint_query(NULL, adaptive_nest_leading_body);
+				nqo_make_hint_query(NULL, adaptive_nest_leading_body);
 			nestloop_planner_query = adaptive_nest_hint_query != NULL ?
 				adaptive_nest_hint_query : execution_planner_query;
 			nestloop_plan =
-				neurqo_plan_nestloop_candidate(nestloop_query,
+				nqo_plan_nestloop_candidate(nestloop_query,
 											  nestloop_planner_query);
 			if (nestloop_plan != NULL)
 			{
 				adaptive_joins =
-					neurqo_wrap_adaptive_joins(final_plan, nestloop_plan,
+					nqo_wrap_adaptive_joins(final_plan, nestloop_plan,
 											  adaptive_level,
 											  adaptive_threshold,
 											  max_nestloop_cost_ratio_pct,
-											  neurqo_current_run_id, round);
-				neurqo_last_adaptive_joins = adaptive_joins;
+											  nqo_current_run_id, round);
+				nqo_last_adaptive_joins = adaptive_joins;
 			}
 		}
 		if (adaptive_joins == 0)
 			final_plan = adaptive_fallback_plan;
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT
+		elog(LOG, "[nqo] run=" UINT64_FORMAT
 			 " round %d: adaptive join planning level=%s threshold_rows=%d "
 			 "hash_baseline=%s eligible=%d wrapped=%d fallback=%s",
-			 neurqo_current_run_id, round, adaptive_level,
+			 nqo_current_run_id, round, adaptive_level,
 			 adaptive_threshold,
 			 forced_hash_baseline ? "forced" : "natural",
 			 eligible_hashjoins, adaptive_joins,
@@ -3485,26 +3485,26 @@ neurqo_plan_execution(Query* q, const char* query_string,
 		else
 		{
 			final_hint_query =
-				neurqo_make_hint_query(aja_hint_body, execution_hint_body);
-			final_plan = neurqo_plan_direct(q, CURSOR_OPT_PARALLEL_OK, false,
+				nqo_make_hint_query(aja_hint_body, execution_hint_body);
+			final_plan = nqo_plan_direct(q, CURSOR_OPT_PARALLEL_OK, false,
 										   final_hint_query != NULL ?
 										   final_hint_query : query_string, true);
 		}
 		if (adaptive_level != NULL)
-			elog(LOG, "[neurqo] run=" UINT64_FORMAT
+			elog(LOG, "[nqo] run=" UINT64_FORMAT
 				 " round %d: adaptive join fallback=volatile_query",
-				 neurqo_current_run_id, round);
+				 nqo_current_run_id, round);
 	}
 
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT
+	elog(LOG, "[nqo] run=" UINT64_FORMAT
 		 " round %d: execution actions search=%s k=%d execution=%s "
 		 "lip=%s filters=%d adaptive_joins=%d policy_ms=%.2f",
-		 neurqo_current_run_id, round,
-		 neurqo_search_enabled() ? neurqo_current_search_strategy : "default",
-		 neurqo_current_search_k > 0 ?
-		 neurqo_current_search_k : neurqo_search_topk,
-		 neurqo_aja_enabled() ? neurqo_current_execution_action : "none",
-		 neurqo_lip_enabled() ? neurqo_current_lip_action : "none",
+		 nqo_current_run_id, round,
+		 nqo_search_enabled() ? nqo_current_search_strategy : "default",
+		 nqo_current_search_k > 0 ?
+		 nqo_current_search_k : nqo_search_topk,
+		 nqo_aja_enabled() ? nqo_current_execution_action : "none",
+		 nqo_lip_enabled() ? nqo_current_lip_action : "none",
 		 lip_filters, adaptive_joins, *policy_ms);
 
 	if (search_hint_body != NULL)
@@ -3529,20 +3529,20 @@ neurqo_plan_execution(Query* q, const char* query_string,
 //The interface
 void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Query* querytree, QueryCompletion* completionTag)
 {
-	neurqo_current_run_id = ++neurqo_run_seq;
-	neurqo_reset_execution_actions();
-	neurqo_current_high_action[0] = '\0';
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT " enter: enabled=%d cmd=%d rtable=%d alg=%d order_decision=%s sql=%s",
-		 neurqo_current_run_id, neurqo_enabled ? 1 : 0, querytree->commandType,
+	nqo_current_run_id = ++nqo_run_seq;
+	nqo_reset_execution_actions();
+	nqo_current_high_action[0] = '\0';
+	elog(LOG, "[nqo] run=" UINT64_FORMAT " enter: enabled=%d cmd=%d rtable=%d alg=%d order_decision=%s sql=%s",
+		 nqo_current_run_id, nqo_enabled ? 1 : 0, querytree->commandType,
 		 list_length(querytree->rtable), query_splitting_algorithm,
-		 neurqo_order_decision_name(order_decision), query_string);
+		 nqo_order_decision_name(order_decision), query_string);
 	if (querytree->commandType != CMD_UTILITY && query_splitting_algorithm != Minsubquery)
 	{
 		//remove Redundant Join
 		rRj(querytree);
 	}
-	elog(LOG, "[neurqo] run=" UINT64_FORMAT " after rRj: rtable=%d",
-		 neurqo_current_run_id, list_length(querytree->rtable));
+	elog(LOG, "[nqo] run=" UINT64_FORMAT " after rRj: rtable=%d",
+		 nqo_current_run_id, list_length(querytree->rtable));
 	PlannedStmt* plannedstmt = NULL;
 	if (querytree->commandType == CMD_UTILITY)
 	{
@@ -3569,7 +3569,7 @@ void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Que
 		{
 			MemoryContext oldcontext = MemoryContextSwitchTo(MessageContext);
 
-			plannedstmt = neurqo_plan(querytree, CURSOR_OPT_PARALLEL_OK, true);
+			plannedstmt = nqo_plan(querytree, CURSOR_OPT_PARALLEL_OK, true);
 			QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote,
 					   NULL, completionTag, querytree, NULL, NIL, oldcontext);
 			return;
@@ -3578,7 +3578,7 @@ void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Que
 		{
 			MemoryContext oldcontext = MemoryContextSwitchTo(MessageContext);
 
-			plannedstmt = neurqo_plan(querytree, CURSOR_OPT_PARALLEL_OK, true);
+			plannedstmt = nqo_plan(querytree, CURSOR_OPT_PARALLEL_OK, true);
 			QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote,
 					   NULL, completionTag, querytree, NULL, NIL, oldcontext);
 			return;
@@ -3594,41 +3594,41 @@ void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Que
 		double planning_ms;
 		double high_state_ms;
 		double execution_ms;
-		double round_start = neurqo_now_ms();
+		double round_start = nqo_now_ms();
 		double t0;
 		char* state_json = NULL;
 		char* search_state_json = NULL;
 		char* low_state_json = NULL;
 		bool high_ok;
 
-		t0 = neurqo_now_ms();
-		high_ok = neurqo_policy_high(querytree, query_string, 0, length, 0,
+		t0 = nqo_now_ms();
+		high_ok = nqo_policy_high(querytree, query_string, 0, length, 0,
 									0.0, 1, &stop_now,
 									&high_policy_ms, &state_json);
 		high_state_ms = Max(
-			neurqo_now_ms() - t0 - high_policy_ms, 0.0);
+			nqo_now_ms() - t0 - high_policy_ms, 0.0);
 		if (!stop_now)
-			elog(LOG, "[neurqo] run=" UINT64_FORMAT
+			elog(LOG, "[nqo] run=" UINT64_FORMAT
 				 " high requested split for an unsplittable query; forcing stop",
-				 neurqo_current_run_id);
-		t0 = neurqo_now_ms();
+				 nqo_current_run_id);
+		t0 = nqo_now_ms();
 		if (high_ok)
-			plannedstmt = neurqo_plan_execution(
+			plannedstmt = nqo_plan_execution(
 				querytree, query_string, 0, length, 0, 0.0, 1,
 				false,
 				&terminal_policy_ms, &search_state_json,
 				&low_state_json);
 		else
-			plannedstmt = neurqo_plan(querytree, CURSOR_OPT_PARALLEL_OK, false);
-		planning_ms = high_state_ms + neurqo_now_ms() - t0;
-		t0 = neurqo_now_ms();
+			plannedstmt = nqo_plan(querytree, CURSOR_OPT_PARALLEL_OK, false);
+		planning_ms = high_state_ms + nqo_now_ms() - t0;
+		t0 = nqo_now_ms();
 		QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote, NULL, completionTag, querytree, NULL, NIL, oldcontext);
-		execution_ms = neurqo_now_ms() - t0;
-			neurqo_log_trajectory_event(
+		execution_ms = nqo_now_ms() - t0;
+			nqo_log_trajectory_event(
 				"final", 0, state_json, true, NULL, search_state_json,
 				low_state_json, plannedstmt, querytree,
 				high_policy_ms + terminal_policy_ms,
-				planning_ms, execution_ms, neurqo_now_ms() - round_start,
+				planning_ms, execution_ms, nqo_now_ms() - round_start,
 				"remote");
 		if (state_json != NULL)
 			pfree(state_json);
@@ -3679,7 +3679,7 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 	PlannedStmt* plannedstmt = NULL;
 	if (global_query->commandType == CMD_UTILITY)
 	{
-		plannedstmt = neurqo_plan(
+		plannedstmt = nqo_plan(
 			global_query, CURSOR_OPT_PARALLEL_OK, false);
 		QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote, NULL, completionTag, NULL, NULL, NIL, oldcontext);
 		return;
@@ -3687,7 +3687,7 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 	int length = global_query->rtable->length;
 	if (length == 1)
 	{
-		plannedstmt = neurqo_plan(
+		plannedstmt = nqo_plan(
 			global_query, CURSOR_OPT_PARALLEL_OK, false);
 		QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote, NULL, completionTag, NULL, NULL, NIL, oldcontext);
 		return;
@@ -3732,7 +3732,7 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		double exec_ms = 0.0;
 		double selection_policy_ms = 0.0;
 		double high_state_ms = 0.0;
-		double round_start = neurqo_now_ms();
+		double round_start = nqo_now_ms();
 		double t0;
 		int remaining = hasNext(graph, length);
 		int high_remaining = remaining > 1 ? remaining : 0;
@@ -3742,59 +3742,59 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		char* low_state_json = NULL;
 		Query* selected_query;
 
-		if (round >= neurqo_max_rounds)
+		if (round >= nqo_max_rounds)
 			high_remaining = 0;
 		if (policy_available)
 		{
-			t0 = neurqo_now_ms();
-			policy_available = neurqo_policy_high(
+			t0 = nqo_now_ms();
+			policy_available = nqo_policy_high(
 				global_query, query_string, round, length, high_remaining,
 				cumulative_cost_ms, max_split_rounds,
 				&stop_now, &policy_ms, &state_json);
 			high_state_ms = Max(
-				neurqo_now_ms() - t0 - policy_ms, 0.0);
+				nqo_now_ms() - t0 - policy_ms, 0.0);
 		}
 		if (!policy_available || remaining <= 1)
 			stop_now = true;
-		if (round >= neurqo_max_rounds)
+		if (round >= nqo_max_rounds)
 		{
 			stop_now = true;
-			elog(LOG, "[neurqo] run=" UINT64_FORMAT " round %d: reached neurqo.max_rounds=%d; finishing residual query",
-				 neurqo_current_run_id, round, neurqo_max_rounds);
+			elog(LOG, "[nqo] run=" UINT64_FORMAT " round %d: reached nqo.max_rounds=%d; finishing residual query",
+				 nqo_current_run_id, round, nqo_max_rounds);
 		}
 		if (stop_now)
 		{
 			double terminal_policy_ms = 0.0;
 
-			t0 = neurqo_now_ms();
+			t0 = nqo_now_ms();
 			if (policy_available)
-				plannedstmt = neurqo_plan_execution(
+				plannedstmt = nqo_plan_execution(
 					global_query, query_string, round, length, remaining,
 					cumulative_cost_ms, max_split_rounds,
 					false,
 					&terminal_policy_ms, &search_state_json,
 					&low_state_json);
 			else
-				plannedstmt = neurqo_plan(
+				plannedstmt = nqo_plan(
 					global_query, CURSOR_OPT_PARALLEL_OK, false);
 			policy_ms += terminal_policy_ms;
-			optimize_ms = high_state_ms + neurqo_now_ms() - t0;
-			t0 = neurqo_now_ms();
+			optimize_ms = high_state_ms + nqo_now_ms() - t0;
+			t0 = nqo_now_ms();
 			QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote,
 					   NULL, completionTag, global_query, transfer_array, FKlist,
 					   oldcontext);
-			exec_ms = neurqo_now_ms() - t0;
+			exec_ms = nqo_now_ms() - t0;
 			cumulative_cost_ms += exec_ms;
-			neurqo_log_trajectory_event("final", round, state_json, stop_now,
+			nqo_log_trajectory_event("final", round, state_json, stop_now,
 										NULL,
 										search_state_json, low_state_json,
 										plannedstmt, global_query,
 										policy_ms, optimize_ms, exec_ms,
-										neurqo_now_ms() - round_start,
+										nqo_now_ms() - round_start,
 										"remote");
-			elog(LOG, "[neurqo] run=" UINT64_FORMAT " round %d: final residual executed policy_ms=%.2f planning_ms=%.2f execution_ms=%.2f total_ms=%.2f",
-				 neurqo_current_run_id, round, policy_ms, optimize_ms, exec_ms,
-				 neurqo_now_ms() - round_start);
+			elog(LOG, "[nqo] run=" UINT64_FORMAT " round %d: final residual executed policy_ms=%.2f planning_ms=%.2f execution_ms=%.2f total_ms=%.2f",
+				 nqo_current_run_id, round, policy_ms, optimize_ms, exec_ms,
+				 nqo_now_ms() - round_start);
 			if (state_json != NULL)
 				pfree(state_json);
 			if (search_state_json != NULL)
@@ -3810,16 +3810,16 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		 */
 		{
 			int removed_equalities =
-				neurqo_remove_redundant_rr_equalities(
+				nqo_remove_redundant_rr_equalities(
 					global_query, is_relationship, length);
 
 			if (removed_equalities > 0)
-				elog(LOG, "[neurqo] run=" UINT64_FORMAT
+				elog(LOG, "[nqo] run=" UINT64_FORMAT
 					 " round %d: removed %d provably redundant R-R "
 					 "equalities from split execution query",
-					 neurqo_current_run_id, round, removed_equalities);
+					 nqo_current_run_id, round, removed_equalities);
 		}
-		t0 = neurqo_now_ms();
+		t0 = nqo_now_ms();
 		selected_query = QSSelectSubquery(
 			global_query, graph, transfer_array, length, query_string,
 			round, cumulative_cost_ms, max_split_rounds,
@@ -3829,27 +3829,27 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		{
 			double fallback_policy_ms = 0.0;
 
-			elog(WARNING, "[neurqo] run=" UINT64_FORMAT
+			elog(WARNING, "[nqo] run=" UINT64_FORMAT
 				 " round %d: no executable split candidate; finishing residual",
-				 neurqo_current_run_id, round);
-			plannedstmt = neurqo_plan_execution(
+				 nqo_current_run_id, round);
+			plannedstmt = nqo_plan_execution(
 				global_query, query_string, round, length, remaining,
 				cumulative_cost_ms, max_split_rounds,
 				false,
 				&fallback_policy_ms, &search_state_json,
 				&low_state_json);
 			policy_ms += fallback_policy_ms;
-			optimize_ms = high_state_ms + neurqo_now_ms() - t0;
-			t0 = neurqo_now_ms();
+			optimize_ms = high_state_ms + nqo_now_ms() - t0;
+			t0 = nqo_now_ms();
 			QSExecutor(query_string, commandTag, pstmt, plannedstmt,
 					   DestRemote, NULL, completionTag, global_query,
 					   transfer_array, FKlist, oldcontext);
-			exec_ms = neurqo_now_ms() - t0;
-			neurqo_log_trajectory_event(
+			exec_ms = nqo_now_ms() - t0;
+			nqo_log_trajectory_event(
 				"final", round, state_json, true, selection_state_json,
 				search_state_json, low_state_json, plannedstmt, global_query,
 				policy_ms, optimize_ms,
-				exec_ms, neurqo_now_ms() - round_start, "remote");
+				exec_ms, nqo_now_ms() - round_start, "remote");
 			if (state_json != NULL)
 				pfree(state_json);
 			if (selection_state_json != NULL)
@@ -3864,7 +3864,7 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		{
 			double execution_policy_ms = 0.0;
 
-			plannedstmt = neurqo_plan_execution(
+			plannedstmt = nqo_plan_execution(
 				selected_query, query_string, round,
 				list_length(selected_query->rtable), 0,
 				cumulative_cost_ms, max_split_rounds,
@@ -3873,31 +3873,31 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 				&low_state_json);
 			policy_ms += execution_policy_ms;
 		}
-		optimize_ms = high_state_ms + neurqo_now_ms() - t0;
+		optimize_ms = high_state_ms + nqo_now_ms() - t0;
 		if (plannedstmt == NULL)
 			ereport(ERROR,
-					(errmsg("NeurQO could not plan selected split candidate")));
+					(errmsg("NQO could not plan selected split candidate")));
 		queryId++;
 		char* relname = palloc(7 * sizeof(char));
 		sprintf(relname, "temp%d", queryId);
 		//Execute the subquery and do some change for next subquery creation
-		t0 = neurqo_now_ms();
+		t0 = nqo_now_ms();
 		FKlist = QSExecutor(query_string, commandTag, pstmt, plannedstmt,
 						   DestIntoRel, relname, completionTag, global_query,
 						   transfer_array, FKlist, oldcontext);
-		exec_ms = neurqo_now_ms() - t0;
+		exec_ms = nqo_now_ms() - t0;
 		cumulative_cost_ms += exec_ms;
-		neurqo_log_trajectory_event("split", round, state_json, false,
+		nqo_log_trajectory_event("split", round, state_json, false,
 									selection_state_json,
 									search_state_json, low_state_json,
 									plannedstmt, selected_query, policy_ms,
 									optimize_ms, exec_ms,
-									neurqo_now_ms() - round_start,
+									nqo_now_ms() - round_start,
 									relname);
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT " round %d: apply split result=%s policy_ms=%.2f split_planning_ms=%.2f execution_rewrite_ms=%.2f total_ms=%.2f",
-			 neurqo_current_run_id, round,
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " round %d: apply split result=%s policy_ms=%.2f split_planning_ms=%.2f execution_rewrite_ms=%.2f total_ms=%.2f",
+			 nqo_current_run_id, round,
 			 relname,
-			 policy_ms, optimize_ms, exec_ms, neurqo_now_ms() - round_start);
+			 policy_ms, optimize_ms, exec_ms, nqo_now_ms() - round_start);
 		if (state_json != NULL)
 			pfree(state_json);
 		if (selection_state_json != NULL)
@@ -3938,15 +3938,15 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 	return;
 }
 
-typedef struct NeurqoCandidateValidationContext
+typedef struct NqoCandidateValidationContext
 {
 	int			nrels;
 	bool		valid;
-} NeurqoCandidateValidationContext;
+} NqoCandidateValidationContext;
 
 static bool
-neurqo_candidate_reference_walker(
-	Node* node, NeurqoCandidateValidationContext* context)
+nqo_candidate_reference_walker(
+	Node* node, NqoCandidateValidationContext* context)
 {
 	if (node == NULL || !context->valid)
 		return false;
@@ -3970,23 +3970,23 @@ neurqo_candidate_reference_walker(
 	if (IsA(node, Query))
 		return query_tree_walker(
 			(Query*)node,
-			(bool (*)())neurqo_candidate_reference_walker,
+			(bool (*)())nqo_candidate_reference_walker,
 			context, QTW_IGNORE_RT_SUBQUERIES);
 	return expression_tree_walker(
-		node, (bool (*)())neurqo_candidate_reference_walker, context);
+		node, (bool (*)())nqo_candidate_reference_walker, context);
 }
 
 static bool
-neurqo_split_candidate_valid(Query* query, int center_x, int center_y)
+nqo_split_candidate_valid(Query* query, int center_x, int center_y)
 {
-	NeurqoCandidateValidationContext context;
+	NqoCandidateValidationContext context;
 
 	context.nrels = list_length(query->rtable);
 	context.valid = true;
-	(void)neurqo_candidate_reference_walker((Node*)query, &context);
+	(void)nqo_candidate_reference_walker((Node*)query, &context);
 	if (!context.valid)
 		ereport(WARNING,
-				(errmsg("NeurQO skipped an invalid split candidate"),
+				(errmsg("NQO skipped an invalid split candidate"),
 				 errdetail("center=(%d,%d) references an absent range table",
 						   center_x, center_y)));
 	return context.valid;
@@ -4001,8 +4001,8 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 {
 	List* candidates = NIL;
 	ListCell* lc;
-	NeurqoSplitCandidate* selected = NULL;
-	NeurqoSplitCandidate* fallback = NULL;
+	NqoSplitCandidate* selected = NULL;
+	NqoSplitCandidate* fallback = NULL;
 	PlannedStmt* fallback_plan = NULL;
 	Index rels[2] = {0, 0};
 	int selected_id = -1;
@@ -4023,7 +4023,7 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 
 	if (order_decision == global_view)
 	{
-		PlannedStmt* temp = neurqo_plan(
+		PlannedStmt* temp = nqo_plan(
 			copyObjectImpl(global_query), CURSOR_OPT_PARALLEL_OK, false);
 		int leaf_has = 0;
 		int depth = 0;
@@ -4055,7 +4055,7 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 		{
 			List* rtable;
 			Query* local_query;
-			NeurqoSplitCandidate* candidate;
+			NqoSplitCandidate* candidate;
 
 			for (int j = 0; j < length; j++)
 				transfer_array[j] = 0;
@@ -4066,17 +4066,17 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 
 			local_query = createQuery(
 				global_query, DestIntoRel, rtable, transfer_array, length);
-			candidate = palloc0(sizeof(NeurqoSplitCandidate));
+			candidate = palloc0(sizeof(NqoSplitCandidate));
 			candidate->x = i;
 			candidate->y = -1;
 			candidate->query = local_query;
-			if (!neurqo_split_candidate_valid(
+			if (!nqo_split_candidate_valid(
 					local_query, candidate->x, candidate->y))
 			{
 				pfree(candidate);
 				continue;
 			}
-			candidate->estimate_plan = neurqo_plan(
+			candidate->estimate_plan = nqo_plan(
 				copyObjectImpl(local_query), CURSOR_OPT_PARALLEL_OK, false);
 			candidate->candidate_id = list_length(candidates);
 			candidates = lappend(candidates, candidate);
@@ -4090,7 +4090,7 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 			{
 				List* rtable;
 				Query* local_query;
-				NeurqoSplitCandidate* candidate;
+				NqoSplitCandidate* candidate;
 
 				for (int k = 0; k < length; k++)
 					transfer_array[k] = 0;
@@ -4103,17 +4103,17 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 				local_query = createQuery(
 					global_query, DestIntoRel, rtable, transfer_array,
 					length);
-				candidate = palloc0(sizeof(NeurqoSplitCandidate));
+				candidate = palloc0(sizeof(NqoSplitCandidate));
 				candidate->x = i;
 				candidate->y = j;
 				candidate->query = local_query;
-				if (!neurqo_split_candidate_valid(
+				if (!nqo_split_candidate_valid(
 						local_query, candidate->x, candidate->y))
 				{
 					pfree(candidate);
 					continue;
 				}
-				candidate->estimate_plan = neurqo_plan(
+				candidate->estimate_plan = nqo_plan(
 					copyObjectImpl(local_query), CURSOR_OPT_PARALLEL_OK,
 					false);
 				candidate->candidate_id = list_length(candidates);
@@ -4128,8 +4128,8 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 	/* Preserve QuerySplit's configured SSA as the local failure fallback. */
 	foreach(lc, candidates)
 	{
-		NeurqoSplitCandidate* candidate =
-			(NeurqoSplitCandidate*)lfirst(lc);
+		NqoSplitCandidate* candidate =
+			(NqoSplitCandidate*)lfirst(lc);
 
 		if (candidate->estimate_plan == NULL)
 			continue;
@@ -4141,24 +4141,24 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 		}
 	}
 	if (fallback == NULL)
-		fallback = (NeurqoSplitCandidate*)linitial(candidates);
+		fallback = (NqoSplitCandidate*)linitial(candidates);
 
-	if (neurqo_policy_select(
+	if (nqo_policy_select(
 			global_query, query_string, round, candidates,
 			cumulative_cost_ms, max_split_rounds, &selected_id,
 			policy_ms, selection_state_json_out))
-		selected = (NeurqoSplitCandidate*)list_nth(candidates, selected_id);
+		selected = (NqoSplitCandidate*)list_nth(candidates, selected_id);
 	else
 	{
 		selected = fallback;
-		neurqo_current_candidate_id = selected->candidate_id;
-		snprintf(neurqo_current_selection_strategy,
-				 sizeof(neurqo_current_selection_strategy),
+		nqo_current_candidate_id = selected->candidate_id;
+		snprintf(nqo_current_selection_strategy,
+				 sizeof(nqo_current_selection_strategy),
 				 "querysplit-fallback");
-		elog(LOG, "[neurqo] run=" UINT64_FORMAT
+		elog(LOG, "[nqo] run=" UINT64_FORMAT
 			 " round %d: select fallback candidate_id=%d strategy=%s",
-			 neurqo_current_run_id, round, selected->candidate_id,
-			 neurqo_order_decision_name(order_decision));
+			 nqo_current_run_id, round, selected->candidate_id,
+			 nqo_order_decision_name(order_decision));
 	}
 
 	X = selected->x;
@@ -4240,7 +4240,7 @@ static List* QSExecutor(const char* query_string, CommandTag commandTag, Node* p
 	bool is_parallel_worker = false;
 	double t0;
 
-	neurqo_reset_execution_metrics();
+	nqo_reset_execution_metrics();
 	BeginCommand(commandTag, dest);
 	plantree_list = lappend(NIL, plannedstmt);
 	CHECK_FOR_INTERRUPTS();
@@ -4269,24 +4269,24 @@ static List* QSExecutor(const char* query_string, CommandTag commandTag, Node* p
 	}
 	MemoryContextSwitchTo(oldcontext);
 	//Executor
-	t0 = neurqo_now_ms();
+	t0 = nqo_now_ms();
 	(void)PortalRun(portal, FETCH_ALL, true, true, receiver, receiver, completionTag);
-	neurqo_last_executor_ms = neurqo_now_ms() - t0;
+	nqo_last_executor_ms = nqo_now_ms() - t0;
 	if (dest == DestIntoRel)
 	{
 		RangeVar* temp_relation = ((DR_intorel*)receiver)->into->rel;
 
 		CommandCounterIncrement();
 		relid = RangeVarGetRelid(temp_relation, NoLock, false);
-		neurqo_last_materialized_rows = completionTag->nprocessed;
-		neurqo_last_materialized_bytes = neurqo_total_relation_size(relid);
-		t0 = neurqo_now_ms();
-		neurqo_analyze_temp_relation(relid, temp_relation);
-		neurqo_last_analyze_ms = neurqo_now_ms() - t0;
+		nqo_last_materialized_rows = completionTag->nprocessed;
+		nqo_last_materialized_bytes = nqo_total_relation_size(relid);
+		t0 = nqo_now_ms();
+		nqo_analyze_temp_relation(relid, temp_relation);
+		nqo_last_analyze_ms = nqo_now_ms() - t0;
 		CommandCounterIncrement();
-		t0 = neurqo_now_ms();
+		t0 = nqo_now_ms();
 		FKlist = Prepare4Next(querytree, transfer_array, (DR_intorel*)receiver, plannedstmt, relname, FKlist);
-		neurqo_last_residual_rewrite_ms = neurqo_now_ms() - t0;
+		nqo_last_residual_rewrite_ms = nqo_now_ms() - t0;
 		CommandCounterIncrement();
 	}
 	receiver->rDestroy(receiver);
@@ -4359,12 +4359,12 @@ static List* Prepare4Next(Query* global_query, Index* transfer_array, DR_intorel
 	foreach(lc, varlist)
 	{
 		Var* var = (Var*)lfirst(lc);
-		Index source_varno = neurqo_source_varno(var, length);
-		AttrNumber source_attno = neurqo_source_attno(var);
+		Index source_varno = nqo_source_varno(var, length);
+		AttrNumber source_attno = nqo_source_attno(var);
 
 		if (source_varno == 0 || source_attno <= 0)
 			ereport(ERROR,
-					(errmsg("NeurQO cannot rewrite an invalid residual Var"),
+					(errmsg("NQO cannot rewrite an invalid residual Var"),
 					 errdetail("varno=%u varnosyn=%u varattno=%d varattnosyn=%d",
 							   var->varno, var->varnosyn,
 							   var->varattno, var->varattnosyn)));
@@ -4380,7 +4380,7 @@ static List* Prepare4Next(Query* global_query, Index* transfer_array, DR_intorel
 			if (rte->eref == NULL ||
 				source_attno > list_length(rte->eref->colnames))
 				ereport(ERROR,
-						(errmsg("NeurQO cannot resolve a residual column"),
+						(errmsg("NQO cannot resolve a residual column"),
 						 errdetail("relation=%u attribute=%d",
 								   source_varno, source_attno)));
 			len = strlen(rte->eref->aliasname) +
@@ -4410,7 +4410,7 @@ static List* Prepare4Next(Query* global_query, Index* transfer_array, DR_intorel
 			}
 			if (!found)
 				ereport(ERROR,
-						(errmsg("NeurQO materialized a split without a required residual column"),
+						(errmsg("NQO materialized a split without a required residual column"),
 						 errdetail("temporary relation=%s missing column=%s",
 								   relname, attrname)));
 			pfree(attrname);
@@ -4494,10 +4494,10 @@ static List* Prepare4Next(Query* global_query, Index* transfer_array, DR_intorel
 		}
 		if (vtar == NULL)
 			continue;
-		source_varno = neurqo_source_varno(vtar, length);
+		source_varno = nqo_source_varno(vtar, length);
 		if (source_varno == 0)
 			ereport(ERROR,
-					(errmsg("NeurQO cannot rewrite an invalid target Var"),
+					(errmsg("NQO cannot rewrite an invalid target Var"),
 					 errdetail("target=%s varno=%u varnosyn=%u",
 							   tar->resname != NULL ? tar->resname : "<unnamed>",
 							   vtar->varno, vtar->varnosyn)));
@@ -4542,7 +4542,7 @@ static List* Prepare4Next(Query* global_query, Index* transfer_array, DR_intorel
 }
 
 static Index
-neurqo_source_varno(const Var* var, int length)
+nqo_source_varno(const Var* var, int length)
 {
 	if (var->varnosyn > 0 && var->varnosyn <= length)
 		return var->varnosyn;
@@ -4552,7 +4552,7 @@ neurqo_source_varno(const Var* var, int length)
 }
 
 static AttrNumber
-neurqo_source_attno(const Var* var)
+nqo_source_attno(const Var* var)
 {
 	if (var->varattnosyn > 0)
 		return var->varattnosyn;
@@ -4566,7 +4566,7 @@ neurqo_source_attno(const Var* var)
  * expression nodes to Var.
  */
 static bool
-neurqo_simple_join_vars(Expr* expr, Var** left, Var** right)
+nqo_simple_join_vars(Expr* expr, Var** left, Var** right)
 {
 	OpExpr* op;
 
@@ -4577,15 +4577,15 @@ neurqo_simple_join_vars(Expr* expr, Var** left, Var** right)
 	op = (OpExpr*)expr;
 	if (list_length(op->args) != 2)
 		return false;
-	*left = neurqo_node_var((Node*)linitial(op->args));
-	*right = neurqo_node_var((Node*)lsecond(op->args));
+	*left = nqo_node_var((Node*)linitial(op->args));
+	*right = nqo_node_var((Node*)lsecond(op->args));
 	return *left != NULL && *right != NULL &&
 		(*left)->varlevelsup == 0 && (*right)->varlevelsup == 0 &&
 		(*left)->varno != (*right)->varno;
 }
 
 static int
-neurqo_graph_find(int* parent, int node)
+nqo_graph_find(int* parent, int node)
 {
 	int root = node;
 
@@ -4602,10 +4602,10 @@ neurqo_graph_find(int* parent, int node)
 }
 
 static bool
-neurqo_graph_union(int* parent, unsigned char* rank, int left, int right)
+nqo_graph_union(int* parent, unsigned char* rank, int left, int right)
 {
-	int left_root = neurqo_graph_find(parent, left);
-	int right_root = neurqo_graph_find(parent, right);
+	int left_root = nqo_graph_find(parent, left);
+	int right_root = nqo_graph_find(parent, right);
 
 	if (left_root == right_root)
 		return false;
@@ -4621,17 +4621,17 @@ neurqo_graph_union(int* parent, unsigned char* rank, int left, int right)
 	return true;
 }
 
-typedef struct NeurqoEqualityVar
+typedef struct NqoEqualityVar
 {
 	Index		varno;
 	AttrNumber	attno;
 	Oid			vartype;
 	int32		vartypmod;
 	Oid			varcollid;
-} NeurqoEqualityVar;
+} NqoEqualityVar;
 
 static bool
-neurqo_transitive_equality_vars(Expr* expr, Var** left, Var** right)
+nqo_transitive_equality_vars(Expr* expr, Var** left, Var** right)
 {
 	OpExpr* op;
 	List* interpretations;
@@ -4675,7 +4675,7 @@ neurqo_transitive_equality_vars(Expr* expr, Var** left, Var** right)
 }
 
 static int
-neurqo_equality_var_index(NeurqoEqualityVar* vars, int* nvars, Var* var)
+nqo_equality_var_index(NqoEqualityVar* vars, int* nvars, Var* var)
 {
 	for (int i = 0; i < *nvars; i++)
 	{
@@ -4706,13 +4706,13 @@ neurqo_equality_var_index(NeurqoEqualityVar* vars, int* nvars, Var* var)
  * untouched residual query.
  */
 static int
-neurqo_remove_redundant_rr_equalities(
+nqo_remove_redundant_rr_equalities(
 	Query* query, bool* relationship_flags, int length)
 {
 	BoolExpr* and_expr;
 	ListCell* lc;
 	int max_vars;
-	NeurqoEqualityVar* vars;
+	NqoEqualityVar* vars;
 	int* parent;
 	unsigned char* rank;
 	int nvars = 0;
@@ -4727,8 +4727,8 @@ neurqo_remove_redundant_rr_equalities(
 		return 0;
 
 	max_vars = list_length(and_expr->args) * 2;
-	vars = (NeurqoEqualityVar*)palloc0(
-		max_vars * sizeof(NeurqoEqualityVar));
+	vars = (NqoEqualityVar*)palloc0(
+		max_vars * sizeof(NqoEqualityVar));
 	parent = (int*)palloc(max_vars * sizeof(int));
 	rank = (unsigned char*)palloc0(
 		max_vars * sizeof(unsigned char));
@@ -4743,7 +4743,7 @@ neurqo_remove_redundant_rr_equalities(
 		int left_index;
 		int right_index;
 
-		if (!neurqo_transitive_equality_vars(
+		if (!nqo_transitive_equality_vars(
 				(Expr*)lfirst(lc), &left, &right))
 			continue;
 		if (left->varno < 1 || left->varno > length ||
@@ -4752,9 +4752,9 @@ neurqo_remove_redundant_rr_equalities(
 		if (relationship_flags[left->varno - 1] &&
 			relationship_flags[right->varno - 1])
 			continue;
-		left_index = neurqo_equality_var_index(vars, &nvars, left);
-		right_index = neurqo_equality_var_index(vars, &nvars, right);
-		(void)neurqo_graph_union(
+		left_index = nqo_equality_var_index(vars, &nvars, left);
+		right_index = nqo_equality_var_index(vars, &nvars, right);
+		(void)nqo_graph_union(
 			parent, rank, left_index, right_index);
 	}
 
@@ -4766,7 +4766,7 @@ neurqo_remove_redundant_rr_equalities(
 		int left_index;
 		int right_index;
 
-		if (!neurqo_transitive_equality_vars(
+		if (!nqo_transitive_equality_vars(
 				(Expr*)lfirst(lc), &left, &right))
 			continue;
 		if (left->varno < 1 || left->varno > length ||
@@ -4774,17 +4774,17 @@ neurqo_remove_redundant_rr_equalities(
 			!relationship_flags[left->varno - 1] ||
 			!relationship_flags[right->varno - 1])
 			continue;
-		left_index = neurqo_equality_var_index(vars, &nvars, left);
-		right_index = neurqo_equality_var_index(vars, &nvars, right);
-		if (neurqo_graph_find(parent, left_index) ==
-			neurqo_graph_find(parent, right_index))
+		left_index = nqo_equality_var_index(vars, &nvars, left);
+		right_index = nqo_equality_var_index(vars, &nvars, right);
+		if (nqo_graph_find(parent, left_index) ==
+			nqo_graph_find(parent, right_index))
 		{
 			and_expr->args =
 				foreach_delete_current(and_expr->args, lc);
 			removed++;
 		}
 		else
-			(void)neurqo_graph_union(
+			(void)nqo_graph_union(
 				parent, rank, left_index, right_index);
 	}
 
@@ -4795,7 +4795,7 @@ neurqo_remove_redundant_rr_equalities(
 }
 
 static void
-neurqo_graph_add_oriented_edge(bool* graph, bool* relation_flags,
+nqo_graph_add_oriented_edge(bool* graph, bool* relation_flags,
 							   int length, int left, int right)
 {
 	if (query_splitting_algorithm == RelationshipCenter)
@@ -4845,7 +4845,7 @@ static bool* List2Graph(bool* relation_flags, List* joinlist, List* FKlist, int 
 			Var* left;
 			Var* right;
 
-			if (!neurqo_simple_join_vars(
+			if (!nqo_simple_join_vars(
 					(Expr*)lfirst(lc), &left, &right))
 				continue;
 			if (left->varno < 1 || left->varno > length ||
@@ -4887,7 +4887,7 @@ static bool* List2Graph(bool* relation_flags, List* joinlist, List* FKlist, int 
 				int left_index;
 				int right_index;
 
-				if (!neurqo_simple_join_vars(
+				if (!nqo_simple_join_vars(
 						(Expr*)lfirst(join_lc), &left, &right))
 					continue;
 				left_index = left->varno - 1;
@@ -4900,7 +4900,7 @@ static bool* List2Graph(bool* relation_flags, List* joinlist, List* FKlist, int 
 				}
 			}
 			if (!has_predicate ||
-				!neurqo_graph_union(parent, rank, con, ref))
+				!nqo_graph_union(parent, rank, con, ref))
 				continue;
 			if (query_splitting_algorithm == RelationshipCenter)
 				graph[con * length + ref] = true;
@@ -4921,7 +4921,7 @@ static bool* List2Graph(bool* relation_flags, List* joinlist, List* FKlist, int 
 				int right_index;
 				bool is_rr;
 
-				if (!neurqo_simple_join_vars(
+				if (!nqo_simple_join_vars(
 						(Expr*)lfirst(lc), &left, &right))
 					continue;
 				if (left->varno < 1 || left->varno > length ||
@@ -4933,10 +4933,10 @@ static bool* List2Graph(bool* relation_flags, List* joinlist, List* FKlist, int 
 					relation_flags[right_index];
 				if (is_rr != (relationship_pass == 1))
 					continue;
-				if (!neurqo_graph_union(
+				if (!nqo_graph_union(
 						parent, rank, left_index, right_index))
 					continue;
-				neurqo_graph_add_oriented_edge(
+				nqo_graph_add_oriented_edge(
 					graph, relation_flags, length,
 					left_index, right_index);
 			}
@@ -4953,7 +4953,7 @@ static bool is_RC(Expr* expr)
 	Var* left;
 	Var* right;
 
-	return !neurqo_simple_join_vars(expr, &left, &right);
+	return !nqo_simple_join_vars(expr, &left, &right);
 }
 
 //get rtable
@@ -5017,7 +5017,7 @@ static List* findvarlist(List* joinlist, Index* transfer_array, int length)
 
 			if (var->varlevelsup != 0)
 				continue;
-			source_varno = neurqo_source_varno(var, length);
+			source_varno = nqo_source_varno(var, length);
 			if (source_varno == 0)
 				continue;
 			if (transfer_array[source_varno - 1] != 0)
@@ -5037,8 +5037,8 @@ static List* findvarlist(List* joinlist, Index* transfer_array, int length)
 
 			if (var->varlevelsup != 0)
 				continue;
-			source_varno = neurqo_source_varno(var, length);
-			source_attno = neurqo_source_attno(var);
+			source_varno = nqo_source_varno(var, length);
+			source_attno = nqo_source_attno(var);
 			if (source_varno == 0 || source_attno <= 0 ||
 				transfer_array[source_varno - 1] == 0)
 				continue;
@@ -5046,8 +5046,8 @@ static List* findvarlist(List* joinlist, Index* transfer_array, int length)
 			{
 				Var* existing = (Var*)lfirst(existing_lc);
 
-				if (neurqo_source_varno(existing, length) == source_varno &&
-					neurqo_source_attno(existing) == source_attno)
+				if (nqo_source_varno(existing, length) == source_varno &&
+					nqo_source_attno(existing) == source_attno)
 				{
 					append = false;
 					break;
@@ -5156,7 +5156,7 @@ static List* setjoinlist(List* qualslist, CommandDest dest, Index* transfer_arra
 
 			if (var->varlevelsup != 0)
 				continue;
-			source_varno = neurqo_source_varno(var, length);
+			source_varno = nqo_source_varno(var, length);
 			if (source_varno == 0 ||
 				transfer_array[source_varno - 1] == 0)
 			{
@@ -5173,7 +5173,7 @@ static List* setjoinlist(List* qualslist, CommandDest dest, Index* transfer_arra
 
 				if (var->varlevelsup != 0)
 					continue;
-				source_varno = neurqo_source_varno(var, length);
+				source_varno = nqo_source_varno(var, length);
 				var->varno = transfer_array[source_varno - 1];
 				var->varnosyn = var->varno;
 			}
@@ -5205,7 +5205,7 @@ static List* simplifyjoinlist(List* list, CommandDest dest, Index* transfer_arra
 
 			if (var->varlevelsup != 0)
 				continue;
-			source_varno = neurqo_source_varno(var, length);
+			source_varno = nqo_source_varno(var, length);
 			if (source_varno == 0 ||
 				transfer_array[source_varno - 1] == 0)
 				has_remote = true;
@@ -5260,7 +5260,7 @@ static List* settargetlist(const List* global_rtable, List* local_rtable, Comman
 
 			if (var->varlevelsup != 0)
 				continue;
-			source_varno = neurqo_source_varno(var, length);
+			source_varno = nqo_source_varno(var, length);
 			if (source_varno == 0 ||
 				transfer_array[source_varno - 1] == 0)
 			{
@@ -5280,7 +5280,7 @@ static List* settargetlist(const List* global_rtable, List* local_rtable, Comman
 
 			if (var->varlevelsup != 0)
 				continue;
-			source_varno = neurqo_source_varno(var, length);
+			source_varno = nqo_source_varno(var, length);
 			var->varno = transfer_array[source_varno - 1];
 			var->varnosyn = var->varno;
 		}
