@@ -86,7 +86,7 @@ class ARMNetModelBuilder(BuilderBase):
             if p.requires_grad:
                 p.register_hook(lambda grad: torch.clamp(grad, -1.0, 1.0))
 
-        torch.backends.cudnn.benchmark = True  # type:ignore
+        torch.backends.cudnn.benchmark = True  # type: ignore
 
         logger.info("register_hook and build cudnn bencnmark")
 
