@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from pydantic import Field, model_validator
 
@@ -67,6 +67,52 @@ class TableSchema(RuntimeDataModel):
             return self.columns[name]
         except KeyError as exc:
             raise KeyError(f"column {name} does not exist in table schema") from exc
+
+
+class FeatureSchema(RuntimeDataModel):
+    """Slim, derived view of what the feature path should encode.
+
+    Produced from a ``DatabaseSchema`` by a ``ViewBuilder`` at job setup —
+    deliberately *not* a subclass: the database-level metainformation
+    (relationships, primary keys, timestamp columns, cross-validation) does
+    not apply to a derived view and must not tag along. All that feature
+    encoding needs is which columns exist and their ``ColumnSchema``.
+
+    Like every runtime data model it is frozen — a static artifact of job
+    configuration, not a status variable. Strategies that synthesize
+    columns (e.g. DFS aggregates) derive a new instance via ``extended``.
+    """
+
+    tables: Dict[NonEmptyStr, Dict[NonEmptyStr, ColumnSchema]]
+
+    @classmethod
+    def from_database(
+        cls,
+        schema: "DatabaseSchema",
+        tables: Optional[Iterable[str]] = None,
+    ) -> "FeatureSchema":
+        """Project a DatabaseSchema down to a feature view.
+
+        ``tables`` selects which tables survive (default: all).
+        """
+        selected = set(schema.tables) if tables is None else set(tables)
+        return cls(
+            tables={
+                name: dict(table.columns)
+                for name, table in schema.tables.items()
+                if name in selected
+            }
+        )
+
+    def get_column(self, table: str, column: str) -> Optional[ColumnSchema]:
+        columns = self.tables.get(table)
+        return None if columns is None else columns.get(column)
+
+    def extended(self, table: str, columns: Dict[str, ColumnSchema]) -> "FeatureSchema":
+        """A new view with extra (synthesized) columns on ``table``."""
+        tables = {name: dict(cols) for name, cols in self.tables.items()}
+        tables.setdefault(table, {}).update(columns)
+        return FeatureSchema(tables=tables)
 
 
 class RelationshipSchema(RuntimeDataModel):
