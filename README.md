@@ -184,8 +184,8 @@ NeurDB consists of three main components:
 
 
 2. **Database Engine Layer**: Built on top of an enhanced PostgreSQL engine, this layer integrates learned optimization, learned concurrency control, and runtime adaptive execution.
-   - *NeurQO* – A learned query optimizer that performs fast-adaptive query optimization through query-state abstraction and workload feedback.
-   - *NeurEngine* – Implements the planner, optimizer, and executor, and supports unified execution graph construction and CPU–GPU co-scheduling to execute both traditional database operators and AI operators.
+   - *NeurQO (SIGMOD 2027)* – A learned query optimizer that performs fast-adaptive query optimization through query-state abstraction and workload feedback.
+   - *NeurEngine (VLDB 2027)* – Implements the planner, optimizer, and executor, and supports unified execution graph construction and CPU–GPU co-scheduling to execute both traditional database operators and AI operators.
    - *NeurCC (SIGMOD 2026)* – A learned concurrency control framework that models concurrency control as a learnable function and dynamically adapts to workload changes.
 
 3.	**Adaptive Data Access Components**: NeurDB incorporates adaptive data access modules that improve indexing and caching performance under dynamic workloads.
@@ -245,6 +245,10 @@ NeurDB is backed by rigorous academic research. Our work has been published in t
     ICML 2026
 12. **NeurIDA: Dynamic Modeling for Effective In-Database Analytics**
     VLDB 2026
+13. **NQO: Query Optimization as a Learnable Function**
+    *SIGMOD 2027*
+14. **Towards Effective Orchestration of AI x DB Workloads [Vision]**
+    *VLDB 2027*
 
 
 ### Citation
