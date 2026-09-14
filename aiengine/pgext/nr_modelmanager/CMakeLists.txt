@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set PostgreSQL paths
-set(PostgreSQL_ROOT /code/neurdb-dev/psql)
+set(PostgreSQL_ROOT /code/neurdb-dev/build/psql)
 #set(PostgreSQL_ROOT /usr/local/pgsql)
 set(PostgreSQL_LIBRARY_DIRS "${PostgreSQL_ROOT}/lib")
 set(PostgreSQL_INCLUDE_DIRS "${PostgreSQL_ROOT}/include")

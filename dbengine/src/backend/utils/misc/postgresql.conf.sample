@@ -745,6 +745,8 @@
 #local_preload_libraries = ''
 #session_preload_libraries = ''
 #shared_preload_libraries = ''	# (change requires restart)
+					# Example: 'nr_molqo' for NeurDB MoLQO
+					# See CUSTOMIZED OPTIONS section below
 #jit_provider = 'llvmjit'		# JIT library to use
 
 # - Other Defaults -
@@ -818,3 +820,18 @@
 #------------------------------------------------------------------------------
 
 # Add settings for extensions here
+
+#------------------------------------------------------------------------------
+# NEURDB MOLQO (Mixture of Learned Query Optimizer)
+#------------------------------------------------------------------------------
+
+# To enable MoLQO, uncomment the following line and restart PostgreSQL:
+#shared_preload_libraries = 'nr_molqo'		# (change requires restart)
+
+# MoLQO Configuration
+# After loading the extension, you can use these settings:
+#enable_molqo = off				# Enable/disable MoLQO optimizer
+#molqo.server_url = 'http://localhost:8080/optimize'	# MoLQO server URL
+
+# Note: After configuring shared_preload_libraries and restarting,
+# you need to run: CREATE EXTENSION nr_molqo;

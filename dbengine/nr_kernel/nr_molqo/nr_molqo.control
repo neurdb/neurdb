@@ -1,0 +1,7 @@
+# nr_molqo extension - NeurDB Mixture of Learned Query Optimizer
+comment = 'NeurDB MoLQO - Mixture of Learned Query Optimizer'
+default_version = '1.0'
+module_pathname = '$libdir/nr_molqo'
+relocatable = true
+trusted = false
+requires = ''

@@ -1,0 +1,17 @@
+scale,system,seconds
+large,export,184.8
+large,lotus,34.5
+large,neurengine,70.8
+large,palimpzest,118.8
+medium,export,61.9
+medium,lotus,28.3
+medium,neurengine,32.1
+medium,palimpzest,113.4
+mini,export,7.9
+mini,lotus,12.2
+mini,neurengine,9.8
+mini,palimpzest,27.8
+small,export,34.5
+small,lotus,19.3
+small,neurengine,17.2
+small,palimpzest,71.2

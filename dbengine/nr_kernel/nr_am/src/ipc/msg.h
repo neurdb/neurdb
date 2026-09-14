@@ -15,7 +15,8 @@
  */
 
 
-#define KV_CHANNEL_BUFSIZE 32768
+/* Increased to 16MB to support bulk loading large indexes (1M+ entries) */
+#define KV_CHANNEL_BUFSIZE (16 * 1024 * 1024)
 
 typedef struct KVChannelShared {
     pg_atomic_uint32 is_running;
@@ -44,7 +45,7 @@ extern void TerminateChannel(KVChannel* channel);
  * ------------------------------------------------------------------------
  */
 
- #define MSG_SIZE 1024
+#define MSG_SIZE (16 * 1024 * 1024)  /* Must be <= KV_CHANNEL_BUFSIZE to fit in channel */
 
 /* Operation codes for KV messages */
 typedef enum KVOp {
@@ -60,7 +61,13 @@ typedef enum KVOp {
     kv_cursor_delete,
     kv_start,
     kv_stop,
-    kv_range
+    kv_range,
+    /* Index operations */
+    kv_index_put,
+    kv_index_get,
+    kv_index_delete,
+    kv_index_range_scan,
+    kv_index_bulk_load
 } KVOp;
 
 /* Status codes for KV responses */

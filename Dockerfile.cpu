@@ -7,6 +7,10 @@ EXPOSE 5432
 # Set environment variables to avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Accept the host user's UID/GID so file ownership on bind-mounts matches
+ARG HOST_UID=1000
+ARG HOST_GID=1000
+
 # Upgrade pip
 RUN apt-get update
 
@@ -33,6 +37,7 @@ RUN apt-get install -y \
     vim \
     wget \
     unzip \
+    rsync \
     pkg-config \
     build-essential \
     libssl-dev \
@@ -67,7 +72,8 @@ RUN apt-get install -y \
 RUN echo "root:rootpassword" | chpasswd
 
 # Create a non-root user 'neurdb' with an empty password and add to sudoers
-RUN useradd -m -s /bin/bash neurdb && \
+RUN groupadd -g ${HOST_GID} neurdb || true && \
+    useradd -m -s /bin/bash -u ${HOST_UID} -g ${HOST_GID} neurdb && \
     passwd -d neurdb && \
     echo "neurdb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
@@ -112,13 +118,6 @@ USER neurdb
 COPY aiengine/runtime/requirements.cpu.txt /usr/local/bin/requirements.txt
 RUN pip install -r /usr/local/bin/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Copy the build script into the container
-USER root
-COPY docker-init.sh /usr/local/bin/docker-init.sh
-
-# Ensure the build script is executable
-RUN chmod +x /usr/local/bin/docker-init.sh
-
 # Change to non-root user 'neurdb' for database compilation and running the init script
 USER neurdb
 
@@ -126,5 +125,5 @@ USER neurdb
 ENV PATH="/home/neurdb/.local/bin:${PATH}"
 RUN git config --global --add safe.directory /code/neurdb-dev
 
-# Command to run the init.sh script
-CMD ["bash", "/usr/local/bin/docker-init.sh"]
+# Command to run the init script from mounted volume
+CMD ["bash", "/code/neurdb-dev/docker-init.sh"]

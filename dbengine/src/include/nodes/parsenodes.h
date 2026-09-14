@@ -235,6 +235,11 @@ typedef struct Query
 	int			stmt_location;
 	/* length in bytes; 0 means "rest of string" */
 	int			stmt_len pg_node_attr(query_jumble_ignore);
+
+	/* NeurDB */
+	List 		*predictTargetList; /* target list */
+	List		*trainOn; /* columns used to train the model */
+	Node		*predictStmt; /* original statement */
 } Query;
 
 
@@ -4076,6 +4081,7 @@ typedef struct NeurDBPredictStmt
 								 * prediction) */
 	List	   *targetList;		/* A list of targets (columns) for the
 								 * prediction */
+	bool        withPrimaryKey;  /* Whether the result includes primary key */
 	List	   *fromClause;		/* A list of tables involved in the prediction */
 	NeurDBTrainOnSpec *trainOnSpec; /* Sepc for the TRAIN ON syntax */
 	SelectStmt *values;			/* Values (following definition of

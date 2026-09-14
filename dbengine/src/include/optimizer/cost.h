@@ -94,6 +94,10 @@ extern void cost_tidrangescan(Path *path, PlannerInfo *root,
 extern void cost_subqueryscan(SubqueryScanPath *path, PlannerInfo *root,
 							  RelOptInfo *baserel, ParamPathInfo *param_info,
 							  bool trivial_pathtarget);
+/* NEURDB: simple cost model for the PREDICT (NeurDBPredict) AI operator */
+extern void cost_neurdbpredict(Cost *startup_cost, Cost *total_cost,
+							   Cost input_startup_cost, Cost input_total_cost,
+							   double tuples);
 extern void cost_functionscan(Path *path, PlannerInfo *root,
 							  RelOptInfo *baserel, ParamPathInfo *param_info);
 extern void cost_valuesscan(Path *path, PlannerInfo *root,

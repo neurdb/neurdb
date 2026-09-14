@@ -50,7 +50,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "[TEST] Running tests..."
-psql -h localhost -U $DB_USER -d $DB_NAME -f $SQL_SCRIPT
+psql -h localhost -U $DB_USER -d $DB_NAME -f $SQL_SCRIPT &> /dev/null
 if [ $? -ne 0 ]; then
   echo "[Fail] Test failed"
   exit 1

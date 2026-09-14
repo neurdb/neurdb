@@ -7,6 +7,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EIGEN_DIR="$SCRIPT_DIR/../external/eigen"
 TEMP_DIR="$EIGEN_DIR/eigen_temp"
 
+# Skip if already downloaded
+if [ -f "$EIGEN_DIR/Eigen/Core" ]; then
+  echo "Eigen already exists at $EIGEN_DIR, skipping download"
+  exit 0
+fi
+
+# Clean and recreate directory
+rm -rf "$EIGEN_DIR"
 mkdir -p "$EIGEN_DIR"
 mkdir -p "$TEMP_DIR"
 

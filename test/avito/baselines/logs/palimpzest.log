@@ -1,0 +1,24 @@
+TIMING,load_tables,3.6
+TIMING,tool_cutoffs,0.0
+TIMING,01_label_h1,2.6
+TIMING,02_features_h1,10.8
+TIMING,03_task_h1,0.0
+TIMING,08_predict_h1,18.3
+  h=1: task_rows=8368 candidates=1155 rmse=0.0924
+TIMING,01_label_h3,3.6
+TIMING,02_features_h3,11.1
+TIMING,03_task_h3,0.0
+TIMING,08_predict_h3,28.3
+  h=3: task_rows=19106 candidates=2676 rmse=0.0319
+TIMING,01_label_h7,5.5
+TIMING,02_features_h7,11.7
+TIMING,03_task_h7,0.0
+TIMING,08_predict_h7,50.4
+  h=7: task_rows=33531 candidates=4595 rmse=0.0097
+TIMING,09_action_list,0.0
+         action  n_ads  avg_ctr_1d  avg_ctr_7d
+           keep    827    0.048777    0.013413
+  promote_later     48    0.107838    0.050735
+    promote_now    120    0.211523    0.057419
+reduce_exposure    160    0.010270    0.003951
+TIMING,total,146.0

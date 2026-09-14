@@ -11,7 +11,7 @@ def libsvm_batch_preprocess(data: str, max_nfileds: int):
     :param max_nfileds: nfileds
     :return: A dictionary with processed 'id', 'value', and 'y' tensors.
     """
-    logger.debug(f"[Data Preprocessing]: Preprocessing started...")
+    logger.debug(f"[Data Preprocessing]: Preprocessing started on data: {data}")
 
     # Split data into lines and filter out any empty lines
     lines = []
@@ -82,7 +82,7 @@ def libsvm_batch_preprocess_id_only(data: str, max_nfileds: int):
     :param max_nfileds: The maximum number of fields (IDs) per sample.
     :return: A dictionary with processed 'id', 'value', and 'y' tensors.
     """
-    logger.debug(f"[Data Preprocessing]: Preprocessing started...")
+    logger.debug(f"[Data Preprocessing]: Preprocessing started on data: {data}")
 
     # Initialize lists for ids and labels
     nsamples, ids_list, label_list = _parser_data(data)
@@ -108,7 +108,7 @@ def libsvm_batch_preprocess_id_only(data: str, max_nfileds: int):
 
 
 def _parser_data(data: str):
-    logger.debug(f"[Data Preprocessing]: Preprocessing started...")
+    logger.debug(f"[Data Preprocessing]: Preprocessing started on data: {data}")
 
     # Initialize lists for ids and labels
     ids_list = []

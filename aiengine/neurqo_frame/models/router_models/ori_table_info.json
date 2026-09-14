@@ -1,0 +1,1047 @@
+{
+    "table_no_map": {
+        "aka_name": 0,
+        "aka_title": 1,
+        "cast_info": 2,
+        "char_name": 3,
+        "comp_cast_type": 4,
+        "company_name": 5,
+        "company_type": 6,
+        "complete_cast": 7,
+        "info_type": 8,
+        "keyword": 9,
+        "kind_type": 10,
+        "link_type": 11,
+        "movie_companies": 12,
+        "movie_info": 13,
+        "movie_info_idx": 14,
+        "movie_keyword": 15,
+        "movie_link": 16,
+        "name": 17,
+        "person_info": 18,
+        "role_type": 19,
+        "title": 20,
+        "cn": 5,
+        "ct": 6,
+        "it": 8,
+        "it2": 8,
+        "kt": 10,
+        "mc": 12,
+        "mi": 13,
+        "miidx": 14,
+        "t": 20,
+        "k": 9,
+        "mk": 15,
+        "an": 0,
+        "cc": 7,
+        "cct1": 4,
+        "cct2": 4,
+        "chn": 3,
+        "ci": 2,
+        "it3": 8,
+        "n": 17,
+        "pi": 18,
+        "rt": 19,
+        "it1": 8,
+        "mi_idx": 14,
+        "cn1": 5,
+        "cn2": 5,
+        "kt1": 10,
+        "kt2": 10,
+        "lt": 11,
+        "mc1": 12,
+        "mc2": 12,
+        "mi_idx1": 14,
+        "mi_idx2": 14,
+        "ml": 16,
+        "t1": 20,
+        "t2": 20,
+        "at": 1,
+        "an1": 0,
+        "n1": 17,
+        "a1": 0
+    },
+    "table_size_list": [
+        901295,
+        361377,
+        36237143,
+        3139686,
+        4,
+        234994,
+        4,
+        135086,
+        113,
+        134164,
+        7,
+        18,
+        2608836,
+        14453625,
+        1380035,
+        4523930,
+        29997,
+        4167486,
+        2802167,
+        12,
+        2527952
+    ],
+    "attr_no_map_list": [
+        {
+            "id": 0,
+            "person_id": 1,
+            "name": 2,
+            "imdb_index": 3,
+            "name_pcode_cf": 4,
+            "name_pcode_nf": 5,
+            "surname_pcode": 6,
+            "md5sum": 7
+        },
+        {
+            "id": 0,
+            "movie_id": 1,
+            "title": 2,
+            "imdb_index": 3,
+            "kind_id": 4,
+            "production_year": 5,
+            "phonetic_code": 6,
+            "episode_of_id": 7,
+            "season_nr": 8,
+            "episode_nr": 9,
+            "note": 10,
+            "md5sum": 11
+        },
+        {
+            "id": 0,
+            "person_id": 1,
+            "movie_id": 2,
+            "person_role_id": 3,
+            "note": 4,
+            "nr_order": 5,
+            "role_id": 6
+        },
+        {
+            "id": 0,
+            "name": 1,
+            "imdb_index": 2,
+            "imdb_id": 3,
+            "name_pcode_nf": 4,
+            "surname_pcode": 5,
+            "md5sum": 6
+        },
+        {
+            "id": 0,
+            "kind": 1
+        },
+        {
+            "id": 0,
+            "name": 1,
+            "country_code": 2,
+            "imdb_id": 3,
+            "name_pcode_nf": 4,
+            "name_pcode_sf": 5,
+            "md5sum": 6
+        },
+        {
+            "id": 0,
+            "kind": 1
+        },
+        {
+            "id": 0,
+            "movie_id": 1,
+            "subject_id": 2,
+            "status_id": 3
+        },
+        {
+            "id": 0,
+            "info": 1
+        },
+        {
+            "id": 0,
+            "keyword": 1,
+            "phonetic_code": 2
+        },
+        {
+            "id": 0,
+            "kind": 1
+        },
+        {
+            "id": 0,
+            "link": 1
+        },
+        {
+            "id": 0,
+            "movie_id": 1,
+            "company_id": 2,
+            "company_type_id": 3,
+            "note": 4
+        },
+        {
+            "id": 0,
+            "movie_id": 1,
+            "info_type_id": 2,
+            "info": 3,
+            "note": 4
+        },
+        {
+            "id": 0,
+            "movie_id": 1,
+            "info_type_id": 2,
+            "info": 3,
+            "note": 4
+        },
+        {
+            "id": 0,
+            "movie_id": 1,
+            "keyword_id": 2
+        },
+        {
+            "id": 0,
+            "movie_id": 1,
+            "linked_movie_id": 2,
+            "link_type_id": 3
+        },
+        {
+            "id": 0,
+            "name": 1,
+            "imdb_index": 2,
+            "imdb_id": 3,
+            "gender": 4,
+            "name_pcode_cf": 5,
+            "name_pcode_nf": 6,
+            "surname_pcode": 7,
+            "md5sum": 8
+        },
+        {
+            "id": 0,
+            "person_id": 1,
+            "info_type_id": 2,
+            "info": 3,
+            "note": 4
+        },
+        {
+            "id": 0,
+            "role": 1
+        },
+        {
+            "id": 0,
+            "title": 1,
+            "imdb_index": 2,
+            "kind_id": 3,
+            "production_year": 4,
+            "imdb_id": 5,
+            "phonetic_code": 6,
+            "episode_of_id": 7,
+            "season_nr": 8,
+            "episode_nr": 9,
+            "series_years": 10,
+            "md5sum": 11
+        }
+    ],
+    "table_attr_map": {
+        "aka_name": [
+            "id",
+            "person_id",
+            "name",
+            "imdb_index",
+            "name_pcode_cf",
+            "name_pcode_nf",
+            "surname_pcode",
+            "md5sum"
+        ],
+        "aka_title": [
+            "id",
+            "movie_id",
+            "title",
+            "imdb_index",
+            "kind_id",
+            "production_year",
+            "phonetic_code",
+            "episode_of_id",
+            "season_nr",
+            "episode_nr",
+            "note",
+            "md5sum"
+        ],
+        "cast_info": [
+            "id",
+            "person_id",
+            "movie_id",
+            "person_role_id",
+            "note",
+            "nr_order",
+            "role_id"
+        ],
+        "char_name": [
+            "id",
+            "name",
+            "imdb_index",
+            "imdb_id",
+            "name_pcode_nf",
+            "surname_pcode",
+            "md5sum"
+        ],
+        "comp_cast_type": [
+            "id",
+            "kind"
+        ],
+        "company_name": [
+            "id",
+            "name",
+            "country_code",
+            "imdb_id",
+            "name_pcode_nf",
+            "name_pcode_sf",
+            "md5sum"
+        ],
+        "company_type": [
+            "id",
+            "kind"
+        ],
+        "complete_cast": [
+            "id",
+            "movie_id",
+            "subject_id",
+            "status_id"
+        ],
+        "info_type": [
+            "id",
+            "info"
+        ],
+        "keyword": [
+            "id",
+            "keyword",
+            "phonetic_code"
+        ],
+        "kind_type": [
+            "id",
+            "kind"
+        ],
+        "link_type": [
+            "id",
+            "link"
+        ],
+        "movie_companies": [
+            "id",
+            "movie_id",
+            "company_id",
+            "company_type_id",
+            "note"
+        ],
+        "movie_info_idx": [
+            "id",
+            "movie_id",
+            "info_type_id",
+            "info",
+            "note"
+        ],
+        "movie_keyword": [
+            "id",
+            "movie_id",
+            "keyword_id"
+        ],
+        "movie_link": [
+            "id",
+            "movie_id",
+            "linked_movie_id",
+            "link_type_id"
+        ],
+        "name": [
+            "id",
+            "name",
+            "imdb_index",
+            "imdb_id",
+            "gender",
+            "name_pcode_cf",
+            "name_pcode_nf",
+            "surname_pcode",
+            "md5sum"
+        ],
+        "role_type": [
+            "id",
+            "role"
+        ],
+        "title": [
+            "id",
+            "title",
+            "imdb_index",
+            "kind_id",
+            "production_year",
+            "imdb_id",
+            "phonetic_code",
+            "episode_of_id",
+            "season_nr",
+            "episode_nr",
+            "series_years",
+            "md5sum"
+        ],
+        "movie_info": [
+            "id",
+            "movie_id",
+            "info_type_id",
+            "info",
+            "note"
+        ],
+        "person_info": [
+            "id",
+            "person_id",
+            "info_type_id",
+            "info",
+            "note"
+        ]
+    },
+    "index_table_map": {
+        "company_id_movie_companies": "movie_companies",
+        "company_type_id_movie_companies": "movie_companies",
+        "info_type_id_movie_info_idx": "movie_info_idx",
+        "info_type_id_movie_info": "movie_info",
+        "info_type_id_person_info": "person_info",
+        "keyword_id_movie_keyword": "movie_keyword",
+        "kind_id_aka_title": "aka_title",
+        "kind_id_title": "title",
+        "linked_movie_id_movie_link": "movie_link",
+        "link_type_id_movie_link": "movie_link",
+        "movie_id_aka_title": "aka_title",
+        "movie_id_cast_info": "cast_info",
+        "movie_id_complete_cast": "complete_cast",
+        "subject_id_complete_cast": "complete_cast",
+        "status_id_complete_cast": "complete_cast",
+        "movie_id_movie_companies": "movie_companies",
+        "movie_id_movie_info_idx": "movie_info_idx",
+        "movie_id_movie_keyword": "movie_keyword",
+        "movie_id_movie_link": "movie_link",
+        "movie_id_movie_info": "movie_info",
+        "person_id_aka_name": "aka_name",
+        "person_id_cast_info": "cast_info",
+        "person_id_person_info": "person_info",
+        "person_role_id_cast_info": "cast_info",
+        "role_id_cast_info": "cast_info"
+    },
+    "attr_no_types_list": [
+        [
+            0,
+            0,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+        ],
+        [
+            0,
+            0,
+            -1,
+            -1,
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0,
+            -1,
+            -1
+        ],
+        [
+            0,
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0
+        ],
+        [
+            0,
+            -1,
+            -1,
+            0,
+            -1,
+            -1,
+            -1
+        ],
+        [
+            0,
+            -1
+        ],
+        [
+            0,
+            -1,
+            -1,
+            0,
+            -1,
+            -1,
+            -1
+        ],
+        [
+            0,
+            -1
+        ],
+        [
+            0,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            -1
+        ],
+        [
+            0,
+            -1,
+            -1
+        ],
+        [
+            0,
+            -1
+        ],
+        [
+            0,
+            -1
+        ],
+        [
+            0,
+            0,
+            0,
+            0,
+            -1
+        ],
+        [
+            0,
+            0,
+            0,
+            -1,
+            -1
+        ],
+        [
+            0,
+            0,
+            0,
+            -1,
+            -1
+        ],
+        [
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            -1,
+            -1,
+            0,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+        ],
+        [
+            0,
+            0,
+            0,
+            -1,
+            -1
+        ],
+        [
+            0,
+            -1
+        ],
+        [
+            0,
+            -1,
+            -1,
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0,
+            -1,
+            -1
+        ]
+    ],
+    "attr_ranges_list": [
+        [
+            [
+                0.5,
+                901343.5
+            ],
+            [
+                3.5,
+                4167489.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                377960.5
+            ],
+            [
+                -0.5,
+                2525672.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.5,
+                7.5
+            ],
+            [
+                1887.5,
+                2016.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                9.5,
+                25391.5
+            ],
+            [
+                0.5,
+                63.5
+            ],
+            [
+                0.5,
+                4315.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                36244344.5
+            ],
+            [
+                0.5,
+                4061926.5
+            ],
+            [
+                0.5,
+                2525975.5
+            ],
+            [
+                0.5,
+                3140339.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                -0.5,
+                1115798165.5
+            ],
+            [
+                0.5,
+                11.5
+            ]
+        ],
+        [
+            [
+                0.5,
+                3140339.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                4.5
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                234997.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                4.5
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                135086.5
+            ],
+            [
+                284.5,
+                2528312.5
+            ],
+            [
+                0.5,
+                2.5
+            ],
+            [
+                2.5,
+                4.5
+            ]
+        ],
+        [
+            [
+                0.5,
+                113.5
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                134170.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                7.5
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                18.5
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                2609129.5
+            ],
+            [
+                1.5,
+                2525745.5
+            ],
+            [
+                0.5,
+                234997.5
+            ],
+            [
+                0.5,
+                2.5
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                14835720.5
+            ],
+            [
+                0.5,
+                2526430.5
+            ],
+            [
+                0.5,
+                110.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                1380035.5
+            ],
+            [
+                1.5,
+                2525793.5
+            ],
+            [
+                98.5,
+                113.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                4523930.5
+            ],
+            [
+                1.5,
+                2525971.5
+            ],
+            [
+                0.5,
+                134170.5
+            ]
+        ],
+        [
+            [
+                0.5,
+                29997.5
+            ],
+            [
+                1.5,
+                186175.5
+            ],
+            [
+                283.5,
+                2524994.5
+            ],
+            [
+                0.5,
+                17.5
+            ]
+        ],
+        [
+            [
+                0.5,
+                4167491.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                -0.5,
+                2012.5
+            ],
+            [
+                66.5,
+                2008.5
+            ],
+            [
+                -0.5,
+                2010.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                12.5
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                0.5,
+                2528312.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.5,
+                7.5
+            ],
+            [
+                1879.5,
+                2019.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                1.5,
+                2528186.5
+            ],
+            [
+                0.5,
+                2013.5
+            ],
+            [
+                0.5,
+                91821.5
+            ],
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0
+            ]
+        ]
+    ],
+    "db_num_attrs": 108
+}

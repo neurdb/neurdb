@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Navigate to the nr_kernel directory
-cd /code/neurdb-dev/dbengine/nr_kernel || {
-    echo "Failed to navigate to nr_kernel directory"
-    exit 1
-}
+NEURDBPATH=${NEURDBPATH:-/code/neurdb-dev}
 
 # Stop the NEURDB PostgreSQL server
 $NEURDBPATH/psql/bin/pg_ctl -D $NEURDBPATH/psql/data stop || {

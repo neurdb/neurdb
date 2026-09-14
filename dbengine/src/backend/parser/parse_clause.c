@@ -444,9 +444,14 @@ transformRangeSubselect(ParseState *pstate, RangeSubselect *r)
 	/*
 	 * Check that we got a SELECT.  Anything else should be impossible given
 	 * restrictions of the grammar, but check anyway.
+	 *
+	 * NEURDB: a PREDICT statement may also appear as a subquery in FROM; its
+	 * analyzed form (CMD_PREDICT) exposes the input columns plus a trailing
+	 * nr_pred column as its output schema.
 	 */
 	if (!IsA(query, Query) ||
-		query->commandType != CMD_SELECT)
+		(query->commandType != CMD_SELECT &&
+		 query->commandType != CMD_PREDICT))
 		elog(ERROR, "unexpected non-SELECT command in subquery in FROM");
 
 	/*

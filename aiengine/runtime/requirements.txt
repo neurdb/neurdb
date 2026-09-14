@@ -49,7 +49,7 @@ python-dateutil==2.9.0.post0
 python-engineio==4.9.1
 python-socketio==5.11.3
 pytz==2024.1
-PyYAML==5.4.1
+PyYAML==6.0.2
 Quart==0.19.6
 requests==2.32.3
 scikit-learn==1.5.2

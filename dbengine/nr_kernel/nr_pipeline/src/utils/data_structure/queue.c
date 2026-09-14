@@ -61,3 +61,29 @@ char *dequeue(BatchQueue *queue) {
   free(node);
   return data;
 }
+
+char *try_dequeue(BatchQueue *queue) {
+  pthread_mutex_lock(&queue->mutex);
+  if (queue->head == NULL) {
+    pthread_mutex_unlock(&queue->mutex);
+    return NULL;
+  }
+  BatchDataNode *node = queue->head;
+  queue->head = node->next;
+  if (queue->head == NULL) {
+    queue->tail = NULL;
+  }
+  queue->size--;
+  pthread_cond_signal(&queue->produce);  // signal a blocked producer
+  pthread_mutex_unlock(&queue->mutex);
+  char *data = node->batched_data;
+  free(node);
+  return data;
+}
+
+int batch_queue_has_data(BatchQueue *queue) {
+  pthread_mutex_lock(&queue->mutex);
+  int has = (queue->head != NULL);
+  pthread_mutex_unlock(&queue->mutex);
+  return has;
+}

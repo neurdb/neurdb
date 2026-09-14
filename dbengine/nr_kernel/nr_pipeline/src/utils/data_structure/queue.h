@@ -53,4 +53,18 @@ void enqueue(BatchQueue *queue, const char *batch_data);
  */
 char *dequeue(BatchQueue *queue);
 
+/**
+ * Non-blocking dequeue: return the head element or NULL if the queue is empty.
+ * Caller owns the returned string (free it). Safe to call from the websocket
+ * service thread (never blocks).
+ * @param queue The batch data queue
+ * @return batch_data The batch data, or NULL if empty
+ */
+char *try_dequeue(BatchQueue *queue);
+
+/**
+ * @return non-zero if the queue currently holds at least one element.
+ */
+int batch_queue_has_data(BatchQueue *queue);
+
 #endif  // QUEUE_H

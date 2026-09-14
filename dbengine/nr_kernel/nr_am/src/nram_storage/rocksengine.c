@@ -416,3 +416,155 @@ void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key
         pfree(*keys);
     }
 }
+
+/* ------------------------------------------------------------------------
+ * Index operations
+ * ------------------------------------------------------------------------
+ */
+
+void rocksengine_index_put(KVEngine *engine, NRIndexKey ikey, NRIndexValue ivalue) {
+    RocksEngine *rocks_engine = (RocksEngine *)engine;
+    char *key_buf, *value_buf;
+    Size key_len, value_len;
+    char *error = NULL;
+
+    CHECK_ROCKS_ENGINE_MAGIC(rocks_engine);
+
+    /* Serialize index key and value */
+    key_buf = nrindex_key_serialize(ikey, &key_len);
+    value_buf = nrindex_value_serialize(ivalue, &value_len);
+
+    /* Put to RocksDB with index prefix */
+    rocksdb_put(rocks_engine->rocksdb, NULL, key_buf, key_len, value_buf, value_len, &error);
+
+    if (error) {
+        elog(ERROR, "RocksDB index put failed: %s", error);
+    }
+
+    pfree(key_buf);
+    pfree(value_buf);
+}
+
+NRIndexValue rocksengine_index_get(KVEngine *engine, NRIndexKey ikey) {
+    RocksEngine *rocks_engine = (RocksEngine *)engine;
+    char *key_buf, *value_buf;
+    Size key_len, value_len;
+    char *error = NULL;
+    NRIndexValue result = NULL;
+
+    CHECK_ROCKS_ENGINE_MAGIC(rocks_engine);
+
+    /* Serialize index key */
+    key_buf = nrindex_key_serialize(ikey, &key_len);
+
+    /* Get from RocksDB */
+    value_buf = rocksdb_get(rocks_engine->rocksdb, NULL, key_buf, key_len, &value_len, &error);
+
+    if (error) {
+        elog(ERROR, "RocksDB index get failed: %s", error);
+    }
+
+    if (value_buf) {
+        /* Deserialize index value */
+        result = nrindex_value_deserialize(value_buf, value_len);
+        free(value_buf); /* RocksDB allocates with malloc */
+    }
+
+    pfree(key_buf);
+    return result;
+}
+
+void rocksengine_index_delete(KVEngine *engine, NRIndexKey ikey) {
+    RocksEngine *rocks_engine = (RocksEngine *)engine;
+    char *key_buf;
+    Size key_len;
+    char *error = NULL;
+
+    CHECK_ROCKS_ENGINE_MAGIC(rocks_engine);
+
+    /* Serialize index key */
+    key_buf = nrindex_key_serialize(ikey, &key_len);
+
+    /* Delete from RocksDB */
+    rocksdb_delete(rocks_engine->rocksdb, NULL, key_buf, key_len, &error);
+
+    if (error) {
+        elog(ERROR, "RocksDB index delete failed: %s", error);
+    }
+
+    pfree(key_buf);
+}
+
+void rocksengine_index_range_scan(KVEngine *engine, NRIndexKey start_key, NRIndexKey end_key,
+                                 uint32_t *out_count, NRIndexKey **keys, NRIndexValue **values) {
+    RocksEngine *rocks_engine = (RocksEngine *)engine;
+    RocksEngineIterator *rocks_it;
+    char *start_buf, *end_buf;
+    Size start_len, end_len;
+    int count = 0;
+    int capacity = 1000; /* Initial capacity */
+
+    CHECK_ROCKS_ENGINE_MAGIC(rocks_engine);
+
+    /* Serialize keys */
+    start_buf = nrindex_key_serialize(start_key, &start_len);
+    end_buf = nrindex_key_serialize(end_key, &end_len);
+
+    /* Allocate result arrays */
+    *keys = (NRIndexKey *)palloc(sizeof(NRIndexKey) * capacity);
+    *values = (NRIndexValue *)palloc(sizeof(NRIndexValue) * capacity);
+
+    /* Create iterator */
+    rocks_it = (RocksEngineIterator *)rocksengine_create_iterator(engine, true);
+    rocksengine_iterator_seek((KVEngineIterator *)rocks_it, NULL); /* Will be overridden */
+
+    /* Set iterator range */
+    rocksdb_iter_seek(rocks_it->rocksdb_iterator, start_buf, start_len);
+
+    /* Iterate through range */
+    while (rocksdb_iter_valid(rocks_it->rocksdb_iterator)) {
+        const char *key_buf, *value_buf;
+        size_t key_len, value_len;
+        NRIndexKey ikey;
+        NRIndexValue ivalue;
+
+        /* Get current key and value */
+        key_buf = rocksdb_iter_key(rocks_it->rocksdb_iterator, &key_len);
+        value_buf = rocksdb_iter_value(rocks_it->rocksdb_iterator, &value_len);
+
+        /* Check if we've exceeded the end key */
+        if (memcmp(key_buf, end_buf, Min(key_len, end_len)) >= 0) {
+            break;
+        }
+
+        /* Deserialize key and value */
+        ikey = nrindex_key_deserialize(key_buf, key_len);
+        ivalue = nrindex_value_deserialize(value_buf, value_len);
+
+        /* Resize arrays if needed */
+        if (count >= capacity) {
+            capacity *= 2;
+            *keys = (NRIndexKey *)repalloc(*keys, sizeof(NRIndexKey) * capacity);
+            *values = (NRIndexValue *)repalloc(*values, sizeof(NRIndexValue) * capacity);
+        }
+
+        (*keys)[count] = ikey;
+        (*values)[count] = ivalue;
+        count++;
+
+        rocksdb_iter_next(rocks_it->rocksdb_iterator);
+    }
+
+    *out_count = count;
+
+    /* Clean up */
+    rocksengine_iterator_destroy(engine, (KVEngineIterator *)rocks_it);
+    pfree(start_buf);
+    pfree(end_buf);
+
+    /* Handle empty result */
+    if (count == 0) {
+        pfree(*values);
+        pfree(*keys);
+    }
+}

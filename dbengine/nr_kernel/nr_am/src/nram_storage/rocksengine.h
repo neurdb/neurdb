@@ -9,6 +9,7 @@
 
 #include "rocksdb/c.h"
 #include "nram_access/kv.h"
+#include "nrindex_access/nrindex_kv.h"
 
 #define NRAM_TABLE_KEY_LENGTH (sizeof(Oid))
 
@@ -57,5 +58,11 @@ void rocksengine_iterator_next(KVEngineIterator *iterator);
 void rocksengine_iterator_prev(KVEngineIterator *iterator);
 void rocksengine_iterator_get(KVEngineIterator *iterator, NRAMKey *tkey, NRAMValue *tvalue);
 void rocksengine_range_scan(KVEngine *engine, NRAMKey start_key, NRAMKey end_key, uint32_t *out_count, NRAMKey **keys, NRAMValue** values);
+
+/* Index operations */
+void rocksengine_index_put(KVEngine *engine, NRIndexKey ikey, NRIndexValue ivalue);
+void rocksengine_index_delete(KVEngine *engine, NRIndexKey ikey);
+NRIndexValue rocksengine_index_get(KVEngine *engine, NRIndexKey ikey);
+void rocksengine_index_range_scan(KVEngine *engine, NRIndexKey start_key, NRIndexKey end_key, uint32_t *out_count, NRIndexKey **keys, NRIndexValue** values);
 
 #endif //ROCKSENGINE_H

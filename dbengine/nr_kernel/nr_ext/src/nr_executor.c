@@ -13,20 +13,6 @@
 #include "utils/snapmgr.h"
 
 #include "parser/parse_node.h"
-#include "predict.h"
-
-/* required metadata marker for PostgreSQL extensions */
-PG_MODULE_MAGIC;
-
-extern ExecutorStart_hook_type ExecutorStart_hook;
-extern ExecutorRun_hook_type ExecutorRun_hook;
-extern ExecutorEnd_hook_type ExecutorEnd_hook;
-extern ExecutorFinish_hook_type ExecutorFinish_hook;
-
-ExecutorStart_hook_type original_executorstart_hook = NULL;
-ExecutorRun_hook_type original_executorrun_hook = NULL;
-ExecutorEnd_hook_type original_executorend_hook = NULL;
-ExecutorFinish_hook_type original_executorfinish_hook = NULL;
 
 /* --- START ---------------------------------------------------------------- */
 
@@ -287,7 +273,7 @@ InitPlan(QueryDesc *queryDesc, int eflags)
 	 * Initialize the junk filter if needed.  SELECT queries need a filter if
 	 * there are any junk attrs in the top-level tlist.
 	 */
-	if (operation == CMD_SELECT)
+	if (operation == CMD_SELECT || operation == CMD_PREDICT)
 	{
 		bool		junk_filter_needed = false;
 		ListCell   *tlist;
@@ -420,8 +406,10 @@ ExecutePlan(EState *estate, PlanState *planstate,
 		 * Count tuples processed, if this is a SELECT.  (For other operation
 		 * types, the ModifyTable plan node must count the appropriate
 		 * events.)
+		 *
+		 * NEURDB: PREDICT has same execution logic as SELECT
 		 */
-		if (operation == CMD_SELECT)
+		if (operation == CMD_SELECT || operation == CMD_PREDICT)
 			(estate->es_processed)++;
 
 		/*
@@ -483,6 +471,7 @@ NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
 		return;
 	}
 
+#if 0
 	if (operation == CMD_PREDICT)
 	{
 		if (planstate == NULL)
@@ -512,11 +501,14 @@ NeurDB_ExecutePlanWrapper(EState *estate, PlannedStmt *plannedstmt,
 	}
 	else
 	{
+#endif
 		elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Calling ExecutePlan");
 		ExecutePlan(estate, planstate, use_parallel_mode, operation, sendTuples,
 					numberTuples, direction, dest, execute_once);
 		elog(DEBUG1, "[NeurDB_ExecutePlanWrapper] Finished ExecutePlan");
+#if 0
 	}
+#endif
 }
 
 /* ----------------------------------------------------------------
@@ -612,9 +604,6 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 {
 	elog(DEBUG1, "In NeurDB's executor start");
 
-	if (original_executorstart_hook)
-		original_executorstart_hook(queryDesc, eflags);
-
 	EState	   *estate;
 	MemoryContext oldcontext;
 
@@ -679,6 +668,7 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 	switch (queryDesc->operation)
 	{
 		case CMD_SELECT:
+		case CMD_PREDICT:		/* PREDICT has same execution steps as SELECT */
 
 			/*
 			 * SELECT FOR [KEY] UPDATE/SHARE and modifying CTEs need to mark
@@ -698,16 +688,19 @@ NeurDB_ExecutorStart(QueryDesc *queryDesc, int eflags)
 				eflags |= EXEC_FLAG_SKIP_TRIGGERS;
 			break;
 
-		case CMD_PREDICT:
+			/* case CMD_PREDICT: */
 
-			elog(DEBUG1, "[NeurDB_ExecutorStart], case in the CMD_PREDICT");
+			/*
+			 * elog(DEBUG1, "[NeurDB_ExecutorStart], case in the
+			 * CMD_PREDICT");
+			 */
 
 			/*
 			 * Bypass the trigger which are often associated with INSERT,
 			 * UPDATE, and DELETE operations
 			 */
-			eflags |= EXEC_FLAG_SKIP_TRIGGERS;
-			break;
+			/* eflags |= EXEC_FLAG_SKIP_TRIGGERS; */
+			/* break; */
 
 		case CMD_INSERT:
 		case CMD_DELETE:
@@ -756,9 +749,6 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 {
 	elog(DEBUG1, "[NeurDB_ExecutorRun] start");
 
-	if (original_executorrun_hook)
-		original_executorrun_hook(queryDesc, direction, count, execute_once);
-
 	EState	   *estate;
 	CmdType		operation;
 	DestReceiver *dest;
@@ -795,8 +785,13 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 	 */
 	estate->es_processed = 0;
 
+	/*
+	 * NEURDB: We need to set sendTuples for PREDICT, otherwise ExecutePlan()
+	 * will not call dest->receiveSlot()
+	 */
 	sendTuples =
-		(operation == CMD_SELECT || queryDesc->plannedstmt->hasReturning);
+		(operation == CMD_SELECT || operation == CMD_PREDICT
+		 || queryDesc->plannedstmt->hasReturning);
 
 	if (sendTuples)
 		dest->rStartup(dest, operation, queryDesc->tupDesc);
@@ -845,9 +840,6 @@ NeurDB_ExecutorRun(QueryDesc *queryDesc, ScanDirection direction,
 void
 NeurDB_ExecutorEnd(QueryDesc *queryDesc)
 {
-	if (original_executorend_hook)
-		original_executorend_hook(queryDesc);
-
 	EState	   *estate;
 	MemoryContext oldcontext;
 
@@ -898,9 +890,6 @@ NeurDB_ExecutorEnd(QueryDesc *queryDesc)
 void
 NeurDB_ExecutorFinish(QueryDesc *queryDesc)
 {
-	if (original_executorfinish_hook)
-		original_executorfinish_hook(queryDesc);
-
 	EState	   *estate;
 	MemoryContext oldcontext;
 
@@ -935,33 +924,4 @@ NeurDB_ExecutorFinish(QueryDesc *queryDesc)
 	MemoryContextSwitchTo(oldcontext);
 
 	estate->es_finished = true;
-}
-
-/*  Called upon extension load. */
-void
-_PG_init(void)
-{
-	elog(DEBUG1, "In NeurDB's _PG_init");
-	/* Save the original hook value. */
-	original_executorstart_hook = ExecutorStart_hook;
-	original_executorrun_hook = ExecutorRun_hook;
-	original_executorend_hook = ExecutorEnd_hook;
-	original_executorfinish_hook = ExecutorFinish_hook;
-	/* Register our handler. */
-	ExecutorStart_hook = NeurDB_ExecutorStart;
-	ExecutorRun_hook = NeurDB_ExecutorRun;
-	ExecutorFinish_hook = NeurDB_ExecutorFinish;
-	ExecutorEnd_hook = NeurDB_ExecutorEnd;
-}
-
-/*  Called with extension unload. */
-void
-_PG_fini(void)
-{
-	elog(DEBUG1, "In NeurDB's _PG_fini");
-	/* Return back the original hook value. */
-	ExecutorStart_hook = original_executorstart_hook;
-	ExecutorRun_hook = original_executorrun_hook;
-	ExecutorEnd_hook = original_executorend_hook;
-	ExecutorFinish_hook = original_executorfinish_hook;
 }

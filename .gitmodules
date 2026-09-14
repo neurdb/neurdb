@@ -1,0 +1,3 @@
+[submodule "dbengine/nr_kernel/nr_am/src/nram_storage/selix"]
+	path = dbengine/nr_kernel/nr_am/src/nram_storage/selix
+	url = https://github.com/neurdb/selix.git
