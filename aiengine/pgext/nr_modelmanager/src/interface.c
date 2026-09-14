@@ -51,8 +51,8 @@ void _PG_init(void) {
  * @member {long} n_dims - the number of dimensions
  */
 typedef struct {
-    float *data;
-    long *dims;
+    float* data;
+    long* dims;
     long n_dims;
 } PredictionResultData;
 
@@ -128,9 +128,9 @@ typedef struct {
  * @return prediction result in float4[]
  */
 Datum pgm_predict_float4(PG_FUNCTION_ARGS) {
-    FuncCallContext *funcctx;  // function calling context
-    PredictionResultData
-        *prediction_result_data;  // to store the values returned
+    FuncCallContext* funcctx;  // function calling context
+    PredictionResultData*
+        prediction_result_data;  // to store the values returned
     if (SRF_IS_FIRSTCALL()) {
         funcctx = SRF_FIRSTCALL_INIT();
         MemoryContext oldcontext =
@@ -140,7 +140,7 @@ Datum pgm_predict_float4(PG_FUNCTION_ARGS) {
         const int model_id = (int)PG_GETARG_INT32(0);
         // the model id obtained from PG_GETARG_INT32 is signed int, same as int
 
-        ArrayType *input_array = PG_GETARG_ARRAYTYPE_P(1);
+        ArrayType* input_array = PG_GETARG_ARRAYTYPE_P(1);
 
         // check value types in the input array
         if (ARR_ELEMTYPE(input_array) != FLOAT4OID) {
@@ -150,7 +150,7 @@ Datum pgm_predict_float4(PG_FUNCTION_ARGS) {
                             "float4, but it is of type %s",
                             format_type_be(ARR_ELEMTYPE(input_array)))));
         }
-        ModelWrapper *model = load_model_by_id(model_id);
+        ModelWrapper* model = load_model_by_id(model_id);
         if (model == NULL) {
             // the model is not found
             elog(WARNING,
@@ -160,11 +160,11 @@ Datum pgm_predict_float4(PG_FUNCTION_ARGS) {
             SRF_RETURN_DONE(funcctx);
         }
 
-        float *data = (float *)ARR_DATA_PTR(
+        float* data = (float*)ARR_DATA_PTR(
             input_array);  // TODO: currently only support float data
-        TensorWrapper *input = tw_create_tensor(data, ARR_DIMS(input_array),
+        TensorWrapper* input = tw_create_tensor(data, ARR_DIMS(input_array),
                                                 ARR_NDIM(input_array));
-        const TensorWrapper *output =
+        const TensorWrapper* output =
             forward(model, input);  // get the prediction result
         if (output == NULL) {
             // error occurred during forward inference
@@ -179,7 +179,7 @@ Datum pgm_predict_float4(PG_FUNCTION_ARGS) {
 
         // construct prediction result data
         prediction_result_data =
-            (PredictionResultData *)palloc(sizeof(PredictionResultData));
+            (PredictionResultData*)palloc(sizeof(PredictionResultData));
         prediction_result_data->data = tw_get_tensor_data(output);
         prediction_result_data->dims = tw_get_tensor_dims(output);
         prediction_result_data->n_dims = tw_get_tensor_n_dim(output);
@@ -219,10 +219,10 @@ Datum pgm_predict_float4(PG_FUNCTION_ARGS) {
     funcctx = SRF_PERCALL_SETUP();
     const unsigned long call_cntr = funcctx->call_cntr;
     const unsigned long max_calls = funcctx->max_calls;
-    prediction_result_data = (PredictionResultData *)funcctx->user_fctx;
+    prediction_result_data = (PredictionResultData*)funcctx->user_fctx;
 
-    const float *result_data = prediction_result_data->data;
-    const long *result_dims = prediction_result_data->dims;
+    const float* result_data = prediction_result_data->data;
+    const long* result_dims = prediction_result_data->dims;
     const long column_num = result_dims[prediction_result_data->n_dims - 1];
 
     if (call_cntr < max_calls) {
@@ -304,9 +304,9 @@ Datum pgm_predict_table(PG_FUNCTION_ARGS) {
     // const char *model_name = text_to_cstring(PG_GETARG_TEXT_PP(0));
     const int model_id = PG_GETARG_INT32(0);
     const int batch_size = PG_GETARG_INT32(1);
-    const char *table_name = text_to_cstring(PG_GETARG_TEXT_PP(2));
+    const char* table_name = text_to_cstring(PG_GETARG_TEXT_PP(2));
     // ArrayType *column_names_array = PG_GETARG_ARRAYTYPE_P(3);
-    const char *column_names_array = text_to_cstring(PG_GETARG_TEXT_PP(3));
+    const char* column_names_array = text_to_cstring(PG_GETARG_TEXT_PP(3));
 
     // spit by comma is the number of columns
     int num_columns = 1;
@@ -350,23 +350,23 @@ Datum pgm_predict_table(PG_FUNCTION_ARGS) {
     logger_end(&logger);
     logger_start(&logger, "forward inference");
     // get the result
-    const SPITupleTable *tuptable = SPI_tuptable;
+    const SPITupleTable* tuptable = SPI_tuptable;
     const int num_rows = (int)SPI_processed;
     TupleDesc tupdesc = tuptable->tupdesc;
 
     // forward inference
-    ModelWrapper *model = load_model_by_id(model_id);
+    ModelWrapper* model = load_model_by_id(model_id);
 
     int batch = 0;
-    TensorWrapper *output = NULL;
+    TensorWrapper* output = NULL;
     for (int start = 0; start < num_rows; start += batch_size) {
         const int end =
             (start + batch_size > num_rows) ? num_rows : start + batch_size;
         const int current_batch_size = end - start;
 
         // create input tensor
-        float *data =
-            (float *)palloc(current_batch_size * num_columns * sizeof(float));
+        float* data =
+            (float*)palloc(current_batch_size * num_columns * sizeof(float));
         for (int i = start; i < end; ++i) {
             HeapTuple tuple = tuptable->vals[i];
             for (int j = 0; j < num_columns; ++j) {
@@ -376,7 +376,7 @@ Datum pgm_predict_table(PG_FUNCTION_ARGS) {
             }
         }
         const int dims[2] = {current_batch_size, num_columns};
-        TensorWrapper *input = tw_create_tensor(data, dims, 2);
+        TensorWrapper* input = tw_create_tensor(data, dims, 2);
 
         // forward inference
         output = forward(model, input);
