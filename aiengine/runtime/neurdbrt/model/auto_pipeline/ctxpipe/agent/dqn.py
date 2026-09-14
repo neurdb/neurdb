@@ -180,7 +180,7 @@ class Agent:
                 if len(train_x_csv.columns) > embedder.MAX_N_COLUMNS:
                     train_x_csv = train_x_csv.iloc[:, -embedder.MAX_N_COLUMNS :]
 
-            ctx_embeddings = embedder.embed(train_x_csv)  # type:ignore
+            ctx_embeddings = embedder.embed(train_x_csv)  # type: ignore
             ctx_embeddings = ctx_embeddings.unsqueeze(dim=0).to(env.DEVICE)
 
             q_value: torch.Tensor = model(state, ctx_embeddings).cpu()
