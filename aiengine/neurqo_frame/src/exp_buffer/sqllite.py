@@ -45,8 +45,7 @@ class ExperienceBuffer:
         cursor = conn.cursor()
 
         # Single table: plan_buffer
-        cursor.execute(
-            """
+        cursor.execute("""
         CREATE TABLE IF NOT EXISTS plan_buffer (
             id INTEGER PRIMARY KEY,
             query_hash TEXT NOT NULL,
@@ -57,8 +56,7 @@ class ExperienceBuffer:
             plan_time REAL,
             hint_json TEXT,
             join_order_hint TEXT
-        )"""
-        )
+        )""")
 
         # Indexes for better performance
         cursor.execute(
