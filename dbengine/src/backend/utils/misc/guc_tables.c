@@ -2054,7 +2054,7 @@ struct config_int ConfigureNamesInt[] =
 {
 	{
 		{"nqo.max_rounds", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum number of NQO split rounds before executing the residual query."),
+			gettext_noop("Sets the maximum number of NQO Dec rounds before executing the residual query."),
 			NULL
 		},
 		&nqo_max_rounds,
@@ -2063,7 +2063,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.server_timeout_ms", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the socket timeout in milliseconds for NQO AI server calls."),
+			gettext_noop("Sets the socket timeout in milliseconds for NQO policy-server calls."),
 			NULL
 		},
 		&nqo_server_timeout_ms,
@@ -2072,7 +2072,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.search_topk", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets how many DP join orders NQO Search keeps before physical-cost replanning."),
+			gettext_noop("Sets how many DP join orders the NQO Enum implementation keeps before physical-cost replanning."),
 			NULL
 		},
 		&nqo_search_topk,
@@ -2081,7 +2081,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.search_max_rels", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum relation count for NQO in-DB top-k join-order search."),
+			gettext_noop("Sets the maximum relation count for the NQO Enum implementation."),
 			NULL
 		},
 		&nqo_search_max_rels,
@@ -2090,7 +2090,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.aja_conservative_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the build-row switch threshold for conservative NQO adaptive joins."),
+			gettext_noop("Sets the build-row switch threshold for the conservative NQO AJoin action."),
 			NULL
 		},
 		&nqo_aja_conservative_rows,
@@ -2099,7 +2099,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.aja_aggressive_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the build-row switch threshold for aggressive NQO adaptive joins."),
+			gettext_noop("Sets the build-row switch threshold for the aggressive NQO AJoin action."),
 			NULL
 		},
 		&nqo_aja_aggressive_rows,
@@ -2108,7 +2108,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.aja_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Rejects conservative NQO adaptive nest-loop candidates whose estimated subtree cost exceeds this percentage of the hash-join subtree cost; zero disables the guard."),
+			gettext_noop("Rejects conservative NQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
 			NULL
 		},
 		&nqo_aja_max_nestloop_cost_ratio_pct,
@@ -2117,7 +2117,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.aja_aggressive_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Rejects aggressive NQO adaptive nest-loop candidates whose estimated subtree cost exceeds this percentage of the hash-join subtree cost; zero disables the guard."),
+			gettext_noop("Rejects aggressive NQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
 			NULL
 		},
 		&nqo_aja_aggressive_max_nestloop_cost_ratio_pct,
@@ -2126,7 +2126,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.lip_max_build_relation_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the largest base relation from which NQO may build a LIP Bloom filter."),
+			gettext_noop("Sets the largest base relation from which the NQO Filter action may build a Bloom filter."),
 			NULL
 		},
 		&nqo_lip_max_build_relation_rows,
@@ -2135,7 +2135,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.lip_selective_plan_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum estimated filtered build rows for selective NQO LIP."),
+			gettext_noop("Sets the maximum estimated build rows for the selective NQO Filter action."),
 			NULL
 		},
 		&nqo_lip_selective_plan_rows,
@@ -2144,7 +2144,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.lip_max_build_selectivity_pct", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum estimated build-side selectivity percentage for selective NQO LIP."),
+			gettext_noop("Sets the maximum build-side selectivity for the selective NQO Filter action."),
 			NULL
 		},
 		&nqo_lip_max_build_selectivity_pct,
@@ -2153,7 +2153,7 @@ struct config_int ConfigureNamesInt[] =
 	},
 	{
 		{"nqo.lip_min_probe_ratio", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the minimum estimated probe/build row ratio for a NQO LIP filter."),
+			gettext_noop("Sets the minimum probe/build row ratio for the NQO Filter action."),
 			NULL
 		},
 		&nqo_lip_min_probe_ratio,
@@ -4013,7 +4013,7 @@ struct config_string ConfigureNamesString[] =
 {
 	{
 		{"nqo.server_url", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the URL of the NQO AI action server."),
+			gettext_noop("Sets the URL of the NQO policy server."),
 			NULL
 		},
 		&nqo_server_url,

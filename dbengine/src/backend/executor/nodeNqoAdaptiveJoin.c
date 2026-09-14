@@ -151,7 +151,7 @@ nqo_exec_adaptive_join(CustomScanState *node)
 		INSTR_TIME_SUBTRACT(end, start);
 
 		if (!build_ok)
-			elog(ERROR, "NQO adaptive join could not build HashJoin table");
+			elog(ERROR, "NQO AJoin could not build the HashJoin table");
 		state->use_nestloop =
 			!state->join_empty &&
 			state->actual_build_rows <= (uint64) state->threshold_rows;
@@ -211,8 +211,8 @@ nqo_explain_adaptive_join(CustomScanState *node, List *ancestors,
 	NqoAdaptiveJoinState *state = (NqoAdaptiveJoinState *) node;
 
 	(void) ancestors;
-	ExplainPropertyText("AJA Level", state->level, es);
-	ExplainPropertyInteger("AJA Switch Threshold", "rows",
+	ExplainPropertyText("AJoin Action", state->level, es);
+	ExplainPropertyInteger("AJoin Switch Threshold", "rows",
 						   state->threshold_rows, es);
 	ExplainPropertyFloat("Estimated Build Rows", NULL,
 						 state->estimated_build_rows, 0, es);

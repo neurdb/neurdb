@@ -98,7 +98,7 @@ static Query* QSSelectSubquery(Query* global_query, bool* graph,
 							   double cumulative_cost_ms,
 							   int max_split_rounds,
 							   double* policy_ms,
-							   char** selection_state_json_out);
+							   char** sched_state_json_out);
 static bool nqo_split_candidate_valid(
 	Query* query, int center_x, int center_y);
 static Plan* find_node_with_nleaf_recursive(Plan* plan, int nleaf, int* leaf_has, int* depth);
@@ -120,31 +120,31 @@ static char* nqo_build_plan_hint(PlannedStmt* plannedstmt, Query* q);
 static char* nqo_build_leading_hint(PlannedStmt* plannedstmt, Query* q,
 									  bool swap_hash_inputs);
 static const char* nqo_order_decision_name(int mode);
-static bool nqo_search_enabled(void);
-static bool nqo_aja_enabled(void);
-static const char* nqo_adaptive_aja_level(void);
-static bool nqo_lip_enabled(void);
-static void nqo_reset_execution_actions(void);
-static bool nqo_policy_high(Query* q, const char* query_string,
+static bool nqo_enum_enabled(void);
+static bool nqo_ajoin_enabled(void);
+static const char* nqo_adaptive_ajoin_level(void);
+static bool nqo_filter_enabled(void);
+static void nqo_reset_action_components(void);
+static bool nqo_policy_dec(Query* q, const char* query_string,
 							   int round, int length, int remaining,
 							   double cumulative_cost_ms,
 							   int max_split_rounds,
 							   bool* stop_now, double* policy_ms,
 							   char** state_json_out);
-static bool nqo_policy_select(Query* q, const char* query_string,
+static bool nqo_policy_sched(Query* q, const char* query_string,
 								 int round, List* candidates,
 								 double cumulative_cost_ms,
 								 int max_split_rounds,
 								 int* candidate_id,
 								 double* policy_ms,
 								 char** state_json_out);
-static bool nqo_policy_search(Query* q, const char* query_string,
+static bool nqo_policy_enum(Query* q, const char* query_string,
 								 int round, int length, int remaining,
 								 double cumulative_cost_ms,
 								 int max_split_rounds,
 								 double* policy_ms,
 								 char** state_json_out);
-static bool nqo_policy_low(Query* q,
+static bool nqo_policy_adapt(Query* q,
 							  int round, PlannedStmt* selected_plan,
 							  double cumulative_cost_ms,
 							  int max_split_rounds,
@@ -158,8 +158,8 @@ static PlannedStmt* nqo_plan_execution(Query* q, const char* query_string,
 										  int max_split_rounds,
 										  bool is_split_execution,
 										  double* policy_ms,
-										  char** search_state_json_out,
-										  char** low_state_json_out);
+										  char** enum_state_json_out,
+										  char** adapt_state_json_out);
 static double nqo_now_ms(void);
 static bool nqo_apply_lip(Query* q, PlannedStmt* reference_plan,
 							 double* lip_ms, int* lip_filters);
@@ -171,11 +171,11 @@ static char* nqo_build_round_state(Query* q, const char* query_string,
 									  double cumulative_cost_ms,
 									  int max_split_rounds);
 static void nqo_append_relations_json(Query* q, StringInfo out);
-static char* nqo_build_selection_state(Query* q, const char* query_string,
+static char* nqo_build_sched_state(Query* q, const char* query_string,
 										  int round, List* candidates,
 										  double cumulative_cost_ms,
 										  int max_split_rounds);
-static char* nqo_build_low_state(Query* q,
+static char* nqo_build_adapt_state(Query* q,
 									int round, PlannedStmt* selected_plan,
 									double cumulative_cost_ms,
 									int max_split_rounds,
@@ -187,9 +187,9 @@ static void nqo_append_plan_json(Plan* plan, Query* q, StringInfo out,
 									int* nnodes);
 static void nqo_log_trajectory_event(const char* phase, int round,
 										const char* state_json, bool stop_now,
-										const char* selection_state_json,
-										const char* search_state_json,
-										const char* low_state_json,
+										const char* sched_state_json,
+										const char* enum_state_json,
+										const char* adapt_state_json,
 										PlannedStmt* execution_plan,
 										Query* execution_query,
 										double policy_ms, double planning_ms,
@@ -221,12 +221,13 @@ int nqo_lip_selective_plan_rows = 10000;
 int nqo_lip_max_build_selectivity_pct = 10;
 int nqo_lip_min_probe_ratio = 2;
 int nqo_lip_max_filters = 4;
-static char nqo_current_search_strategy[64] = "";
-static char nqo_current_execution_action[64] = "";
-static char nqo_current_lip_action[64] = "";
-static char nqo_current_high_action[16] = "";
-static char nqo_current_selection_strategy[64] = "";
-static int nqo_current_search_k = 0;
+static char nqo_current_enum_action[64] = "";
+static char nqo_current_ajoin_action[64] = "";
+static char nqo_current_filter_action[64] = "";
+static char nqo_current_dec_action[16] = "";
+static char nqo_current_sched_strategy[64] = "";
+static double nqo_current_sched_alpha = -1.0;
+static int nqo_current_enum_k = 0;
 static int nqo_current_candidate_id = -1;
 //the number of subquery
 static int queryId = 0;
@@ -260,14 +261,16 @@ typedef struct NqoPolicyAction
 	int candidate_id;
 	bool has_selection_strategy;
 	char selection_strategy[64];
-	bool has_search_strategy;
-	char search_strategy[64];
-	bool has_search_k;
-	int search_k;
-	bool has_execution_action;
-	char execution_action[64];
-	bool has_lip_action;
-	char lip_action[64];
+	bool has_sched_alpha;
+	double sched_alpha;
+	bool has_enum_action;
+	char enum_action[64];
+	bool has_enum_k;
+	int enum_k;
+	bool has_ajoin_action;
+	char ajoin_action[64];
+	bool has_filter_action;
+	char filter_action[64];
 	bool has_aja_hint;
 	char aja_hint[1024];
 	bool has_join_method;
@@ -486,7 +489,7 @@ nqo_append_relations_json(Query* q, StringInfo out)
 }
 
 static char*
-nqo_build_selection_state(Query* q, const char* query_string,
+nqo_build_sched_state(Query* q, const char* query_string,
 							 int round, List* candidates,
 							 double cumulative_cost_ms,
 							 int max_split_rounds)
@@ -499,7 +502,7 @@ nqo_build_selection_state(Query* q, const char* query_string,
 	initStringInfo(&state);
 	appendStringInfo(&state,
 					 "{\"pid\":%d,\"run_id\":" UINT64_FORMAT
-					 ",\"request_type\":\"select\",\"round\":%d,"
+					 ",\"request_type\":\"sched\",\"round\":%d,"
 					 "\"candidate_count\":%d,\"cumulative_cost_ms\":%.3f,"
 					 "\"max_split_rounds\":%d,\"sql\":",
 					 MyProcPid, nqo_current_run_id, round,
@@ -549,9 +552,9 @@ nqo_build_selection_state(Query* q, const char* query_string,
 static void
 nqo_log_trajectory_event(const char* phase, int round,
 							const char* state_json, bool stop_now,
-							const char* selection_state_json,
-							const char* search_state_json,
-							const char* low_state_json,
+							const char* sched_state_json,
+							const char* enum_state_json,
+							const char* adapt_state_json,
 							PlannedStmt* execution_plan,
 							Query* execution_query,
 							double policy_ms, double planning_ms,
@@ -587,25 +590,25 @@ nqo_log_trajectory_event(const char* phase, int round,
 		appendStringInfoString(&line, state_json);
 	else
 		appendStringInfoString(&line, "null");
-	appendStringInfoString(&line, ",\"decision_states\":{\"high\":");
+	appendStringInfoString(&line, ",\"decision_states\":{\"dec\":");
 	if (state_json != NULL && state_json[0] != '\0' &&
-		nqo_current_high_action[0] != '\0')
+		nqo_current_dec_action[0] != '\0')
 		appendStringInfoString(&line, state_json);
 	else
 		appendStringInfoString(&line, "null");
-	appendStringInfoString(&line, ",\"select\":");
-	if (selection_state_json != NULL && selection_state_json[0] != '\0')
-		appendStringInfoString(&line, selection_state_json);
+	appendStringInfoString(&line, ",\"sched\":");
+	if (sched_state_json != NULL && sched_state_json[0] != '\0')
+		appendStringInfoString(&line, sched_state_json);
 	else
 		appendStringInfoString(&line, "null");
-	appendStringInfoString(&line, ",\"search\":");
-	if (search_state_json != NULL && search_state_json[0] != '\0')
-		appendStringInfoString(&line, search_state_json);
+	appendStringInfoString(&line, ",\"enum\":");
+	if (enum_state_json != NULL && enum_state_json[0] != '\0')
+		appendStringInfoString(&line, enum_state_json);
 	else
 		appendStringInfoString(&line, "null");
-	appendStringInfoString(&line, ",\"low\":");
-	if (low_state_json != NULL && low_state_json[0] != '\0')
-		appendStringInfoString(&line, low_state_json);
+	appendStringInfoString(&line, ",\"adapt\":");
+	if (adapt_state_json != NULL && adapt_state_json[0] != '\0')
+		appendStringInfoString(&line, adapt_state_json);
 	else
 		appendStringInfoString(&line, "null");
 	appendStringInfoChar(&line, '}');
@@ -621,52 +624,57 @@ nqo_log_trajectory_event(const char* phase, int round,
 	else
 		appendStringInfoString(&line, "null");
 	appendStringInfoString(&line, ",\"action\":{");
-	appendStringInfoString(&line, "\"high_action\":");
+	appendStringInfoString(&line, "\"dec_action\":");
 	nqo_append_json_string(&line,
-							  nqo_current_high_action[0] != '\0' ?
-							  nqo_current_high_action : NULL);
+							  nqo_current_dec_action[0] != '\0' ?
+							  nqo_current_dec_action : NULL);
 	appendStringInfoString(&line, ",\"order_decision\":");
 	nqo_append_json_string(&line, nqo_order_decision_name(order_decision));
 	appendStringInfoString(&line, ",\"candidate_id\":");
-	if (selection_state_json == NULL)
+	if (sched_state_json == NULL)
 		appendStringInfoString(&line, "null");
 	else
 		appendStringInfo(&line, "%d", nqo_current_candidate_id);
 	appendStringInfoString(&line, ",\"selection_strategy\":");
-	if (selection_state_json == NULL)
+	if (sched_state_json == NULL)
 		nqo_append_json_string(&line, NULL);
 	else
 		nqo_append_json_string(
 			&line,
-			nqo_current_selection_strategy[0] != '\0' ?
-			nqo_current_selection_strategy : "phi4");
-	appendStringInfoString(&line, ",\"search_strategy\":");
-	if (search_state_json == NULL)
+			nqo_current_sched_strategy[0] != '\0' ?
+			nqo_current_sched_strategy : "phi4");
+	if (sched_state_json == NULL || nqo_current_sched_alpha < 0.0)
+		appendStringInfoString(&line, ",\"sched_alpha\":null");
+	else
+		appendStringInfo(&line, ",\"sched_alpha\":%.6g",
+						 nqo_current_sched_alpha);
+	appendStringInfoString(&line, ",\"enum_action\":");
+	if (enum_state_json == NULL)
 		nqo_append_json_string(&line, NULL);
 	else
 		nqo_append_json_string(&line,
-								  nqo_search_enabled() ?
-								  nqo_current_search_strategy : "default");
-	if (search_state_json == NULL)
-		appendStringInfoString(&line, ",\"search_k\":null");
+								  nqo_enum_enabled() ?
+								  nqo_current_enum_action : "native");
+	if (enum_state_json == NULL)
+		appendStringInfoString(&line, ",\"enum_k\":null");
 	else
-		appendStringInfo(&line, ",\"search_k\":%d",
-						 nqo_current_search_k > 0 ?
-						 nqo_current_search_k : 0);
-	appendStringInfoString(&line, ",\"execution_action\":");
-	if (low_state_json == NULL)
+		appendStringInfo(&line, ",\"enum_k\":%d",
+						 nqo_current_enum_k > 0 ?
+						 nqo_current_enum_k : 0);
+	appendStringInfoString(&line, ",\"ajoin_action\":");
+	if (adapt_state_json == NULL)
 		nqo_append_json_string(&line, NULL);
 	else
 		nqo_append_json_string(&line,
-								  nqo_aja_enabled() ?
-								  nqo_current_execution_action : "none");
-	appendStringInfoString(&line, ",\"lip_action\":");
-	if (low_state_json == NULL)
+								  nqo_ajoin_enabled() ?
+								  nqo_current_ajoin_action : "off");
+	appendStringInfoString(&line, ",\"filter_action\":");
+	if (adapt_state_json == NULL)
 		nqo_append_json_string(&line, NULL);
 	else
 		nqo_append_json_string(&line,
-								  nqo_lip_enabled() ?
-								  nqo_current_lip_action : "none");
+								  nqo_filter_enabled() ?
+								  nqo_current_filter_action : "none");
 	appendStringInfo(&line, ",\"lip_filters\":%d",
 					 nqo_last_lip_filters);
 	appendStringInfo(&line, ",\"aja_threshold_rows\":%d",
@@ -782,41 +790,39 @@ nqo_order_decision_name(int mode)
 }
 
 static bool
-nqo_search_enabled(void)
+nqo_enum_enabled(void)
 {
-	return nqo_current_search_strategy[0] != '\0' &&
-		strcmp(nqo_current_search_strategy, "default") != 0 &&
-		strcmp(nqo_current_search_strategy, "none") != 0;
+	return nqo_current_enum_action[0] != '\0' &&
+		strcmp(nqo_current_enum_action, "native") != 0 &&
+		strcmp(nqo_current_enum_action, "off") != 0;
 }
 
 static bool
-nqo_aja_enabled(void)
+nqo_ajoin_enabled(void)
 {
-	return nqo_current_execution_action[0] != '\0' &&
-		(nqo_adaptive_aja_level() != NULL ||
-		 strcmp(nqo_current_execution_action, "hashjoin") == 0 ||
-		 strcmp(nqo_current_execution_action, "nestloop") == 0 ||
-		 strcmp(nqo_current_execution_action, "mergejoin") == 0);
+	return nqo_current_ajoin_action[0] != '\0' &&
+		(nqo_adaptive_ajoin_level() != NULL ||
+		 strcmp(nqo_current_ajoin_action, "hashjoin") == 0 ||
+		 strcmp(nqo_current_ajoin_action, "nestloop") == 0 ||
+		 strcmp(nqo_current_ajoin_action, "mergejoin") == 0);
 }
 
 static const char*
-nqo_adaptive_aja_level(void)
+nqo_adaptive_ajoin_level(void)
 {
-	if (strcmp(nqo_current_execution_action, "conservative") == 0)
+	if (strcmp(nqo_current_ajoin_action, "conservative") == 0)
 		return "conservative";
-	if (strcmp(nqo_current_execution_action, "aggressive") == 0 ||
-		strcmp(nqo_current_execution_action, "aja") == 0)
+	if (strcmp(nqo_current_ajoin_action, "aggressive") == 0)
 		return "aggressive";
 	return NULL;
 }
 
 static bool
-nqo_lip_enabled(void)
+nqo_filter_enabled(void)
 {
-	return nqo_current_lip_action[0] != '\0' &&
-		strcmp(nqo_current_lip_action, "default") != 0 &&
-		strcmp(nqo_current_lip_action, "none") != 0 &&
-		strcmp(nqo_current_lip_action, "off") != 0;
+	return nqo_current_filter_action[0] != '\0' &&
+		strcmp(nqo_current_filter_action, "none") != 0 &&
+		strcmp(nqo_current_filter_action, "off") != 0;
 }
 
 static bool
@@ -1075,25 +1081,30 @@ nqo_parse_policy_action(const char* body, NqoPolicyAction* act)
 				snprintf(act->selection_strategy,
 						 sizeof(act->selection_strategy), "%s", val);
 			}
-			else if (strcmp(key, "search_strategy") == 0)
+			else if (strcmp(key, "sched_alpha") == 0)
 			{
-				act->has_search_strategy = true;
-				snprintf(act->search_strategy, sizeof(act->search_strategy), "%s", val);
+				act->has_sched_alpha = true;
+				act->sched_alpha = atof(val);
 			}
-			else if (strcmp(key, "search_k") == 0)
+			else if (strcmp(key, "enum_action") == 0)
 			{
-				act->has_search_k = true;
-				act->search_k = atoi(val);
+				act->has_enum_action = true;
+				snprintf(act->enum_action, sizeof(act->enum_action), "%s", val);
 			}
-			else if (strcmp(key, "execution_action") == 0)
+			else if (strcmp(key, "enum_k") == 0)
 			{
-				act->has_execution_action = true;
-				snprintf(act->execution_action, sizeof(act->execution_action), "%s", val);
+				act->has_enum_k = true;
+				act->enum_k = atoi(val);
 			}
-			else if (strcmp(key, "lip_action") == 0)
+			else if (strcmp(key, "ajoin_action") == 0)
 			{
-				act->has_lip_action = true;
-				snprintf(act->lip_action, sizeof(act->lip_action), "%s", val);
+				act->has_ajoin_action = true;
+				snprintf(act->ajoin_action, sizeof(act->ajoin_action), "%s", val);
+			}
+			else if (strcmp(key, "filter_action") == 0)
+			{
+				act->has_filter_action = true;
+				snprintf(act->filter_action, sizeof(act->filter_action), "%s", val);
 			}
 			else if (strcmp(key, "aja_hint") == 0 || strcmp(key, "hint") == 0)
 			{
@@ -1115,13 +1126,14 @@ nqo_parse_policy_action(const char* body, NqoPolicyAction* act)
 }
 
 static void
-nqo_reset_execution_actions(void)
+nqo_reset_action_components(void)
 {
-	nqo_current_search_strategy[0] = '\0';
-	nqo_current_execution_action[0] = '\0';
-	nqo_current_lip_action[0] = '\0';
-	nqo_current_selection_strategy[0] = '\0';
-	nqo_current_search_k = 0;
+	nqo_current_enum_action[0] = '\0';
+	nqo_current_ajoin_action[0] = '\0';
+	nqo_current_filter_action[0] = '\0';
+	nqo_current_sched_strategy[0] = '\0';
+	nqo_current_sched_alpha = -1.0;
+	nqo_current_enum_k = 0;
 	nqo_current_candidate_id = -1;
 }
 
@@ -1161,7 +1173,7 @@ nqo_request_policy_action(const char* request_type, int round,
 }
 
 static bool
-nqo_policy_high(Query* q, const char* query_string,
+nqo_policy_dec(Query* q, const char* query_string,
 				   int round, int length, int remaining,
 				   double cumulative_cost_ms, int max_split_rounds,
 				   bool* stop_now, double* policy_ms,
@@ -1171,16 +1183,16 @@ nqo_policy_high(Query* q, const char* query_string,
 	char* state_json;
 	bool ok;
 
-	nqo_reset_execution_actions();
-	nqo_current_high_action[0] = '\0';
+	nqo_reset_action_components();
+	nqo_current_dec_action[0] = '\0';
 	*stop_now = false;
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = nqo_build_round_state(q, query_string, "high",
+	state_json = nqo_build_round_state(q, query_string, "dec",
 										 round, length, remaining,
 										 cumulative_cost_ms,
 										 max_split_rounds);
-	ok = nqo_request_policy_action("high", round, state_json, &act,
+	ok = nqo_request_policy_action("dec", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1193,22 +1205,22 @@ nqo_policy_high(Query* q, const char* query_string,
 
 	if (act.has_order_decision)
 		order_decision = act.order_decision;
-	if (remaining > 0 && strcmp(act.action, "split") == 0 && !act.stop)
+	if (remaining > 0 && strcmp(act.action, "apply") == 0 && !act.stop)
 	{
-		snprintf(nqo_current_high_action,
-				 sizeof(nqo_current_high_action), "split");
+		snprintf(nqo_current_dec_action,
+				 sizeof(nqo_current_dec_action), "apply");
 		*stop_now = false;
 	}
 	else
 	{
-		snprintf(nqo_current_high_action,
-				 sizeof(nqo_current_high_action), "stop");
+		snprintf(nqo_current_dec_action,
+				 sizeof(nqo_current_dec_action), "skip");
 		*stop_now = true;
 	}
 
 	elog(LOG, "[nqo] run=" UINT64_FORMAT
-		" round %d: high action=%s stop=%d order_decision=%s note=\"%s\" policy_ms=%.2f",
-		nqo_current_run_id, round, nqo_current_high_action,
+		" round %d: Dec action=%s stop=%d order_decision=%s note=\"%s\" policy_ms=%.2f",
+		nqo_current_run_id, round, nqo_current_dec_action,
 		*stop_now ? 1 : 0,
 		nqo_order_decision_name(order_decision), act.note, *policy_ms);
 
@@ -1220,7 +1232,7 @@ nqo_policy_high(Query* q, const char* query_string,
 }
 
 static bool
-nqo_policy_select(Query* q, const char* query_string,
+nqo_policy_sched(Query* q, const char* query_string,
 					 int round, List* candidates,
 					 double cumulative_cost_ms, int max_split_rounds,
 					 int* candidate_id, double* policy_ms,
@@ -1233,13 +1245,14 @@ nqo_policy_select(Query* q, const char* query_string,
 
 	*candidate_id = -1;
 	nqo_current_candidate_id = -1;
-	nqo_current_selection_strategy[0] = '\0';
+	nqo_current_sched_strategy[0] = '\0';
+	nqo_current_sched_alpha = -1.0;
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = nqo_build_selection_state(
+	state_json = nqo_build_sched_state(
 		q, query_string, round, candidates, cumulative_cost_ms,
 		max_split_rounds);
-	ok = nqo_request_policy_action("select", round, state_json, &act,
+	ok = nqo_request_policy_action("sched", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1254,7 +1267,7 @@ nqo_policy_select(Query* q, const char* query_string,
 		act.candidate_id < 0 || act.candidate_id >= ncandidates)
 	{
 		elog(WARNING, "[nqo] run=" UINT64_FORMAT
-			 " round %d: select returned invalid candidate_id=%d for %d candidates",
+			 " round %d: Sched returned invalid candidate_id=%d for %d candidates",
 			 nqo_current_run_id, round,
 			 act.has_candidate_id ? act.candidate_id : -1, ncandidates);
 		if (state_json_out != NULL)
@@ -1266,14 +1279,18 @@ nqo_policy_select(Query* q, const char* query_string,
 
 	*candidate_id = act.candidate_id;
 	nqo_current_candidate_id = act.candidate_id;
-	snprintf(nqo_current_selection_strategy,
-			 sizeof(nqo_current_selection_strategy), "%s",
+	snprintf(nqo_current_sched_strategy,
+			 sizeof(nqo_current_sched_strategy), "%s",
 			 act.has_selection_strategy ?
 			 act.selection_strategy : "model");
+	if (act.has_sched_alpha &&
+		act.sched_alpha >= 0.0 && act.sched_alpha <= 1.0)
+		nqo_current_sched_alpha = act.sched_alpha;
 	elog(LOG, "[nqo] run=" UINT64_FORMAT
-		 " round %d: select candidate_id=%d/%d strategy=%s note=\"%s\" policy_ms=%.2f",
+		 " round %d: Sched candidate_id=%d/%d alpha=%.3f strategy=%s note=\"%s\" policy_ms=%.2f",
 		 nqo_current_run_id, round, *candidate_id, ncandidates,
-		 nqo_current_selection_strategy, act.note, *policy_ms);
+		 nqo_current_sched_alpha, nqo_current_sched_strategy,
+		 act.note, *policy_ms);
 
 	if (state_json_out != NULL)
 		*state_json_out = state_json;
@@ -1283,7 +1300,7 @@ nqo_policy_select(Query* q, const char* query_string,
 }
 
 static bool
-nqo_policy_search(Query* q, const char* query_string,
+nqo_policy_enum(Query* q, const char* query_string,
 					 int round, int length, int remaining,
 					 double cumulative_cost_ms, int max_split_rounds,
 					 double* policy_ms, char** state_json_out)
@@ -1292,15 +1309,15 @@ nqo_policy_search(Query* q, const char* query_string,
 	char* state_json;
 	bool ok;
 
-	nqo_current_search_strategy[0] = '\0';
-	nqo_current_search_k = 0;
+	nqo_current_enum_action[0] = '\0';
+	nqo_current_enum_k = 0;
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = nqo_build_round_state(q, query_string, "search",
+	state_json = nqo_build_round_state(q, query_string, "enum",
 										 round, length, remaining,
 										 cumulative_cost_ms,
 										 max_split_rounds);
-	ok = nqo_request_policy_action("search", round, state_json, &act,
+	ok = nqo_request_policy_action("enum", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1308,19 +1325,19 @@ nqo_policy_search(Query* q, const char* query_string,
 		return false;
 	}
 
-	if (act.has_search_strategy)
-		snprintf(nqo_current_search_strategy,
-				 sizeof(nqo_current_search_strategy),
-				 "%s", act.search_strategy);
-	if (act.has_search_k && act.search_k > 0)
-		nqo_current_search_k = act.search_k;
+	if (act.has_enum_action)
+		snprintf(nqo_current_enum_action,
+				 sizeof(nqo_current_enum_action),
+				 "%s", act.enum_action);
+	if (act.has_enum_k && act.enum_k > 0)
+		nqo_current_enum_k = act.enum_k;
 
 	elog(LOG, "[nqo] run=" UINT64_FORMAT
-		 " round %d: search strategy=%s k=%d note=\"%s\" policy_ms=%.2f",
+		 " round %d: Enum action=%s k=%d note=\"%s\" policy_ms=%.2f",
 		 nqo_current_run_id, round,
-		 nqo_search_enabled() ? nqo_current_search_strategy : "default",
-		 nqo_current_search_k > 0 ?
-		 nqo_current_search_k : nqo_search_topk,
+		 nqo_enum_enabled() ? nqo_current_enum_action : "native",
+		 nqo_current_enum_k > 0 ?
+		 nqo_current_enum_k : nqo_search_topk,
 		act.note, *policy_ms);
 	if (state_json_out != NULL)
 		*state_json_out = state_json;
@@ -1330,7 +1347,7 @@ nqo_policy_search(Query* q, const char* query_string,
 }
 
 static bool
-nqo_policy_low(Query* q,
+nqo_policy_adapt(Query* q,
 				  int round, PlannedStmt* selected_plan,
 				  double cumulative_cost_ms,
 				  int max_split_rounds,
@@ -1342,15 +1359,15 @@ nqo_policy_low(Query* q,
 	char* state_json;
 	bool ok;
 
-	nqo_current_execution_action[0] = '\0';
-	nqo_current_lip_action[0] = '\0';
+	nqo_current_ajoin_action[0] = '\0';
+	nqo_current_filter_action[0] = '\0';
 	*aja_hint_out = NULL;
 	if (state_json_out != NULL)
 		*state_json_out = NULL;
-	state_json = nqo_build_low_state(
+	state_json = nqo_build_adapt_state(
 		q, round, selected_plan,
 		cumulative_cost_ms, max_split_rounds, is_split_execution);
-	ok = nqo_request_policy_action("low", round, state_json, &act,
+	ok = nqo_request_policy_action("adapt", round, state_json, &act,
 									 policy_ms);
 	if (!ok)
 	{
@@ -1358,15 +1375,15 @@ nqo_policy_low(Query* q,
 		return false;
 	}
 
-	if (act.has_execution_action)
-		snprintf(nqo_current_execution_action,
-				 sizeof(nqo_current_execution_action),
-				 "%s", act.execution_action);
-	if (act.has_lip_action)
-		snprintf(nqo_current_lip_action,
-				 sizeof(nqo_current_lip_action),
-				 "%s", act.lip_action);
-	if (nqo_adaptive_aja_level() == NULL &&
+	if (act.has_ajoin_action)
+		snprintf(nqo_current_ajoin_action,
+				 sizeof(nqo_current_ajoin_action),
+				 "%s", act.ajoin_action);
+	if (act.has_filter_action)
+		snprintf(nqo_current_filter_action,
+				 sizeof(nqo_current_filter_action),
+				 "%s", act.filter_action);
+	if (nqo_adaptive_ajoin_level() == NULL &&
 		act.has_aja_hint &&
 		pg_strcasecmp(act.aja_hint, "none") != 0 &&
 		pg_strcasecmp(act.aja_hint, "default") != 0)
@@ -1376,17 +1393,17 @@ nqo_policy_low(Query* q,
 		else
 			*aja_hint_out = nqo_build_join_method_hint(q, act.aja_hint);
 	}
-	else if (nqo_adaptive_aja_level() == NULL &&
+	else if (nqo_adaptive_ajoin_level() == NULL &&
 			 act.has_join_method &&
 			 pg_strcasecmp(act.join_method, "none") != 0 &&
 			 pg_strcasecmp(act.join_method, "default") != 0)
 		*aja_hint_out = nqo_build_join_method_hint(q, act.join_method);
 
 	elog(LOG, "[nqo] run=" UINT64_FORMAT
-		 " round %d: low execution_action=%s lip_action=%s aja_hint=%s note=\"%s\" policy_ms=%.2f",
+		 " round %d: Adapt AJoin=%s Filter=%s aja_hint=%s note=\"%s\" policy_ms=%.2f",
 		 nqo_current_run_id, round,
-		 nqo_aja_enabled() ? nqo_current_execution_action : "none",
-		 nqo_lip_enabled() ? nqo_current_lip_action : "none",
+		 nqo_ajoin_enabled() ? nqo_current_ajoin_action : "off",
+		 nqo_filter_enabled() ? nqo_current_filter_action : "none",
 		*aja_hint_out != NULL ? *aja_hint_out : "none",
 		act.note, *policy_ms);
 	if (state_json_out != NULL)
@@ -1647,7 +1664,7 @@ nqo_collect_lip_filters(Query* q, List* clauses,
 	int nprobes = 0;
 	int nfilters = 0;
 	int nrtables = list_length(q->rtable);
-	bool selective = strcmp(nqo_current_lip_action, "selective") == 0;
+	bool selective = strcmp(nqo_current_filter_action, "selective") == 0;
 
 	has_local_restrict = (bool*)palloc0((nrtables + 1) * sizeof(bool));
 	foreach(lc, clauses)
@@ -1962,7 +1979,7 @@ nqo_apply_lip(Query* q, PlannedStmt* reference_plan,
 
 	*lip_ms = 0.0;
 	*lip_filters = 0;
-	if (!nqo_lip_enabled() || q == NULL || q->jointree == NULL)
+	if (!nqo_filter_enabled() || q == NULL || q->jointree == NULL)
 		return true;
 
 	nqo_flatten_and_clauses(q->jointree->quals, &clauses);
@@ -1971,7 +1988,7 @@ nqo_apply_lip(Query* q, PlannedStmt* reference_plan,
 	if (nfilters <= 0)
 	{
 		elog(LOG, "[nqo] run=" UINT64_FORMAT " LIP skipped: no eligible int4 equi-join filters mode=%s",
-			 nqo_current_run_id, nqo_current_lip_action);
+			 nqo_current_run_id, nqo_current_filter_action);
 		return true;
 	}
 
@@ -1997,7 +2014,7 @@ nqo_apply_lip(Query* q, PlannedStmt* reference_plan,
 	*lip_filters = nfilters;
 	elog(LOG, "[nqo] run=" UINT64_FORMAT
 		 " apply LIP: mode=%s filters=%d probes=%d lip_ms=%.2f",
-		 nqo_current_run_id, nqo_current_lip_action,
+		 nqo_current_run_id, nqo_current_filter_action,
 		 nfilters, nprobes, *lip_ms);
 	return true;
 }
@@ -2057,11 +2074,11 @@ nqo_plan_direct(Query* q, int cursorOptions, bool apply_lip,
 	elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " plan: perminfos rebuilt=%d, calling planner",
 		 nqo_current_run_id, list_length(q->rteperminfos));
 	if (hint_query_string != NULL && log_hint)
-		elog(LOG, "[nqo] run=" UINT64_FORMAT " apply planner hint: search_strategy=%s execution_action=%s lip_action=%s hint=%s",
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " apply planner hint: Enum=%s AJoin=%s Filter=%s hint=%s",
 			 nqo_current_run_id,
-			 nqo_search_enabled() ? nqo_current_search_strategy : "default",
-			 nqo_aja_enabled() ? nqo_current_execution_action : "none",
-			 nqo_lip_enabled() ? nqo_current_lip_action : "none",
+			 nqo_enum_enabled() ? nqo_current_enum_action : "native",
+			 nqo_ajoin_enabled() ? nqo_current_ajoin_action : "off",
+			 nqo_filter_enabled() ? nqo_current_filter_action : "none",
 			 hint_query_string);
 	r = planner(q, hint_query_string, cursorOptions, NULL);
 	elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " plan: planner returned ok lip_filters=%d lip_ms=%.2f",
@@ -2269,10 +2286,10 @@ nqo_build_join_method_hint(Query* q, const char* method)
 }
 
 static int
-nqo_effective_search_k(void)
+nqo_effective_enum_k(void)
 {
-	int k = nqo_current_search_k > 0 ?
-		nqo_current_search_k : nqo_search_topk;
+	int k = nqo_current_enum_k > 0 ?
+		nqo_current_enum_k : nqo_search_topk;
 
 	if (k <= 0)
 		k = 1;
@@ -2454,7 +2471,7 @@ nqo_make_subset_query(Query* q, NqoSearchRel* rels, int nrels,
 		 * The subset plan estimates pre-aggregation join cardinality.  Keeping
 		 * the parent GROUP/ORDER/DISTINCT metadata after createQuery() has
 		 * replaced its target list leaves dangling sortgrouprefs (for example
-		 * TPC-H Q16) and can make the planner fail before Search gets a chance
+		 * TPC-H Q16) and can make the planner fail before Enum gets a chance
 		 * to fall back.  Projection and upper-query operations do not belong
 		 * in this estimate.
 		 */
@@ -2650,7 +2667,7 @@ nqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 	bool all_rte_relation;
 	int nrels;
 	int max_rels = nqo_search_max_rels;
-	int k = nqo_effective_search_k();
+	int k = nqo_effective_enum_k();
 	uint64 nmasks;
 	uint64 full_mask;
 	NqoSearchCell* cells;
@@ -2681,7 +2698,7 @@ nqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 	{
 		nqo_last_search_ms = nqo_now_ms() - t0;
 		elog(LOG, "[nqo] run=" UINT64_FORMAT
-			 " Search top-k skipped: query contains SubLink; fallback default",
+			 " Enum top-k skipped: query contains SubLink; fallback native",
 			 nqo_current_run_id);
 		return NULL;
 	}
@@ -2695,7 +2712,7 @@ nqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 	if (!all_rte_relation || nrels > max_rels)
 	{
 		nqo_last_search_ms = nqo_now_ms() - t0;
-		elog(LOG, "[nqo] run=" UINT64_FORMAT " Search top-k skipped: nrels=%d all_relation=%d max_rels=%d; fallback default",
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " Enum top-k skipped: nrels=%d all_relation=%d max_rels=%d; fallback native",
 			 nqo_current_run_id, nrels, all_rte_relation ? 1 : 0, max_rels);
 		return NULL;
 	}
@@ -2768,7 +2785,7 @@ nqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 	if (cells[full_mask].nentries == 0)
 	{
 		nqo_last_search_ms = nqo_now_ms() - t0;
-		elog(LOG, "[nqo] run=" UINT64_FORMAT " Search top-k found no connected DP order; fallback default",
+		elog(LOG, "[nqo] run=" UINT64_FORMAT " Enum top-k found no connected DP order; fallback native",
 			 nqo_current_run_id);
 		return NULL;
 	}
@@ -2787,7 +2804,7 @@ nqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 									false, hint_query, false);
 		cost = planned && planned->planTree ?
 			planned->planTree->total_cost : DBL_MAX;
-		elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " Search candidate %d/%d cout=%.2f physical_cost=%.2f hint=%s",
+		elog(DEBUG1, "[nqo] run=" UINT64_FORMAT " Enum candidate %d/%d cout=%.2f physical_cost=%.2f hint=%s",
 			 nqo_current_run_id, i + 1, cells[full_mask].nentries,
 			 cells[full_mask].entries[i].cout, cost, search_hint);
 		if (cost < best_cost)
@@ -2809,8 +2826,8 @@ nqo_build_topk_leading_hint(Query* q, PlannedStmt** selected_plan_out)
 	if (best_leading == NULL)
 		return NULL;
 
-	elog(LOG, "[nqo] run=" UINT64_FORMAT " Search top-k applied: strategy=%s k=%d nrels=%d candidates=%d best_physical_cost=%.2f search_ms=%.2f leading=%s",
-		 nqo_current_run_id, nqo_current_search_strategy, k, nrels,
+	elog(LOG, "[nqo] run=" UINT64_FORMAT " Enum top-k applied: action=%s k=%d nrels=%d candidates=%d best_physical_cost=%.2f enum_ms=%.2f leading=%s",
+		 nqo_current_run_id, nqo_current_enum_action, k, nrels,
 		 cells[full_mask].nentries, best_cost, nqo_last_search_ms,
 		 best_leading);
 	nqo_last_search_applied = true;
@@ -2829,9 +2846,9 @@ nqo_build_search_hint(Query* q, PlannedStmt** selected_plan_out)
 {
 	if (selected_plan_out != NULL)
 		*selected_plan_out = NULL;
-	if (!nqo_search_enabled())
+	if (!nqo_enum_enabled())
 		return NULL;
-	if (strcmp(nqo_current_search_strategy, "left_deep") == 0)
+	if (strcmp(nqo_current_enum_action, "left_deep") == 0)
 		return nqo_build_left_deep_leading_hint(q);
 	return nqo_build_topk_leading_hint(q, selected_plan_out);
 }
@@ -3186,7 +3203,7 @@ nqo_append_plan_json(Plan* plan, Query* q, StringInfo out, int* nnodes)
 }
 
 static char*
-nqo_build_low_state(Query* q,
+nqo_build_adapt_state(Query* q,
 					   int round, PlannedStmt* selected_plan,
 					   double cumulative_cost_ms,
 					   int max_split_rounds,
@@ -3202,21 +3219,21 @@ nqo_build_low_state(Query* q,
 
 	initStringInfo(&state);
 	appendStringInfo(&state,
-					 "{\"request_type\":\"low\",\"pid\":%d,"
+					 "{\"request_type\":\"adapt\",\"pid\":%d,"
 					 "\"run_id\":" UINT64_FORMAT ",\"round\":%d,"
 					 "\"base_rels\":%d,\"cumulative_cost_ms\":%.3f,"
 					 "\"max_split_rounds\":%d,"
-					 "\"is_split_execution\":%s,\"search_strategy\":",
+					 "\"is_split_execution\":%s,\"enum_action\":",
 					 MyProcPid, nqo_current_run_id, round,
 					 list_length(q->rtable), cumulative_cost_ms,
 					 max_split_rounds,
 					 is_split_execution ? "true" : "false");
 	nqo_append_json_string(&state,
-							  nqo_search_enabled() ?
-							  nqo_current_search_strategy : "default");
-	appendStringInfo(&state, ",\"search_k\":%d",
-					 nqo_current_search_k > 0 ?
-					 nqo_current_search_k : nqo_search_topk);
+							  nqo_enum_enabled() ?
+								  nqo_current_enum_action : "native");
+	appendStringInfo(&state, ",\"enum_k\":%d",
+					 nqo_current_enum_k > 0 ?
+					 nqo_current_enum_k : nqo_search_topk);
 
 	if (plan == NULL)
 		appendStringInfoString(&state, ",\"plan_available\":false");
@@ -3244,15 +3261,15 @@ nqo_build_planner_hint(Query* q)
 	char* aja_hint = NULL;
 	char* hint_query = NULL;
 
-	if (nqo_search_enabled())
+	if (nqo_enum_enabled())
 		search_hint = nqo_build_search_hint(q, NULL);
-	if (nqo_aja_enabled())
+	if (nqo_ajoin_enabled())
 	{
-		if (strcmp(nqo_current_execution_action, "hashjoin") == 0 ||
-			strcmp(nqo_current_execution_action, "nestloop") == 0 ||
-			strcmp(nqo_current_execution_action, "mergejoin") == 0)
+		if (strcmp(nqo_current_ajoin_action, "hashjoin") == 0 ||
+			strcmp(nqo_current_ajoin_action, "nestloop") == 0 ||
+			strcmp(nqo_current_ajoin_action, "mergejoin") == 0)
 			aja_hint = nqo_build_join_method_hint(
-				q, nqo_current_execution_action);
+				q, nqo_current_ajoin_action);
 	}
 
 	hint_query = nqo_make_hint_query(aja_hint, search_hint);
@@ -3269,8 +3286,8 @@ nqo_plan_execution(Query* q, const char* query_string,
 					  double cumulative_cost_ms, int max_split_rounds,
 					  bool is_split_execution,
 					  double* policy_ms,
-					  char** search_state_json_out,
-					  char** low_state_json_out)
+					  char** enum_state_json_out,
+					  char** adapt_state_json_out)
 {
 	PlannedStmt* selected_plan;
 	PlannedStmt* final_plan;
@@ -3291,8 +3308,8 @@ nqo_plan_execution(Query* q, const char* query_string,
 	const char* execution_hint_body;
 	const char* execution_planner_query;
 	const char* adaptive_level;
-	double search_policy_ms = 0.0;
-	double low_policy_ms = 0.0;
+	double enum_policy_ms = 0.0;
+	double adapt_policy_ms = 0.0;
 	double lip_ms = 0.0;
 	int lip_filters = 0;
 	int adaptive_threshold = 0;
@@ -3309,21 +3326,21 @@ nqo_plan_execution(Query* q, const char* query_string,
 	nqo_last_lip_filters = 0;
 	nqo_last_adaptive_joins = 0;
 	nqo_last_adaptive_threshold = 0;
-	if (search_state_json_out != NULL)
-		*search_state_json_out = NULL;
-	if (low_state_json_out != NULL)
-		*low_state_json_out = NULL;
-	if (!nqo_policy_search(q, query_string, round, length, remaining,
+	if (enum_state_json_out != NULL)
+		*enum_state_json_out = NULL;
+	if (adapt_state_json_out != NULL)
+		*adapt_state_json_out = NULL;
+	if (!nqo_policy_enum(q, query_string, round, length, remaining,
 							  cumulative_cost_ms, max_split_rounds,
-							  &search_policy_ms,
-							  search_state_json_out))
+							  &enum_policy_ms,
+							  enum_state_json_out))
 	{
-		nqo_current_search_strategy[0] = '\0';
-		nqo_current_search_k = 0;
+		nqo_current_enum_action[0] = '\0';
+		nqo_current_enum_k = 0;
 	}
-	*policy_ms += search_policy_ms;
+	*policy_ms += enum_policy_ms;
 
-	if (nqo_search_enabled())
+	if (nqo_enum_enabled())
 		search_hint_body = nqo_build_search_hint(
 			q, &search_candidate_plan);
 	search_hint_query = nqo_make_hint_query(NULL, search_hint_body);
@@ -3341,18 +3358,18 @@ nqo_plan_execution(Query* q, const char* query_string,
 										  CURSOR_OPT_PARALLEL_OK, false,
 										  search_planner_query, false);
 
-	if (!nqo_policy_low(q, round, selected_plan,
+	if (!nqo_policy_adapt(q, round, selected_plan,
 						   cumulative_cost_ms,
 						   max_split_rounds, is_split_execution,
 						   &aja_hint_body,
-						   &low_policy_ms, low_state_json_out))
+						   &adapt_policy_ms, adapt_state_json_out))
 	{
-		nqo_current_execution_action[0] = '\0';
-		nqo_current_lip_action[0] = '\0';
+		nqo_current_ajoin_action[0] = '\0';
+		nqo_current_filter_action[0] = '\0';
 	}
-	*policy_ms += low_policy_ms;
+	*policy_ms += adapt_policy_ms;
 
-	adaptive_level = nqo_adaptive_aja_level();
+	adaptive_level = nqo_adaptive_ajoin_level();
 	adaptive_safe = adaptive_level != NULL &&
 		!contain_volatile_functions((Node *) q);
 	if (adaptive_level != NULL && aja_hint_body != NULL)
@@ -3362,11 +3379,11 @@ nqo_plan_execution(Query* q, const char* query_string,
 	}
 	if (aja_hint_body == NULL &&
 		adaptive_level == NULL &&
-		(strcmp(nqo_current_execution_action, "hashjoin") == 0 ||
-		 strcmp(nqo_current_execution_action, "nestloop") == 0 ||
-		 strcmp(nqo_current_execution_action, "mergejoin") == 0))
+		(strcmp(nqo_current_ajoin_action, "hashjoin") == 0 ||
+		 strcmp(nqo_current_ajoin_action, "nestloop") == 0 ||
+		 strcmp(nqo_current_ajoin_action, "mergejoin") == 0))
 		aja_hint_body = nqo_build_join_method_hint(
-			q, nqo_current_execution_action);
+			q, nqo_current_ajoin_action);
 
 	nqo_apply_lip(q, selected_plan, &lip_ms, &lip_filters);
 	nqo_last_lip_build_ms = lip_ms;
@@ -3497,14 +3514,14 @@ nqo_plan_execution(Query* q, const char* query_string,
 	}
 
 	elog(LOG, "[nqo] run=" UINT64_FORMAT
-		 " round %d: execution actions search=%s k=%d execution=%s "
-		 "lip=%s filters=%d adaptive_joins=%d policy_ms=%.2f",
+		 " round %d: execution actions Enum=%s k=%d AJoin=%s "
+		 "Filter=%s filters=%d adaptive_joins=%d policy_ms=%.2f",
 		 nqo_current_run_id, round,
-		 nqo_search_enabled() ? nqo_current_search_strategy : "default",
-		 nqo_current_search_k > 0 ?
-		 nqo_current_search_k : nqo_search_topk,
-		 nqo_aja_enabled() ? nqo_current_execution_action : "none",
-		 nqo_lip_enabled() ? nqo_current_lip_action : "none",
+		 nqo_enum_enabled() ? nqo_current_enum_action : "native",
+		 nqo_current_enum_k > 0 ?
+		 nqo_current_enum_k : nqo_search_topk,
+		 nqo_ajoin_enabled() ? nqo_current_ajoin_action : "off",
+		 nqo_filter_enabled() ? nqo_current_filter_action : "none",
 		 lip_filters, adaptive_joins, *policy_ms);
 
 	if (search_hint_body != NULL)
@@ -3530,8 +3547,8 @@ nqo_plan_execution(Query* q, const char* query_string,
 void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Query* querytree, QueryCompletion* completionTag)
 {
 	nqo_current_run_id = ++nqo_run_seq;
-	nqo_reset_execution_actions();
-	nqo_current_high_action[0] = '\0';
+	nqo_reset_action_components();
+	nqo_current_dec_action[0] = '\0';
 	elog(LOG, "[nqo] run=" UINT64_FORMAT " enter: enabled=%d cmd=%d rtable=%d alg=%d order_decision=%s sql=%s",
 		 nqo_current_run_id, nqo_enabled ? 1 : 0, querytree->commandType,
 		 list_length(querytree->rtable), query_splitting_algorithm,
@@ -3589,53 +3606,53 @@ void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Que
 	{
 		MemoryContext oldcontext = MemoryContextSwitchTo(MessageContext);
 		bool stop_now = true;
-		double high_policy_ms = 0.0;
+		double dec_policy_ms = 0.0;
 		double terminal_policy_ms = 0.0;
 		double planning_ms;
-		double high_state_ms;
+		double dec_state_ms;
 		double execution_ms;
 		double round_start = nqo_now_ms();
 		double t0;
 		char* state_json = NULL;
-		char* search_state_json = NULL;
-		char* low_state_json = NULL;
-		bool high_ok;
+		char* enum_state_json = NULL;
+		char* adapt_state_json = NULL;
+		bool dec_ok;
 
 		t0 = nqo_now_ms();
-		high_ok = nqo_policy_high(querytree, query_string, 0, length, 0,
+		dec_ok = nqo_policy_dec(querytree, query_string, 0, length, 0,
 									0.0, 1, &stop_now,
-									&high_policy_ms, &state_json);
-		high_state_ms = Max(
-			nqo_now_ms() - t0 - high_policy_ms, 0.0);
+									&dec_policy_ms, &state_json);
+		dec_state_ms = Max(
+			nqo_now_ms() - t0 - dec_policy_ms, 0.0);
 		if (!stop_now)
 			elog(LOG, "[nqo] run=" UINT64_FORMAT
 				 " high requested split for an unsplittable query; forcing stop",
 				 nqo_current_run_id);
 		t0 = nqo_now_ms();
-		if (high_ok)
+		if (dec_ok)
 			plannedstmt = nqo_plan_execution(
 				querytree, query_string, 0, length, 0, 0.0, 1,
 				false,
-				&terminal_policy_ms, &search_state_json,
-				&low_state_json);
+				&terminal_policy_ms, &enum_state_json,
+				&adapt_state_json);
 		else
 			plannedstmt = nqo_plan(querytree, CURSOR_OPT_PARALLEL_OK, false);
-		planning_ms = high_state_ms + nqo_now_ms() - t0;
+		planning_ms = dec_state_ms + nqo_now_ms() - t0;
 		t0 = nqo_now_ms();
 		QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote, NULL, completionTag, querytree, NULL, NIL, oldcontext);
 		execution_ms = nqo_now_ms() - t0;
 			nqo_log_trajectory_event(
-				"final", 0, state_json, true, NULL, search_state_json,
-				low_state_json, plannedstmt, querytree,
-				high_policy_ms + terminal_policy_ms,
+				"final", 0, state_json, true, NULL, enum_state_json,
+				adapt_state_json, plannedstmt, querytree,
+				dec_policy_ms + terminal_policy_ms,
 				planning_ms, execution_ms, nqo_now_ms() - round_start,
 				"remote");
 		if (state_json != NULL)
 			pfree(state_json);
-		if (search_state_json != NULL)
-			pfree(search_state_json);
-		if (low_state_json != NULL)
-			pfree(low_state_json);
+		if (enum_state_json != NULL)
+			pfree(enum_state_json);
+		if (adapt_state_json != NULL)
+			pfree(adapt_state_json);
 		return;
 	}
 	//split parent query by foreign key
@@ -3650,9 +3667,9 @@ void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Que
  * The original QuerySplit implementation also deleted predicates joining two
  * relationship relations here.  Those predicates are not generally redundant
  * (TPC-H Q5's customer-to-supplier nation predicate is one counterexample), so
- * mutating the user Query changed both results and runtime even when High chose
- * stop.  List2Graph() builds a separate acyclic scheduling graph, so keep every
- * SQL predicate intact at entry.  Only after High selects split may the
+	 * mutating the user Query changed both results and runtime even when Dec chose
+	 * Skip. List2Graph() builds a separate acyclic scheduling graph, so keep every
+	 * SQL predicate intact at entry. Only after Dec selects Apply may the
  * split-execution copy remove an R-R equality proven redundant by transitivity.
  */
 static void rRj(Query* querytree)
@@ -3730,16 +3747,16 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		double policy_ms = 0.0;
 		double optimize_ms = 0.0;
 		double exec_ms = 0.0;
-		double selection_policy_ms = 0.0;
-		double high_state_ms = 0.0;
+		double sched_policy_ms = 0.0;
+		double dec_state_ms = 0.0;
 		double round_start = nqo_now_ms();
 		double t0;
 		int remaining = hasNext(graph, length);
 		int high_remaining = remaining > 1 ? remaining : 0;
 		char* state_json = NULL;
-		char* selection_state_json = NULL;
-		char* search_state_json = NULL;
-		char* low_state_json = NULL;
+		char* sched_state_json = NULL;
+		char* enum_state_json = NULL;
+		char* adapt_state_json = NULL;
 		Query* selected_query;
 
 		if (round >= nqo_max_rounds)
@@ -3747,11 +3764,11 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		if (policy_available)
 		{
 			t0 = nqo_now_ms();
-			policy_available = nqo_policy_high(
+			policy_available = nqo_policy_dec(
 				global_query, query_string, round, length, high_remaining,
 				cumulative_cost_ms, max_split_rounds,
 				&stop_now, &policy_ms, &state_json);
-			high_state_ms = Max(
+			dec_state_ms = Max(
 				nqo_now_ms() - t0 - policy_ms, 0.0);
 		}
 		if (!policy_available || remaining <= 1)
@@ -3772,13 +3789,13 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 					global_query, query_string, round, length, remaining,
 					cumulative_cost_ms, max_split_rounds,
 					false,
-					&terminal_policy_ms, &search_state_json,
-					&low_state_json);
+					&terminal_policy_ms, &enum_state_json,
+					&adapt_state_json);
 			else
 				plannedstmt = nqo_plan(
 					global_query, CURSOR_OPT_PARALLEL_OK, false);
 			policy_ms += terminal_policy_ms;
-			optimize_ms = high_state_ms + nqo_now_ms() - t0;
+			optimize_ms = dec_state_ms + nqo_now_ms() - t0;
 			t0 = nqo_now_ms();
 			QSExecutor(query_string, commandTag, pstmt, plannedstmt, DestRemote,
 					   NULL, completionTag, global_query, transfer_array, FKlist,
@@ -3787,7 +3804,7 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 			cumulative_cost_ms += exec_ms;
 			nqo_log_trajectory_event("final", round, state_json, stop_now,
 										NULL,
-										search_state_json, low_state_json,
+										enum_state_json, adapt_state_json,
 										plannedstmt, global_query,
 										policy_ms, optimize_ms, exec_ms,
 										nqo_now_ms() - round_start,
@@ -3797,16 +3814,16 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 				 nqo_now_ms() - round_start);
 			if (state_json != NULL)
 				pfree(state_json);
-			if (search_state_json != NULL)
-				pfree(search_state_json);
-			if (low_state_json != NULL)
-				pfree(low_state_json);
+			if (enum_state_json != NULL)
+				pfree(enum_state_json);
+			if (adapt_state_json != NULL)
+				pfree(adapt_state_json);
 			break;
 		}
 
 		/*
-		 * A split decision only chooses the next execution object.  Search
-		 * and Low are requested after SSA has selected that object.
+		 * Dec only chooses the next execution object. Enum and Adapt are
+		 * requested after Sched has selected that object.
 		 */
 		{
 			int removed_equalities =
@@ -3823,8 +3840,8 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		selected_query = QSSelectSubquery(
 			global_query, graph, transfer_array, length, query_string,
 			round, cumulative_cost_ms, max_split_rounds,
-			&selection_policy_ms, &selection_state_json);
-		policy_ms += selection_policy_ms;
+			&sched_policy_ms, &sched_state_json);
+		policy_ms += sched_policy_ms;
 		if (selected_query == NULL)
 		{
 			double fallback_policy_ms = 0.0;
@@ -3836,28 +3853,28 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 				global_query, query_string, round, length, remaining,
 				cumulative_cost_ms, max_split_rounds,
 				false,
-				&fallback_policy_ms, &search_state_json,
-				&low_state_json);
+				&fallback_policy_ms, &enum_state_json,
+				&adapt_state_json);
 			policy_ms += fallback_policy_ms;
-			optimize_ms = high_state_ms + nqo_now_ms() - t0;
+			optimize_ms = dec_state_ms + nqo_now_ms() - t0;
 			t0 = nqo_now_ms();
 			QSExecutor(query_string, commandTag, pstmt, plannedstmt,
 					   DestRemote, NULL, completionTag, global_query,
 					   transfer_array, FKlist, oldcontext);
 			exec_ms = nqo_now_ms() - t0;
 			nqo_log_trajectory_event(
-				"final", round, state_json, true, selection_state_json,
-				search_state_json, low_state_json, plannedstmt, global_query,
+				"final", round, state_json, true, sched_state_json,
+				enum_state_json, adapt_state_json, plannedstmt, global_query,
 				policy_ms, optimize_ms,
 				exec_ms, nqo_now_ms() - round_start, "remote");
 			if (state_json != NULL)
 				pfree(state_json);
-			if (selection_state_json != NULL)
-				pfree(selection_state_json);
-			if (search_state_json != NULL)
-				pfree(search_state_json);
-			if (low_state_json != NULL)
-				pfree(low_state_json);
+			if (sched_state_json != NULL)
+				pfree(sched_state_json);
+			if (enum_state_json != NULL)
+				pfree(enum_state_json);
+			if (adapt_state_json != NULL)
+				pfree(adapt_state_json);
 			break;
 		}
 		else
@@ -3869,11 +3886,11 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 				list_length(selected_query->rtable), 0,
 				cumulative_cost_ms, max_split_rounds,
 				true,
-				&execution_policy_ms, &search_state_json,
-				&low_state_json);
+				&execution_policy_ms, &enum_state_json,
+				&adapt_state_json);
 			policy_ms += execution_policy_ms;
 		}
-		optimize_ms = high_state_ms + nqo_now_ms() - t0;
+		optimize_ms = dec_state_ms + nqo_now_ms() - t0;
 		if (plannedstmt == NULL)
 			ereport(ERROR,
 					(errmsg("NQO could not plan selected split candidate")));
@@ -3888,8 +3905,8 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 		exec_ms = nqo_now_ms() - t0;
 		cumulative_cost_ms += exec_ms;
 		nqo_log_trajectory_event("split", round, state_json, false,
-									selection_state_json,
-									search_state_json, low_state_json,
+									sched_state_json,
+									enum_state_json, adapt_state_json,
 									plannedstmt, selected_query, policy_ms,
 									optimize_ms, exec_ms,
 									nqo_now_ms() - round_start,
@@ -3900,12 +3917,12 @@ static void Recon(const char* query_string, CommandTag commandTag, Node* pstmt, 
 			 policy_ms, optimize_ms, exec_ms, nqo_now_ms() - round_start);
 		if (state_json != NULL)
 			pfree(state_json);
-		if (selection_state_json != NULL)
-			pfree(selection_state_json);
-		if (search_state_json != NULL)
-			pfree(search_state_json);
-		if (low_state_json != NULL)
-			pfree(low_state_json);
+		if (sched_state_json != NULL)
+			pfree(sched_state_json);
+		if (enum_state_json != NULL)
+			pfree(enum_state_json);
+		if (adapt_state_json != NULL)
+			pfree(adapt_state_json);
 		WhereClause = NIL;
 		if (global_query->jointree->quals != NULL)
 		{
@@ -3997,7 +4014,7 @@ static Query*
 QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 				 int length, const char* query_string, int round,
 				 double cumulative_cost_ms, int max_split_rounds,
-				 double* policy_ms, char** selection_state_json_out)
+				 double* policy_ms, char** sched_state_json_out)
 {
 	List* candidates = NIL;
 	ListCell* lc;
@@ -4010,8 +4027,8 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 	int Y;
 
 	*policy_ms = 0.0;
-	if (selection_state_json_out != NULL)
-		*selection_state_json_out = NULL;
+	if (sched_state_json_out != NULL)
+		*sched_state_json_out = NULL;
 	if (graph == NULL || length <= 1 || hasNext(graph, length) <= 1)
 		return NULL;
 
@@ -4143,20 +4160,20 @@ QSSelectSubquery(Query* global_query, bool* graph, Index* transfer_array,
 	if (fallback == NULL)
 		fallback = (NqoSplitCandidate*)linitial(candidates);
 
-	if (nqo_policy_select(
+	if (nqo_policy_sched(
 			global_query, query_string, round, candidates,
 			cumulative_cost_ms, max_split_rounds, &selected_id,
-			policy_ms, selection_state_json_out))
+			policy_ms, sched_state_json_out))
 		selected = (NqoSplitCandidate*)list_nth(candidates, selected_id);
 	else
 	{
 		selected = fallback;
 		nqo_current_candidate_id = selected->candidate_id;
-		snprintf(nqo_current_selection_strategy,
-				 sizeof(nqo_current_selection_strategy),
+		snprintf(nqo_current_sched_strategy,
+				 sizeof(nqo_current_sched_strategy),
 				 "querysplit-fallback");
 		elog(LOG, "[nqo] run=" UINT64_FORMAT
-			 " round %d: select fallback candidate_id=%d strategy=%s",
+			 " round %d: Sched fallback candidate_id=%d strategy=%s",
 			 nqo_current_run_id, round, selected->candidate_id,
 			 nqo_order_decision_name(order_decision));
 	}
@@ -4702,7 +4719,7 @@ nqo_equality_var_index(NqoEqualityVar* vars, int* nvars, Var* var)
  * its exact attributes are already connected by those equalities (or by an
  * earlier retained R-R equality), making it a true transitive cycle edge.
  *
- * This runs only after High selected split.  A stop path therefore plans the
+	 * This runs only after Dec selected Apply. A Skip path therefore plans the
  * untouched residual query.
  */
 static int
