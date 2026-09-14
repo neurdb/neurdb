@@ -1,0 +1,2827 @@
+{
+  "schema_version": 2,
+  "generated_at_utc": "2026-08-19T10:57:54.078682+00:00",
+  "method": "static QuerySplit compatibility filtering followed by direct PostgreSQL FK-Center enumeration",
+  "postgresql": {
+    "host": "127.0.0.1",
+    "port": 15432,
+    "user": "pgdb"
+  },
+  "decision_rule": {
+    "description": "Expose query decomposition only to queries whose join core is classified as QuerySplit SPJ-compatible. FK-Center counts are reported for analysis but do not determine eligibility.",
+    "eligibility_field": "is_spj_compatible"
+  },
+  "field_semantics": {
+    "queries": "Each query records its PostgreSQL-generated FK-Center aliases when applicable and a static QuerySplit SPJ-compatibility classification. Incompatible SQL is not sent to PostgreSQL.",
+    "is_spj_compatible": "True when the join core avoids structures unsafe for the current QuerySplit rewrite. Simple MIN(column), COUNT(*), and COUNT(DISTINCT column) result reducers are allowed.",
+    "non_spj_features": "Syntactic reasons for classifying the SQL as incompatible; this classification does not require PostgreSQL.",
+    "empty_array": "PostgreSQL found at most one raw center, so no intermediate decomposition center is exposed.",
+    "null": "The query was excluded by the compatibility check or bypassed the NQO decomposition hook, so FK-Centers were not enumerated."
+  },
+  "workloads": {
+    "JOB": {
+      "database": "imdb_ori",
+      "sql_directory": "workloads/query_job",
+      "query_count": 113,
+      "policy_request_count": 113,
+      "no_policy_request_count": 0,
+      "skipped_non_spj_query_count": 0,
+      "spj_compatible_query_count": 113,
+      "spj_compatible_query_ratio": 1.0,
+      "non_spj_compatible_query_count": 0,
+      "recommend_decomposition_enabled": true,
+      "center_count_histogram": {
+        "2": 28,
+        "3": 24,
+        "4": 31,
+        "5": 21,
+        "6": 3,
+        "7": 6
+      },
+      "queries": {
+        "1a": {
+          "centers": [
+            "mc",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "1b": {
+          "centers": [
+            "mc",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "1c": {
+          "centers": [
+            "mc",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "1d": {
+          "centers": [
+            "mc",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "2a": {
+          "centers": [
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "2b": {
+          "centers": [
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "2c": {
+          "centers": [
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "2d": {
+          "centers": [
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "3a": {
+          "centers": [
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "3b": {
+          "centers": [
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "3c": {
+          "centers": [
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "4a": {
+          "centers": [
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "4b": {
+          "centers": [
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "4c": {
+          "centers": [
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "5a": {
+          "centers": [
+            "mc",
+            "mi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "5b": {
+          "centers": [
+            "mc",
+            "mi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "5c": {
+          "centers": [
+            "mc",
+            "mi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "6a": {
+          "centers": [
+            "ci",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "6b": {
+          "centers": [
+            "ci",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "6c": {
+          "centers": [
+            "ci",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "6d": {
+          "centers": [
+            "ci",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "6e": {
+          "centers": [
+            "ci",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "6f": {
+          "centers": [
+            "ci",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "7a": {
+          "centers": [
+            "an",
+            "ci",
+            "ml",
+            "pi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "7b": {
+          "centers": [
+            "an",
+            "ci",
+            "ml",
+            "pi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "7c": {
+          "centers": [
+            "an",
+            "ci",
+            "ml",
+            "pi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "8a": {
+          "centers": [
+            "an1",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "8b": {
+          "centers": [
+            "an",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "8c": {
+          "centers": [
+            "a1",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "8d": {
+          "centers": [
+            "an1",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "9a": {
+          "centers": [
+            "an",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "9b": {
+          "centers": [
+            "an",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "9c": {
+          "centers": [
+            "an",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "9d": {
+          "centers": [
+            "an",
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "10a": {
+          "centers": [
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "10b": {
+          "centers": [
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "10c": {
+          "centers": [
+            "ci",
+            "mc"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "11a": {
+          "centers": [
+            "mc",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "11b": {
+          "centers": [
+            "mc",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "11c": {
+          "centers": [
+            "mc",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "11d": {
+          "centers": [
+            "mc",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "12a": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "12b": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "12c": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "13a": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "13b": {
+          "centers": [
+            "mc",
+            "mi",
+            "miidx",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "13c": {
+          "centers": [
+            "mc",
+            "mi",
+            "miidx",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "13d": {
+          "centers": [
+            "mc",
+            "mi",
+            "miidx",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "14a": {
+          "centers": [
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "14b": {
+          "centers": [
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "14c": {
+          "centers": [
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "15a": {
+          "centers": [
+            "aka_t",
+            "mc",
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "15b": {
+          "centers": [
+            "at",
+            "mc",
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "15c": {
+          "centers": [
+            "at",
+            "mc",
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "15d": {
+          "centers": [
+            "at",
+            "mc",
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "16a": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "16b": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "16c": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "16d": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "17a": {
+          "centers": [
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "17b": {
+          "centers": [
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "17c": {
+          "centers": [
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "17d": {
+          "centers": [
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "17e": {
+          "centers": [
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "17f": {
+          "centers": [
+            "ci",
+            "mc",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "18a": {
+          "centers": [
+            "ci",
+            "mi",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "18b": {
+          "centers": [
+            "ci",
+            "mi",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "18c": {
+          "centers": [
+            "ci",
+            "mi",
+            "mi_idx"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "19a": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "19b": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "19c": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "19d": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "20a": {
+          "centers": [
+            "cc",
+            "ci",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "20b": {
+          "centers": [
+            "cc",
+            "ci",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "20c": {
+          "centers": [
+            "cc",
+            "ci",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "21a": {
+          "centers": [
+            "mc",
+            "mi",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "21b": {
+          "centers": [
+            "mc",
+            "mi",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "21c": {
+          "centers": [
+            "mc",
+            "mi",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "22a": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "22b": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "22c": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "22d": {
+          "centers": [
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "23a": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "23b": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "23c": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "24a": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "24b": {
+          "centers": [
+            "an",
+            "ci",
+            "mc",
+            "mi",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "25a": {
+          "centers": [
+            "ci",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "25b": {
+          "centers": [
+            "ci",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "25c": {
+          "centers": [
+            "ci",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "26a": {
+          "centers": [
+            "cc",
+            "ci",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "26b": {
+          "centers": [
+            "cc",
+            "ci",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "26c": {
+          "centers": [
+            "cc",
+            "ci",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "27a": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "27b": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "27c": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "28a": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "28b": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "28c": {
+          "centers": [
+            "cc",
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk",
+            "t"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "29a": {
+          "centers": [
+            "an",
+            "cc",
+            "ci",
+            "mc",
+            "mi",
+            "mk",
+            "pi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "29b": {
+          "centers": [
+            "an",
+            "cc",
+            "ci",
+            "mc",
+            "mi",
+            "mk",
+            "pi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "29c": {
+          "centers": [
+            "an",
+            "cc",
+            "ci",
+            "mc",
+            "mi",
+            "mk",
+            "pi"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "30a": {
+          "centers": [
+            "cc",
+            "ci",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "30b": {
+          "centers": [
+            "cc",
+            "ci",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "30c": {
+          "centers": [
+            "cc",
+            "ci",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "31a": {
+          "centers": [
+            "ci",
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "31b": {
+          "centers": [
+            "ci",
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "31c": {
+          "centers": [
+            "ci",
+            "mc",
+            "mi",
+            "mi_idx",
+            "mk"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "32a": {
+          "centers": [
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "32b": {
+          "centers": [
+            "mk",
+            "ml"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "33a": {
+          "centers": [
+            "mc1",
+            "mc2",
+            "mi_idx1",
+            "mi_idx2",
+            "ml",
+            "t1",
+            "t2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "33b": {
+          "centers": [
+            "mc1",
+            "mc2",
+            "mi_idx1",
+            "mi_idx2",
+            "ml",
+            "t1",
+            "t2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "33c": {
+          "centers": [
+            "mc1",
+            "mc2",
+            "mi_idx1",
+            "mi_idx2",
+            "ml",
+            "t1",
+            "t2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        }
+      },
+      "probe_issues": {}
+    },
+    "STACK": {
+      "database": "so",
+      "sql_directory": "workloads/query_stack",
+      "query_count": 112,
+      "policy_request_count": 112,
+      "no_policy_request_count": 0,
+      "skipped_non_spj_query_count": 0,
+      "spj_compatible_query_count": 112,
+      "spj_compatible_query_ratio": 1.0,
+      "non_spj_compatible_query_count": 0,
+      "recommend_decomposition_enabled": true,
+      "center_count_histogram": {
+        "3": 24,
+        "4": 16,
+        "5": 40,
+        "6": 16,
+        "8": 8,
+        "9": 8
+      },
+      "queries": {
+        "q1_q1-009": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q1_q1-031": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q1_q1-035": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q1_q1-067": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q1_q1-075": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q1_q1-098": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q1_q1-099": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q1_q1-100": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-001": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-012": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-032": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-035": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-050": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-081": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-094": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q2_q2-098": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-018": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-040": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-043": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-046": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-066": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-068": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-086": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q3_q3-099": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1",
+            "t2",
+            "q2",
+            "tq2",
+            "u2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-002": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-026": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-041": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-042": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-064": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-074": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-086": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q4_q4-089": {
+          "centers": [
+            "t1",
+            "q1",
+            "a1",
+            "tq1",
+            "u1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-015": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-032": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-041": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-052": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-059": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-077": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-079": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q5_q5-082": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-002": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-009": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-060": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-064": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-065": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-067": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-069": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q6_q6-085": {
+          "centers": [
+            "t1",
+            "q1",
+            "tq1",
+            "u1",
+            "c1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-034": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-036": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-047": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-077": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-082": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-085": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-095": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q7_q7-099": {
+          "centers": [
+            "u",
+            "b1",
+            "b2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-006": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-025": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-046": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-062": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-065": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-074": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-076": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q8_q8-096": {
+          "centers": [
+            "pl",
+            "c1",
+            "c2",
+            "tq1",
+            "tq2"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_0ea8bacd": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_6c5cba41": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_33e1caf2": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_87c4bd09": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_9389f588": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_aa96c8d7": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_c1ae2a99": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q11_e4ca3559": {
+          "centers": [
+            "t",
+            "q",
+            "tq"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_5a5ff9bd": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_06c8d688": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_55de941e": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_76a47868": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_547c6bf1": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_812a3eff": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_07007205": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q12_bde6c0cf": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_1ddcc865": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_13ad1b8c": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_935e2051": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_a3d03772": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_a091adce": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_add0df9d": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_d383cd5b": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q13_d4707be2": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_5dbc1d1f": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_5e4835cd": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_63c0776f": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_74fd1af6": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_97e68ad5": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_719e692d": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_4063b6cb": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q14_b49361f8": {
+          "centers": [
+            "u1",
+            "q1",
+            "a1",
+            "t1",
+            "tq1",
+            "b"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_3e37e626": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_21e4988a": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_543ab3f7": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_78995a5f": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_b2ee2c78": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_b8ddf65b": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_c9619ad4": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q15_d5546c01": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_1e863562": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_374e3e4c": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_b1a96cd4": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_d5290889": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_ea9efde5": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_ed2ffeae": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_f67cec3d": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        },
+        "q16_fbe34e8f": {
+          "centers": [
+            "u1",
+            "t1",
+            "tq1",
+            "b1"
+          ],
+          "is_spj_compatible": true,
+          "non_spj_features": [],
+          "center_probe_status": "ok"
+        }
+      },
+      "probe_issues": {}
+    },
+    "TPCH": {
+      "database": "tpch",
+      "sql_directory": "workloads/query_tpch",
+      "query_count": 22,
+      "policy_request_count": 0,
+      "no_policy_request_count": 22,
+      "skipped_non_spj_query_count": 22,
+      "spj_compatible_query_count": 0,
+      "spj_compatible_query_ratio": 0.0,
+      "non_spj_compatible_query_count": 22,
+      "recommend_decomposition_enabled": false,
+      "center_count_histogram": {
+        "not_applicable": 22
+      },
+      "queries": {
+        "1": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "2": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "3": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "4": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "5": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "6": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "7": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "8": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery",
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "9": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "10": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "11": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery",
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "12": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "13": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "14": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "15": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery",
+            "complex_aggregation",
+            "cte"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "16": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "17": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "18": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "19": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "complex_aggregation"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "20": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "21": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        },
+        "22": {
+          "centers": null,
+          "is_spj_compatible": false,
+          "non_spj_features": [
+            "subquery"
+          ],
+          "center_probe_status": "skipped_non_spj"
+        }
+      },
+      "probe_issues": {}
+    }
+  }
+}

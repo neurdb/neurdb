@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurdb-query-opt"
+version = "0.1.0"
+description = "NeurDB learned query optimization service"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "numpy>=2.0,<3",
+  "psycopg2>=2.9,<3",
+  "torch>=2.7,<2.8",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
+
+[project.scripts]
+nqo-server = "runtime.action_server:main"
+nqo-sql = "database.client:main"
+nqo-train = "training.experience_trainer:main"
+nqo-train-mixed = "training.multi_workload:main"
+nqo-incremental-trainer = "training.incremental_trainer:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["database*", "experience*", "model*", "optimization*", "runtime*", "training*"]
+
+[tool.setuptools.package-data]
+optimization = ["data/*.json"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
