@@ -13314,6 +13314,23 @@ table_ref:	relation_expr opt_alias_clause
 					n->alias = $3;
 					$$ = (Node *) n;
 				}
+			| '(' NeurDBPredictStmt ')' opt_alias_clause
+				{
+					/*
+					 * NEURDB: allow a PREDICT statement to be nested in FROM,
+					 * e.g. SELECT ... FROM (PREDICT VALUE OF c FROM t TRAIN
+					 * m ON *) p.  It is carried as a regular sub-select; the
+					 * analyzer gives the resulting CMD_PREDICT subquery an
+					 * output schema of all input columns plus a trailing
+					 * nr_pred float8 column.
+					 */
+					RangeSubselect *n = makeNode(RangeSubselect);
+
+					n->lateral = false;
+					n->subquery = $2;
+					n->alias = $4;
+					$$ = (Node *) n;
+				}
 			| joined_table
 				{
 					$$ = (Node *) $1;

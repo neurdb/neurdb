@@ -96,6 +96,23 @@ typedef bool (*ExecutorCheckPerms_hook_type) (List *rangeTable,
 											  bool ereport_on_violation);
 extern PGDLLIMPORT ExecutorCheckPerms_hook_type ExecutorCheckPerms_hook;
 
+/*
+ * NEURDB: hooks letting the nr_ext extension execute NeurDBPredict plan
+ * nodes that appear *inside* a plan tree (e.g. under a SubqueryScan for
+ * SELECT ... FROM (PREDICT ...) p), where core ExecInitNode / ExecEndNode /
+ * ExecReScan do the dispatching.  The node implementation lives in nr_ext.
+ */
+typedef PlanState *(*NeurDBPredictInitNode_hook_type) (Plan *node,
+														EState *estate,
+														int eflags);
+extern PGDLLIMPORT NeurDBPredictInitNode_hook_type NeurDBPredictInitNode_hook;
+
+typedef void (*NeurDBPredictEndNode_hook_type) (PlanState *node);
+extern PGDLLIMPORT NeurDBPredictEndNode_hook_type NeurDBPredictEndNode_hook;
+
+typedef void (*NeurDBPredictReScan_hook_type) (PlanState *node);
+extern PGDLLIMPORT NeurDBPredictReScan_hook_type NeurDBPredictReScan_hook;
+
 
 /*
  * prototypes from functions in execAmi.c

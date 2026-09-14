@@ -61,6 +61,9 @@ extern Limit *make_limit(Plan *lefttree, Node *limitOffset, Node *limitCount,
 						 AttrNumber *uniqColIdx, Oid *uniqOperators,
 						 Oid *uniqCollations);
 
+/* NEURDB */
+extern NeurDBPredict *make_neurdbpredict(Plan *lefttree);
+
 /*
  * prototypes for plan/initsplan.c
  */

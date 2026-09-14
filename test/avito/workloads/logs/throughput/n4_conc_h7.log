@@ -1,0 +1,115 @@
+SET
+=== 08 h=7  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=33531  candidate=4595  fed_to_operator=4595  batches=2
+SET
+SET
+SET
+                                 QUERY PLAN
+----------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..17924.91 rows=4586 width=48)
+   ->  NeurDB Predict  (cost=10000.00..17879.05 rows=4586 width=185)
+         ->  Seq Scan on w_task_7  (cost=0.00..1293.05 rows=4586 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 4595
+Time: 19948.523 ms (00:19.949)
+Timing is off.
+ALTER TABLE
+--- w_pred_7 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   4595 |  0.020506 | 0.009638
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=7) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 4418364 | 2015-05-09 00:00:00 |         27 |   950 | 0.252300
+ 4418364 | 2015-05-08 00:00:00 |         27 |   950 | 0.248985
+ 4418364 | 2015-05-07 00:00:00 |         27 |   950 | 0.241540
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.215379
+ 1230184 | 2015-05-06 00:00:00 |         27 | 15500 | 0.215185
+(5 rows)
+
+RESET
+SET
+=== 08 h=7  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=33531  candidate=4595  fed_to_operator=4595  batches=2
+SET
+SET
+SET
+                                 QUERY PLAN
+----------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..17924.91 rows=4586 width=48)
+   ->  NeurDB Predict  (cost=10000.00..17879.05 rows=4586 width=185)
+         ->  Seq Scan on w_task_7  (cost=0.00..1293.05 rows=4586 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 4595
+Time: 12662.115 ms (00:12.662)
+Timing is off.
+ALTER TABLE
+--- w_pred_7 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   4595 |  0.020502 | 0.009655
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=7) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 4418364 | 2015-05-09 00:00:00 |         27 |   950 | 0.250125
+ 4418364 | 2015-05-08 00:00:00 |         27 |   950 | 0.246406
+ 4418364 | 2015-05-07 00:00:00 |         27 |   950 | 0.239455
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.215769
+ 1230184 | 2015-05-06 00:00:00 |         27 | 15500 | 0.213452
+(5 rows)
+
+RESET
+SET
+SET
+=== 08 h=7  sched=on  candidates: categoryid IN (60, 26, 27)
+    rows total=33531  candidate=4595  fed_to_operator=4595  batches=2
+SET
+SET
+SET
+                                 QUERY PLAN
+----------------------------------------------------------------------------
+ Subquery Scan on p  (cost=10000.00..17924.91 rows=4586 width=48)
+   ->  NeurDB Predict  (cost=10000.00..17879.05 rows=4586 width=185)
+         ->  Seq Scan on w_task_7  (cost=0.00..1293.05 rows=4586 width=185)
+               Filter: (categoryid = ANY ('{60,26,27}'::bigint[]))
+(4 rows)
+
+DROP TABLE
+Timing is on.
+psql:/code/neurdb-dev/test/avito/workloads/08_predict_candidates.sql:93: WARNING:  User specified model name: tabpfn
+SELECT 4595
+Time: 6058.794 ms (00:06.059)
+Timing is off.
+ALTER TABLE
+--- w_pred_7 summary ---
+ n_rows | mean_pred |   rmse
+--------+-----------+----------
+   4595 |  0.020502 | 0.009657
+(1 row)
+
+--- top-5 candidate ads by predicted CTR (h=7) ---
+  adid   |         ts          | categoryid | price | pred_ctr
+---------+---------------------+------------+-------+----------
+ 4418364 | 2015-05-09 00:00:00 |         27 |   950 | 0.250049
+ 4418364 | 2015-05-08 00:00:00 |         27 |   950 | 0.246434
+ 4418364 | 2015-05-07 00:00:00 |         27 |   950 | 0.239621
+  974474 | 2015-05-12 00:00:00 |         60 |  3899 | 0.215705
+ 1230184 | 2015-05-06 00:00:00 |         27 | 15500 | 0.213365
+(5 rows)
+
+RESET

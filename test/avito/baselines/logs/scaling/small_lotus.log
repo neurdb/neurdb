@@ -1,0 +1,48 @@
+TIMING,load_tables,2.3
+TIMING,tool_cutoffs,0.0
+TIMING,tool_rollups,0.5
+TIMING,01_label_h1,0.1
+TIMING,02_features_h1,2.2
+TIMING,03_task_h1,0.0
+TIMING,08_predict_h1,6.1
+  h=1: task_rows=4881 candidates=653 rmse=0.1200
+TIMING,01_label_h3,0.1
+TIMING,02_features_h3,2.3
+TIMING,03_task_h3,0.0
+TIMING,08_predict_h3,1.3
+  h=3: task_rows=11729 candidates=1591 rmse=0.0472
+TIMING,01_label_h7,0.1
+TIMING,02_features_h7,2.3
+TIMING,03_task_h7,0.0
+TIMING,08_predict_h7,2.0
+  h=7: task_rows=21509 candidates=2836 rmse=0.0125
+TIMING,09_action_list,0.0
+         action  n_ads  avg_ctr_1d  avg_ctr_7d
+           keep    406    0.066634    0.016257
+  promote_later     34    0.119129    0.047024
+    promote_now    120    0.244659    0.073822
+reduce_exposure     93    0.014702    0.005576
+TIMING,total,19.3
+	Command being timed: "python run_lotus.py --data data_small --out logs/scaling/lotus_small --device cuda:0"
+	User time (seconds): 45.18
+	System time (seconds): 29.93
+	Percent of CPU this job got: 254%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:29.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 5227328
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 6409
+	Minor (reclaiming a frame) page faults: 2167110
+	Voluntary context switches: 18885
+	Involuntary context switches: 7283134
+	Swaps: 0
+	File system inputs: 2895360
+	File system outputs: 328
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

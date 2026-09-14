@@ -123,6 +123,14 @@ static TupleTableSlot *ExecProcNodeFirst(PlanState *node);
 static TupleTableSlot *ExecProcNodeInstr(PlanState *node);
 static bool ExecShutdownNode_walker(PlanState *node, void *context);
 
+/*
+ * NEURDB: dispatch hooks for NeurDBPredict plan nodes nested inside plan
+ * trees; installed by the nr_ext extension (see executor.h).
+ */
+NeurDBPredictInitNode_hook_type NeurDBPredictInitNode_hook = NULL;
+NeurDBPredictEndNode_hook_type NeurDBPredictEndNode_hook = NULL;
+NeurDBPredictReScan_hook_type NeurDBPredictReScan_hook = NULL;
+
 
 /* ------------------------------------------------------------------------
  *		ExecInitNode
@@ -380,6 +388,13 @@ ExecInitNode(Plan *node, EState *estate, int eflags)
 		case T_Limit:
 			result = (PlanState *) ExecInitLimit((Limit *) node,
 												 estate, eflags);
+			break;
+
+		case T_NeurDBPredict:
+			/* NEURDB: node implementation lives in the nr_ext extension */
+			if (NeurDBPredictInitNode_hook == NULL)
+				elog(ERROR, "cannot execute NeurDBPredict node: nr_ext extension is not loaded");
+			result = (*NeurDBPredictInitNode_hook) (node, estate, eflags);
 			break;
 
 		default:
@@ -755,6 +770,13 @@ ExecEndNode(PlanState *node)
 
 		case T_LimitState:
 			ExecEndLimit((LimitState *) node);
+			break;
+
+		case T_NeurDBPredictState:
+			/* NEURDB: node implementation lives in the nr_ext extension */
+			if (NeurDBPredictEndNode_hook == NULL)
+				elog(ERROR, "cannot end NeurDBPredict node: nr_ext extension is not loaded");
+			(*NeurDBPredictEndNode_hook) (node);
 			break;
 
 		default:

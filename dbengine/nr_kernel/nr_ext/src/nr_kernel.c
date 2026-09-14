@@ -9,12 +9,31 @@
 #include "miscadmin.h"
 #include "postmaster/bgworker.h"
 #include "storage/ipc.h"
+#include "executor/executor.h"
 #include "tcop/utility.h"
+#include "utils/guc.h"
 #include "utils/snapmgr.h"
 #include "utils/builtins.h"
 
+#include "nodePredict.h"
+
 /* required metadata marker for PostgreSQL extensions */
 PG_MODULE_MAGIC;
+
+/*
+ * neurdb.predict_into --- optional target table for PREDICT materialization.
+ *
+ * When this GUC is set to a (pre-created) table name, the PREDICT AI operator
+ * emits every input row augmented with a trailing "nr_pred" column AND writes
+ * that augmented row into the named table.  This turns PREDICT into a
+ * relation-producing operator whose result can be consumed by ordinary SQL
+ * (e.g. ORDER BY ... LIMIT k for top-k, or GROUP BY for aggregation),
+ * effectively enabling "PREDICT -> top-k / aggregation" pipelines.
+ *
+ * When empty (the default), PREDICT keeps its legacy single-column output and
+ * does not write anywhere, so existing behaviour is preserved.
+ */
+char	   *NrPredictInto = NULL;
 
 extern planner_hook_type planner_hook;
 extern ExecutorStart_hook_type ExecutorStart_hook;
@@ -80,8 +99,8 @@ _clear_all_tuples(Relation rel)
 void
 aiengineworker_main(Datum main_arg)
 {
-	HeapTuple	tup;
 	Relation	rel;
+	HeapTuple	tup;
 
 	elog(DEBUG1, "In NeurDB's aiengineworker_main");
 
@@ -152,6 +171,23 @@ void
 _PG_init(void)
 {
 	elog(DEBUG1, "In NeurDB's _PG_init");
+
+	/*
+	 * Register the materialization target GUC.  PGC_USERSET so it can be set
+	 * per-session/per-statement (e.g. SET neurdb.predict_into = 'w_pred_1';).
+	 */
+	DefineCustomStringVariable("neurdb.predict_into",
+							   "Target table for PREDICT materialization.",
+							   "If non-empty, PREDICT appends an nr_pred column to "
+							   "each input row and writes the augmented row into "
+							   "this (pre-created) table, enabling PREDICT -> "
+							   "top-k / aggregation pipelines via plain SQL.",
+							   &NrPredictInto,
+							   "",
+							   PGC_USERSET,
+							   0,
+							   NULL, NULL, NULL);
+
 	/* Save the original hook value. */
 	original_planner_hook = planner_hook;
 	original_executorstart_hook = ExecutorStart_hook;
@@ -164,6 +200,15 @@ _PG_init(void)
 	ExecutorRun_hook = NeurDB_ExecutorRun;
 	ExecutorFinish_hook = NeurDB_ExecutorFinish;
 	ExecutorEnd_hook = NeurDB_ExecutorEnd;
+
+	/*
+	 * Let the core executor dispatch NeurDBPredict nodes that appear nested
+	 * inside plan trees (SELECT ... FROM (PREDICT ...) p) back into this
+	 * extension's node implementation.
+	 */
+	NeurDBPredictInitNode_hook = NeurDBPredictInitNodeHook;
+	NeurDBPredictEndNode_hook = NeurDBPredictEndNodeHook;
+	NeurDBPredictReScan_hook = NeurDBPredictReScanHook;
 
 	register_aiengine_background_worker();
 }
@@ -179,4 +224,7 @@ _PG_fini(void)
 	ExecutorRun_hook = original_executorrun_hook;
 	ExecutorEnd_hook = original_executorend_hook;
 	ExecutorFinish_hook = original_executorfinish_hook;
+	NeurDBPredictInitNode_hook = NULL;
+	NeurDBPredictEndNode_hook = NULL;
+	NeurDBPredictReScan_hook = NULL;
 }

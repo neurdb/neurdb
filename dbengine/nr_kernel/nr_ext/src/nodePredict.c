@@ -9,21 +9,62 @@
 #include "access/genam.h"
 #include "access/relation.h"
 #include "access/heapam.h"
+#include "access/table.h"
+#include "access/tableam.h"
 #include "funcapi.h"
 #include "nodes/nodeFuncs.h"
 #include "parser/parse_func.h"
 #include "parser/parse_node.h"
 #include "parser/parse_target.h"
+#include "catalog/namespace.h"
 #include "catalog/pg_type.h"
 #include "fmgr.h"
 #include "lib/ilist.h"
 #include "utils/builtins.h"
 #include "utils/array.h"
+#include "utils/regproc.h"
+#include "utils/rel.h"
 #include "neurdb/predict.h"
 #include "nodes/primnodes.h"
 #include "nodes/makefuncs.h"
 
+#include "nodePredict.h"
 #include "util.h"
+
+/*
+ * Materialization target GUC, defined in nr_kernel.c.  When non-empty, the
+ * PREDICT operator augments every input row with a trailing nr_pred column and
+ * writes the row into this table, so downstream relational operators
+ * (top-k / aggregation) can consume PREDICT output as a normal relation.
+ */
+extern char *NrPredictInto;
+
+/*
+ * Per-backend materialization state.  PREDICT runs one node at a time within a
+ * backend, so file-static state is sufficient and avoids touching the core
+ * NeurDBPredictState struct (which lives in a backend header).
+ */
+static Relation nr_mat_rel = NULL;	/* open target relation, or NULL */
+static int	nr_mat_ninput = 0;		/* # of passthrough (input) columns */
+static bool nr_mat_enabled = false; /* materialization active for this node */
+
+/*
+ * Nested-subquery state.  When PREDICT runs as a subquery in FROM
+ * (SELECT ... FROM (PREDICT ...) p), the planner marks the plan node with
+ * nested=true and the child plan already emits (input columns + a trailing
+ * NULL float8 nr_pred placeholder).  The node then passes the input columns
+ * through and overwrites the placeholder with the prediction -- no table
+ * write, no legacy single-column projection.
+ */
+static bool nr_nested_mode = false;
+static int	nr_nested_ninput = 0;	/* # of passthrough (input) columns */
+
+/*
+ * True when the node was initialized under EXEC_FLAG_EXPLAIN_ONLY: no
+ * pipeline session is opened, so none must be closed at ExecEnd either
+ * (closing a never-opened session blocks waiting for the AI engine).
+ */
+static bool nr_explain_only = false;
 
 static char *initFuncName = "nr_pipeline_init";
 #define INIT_PARAMS_ARRAY_SIZE 10
@@ -270,6 +311,64 @@ append_primary_values_to_tuple_slot(TupleTableSlot *proj_slot,
 	return proj_slot;
 }
 
+static TupleTableSlot *
+build_passthrough_prediction_slot(TupleTableSlot *input_slot,
+								  TupleTableSlot *out_slot,
+								  int ninput,
+								  double value)
+{
+	slot_getallattrs(input_slot);
+	ExecClearTuple(out_slot);
+	for (int i = 0; i < ninput; i++)
+	{
+		out_slot->tts_values[i] = input_slot->tts_values[i];
+		out_slot->tts_isnull[i] = input_slot->tts_isnull[i];
+	}
+	out_slot->tts_values[ninput] = Float8GetDatum(value);
+	out_slot->tts_isnull[ninput] = false;
+	ExecStoreVirtualTuple(out_slot);
+
+	return out_slot;
+}
+
+static TupleTableSlot *
+build_legacy_prediction_slot(NeurDBPredictState * predictstate,
+							 TupleTableSlot *input_slot,
+							 double value)
+{
+	TupleTableSlot *slot_copy = NULL;
+	TupleTableSlot *out_slot;
+
+	if (predictstate->stmt->withPrimaryKey)
+	{
+		/* copy the primary key to a new slot before projection */
+		slot_copy = MakeTupleTableSlot(input_slot->tts_tupleDescriptor,
+									   &TTSOpsVirtual);
+		ExecCopySlot(slot_copy, input_slot);
+	}
+
+	predictstate->ps.ps_ExprContext->ecxt_outertuple = input_slot;
+	out_slot = ExecProject(predictstate->ps.ps_ProjInfo);
+
+	build_result_slot(value,
+					  predictstate->is_float,
+					  predictstate->id_class_map,
+					  out_slot);
+
+	if (predictstate->stmt->withPrimaryKey)
+	{
+		out_slot = append_primary_values_to_tuple_slot(out_slot,
+													   predictstate->primkeyindexes,
+													   predictstate->nkeys,
+													   slot_copy,
+													   predictstate->is_float ? 1 : 2);
+
+		ReleaseTupleDesc(slot_copy->tts_tupleDescriptor);
+	}
+
+	return out_slot;
+}
+
 static void
 reset_slot_cache(NeurDBPredictState * predictstate)
 {
@@ -300,7 +399,17 @@ ExecNeurDBPredict(PlanState *pstate)
 
 	outerPlan = outerPlanState(predictstate);
 
-	predictstate->is_final = false;
+	/*
+	 * NB: do NOT reset predictstate->is_final here.  is_final is persistent
+	 * state on the node: it is set when the outer plan is exhausted (the
+	 * current batch is the last one) and must survive across the many
+	 * ExecNeurDBPredict() invocations that drain a batch's results one row at
+	 * a time.  Clearing it on every call made the INFERENCE_RETURN state lose
+	 * track of the final batch, loop back to INFERENCE_COLLECT after the last
+	 * row, re-scan the input, and push a duplicate batch that the AI engine
+	 * (told exactly nr_task_num_batches up front) never answers -- hanging the
+	 * backend forever in nws_wait_completion().
+	 */
 
 	for (;;)
 	{
@@ -403,6 +512,14 @@ ExecNeurDBPredict(PlanState *pstate)
 
 						OidFunctionCall1(funcOid, BoolGetDatum(true));
 
+						/*
+						 * Entering the inference phase with a fresh batch:
+						 * is_final is still true from the last training batch,
+						 * so clear it here (it is no longer reset per-call) to
+						 * avoid prematurely ending inference after one batch.
+						 */
+						predictstate->is_final = false;
+
 						/* go to inference */
 						predictstate->nrpstate = NEURDBPREDICT_INFERENCE_COLLECT;
 					}
@@ -491,38 +608,40 @@ ExecNeurDBPredict(PlanState *pstate)
 						}
 					}
 
-					/* get the next slot from the cache */
+					/* get the next input slot from the cache */
 					slot = predictstate->slot_cache[predictstate->num_consumed];
-
-					TupleTableSlot *slot_copy;
-
-					if (predictstate->stmt->withPrimaryKey)
-					{
-						/* copy the primary key to a new slot */
-						slot_copy = MakeTupleTableSlot(slot->tts_tupleDescriptor, &TTSOpsVirtual);
-						ExecCopySlot(slot_copy, slot);
-					}
-
-					/* project the slot */
-					predictstate->ps.ps_ExprContext->ecxt_outertuple = slot;
-					slot = ExecProject(predictstate->ps.ps_ProjInfo);
 
 					/* get the next result from the cache */
 					double		value = pop_result_from_cache(&predictstate->result_cache);
 
-					/* build the returning slot */
-					build_result_slot(value, predictstate->is_float, predictstate->id_class_map, slot);
-
-					if (predictstate->stmt->withPrimaryKey)
+					if (nr_nested_mode)
 					{
-						slot = append_primary_values_to_tuple_slot(slot,
-																   predictstate->primkeyindexes,
-																   predictstate->nkeys,
-																   slot_copy,
-																   predictstate->is_float ? 1 : 2);
+						TupleTableSlot *out =
+							build_passthrough_prediction_slot(slot,
+															  predictstate->ps.ps_ResultTupleSlot,
+															  nr_nested_ninput,
+															  value);
 
-						ReleaseTupleDesc(slot_copy->tts_tupleDescriptor);
+						predictstate->num_consumed += 1;
+						return out;
 					}
+
+					if (nr_mat_enabled)
+					{
+						TupleTableSlot *out =
+							build_passthrough_prediction_slot(slot,
+															  predictstate->ps.ps_ResultTupleSlot,
+															  nr_mat_ninput,
+															  value);
+
+						/* write the augmented row into the target table */
+						simple_table_tuple_insert(nr_mat_rel, out);
+
+						predictstate->num_consumed += 1;
+						return out;
+					}
+
+					slot = build_legacy_prediction_slot(predictstate, slot, value);
 
 					predictstate->num_consumed += 1;
 					return slot;
@@ -687,6 +806,67 @@ _temp_extract_table_name(List *fromClause)
 }
 
 
+/*
+ * Open the materialization target table named by neurdb.predict_into and set
+ * up the augmented result slot (input columns + a trailing float8 nr_pred
+ * column).
+ *
+ * The target table must already exist and have exactly (ninput + 1) columns,
+ * laid out as the input columns (same order/types as the PREDICT FROM source)
+ * followed by a final float8 prediction column.  A convenient way to create it:
+ *
+ *     CREATE TABLE w_pred_h (LIKE w_task_h INCLUDING DEFAULTS, nr_pred float8);
+ *
+ * Installs the augmented (blessed) tuple descriptor as the node's result slot
+ * and records the open relation / input width in file-static state.
+ */
+static void
+nr_open_materialize_target(NeurDBPredictState * predictstate, TupleDesc inputDesc)
+{
+	List	   *names;
+	RangeVar   *rv;
+	Oid			relid;
+	TupleDesc	relDesc;
+	TupleDesc	outDesc;
+
+	nr_mat_ninput = inputDesc->natts;
+
+	names = stringToQualifiedNameList(NrPredictInto, NULL);
+	rv = makeRangeVarFromNameList(names);
+	relid = RangeVarGetRelid(rv, RowExclusiveLock, false);
+	nr_mat_rel = table_open(relid, RowExclusiveLock);
+
+	relDesc = RelationGetDescr(nr_mat_rel);
+	if (relDesc->natts != nr_mat_ninput + 1)
+	{
+		char	   *relname = pstrdup(RelationGetRelationName(nr_mat_rel));
+		int			expected = nr_mat_ninput + 1;
+		int			got = relDesc->natts;
+
+		table_close(nr_mat_rel, RowExclusiveLock);
+		nr_mat_rel = NULL;
+		ereport(ERROR,
+				(errcode(ERRCODE_DATATYPE_MISMATCH),
+				 errmsg("neurdb.predict_into table \"%s\" must have %d columns "
+						"(input columns + 1 prediction column), but has %d",
+						relname, expected, got)));
+	}
+
+	/* Result slot carries the target relation's descriptor (input + nr_pred). */
+	outDesc = CreateTupleDescCopy(relDesc);
+	outDesc = BlessTupleDesc(outDesc);
+
+	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
+	predictstate->ps.ps_ResultTupleSlot =
+		MakeSingleTupleTableSlot(outDesc, &TTSOpsVirtual);
+	predictstate->ps.ps_ResultTupleDesc = outDesc;
+	predictstate->ps.ps_ProjInfo = NULL;
+
+	elog(DEBUG1,
+		 "[NeurDBPredict] materialize ON: into=\"%s\" ninput=%d",
+		 NrPredictInto, nr_mat_ninput);
+}
+
 static TupleDesc
 _copy_tuple_desc(List *targetList, TupleDesc resultDesc)
 {
@@ -743,16 +923,32 @@ _append_primary_key_tuple_desc(TupleDesc resultDesc,
 	return resultDesc;
 }
 
-
 NeurDBPredictState *
 ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 {
 	NeurDBPredictState *predictstate;
 	Plan	   *outerPlan;
 
+	/* reset per-backend output-mode state for this node */
+	nr_mat_rel = NULL;
+	nr_mat_ninput = 0;
+	nr_nested_mode = node->nested;
+	/* nested mode ignores the materialization GUC */
+	nr_mat_enabled = !nr_nested_mode &&
+		(NrPredictInto != NULL && NrPredictInto[0] != '\0');
+
 	predictstate = makeNode(NeurDBPredictState);
 	predictstate->ps.plan = (Plan *) node;
-	predictstate->ps.plan->targetlist = node->predictTargetList;
+	if (!nr_nested_mode)
+	{
+		/*
+		 * Legacy quirk: expose the predict target list as the plan's
+		 * targetlist.  In nested mode the plan targetlist must stay the
+		 * passthrough+nr_pred list set up by the planner, since the outer
+		 * query references those columns positionally.
+		 */
+		predictstate->ps.plan->targetlist = node->predictTargetList;
+	}
 	predictstate->ps.state = estate;
 	predictstate->ps.ExecProcNode = ExecNeurDBPredict;
 
@@ -771,160 +967,185 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	outerPlan = outerPlan(node);
 	outerPlanState(predictstate) = ExecInitNode(outerPlan, estate, eflags);
 
-	/*
-	 * Initialize result tuple slot with FIXED descriptor Need to determine
-	 * upfront if we're doing classification or regression
-	 */
-	TupleDesc	resultDesc;
-	int			natts = list_length(node->predictTargetList);
-
 	char	   *table = _temp_extract_table_name(predictstate->stmt->fromClause);
 
-	bool		add_primary_key = node->stmt->withPrimaryKey;
-	bool		use_full = false;
-	int			nkeys = 0;
-	AttrNumber *keys = NULL;
-
-	int			i;
-
-	RangeVar   *rv = makeRangeVar(NULL, table, -1);
-	Oid			relid = RangeVarGetRelid(rv, NoLock, false);
-	Relation	rel = relation_open(relid, AccessShareLock);
-
-	if (add_primary_key)
+	if (nr_nested_mode)
 	{
-		Oid			ident_index;
+		/*
+		 * Nested mode: the child plan already emits (input columns + a
+		 * trailing NULL float8 nr_pred placeholder), so the output schema is
+		 * exactly the child's.  We pass the input columns through and fill
+		 * the placeholder with the prediction at run time.
+		 */
+		TupleDesc	outDesc =
+			CreateTupleDescCopy(ExecGetResultType(outerPlanState(predictstate)));
 
-		ident_index = RelationGetReplicaIndex(rel);
+		outDesc = BlessTupleDesc(outDesc);
+		nr_nested_ninput = outDesc->natts - 1;
+		if (nr_nested_ninput < 1)
+			elog(ERROR, "nested PREDICT subquery has no input columns");
 
-		if (OidIsValid(ident_index))
+		predictstate->ps.ps_ResultTupleSlot =
+			MakeSingleTupleTableSlot(outDesc, &TTSOpsVirtual);
+		predictstate->ps.ps_ResultTupleDesc = outDesc;
+		predictstate->ps.ps_ProjInfo = NULL;
+
+		elog(DEBUG1, "[NeurDBPredict] nested mode: ninput=%d", nr_nested_ninput);
+	}
+	else if (nr_mat_enabled)
+	{
+		/*
+		 * Materialization mode: the output schema is (all input columns +
+		 * trailing nr_pred). We pass the input row through verbatim and append
+		 * the prediction, so downstream SQL (top-k / aggregation) can consume
+		 * PREDICT output as a relation.
+		 */
+		nr_open_materialize_target(predictstate,
+								   ExecGetResultType(outerPlanState(predictstate)));
+	}
+	else
+	{
+		/*
+		 * Legacy mode: emit only the prediction (single column), optionally
+		 * with a debug column for classification and primary keys requested by
+		 * PREDICT ... WITH PRIMARY KEY.
+		 */
+		TupleDesc	resultDesc;
+		int			natts = list_length(node->predictTargetList);
+		bool		needsDebugColumn = (node->stmt->kind == PREDICT_CLASS);
+		bool		add_primary_key = node->stmt->withPrimaryKey;
+		int			nkeys = 0;
+		AttrNumber *keys = NULL;
+		Relation	rel = NULL;
+		int			i;
+
+		if (add_primary_key)
 		{
-			Relation	idxrel;
-			Form_pg_index idx;
+			RangeVar   *rv = makeRangeVar(NULL, table, -1);
+			Oid			relid = RangeVarGetRelid(rv, NoLock, false);
 
-			idxrel = index_open(ident_index, AccessShareLock);
-			idx = idxrel->rd_index;
+			rel = relation_open(relid, AccessShareLock);
 
-			nkeys = idx->indnatts;
-			keys = (AttrNumber *) palloc(sizeof(AttrNumber) * nkeys);
+			Oid			ident_index = RelationGetReplicaIndex(rel);
 
-			for (i = 0; i < nkeys; i++)
+			if (OidIsValid(ident_index))
 			{
-				if (idx->indkey.values[i] == 0)
-					ereport(ERROR,
-							(errmsg("replica identity index contains expressions")));
+				Relation	idxrel;
+				Form_pg_index idx;
 
-				keys[i] = idx->indkey.values[i] - 1;
-			}
+				idxrel = index_open(ident_index, AccessShareLock);
+				idx = idxrel->rd_index;
 
-			index_close(idxrel, AccessShareLock);
-		}
-		else
-		{
-			/* no primary key, use full table */
-			TupleDesc	tableDesc;
-			Form_pg_attribute attr;
-			bool		skip;
+				nkeys = idx->indnatts;
+				keys = (AttrNumber *) palloc(sizeof(AttrNumber) * nkeys);
 
-			tableDesc = RelationGetDescr(rel);
-
-			nkeys = tableDesc->natts - natts;
-			keys = (AttrNumber *) palloc(sizeof(AttrNumber) * nkeys);
-
-			i = 0;
-
-			for (int k = 0; k < tableDesc->natts; k++)
-			{
-				attr = TupleDescAttr(tableDesc, k);
-
-				const char *name = NameStr(attr->attname);
-
-				/* check if the name is in the predict target list */
-				ListCell   *lc;
-
-				skip = false;
-				foreach(lc, node->predictTargetList)
+				for (i = 0; i < nkeys; i++)
 				{
-					TargetEntry *tle = (TargetEntry *) lfirst(lc);
+					if (idx->indkey.values[i] == 0)
+						ereport(ERROR,
+								(errmsg("replica identity index contains expressions")));
 
-					if (strcmp(name, tle->resname) == 0)
+					keys[i] = idx->indkey.values[i] - 1;
+				}
+
+				index_close(idxrel, AccessShareLock);
+			}
+			else
+			{
+				TupleDesc	tableDesc = RelationGetDescr(rel);
+
+				nkeys = tableDesc->natts - natts;
+				keys = (AttrNumber *) palloc(sizeof(AttrNumber) * nkeys);
+
+				i = 0;
+				for (int k = 0; k < tableDesc->natts; k++)
+				{
+					Form_pg_attribute attr = TupleDescAttr(tableDesc, k);
+					const char *name = NameStr(attr->attname);
+					bool		skip = false;
+					ListCell   *lc;
+
+					foreach(lc, node->predictTargetList)
 					{
-						/* skip this attribute */
-						skip = true;
-						break;
-					}
-				}
-				if (skip)
-				{
-					continue;
-				}
+						TargetEntry *tle = (TargetEntry *) lfirst(lc);
 
-				keys[i] = k;
-				i++;
+						if (strcmp(name, tle->resname) == 0)
+						{
+							skip = true;
+							break;
+						}
+					}
+					if (skip)
+						continue;
+
+					keys[i++] = k;
+				}
 			}
 		}
+
+		if (add_primary_key)
+			natts += nkeys;
+		if (needsDebugColumn)
+			natts++;
+
+		resultDesc = CreateTemplateTupleDesc(natts);
+		resultDesc = _copy_tuple_desc(node->predictTargetList, resultDesc);
+
+		i = list_length(node->predictTargetList) + 1;
+		if (needsDebugColumn)
+		{
+			TupleDescInitEntry(resultDesc,
+							   (AttrNumber) i,
+							   "_dbg_value",
+							   FLOAT8OID,
+							   -1,
+							   0);
+			i++;
+		}
+
+		if (add_primary_key)
+		{
+			resultDesc = _append_primary_key_tuple_desc(resultDesc,
+														rel,
+														nkeys,
+														keys,
+														node->predictTargetList,
+														i);
+			predictstate->primkeyindexes = keys;
+			predictstate->nkeys = nkeys;
+			relation_close(rel, AccessShareLock);
+		}
+
+		resultDesc = BlessTupleDesc(resultDesc);
+		ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
+		predictstate->ps.ps_ResultTupleSlot = MakeSingleTupleTableSlot(resultDesc, &TTSOpsVirtual);
+		predictstate->ps.ps_ResultTupleDesc = resultDesc;
+
+		/*
+		 * initialize projection info
+		 */
+		predictstate->ps.ps_ProjInfo =
+			ExecBuildProjectionInfo(node->predictTargetList,
+									predictstate->ps.ps_ExprContext,
+									predictstate->ps.ps_ResultTupleSlot,
+									(PlanState *) predictstate,
+									ExecTypeFromTL(node->predictTargetList));
 	}
-
-	/* Determine if we need the debug column (for classification) */
-	/* You may need to determine this from node->stmt->kind or other metadata */
-	bool		needsDebugColumn = (node->stmt->kind == PREDICT_CLASS);
-
-	if (add_primary_key)
-	{
-		natts += nkeys;
-	}
-
-	if (needsDebugColumn)
-	{
-		natts++;
-	}
-
-	resultDesc = CreateTemplateTupleDesc(natts);
-	resultDesc = _copy_tuple_desc(node->predictTargetList, resultDesc);
-
-	i = list_length(node->predictTargetList) + 1;
-
-	if (needsDebugColumn)
-	{
-		/* Add debug column */
-		TupleDescInitEntry(resultDesc,
-						   (AttrNumber) (i),
-						   "_dbg_value",
-						   FLOAT8OID,
-						   -1,
-						   0);
-		i++;
-	}
-
-	if (add_primary_key)
-	{
-		resultDesc = _append_primary_key_tuple_desc(resultDesc,
-													rel,
-													nkeys,
-													keys,
-													node->predictTargetList,
-													i);
-
-		predictstate->primkeyindexes = keys;
-		predictstate->nkeys = nkeys;
-	}
-
-	relation_close(rel, AccessShareLock);
-
-	resultDesc = BlessTupleDesc(resultDesc);
-	ExecInitResultTupleSlotTL(&predictstate->ps, &TTSOpsVirtual);
-	predictstate->ps.ps_ResultTupleSlot = MakeSingleTupleTableSlot(resultDesc, &TTSOpsVirtual);
-	predictstate->ps.ps_ResultTupleDesc = resultDesc;
 
 	/*
-	 * initialize projection info
+	 * For EXPLAIN (without ANALYZE) the node will never be executed: do not
+	 * open an AI-engine pipeline session (and skip closing it at ExecEnd).
 	 */
-	predictstate->ps.ps_ProjInfo =
-		ExecBuildProjectionInfo(node->predictTargetList,
-								predictstate->ps.ps_ExprContext,
-								predictstate->ps.ps_ResultTupleSlot,
-								(PlanState *) predictstate,
-								ExecTypeFromTL(node->predictTargetList));
+	nr_explain_only = (eflags & EXEC_FLAG_EXPLAIN_ONLY) != 0;
+	if (nr_explain_only)
+	{
+		predictstate->slot_cache = NULL;
+		predictstate->slot_cache_size = 0;
+		predictstate->num_consumed = 0;
+		dclist_init(&predictstate->result_cache);
+		predictstate->curr_epoch = 0;
+		return predictstate;
+	}
 
 	StringInfoData targetColumns = build_target_columns(node->predictTargetList);
 
@@ -938,6 +1159,24 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 															 targetColumns.data,
 															 trainOnColumns.data);
 
+	/*
+	 * Tuple descriptor describing the rows pushed to the AI engine.  In
+	 * nested mode the child plan carries an extra trailing nr_pred
+	 * placeholder column; trim it so the engine-facing layout is identical
+	 * to the raw input columns (the pipeline reads only the attributes
+	 * described by this descriptor, so the placeholder is simply ignored).
+	 */
+	TupleDesc	pipeDesc = ExecTypeFromTL(outerPlan->targetlist);
+
+	if (nr_nested_mode)
+	{
+		TupleDesc	trimmed = CreateTemplateTupleDesc(pipeDesc->natts - 1);
+
+		for (int attno = 1; attno < pipeDesc->natts; attno++)
+			TupleDescCopyEntry(trimmed, attno, pipeDesc, attno);
+		pipeDesc = trimmed;
+	}
+
 	args[0] = CStringGetTextDatum(model);
 	args[1] = CStringGetTextDatum(table);
 	args[2] = Int32GetDatum(NrTaskBatchSize);
@@ -947,7 +1186,7 @@ ExecInitNeurDBPredict(NeurDBPredict * node, EState *estate, int eflags)
 	args[6] = PointerGetDatum(trainColumnArray);
 	args[7] = CStringGetTextDatum(targetColumns.data);
 	args[8] = Int32GetDatum(predictstate->stmt->kind);
-	args[9] = PointerGetDatum(ExecTypeFromTL(outerPlan->targetlist));
+	args[9] = PointerGetDatum(pipeDesc);
 
 	UdfResult	initRes = call_udf_function(initFuncName,
 											initArgTypes,
@@ -1007,9 +1246,22 @@ call_pipeline_close()
 void
 ExecEndNeurDBPredict(NeurDBPredictState * node)
 {
+	/* close the materialization target table, if one was opened */
+	if (nr_mat_rel != NULL)
+	{
+		table_close(nr_mat_rel, RowExclusiveLock);
+		nr_mat_rel = NULL;
+	}
+	nr_mat_enabled = false;
+	nr_mat_ninput = 0;
+	nr_nested_mode = false;
+	nr_nested_ninput = 0;
+
 	ExecFreeExprContext(&node->ps);
 	ExecEndNode(outerPlanState(node));
-	call_pipeline_close();
+	if (!nr_explain_only)
+		call_pipeline_close();
+	nr_explain_only = false;
 	elog(DEBUG1, "NeurDB prediction end");
 }
 
@@ -1024,4 +1276,30 @@ ExecReScanNeurDBPredict(NeurDBPredictState * node)
 	 */
 	if (outerPlan && outerPlan->chgParam == NULL)
 		ExecReScan(outerPlan);
+}
+
+/*
+ * Generic-signature wrappers installed into the core executor's
+ * NeurDBPredict dispatch hooks (executor/executor.h), so that core
+ * ExecInitNode / ExecEndNode / ExecReScan can run NeurDBPredict nodes that
+ * sit *inside* a plan tree (e.g. under a SubqueryScan for
+ * SELECT ... FROM (PREDICT ...) p).
+ */
+PlanState *
+NeurDBPredictInitNodeHook(Plan *node, EState *estate, int eflags)
+{
+	return (PlanState *) ExecInitNeurDBPredict((NeurDBPredict *) node,
+											   estate, eflags);
+}
+
+void
+NeurDBPredictEndNodeHook(PlanState *node)
+{
+	ExecEndNeurDBPredict((NeurDBPredictState *) node);
+}
+
+void
+NeurDBPredictReScanHook(PlanState *node)
+{
+	ExecReScanNeurDBPredict((NeurDBPredictState *) node);
 }

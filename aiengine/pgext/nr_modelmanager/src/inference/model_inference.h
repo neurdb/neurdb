@@ -14,6 +14,6 @@
  * @param {TensorWrapper*} input - input tensor
  * @return {TensorWrapper*} - the output tensor
  */
-TensorWrapper *forward(ModelWrapper *model, TensorWrapper *input);
+TensorWrapper* forward(ModelWrapper* model, TensorWrapper* input);
 
 #endif  // PG_MODEL_MODEL_INFERENCE_H

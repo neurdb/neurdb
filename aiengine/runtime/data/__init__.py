@@ -10,6 +10,7 @@ from .schema import (
     ColumnRole,
     ColumnSchema,
     DatabaseSchema,
+    FeatureSchema,
     RelationshipSchema,
     TableSchema,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "ColumnRole",
     "ColumnSchema",
     "DatabaseSchema",
+    "FeatureSchema",
     "RelationshipSchema",
     "TableSchema",
 ]

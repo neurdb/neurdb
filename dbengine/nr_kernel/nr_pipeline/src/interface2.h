@@ -17,6 +17,7 @@
 
 #include "utils/network/websocket.h"
 
+struct DistributedInfer;
 
 typedef enum {
     PS_UNINIT = 0,
@@ -54,8 +55,22 @@ typedef struct {
     MemoryContext hash_ctx;
     HTAB *class_id_map;
     List *id_class_map;
+    struct DistributedInfer *dist_infer;
 
-    List *primary_key_ids;
+    /*
+     * Broadcast-train state for in-context models (tabpfn): the fitted
+     * context lives inside one AI-server process keyed by a process-local
+     * model id, so to shard inference across engines the SAME context is
+     * fitted on EVERY registered engine during the train phase, and the
+     * per-engine model ids are remembered for the inference task.
+     */
+    int eng_count;            /* engines captured at train time (0 = none) */
+    char **eng_hosts;
+    int *eng_ports;
+    NrWebsocket **train_wss;  /* one ws per engine while PS_TRAIN, else NULL */
+    int *worker_model_ids;    /* per-engine model id after the train phase */
+
+	List *primary_key_ids;
 } PipelineSession;
 
 

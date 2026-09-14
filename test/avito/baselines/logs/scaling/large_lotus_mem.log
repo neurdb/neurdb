@@ -1,0 +1,47 @@
+TIMING,load_tables,5.8
+TIMING,tool_cutoffs,0.2
+TIMING,01_label_h1,10.9
+TIMING,02_features_h1,33.6
+TIMING,03_task_h1,0.0
+TIMING,08_predict_h1,6.5
+  h=1: task_rows=8368 candidates=1155 rmse=0.0919
+TIMING,01_label_h3,12.6
+TIMING,02_features_h3,34.0
+TIMING,03_task_h3,0.0
+TIMING,08_predict_h3,1.9
+  h=3: task_rows=19106 candidates=2676 rmse=0.0322
+TIMING,01_label_h7,17.5
+TIMING,02_features_h7,37.5
+TIMING,03_task_h7,0.0
+TIMING,08_predict_h7,4.2
+  h=7: task_rows=33531 candidates=4595 rmse=0.0096
+TIMING,09_action_list,0.0
+         action  n_ads  avg_ctr_1d  avg_ctr_7d
+           keep    826    0.048895    0.013433
+  promote_later     48    0.109069    0.051390
+    promote_now    120    0.212558    0.057352
+reduce_exposure    161    0.010328    0.003958
+TIMING,total,164.8
+	Command being timed: "python /home/worker/r/neurdb/neurdb-dev/test/avito/baselines/run_lotus.py --data /home/worker/r/neurdb/neurdb-dev/test/avito/baselines/data_large --out /home/worker/r/neurdb/neurdb-dev/test/avito/baselines/logs/scaling/lotus_large_mem --device cuda:0"
+	User time (seconds): 180.36
+	System time (seconds): 49.75
+	Percent of CPU this job got: 131%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:55.59
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10573288
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 6838
+	Minor (reclaiming a frame) page faults: 8291839
+	Voluntary context switches: 23343
+	Involuntary context switches: 10093894
+	Swaps: 0
+	File system inputs: 4795928
+	File system outputs: 552
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

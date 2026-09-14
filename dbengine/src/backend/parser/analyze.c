@@ -3679,6 +3679,52 @@ transformNeurDBPredictStmt(ParseState *pstate, NeurDBPredictStmt * stmt)
 				 errmsg("PREDICT statement must be on a table or a subquery")));
 	}
 
+	/*
+	 * NEURDB: when PREDICT itself appears as a subquery in an outer query's
+	 * FROM clause (SELECT ... FROM (PREDICT ...) p), the targetList above is
+	 * unusable: it aliases the inner subquery's targetList, whose Vars
+	 * reference the *inner* range table.  The nested query must instead
+	 * advertise a proper output schema referencing its own range table: all
+	 * input columns passed through, plus a trailing float8 "nr_pred" column.
+	 * The nr_pred entry is a NULL float8 placeholder Const; at run time the
+	 * NeurDBPredict executor node overwrites it with the prediction.
+	 */
+	if (pstate->parentParseState != NULL)
+	{
+		ParseNamespaceItem *nsitem;
+		List	   *tlist;
+		Const	   *placeholder;
+		TargetEntry *predte;
+		AttrNumber	resno = 1;
+
+		if (stmt->kind != PREDICT_VALUE)
+			ereport(ERROR,
+					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					 errmsg("only PREDICT VALUE is supported in a subquery")));
+
+		nsitem = (ParseNamespaceItem *) linitial(pstate->p_namespace);
+		tlist = expandNSItemAttrs(pstate, nsitem, 0, true, -1);
+
+		/*
+		 * expandNSItemAttrs numbers entries from pstate->p_next_resno, which
+		 * the predictTargetList/trainOn transforms above already consumed;
+		 * renumber so the output columns are 1..N as the outer query expects.
+		 */
+		foreach(l, tlist)
+		{
+			te = (TargetEntry *) lfirst(l);
+			te->resno = resno++;
+		}
+
+		placeholder = makeConst(FLOAT8OID, -1, InvalidOid, sizeof(float8),
+								(Datum) 0, true, FLOAT8PASSBYVAL);
+		predte = makeTargetEntry((Expr *) placeholder,
+								 resno,
+								 pstrdup("nr_pred"),
+								 false);
+		qry->targetList = lappend(tlist, predte);
+	}
+
 	/* mark column origins */
 	markTargetListOrigins(pstate, qry->targetList);
 

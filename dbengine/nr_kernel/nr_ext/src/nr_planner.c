@@ -241,6 +241,8 @@ static PlannerInfo *subquery_planner(PlannerGlobal *glob, Query *parse,
 									 PlannerInfo *parent_root,
 									 bool hasRecursion, double tuple_fraction);
 
+extern void neurdb_pull_up_predict_subqueries(PlannerInfo *root);
+
 static RowMarkType select_rowmark_type(RangeTblEntry *rte,
 									   LockClauseStrength strength);
 
@@ -409,8 +411,11 @@ NeurDB_planner(Query *parse, const char *query_string, int cursorOptions,
 		top_plan_add_predict->plan.qual = NIL;
 		top_plan_add_predict->plan.lefttree = top_plan;
 		top_plan_add_predict->plan.righttree = NULL;
-		top_plan_add_predict->plan.startup_cost = top_plan->startup_cost;
-		top_plan_add_predict->plan.total_cost = top_plan->total_cost;
+		/* AI operator cost model (see cost_neurdbpredict in costsize.c) */
+		cost_neurdbpredict(&top_plan_add_predict->plan.startup_cost,
+						   &top_plan_add_predict->plan.total_cost,
+						   top_plan->startup_cost, top_plan->total_cost,
+						   top_plan->plan_rows);
 		top_plan_add_predict->plan.plan_rows = top_plan->plan_rows;
 		top_plan_add_predict->plan.plan_width = top_plan->plan_width;
 		top_plan_add_predict->plan.parallel_aware = false;
@@ -706,6 +711,7 @@ subquery_planner(PlannerGlobal *glob, Query *parse,
 	 * query.
 	 */
 	pull_up_subqueries(root);
+	neurdb_pull_up_predict_subqueries(root);
 
 	/*
 	 * If this is a simple UNION ALL query, flatten it into an appendrel. We
