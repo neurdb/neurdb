@@ -2,4 +2,6 @@
 
 Model analytics server: `runtime`
 
-Learned query optimizer server: `query_opt`
+AI-for-DB services: [`ai_for_db`](ai_for_db/README.md)
+
+Learned query optimizer: [`ai_for_db/query_opt`](ai_for_db/query_opt/README.md)

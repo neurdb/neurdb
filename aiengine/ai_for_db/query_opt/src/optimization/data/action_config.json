@@ -1,0 +1,97 @@
+{
+  "method_labels": {
+    "query_split": "QuerySplit",
+    "lip_selective": "LIP (Sel.)",
+    "lip_full": "LIP (Full)",
+    "aja_conservative": "AJA (Cons.)",
+    "aja_aggressive": "AJA (Aggr.)",
+    "top5": "TOP-5 (DP)",
+    "top10": "TOP-10 (DP)"
+  },
+  "method_overrides": {
+    "query_split": {"dec": "apply"},
+    "lip_selective": {"filter": "selective"},
+    "lip_full": {"filter": "full", "lip_max_build_selectivity_pct": 10},
+    "aja_conservative": {"ajoin": "conservative"},
+    "aja_aggressive": {"ajoin": "aggressive"},
+    "top5": {"enum": "top5", "enum_k": 5},
+    "top10": {
+      "enum": "top10",
+      "enum_k": 10,
+      "lip_max_build_selectivity_pct": 10
+    }
+  },
+  "datasets": {
+    "JOB": {
+      "methods": [
+        "query_split",
+        "lip_selective",
+        "lip_full",
+        "aja_conservative",
+        "aja_aggressive",
+        "top5",
+        "top10"
+      ],
+      "base_profile": {
+        "max_rounds": 16,
+        "search_max_rels": 12,
+        "aja_conservative_rows": 100000,
+        "aja_aggressive_rows": 100000,
+        "aja_max_nestloop_cost_ratio_pct": 150,
+        "aja_aggressive_max_nestloop_cost_ratio_pct": 125,
+        "lip_max_build_relation_rows": 500000,
+        "lip_selective_plan_rows": 10000,
+        "lip_max_build_selectivity_pct": 5,
+        "lip_min_probe_ratio": 2,
+        "lip_max_filters": 4
+      }
+    },
+    "STACK": {
+      "methods": [
+        "query_split",
+        "lip_selective",
+        "lip_full",
+        "aja_conservative",
+        "aja_aggressive",
+        "top5",
+        "top10"
+      ],
+      "base_profile": {
+        "max_rounds": 16,
+        "search_max_rels": 12,
+        "aja_conservative_rows": 1000,
+        "aja_aggressive_rows": 1000,
+        "aja_max_nestloop_cost_ratio_pct": 150,
+        "aja_aggressive_max_nestloop_cost_ratio_pct": 125,
+        "lip_max_build_relation_rows": 10000,
+        "lip_selective_plan_rows": 10000,
+        "lip_max_build_selectivity_pct": 1,
+        "lip_min_probe_ratio": 2,
+        "lip_max_filters": 4
+      }
+    },
+    "TPCH": {
+      "methods": [
+        "lip_selective",
+        "lip_full",
+        "aja_conservative",
+        "aja_aggressive",
+        "top5",
+        "top10"
+      ],
+      "base_profile": {
+        "max_rounds": 16,
+        "search_max_rels": 12,
+        "aja_conservative_rows": 100000,
+        "aja_aggressive_rows": 10000,
+        "aja_max_nestloop_cost_ratio_pct": 150,
+        "aja_aggressive_max_nestloop_cost_ratio_pct": 125,
+        "lip_max_build_relation_rows": 100000,
+        "lip_selective_plan_rows": 10000,
+        "lip_max_build_selectivity_pct": 5,
+        "lip_min_probe_ratio": 2,
+        "lip_max_filters": 4
+      }
+    }
+  }
+}
