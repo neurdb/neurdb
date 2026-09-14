@@ -14,7 +14,7 @@ query_opt/
   src/database/       PostgreSQL catalog reader and SQL client
   src/experience/     persistent SQLite experience storage
   src/training/       explicit training, mixed workloads, checkpoint updates
-  examples/           SQL and Python clients
+  examples/           SQL/Python clients and a read-only JOB experience sample
   tests/              policy, experience, training, and client regression tests
 ```
 
@@ -37,9 +37,11 @@ Kernel ownership, relative to the NeurDB root:
 
 This package imports the existing NQO runtime from the `neurqo` repository at
 `dd44135f115ac41e5c2e67c210ffe9e21ee8dae3`, retaining module names and checkpoint
-compatibility. Workloads, benchmark results, large buffers, and checkpoints are
-not duplicated here. The original research repository remains the experiment
-and reproduction workspace. Synchronize future algorithm changes explicitly.
+compatibility. The released lightweight JOB buffer is included as
+[example data](examples/data/README.md); full collection buffers, benchmark
+results, workloads, and checkpoints are not duplicated here. The original
+research repository remains the experiment and reproduction workspace.
+Synchronize future algorithm changes explicitly.
 
 ## Install
 
@@ -138,6 +140,14 @@ policy decisions; PG's `nqo.trajectory_log` records execution events. They are
 distinct logs, not automatically a populated training buffer. The research
 collector still combines decisions, execution events, runtimes, and correctness
 checks into experience records. This SQL example is not an experiment collector.
+
+The read-only [JOB example buffer](examples/data/README.md) contains 11,045
+historical execution records covering 113 queries. Use it to inspect experience
+or as input to the training/replay tools. It is not a cache of SQL result rows
+and is not automatically loaded or updated by `nqo-sql`, psql, or the AI server.
+Adding a client-transparent collection path would require correlating policy
+decisions with DB completion/timeout feedback and persisting completed episodes;
+that service-side feedback pipeline is not implemented by `store.py` alone.
 
 `nqo-train`, `nqo-train-mixed`, and `nqo-incremental-trainer` expose the existing
 training/checkpoint tools (`--help` for arguments). Nothing starts training,
