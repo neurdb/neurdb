@@ -10,7 +10,10 @@ from contextlib import contextmanager
 from urllib.error import URLError
 from urllib.request import urlopen
 
+import psycopg2
 import pytest
+from database.client import configure_session
+from experience.store import ExperienceStore
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("NQO_TEST_DB") != "1", reason="set NQO_TEST_DB=1 for DB smoke tests"
@@ -29,7 +32,7 @@ WHERE cn.country_code = '[de]'
 
 
 @contextmanager
-def action_server(directory, *, fixed=None, model=None, catalog=None):
+def action_server(directory, *, fixed=None, model=None, catalog=None, collect=False):
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         port = listener.getsockname()[1]
@@ -60,6 +63,18 @@ def action_server(directory, *, fixed=None, model=None, catalog=None):
     else:
         command += ["--model-module", "runtime.policies.fixed:predict"]
         env.update(fixed or {})
+    if collect:
+        command += [
+            "--collect-experience",
+            "--data-dir",
+            str(directory / "data"),
+            "--experience-database",
+            os.environ.get("PGDATABASE", "imdb_ori"),
+            "--db-trajectory-log",
+            str(directory / "db.jsonl"),
+            "--collector-interval",
+            "0.05",
+        ]
     with (directory / "server.log").open("w") as log:
         process = subprocess.Popen(command, stdout=log, stderr=log, env=env, cwd="/tmp")
         try:
@@ -129,9 +144,13 @@ def test_fixed_policy_through_postgres(mode, tmp_path, pg_result):
     with action_server(tmp_path, fixed=fixed) as url:
         result = run_query(url, tmp_path / "db.jsonl")
     assert result["rows"] == pg_result["rows"]
-    events = [
+    all_events = [
         json.loads(line) for line in (tmp_path / "db.jsonl").read_text().splitlines()
     ]
+    assert all_events[0]["phase"] == "query_start"
+    assert all_events[-1]["phase"] == "query_complete"
+    assert all_events[-1]["status"] == "ok"
+    events = [e for e in all_events if e["phase"] in ("split", "final")]
     assert events[-1]["phase"] == "final"
     decisions = [
         json.loads(line)
@@ -173,3 +192,59 @@ def test_trusted_checkpoint_through_postgres(tmp_path, pg_result):
     assert all(
         entry["action"]["model_source"].startswith("checkpoint:") for entry in decisions
     )
+
+
+def test_server_collects_sql_outcomes_without_client_buffer_code(tmp_path, pg_result):
+    buffer = tmp_path / "data" / "experience" / "job.sqlite"
+    fixed = {"NQO_FIXED_DEC": "apply", "NQO_FIXED_SCHED_ALPHA": "0.5"}
+    with action_server(tmp_path, fixed=fixed, collect=True) as url:
+        assert run_query(url, tmp_path / "db.jsonl")["rows"] == pg_result["rows"]
+        connection = psycopg2.connect(application_name="nqo-collector-smoke")
+        connection.autocommit = True
+        try:
+            with connection.cursor() as cursor:
+                configure_session(
+                    cursor,
+                    enabled=True,
+                    server_url=url,
+                    timeout_ms=300,
+                    dataset="job",
+                    trajectory_log=str(tmp_path / "db.jsonl"),
+                )
+                with pytest.raises(psycopg2.errors.QueryCanceled):
+                    cursor.execute("SELECT pg_sleep(2)")
+                with pytest.raises(psycopg2.errors.DivisionByZero):
+                    cursor.execute("SELECT 1/0")
+                cursor.execute("SELECT 11; SELECT 22")
+                assert cursor.fetchall() == [(22,)]
+        finally:
+            connection.close()
+        deadline = time.monotonic() + 5
+        while True:
+            with ExperienceStore(buffer, read_only=True) as store:
+                records = list(store.iter_executions())
+            if len(records) == 5:
+                break
+            assert time.monotonic() < deadline, (tmp_path / "server.log").read_text()
+            time.sleep(0.05)
+        assert sorted(r["status"] for r in records) == [
+            "error",
+            "ok",
+            "ok",
+            "ok",
+            "timeout",
+        ]
+        by_sql = {r["db_events"][0]["sql"].strip(): r for r in records}
+        assert {"SELECT 11", "SELECT 22"}.issubset(by_sql)
+        assert by_sql["SELECT pg_sleep(2)"]["first_runtime_ms"] >= 250
+        split = by_sql[QUERY.strip()]
+        assert any(e["phase"] == "split" for e in split["db_events"])
+        for record in records:
+            completion = record["db_events"][-1]
+            assert completion["runtime_scope"] == "db_nqo"
+            assert record["first_runtime_ms"] == completion["wall_ms"]
+        assert len(split["trajectory"]) > 3
+    with action_server(tmp_path, fixed=fixed, collect=True):
+        time.sleep(0.2)
+        with ExperienceStore(buffer, read_only=True) as store:
+            assert store.trajectory_cache_summary()["entries"] == 5

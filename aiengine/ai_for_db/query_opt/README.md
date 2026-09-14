@@ -12,9 +12,13 @@ query_opt/
   src/model/          graph/plan encoders and hierarchical policy
   src/optimization/   action vocabulary, state contracts, dataset parameters
   src/database/       PostgreSQL catalog reader and SQL client
-  src/experience/     persistent SQLite experience storage
+  src/experience/     persistent SQLite storage and background log collector
   src/training/       explicit training, mixed workloads, checkpoint updates
-  examples/           SQL/Python clients and a read-only JOB experience sample
+  data/bootstrap/     versioned initial experience, including JOB
+  data/experience/    writable dataset buffers (ignored by Git)
+  data/logs/          policy and DB JSONL files (ignored by Git)
+  data/collector/     durable log read positions (ignored by Git)
+  examples/           SQL/Python clients
   tests/              policy, experience, training, and client regression tests
 ```
 
@@ -38,7 +42,7 @@ Kernel ownership, relative to the NeurDB root:
 This package imports the existing NQO runtime from the `neurqo` repository at
 `dd44135f115ac41e5c2e67c210ffe9e21ee8dae3`, retaining module names and checkpoint
 compatibility. The released lightweight JOB buffer is included as
-[example data](examples/data/README.md); full collection buffers, benchmark
+[bootstrap data](data/bootstrap/README.md); full collection buffers, benchmark
 results, workloads, and checkpoints are not duplicated here. The original
 research repository remains the experiment and reproduction workspace.
 Synchronize future algorithm changes explicitly.
@@ -135,24 +139,99 @@ it directly to the Internet. For a separate AI host, change the client's
 ## Experience and Training
 
 `experience.store.ExperienceStore` preserves the dataset-level SQLite store and
-complete-trajectory reuse semantics. The server's `--trajectory-log` records
-policy decisions; PG's `nqo.trajectory_log` records execution events. They are
-distinct logs, not automatically a populated training buffer. The research
-collector still combines decisions, execution events, runtimes, and correctness
-checks into experience records. This SQL example is not an experiment collector.
+complete-trajectory reuse semantics. Enable the server's collector explicitly:
 
-The read-only [JOB example buffer](examples/data/README.md) contains 11,045
-historical execution records covering 113 queries. Use it to inspect experience
-or as input to the training/replay tools. It is not a cache of SQL result rows
-and is not automatically loaded or updated by `nqo-sql`, psql, or the AI server.
-Adding a client-transparent collection path would require correlating policy
-decisions with DB completion/timeout feedback and persisting completed episodes;
-that service-side feedback pipeline is not implemented by `store.py` alone.
+```bash
+nqo-server --model-module runtime.policies.fixed:predict --require-model \
+  --workload job --collect-experience --experience-database imdb_ori
+```
+
+This starts one server-owned thread, polling every two seconds. It combines
+policy decisions and DB execution events, then appends completed executions to
+`data/experience/job.sqlite`. `--data-dir` (or `NQO_DATA_DIR`) changes the data
+root; `--collector-interval` changes the polling interval. Source installations
+default to this package's `data/`; installed wheels without a checkout use
+`~/.local/share/neurdb/query_opt`. No training starts.
+
+Configure PostgreSQL to write the corresponding DB log, using an absolute path
+writable by its OS user. For the development container, an administrator can
+set this default for **new connections** once:
+
+```sql
+ALTER DATABASE imdb_ori SET nqo.trajectory_log =
+  '/code/neurdb-dev/aiengine/ai_for_db/query_opt/data/logs/job.db.jsonl';
+```
+
+Then execute NQO-enabled SQL normally, for example `nqo-sql --dataset job --file
+examples/query.sql`. psql applications need the usual `SET nqo = on` and correct
+`nqo.server_url`; they do not manage SQLite. Without a database default, use a
+session-local `SET nqo.trajectory_log` or the client's `--trajectory-log`.
+The collector's `--db-trajectory-log` must identify that same file. On separate
+hosts, expose the PG-written log to the server through a shared mount; the paths
+on the two hosts need not be identical. The server cannot configure remote PG
+filesystem permissions or database defaults for you.
+
+### Persistent Files
+
+Each dataset uses **two append-only JSONL logs shared by all queries**, not a
+new file per SQL. Each line is one JSON event:
+
+| File under `data/` | Writer | Contents |
+|---|---|---|
+| `logs/job.policy.jsonl` | AI server | `policy_decision`: state, action, inference latency and policy metadata; optional reload events |
+| `logs/job.db.jsonl` | PostgreSQL | `query_start`, per-round `split`/`final`, and `query_complete` |
+| `experience/job.sqlite` | Collector | One persistent execution record with its full decision/execution trajectory |
+| `collector/job.json` | Collector | Read offsets and pending executions for restart recovery, not a SQL log |
+
+`pid` and `run_id` correlate a SQL execution across both logs; `round` and
+`request_type` associate individual decisions. Start events include the original
+statement, database, timeout and action settings. Round events retain states,
+selected actions, timing breakdowns, adaptive-join counters and materialized
+relation statistics. Completion events record status (`ok`, `timeout`, `error`,
+or `cancelled`), elapsed time, result row count when available, and error details.
+Concurrent writes are serialized so JSON lines do not interleave. Logs contain
+SQL text and plan/state details: restrict access as for database query logs.
+
+The collector resumes saved offsets after restart, waits for complete JSON
+lines, and uses stable execution IDs to avoid duplicate inserts on replay.
+SQLite writes commit before advancing the cursor. It only accepts the configured
+database and permits one collector per runtime buffer; changing datasets requires
+a server restart. `GET /` reports collector health. Do not truncate or rotate logs
+with unread events: drain them first. Abrupt backend termination without a
+completion event leaves a pending execution, never a fabricated success.
+
+The tracked [JOB bootstrap](data/bootstrap/README.md) has 11,045 historical
+records covering 113 queries. On first collection startup it is copied to
+`data/experience/job.sqlite` **only if that runtime file does not exist**. All
+subsequent appends go to the runtime file; the tracked bootstrap is unchanged.
+Datasets without bootstrap data start with an empty store. Runtime SQLite files,
+their lock files, logs and cursors are ignored by Git.
+
+### Measurement Scope
+
+New service-collected records use `runtime_scope=db_nqo`: elapsed time from entry
+to exit of the NQO hook, covering all rounds, search/planning, AI calls, execution
+and intermediate materialization. This is **not just the final SELECT** and is
+not identical to client `wall_ms`: parse/analyze/rewrite, connection setup and
+client/network fetch overhead are outside this timer. The scope and action
+settings are included in the stored configuration identity, separate from
+historical experiment measurements. Timeout records retain the observed elapsed
+time; a benchmark-specific timeout penalty needs a PG baseline and is applied by
+evaluation, not guessed by this collector.
+
+Collection records execution facts, not a correctness comparison against PG;
+it does not fetch/hash result rows or execute SQL again. Statements that never
+enter the NQO hook (NQO disabled, non-SELECT, parse/analyze errors, or the currently
+unsupported extended-protocol path) do not generate these experiences. Experience
+is not a result cache: ordinary SQL is still executed, and intermediate result
+tables cannot be restored from it. Training/replay consumers decide how to reuse
+labels, keeping dataset and measurement scope consistent.
 
 `nqo-train`, `nqo-train-mixed`, and `nqo-incremental-trainer` expose the existing
-training/checkpoint tools (`--help` for arguments). Nothing starts training,
-collection, scheduled jobs, or background services automatically. Keep local
-catalogs, logs, buffers, and checkpoints under ignored `.runtime/`.
+training/checkpoint tools (`--help` for arguments). Without `--collect-experience`
+the server does not start a collector. Nothing installs scheduled services or
+starts training automatically. Keep local catalogs and checkpoints in ignored
+`.runtime/` and persistent collection data in `data/`.
 
 ## Verify
 
@@ -165,6 +244,8 @@ Opt-in integration tests execute JOB 2a against `PGHOST/PGPORT/PGUSER/PGDATABASE
 compare fixed-action and checkpoint results with PG, and check actual action
 activation and state boundaries. They launch temporary loopback action servers
 and always stop them on exit; they do not train or run a workload benchmark.
+The collector smoke test also checks a split execution, timeout, execution error,
+multiple statements sharing logs, and restart deduplication.
 
 ```bash
 NQO_TEST_DB=1 NQO_TEST_MODEL=/path/to/trusted/best.pt \

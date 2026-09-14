@@ -738,6 +738,8 @@ def ingest_trajectory(
     trajectory: list[dict[str, Any]] = []
 
     for event in db_events:
+        if event.get("phase") in {"query_start", "query_complete"}:
+            continue
         round_index = int(event.get("round") or 0)
         timing = event.get("timing_ms") or {}
         stored_states = event.get("decision_states") or {}

@@ -1,6 +1,6 @@
-# JOB Experience Sample
+# JOB Experience Bootstrap
 
-`job_light.sqlite` is the released lightweight JOB experience buffer, copied
+`job.sqlite` is the released lightweight JOB experience buffer, copied
 byte-for-byte from `neurqo/results/buffers/job_light.sql` at source commit
 `dd44135f115ac41e5c2e67c210ffe9e21ee8dae3`. The source's historical `.sql` suffix
 also denotes a binary SQLite database, not a SQL script. Only the filename has
@@ -32,7 +32,7 @@ From `aiengine/ai_for_db/query_opt`, with its Python environment activated:
 python - <<'PY'
 from experience.store import ExperienceStore
 
-with ExperienceStore("examples/data/job_light.sqlite", read_only=True) as store:
+with ExperienceStore("data/bootstrap/job.sqlite", read_only=True) as store:
     print(store.trajectory_cache_summary())
     record = next(
         row for row in store.iter_executions(query_ids=["2a"])
@@ -55,22 +55,16 @@ performance measurement on the current machine.
 
 ## Runtime Use
 
-Treat this tracked file as a **read-only seed**. For a writable local copy:
+Treat this tracked file as a **read-only seed**. The AI server's
+`--collect-experience --workload job --experience-database imdb_ori` initializes
+`data/experience/job.sqlite` from this file only if the runtime buffer is absent.
+An existing runtime buffer is never replaced. The background collector then
+appends executions there; it never modifies this bootstrap. The runtime directory
+is ignored by Git. See the [service setup](../../README.md#experience-and-training)
+for the required PostgreSQL log configuration and measurement scope.
 
-```bash
-mkdir -p .runtime/experience
-cp -n examples/data/job_light.sqlite .runtime/experience/job.sqlite
-```
-
-Open the local copy with `ExperienceStore` and explicitly call
-`append_execution()` with collected states/actions, DB events, execution status,
-and runtimes. `.runtime/` is ignored by Git; do not write new runs into the
-tracked example. The copy command leaves an existing local buffer untouched.
-
-**Executing SQL does not currently append experience automatically.** Neither
-psql nor `nqo-sql` loads this file implicitly; the AI server logs policy
-decisions but does not yet collect complete SQL outcomes into SQLite. Production
-collection should be connected on the service/DB side so applications need not
-manage the buffer. That is a separate integration task, not enabled by shipping
-this sample. Experience also does not contain the materialized SQL result tables
-needed to resume a partially executed query.
+This is architecture-owned initial data, not a client example. Applications
+only execute SQL; the service collects policy and execution logs. Training can
+read the runtime buffer through `--experience-db data/experience/job.sqlite`.
+Experience does not contain materialized SQL result tables needed to resume a
+partially executed query, and collection does not start training automatically.

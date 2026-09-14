@@ -56,6 +56,7 @@ import importlib.util
 import json
 import math
 import os
+import signal
 import sys
 import threading
 import time
@@ -64,6 +65,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable
 
+from experience.collector import ExperienceCollector, default_data_dir
 from optimization.action_vocabulary import (
     ADAPT_PHASE,
     DEC_PHASE,
@@ -113,6 +115,9 @@ PLAN_NODE_NAME_TO_EXPLAIN = {
     "ValuesScan": "Values Scan",
 }
 
+TRAJECTORY_LOG_LOCK = threading.Lock()
+COLLECTOR: ExperienceCollector | None = None
+
 
 def _truthy(value: Any) -> bool:
     if isinstance(value, bool):
@@ -138,8 +143,9 @@ def _append_jsonl(path: str | None, payload: dict[str, Any]) -> None:
         return
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(payload, sort_keys=True, default=str) + "\n")
+    with TRAJECTORY_LOG_LOCK:
+        with p.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, sort_keys=True, default=str) + "\n")
 
 
 def _explain_node_name(name: Any) -> str:
@@ -1386,6 +1392,15 @@ class Handler(BaseHTTPRequestHandler):
             if key in request and request[key] is not None:
                 new_config[key] = request[key]
 
+        if (
+            COLLECTOR is not None
+            and str(new_config["workload"]).lower() != COLLECTOR.dataset
+        ):
+            self._respond(
+                b"reloaded=0\nnote=restart the collector to change datasets\n", 400
+            )
+            return
+
         try:
             controller = HierarchicalPolicyController(**new_config)
         except Exception as exc:  # noqa: BLE001
@@ -1491,10 +1506,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         with POLICY_LOCK:
             source = CONTROLLER.source if CONTROLLER else "stub"
-        self._respond(
-            f"action=none\nstop=1\nnote=health ok\nmodel_source={source}\n".encode(
-                "utf-8"
+        collector_status = "disabled"
+        if COLLECTOR is not None:
+            collector_status = (
+                "error"
+                if COLLECTOR.last_error or not COLLECTOR.is_alive()
+                else "running"
             )
+        self._respond(
+            (
+                f"action=none\nstop=1\nnote=health ok\nmodel_source={source}\n"
+                f"collector={collector_status}\n"
+            ).encode("utf-8")
         )
 
     def log_message(self, *args):  # silence default per-request stderr noise
@@ -1502,7 +1525,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> int:
-    global CONTROLLER, CONTROLLER_CONFIG, REQUIRE_MODEL, TRAJECTORY_LOG
+    global CONTROLLER, CONTROLLER_CONFIG, REQUIRE_MODEL, TRAJECTORY_LOG, COLLECTOR
 
     ap = argparse.ArgumentParser(description="NQO hierarchical action server")
     ap.add_argument("--host", default="127.0.0.1")
@@ -1597,12 +1620,56 @@ def main() -> int:
     )
     ap.add_argument("--trajectory-log", default=os.environ.get("NQO_TRAJECTORY_LOG"))
     ap.add_argument(
+        "--collect-experience",
+        action="store_true",
+        help="enable the log collector, never training",
+    )
+    ap.add_argument("--data-dir", type=Path, default=default_data_dir())
+    ap.add_argument(
+        "--experience-database", help="exact PostgreSQL database name to collect"
+    )
+    ap.add_argument(
+        "--db-trajectory-log",
+        type=Path,
+        help="PG-written JSONL path visible to this server",
+    )
+    ap.add_argument("--collector-interval", type=float, default=2.0)
+    ap.add_argument(
         "--require-model",
         action="store_true",
         default=_truthy(os.environ.get("NQO_REQUIRE_MODEL")),
         help="fail startup if --model-module/--model-path cannot be loaded",
     )
     args = ap.parse_args()
+
+    collector = None
+    if args.collect_experience:
+        if not args.experience_database:
+            ap.error("--collect-experience requires --experience-database")
+        dataset = args.workload.strip().lower()
+        if not dataset or not all(c.isalnum() or c in "_-" for c in dataset):
+            ap.error("workload must be a simple dataset name")
+        data_dir = args.data_dir.expanduser().resolve()
+        args.trajectory_log = args.trajectory_log or str(
+            data_dir / "logs" / f"{dataset}.policy.jsonl"
+        )
+        db_log = args.db_trajectory_log or data_dir / "logs" / f"{dataset}.db.jsonl"
+        try:
+            collector = ExperienceCollector(
+                dataset=dataset,
+                database=args.experience_database,
+                policy_log=Path(args.trajectory_log),
+                db_log=db_log,
+                buffer=data_dir / "experience" / f"{dataset}.sqlite",
+                checkpoint=data_dir / "collector" / f"{dataset}.json",
+                bootstrap=data_dir / "bootstrap" / f"{dataset}.sqlite",
+                interval=args.collector_interval,
+                log=log,
+            )
+        except ValueError as exc:
+            ap.error(str(exc))
+        Path(args.trajectory_log).parent.mkdir(parents=True, exist_ok=True)
+        db_log.parent.mkdir(parents=True, exist_ok=True)
 
     REQUIRE_MODEL = bool(args.require_model)
     TRAJECTORY_LOG = args.trajectory_log
@@ -1649,16 +1716,37 @@ def main() -> int:
             return 2
 
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
+    if collector is not None:
+        COLLECTOR = collector
+        collector.start()
+        if not collector.ready.wait(timeout=30) or collector.startup_error:
+            log(
+                f"collector initialization failed: {collector.startup_error or 'startup timeout'}"
+            )
+            collector.stop()
+            srv.server_close()
+            return 2
+        log(
+            f"collector enabled buffer={collector.buffer} db_log={collector.paths['db']} interval={collector.interval}s"
+        )
     log(
         f"NQO hierarchical action server listening on http://{args.host}:{args.port}/action "
         f"source={CONTROLLER.source} trajectory_log={TRAJECTORY_LOG or 'off'}"
     )
     try:
+
+        def stop_on_signal(_signum, _frame):
+            raise KeyboardInterrupt
+
+        signal.signal(signal.SIGTERM, stop_on_signal)
         srv.serve_forever()
     except KeyboardInterrupt:
         log("shutting down")
     finally:
         srv.server_close()
+        if collector is not None:
+            collector.stop()
+            COLLECTOR = None
     return 0
 
 

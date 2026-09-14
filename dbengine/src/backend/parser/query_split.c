@@ -16,6 +16,7 @@
 #include <math.h>
 #include <netdb.h>
 #include <sys/time.h>
+#include <sys/file.h>
 
 #include "access/stratnum.h"
 #include "executor/nodeNqoAdaptiveJoin.h"
@@ -24,6 +25,7 @@
 #include "optimizer/cost.h"
 #include "optimizer/optimizer.h"
 #include "commands/event_trigger.h"
+#include "commands/dbcommands.h"
 #include "commands/portalcmds.h"
 #include "utils/relmapper.h"
 #include "commands/vacuum.h"
@@ -36,6 +38,7 @@
 #include "utils/rel.h"
 #include "utils/ruleutils.h"
 #include "utils/syscache.h"
+#include "utils/timestamp.h"
 #include "storage/fd.h"
 #include "storage/buf_internals.h"
 #include "parser/parse_relation.h"		/* addRTEPermissionInfo (PG16) */
@@ -50,6 +53,8 @@
 
 //Create a local query
 static Query* createQuery(const Query* querytree, CommandDest dest, List* rtable, Index* transfer_array, int length);
+static void nqo_execute_query(const char* query_string, CommandTag commandTag,
+	Node* pstmt, Query* querytree, QueryCompletion* completionTag);
 //change the RangeTblEntry relid to the new one
 static void dochange(RangeTblEntry* rte, char* relname, Relation relation, Oid relid);
 //Get the var will link to unlocal table
@@ -550,6 +555,92 @@ nqo_build_sched_state(Query* q, const char* query_string,
 }
 
 static void
+nqo_write_log_line(const char* line)
+{
+	FILE* fp;
+
+	if (nqo_trajectory_log_path == NULL || nqo_trajectory_log_path[0] == '\0')
+		return;
+	fp = AllocateFile(nqo_trajectory_log_path, "a");
+	if (fp == NULL)
+	{
+		elog(WARNING, "[nqo] could not open trajectory log: %m");
+		return;
+	}
+	/* Serialize complete JSON lines across PostgreSQL backend processes. */
+	if (flock(fileno(fp), LOCK_EX) == 0)
+	{
+		if (fputs(line, fp) == EOF || fputc('\n', fp) == EOF || fflush(fp) != 0)
+			elog(WARNING, "[nqo] could not write trajectory log: %m");
+		flock(fileno(fp), LOCK_UN);
+	}
+	else
+		elog(WARNING, "[nqo] could not lock trajectory log: %m");
+	FreeFile(fp);
+}
+
+static void
+nqo_log_query_boundary(const char* phase, const char* sql, const char* database,
+	const char* status, double started_ms, ErrorData* error,
+	QueryCompletion* completion)
+{
+	StringInfoData line;
+
+	if (nqo_trajectory_log_path == NULL || nqo_trajectory_log_path[0] == '\0')
+		return;
+	initStringInfo(&line);
+	appendStringInfo(&line, "{\"schema_version\":1,\"pid\":%d,\"run_id\":"
+		UINT64_FORMAT ",\"ts_ms\":%.3f,\"phase\":", MyProcPid,
+		nqo_current_run_id, nqo_now_ms());
+	nqo_append_json_string(&line, phase);
+	appendStringInfoString(&line, ",\"database\":");
+	nqo_append_json_string(&line, database);
+	appendStringInfo(&line, ",\"timeout_limit_ms\":%d", StatementTimeout);
+	if (sql != NULL)
+	{
+		appendStringInfoString(&line, ",\"sql\":");
+		nqo_append_json_string(&line, sql);
+		appendStringInfo(&line,
+			",\"action_settings\":{\"max_rounds\":%d,\"search_topk\":%d,"
+			"\"search_max_rels\":%d,\"search_exact_cardinality\":%s,"
+			"\"aja_conservative_rows\":%d,\"aja_aggressive_rows\":%d,"
+			"\"aja_max_nestloop_cost_ratio_pct\":%d,"
+			"\"aja_aggressive_max_nestloop_cost_ratio_pct\":%d,"
+			"\"lip_max_build_relation_rows\":%d,\"lip_selective_plan_rows\":%d,"
+			"\"lip_max_build_selectivity_pct\":%d,\"lip_min_probe_ratio\":%d,"
+			"\"lip_max_filters\":%d}",
+			nqo_max_rounds, nqo_search_topk, nqo_search_max_rels,
+			nqo_search_exact_cardinality ? "true" : "false",
+			nqo_aja_conservative_rows, nqo_aja_aggressive_rows,
+			nqo_aja_max_nestloop_cost_ratio_pct,
+			nqo_aja_aggressive_max_nestloop_cost_ratio_pct,
+			nqo_lip_max_build_relation_rows, nqo_lip_selective_plan_rows,
+			nqo_lip_max_build_selectivity_pct, nqo_lip_min_probe_ratio,
+			nqo_lip_max_filters);
+	}
+	if (status != NULL)
+	{
+		appendStringInfoString(&line, ",\"status\":");
+		nqo_append_json_string(&line, status);
+		appendStringInfo(&line, ",\"runtime_scope\":\"db_nqo\",\"wall_ms\":%.3f",
+			Max(nqo_now_ms() - started_ms, 0.0));
+		if (completion != NULL)
+			appendStringInfo(&line, ",\"result_rows\":" UINT64_FORMAT,
+				completion->nprocessed);
+		if (error != NULL)
+		{
+			appendStringInfoString(&line, ",\"sqlstate\":");
+			nqo_append_json_string(&line, unpack_sql_state(error->sqlerrcode));
+			appendStringInfoString(&line, ",\"error\":");
+			nqo_append_json_string(&line, error->message);
+		}
+	}
+	appendStringInfoChar(&line, '}');
+	nqo_write_log_line(line.data);
+	pfree(line.data);
+}
+
+static void
 nqo_log_trajectory_event(const char* phase, int round,
 							const char* state_json, bool stop_now,
 							const char* sched_state_json,
@@ -561,22 +652,12 @@ nqo_log_trajectory_event(const char* phase, int round,
 							double execution_ms, double total_ms,
 							const char* result)
 {
-	FILE* fp;
 	StringInfoData line;
 	NqoAdaptiveJoinStats aja_stats = nqo_get_adaptive_join_stats();
 
 	if (nqo_trajectory_log_path == NULL ||
 		nqo_trajectory_log_path[0] == '\0')
 		return;
-
-	fp = AllocateFile(nqo_trajectory_log_path, "a");
-	if (fp == NULL)
-	{
-		elog(WARNING, "[nqo] run=" UINT64_FORMAT
-			 " could not append trajectory log %s: %m",
-			 nqo_current_run_id, nqo_trajectory_log_path);
-		return;
-	}
 
 	initStringInfo(&line);
 	appendStringInfo(&line,
@@ -720,9 +801,7 @@ nqo_log_trajectory_event(const char* phase, int round,
 	nqo_append_json_string(&line, result);
 	appendStringInfoChar(&line, '}');
 
-	fputs(line.data, fp);
-	fputc('\n', fp);
-	FreeFile(fp);
+	nqo_write_log_line(line.data);
 	pfree(line.data);
 }
 
@@ -3546,7 +3625,68 @@ nqo_plan_execution(Query* q, const char* query_string,
 //The interface
 void doQSparse(const char* query_string, CommandTag commandTag, Node* pstmt, Query* querytree, QueryCompletion* completionTag)
 {
-	nqo_current_run_id = ++nqo_run_seq;
+	double started_ms = nqo_now_ms();
+	MemoryContext saved_context = CurrentMemoryContext;
+	char* database = NULL;
+	char* statement = NULL;
+
+	/* Timestamp-based IDs also distinguish reused PIDs after backend restart. */
+	nqo_run_seq = Max(nqo_run_seq + 1, (uint64) GetCurrentTimestamp());
+	nqo_current_run_id = nqo_run_seq;
+	if (nqo_trajectory_log_path != NULL && nqo_trajectory_log_path[0] != '\0')
+	{
+		int location = Max(querytree->stmt_location, 0);
+		int length = querytree->stmt_len;
+
+		database = get_database_name(MyDatabaseId);
+		statement = length > 0 ? pnstrdup(query_string + location, length) :
+			pstrdup(query_string + location);
+		nqo_log_query_boundary("query_start", statement, database, NULL,
+			started_ms, NULL, NULL);
+	}
+	PG_TRY();
+	{
+		nqo_execute_query(query_string, commandTag, pstmt, querytree, completionTag);
+	}
+	PG_CATCH();
+	{
+		ErrorData* error;
+		const char* status = "error";
+
+		MemoryContextSwitchTo(saved_context);
+		error = CopyErrorData();
+		FlushErrorState();
+		if (error->sqlerrcode == ERRCODE_QUERY_CANCELED)
+			status = error->message_id != NULL &&
+				strcmp(error->message_id, "canceling statement due to statement timeout") == 0 ?
+				"timeout" : "cancelled";
+		HOLD_INTERRUPTS();
+		PG_TRY(log_error);
+		{
+			nqo_log_query_boundary("query_complete", NULL, database, status,
+				started_ms, error, NULL);
+		}
+		PG_CATCH(log_error);
+		{
+			FlushErrorState();
+		}
+		PG_END_TRY(log_error);
+		RESUME_INTERRUPTS();
+		ReThrowError(error);
+	}
+	PG_END_TRY();
+	nqo_log_query_boundary("query_complete", NULL, database, "ok",
+		started_ms, NULL, completionTag);
+	if (statement != NULL)
+		pfree(statement);
+	if (database != NULL)
+		pfree(database);
+}
+
+static void
+nqo_execute_query(const char* query_string, CommandTag commandTag, Node* pstmt,
+	Query* querytree, QueryCompletion* completionTag)
+{
 	nqo_reset_action_components();
 	nqo_current_dec_action[0] = '\0';
 	elog(LOG, "[nqo] run=" UINT64_FORMAT " enter: enabled=%d cmd=%d rtable=%d alg=%d order_decision=%s sql=%s",
@@ -3676,7 +3816,7 @@ static void rRj(Query* querytree)
 {
 	//get all the foreign key
 	List* FKlist = grFK(querytree->rtable);
-	int length = querytree->rtable->length;
+	int length = list_length(querytree->rtable);
 	is_relationship = (bool*)palloc(length * sizeof(bool));
 	memset(is_relationship, true, length * sizeof(bool));
 	ListCell* lc;
