@@ -206,7 +206,7 @@ static void ExecParallelHashJoinPartitionOuter(HashJoinState *hjstate);
 /*
  * Build a private hash table without consuming the probe side.
  *
- * NQO's adaptive join uses this exact executor boundary to observe the
+ * NeurQO's adaptive join uses this exact executor boundary to observe the
  * build cardinality before choosing between the already initialized HashJoin
  * and an equivalent NestLoop.  The normal ExecHashJoin path is unchanged.
  */

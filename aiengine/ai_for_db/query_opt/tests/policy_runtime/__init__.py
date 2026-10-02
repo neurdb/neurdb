@@ -1,1 +1,1 @@
-"""Tests for the independent NQO Python runtime."""
+"""Tests for the independent NeurQO Python runtime."""

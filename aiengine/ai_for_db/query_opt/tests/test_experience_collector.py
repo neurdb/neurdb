@@ -70,7 +70,7 @@ def episode(run=1, status="ok", database="imdb_ori"):
             database=database,
             status=status,
             wall_ms=12,
-            runtime_scope="db_nqo",
+            runtime_scope="db_neurqo",
             result_rows=1,
             ts_ms=1012,
         ),

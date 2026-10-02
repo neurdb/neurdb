@@ -18,11 +18,11 @@ dependencies = [
 test = ["pytest>=8,<9"]
 
 [project.scripts]
-nqo-server = "runtime.action_server:main"
-nqo-sql = "database.client:main"
-nqo-train = "training.experience_trainer:main"
-nqo-train-mixed = "training.multi_workload:main"
-nqo-incremental-trainer = "training.incremental_trainer:main"
+neurqo-server = "runtime.action_server:main"
+neurqo-sql = "database.client:main"
+neurqo-train = "training.experience_trainer:main"
+neurqo-train-mixed = "training.multi_workload:main"
+neurqo-incremental-trainer = "training.incremental_trainer:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

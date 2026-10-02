@@ -1,4 +1,4 @@
-"""Canonical NQO action vocabulary and legacy protocol adapters.
+"""Canonical NeurQO action vocabulary and legacy protocol adapters.
 
 The public names in this module follow the paper: Dec, Sched, Enum, Filter,
 and AJoin.  Older checkpoints and execution buffers used the implementation

@@ -1,4 +1,4 @@
-"""Environment-configurable policy for isolated NQO action experiments.
+"""Environment-configurable policy for isolated NeurQO action experiments.
 
 The module is loaded by the action server through:
 
@@ -24,31 +24,32 @@ from optimization.action_vocabulary import (
     canonical_filter_action,
     canonical_phase,
 )
+from optimization.naming import environ
 
 
 def _setting(name: str, default: str) -> str:
-    return os.environ.get(name, default).strip().lower()
+    return environ.get(name, default).strip().lower()
 
 
 def _setting_with_legacy(name: str, legacy: str, default: str) -> str:
-    value = os.environ.get(name)
+    value = environ.get(name)
     if value is None:
-        value = os.environ.get(legacy, default)
+        value = environ.get(legacy, default)
     return value.strip().lower()
 
 
 def _integer(name: str, default: int) -> int:
-    value = os.environ.get(name)
+    value = environ.get(name)
     return default if value is None else int(value)
 
 
 def _float(name: str, default: float) -> float:
-    value = os.environ.get(name)
+    value = environ.get(name)
     return default if value is None else float(value)
 
 
 def _float_sequence(name: str) -> list[float]:
-    value = os.environ.get(name, "")
+    value = environ.get(name, "")
     return [float(item.strip()) for item in value.split(",") if item.strip()]
 
 
@@ -57,30 +58,30 @@ def predict(state: dict[str, Any]) -> dict[str, Any]:
 
     if request_type == DEC_PHASE:
         dec = canonical_dec_action(
-            _setting_with_legacy("NQO_FIXED_DEC", "NQO_FIXED_HIGH", "skip")
+            _setting_with_legacy("NEURQO_FIXED_DEC", "NEURQO_FIXED_HIGH", "skip")
         )
         round_no = int(state.get("round") or 0)
         remaining = int(state.get("remaining_splits") or 0)
-        max_dec_rounds = _integer("NQO_FIXED_DEC_ROUNDS", -1)
-        if "NQO_FIXED_DEC_ROUNDS" not in os.environ:
-            max_dec_rounds = _integer("NQO_FIXED_SPLIT_ROUNDS", -1)
+        max_dec_rounds = _integer("NEURQO_FIXED_DEC_ROUNDS", -1)
+        if "NEURQO_FIXED_DEC_ROUNDS" not in environ:
+            max_dec_rounds = _integer("NEURQO_FIXED_SPLIT_ROUNDS", -1)
         apply = dec == "apply" and remaining > 0
         if max_dec_rounds >= 0 and round_no >= max_dec_rounds:
             apply = False
         dec_action = "apply" if apply else "skip"
         return {
             "dec_action": dec_action,
-            "order_decision": _setting("NQO_FIXED_ORDER_DECISION", "only_cost"),
+            "order_decision": _setting("NEURQO_FIXED_ORDER_DECISION", "only_cost"),
             "note": "fixed Dec policy",
         }
 
     if request_type == SCHED_PHASE:
-        alpha = _float("NQO_FIXED_SCHED_ALPHA", 0.5)
-        if "NQO_FIXED_SCHED_ALPHA" not in os.environ:
-            alpha = _float("NQO_FIXED_ALPHA", 0.5)
-        sequence = _float_sequence("NQO_FIXED_SCHED_ALPHA_SEQUENCE")
+        alpha = _float("NEURQO_FIXED_SCHED_ALPHA", 0.5)
+        if "NEURQO_FIXED_SCHED_ALPHA" not in environ:
+            alpha = _float("NEURQO_FIXED_ALPHA", 0.5)
+        sequence = _float_sequence("NEURQO_FIXED_SCHED_ALPHA_SEQUENCE")
         if not sequence:
-            sequence = _float_sequence("NQO_FIXED_ALPHA_SEQUENCE")
+            sequence = _float_sequence("NEURQO_FIXED_ALPHA_SEQUENCE")
         round_no = int(state.get("round") or 0)
         if round_no < len(sequence):
             alpha = sequence[round_no]
@@ -97,10 +98,12 @@ def predict(state: dict[str, Any]) -> dict[str, Any]:
         }
 
     if request_type == ENUM_PHASE:
-        enum = _setting_with_legacy("NQO_FIXED_ENUM", "NQO_FIXED_SEARCH", "native")
-        enum_k = _integer("NQO_FIXED_ENUM_K", 5)
-        if "NQO_FIXED_ENUM_K" not in os.environ:
-            enum_k = _integer("NQO_FIXED_SEARCH_K", 5)
+        enum = _setting_with_legacy(
+            "NEURQO_FIXED_ENUM", "NEURQO_FIXED_SEARCH", "native"
+        )
+        enum_k = _integer("NEURQO_FIXED_ENUM_K", 5)
+        if "NEURQO_FIXED_ENUM_K" not in environ:
+            enum_k = _integer("NEURQO_FIXED_SEARCH_K", 5)
         enum_action = canonical_enum_action(enum, enum_k)
         return {
             "enum_action": enum_action,
@@ -110,10 +113,10 @@ def predict(state: dict[str, Any]) -> dict[str, Any]:
 
     if request_type == ADAPT_PHASE:
         filter_action = canonical_filter_action(
-            _setting_with_legacy("NQO_FIXED_FILTER", "NQO_FIXED_LIP", "none")
+            _setting_with_legacy("NEURQO_FIXED_FILTER", "NEURQO_FIXED_LIP", "none")
         )
         ajoin_action = canonical_ajoin_action(
-            _setting_with_legacy("NQO_FIXED_AJOIN", "NQO_FIXED_AJA", "off")
+            _setting_with_legacy("NEURQO_FIXED_AJOIN", "NEURQO_FIXED_AJA", "off")
         )
         return {
             "filter_action": filter_action,

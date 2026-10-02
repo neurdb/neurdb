@@ -1,4 +1,4 @@
-"""Single-table execution-experience persistence used by NQO."""
+"""Single-table execution-experience persistence used by NeurQO."""
 
 from .store import (
     ExperienceStore,

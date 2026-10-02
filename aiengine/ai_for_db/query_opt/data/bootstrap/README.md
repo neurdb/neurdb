@@ -48,7 +48,7 @@ PY
 
 This inspection does not connect to PostgreSQL, run SQL, or start training.
 The existing training tool accepts this path through `--experience-db`; run
-`nqo-train --help` for the required catalog, query selection, and model options.
+`neurqo-train --help` for the required catalog, query selection, and model options.
 Use a catalog and workload definition matching the JOB database. Historical
 timings are measurements from the original experiment environment, not a fresh
 performance measurement on the current machine.

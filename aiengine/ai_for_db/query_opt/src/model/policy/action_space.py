@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Current action-space and PPO utilities shared by online NQO."""
+"""Current action-space and PPO utilities shared by online NeurQO."""
 from __future__ import annotations
 
 import hashlib

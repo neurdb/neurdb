@@ -1,6 +1,6 @@
-"""Replay a previously recorded NQO state-to-Action mapping.
+"""Replay a previously recorded NeurQO state-to-Action mapping.
 
-The mapping path is supplied through ``NQO_REPLAY_POLICY_MAP``.  This is
+The mapping path is supplied through ``NEURQO_REPLAY_POLICY_MAP``.  This is
 used for fresh physical measurements of an already selected checkpoint: the
 saved Actions are reproduced without running the neural network again.
 """
@@ -13,6 +13,8 @@ import os
 import re
 from pathlib import Path
 from typing import Any
+
+from optimization.naming import environ
 
 EPHEMERAL_STATE_FIELDS = {
     "pid",
@@ -65,9 +67,9 @@ def _state_hash(state: dict[str, Any]) -> str:
 
 
 def _load_mapping() -> dict[str, Any]:
-    path = os.environ.get("NQO_REPLAY_POLICY_MAP")
+    path = environ.get("NEURQO_REPLAY_POLICY_MAP")
     if not path:
-        raise RuntimeError("NQO_REPLAY_POLICY_MAP is not set")
+        raise RuntimeError("NEURQO_REPLAY_POLICY_MAP is not set")
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     queries = payload.get("queries")
     owners = payload.get("initial_state_owners")

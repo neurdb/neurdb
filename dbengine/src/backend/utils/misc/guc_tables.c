@@ -808,41 +808,41 @@ StaticAssertDecl(lengthof(config_type_names) == (PGC_ENUM + 1),
  *	  variable_is_guc_list_quote() in src/bin/pg_dump/dumputils.c.
  */
 
-extern bool nqo_enabled;		/* NQO RCenter query-split master switch */
-extern char *nqo_server_url;
-extern char *nqo_trajectory_log_path;
-extern int nqo_server_timeout_ms;
-extern int nqo_max_rounds;
-extern int nqo_search_topk;
-extern int nqo_search_max_rels;
-extern bool nqo_search_exact_cardinality;
-extern int nqo_aja_conservative_rows;
-extern int nqo_aja_aggressive_rows;
-extern int nqo_aja_max_nestloop_cost_ratio_pct;
-extern int nqo_aja_aggressive_max_nestloop_cost_ratio_pct;
-extern int nqo_lip_max_build_relation_rows;
-extern int nqo_lip_selective_plan_rows;
-extern int nqo_lip_max_build_selectivity_pct;
-extern int nqo_lip_min_probe_ratio;
-extern int nqo_lip_max_filters;
+extern bool neurqo_enabled;		/* NeurQO RCenter query-split master switch */
+extern char *neurqo_server_url;
+extern char *neurqo_trajectory_log_path;
+extern int neurqo_server_timeout_ms;
+extern int neurqo_max_rounds;
+extern int neurqo_search_topk;
+extern int neurqo_search_max_rels;
+extern bool neurqo_search_exact_cardinality;
+extern int neurqo_aja_conservative_rows;
+extern int neurqo_aja_aggressive_rows;
+extern int neurqo_aja_max_nestloop_cost_ratio_pct;
+extern int neurqo_aja_aggressive_max_nestloop_cost_ratio_pct;
+extern int neurqo_lip_max_build_relation_rows;
+extern int neurqo_lip_selective_plan_rows;
+extern int neurqo_lip_max_build_selectivity_pct;
+extern int neurqo_lip_min_probe_ratio;
+extern int neurqo_lip_max_filters;
 
 struct config_bool ConfigureNamesBool[] =
 {
 	{
-		{"nqo", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Enables the NQO RCenter query-split pipeline for SELECTs."),
+		{"neurqo", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Enables the NeurQO RCenter query-split pipeline for SELECTs."),
 			NULL
 		},
-		&nqo_enabled,
+		&neurqo_enabled,
 		false,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.search_exact_cardinality", PGC_USERSET, QUERY_TUNING_METHOD,
+		{"neurqo.search_exact_cardinality", PGC_USERSET, QUERY_TUNING_METHOD,
 			gettext_noop("Uses a PostgreSQL planning call for every connected DP subset instead of pairwise cardinality composition."),
 			NULL
 		},
-		&nqo_search_exact_cardinality,
+		&neurqo_search_exact_cardinality,
 		false,
 		NULL, NULL, NULL
 	},
@@ -2077,119 +2077,119 @@ struct config_bool ConfigureNamesBool[] =
 struct config_int ConfigureNamesInt[] =
 {
 	{
-		{"nqo.max_rounds", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum number of NQO Dec rounds before executing the residual query."),
+		{"neurqo.max_rounds", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum number of NeurQO Dec rounds before executing the residual query."),
 			NULL
 		},
-		&nqo_max_rounds,
+		&neurqo_max_rounds,
 		64, 0, INT_MAX,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.server_timeout_ms", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the socket timeout in milliseconds for NQO policy-server calls."),
+		{"neurqo.server_timeout_ms", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the socket timeout in milliseconds for NeurQO policy-server calls."),
 			NULL
 		},
-		&nqo_server_timeout_ms,
+		&neurqo_server_timeout_ms,
 		2000, 1, 60000,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.search_topk", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets how many DP join orders the NQO Enum implementation keeps before physical-cost replanning."),
+		{"neurqo.search_topk", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets how many DP join orders the NeurQO Enum implementation keeps before physical-cost replanning."),
 			NULL
 		},
-		&nqo_search_topk,
+		&neurqo_search_topk,
 		5, 1, 16,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.search_max_rels", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum relation count for the NQO Enum implementation."),
+		{"neurqo.search_max_rels", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum relation count for the NeurQO Enum implementation."),
 			NULL
 		},
-		&nqo_search_max_rels,
+		&neurqo_search_max_rels,
 		12, 2, 16,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.aja_conservative_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the build-row switch threshold for the conservative NQO AJoin action."),
+		{"neurqo.aja_conservative_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the build-row switch threshold for the conservative NeurQO AJoin action."),
 			NULL
 		},
-		&nqo_aja_conservative_rows,
+		&neurqo_aja_conservative_rows,
 		362443, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.aja_aggressive_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the build-row switch threshold for the aggressive NQO AJoin action."),
+		{"neurqo.aja_aggressive_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the build-row switch threshold for the aggressive NeurQO AJoin action."),
 			NULL
 		},
-		&nqo_aja_aggressive_rows,
+		&neurqo_aja_aggressive_rows,
 		3624434, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.aja_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Rejects conservative NQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
+		{"neurqo.aja_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Rejects conservative NeurQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
 			NULL
 		},
-		&nqo_aja_max_nestloop_cost_ratio_pct,
+		&neurqo_aja_max_nestloop_cost_ratio_pct,
 		150, 0, INT_MAX,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.aja_aggressive_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Rejects aggressive NQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
+		{"neurqo.aja_aggressive_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Rejects aggressive NeurQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
 			NULL
 		},
-		&nqo_aja_aggressive_max_nestloop_cost_ratio_pct,
+		&neurqo_aja_aggressive_max_nestloop_cost_ratio_pct,
 		125, 0, INT_MAX,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.lip_max_build_relation_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the largest base relation from which the NQO Filter action may build a Bloom filter."),
+		{"neurqo.lip_max_build_relation_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the largest base relation from which the NeurQO Filter action may build a Bloom filter."),
 			NULL
 		},
-		&nqo_lip_max_build_relation_rows,
+		&neurqo_lip_max_build_relation_rows,
 		500000, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.lip_selective_plan_rows", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum estimated build rows for the selective NQO Filter action."),
+		{"neurqo.lip_selective_plan_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum estimated build rows for the selective NeurQO Filter action."),
 			NULL
 		},
-		&nqo_lip_selective_plan_rows,
+		&neurqo_lip_selective_plan_rows,
 		10000, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.lip_max_build_selectivity_pct", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum build-side selectivity for the selective NQO Filter action."),
+		{"neurqo.lip_max_build_selectivity_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum build-side selectivity for the selective NeurQO Filter action."),
 			NULL
 		},
-		&nqo_lip_max_build_selectivity_pct,
+		&neurqo_lip_max_build_selectivity_pct,
 		10, 1, 100,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.lip_min_probe_ratio", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the minimum probe/build row ratio for the NQO Filter action."),
+		{"neurqo.lip_min_probe_ratio", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the minimum probe/build row ratio for the NeurQO Filter action."),
 			NULL
 		},
-		&nqo_lip_min_probe_ratio,
+		&neurqo_lip_min_probe_ratio,
 		2, 1, 1000,
 		NULL, NULL, NULL
 	},
 	{
-		{"nqo.lip_max_filters", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the maximum number of Bloom filters built per NQO round."),
+		{"neurqo.lip_max_filters", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum number of Bloom filters built per NeurQO round."),
 			NULL
 		},
-		&nqo_lip_max_filters,
+		&neurqo_lip_max_filters,
 		4, 1, 10,
 		NULL, NULL, NULL
 	},
@@ -4070,21 +4070,21 @@ struct config_real ConfigureNamesReal[] =
 struct config_string ConfigureNamesString[] =
 {
 	{
-		{"nqo.server_url", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the URL of the NQO policy server."),
+		{"neurqo.server_url", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the URL of the NeurQO policy server."),
 			NULL
 		},
-		&nqo_server_url,
+		&neurqo_server_url,
 		"http://127.0.0.1:8088/action",
 		NULL, NULL, NULL
 	},
 
 	{
-		{"nqo.trajectory_log", PGC_USERSET, QUERY_TUNING_METHOD,
-			gettext_noop("Sets the JSONL file path for NQO online trajectory events."),
+		{"neurqo.trajectory_log", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the JSONL file path for NeurQO online trajectory events."),
 			gettext_noop("An empty string disables DB-side trajectory logging.")
 		},
-		&nqo_trajectory_log_path,
+		&neurqo_trajectory_log_path,
 		"",
 		NULL, NULL, NULL
 	},

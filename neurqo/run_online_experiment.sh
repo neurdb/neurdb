@@ -6,11 +6,11 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 CONTAINER="${CONTAINER:-neurdb_dev_opt}"
 CONTAINER_REPO="${CONTAINER_REPO:-/code/neurdb-dev}"
-RUNTIME_HOST="${RUNTIME_HOST:-${REPO_ROOT}/.nqo_runtime}"
-RUNTIME_CONTAINER="${RUNTIME_CONTAINER:-${CONTAINER_REPO}/.nqo_runtime}"
+RUNTIME_HOST="${RUNTIME_HOST:-${REPO_ROOT}/.neurqo_runtime}"
+RUNTIME_CONTAINER="${RUNTIME_CONTAINER:-${CONTAINER_REPO}/.neurqo_runtime}"
 
-NQO_SRC_HOST="${NQO_SRC_HOST:-/home/naili/neurqo}"
-MODEL_PATH="${MODEL_PATH:-${NQO_SRC_HOST}/results/released_model/job/random/a/best.pt}"
+NEURQO_SRC_HOST="${NEURQO_SRC_HOST:-/home/naili/neurqo}"
+MODEL_PATH="${MODEL_PATH:-${NEURQO_SRC_HOST}/results/released_model/job/random/a/best.pt}"
 MODEL_METHOD="${MODEL_METHOD:-standardmdp_rl}"
 MODEL_HIDDEN="${MODEL_HIDDEN:-128}"
 WORKLOAD="${WORKLOAD:-job}"
@@ -39,14 +39,14 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5432}"
 PGUSER="${PGUSER:-neurdb}"
 PGDATABASE="${PGDATABASE:-imdb_ori}"
-QUERY_DIR_CONTAINER="${QUERY_DIR_CONTAINER:-${CONTAINER_REPO}/nqo/test}"
+QUERY_DIR_CONTAINER="${QUERY_DIR_CONTAINER:-${CONTAINER_REPO}/neurqo/test}"
 QUERIES="${QUERIES:-job_2a}"
 
 RUN_ID="${RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}"
 RUN_HOST="${RUNTIME_HOST}/runs/${RUN_ID}"
 RUN_CONTAINER="${RUNTIME_CONTAINER}/runs/${RUN_ID}"
-MIRROR_HOST="${RUNTIME_HOST}/nqo"
-MIRROR_CONTAINER="${RUNTIME_CONTAINER}/nqo"
+MIRROR_HOST="${RUNTIME_HOST}/neurqo"
+MIRROR_CONTAINER="${RUNTIME_CONTAINER}/neurqo"
 MODEL_BASENAME="$(basename "${MODEL_PATH}")"
 MODEL_CONTAINER="${RUN_CONTAINER}/models/${MODEL_BASENAME}"
 CATALOG_CONTAINER="${RUN_CONTAINER}/catalog.snapshot.json"
@@ -61,7 +61,7 @@ TRANSITIONS_CONTAINER="${RUN_CONTAINER}/transitions.jsonl"
 MODEL_UPDATE_METADATA_CONTAINER="${RUN_CONTAINER}/model_update.json"
 MODEL_RELOAD_OUT_CONTAINER="${RUN_CONTAINER}/model_reload.out"
 PROMOTION_DECISION_CONTAINER="${RUN_CONTAINER}/promotion.json"
-SERVER_PID_FILE="/tmp/nqo_ai_server_online.pid"
+SERVER_PID_FILE="/tmp/neurqo_ai_server_online.pid"
 
 die() {
   echo "error: $*" >&2
@@ -72,8 +72,8 @@ docker_exec() {
   docker exec -u neurdb -w "${CONTAINER_REPO}" "${CONTAINER}" bash -lc "$*"
 }
 
-sync_nqo_runtime() {
-  [ -f "${NQO_SRC_HOST}/src/runtime/action_server.py" ] || die "missing NQO runtime: ${NQO_SRC_HOST}"
+sync_neurqo_runtime() {
+  [ -f "${NEURQO_SRC_HOST}/src/runtime/action_server.py" ] || die "missing NeurQO runtime: ${NEURQO_SRC_HOST}"
   [ -f "${MODEL_PATH}" ] || die "missing model checkpoint: ${MODEL_PATH}"
 
   mkdir -p "${MIRROR_HOST}" "${RUN_HOST}/models"
@@ -81,10 +81,10 @@ sync_nqo_runtime() {
   rsync -a --delete --delete-excluded \
     --exclude='__pycache__/' \
     --exclude='*.egg-info/' \
-    "${NQO_SRC_HOST}/src/" "${MIRROR_HOST}/src/"
+    "${NEURQO_SRC_HOST}/src/" "${MIRROR_HOST}/src/"
   rm -rf "${MIRROR_HOST}/workloads"
   mkdir -p "${MIRROR_HOST}/workloads"
-  cp -a "${NQO_SRC_HOST}/workloads/train_test.py" "${MIRROR_HOST}/workloads/train_test.py"
+  cp -a "${NEURQO_SRC_HOST}/workloads/train_test.py" "${MIRROR_HOST}/workloads/train_test.py"
   touch "${MIRROR_HOST}/workloads/__init__.py"
   cp -f "${MODEL_PATH}" "${RUN_HOST}/models/${MODEL_BASENAME}"
   find "${MIRROR_HOST}" -type d -name __pycache__ -prune -exec rm -rf {} +
@@ -164,7 +164,7 @@ start_server() {
       --workload '${WORKLOAD}' \
       --catalog-path '${CATALOG_CONTAINER}' \
       --device '${DEVICE}' \
-      --nqo-src '${MIRROR_CONTAINER}/src' \
+      --neurqo-src '${MIRROR_CONTAINER}/src' \
       --trajectory-log '${SERVER_DECISIONS_CONTAINER}' \
       --require-model \
       > '${SERVER_STDOUT_CONTAINER}' 2>&1 & echo \$! > '${SERVER_PID_FILE}'"
@@ -206,12 +206,12 @@ resolve_query_path() {
   local q="$1"
   if [[ "${q}" = /* ]]; then
     printf '%s\n' "${q}"
-  elif [[ -f "${REPO_ROOT}/nqo/test/${q}.sql" ]]; then
+  elif [[ -f "${REPO_ROOT}/neurqo/test/${q}.sql" ]]; then
     printf '%s/%s.sql\n' "${QUERY_DIR_CONTAINER}" "${q}"
-  elif [[ -f "${REPO_ROOT}/nqo/test/job_${q}.sql" ]]; then
+  elif [[ -f "${REPO_ROOT}/neurqo/test/job_${q}.sql" ]]; then
     printf '%s/job_%s.sql\n' "${QUERY_DIR_CONTAINER}" "${q}"
   else
-    die "cannot resolve query ${q}; use a container SQL path or a file in nqo/test"
+    die "cannot resolve query ${q}; use a container SQL path or a file in neurqo/test"
   fi
 }
 
@@ -228,13 +228,13 @@ run_one_query() {
 
   start_ns="$(date +%s%N)"
   if ! docker exec -i -u neurdb -w "${CONTAINER_REPO}" "${CONTAINER}" bash -lc "'${PSQL_BIN}' -h '${PGHOST}' -p '${PGPORT}' -U '${PGUSER}' -d '${PGDATABASE}' -v ON_ERROR_STOP=1 -At" >"${out_file}" 2>&1 <<SQL
-SET nqo.server_url = 'http://${AI_HOST}:${AI_PORT}/action';
-SET nqo.server_timeout_ms = ${SERVER_TIMEOUT_MS};
-SET nqo.max_rounds = ${MAX_ROUNDS};
-SET nqo.search_topk = ${SEARCH_TOPK};
-SET nqo.search_max_rels = ${SEARCH_MAX_RELS};
-SET nqo.trajectory_log = '${DB_TRAJECTORY_CONTAINER}';
-SET nqo = ${mode};
+SET neurqo.server_url = 'http://${AI_HOST}:${AI_PORT}/action';
+SET neurqo.server_timeout_ms = ${SERVER_TIMEOUT_MS};
+SET neurqo.max_rounds = ${MAX_ROUNDS};
+SET neurqo.search_topk = ${SEARCH_TOPK};
+SET neurqo.search_max_rels = ${SEARCH_MAX_RELS};
+SET neurqo.trajectory_log = '${DB_TRAJECTORY_CONTAINER}';
+SET neurqo = ${mode};
 \\i ${query_path}
 SQL
   then
@@ -627,7 +627,7 @@ main() {
   [ "${ONLINE_EXPERIMENT_ROUNDS}" -ge 1 ] || die "ONLINE_EXPERIMENT_ROUNDS must be >= 1"
 
   mkdir -p "${RUN_HOST}"
-  sync_nqo_runtime
+  sync_neurqo_runtime
   create_catalog_snapshot
   start_server
   if [ "${KEEP_SERVER}" != "1" ]; then
@@ -689,7 +689,7 @@ main() {
         --workload '${WORKLOAD}' \
         --catalog-path '${CATALOG_CONTAINER}' \
         --device '${DEVICE}' \
-        --nqo-src '${MIRROR_CONTAINER}/src' \
+        --neurqo-src '${MIRROR_CONTAINER}/src' \
         --learning-rate '${ONLINE_LEARNING_RATE}' \
         --epochs '${ONLINE_EPOCHS}' \
         --once"

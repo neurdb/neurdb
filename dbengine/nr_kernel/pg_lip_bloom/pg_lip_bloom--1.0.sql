@@ -20,4 +20,4 @@ AS 'MODULE_PATHNAME', 'pg_lip_bloom_info'
 LANGUAGE C VOLATILE PARALLEL UNSAFE;
 
 COMMENT ON EXTENSION pg_lip_bloom IS
-'Runtime Bloom filters used by NQO LIP actions';
+'Runtime Bloom filters used by NeurQO LIP actions';

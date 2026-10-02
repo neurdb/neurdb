@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train NQO policies from recorded PostgreSQL execution experience."""
+"""Train NeurQO policies from recorded PostgreSQL execution experience."""
 from __future__ import annotations
 
 import argparse

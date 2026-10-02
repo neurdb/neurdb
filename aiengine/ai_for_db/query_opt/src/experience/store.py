@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Single-table execution experience used by every NQO workflow."""
+"""Single-table execution experience used by every NeurQO workflow."""
 from __future__ import annotations
 
 import hashlib

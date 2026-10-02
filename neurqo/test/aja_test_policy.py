@@ -2,21 +2,23 @@
 
 import json
 
+from optimization.action_vocabulary import canonical_phase
+
 
 def predict(state):
-    request_type = str(state.get("request_type") or "").lower()
-    if request_type == "high":
-        return {"high_action": "stop"}
-    if request_type == "search":
-        return {"search_label": "default"}
-    if request_type == "low":
+    request_type = canonical_phase(state.get("request_type"))
+    if request_type == "dec":
+        return {"dec_action": "skip"}
+    if request_type == "enum":
+        return {"enum_action": "native"}
+    if request_type == "adapt":
         plan_state = json.dumps(state.get("plan_json") or {}, sort_keys=True)
         return {
-            "aja_level": (
+            "ajoin_action": (
                 "aggressive"
                 if "build_aggressive_case" in plan_state
                 else "conservative"
             ),
-            "lip_action": "none",
+            "filter_action": "none",
         }
     return {}

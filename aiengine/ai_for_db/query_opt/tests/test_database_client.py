@@ -6,9 +6,9 @@ from database.client import configure_session, dataset_settings, execute_sql, ma
 
 
 def test_dataset_parameters_are_packaged():
-    assert dataset_settings("job")["nqo.aja_conservative_rows"] == 100000
-    assert dataset_settings("stack")["nqo.lip_max_build_relation_rows"] == 10000
-    assert dataset_settings("tpch")["nqo.aja_aggressive_rows"] == 10000
+    assert dataset_settings("job")["neurqo.aja_conservative_rows"] == 100000
+    assert dataset_settings("stack")["neurqo.lip_max_build_relation_rows"] == 10000
+    assert dataset_settings("tpch")["neurqo.aja_aggressive_rows"] == 10000
 
 
 def test_enable_only_after_session_configuration():
@@ -22,10 +22,10 @@ def test_enable_only_after_session_configuration():
     )
     calls = cursor.execute.call_args_list
     assert calls[0].args[1] == ("off",)
-    assert "nqo" in repr(calls[0].args[0])
+    assert "neurqo" in repr(calls[0].args[0])
     assert calls[1].args[1] == (60000,)
-    assert calls[-1].args == ("SET nqo TO on",)
-    assert any("nqo.server_url" in repr(call.args[0]) for call in calls)
+    assert calls[-1].args == ("SET neurqo TO on",)
+    assert any("neurqo.server_url" in repr(call.args[0]) for call in calls)
 
 
 def test_pg_does_not_set_action_parameters():
@@ -74,7 +74,7 @@ def test_timeout_returns_error_and_closes_session(monkeypatch, capsys):
     connection.close.assert_called_once()
 
 
-def test_catalog_export_does_not_enable_nqo(monkeypatch, tmp_path):
+def test_catalog_export_does_not_enable_neurqo(monkeypatch, tmp_path):
     connection = MagicMock()
     cursor = connection.cursor.return_value.__enter__.return_value
     monkeypatch.setattr("database.client.psycopg2.connect", lambda **kw: connection)
@@ -85,7 +85,7 @@ def test_catalog_export_does_not_enable_nqo(monkeypatch, tmp_path):
     assert main(["--export-catalog", str(path)]) == 0
     write.assert_called_once_with(path, {})
     assert not any(
-        call.args == ("SET nqo TO on",) for call in cursor.execute.call_args_list
+        call.args == ("SET neurqo TO on",) for call in cursor.execute.call_args_list
     )
     connection.close.assert_called_once()
 

@@ -1,6 +1,6 @@
 # pg_lip_bloom
 
-`pg_lip_bloom` is the runtime Bloom-filter extension used by NQO's Filter
+`pg_lip_bloom` is the runtime Bloom-filter extension used by NeurQO's Filter
 action. The Filter implementation invokes exactly these functions:
 
 - `pg_lip_bloom_set_dynamic(integer)`

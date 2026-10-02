@@ -11,11 +11,11 @@ from runtime.policies import fixed as fixed_policy
 class FixedPolicyTest(unittest.TestCase):
     def test_actions_are_independently_configurable(self):
         env = {
-            "NQO_FIXED_DEC": "apply",
-            "NQO_FIXED_SCHED_ALPHA": "0.75",
-            "NQO_FIXED_ENUM": "top5",
-            "NQO_FIXED_FILTER": "selective",
-            "NQO_FIXED_AJOIN": "conservative",
+            "NEURQO_FIXED_DEC": "apply",
+            "NEURQO_FIXED_SCHED_ALPHA": "0.75",
+            "NEURQO_FIXED_ENUM": "top5",
+            "NEURQO_FIXED_FILTER": "selective",
+            "NEURQO_FIXED_AJOIN": "conservative",
         }
         with patch.dict(os.environ, env, clear=False):
             self.assertEqual(
@@ -38,8 +38,8 @@ class FixedPolicyTest(unittest.TestCase):
 
     def test_split_round_limit_stops_further_decomposition(self):
         env = {
-            "NQO_FIXED_DEC": "apply",
-            "NQO_FIXED_DEC_ROUNDS": "2",
+            "NEURQO_FIXED_DEC": "apply",
+            "NEURQO_FIXED_DEC_ROUNDS": "2",
         }
         with patch.dict(os.environ, env, clear=False):
             action = fixed_policy.predict(
@@ -49,8 +49,8 @@ class FixedPolicyTest(unittest.TestCase):
 
     def test_alpha_sequence_selects_a_per_round_action(self):
         env = {
-            "NQO_FIXED_SCHED_ALPHA": "0.5",
-            "NQO_FIXED_SCHED_ALPHA_SEQUENCE": "0.75,0.25",
+            "NEURQO_FIXED_SCHED_ALPHA": "0.5",
+            "NEURQO_FIXED_SCHED_ALPHA_SEQUENCE": "0.75,0.25",
         }
         with patch.dict(os.environ, env, clear=False):
             first = fixed_policy.predict({"request_type": "sched", "round": 0})
@@ -63,7 +63,7 @@ class FixedPolicyTest(unittest.TestCase):
     def test_legacy_environment_and_request_names_are_read_only_aliases(self):
         with patch.dict(
             os.environ,
-            {"NQO_FIXED_HIGH": "split", "NQO_FIXED_SPLIT_ROUNDS": "1"},
+            {"NEURQO_FIXED_HIGH": "split", "NEURQO_FIXED_SPLIT_ROUNDS": "1"},
             clear=True,
         ):
             action = fixed_policy.predict(

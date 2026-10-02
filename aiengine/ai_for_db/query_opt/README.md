@@ -1,6 +1,12 @@
 # NeurDB Query Optimization
 
-NQO is the AI-for-DB query optimization service. It runs separately from the
+The system name is **NeurQO**; new commands use `neurqo-*`, PostgreSQL settings
+use `neurqo.*`, and environment variables use `NEURQO_*`. Existing `NQO_*`
+environment variables and `nqo.*` GUCs remain read aliases. Old checkpoints and
+buffers are loaded without rewriting their contents; profile readers and cache
+hashes retain compatibility with the released `nqo_enabled` field and labels.
+
+NeurQO is the AI-for-DB query optimization service. It runs separately from the
 analytics server in `aiengine/runtime`; it does not consume streamed table
 batches or replace `aiengine/network`.
 
@@ -33,13 +39,13 @@ Kernel ownership, relative to the NeurDB root:
 
 - `dbengine/src/backend/parser/query_split.c`: rounds, state serialization,
   decomposition/scheduling, DP top-K + Leading hints, and SPI Bloom builds.
-- `dbengine/src/backend/executor/nodeNqoAdaptiveJoin.c` and `nodeHashjoin.c`:
+- `dbengine/src/backend/executor/nodeNeurQOAdaptiveJoin.c` and `nodeHashjoin.c`:
   execution-time adaptive join behavior.
 - `dbengine/src/backend/tcop/postgres.c`, `utils/misc/guc_tables.c`, and matching
   headers: integration and session settings.
 - `dbengine/nr_kernel/pg_lip_bloom`: Filter action's Bloom extension.
 
-This package imports the existing NQO runtime from the `neurqo` repository at
+This package imports the existing NeurQO runtime from the `neurqo` repository at
 `dd44135f115ac41e5c2e67c210ffe9e21ee8dae3`, retaining module names and checkpoint
 compatibility. The released lightweight JOB buffer is included as
 [bootstrap data](data/bootstrap/README.md); full collection buffers, benchmark
@@ -73,7 +79,7 @@ NeurDB's custom `0.2-devel` version is rejected by psycopg2's version check.
 This does not change the server to which the driver connects. In contrast,
 build server extensions against **NeurDB's** `pg_config`.
 
-The backend must include the NQO kernel changes and load `pg_hint_plan` through
+The backend must include the NeurQO kernel changes and load `pg_hint_plan` through
 `shared_preload_libraries`. Build/install `dbengine/nr_kernel/pg_lip_bloom` with
 the target `PG_CONFIG` (also included in `nr_kernel`'s build/install targets).
 Provision `CREATE EXTENSION pg_lip_bloom` as an administrator before using LIP
@@ -85,15 +91,15 @@ the required runtime components.
 Fixed-policy connectivity test, in the foreground:
 
 ```bash
-NQO_FIXED_DEC=apply NQO_FIXED_SCHED_ALPHA=0.5 \
-  nqo-server --model-module runtime.policies.fixed:predict --require-model
+NEURQO_FIXED_DEC=apply NEURQO_FIXED_SCHED_ALPHA=0.5 \
+  neurqo-server --model-module runtime.policies.fixed:predict --require-model
 ```
 
 In another shell using the same environment:
 
 ```bash
-nqo-sql --dataset job --file examples/query.sql
-nqo-sql --pg --file examples/query.sql
+neurqo-sql --dataset job --file examples/query.sql
+neurqo-sql --pg --file examples/query.sql
 python examples/query.py --dataset job --sql 'SELECT MIN(title) FROM title'
 ```
 
@@ -107,16 +113,16 @@ statement's result. Files must contain SQL, not psql meta-commands. The default
 
 `--dataset` loads the copied dataset-level action parameters; it does not pick
 the actions or override learned scheduling. Fixed-policy testing uses
-`NQO_FIXED_ENUM=top5`, `NQO_FIXED_FILTER=selective`, and/or
-`NQO_FIXED_AJOIN=conservative` on the server. For TPC-H, keep Dec at `skip`.
+`NEURQO_FIXED_ENUM=top5`, `NEURQO_FIXED_FILTER=selective`, and/or
+`NEURQO_FIXED_AJOIN=conservative` on the server. For TPC-H, keep Dec at `skip`.
 Standalone QuerySplit uses alpha 0.5; learned scheduling is not fixed unless
 explicitly requested.
 
 To use an existing checkpoint:
 
 ```bash
-nqo-sql --export-catalog .runtime/job-catalog.json
-nqo-server --model-path /path/to/trusted/best.pt \
+neurqo-sql --export-catalog .runtime/job-catalog.json
+neurqo-server --model-path /path/to/trusted/best.pt \
   --catalog-path .runtime/job-catalog.json --workload job --device cpu \
   --require-model --trajectory-log .runtime/policy.jsonl
 ```
@@ -127,7 +133,7 @@ read at startup; PG sends current residual/temporary-relation context per round.
 Checkpoints must be trusted because loading includes PyTorch pickle metadata.
 `--require-model` fails startup instead of silently using the stub policy.
 Clear fixed-policy environment variables before learned inference, especially
-`NQO_FIXED_SCHED_ALPHA`.
+`NEURQO_FIXED_SCHED_ALPHA`.
 
 The server accepts JSON state via `POST /action` and returns the existing
 line-oriented PG wire format. `GET /` reports health/source; `POST /reload`
@@ -142,13 +148,13 @@ it directly to the Internet. For a separate AI host, change the client's
 complete-trajectory reuse semantics. Enable the server's collector explicitly:
 
 ```bash
-nqo-server --model-module runtime.policies.fixed:predict --require-model \
+neurqo-server --model-module runtime.policies.fixed:predict --require-model \
   --workload job --collect-experience --experience-database imdb_ori
 ```
 
 This starts one server-owned thread, polling every two seconds. It combines
 policy decisions and DB execution events, then appends completed executions to
-`data/experience/job.sqlite`. `--data-dir` (or `NQO_DATA_DIR`) changes the data
+`data/experience/job.sqlite`. `--data-dir` (or `NEURQO_DATA_DIR`) changes the data
 root; `--collector-interval` changes the polling interval. Source installations
 default to this package's `data/`; installed wheels without a checkout use
 `~/.local/share/neurdb/query_opt`. No training starts.
@@ -158,14 +164,14 @@ writable by its OS user. For the development container, an administrator can
 set this default for **new connections** once:
 
 ```sql
-ALTER DATABASE imdb_ori SET nqo.trajectory_log =
+ALTER DATABASE imdb_ori SET neurqo.trajectory_log =
   '/code/neurdb-dev/aiengine/ai_for_db/query_opt/data/logs/job.db.jsonl';
 ```
 
-Then execute NQO-enabled SQL normally, for example `nqo-sql --dataset job --file
-examples/query.sql`. psql applications need the usual `SET nqo = on` and correct
-`nqo.server_url`; they do not manage SQLite. Without a database default, use a
-session-local `SET nqo.trajectory_log` or the client's `--trajectory-log`.
+Then execute NeurQO-enabled SQL normally, for example `neurqo-sql --dataset job --file
+examples/query.sql`. psql applications need the usual `SET neurqo = on` and correct
+`neurqo.server_url`; they do not manage SQLite. Without a database default, use a
+session-local `SET neurqo.trajectory_log` or the client's `--trajectory-log`.
 The collector's `--db-trajectory-log` must identify that same file. On separate
 hosts, expose the PG-written log to the server through a shared mount; the paths
 on the two hosts need not be identical. The server cannot configure remote PG
@@ -209,8 +215,8 @@ their lock files, logs and cursors are ignored by Git.
 
 ### Measurement Scope
 
-New service-collected records use `runtime_scope=db_nqo`: elapsed time from entry
-to exit of the NQO hook, covering all rounds, search/planning, AI calls, execution
+New service-collected records use `runtime_scope=db_neurqo`: elapsed time from entry
+to exit of the NeurQO hook, covering all rounds, search/planning, AI calls, execution
 and intermediate materialization. This is **not just the final SELECT** and is
 not identical to client `wall_ms`: parse/analyze/rewrite, connection setup and
 client/network fetch overhead are outside this timer. The scope and action
@@ -221,13 +227,13 @@ evaluation, not guessed by this collector.
 
 Collection records execution facts, not a correctness comparison against PG;
 it does not fetch/hash result rows or execute SQL again. Statements that never
-enter the NQO hook (NQO disabled, non-SELECT, parse/analyze errors, or the currently
+enter the NeurQO hook (NeurQO disabled, non-SELECT, parse/analyze errors, or the currently
 unsupported extended-protocol path) do not generate these experiences. Experience
 is not a result cache: ordinary SQL is still executed, and intermediate result
 tables cannot be restored from it. Training/replay consumers decide how to reuse
 labels, keeping dataset and measurement scope consistent.
 
-`nqo-train`, `nqo-train-mixed`, and `nqo-incremental-trainer` expose the existing
+`neurqo-train`, `neurqo-train-mixed`, and `neurqo-incremental-trainer` expose the existing
 training/checkpoint tools (`--help` for arguments). Without `--collect-experience`
 the server does not start a collector. Nothing installs scheduled services or
 starts training automatically. Keep local catalogs and checkpoints in ignored
@@ -248,8 +254,8 @@ The collector smoke test also checks a split execution, timeout, execution error
 multiple statements sharing logs, and restart deduplication.
 
 ```bash
-NQO_TEST_DB=1 NQO_TEST_MODEL=/path/to/trusted/best.pt \
-  NQO_TEST_CATALOG="$PWD/.runtime/job-catalog.json" \
+NEURQO_TEST_DB=1 NEURQO_TEST_MODEL=/path/to/trusted/best.pt \
+  NEURQO_TEST_CATALOG="$PWD/.runtime/job-catalog.json" \
   pytest -q tests/test_database_integration.py
 ```
 

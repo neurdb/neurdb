@@ -370,7 +370,7 @@ class PhaseDecisionTest(unittest.TestCase):
             )
             with patch.dict(
                 os.environ,
-                {"NQO_WORKLOAD_CENTER_ANALYSIS": str(path)},
+                {"NEURQO_WORKLOAD_CENTER_ANALYSIS": str(path)},
             ):
                 controller = PolicyController(workload="tpch")
 

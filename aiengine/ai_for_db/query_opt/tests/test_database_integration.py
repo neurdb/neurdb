@@ -16,7 +16,8 @@ from database.client import configure_session
 from experience.store import ExperienceStore
 
 pytestmark = pytest.mark.skipif(
-    os.environ.get("NQO_TEST_DB") != "1", reason="set NQO_TEST_DB=1 for DB smoke tests"
+    os.environ.get("NEURQO_TEST_DB") != "1",
+    reason="set NEURQO_TEST_DB=1 for DB smoke tests",
 )
 
 QUERY = """
@@ -38,7 +39,7 @@ def action_server(directory, *, fixed=None, model=None, catalog=None, collect=Fa
         port = listener.getsockname()[1]
     url = f"http://127.0.0.1:{port}/action"
     env = {
-        key: value for key, value in os.environ.items() if not key.startswith("NQO_")
+        key: value for key, value in os.environ.items() if not key.startswith("NEURQO_")
     }
     env.update(OMP_NUM_THREADS="1", MKL_NUM_THREADS="1")
     command = [
@@ -135,11 +136,11 @@ def pg_result(tmp_path_factory):
 @pytest.mark.parametrize("mode", ["native", "split", "top5", "lip", "aja", "combined"])
 def test_fixed_policy_through_postgres(mode, tmp_path, pg_result):
     fixed = {
-        "NQO_FIXED_DEC": "apply" if mode == "split" else "skip",
-        "NQO_FIXED_ENUM": "top5" if mode in ("top5", "combined") else "native",
-        "NQO_FIXED_FILTER": "selective" if mode in ("lip", "combined") else "none",
-        "NQO_FIXED_AJOIN": "conservative" if mode in ("aja", "combined") else "off",
-        "NQO_FIXED_SCHED_ALPHA": "0.5",
+        "NEURQO_FIXED_DEC": "apply" if mode == "split" else "skip",
+        "NEURQO_FIXED_ENUM": "top5" if mode in ("top5", "combined") else "native",
+        "NEURQO_FIXED_FILTER": "selective" if mode in ("lip", "combined") else "none",
+        "NEURQO_FIXED_AJOIN": "conservative" if mode in ("aja", "combined") else "off",
+        "NEURQO_FIXED_SCHED_ALPHA": "0.5",
     }
     with action_server(tmp_path, fixed=fixed) as url:
         result = run_query(url, tmp_path / "db.jsonl")
@@ -177,10 +178,12 @@ def test_fixed_policy_through_postgres(mode, tmp_path, pg_result):
 
 
 def test_trusted_checkpoint_through_postgres(tmp_path, pg_result):
-    model = os.environ.get("NQO_TEST_MODEL")
-    catalog = os.environ.get("NQO_TEST_CATALOG")
+    model = os.environ.get("NEURQO_TEST_MODEL")
+    catalog = os.environ.get("NEURQO_TEST_CATALOG")
     if not model or not catalog:
-        pytest.skip("provide NQO_TEST_MODEL and NQO_TEST_CATALOG for checkpoint smoke")
+        pytest.skip(
+            "provide NEURQO_TEST_MODEL and NEURQO_TEST_CATALOG for checkpoint smoke"
+        )
     with action_server(tmp_path, model=model, catalog=catalog) as url:
         result = run_query(url, tmp_path / "db.jsonl")
     assert result["rows"] == pg_result["rows"]
@@ -196,10 +199,10 @@ def test_trusted_checkpoint_through_postgres(tmp_path, pg_result):
 
 def test_server_collects_sql_outcomes_without_client_buffer_code(tmp_path, pg_result):
     buffer = tmp_path / "data" / "experience" / "job.sqlite"
-    fixed = {"NQO_FIXED_DEC": "apply", "NQO_FIXED_SCHED_ALPHA": "0.5"}
+    fixed = {"NEURQO_FIXED_DEC": "apply", "NEURQO_FIXED_SCHED_ALPHA": "0.5"}
     with action_server(tmp_path, fixed=fixed, collect=True) as url:
         assert run_query(url, tmp_path / "db.jsonl")["rows"] == pg_result["rows"]
-        connection = psycopg2.connect(application_name="nqo-collector-smoke")
+        connection = psycopg2.connect(application_name="neurqo-collector-smoke")
         connection.autocommit = True
         try:
             with connection.cursor() as cursor:
@@ -241,7 +244,7 @@ def test_server_collects_sql_outcomes_without_client_buffer_code(tmp_path, pg_re
         assert any(e["phase"] == "split" for e in split["db_events"])
         for record in records:
             completion = record["db_events"][-1]
-            assert completion["runtime_scope"] == "db_nqo"
+            assert completion["runtime_scope"] == "db_neurqo"
             assert record["first_runtime_ms"] == completion["wall_ms"]
         assert len(split["trajectory"]) > 3
     with action_server(tmp_path, fixed=fixed, collect=True):

@@ -1,4 +1,4 @@
-comment = 'Runtime Bloom filters used by NQO LIP actions'
+comment = 'Runtime Bloom filters used by NeurQO LIP actions'
 default_version = '1.0'
 module_pathname = '$libdir/pg_lip_bloom'
 relocatable = true

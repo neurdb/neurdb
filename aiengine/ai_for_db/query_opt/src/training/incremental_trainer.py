@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-NQO incremental training bridge.
+NeurQO incremental training bridge.
 
 This process consumes DB-side trajectory JSONL produced by:
 
-    SET nqo.trajectory_log = '/tmp/nqo_runtime.jsonl';
+    SET neurqo.trajectory_log = '/tmp/neurqo_runtime.jsonl';
 
 DB events are converted into online RL transitions:
 
@@ -52,7 +52,7 @@ def load_callable(spec: str | None) -> Callable[[list[dict[str, Any]]], Any] | N
 
     module_path = Path(module_name)
     if module_path.exists():
-        import_name = f"nqo_incremental_trainer_{abs(hash(str(module_path)))}"
+        import_name = f"neurqo_incremental_trainer_{abs(hash(str(module_path)))}"
         mod_spec = importlib.util.spec_from_file_location(import_name, module_path)
         if mod_spec is None or mod_spec.loader is None:
             raise ImportError(f"cannot import trainer module from {module_path}")
@@ -125,7 +125,7 @@ class IncrementalCheckpointTrainer:
         workload: str,
         catalog_path: str,
         device: str,
-        nqo_src: str | None,
+        neurqo_src: str | None,
         learning_rate: float,
         epochs: int,
     ) -> None:
@@ -144,7 +144,7 @@ class IncrementalCheckpointTrainer:
             workload=workload,
             catalog_path=catalog_path,
             device=device,
-            nqo_src=nqo_src,
+            neurqo_src=neurqo_src,
         )
         if self.controller._model is None or self.controller._torch is None:
             raise RuntimeError(f"could not load model checkpoint {self.model_path}")
@@ -215,7 +215,7 @@ class IncrementalCheckpointTrainer:
         encoded = model.encode_state_obj(structured_state, self.device)
 
         if self.model_method != "standardmdp_rl":
-            raise RuntimeError("the NQO incremental trainer requires standardmdp_rl")
+            raise RuntimeError("the NeurQO incremental trainer requires standardmdp_rl")
         if phase == "dec":
             return model.dec_actor(encoded)
         if phase == "sched":
@@ -438,8 +438,10 @@ def process_lines(
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NQO incremental training bridge")
-    ap.add_argument("--db-log", required=True, help="DB-side nqo.trajectory_log JSONL")
+    ap = argparse.ArgumentParser(description="NeurQO incremental training bridge")
+    ap.add_argument(
+        "--db-log", required=True, help="DB-side neurqo.trajectory_log JSONL"
+    )
     ap.add_argument("--out", required=True, help="transition JSONL output path")
     ap.add_argument("--trainer-module", default=None)
     ap.add_argument("--model-path", default=None)
@@ -450,7 +452,7 @@ def main() -> int:
     ap.add_argument("--workload", default="job")
     ap.add_argument("--catalog-path", default=None)
     ap.add_argument("--device", default="cpu")
-    ap.add_argument("--nqo-src", default=None)
+    ap.add_argument("--neurqo-src", default=None)
     ap.add_argument("--learning-rate", type=float, default=1e-5)
     ap.add_argument("--epochs", type=int, default=1)
     ap.add_argument("--batch-size", type=int, default=32)
@@ -477,7 +479,7 @@ def main() -> int:
             workload=args.workload,
             catalog_path=args.catalog_path,
             device=args.device,
-            nqo_src=args.nqo_src,
+            neurqo_src=args.neurqo_src,
             learning_rate=args.learning_rate,
             epochs=args.epochs,
         )

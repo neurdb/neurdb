@@ -16,8 +16,8 @@ from optimization.actions import ingest_trajectory
 
 
 def default_data_dir() -> Path:
-    if os.environ.get("NQO_DATA_DIR"):
-        return Path(os.environ["NQO_DATA_DIR"]).expanduser().resolve()
+    if os.environ.get("NEURQO_DATA_DIR"):
+        return Path(os.environ["NEURQO_DATA_DIR"]).expanduser().resolve()
     checkout = Path(__file__).resolve().parents[2]
     if (checkout / "pyproject.toml").is_file():
         return checkout / "data"
@@ -38,7 +38,7 @@ class ExperienceCollector(threading.Thread):
         interval: float = 2.0,
         log: Callable[[str], None] = print,
     ) -> None:
-        super().__init__(name="nqo-experience-collector", daemon=True)
+        super().__init__(name="neurqo-experience-collector", daemon=True)
         if not math.isfinite(interval) or interval <= 0:
             raise ValueError("collector interval must be positive and finite")
         self.dataset = dataset
@@ -180,6 +180,7 @@ class ExperienceCollector(threading.Thread):
             {
                 "dataset": self.dataset,
                 "database": self.database,
+                # Preserve the configuration identity of existing buffers.
                 "runtime_scope": "db_nqo",
                 "action_settings": start.get("action_settings") or {},
             }

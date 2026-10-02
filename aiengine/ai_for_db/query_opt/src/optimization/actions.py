@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared runtime utilities for online NQO collection and evaluation."""
+"""Shared runtime utilities for online NeurQO collection and evaluation."""
 from __future__ import annotations
 
 import hashlib
@@ -26,6 +26,7 @@ from optimization.action_vocabulary import (
     normalize_policy_action,
     normalize_policy_state,
 )
+from optimization.naming import legacy_profile, normalize_profile
 
 ONLINE_ACTION_SPACE_VERSION = "dec2-sched3-enum2-adapt4-v3"
 STATE_CONTRACT_FORBIDDEN_FIELDS = {
@@ -117,7 +118,7 @@ class ActionProfile:
     """A fixed policy used to isolate one mechanism during calibration."""
 
     name: str
-    nqo_enabled: bool = True
+    neurqo_enabled: bool = True
     dec: str = "skip"
     dec_rounds: int = -1
     sched_alpha: float = 0.5
@@ -151,43 +152,45 @@ class ActionProfile:
 
     @property
     def is_postgres(self) -> bool:
-        return not self.nqo_enabled
+        return not self.neurqo_enabled
 
     def policy_environment(self) -> dict[str, str]:
         environment = {
-            "NQO_FIXED_DEC": self.dec,
-            "NQO_FIXED_DEC_ROUNDS": str(self.dec_rounds),
-            "NQO_FIXED_SCHED_ALPHA": str(self.sched_alpha),
-            "NQO_FIXED_ENUM": self.enum,
-            "NQO_FIXED_ENUM_K": str(self.enum_k),
-            "NQO_FIXED_FILTER": self.filter,
-            "NQO_FIXED_AJOIN": self.ajoin,
+            "NEURQO_FIXED_DEC": self.dec,
+            "NEURQO_FIXED_DEC_ROUNDS": str(self.dec_rounds),
+            "NEURQO_FIXED_SCHED_ALPHA": str(self.sched_alpha),
+            "NEURQO_FIXED_ENUM": self.enum,
+            "NEURQO_FIXED_ENUM_K": str(self.enum_k),
+            "NEURQO_FIXED_FILTER": self.filter,
+            "NEURQO_FIXED_AJOIN": self.ajoin,
         }
         if self.sched_alpha_sequence:
-            environment["NQO_FIXED_SCHED_ALPHA_SEQUENCE"] = ",".join(
+            environment["NEURQO_FIXED_SCHED_ALPHA_SEQUENCE"] = ",".join(
                 str(alpha) for alpha in self.sched_alpha_sequence
             )
         return environment
 
     def guc_settings(self) -> dict[str, Any]:
         return {
-            "nqo.max_rounds": self.max_rounds,
-            "nqo.search_topk": self.enum_k,
-            "nqo.search_max_rels": self.search_max_rels,
-            "nqo.search_exact_cardinality": (self.search_exact_cardinality),
-            "nqo.aja_conservative_rows": self.aja_conservative_rows,
-            "nqo.aja_aggressive_rows": self.aja_aggressive_rows,
-            "nqo.aja_max_nestloop_cost_ratio_pct": (
+            "neurqo.max_rounds": self.max_rounds,
+            "neurqo.search_topk": self.enum_k,
+            "neurqo.search_max_rels": self.search_max_rels,
+            "neurqo.search_exact_cardinality": (self.search_exact_cardinality),
+            "neurqo.aja_conservative_rows": self.aja_conservative_rows,
+            "neurqo.aja_aggressive_rows": self.aja_aggressive_rows,
+            "neurqo.aja_max_nestloop_cost_ratio_pct": (
                 self.aja_max_nestloop_cost_ratio_pct
             ),
-            "nqo.aja_aggressive_max_nestloop_cost_ratio_pct": (
+            "neurqo.aja_aggressive_max_nestloop_cost_ratio_pct": (
                 self.aja_aggressive_max_nestloop_cost_ratio_pct
             ),
-            "nqo.lip_max_build_relation_rows": (self.lip_max_build_relation_rows),
-            "nqo.lip_selective_plan_rows": (self.lip_selective_plan_rows),
-            "nqo.lip_max_build_selectivity_pct": (self.lip_max_build_selectivity_pct),
-            "nqo.lip_min_probe_ratio": self.lip_min_probe_ratio,
-            "nqo.lip_max_filters": self.lip_max_filters,
+            "neurqo.lip_max_build_relation_rows": (self.lip_max_build_relation_rows),
+            "neurqo.lip_selective_plan_rows": (self.lip_selective_plan_rows),
+            "neurqo.lip_max_build_selectivity_pct": (
+                self.lip_max_build_selectivity_pct
+            ),
+            "neurqo.lip_min_probe_ratio": self.lip_min_probe_ratio,
+            "neurqo.lip_max_filters": self.lip_max_filters,
         }
 
     def to_dict(self) -> dict[str, Any]:
@@ -195,7 +198,7 @@ class ActionProfile:
 
     def legacy_dict(self) -> dict[str, Any]:
         """Return the v2 profile identity used by released buffers."""
-        legacy = self.to_dict()
+        legacy = legacy_profile(self.to_dict())
         legacy.update(
             {
                 "high": "split" if self.dec == "apply" else "stop",
@@ -218,14 +221,19 @@ class ActionProfile:
 
     def compatible_hashes(self) -> tuple[str, ...]:
         """Return canonical and released-v2 profile hashes, in preference order."""
-        hashes = (content_hash(self.to_dict()), content_hash(self.legacy_dict()))
+        hashes = (
+            content_hash(self.to_dict()),
+            content_hash(legacy_profile(self.to_dict())),
+            content_hash(self.legacy_dict()),
+        )
         return tuple(dict.fromkeys(hashes))
 
     @classmethod
     def from_mapping(cls, *, name: str, values: dict[str, Any]) -> "ActionProfile":
         """Load a profile while accepting released legacy field names."""
         normalized = {
-            LEGACY_PROFILE_FIELDS.get(key, key): value for key, value in values.items()
+            LEGACY_PROFILE_FIELDS.get(key, key): value
+            for key, value in normalize_profile(values).items()
         }
         return cls(name=name, **normalized)
 
@@ -233,8 +241,8 @@ class ActionProfile:
 def builtin_profiles() -> dict[str, ActionProfile]:
     """Return independent-action profiles used by the calibration protocol."""
     return {
-        "pg": ActionProfile(name="pg", nqo_enabled=False),
-        "nqo_none": ActionProfile(name="nqo_none"),
+        "pg": ActionProfile(name="pg", neurqo_enabled=False),
+        "neurqo_none": ActionProfile(name="neurqo_none"),
         "query_split": ActionProfile(name="query_split", dec="split"),
         "split_search": ActionProfile(name="split_search", enum="split"),
         "top5": ActionProfile(name="top5", enum="top5", enum_k=5),
@@ -426,12 +434,14 @@ def global_experience_path(pgdb_root: Path, workload: str) -> Path:
     dataset = workload.strip().upper()
     if dataset not in DATASET_TIMEOUT_CAP_MS:
         raise ValueError(f"unsupported workload {workload!r}")
-    return (
+    canonical = (
         Path(pgdb_root).resolve()
-        / ".nqo_runtime"
+        / ".neurqo_runtime"
         / "experience"
         / f"{dataset.lower()}_light.sql"
     )
+    legacy = Path(pgdb_root).resolve() / ".nqo_runtime" / "experience" / canonical.name
+    return legacy if not canonical.exists() and legacy.exists() else canonical
 
 
 def action_config_hash(config: dict[str, Any]) -> str:

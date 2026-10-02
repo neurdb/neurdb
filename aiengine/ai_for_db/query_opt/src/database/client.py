@@ -1,4 +1,4 @@
-"""Execute SQL through NeurDB, with session-local NQO configuration."""
+"""Execute SQL through NeurDB, with session-local NeurQO configuration."""
 
 from __future__ import annotations
 
@@ -37,20 +37,20 @@ def configure_session(
 ) -> None:
     if timeout_ms <= 0:
         raise ValueError("timeout_ms must be positive")
-    # Disable NQO while configuring the session; never alter global settings.
-    settings: dict[str, Any] = {"nqo": "off", "statement_timeout": timeout_ms}
+    # Disable NeurQO while configuring the session; never alter global settings.
+    settings: dict[str, Any] = {"neurqo": "off", "statement_timeout": timeout_ms}
     if enabled:
         if dataset:
             settings.update(dataset_settings(dataset))
-        settings["nqo.server_url"] = server_url
+        settings["neurqo.server_url"] = server_url
         if trajectory_log:
-            settings["nqo.trajectory_log"] = trajectory_log
+            settings["neurqo.trajectory_log"] = trajectory_log
     for name, value in settings.items():
         if isinstance(value, bool):
             value = "on" if value else "off"
         cursor.execute(sql.SQL("SET {} TO %s").format(sql.Identifier(name)), (value,))
     if enabled:
-        cursor.execute("SET nqo TO on")
+        cursor.execute("SET neurqo TO on")
 
 
 def execute_sql(cursor: Any, query: str) -> dict[str, Any]:
@@ -78,14 +78,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--user", help="libpq PGUSER default when omitted")
     parser.add_argument("--dbname", help="libpq PGDATABASE default when omitted")
     parser.add_argument(
-        "--pg", action="store_true", help="disable NQO for this session"
+        "--pg", action="store_true", help="disable NeurQO for this session"
     )
     parser.add_argument("--server-url", default="http://127.0.0.1:8088/action")
     parser.add_argument("--dataset", choices=("job", "stack", "tpch"))
     parser.add_argument("--timeout-ms", type=int, default=60_000)
     parser.add_argument("--trajectory-log", help="absolute path writable by PostgreSQL")
     parser.add_argument(
-        "--export-catalog", type=Path, help="write catalog with NQO off"
+        "--export-catalog", type=Path, help="write catalog with NeurQO off"
     )
     args = parser.parse_args(argv)
     if args.sql is None and args.file is None and args.export_catalog is None:
@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
                 for key in ("host", "port", "user", "dbname")
                 if (value := getattr(args, key)) is not None
             },
-            application_name="nqo-sql",
+            application_name="neurqo-sql",
             connect_timeout=10,
         )
         connection.autocommit = True
@@ -137,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Query interrupted", file=sys.stderr)
         return 130
     except (OSError, ValueError, psycopg2.Error) as exc:
-        print(f"nqo-sql: {exc}", file=sys.stderr)
+        print(f"neurqo-sql: {exc}", file=sys.stderr)
         return 1
     finally:
         if connection is not None:

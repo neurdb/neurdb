@@ -10,6 +10,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Mapping
 
+from optimization.naming import environ
+
 DEFAULT_ANALYSIS_PATH = (
     Path(__file__).resolve().parent / "data" / "workload_fk_center_analysis.json"
 )
@@ -25,7 +27,7 @@ class DecompositionEligibility:
 
 
 def _analysis_path(path: str | Path | None = None) -> Path:
-    configured = path or os.environ.get("NQO_WORKLOAD_CENTER_ANALYSIS")
+    configured = path or environ.get("NEURQO_WORKLOAD_CENTER_ANALYSIS")
     return Path(configured).resolve() if configured else DEFAULT_ANALYSIS_PATH
 
 

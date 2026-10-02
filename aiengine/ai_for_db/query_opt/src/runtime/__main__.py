@@ -1,4 +1,4 @@
-"""Run the NQO action server with ``python -m runtime``."""
+"""Run the NeurQO action server with ``python -m runtime``."""
 
 from .action_server import main
 
