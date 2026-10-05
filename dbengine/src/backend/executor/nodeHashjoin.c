@@ -203,6 +203,82 @@ static bool ExecHashJoinNewBatch(HashJoinState *hjstate);
 static bool ExecParallelHashJoinNewBatch(HashJoinState *hjstate);
 static void ExecParallelHashJoinPartitionOuter(HashJoinState *hjstate);
 
+/*
+ * Build a private hash table without consuming the probe side.
+ *
+ * NeurQO's adaptive join uses this exact executor boundary to observe the
+ * build cardinality before choosing between the already initialized HashJoin
+ * and an equivalent NestLoop.  The normal ExecHashJoin path is unchanged.
+ */
+bool
+ExecHashJoinBuildHashTable(HashJoinState *node, uint64 *build_rows,
+						   bool *join_empty)
+{
+	PlanState  *outerNode;
+	HashState  *hashNode;
+	HashJoinTable hashtable;
+
+	Assert(node != NULL);
+	Assert(build_rows != NULL);
+	Assert(join_empty != NULL);
+	Assert(node->hj_JoinState == HJ_BUILD_HASHTABLE);
+	Assert(node->hj_HashTable == NULL);
+
+	*build_rows = 0;
+	*join_empty = false;
+	hashNode = (HashState *) innerPlanState(node);
+	outerNode = outerPlanState(node);
+
+	/* Adaptive plans are deliberately rejected before reaching this helper. */
+	if (hashNode == NULL || hashNode->parallel_state != NULL)
+		return false;
+
+	ResetExprContext(node->js.ps.ps_ExprContext);
+
+	/*
+	 * Preserve the serial executor's empty-outer optimization and its saved
+	 * first tuple.  A proven-empty outer side makes this inner join empty
+	 * without executing the build side.
+	 */
+	if (HJ_FILL_INNER(node))
+		node->hj_FirstOuterTupleSlot = NULL;
+	else if (HJ_FILL_OUTER(node) ||
+			 (outerNode->plan->startup_cost < hashNode->ps.plan->total_cost &&
+			  !node->hj_OuterNotEmpty))
+	{
+		node->hj_FirstOuterTupleSlot = ExecProcNode(outerNode);
+		if (TupIsNull(node->hj_FirstOuterTupleSlot))
+		{
+			node->hj_OuterNotEmpty = false;
+			*join_empty = true;
+			return true;
+		}
+		node->hj_OuterNotEmpty = true;
+	}
+	else
+		node->hj_FirstOuterTupleSlot = NULL;
+
+	hashtable = ExecHashTableCreate(hashNode,
+									node->hj_HashOperators,
+									node->hj_Collations,
+									HJ_FILL_INNER(node));
+	node->hj_HashTable = hashtable;
+	hashNode->hashtable = hashtable;
+	(void) MultiExecProcNode((PlanState *) hashNode);
+	*build_rows = (uint64) hashtable->totalTuples;
+
+	if (hashtable->totalTuples == 0 && !HJ_FILL_OUTER(node))
+	{
+		*join_empty = true;
+		return true;
+	}
+
+	hashtable->nbatch_outstart = hashtable->nbatch;
+	node->hj_OuterNotEmpty = false;
+	node->hj_JoinState = HJ_NEED_NEW_OUTER;
+	return true;
+}
+
 
 /* ----------------------------------------------------------------
  *		ExecHashJoinImpl
