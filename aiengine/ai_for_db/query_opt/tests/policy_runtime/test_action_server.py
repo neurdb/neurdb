@@ -418,6 +418,34 @@ class PhaseDecisionTest(unittest.TestCase):
             )
         )
 
+    def test_casted_aggregate_reaches_high_model_inference(self):
+        controller = PolicyController(workload="job")
+        controller._model = object()
+        for sql in (
+            "SELECT MIN((lt.link)::text) FROM link_type lt, movie_link ml "
+            "WHERE lt.id = ml.link_type_id",
+            "SELECT MIN(CAST(lt.link AS text)) FROM link_type lt",
+        ):
+            with self.subTest(sql=sql), patch.object(
+                controller, "_predict_hrl", return_value={"dec_action": "apply"}
+            ) as predict:
+                action = controller.predict({"request_type": "dec", "sql": sql})
+                predict.assert_called_once()
+                self.assertEqual(action["dec_action"], "apply")
+
+    def test_complex_casted_aggregate_still_skips_high_inference(self):
+        controller = PolicyController(workload="job")
+        controller._model = object()
+        with patch.object(controller, "_predict_hrl") as predict:
+            action = controller.predict(
+                {
+                    "request_type": "dec",
+                    "sql": "SELECT SUM((a.x * a.y)::numeric) FROM a",
+                }
+            )
+        predict.assert_not_called()
+        self.assertEqual(action["dec_action"], "skip")
+
     def test_runtime_relation_plan_contains_temp_table_statistics(self):
         plan = action_server.runtime_relation_plan(
             {

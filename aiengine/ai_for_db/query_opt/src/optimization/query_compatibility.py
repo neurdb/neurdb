@@ -30,17 +30,58 @@ SQL_IGNORED_TEXT = re.compile(
     flags=re.DOTALL,
 )
 SQL_TOKEN = re.compile(
-    r"[A-Za-z_][A-Za-z0-9_$]*|\d+(?:\.\d+)?|::|<=|>=|<>|!=" r"|[-+*/%.=<>(),;]"
+    r"[A-Za-z_][A-Za-z0-9_$]*|\d+(?:\.\d+)?|::|<=|>=|<>|!=" r"|[-+*/%.=<>(),;]|[^\s]"
 )
 SQL_IDENTIFIER = re.compile(r"^[a-z_][a-z0-9_$]*$")
+SQL_CAST_TYPE = re.compile(
+    r"[a-z_][a-z0-9_$]*(?: \. [a-z_][a-z0-9_$]*)?"
+    r"(?: varying| precision)?"
+    r"(?: \( \d+(?: , \d+)* \))?"
+    r"(?: (?:with|without) time zone)?"
+)
 
 
-def _simple_result_aggregate(argument: list[str]) -> bool:
-    """Return whether an aggregate is a simple JOB/STACK result reducer."""
-    if argument == ["*"]:
-        return True
-    if argument and argument[0] == "distinct":
-        argument = argument[1:]
+def _simple_column_expression(argument: list[str]) -> bool:
+    """Recognize a column wrapped only in parentheses and type casts."""
+    depth = 0
+    outer_end = None
+    cast_index = None
+    for index, token in enumerate(argument):
+        if token == "(":
+            depth += 1
+        elif token == ")":
+            depth -= 1
+            if depth == 0 and outer_end is None:
+                outer_end = index
+        elif token == "::" and depth == 0:
+            cast_index = index
+        if depth < 0:
+            return False
+    if depth != 0:
+        return False
+
+    # Deparsed PG aggregates include casts such as MIN((lt.link)::text).
+    # Unwrap only the cast, so arithmetic/functions underneath remain rejected.
+    if cast_index is not None:
+        return bool(SQL_CAST_TYPE.fullmatch(" ".join(argument[cast_index + 1 :]))) and (
+            _simple_column_expression(argument[:cast_index])
+        )
+    if outer_end == len(argument) - 1:
+        if argument[0] == "(":
+            return _simple_column_expression(argument[1:-1])
+        if argument[:2] == ["cast", "("]:
+            depth = 0
+            for index in range(2, len(argument) - 1):
+                token = argument[index]
+                if token == "(":
+                    depth += 1
+                elif token == ")":
+                    depth -= 1
+                elif token == "as" and depth == 0:
+                    return bool(
+                        SQL_CAST_TYPE.fullmatch(" ".join(argument[index + 1 : -1]))
+                    ) and _simple_column_expression(argument[2:index])
+            return False
     if len(argument) == 1:
         return bool(SQL_IDENTIFIER.match(argument[0]))
     return (
@@ -49,6 +90,15 @@ def _simple_result_aggregate(argument: list[str]) -> bool:
         and argument[1] == "."
         and bool(SQL_IDENTIFIER.match(argument[2]))
     )
+
+
+def _simple_result_aggregate(argument: list[str]) -> bool:
+    """Return whether an aggregate is a simple JOB/STACK result reducer."""
+    if argument == ["*"]:
+        return True
+    if argument and argument[0] == "distinct":
+        argument = argument[1:]
+    return _simple_column_expression(argument)
 
 
 def _has_complex_aggregate(tokens: list[str]) -> bool:
