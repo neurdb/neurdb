@@ -292,14 +292,12 @@ class PostgresConnector:
 
         try:
             # Get all table names from the current database
-            self.cursor.execute(
-                """
+            self.cursor.execute("""
                 SELECT table_name
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_type = 'BASE TABLE';
-            """
-            )
+            """)
             tables = self.cursor.fetchall()
 
             # Assign IDs and process each table
