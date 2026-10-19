@@ -46,7 +46,7 @@ class GTEEmbedder(TextEmbedder):
             return_tensors="pt",
         ).to(env.DEVICE)
         output = self._ctx_model(**ctx_dict)
-        attn_mask: torch.Tensor = ctx_dict["attention_mask"]  # type:ignore
+        attn_mask: torch.Tensor = ctx_dict["attention_mask"]  # type: ignore
         embeddings = (
             self._average_pool(output.last_hidden_state, attn_mask).detach().cpu()
         )
