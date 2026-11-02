@@ -16,8 +16,8 @@ def seed_everything(seed=RANDOM_SEED):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True  # type:ignore
-    torch.backends.cudnn.benchmark = False  # type:ignore
+    torch.backends.cudnn.deterministic = True  # type: ignore
+    torch.backends.cudnn.benchmark = False  # type: ignore
     # torch.use_deterministic_algorithms(True)
 
 
