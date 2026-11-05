@@ -1,5 +1,5 @@
 # List of subdirectories to process
-SUBDIRS := nr_ext nr_pipeline nr_am nr_store nr_molqo
+SUBDIRS := nr_ext nr_pipeline nr_am nr_store nr_molqo pg_lip_bloom
 
 # PG_CONFIG can be overridden by the caller (e.g. make PG_CONFIG=/opt/neurdb/bin/pg_config)
 PG_CONFIG ?= pg_config

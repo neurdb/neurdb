@@ -808,8 +808,44 @@ StaticAssertDecl(lengthof(config_type_names) == (PGC_ENUM + 1),
  *	  variable_is_guc_list_quote() in src/bin/pg_dump/dumputils.c.
  */
 
+extern bool neurqo_enabled;		/* NeurQO RCenter query-split master switch */
+extern char *neurqo_server_url;
+extern char *neurqo_trajectory_log_path;
+extern int neurqo_server_timeout_ms;
+extern int neurqo_max_rounds;
+extern int neurqo_search_topk;
+extern int neurqo_search_max_rels;
+extern bool neurqo_search_exact_cardinality;
+extern int neurqo_aja_conservative_rows;
+extern int neurqo_aja_aggressive_rows;
+extern int neurqo_aja_max_nestloop_cost_ratio_pct;
+extern int neurqo_aja_aggressive_max_nestloop_cost_ratio_pct;
+extern int neurqo_lip_max_build_relation_rows;
+extern int neurqo_lip_selective_plan_rows;
+extern int neurqo_lip_max_build_selectivity_pct;
+extern int neurqo_lip_min_probe_ratio;
+extern int neurqo_lip_max_filters;
+
 struct config_bool ConfigureNamesBool[] =
 {
+	{
+		{"neurqo", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Enables the NeurQO RCenter query-split pipeline for SELECTs."),
+			NULL
+		},
+		&neurqo_enabled,
+		false,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.search_exact_cardinality", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Uses a PostgreSQL planning call for every connected DP subset instead of pairwise cardinality composition."),
+			NULL
+		},
+		&neurqo_search_exact_cardinality,
+		false,
+		NULL, NULL, NULL
+	},
 	{
 		{"nr_predict_pushdown", PGC_USERSET, QUERY_TUNING_METHOD,
 			gettext_noop("Enables pushing input-column quals below the PREDICT "
@@ -2040,6 +2076,124 @@ struct config_bool ConfigureNamesBool[] =
 
 struct config_int ConfigureNamesInt[] =
 {
+	{
+		{"neurqo.max_rounds", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum number of NeurQO Dec rounds before executing the residual query."),
+			NULL
+		},
+		&neurqo_max_rounds,
+		64, 0, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.server_timeout_ms", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the socket timeout in milliseconds for NeurQO policy-server calls."),
+			NULL
+		},
+		&neurqo_server_timeout_ms,
+		2000, 1, 60000,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.search_topk", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets how many DP join orders the NeurQO Enum implementation keeps before physical-cost replanning."),
+			NULL
+		},
+		&neurqo_search_topk,
+		5, 1, 16,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.search_max_rels", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum relation count for the NeurQO Enum implementation."),
+			NULL
+		},
+		&neurqo_search_max_rels,
+		12, 2, 16,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_conservative_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the build-row switch threshold for the conservative NeurQO AJoin action."),
+			NULL
+		},
+		&neurqo_aja_conservative_rows,
+		362443, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_aggressive_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the build-row switch threshold for the aggressive NeurQO AJoin action."),
+			NULL
+		},
+		&neurqo_aja_aggressive_rows,
+		3624434, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Rejects conservative NeurQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
+			NULL
+		},
+		&neurqo_aja_max_nestloop_cost_ratio_pct,
+		150, 0, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.aja_aggressive_max_nestloop_cost_ratio_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Rejects aggressive NeurQO AJoin candidates whose estimated nest-loop cost exceeds this percentage of the hash-join cost; zero disables the guard."),
+			NULL
+		},
+		&neurqo_aja_aggressive_max_nestloop_cost_ratio_pct,
+		125, 0, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_max_build_relation_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the largest base relation from which the NeurQO Filter action may build a Bloom filter."),
+			NULL
+		},
+		&neurqo_lip_max_build_relation_rows,
+		500000, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_selective_plan_rows", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum estimated build rows for the selective NeurQO Filter action."),
+			NULL
+		},
+		&neurqo_lip_selective_plan_rows,
+		10000, 1, INT_MAX,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_max_build_selectivity_pct", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum build-side selectivity for the selective NeurQO Filter action."),
+			NULL
+		},
+		&neurqo_lip_max_build_selectivity_pct,
+		10, 1, 100,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_min_probe_ratio", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the minimum probe/build row ratio for the NeurQO Filter action."),
+			NULL
+		},
+		&neurqo_lip_min_probe_ratio,
+		2, 1, 1000,
+		NULL, NULL, NULL
+	},
+	{
+		{"neurqo.lip_max_filters", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the maximum number of Bloom filters built per NeurQO round."),
+			NULL
+		},
+		&neurqo_lip_max_filters,
+		4, 1, 10,
+		NULL, NULL, NULL
+	},
+
 	{
 		{"nr_task_batch_size", PGC_USERSET, NEURDB_RUNTIME_OPTIONS,
 			gettext_noop("Sets the used model for ML tasks."),
@@ -3915,6 +4069,26 @@ struct config_real ConfigureNamesReal[] =
 
 struct config_string ConfigureNamesString[] =
 {
+	{
+		{"neurqo.server_url", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the URL of the NeurQO policy server."),
+			NULL
+		},
+		&neurqo_server_url,
+		"http://127.0.0.1:8088/action",
+		NULL, NULL, NULL
+	},
+
+	{
+		{"neurqo.trajectory_log", PGC_USERSET, QUERY_TUNING_METHOD,
+			gettext_noop("Sets the JSONL file path for NeurQO online trajectory events."),
+			gettext_noop("An empty string disables DB-side trajectory logging.")
+		},
+		&neurqo_trajectory_log_path,
+		"",
+		NULL, NULL, NULL
+	},
+
 	{
 		{"nr_model_name", PGC_USERSET, NEURDB_MODEL_OPTIONS,
 			gettext_noop("Sets the used model for ML tasks."),

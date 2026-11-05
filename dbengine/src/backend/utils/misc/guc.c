@@ -186,6 +186,24 @@ static const unit_conversion time_unit_conversion_table[] =
 static const char *const map_old_guc_names[] = {
 	"sort_mem", "work_mem",
 	"vacuum_mem", "maintenance_work_mem",
+	/* Read existing configuration without creating a second setting/state. */
+	"nqo", "neurqo",
+	"nqo.server_url", "neurqo.server_url",
+	"nqo.trajectory_log", "neurqo.trajectory_log",
+	"nqo.server_timeout_ms", "neurqo.server_timeout_ms",
+	"nqo.max_rounds", "neurqo.max_rounds",
+	"nqo.search_topk", "neurqo.search_topk",
+	"nqo.search_max_rels", "neurqo.search_max_rels",
+	"nqo.search_exact_cardinality", "neurqo.search_exact_cardinality",
+	"nqo.aja_conservative_rows", "neurqo.aja_conservative_rows",
+	"nqo.aja_aggressive_rows", "neurqo.aja_aggressive_rows",
+	"nqo.aja_max_nestloop_cost_ratio_pct", "neurqo.aja_max_nestloop_cost_ratio_pct",
+	"nqo.aja_aggressive_max_nestloop_cost_ratio_pct", "neurqo.aja_aggressive_max_nestloop_cost_ratio_pct",
+	"nqo.lip_max_build_relation_rows", "neurqo.lip_max_build_relation_rows",
+	"nqo.lip_selective_plan_rows", "neurqo.lip_selective_plan_rows",
+	"nqo.lip_max_build_selectivity_pct", "neurqo.lip_max_build_selectivity_pct",
+	"nqo.lip_min_probe_ratio", "neurqo.lip_min_probe_ratio",
+	"nqo.lip_max_filters", "neurqo.lip_max_filters",
 	NULL
 };
 

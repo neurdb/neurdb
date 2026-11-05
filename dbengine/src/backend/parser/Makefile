@@ -32,6 +32,7 @@ OBJS = \
 	parse_type.o \
 	parse_utilcmd.o \
 	parser.o \
+	query_split.o \
 	scan.o \
 	scansup.o
 
