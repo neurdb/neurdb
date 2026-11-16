@@ -43,7 +43,7 @@ def pad_attn_bias_unsqueeze(x, padlen):
 
 
 def floyd_warshall_rewrite(adjacency_matrix):
-    (nrows, ncols) = adjacency_matrix.shape
+    nrows, ncols = adjacency_matrix.shape
     assert nrows == ncols
     M = adjacency_matrix.copy().astype("long")
     for i in range(nrows):

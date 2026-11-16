@@ -110,7 +110,7 @@ class Environment:
         self.prim_state = self.get_state()
         step_result = self.pipeline.add_step(
             step, has_timeout=has_timeout
-        )  # type:ignore
+        )  # type: ignore
         if step_result <= 0:
             return None, step_result
 

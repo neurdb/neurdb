@@ -274,7 +274,7 @@ def parse_one_sql(_sql, table_info: DBTableInfo):
     attr_range_conds = [x.copy() for x in table_info.attr_ranges_list]
 
     for filter_predicate in filter_predicates:
-        (lhs, op, rhs) = filter_predicate
+        lhs, op, rhs = filter_predicate
         lhs_table_no, lhs_attr_no = parse_predicate_lhs(
             lhs, table_info.table_no_map, table_info.attr_no_map_list
         )
