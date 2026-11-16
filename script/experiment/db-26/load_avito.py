@@ -11,6 +11,7 @@ Then load into NeurDB from inside the container:
         -v ON_ERROR_STOP=1 -f /code/neurdb-dev/test/avito/rel-avito-db/avito_schema.sql \
         -f /code/neurdb-dev/test/avito/rel-avito-db/avito_copy.sql
 """
+
 import os
 
 import duckdb
